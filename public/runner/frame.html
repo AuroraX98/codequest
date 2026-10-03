@@ -1,0 +1,199 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'none'; script-src 'unsafe-inline' 'unsafe-eval' blob:; connect-src 'none'; worker-src blob:; style-src 'unsafe-inline'; img-src data:; font-src data:;"
+    />
+    <style>
+      body {
+        font: 16px system-ui;
+        padding: 20px;
+        color: #282137;
+        background: #fff;
+      }
+      button,
+      input,
+      select {
+        font: inherit;
+        padding: 8px;
+      }
+      pre {
+        white-space: pre-wrap;
+      }
+      * {
+        box-sizing: border-box;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script>
+      const root = document.getElementById("root");
+      let worker = null;
+      let current = null;
+      const respond = (result) =>
+        parent.postMessage({ type: "result", id: current, result }, "*");
+      let vendorAssets = {};
+      const script = (url) =>
+        new Promise((res, rej) => {
+          let s = document.createElement("script");
+          const file = vendorAssets[url];
+          if (!file) {
+            rej(new Error("This tool needs an offline-pack download."));
+            return;
+          }
+          const blobURL = URL.createObjectURL(
+            new Blob([file.bytes], { type: "application/javascript" }),
+          );
+          s.src = blobURL;
+          s.onload = () => {
+            URL.revokeObjectURL(blobURL);
+            res();
+          };
+          s.onerror = () =>
+            rej(
+              new Error(
+                "Could not load the coding tools. Check your connection and run again.",
+              ),
+            );
+          document.head.append(s);
+        });
+      const codeString = (s) => JSON.stringify(s);
+      async function run(data) {
+        current = data.id;
+        worker?.terminate();
+        root.innerHTML = "";
+        const { lesson: l, code } = data;
+        vendorAssets = data.assets || {};
+        try {
+          if (
+            l.runtime === "html" ||
+            l.runtime === "css" ||
+            l.runtime === "react" ||
+            (l.runtime === "javascript" &&
+              (l.extraFiles || []).some((f) => /\.html$/.test(f.name)))
+          ) {
+            let output = [];
+            const original = console.log;
+            console.log = (...x) => output.push(x.map(String).join(" "));
+            if (l.runtime === "react") {
+              if (!window.Babel)
+                await script(
+                  "https://cdn.jsdelivr.net/npm/@babel/standalone@7.26.9/babel.min.js",
+                );
+              if (!window.React) {
+                await script(
+                  "https://cdn.jsdelivr.net/npm/react@18.3.1/umd/react.development.js",
+                );
+                await script(
+                  "https://cdn.jsdelivr.net/npm/react-dom@18.3.1/umd/react-dom.development.js",
+                );
+              }
+              const compiled = Babel.transform(code, {
+                presets: ["react"],
+                filename: "App.jsx",
+              }).code;
+              new Function(
+                compiled +
+                  '\nReactDOM.createRoot(document.getElementById("root")).render(React.createElement(App));',
+              )();
+            } else if (l.runtime === "javascript") {
+              root.innerHTML = (l.extraFiles || []).find((f) =>
+                /\.html$/.test(f.name),
+              ).code;
+              const AsyncFunction = Object.getPrototypeOf(
+                async function () {},
+              ).constructor;
+              const body =
+                code +
+                "\nawait new Promise(r=>setTimeout(r,100));const result=[];for(const c of __checks){try{result.push({label:c.label,passed:!!(await eval(c.expression))});}catch{result.push({label:c.label,passed:false});}}return result;";
+              const checks = await new AsyncFunction(
+                "__checks",
+                "__output",
+                body,
+              )(l.checks, output);
+              console.log = original;
+              respond({ output, checks });
+              return;
+            } else if (l.runtime === "html") {
+              root.innerHTML = code;
+              for (const s of root.querySelectorAll("script")) s.remove();
+            } else {
+              root.innerHTML =
+                (l.extraFiles || []).find((f) => /\.html$/.test(f.name))
+                  ?.code ||
+                '<main class="card"><h1>Hello, coder</h1><p>Your CSS changes this preview.</p><button>Try me</button></main>';
+              const style = document.createElement("style");
+              style.textContent = code;
+              root.append(style);
+            }
+            await new Promise((r) => setTimeout(r, 350));
+            const checks = [];
+            for (const c of l.checks) {
+              try {
+                checks.push({
+                  label: c.label,
+                  passed: !!(await new Function(
+                    "return (" + c.expression + ")",
+                  )()),
+                });
+              } catch {
+                checks.push({ label: c.label, passed: false });
+              }
+            }
+            console.log = original;
+            respond({ output, checks });
+            return;
+          }
+          let source;
+          if (l.runtime === "python")
+            source = `importScripts('https://cdn.jsdelivr.net/pyodide/v0.27.7/full/pyodide.js');onmessage=async(e)=>{try{let output=[];const p=await loadPyodide({indexURL:'https://cdn.jsdelivr.net/pyodide/v0.27.7/full/',stdout:s=>output.push(s),stderr:s=>output.push(s)});for(const f of e.data.files||[]){if(/^[A-Za-z0-9_.-]+$/.test(f.name))p.FS.writeFile('/home/pyodide/'+f.name,f.code);}await p.loadPackagesFromImports(e.data.code);p.runPython(e.data.code);p.globals.set('__output',p.toPy(output));let checks=e.data.checks.map(c=>{try{return {label:c.label,passed:!!p.runPython(c.expression)}}catch{return {label:c.label,passed:false}}});postMessage({output,checks});}catch(e){postMessage({output:[],checks:[],error:String(e.message||e)})}};`;
+          else if (l.runtime === "sql")
+            source = `importScripts('https://cdn.jsdelivr.net/npm/sql.js@1.13.0/dist/sql-wasm.js');onmessage=async(e)=>{try{const SQL=await initSqlJs({locateFile:f=>'https://cdn.jsdelivr.net/npm/sql.js@1.13.0/dist/'+f});const db=new SQL.Database();if(e.data.setup)db.run(e.data.setup);let result=db.exec(e.data.code);if(!result.length){try{result=db.exec("SELECT * FROM answer")}catch{}}const output=result.map(t=>t.columns.join(' | ')+'\\n'+t.values.map(r=>r.map(v=>v===null?'NULL':v).join(' | ')).join('\\n'));let checks=e.data.checks.map(c=>{try{return {label:c.label,passed:db.exec(c.expression)[0]?.values[0]?.[0]===1}}catch{return {label:c.label,passed:false}}});db.close();postMessage({output,checks});}catch(e){postMessage({output:[],checks:[],error:String(e.message||e)})}};`;
+          else
+            source = `${l.runtime === "typescript" ? "importScripts('https://cdn.jsdelivr.net/npm/typescript@5.9.3/lib/typescript.js');" : ""}onmessage=async(e)=>{let output=[];try{let code=e.data.code;${l.runtime === "typescript" ? `const libs={};for(const name of ['lib.es5.d.ts','lib.es2015.core.d.ts','lib.es2015.collection.d.ts','lib.es2015.iterable.d.ts','lib.es2015.symbol.d.ts','lib.es2015.symbol.wellknown.d.ts','lib.es2015.promise.d.ts','lib.es2015.proxy.d.ts','lib.es2015.reflect.d.ts','lib.es2015.generator.d.ts','lib.dom.d.ts','lib.decorators.d.ts','lib.decorators.legacy.d.ts'])libs[name]=await (await fetch('https://cdn.jsdelivr.net/npm/typescript@5.9.3/lib/'+name)).text();const options={target:ts.ScriptTarget.ES2015,strict:true,noEmitOnError:true,lib:Object.keys(libs)};const host={getSourceFile:(n,l)=>n==='main.ts'?ts.createSourceFile(n,code,l):libs[n.replace(/^.*\\//,'')]?ts.createSourceFile(n,libs[n.replace(/^.*\\//,'')],l):undefined,getDefaultLibFileName:()=> 'lib.es5.d.ts',writeFile:()=>{},getCurrentDirectory:()=>'',getDirectories:()=>[],fileExists:n=>n==='main.ts'||!!libs[n],readFile:n=>n==='main.ts'?code:libs[n],getCanonicalFileName:n=>n,useCaseSensitiveFileNames:()=>true,getNewLine:()=> '\\n'};const program=ts.createProgram(['main.ts'],options,host);const errors=ts.getPreEmitDiagnostics(program).filter(d=>d.category===ts.DiagnosticCategory.Error);if(errors.length)throw new Error(errors.map(d=>'TypeScript: '+ts.flattenDiagnosticMessageText(d.messageText,' ')).join('\\n'));code=ts.transpileModule(code,{compilerOptions:options}).outputText;` : ""}const fakeConsole={log:(...v)=>output.push(v.map(x=>typeof x==='object'?JSON.stringify(x):String(x)).join(' ')),error:(...v)=>output.push(v.map(String).join(' ')),warn:(...v)=>output.push(v.map(String).join(' '))};const body=code+'\\nconst __results=[];for(const c of __checks){try{__results.push({label:c.label,passed:!!(await eval(c.expression))})}catch{__results.push({label:c.label,passed:false})}}return __results;';const AsyncFunction=Object.getPrototypeOf(async function(){}).constructor;const checks=await new AsyncFunction('console','__output','__checks',body)(fakeConsole,output,e.data.checks);postMessage({output,checks});}catch(e){postMessage({output,checks:[],error:String(e.message||e)})}};`;
+          const bridge = `let __assets={},__loaded=false,__pending=[];self.importScripts=(...urls)=>{if(!__loaded){__pending.push(urls);return;}for(const url of urls){const asset=__assets[String(url)];if(!asset)throw new Error("The coding tool is not in your downloaded pack: "+url);(0,eval)(new TextDecoder().decode(asset.bytes));}};self.fetch=async(input)=>{const url=typeof input==='string'?input:input.url||String(input);const asset=__assets[url];if(!asset)throw new Error("This downloaded runner cannot access the network: "+url);return new Response(asset.bytes.slice(0),{headers:{'Content-Type':asset.type}});};`;
+          source =
+            bridge +
+            source +
+            `\nconst __task=onmessage;onmessage=async(e)=>{try{__assets=e.data.assets||{};__loaded=true;for(const urls of __pending)importScripts(...urls);__pending=[];await __task(e);}catch(error){postMessage({output:[],checks:[],error:String(error.message||error)})}};`;
+          worker = new Worker(
+            URL.createObjectURL(
+              new Blob([source], { type: "text/javascript" }),
+            ),
+          );
+          worker.onmessage = (e) => {
+            respond(e.data);
+            worker.terminate();
+          };
+          worker.onerror = (e) =>
+            respond({
+              output: [],
+              checks: [],
+              error: e.message || "The coding tool could not start.",
+            });
+          worker.postMessage({
+            code,
+            assets: vendorAssets,
+            files: l.extraFiles || [],
+            checks: l.checks,
+            setup: (l.extraFiles || [])
+              .filter((f) => f.name === "setup.sql")
+              .map((f) => f.code)
+              .join("\n"),
+          });
+        } catch (e) {
+          respond({ output: [], checks: [], error: String(e.message || e) });
+        }
+      }
+      addEventListener("message", (e) => {
+        if (e.source !== parent) return;
+        if (e.data?.type === "run") run(e.data);
+        if (e.data?.type === "stop") worker?.terminate();
+      });
+      parent.postMessage({ type: "ready" }, "*");
+    </script>
+  </body>
+</html>
