@@ -914,7 +914,7 @@ export default function CodeQuest({
           )}
           {ready && view === "studio" && (
             <div
-              className="button-row"
+              className="button-row studio-mode"
               role="group"
               aria-label="Build studio mode"
             >
@@ -2057,7 +2057,7 @@ export default function CodeQuest({
                       }
                     />
                   </label>
-                  <label className="setting-row">
+                  <label className="setting-row setting-field">
                     <span>
                       <b>Appearance</b>
                       <small>Your purple palette in light or dark.</small>
@@ -2074,7 +2074,7 @@ export default function CodeQuest({
                       <option value="dark">Dark</option>
                     </select>
                   </label>
-                  <label className="setting-row">
+                  <label className="setting-row setting-field">
                     <span>
                       <b>Daily goal</b>
                       <small>Finished projects. One is a good start.</small>

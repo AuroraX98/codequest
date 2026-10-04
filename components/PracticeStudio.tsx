@@ -375,10 +375,15 @@ export default function PracticeStudio(props: Props) {
           const detail = sample.error
             ? ` The runner reported: ${sample.error.slice(0, 700)}`
             : sample.checks.some((check) => !check.passed)
-              ? ` Checks to fix: ${sample.checks.filter((check) => !check.passed).map((check) => check.label).join("; ").slice(0, 700)}.`
+              ? ` Checks to fix: ${sample.checks
+                  .filter((check) => !check.passed)
+                  .map((check) => check.label)
+                  .join("; ")
+                  .slice(0, 700)}.`
               : " The runner did not return all required checks.";
           throw new Error(
-            "The generated example did not pass its own checks. This project was not saved. Generate another project." + detail,
+            "The generated example did not pass its own checks. This project was not saved. Generate another project." +
+              detail,
           );
         }
         const starter = await execute(
@@ -507,11 +512,11 @@ export default function PracticeStudio(props: Props) {
           with the explanations you need before you try it.
         </p>
       </div>
-      <div className="panel">
+      <div className="panel content-flow">
         <h3>
           <Sparkles size={20} /> Create a practice project
         </h3>
-        <label className="setting-row">
+        <label className="setting-row setting-field">
           <span>
             <b>Course topic</b>
             <small>Practice a skill from any course.</small>
@@ -529,7 +534,7 @@ export default function PracticeStudio(props: Props) {
             ))}
           </select>
         </label>
-        <label className="setting-row">
+        <label className="setting-row setting-field">
           <span>
             <b>Practice difficulty</b>
             <small>
@@ -550,15 +555,17 @@ export default function PracticeStudio(props: Props) {
             <option value="advanced">Advanced</option>
           </select>
         </label>
-        <label htmlFor="practice-idea">Your idea (optional)</label>
-        <input
-          id="practice-idea"
-          value={idea}
-          maxLength={500}
-          disabled={!!busy}
-          placeholder="For example: a pet tracker, a small game, or a reading list"
-          onChange={(event) => setIdea(event.target.value)}
-        />
+        <div className="form-field">
+          <label htmlFor="practice-idea">Your idea (optional)</label>
+          <input
+            id="practice-idea"
+            value={idea}
+            maxLength={500}
+            disabled={!!busy}
+            placeholder="For example: a pet tracker, a small game, or a reading list"
+            onChange={(event) => setIdea(event.target.value)}
+          />
+        </div>
         <div className="button-row">
           <button
             className="primary"
@@ -613,7 +620,7 @@ export default function PracticeStudio(props: Props) {
           </p>
         )}
       </div>
-      <div className="panel">
+      <div className="panel content-flow">
         <h3>Your saved practice</h3>
         <p className="muted">
           The latest 20 projects and 20 earlier versions per project stay with
@@ -716,7 +723,7 @@ export default function PracticeStudio(props: Props) {
                 text={project.project.explanation[theory] ?? ""}
                 runtime={project.project.runtime}
               />
-              <div className="button-row">
+              <div className="concept-controls">
                 <span>
                   {theory + 1} of {project.project.explanation.length}
                 </span>
@@ -741,7 +748,7 @@ export default function PracticeStudio(props: Props) {
               text={project.project.task}
               runtime={project.project.runtime}
             />
-            <ol>
+            <ol className="steps">
               {project.project.steps.map((step, index) => (
                 <li key={index}>
                   <InlineCode text={step} />
@@ -749,7 +756,7 @@ export default function PracticeStudio(props: Props) {
               ))}
             </ol>
             <h4>What your finished project should do</h4>
-            <ul>
+            <ul className="steps">
               {project.project.requirements.map((item, index) => (
                 <li key={index}>
                   <InlineCode text={item} />
@@ -763,7 +770,7 @@ export default function PracticeStudio(props: Props) {
               />
             )}
           </section>
-          <div className="panel editor-panel">
+          <div className="panel editor-panel practice-editor">
             <div className="editor-title">
               <h3>Make it work</h3>
               <span className="small-tag">{project.project.runtime}</span>
@@ -1015,7 +1022,7 @@ export default function PracticeStudio(props: Props) {
               </p>
             )}
           </div>
-          <section className="panel">
+          <section className="panel content-flow">
             <h3>A little help when you need it</h3>
             <div className="button-row">
               <button

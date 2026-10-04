@@ -200,7 +200,7 @@ export default function LearningSettings({
           </p>
         )}
         {status.conflict && (
-          <div className="notice">
+          <div className="notice sync-conflict">
             <b>Two project copies are kept</b>
             <p>{status.conflict.message}</p>
             <p>Choosing a copy keeps the other in saved history.</p>

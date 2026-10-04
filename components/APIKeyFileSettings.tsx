@@ -127,7 +127,7 @@ export default function APIKeyFileSettings(props: Props) {
   const fileName = metadata.handle?.name || fallbackName;
   return (
     <section
-      className="panel ai-connection-panel"
+      className="panel ai-connection-panel content-flow"
       aria-label="API key file settings"
     >
       <h3>

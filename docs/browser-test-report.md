@@ -50,3 +50,9 @@ A live DeepSeek Python Basics beginner project was generated and adopted after i
 ## User guides
 
 See [API key storage and removal](api-key-removal.md), [Connect an API key from a file](api-key-file.md), and [AI practice projects](ai-practice-projects.md) for the corresponding workflows and their limits.
+
+## App spacing review
+
+On October 3, 2026, a focused spacing review covered AI practice creation, saved practice, lesson theory, quizzes, course projects, math, the tutor, Skill path, progress, Settings, and the optional key-file panel. The idea field now stacks below its label, descriptions and action rows have deliberate gaps, lesson paragraphs and instructions have room between them, and practice history/results have padding.
+
+Observed desktop (1440 px), phone (390 px), and narrow phone (320 px) layouts kept the main navigation views and visible controls within the screen, without horizontal page overflow. All four course phases opened at 320 px. Topic/difficulty settings stack on small screens, editor actions wrap, and checkbox rows stay inline. Dark mode and 18 px larger lesson text were checked at 320 px without page overflow; the prior user preferences were restored. Build and source checks passed. These were visual and DOM layout checks; no tests that merely repeat CSS declarations were added. The rare sync-conflict notice received a stacked layout through source review and retains its existing behavior; a live conflict was not created for this visual pass.
