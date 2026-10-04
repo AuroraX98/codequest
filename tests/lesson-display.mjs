@@ -21,5 +21,24 @@ try {
  const indented='if ready:\n\tlaunch()\n\n    # spaces and blank lines stay intact\n';assert.equal(codeTokens(indented,'python').map(t=>t.text).join(''),indented);
  assert.deepEqual(lessonBlocks('Plain words with <b>text</b>.','python'),[{kind:'prose',text:'Plain words with <b>text</b>.'}]);
  assert.equal(lessonBlocks('```python\nunfinished','python')[0].kind,'prose');
- console.log('Passed exact source/indentation preservation for 8 runtimes, semicolons inside strings/loops, real syntax tokenization, escaped HTML, inline terms, and incomplete-fence fallback.');
+ const prose='Use **not** and **another phrase** beside `pet_name`. **Call `print()` once**; keep `2 ** 3` unchanged. An unmatched **marker stays literal. <img src="x" onerror="alert(1)">';
+ const proseDom=new JSDOM(renderToStaticMarkup(React.createElement(LessonContent,{text:prose,runtime:'python'}))).window.document;
+ assert.deepEqual([...proseDom.querySelectorAll('strong')].map(n=>n.textContent),['not','another phrase','Call print() once']);
+ assert.deepEqual([...proseDom.querySelectorAll('.inline-code')].map(n=>n.textContent),['pet_name','print()','2 ** 3']);
+ assert.equal(proseDom.querySelector('strong .inline-code').textContent,'print()');
+ assert.ok(proseDom.body.textContent.includes('An unmatched **marker stays literal.'));
+ assert.ok(proseDom.body.textContent.includes('<img src="x" onerror="alert(1)">'));
+ assert.equal(proseDom.querySelectorAll('img,script').length,0);
+ const literalCode='answer = 2 ** 3\nprint("**not bold**")\n';
+ const codeDom=new JSDOM(renderToStaticMarkup(React.createElement(LessonContent,{text:'**Explanation**\n```python\n'+literalCode+'```\n```output\n**literal output**\n```',runtime:'python'}))).window.document;
+ assert.equal(codeDom.querySelector('pre code').textContent,literalCode);
+ assert.equal(codeDom.querySelectorAll('pre strong').length,0);
+ assert.equal(codeDom.querySelectorAll('strong').length,1);
+ assert.equal(codeDom.querySelectorAll('pre code')[1].textContent,'**literal output**\n');
+ const unmatched='Plain **unfinished and `**inside code**` remain literal.';
+ const unmatchedDom=new JSDOM(renderToStaticMarkup(React.createElement(LessonContent,{text:unmatched,runtime:'python'}))).window.document;
+ assert.equal(unmatchedDom.querySelectorAll('strong').length,0);
+ assert.equal(unmatchedDom.querySelector('.inline-code').textContent,'**inside code**');
+ assert.equal(unmatchedDom.body.textContent,'Plain **unfinished and **inside code** remain literal.');
+ console.log('Passed exact source/indentation preservation for 8 runtimes, escaped HTML, inline bold/code combinations, literal exponent/output code, unmatched markers, syntax tokenization, and incomplete-fence fallback.');
 } finally {for(const file of files)await rm(file.replace(/\.tsx?$/,'.display-test.mjs'),{force:true});}

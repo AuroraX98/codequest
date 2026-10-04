@@ -124,7 +124,8 @@ export async function askProvider(
       method: "POST",
       headers: request.headers,
       body: JSON.stringify(request.body),
-      redirect: "error",
+      // Workers support manual redirects; reject 3xx below without forwarding keys.
+      redirect: "manual",
       cache: "no-store",
       signal: AbortSignal.timeout(45000),
     });

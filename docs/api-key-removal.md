@@ -2,6 +2,8 @@
 
 Each person connects their own API key in CodeQuest. The app saves it encrypted on its server, tied to that person's signed-in account. It is excluded from the project's source files, offline downloads, and learning backups. Connecting a key in the app does not upload it to GitHub.
 
+If you connect using a local JSON file, read [Connect an API key from a file](api-key-file.md) for file permissions, browser support, and how to clear the local copy. A filled file contains readable text and belongs outside the repository. The downloadable public template contains no key.
+
 ## Remove your saved key from CodeQuest
 
 1. Connect to the internet and sign in to the CodeQuest account that saved the key.
@@ -9,6 +11,10 @@ Each person connects their own API key in CodeQuest. The app saves it encrypted 
 3. Select **Disconnect assistant**. Wait for the message saying your assistant is disconnected. The provider choices will appear again.
 
 This clears the key saved for that CodeQuest account. Turning off AI assistance, signing out, or clearing your browser's data does not remove the saved server key. Your lessons and saved projects remain available after disconnecting.
+
+Turning off **Allow this device to read my API key file** or selecting **Forget file** does not disconnect the saved server key. Editing or deleting the key in that file also leaves the server connection unchanged until you reread a valid changed file or select **Disconnect assistant**. A valid JSON file with an empty `apiKey` disconnects when read again; deleting the file itself does not do that.
+
+**Clear key and disconnect** removes the saved server connection and turns off automatic reading. Clearing the selected local file requires supported browser write access and permission. Safari instead downloads a blank replacement; you must replace the original filled file manually. The server is disconnected by the action, but the blank download alone does not erase your original file. See the [key-file guide](api-key-file.md) for the complete steps.
 
 ## Stop the key from working everywhere
 
@@ -24,7 +30,7 @@ These steps apply if you pasted a key into a project file, commit, or other GitH
 2. **Remove the key from the current files or other content where you posted it.** Keep replacement keys in the app's connection settings or an appropriate secret manager.
 3. **Check older copies.** Editing or deleting a file does not remove the key from Git history. It can also remain in forks, clones, cached views, or pull requests. Revoking it makes the exposed key unusable.
 4. **Use GitHub's official cleanup guide if history removal is needed.** History cleanup changes commits and needs coordination with other people using the repository. Follow the guide's instructions for copies and GitHub Support where applicable.
-5. **Prevent another upload.** Keep secret files out of source control and review changes before committing. `.gitignore` does not remove files that are already tracked or erase previous commits. Enable GitHub push protection where available.
+5. **Prevent another upload.** Keep secret files outside the repository and review changes before committing. CodeQuest ignores `codequest-api-key.json` and `codequest-api-key.*.json`; these patterns do not cover other filenames. `.gitignore` does not remove files that are already tracked or erase previous commits. Enable GitHub push protection where available.
 
 Reference: [GitHub's guide to removing sensitive data from a repository](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/removing-sensitive-data-from-a-repository).
 

@@ -30,6 +30,7 @@ import {
 import { defaultProfile } from "../lib/profile";
 import { LearningClient, type DeviceStatus } from "../lib/learning-client";
 import AIConnectionSettings from "./AIConnectionSettings";
+import APIKeyFileSettings, { type APIKeyFileSettingsHandle } from "./APIKeyFileSettings";
 import { providers } from "../lib/ai-providers";
 import LearningSettings from "./LearningSettings";
 import LessonContent, { InlineCode } from "./LessonContent";
@@ -196,7 +197,8 @@ export default function CodeQuest({
     tutorAbort = useRef<AbortController | null>(null),
     tutorSequence = useRef(0),
     tutorFlight = useRef(false),
-    tutorContextRef = useRef("");
+    tutorContextRef = useRef(""),
+    apiKeyFileSettings = useRef<APIKeyFileSettingsHandle>(null);
   useEffect(() => {
     if (!theoryFocusRequested.current) return;
     theoryFocusRequested.current = false;
@@ -1229,13 +1231,26 @@ export default function CodeQuest({
                             <button
                               className="icon-button"
                               aria-label="Start again from starter code"
-                              onClick={() => {
+                              onClick={async () => {
                                 if (
-                                  confirm(
-                                    "Replace your code with the starter? Your earlier saved version is available in History.",
+                                  !confirm(
+                                    "Replace your code with the starter? Your current code will be saved first and available in History.",
                                   )
                                 )
+                                  return;
+                                const id = activeId,
+                                  scope = device.scope;
+                                try {
+                                  await saveCode();
+                                  if (
+                                    unitRef.current !== id ||
+                                    device.scope !== scope
+                                  )
+                                    return;
                                   restoreProject(lesson.starter);
+                                } catch (e) {
+                                  setError((e as Error).message);
+                                }
                               }}
                             >
                               <RotateCcw size={18} />
@@ -1243,11 +1258,16 @@ export default function CodeQuest({
                             <button
                               className="icon-button"
                               onClick={async () => {
+                                const id = activeId,
+                                  scope = device.scope;
                                 try {
                                   await saveCode();
-                                  const d = await fetch(
-                                    "/api/quest?unit=" + activeId,
-                                  ).then((r) => readResponse(r));
+                                  const d = await device.detail(id);
+                                  if (
+                                    unitRef.current !== id ||
+                                    device.scope !== scope
+                                  )
+                                    return;
                                   setHistory(d.history);
                                   setShowHistory((v) => !v);
                                 } catch (e) {
@@ -1289,9 +1309,20 @@ export default function CodeQuest({
                                 className="history-row"
                                 key={h.id}
                                 onClick={async () => {
-                                  await saveCode();
-                                  restoreProject(h.code);
-                                  setShowHistory(false);
+                                  const id = activeId,
+                                    scope = device.scope;
+                                  try {
+                                    await saveCode();
+                                    if (
+                                      unitRef.current !== id ||
+                                      device.scope !== scope
+                                    )
+                                      return;
+                                    restoreProject(h.code);
+                                    setShowHistory(false);
+                                  } catch (e) {
+                                    setError((e as Error).message);
+                                  }
                                 }}
                               >
                                 <History size={17} />
@@ -2051,6 +2082,7 @@ export default function CodeQuest({
                     setFeedback(message);
                   }}
                   onError={setError}
+                  beforeConnectionChange={() => apiKeyFileSettings.current?.disableAuto() ?? Promise.resolve()}
                 />
                 <section className="panel">
                   <h3>Your work stays with you</h3>
@@ -2136,6 +2168,19 @@ export default function CodeQuest({
               </button>
             </div>
           )}
+          <APIKeyFileSettings
+            ref={apiKeyFileSettings}
+            state={state}
+            lesson={activeId}
+            online={deviceStatus.online}
+            visible={ready && view === "settings"}
+            request={request}
+            onSaved={(next, message) => {
+              setChat([]);
+              setState(next);
+              setFeedback(message);
+            }}
+          />
           <footer>
             CodeQuest · Built around your pace.
             <span>

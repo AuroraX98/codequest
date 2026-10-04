@@ -46,6 +46,16 @@ available=true;remote.draftScope='b'.repeat(64);const count=posts.length;await r
 remote.progress[0].code='other device';await reload.sync(true);assert.ok(reload.status.conflict);
 await reload.mutate({action:'save',unitId:l.id,code:'newest device copy'});await reload.resolve('account');
 assert.equal(reload.current.progress[0].code,'other device');assert.equal(reload.status.pending,0);assert.ok((await reload.detail(l.id)).history.some(h=>h.code==='newest device copy'));
+// A confirmed starter reset saves the current edit before replacing it, even offline.
+available=false;
+const justEdited='const temperature = 19; // saved immediately before reset';
+await reload.mutate({action:'save',unitId:l.id,code:justEdited});
+await reload.mutate({action:'save',unitId:l.id,code:l.starter});
+assert.equal(reload.current.progress[0].code,l.starter);
+assert.ok((await reload.detail(l.id)).history.some(h=>h.code===justEdited));
+available=true;await reload.sync(true);
+assert.equal(remote.progress[0].code,l.starter);assert.equal(reload.status.pending,0);
+assert.ok((await reload.detail(l.id)).history.some(h=>h.code===justEdited));
 // Lost acknowledgment replay remains safe.
 await reload.mutate({action:'save',unitId:l.id,code:'committed once'});dropAck=true;await reload.sync(true);assert.equal(reload.status.pending,1);await reload.sync(true);assert.equal(reload.status.pending,0);assert.equal(remote.progress[0].code,'committed once');
 await reload.mutate({action:'quiz',unitId:l.id,answer:l.quiz.answer});if(l.math)await reload.mutate({action:'math',unitId:l.id,answer:l.math.answer});
@@ -63,5 +73,5 @@ Object.defineProperty(globalThis,'navigator',{value:{onLine:true},configurable:t
 await reload.mutate({action:'disconnect'});assert.equal(reload.current.aiProvider,null);
 // Account-scoped storage has no API key fields.
 assert.ok(!JSON.stringify(await readDevice('accounts','a'.repeat(64))).includes('encrypted_key'));
-console.log('Passed 9 offline client flows: in-flight edits, delayed cross-tab acknowledgment, reload, account switch, conflict recovery, lost acknowledgment, completion replay, credential exclusion and offline provider metadata.');
+console.log('Passed 10 offline client flows: in-flight edits, delayed cross-tab acknowledgment, reload, account switch, conflict recovery, starter reset history preservation, lost acknowledgment, completion replay, credential exclusion and offline provider metadata.');
 await rm(temp,{recursive:true,force:true});

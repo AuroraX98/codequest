@@ -1,23 +1,37 @@
 "use client";
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { Check, Copy } from "lucide-react";
 import { codeTokens, lessonBlocks } from "../lib/lesson-markup";
 import { codeLabel } from "../lib/code-language";
 export function InlineCode({ text }: { text: string }) {
-  const parts = text.split(/(`[^`\n]+`)/g);
-  return (
-    <>
-      {parts.map((part, i) =>
-        part.startsWith("`") && part.endsWith("`") && part.length > 2 ? (
-          <code className="inline-code" key={i}>
-            {part.slice(1, -1)}
-          </code>
-        ) : (
-          part
-        ),
-      )}
-    </>
-  );
+  // Tokenize code first so asterisks inside it remain literal source text.
+  const parts = text.split(/(`[^`\n]+`|\*\*)/g);
+  const content: ReactNode[] = [];
+  const renderPart = (part: string, key: number) =>
+    part.startsWith("`") && part.endsWith("`") && part.length > 2 ? (
+      <code className="inline-code" key={key}>
+        {part.slice(1, -1)}
+      </code>
+    ) : (
+      part
+    );
+  for (let i = 0; i < parts.length; i++) {
+    if (parts[i] === "**") {
+      const end = parts.indexOf("**", i + 1);
+      const inner = end > i ? parts.slice(i + 1, end) : [];
+      if (inner.length && inner.join("").trim()) {
+        content.push(
+          <strong key={i}>
+            {inner.map((part, offset) => renderPart(part, i + 1 + offset))}
+          </strong>,
+        );
+        i = end;
+        continue;
+      }
+    }
+    content.push(renderPart(parts[i], i));
+  }
+  return <>{content}</>;
 }
 export function CodeExample({
   code,

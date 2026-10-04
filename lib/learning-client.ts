@@ -272,19 +272,26 @@ export class LearningClient {
     this.emit();
     if (online && this.current.profile.autoSync) await this.sync();
   }
-  private async onlineAction(a: Action) {
+  private async onlineAction(a: Action, scope = this.scope) {
+    const accountChanged = () =>
+      this.scope !== scope ||
+      (a.deviceScope !== undefined && a.deviceScope !== scope);
+    if (accountChanged())
+      throw new Error("Account changed. Reopen your key settings.");
     const current = await this.remote();
-    if (current.draftScope !== this.scope)
+    if (accountChanged() || current.draftScope !== scope)
       throw new Error(
         "This tab belongs to a different account. Reopen it after signing into the original account.",
       );
     const r = await fetch("/api/quest", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...a, deviceScope: this.scope }),
+      body: JSON.stringify({ ...a, deviceScope: a.deviceScope ?? scope }),
     });
     const data = (await r.json()) as Reply;
     if (!r.ok) throw new Error(data.error ?? "Could not save to your account.");
+    if (accountChanged())
+      throw new Error("Account changed. Reopen your key settings.");
     return data;
   }
   async mutate(
@@ -293,19 +300,29 @@ export class LearningClient {
     QuestState | { state: QuestState; correct: boolean; feedback: string }
   > {
     if (["key", "disconnect"].includes(a.action)) {
+      const scope = this.scope;
+      if (!scope) throw new Error("Your learning account is still loading.");
+      if (a.deviceScope !== undefined && a.deviceScope !== scope)
+        throw new Error("Account changed. Reopen your key settings.");
+      const action = { ...a, deviceScope: a.deviceScope ?? scope };
       if (!navigator.onLine)
         throw new Error(
           "Key settings need an internet connection. Your key is never saved in an offline pack.",
         );
       await this.sync(true);
-      const data = (await this.onlineAction(a)) as QuestState;
+      if (this.scope !== scope)
+        throw new Error("Account changed. Reopen your key settings.");
+      const data = (await this.onlineAction(action, scope)) as QuestState;
+      if (this.scope !== scope || data.draftScope !== scope)
+        throw new Error("Account changed. Reopen your key settings.");
       if (this.status.storageAvailable) {
-        this.adopt(
-          await editAccount<Account>(this.scope, (r) => ({
-            ...r!,
-            remote: data,
-          })),
-        );
+        const record = await editAccount<Account>(scope, (r) => ({
+          ...r!,
+          remote: data,
+        }));
+        if (this.scope !== scope)
+          throw new Error("Account changed. Reopen your key settings.");
+        this.adopt(record);
       } else {
         this.current = data;
         this.emit();

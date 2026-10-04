@@ -10,12 +10,14 @@ export default function AIConnectionSettings({
   request,
   onSaved,
   onError,
+  beforeConnectionChange,
 }: {
   state: QuestState;
   online: boolean;
   request: (action: Action) => Promise<QuestState>;
   onSaved: (state: QuestState, message: string) => void;
   onError: (message: string) => void;
+  beforeConnectionChange?: () => Promise<void>;
 }) {
   const current = state.keyConnected ? (state.aiProvider ?? "deepseek") : null;
   const [changing, setChanging] = useState(false);
@@ -63,6 +65,7 @@ export default function AIConnectionSettings({
                 onClick={async () => {
                   setBusy(true);
                   try {
+                    await beforeConnectionChange?.();
                     onSaved(
                       await request({ action: "disconnect" }),
                       "Your AI assistant is disconnected. You can keep learning.",
@@ -128,6 +131,7 @@ export default function AIConnectionSettings({
                 if (busy || !online) return;
                 setBusy(true);
                 try {
+                  await beforeConnectionChange?.();
                   const next = await request({
                     action: "key",
                     provider: selection,
