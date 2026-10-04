@@ -11,7 +11,9 @@ export default function AIConnectionSettings({
   onSaved,
   onError,
   beforeConnectionChange,
+  localMode = false,
 }: {
+  localMode?: boolean;
   state: QuestState;
   online: boolean;
   request: (action: Action) => Promise<QuestState>;
@@ -199,9 +201,11 @@ export default function AIConnectionSettings({
         </p>
       )}
       <p className="muted">
-        Your key is encrypted on the server and excluded from offline storage
-        and downloads. When you ask, your question, current code, lesson notes,
-        and recent chat go to{" "}
+        {localMode
+          ? "Your key is encrypted in the local database on this computer"
+          : "Your key is encrypted on the server"}{" "}
+        and excluded from offline storage and downloads. When you ask, your
+        question, current code, lesson notes, and recent chat go to{" "}
         {current ? providers[current].name : "your chosen provider"}.
       </p>
       <p className="muted">

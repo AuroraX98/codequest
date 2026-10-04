@@ -4,6 +4,9 @@ import hostingConfig from "./.openai/hosting.json";
 import { readExecutionProfile } from "./scripts/execution-profile.mjs";
 import { sites } from "./build/sites-vite-plugin";
 import { connectorPreview } from "./build/connector-preview-plugin.mjs";
+import { localMode } from "./build/local-mode-plugin";
+import { prepareLocalRuntime } from "./scripts/local-runtime.mjs";
+import path from "node:path";
 
 const SITE_CREATOR_PLACEHOLDER_DATABASE_ID =
   "00000000-0000-4000-8000-000000000000";
@@ -37,6 +40,12 @@ const localBindingConfig = {
 };
 
 export default defineConfig(async ({ command }) => {
+  const local = process.env.CODEQUEST_LOCAL_MODE === "1";
+  if (local && command !== "serve")
+    throw new Error(
+      "Local mode is for npm run local only. Build hosted releases without CODEQUEST_LOCAL_MODE.",
+    );
+  const runtime = local ? await prepareLocalRuntime(process.cwd()) : null;
   // Use Miniflare's local Request.cf placeholder unless fetching is requested.
   process.env.CLOUDFLARE_CF_FETCH_ENABLED ??= "false";
   process.env.WRANGLER_SEND_METRICS ??= "false";
@@ -53,7 +62,27 @@ export default defineConfig(async ({ command }) => {
 
   return {
     server: {
-      ...(managedLinux
+      fs: {
+        deny: [
+          ".env",
+          ".env.*",
+          "**/.dev.vars*",
+          "*.{crt,pem}",
+          "**/.git/**",
+          "**/.wrangler/**",
+          "**/.sites-runtime/**",
+          "**/.codequest-local/**",
+        ],
+      },
+      ...(local
+        ? {
+            host: "127.0.0.1",
+            port: 5173,
+            strictPort: true,
+            allowedHosts: ["localhost"],
+          }
+        : {}),
+      ...(!local && managedLinux
         ? { host: "0.0.0.0", allowedHosts: ["terminal.local"] }
         : {}),
       ...(isCodexSeatbeltSandbox
@@ -61,15 +90,31 @@ export default defineConfig(async ({ command }) => {
         : {}),
     },
     plugins: [
+      ...(local ? [localMode()] : []),
       vinext(),
-      sites({ mockAuth: !managedLinux }),
-      connectorPreview(),
+      sites({ mockAuth: !local && !managedLinux }),
+      ...(!local ? [connectorPreview()] : []),
       cloudflare({
+        ...(runtime
+          ? {
+              configPath: runtime.configPath,
+              persistState: { path: runtime.statePath },
+              tunnel: false,
+              remoteBindings: false,
+            }
+          : {}),
         viteEnvironment: { name: "rsc", childEnvironments: ["ssr"] },
         inspectorPort: false,
         config: {
-          ...localBindingConfig,
-          ...(command === "serve"
+          ...(!runtime ? localBindingConfig : {}),
+          ...(runtime
+            ? {
+                name: "codequest-local",
+                main: path.resolve("build/sites-worker.ts"),
+                vars: { AI_KEY_ENCRYPTION_KEY: runtime.secret },
+              }
+            : {}),
+          ...(command === "serve" && !local
             ? {
                 services: [
                   {
@@ -81,7 +126,7 @@ export default defineConfig(async ({ command }) => {
               }
             : {}),
         },
-        ...(command === "serve"
+        ...(command === "serve" && !local
           ? {
               auxiliaryWorkers: [
                 {

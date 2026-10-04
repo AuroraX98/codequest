@@ -1,8 +1,11 @@
 import assert from "node:assert/strict";
-import { readFile, rm, writeFile } from "node:fs/promises";
+import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import ts from "typescript";
 const tmp = new URL("../.sites-runtime/navigation-test.mjs", import.meta.url);
 try {
+  await mkdir(new URL("../.sites-runtime/", import.meta.url), {
+    recursive: true,
+  });
   await writeFile(
     tmp,
     ts.transpileModule(

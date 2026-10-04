@@ -1,16 +1,16 @@
 # API key storage and removal
 
-Each person connects their own API key in CodeQuest. The app saves it encrypted on its server, tied to that person's signed-in account. It is excluded from the project's source files, offline downloads, and learning backups. Connecting a key in the app does not upload it to GitHub.
+Each person connects their own API key in CodeQuest. The hosted app saves it encrypted on its server, tied to that person's signed-in account. When started with `npm run local`, it saves the encrypted key in the private local database on that computer, without ChatGPT sign-in. It is excluded from the project's source files, offline downloads, and learning backups. Connecting a key in the app does not upload it to GitHub.
 
 If you connect using a local JSON file, read [Connect an API key from a file](api-key-file.md) for file permissions, browser support, and how to clear the local copy. A filled file contains readable text and belongs outside the repository. The downloadable public template contains no key.
 
 ## Remove your saved key from CodeQuest
 
-1. Connect to the internet and sign in to the CodeQuest account that saved the key.
+1. In the hosted app, connect to the internet and sign in to the CodeQuest account that saved the key. In local mode, start `npm run local` and open http://127.0.0.1:5173; no sign-in is needed.
 2. Open **Settings**, then find **Your AI assistant**. If you are choosing a replacement provider, select **Cancel** to return to the connected assistant.
 3. Select **Disconnect assistant**. Wait for the message saying your assistant is disconnected. The provider choices will appear again.
 
-This clears the key saved for that CodeQuest account. Turning off AI assistance, signing out, or clearing your browser's data does not remove the saved server key. Your lessons and saved projects remain available after disconnecting.
+This clears the key saved for that CodeQuest account or local learner. Turning off AI assistance, signing out, or clearing your browser's data does not remove the saved server key. Your lessons and saved projects remain available after disconnecting.
 
 Turning off **Allow this device to read my API key file** or selecting **Forget file** does not disconnect the saved server key. Editing or deleting the key in that file also leaves the server connection unchanged until you reread a valid changed file or select **Disconnect assistant**. A valid JSON file with an empty `apiKey` disconnects when read again; deleting the file itself does not do that.
 

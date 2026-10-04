@@ -33,6 +33,29 @@ Swift uses the downloadable macOS companion in Settings. It runs actual Swift co
 
 Backend and development-tool projects include additional editable files, downloads, and concrete instructions for local servers, Git, package managers, testing, and deployment. Local or Xcode steps have a separate explicit confirmation; browser checks alone do not certify those steps.
 
+## Run on your own computer without ChatGPT sign-in
+
+Install Node.js 22.13 or newer, download this repository using **Code → Download ZIP**, extract it, and open a terminal in the extracted folder. Run:
+
+```sh
+npm install
+npm run local
+```
+
+Open **http://127.0.0.1:5173** and leave the terminal running. Stop with Ctrl+C. Run `npm run local` again next time. This mode opens directly with one local learner and needs no ChatGPT account or hosting account. It is a development server for personal use on your computer; it refuses network access from other devices. The existing hosted app still uses ChatGPT sign-in.
+
+The first run downloads and verifies the coding runtimes, creates the learning database, applies migrations, and generates a private encryption key. Later runs reuse those files and apply only new migrations. Progress, history, settings, chat history, and encrypted AI credentials are stored in the ignored `.codequest-local/` folder. Browser drafts and AI practice projects also remain in this browser profile. Keep the same folder and browser address to keep using your saves. Download learning and practice backups before moving your work.
+
+AI is optional. In **Settings**, choose DeepSeek, OpenAI, or Claude and enter your own provider API key. Local mode encrypts it in the database on your computer. Questions, code, and lesson context are sent to that provider when you ask for help or generate a project. Provider API access needs internet and is billed by the provider. **Disconnect assistant** removes the saved connection; the optional key-file controls can separately clear a file you have allowed the app to edit. Never put a filled key file or `.codequest-local/` in GitHub.
+
+After the initial setup, lessons and the supported browser coding runtimes work without internet while the local server is running. AI and the first dependency/runtime downloads need internet. Offline learning downloads can also keep the learning interface available when the local server stops. Swift and projects that need a local server or Xcode retain their setup requirements.
+
+There is one local learner for each app folder. People sharing that computer/app folder share its server-side learning data, even in different browsers. Use separate operating-system accounts and separate app copies for separate learners. Local mode is not a public hosting or multiuser sign-in system. The encryption key protects credentials at rest; someone with access to both the private database and key can decrypt them. Keep your computer account and private backups secure. Do not delete the encryption key on its own: existing saved credentials would need reconnecting. Deleting the whole `.codequest-local/` folder resets local server data; browser drafts/practice are separate and can be removed through browser site-data controls.
+
+If port 5173 is already occupied, stop the other server and retry. If you see a database migration or damaged-key error, keep your private files and fix/restore them before continuing; startup stops rather than silently discarding learning data or replacing the encryption key.
+
+Validation: `node tests/local-mode.mjs` checks local request boundaries, spoofed identity removal, and private runtime initialization. The local server was also checked without sign-in for saved progress, quizzes, settings, backups, key disconnect, and restart persistence. Live AI replies require the user's own valid provider key.
+
 ## Development
 
 This public repository is a clean source snapshot. It contains no API keys, user database, or private deployment history. The existing hosted app keeps its own access settings. To publish your own copy with Sites, register it as a new project; the included `.openai/hosting.json` contains generic database bindings and no live project ID. API key storage requires your deployment's own `AI_KEY_ENCRYPTION_KEY` server secret. Never commit that secret or a user's key.

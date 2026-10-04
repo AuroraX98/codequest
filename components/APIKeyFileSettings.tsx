@@ -20,6 +20,7 @@ import type { QuestState } from "../lib/types";
 
 export type APIKeyFileSettingsHandle = { disableAuto(): Promise<void> };
 type Props = {
+  localMode?: boolean;
   ref?: Ref<APIKeyFileSettingsHandle>;
   state: QuestState;
   lesson: string;
@@ -135,12 +136,20 @@ export default function APIKeyFileSettings(props: Props) {
       </h3>
       <p>
         Keep your provider and key in a JSON file on your device. Reading it
-        connects that assistant to your signed-in CodeQuest account.
+        connects that assistant to{" "}
+        {props.localMode
+          ? "your local CodeQuest learner"
+          : "your signed-in CodeQuest account"}
+        .
       </p>
       <p className="muted">
         This local file contains your key as plain text. Keep it private and out
-        of GitHub. CodeQuest saves a read key encrypted on the server; file
-        contents and keys stay out of learning backups and offline downloads.
+        of GitHub. CodeQuest saves a read key encrypted{" "}
+        {props.localMode
+          ? "in this computer’s local database"
+          : "on the server"}
+        ; file contents and keys stay out of learning backups and offline
+        downloads.
       </p>
       <label className="setting-row">
         <span>
@@ -318,7 +327,7 @@ export default function APIKeyFileSettings(props: Props) {
       </div>
       <p className="muted">
         Turning file access off or forgetting a file stops future reads. It does
-        not remove the encrypted server key. Disconnect assistant removes that
+        not remove the encrypted saved key. Disconnect assistant removes that
         saved key; revoking it at the provider stops it from working everywhere.
       </p>
     </section>

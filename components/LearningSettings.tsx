@@ -17,7 +17,9 @@ export default function LearningSettings({
   onError,
   onResolved,
   beforeResolve,
+  localMode = false,
 }: {
+  localMode?: boolean;
   profile: Profile;
   prefs: (p: Partial<Profile>) => Promise<void>;
   device: LearningClient;
@@ -168,9 +170,12 @@ export default function LearningSettings({
           <span>
             <b>Sync when connected</b>
             <small>
-              Send device saves to your private account when the app is open and
-              you reconnect. Turning this off keeps changes on this device until
-              you press Sync now.
+              Send device saves to{" "}
+              {localMode
+                ? "this computer’s local database"
+                : "your private account"}{" "}
+              when the app is open and you reconnect. Turning this off keeps
+              changes on this device until you press Sync now.
             </small>
           </span>
           <input

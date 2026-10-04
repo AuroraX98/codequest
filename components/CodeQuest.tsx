@@ -145,9 +145,11 @@ function Choices({
 export default function CodeQuest({
   units,
   lessons,
+  localMode = false,
 }: {
   units: Unit[];
   lessons: Lesson[];
+  localMode?: boolean;
 }) {
   const device = useMemo(() => new LearningClient(lessons, empty), [lessons]);
   const request = (action: Parameters<LearningClient["mutate"]>[0]) =>
@@ -1118,7 +1120,11 @@ export default function CodeQuest({
           {ready && (
             <div className="device-status" role="status">
               <span>
-                {deviceStatus.online ? "Connected" : "Offline on this device"}
+                {deviceStatus.online
+                  ? localMode
+                    ? "Local mode · This computer"
+                    : "Connected"
+                  : "Offline on this device"}
                 {deviceStatus.pending
                   ? ` · ${deviceStatus.pending} changes waiting to sync`
                   : ""}
@@ -2310,9 +2316,17 @@ export default function CodeQuest({
                 <p className="eyebrow">MAKE IT YOURS</p>
                 <h1>A comfortable place to learn.</h1>
                 <p>Choose your pace and connect your coding buddy.</p>
+                {localMode && (
+                  <p role="status">
+                    Local mode · No ChatGPT sign-in. Progress and encrypted AI
+                    keys stay on this computer. Each copy has one local learner;
+                    use a separate computer account for another person.
+                  </p>
+                )}
               </div>
               <div className="settings-grid">
                 <LearningSettings
+                  localMode={localMode}
                   beforeResolve={saveCode}
                   profile={state.profile}
                   prefs={prefs}
@@ -2384,6 +2398,7 @@ export default function CodeQuest({
                   </p>
                 </section>
                 <AIConnectionSettings
+                  localMode={localMode}
                   key={state.draftScope}
                   state={state}
                   online={deviceStatus.online}
@@ -2402,9 +2417,11 @@ export default function CodeQuest({
                 <section className="panel">
                   <h3>Your work stays with you</h3>
                   <p>
-                    Your code, answers, settings, and progress save to your
-                    private account. Earlier versions are available in each
-                    project’s History.
+                    Your code, answers, settings, and progress save to{" "}
+                    {localMode
+                      ? "the local database on this computer"
+                      : "your private account"}
+                    . Earlier versions are available in each project’s History.
                   </p>
                   <div className="button-row">
                     <button
@@ -2501,6 +2518,7 @@ export default function CodeQuest({
             />
           )}
           <APIKeyFileSettings
+            localMode={localMode}
             ref={apiKeyFileSettings}
             state={state}
             lesson={activeId}

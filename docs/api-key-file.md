@@ -19,11 +19,11 @@ A filled file contains your key as readable text. Use a personal device and a fo
 
 ## Choose the file in CodeQuest
 
-1. Sign in while online and open **Settings → API key file (optional)**. **Download blank template** gives you an empty starting file.
+1. In the hosted app, sign in while online. In local mode, start `npm run local` and open http://127.0.0.1:5173 without signing in. Open **Settings → API key file (optional)**. **Download blank template** gives you an empty starting file.
 2. Turn on **Allow this device to read my API key file**, then select **Choose JSON file** and choose your private filled file. Allow access if your browser asks.
 3. Wait for the connection message before asking a question. Use **Read file again** after editing the file; Safari may ask you to choose it again.
 
-The app saves the chosen key encrypted on its server for your signed-in account. The file feature changes how you provide the key; live AI requests still use the account's saved server key and need internet. Keys are excluded from GitHub source, public assets, the offline pack, learning backups, and the coding project's downloadable files.
+The hosted app saves the chosen key encrypted on its server for your signed-in account. Local mode saves it encrypted in this computer's `.codequest-local/` database using its private encryption key; that folder is ignored by Git. The file feature changes how you provide the key; live AI requests still use the account's saved server key and need internet. Keys are excluded from GitHub source, public assets, the offline pack, learning backups, and the coding project's downloadable files.
 
 Browsers handle file access differently. In a supported browser, CodeQuest remembers a handle to your chosen file, the enabled setting, and the last provider for that account on that device. It does not save the key itself in browser storage. When you reopen the app or reconnect, it can reread the file if you are online, AI is enabled, and read permission is already granted. **Read file again** can ask you to grant permission if needed.
 

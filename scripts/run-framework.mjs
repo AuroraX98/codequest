@@ -5,8 +5,14 @@ import { readExecutionProfile } from "./execution-profile.mjs";
 const [command, ...args] = process.argv.slice(2);
 if (!["dev", "build"].includes(command))
   throw new Error("Expected dev or build.");
-const managedLinux = readExecutionProfile() === "managed-linux";
-const vendor = spawnSync(process.execPath, [fileURLToPath(new URL("./prepare-vendor.mjs", import.meta.url))], { stdio: "inherit" });
+const managedLinux =
+  process.env.CODEQUEST_LOCAL_MODE !== "1" &&
+  readExecutionProfile() === "managed-linux";
+const vendor = spawnSync(
+  process.execPath,
+  [fileURLToPath(new URL("./prepare-vendor.mjs", import.meta.url))],
+  { stdio: "inherit" },
+);
 if (vendor.status !== 0) process.exit(vendor.status ?? 1);
 const offline = spawnSync(
   process.execPath,

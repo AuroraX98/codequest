@@ -5,8 +5,12 @@ import lessons from "../content/lessons.json";
 import type { Unit, Lesson } from "../lib/types";
 export const dynamic = "force-dynamic";
 export default async function Home() {
-  await requireChatGPTUser("/");
+  const user = await requireChatGPTUser("/");
   return (
-    <CodeQuest units={catalog.units as Unit[]} lessons={lessons as Lesson[]} />
+    <CodeQuest
+      units={catalog.units as Unit[]}
+      lessons={lessons as Lesson[]}
+      localMode={user.userId === "codequest-local"}
+    />
   );
 }
