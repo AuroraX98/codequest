@@ -40,6 +40,21 @@ export function CodeExample({
   code: string;
   language: string;
 }) {
+  return (
+    <CodeExampleContent
+      key={JSON.stringify([language, code])}
+      code={code}
+      language={language}
+    />
+  );
+}
+function CodeExampleContent({
+  code,
+  language,
+}: {
+  code: string;
+  language: string;
+}) {
   const tokens = useMemo(() => codeTokens(code, language), [code, language]);
   const [copied, setCopied] = useState(false);
   const [copyError, setCopyError] = useState(false);
@@ -52,7 +67,7 @@ export function CodeExample({
           <button
             type="button"
             className="text-button"
-            aria-label="Copy example code"
+            aria-label={copied ? "Copied example code" : "Copy example code"}
             onClick={async () => {
               try {
                 await navigator.clipboard.writeText(code);
@@ -84,6 +99,9 @@ export function CodeExample({
           )}
         </code>
       </pre>
+      <small className="sr-only" role="status">
+        {copied ? "Example code copied." : ""}
+      </small>
       {copyError && <small role="status">Select the code to copy it.</small>}
     </figure>
   );

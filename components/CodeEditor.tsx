@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef } from "react";
+import { useEffect, useId, useRef } from "react";
 import {
   EditorView,
   keymap,
@@ -34,6 +34,7 @@ export default function CodeEditor({
   unitId: string;
 }) {
   const mount = useRef<HTMLDivElement>(null);
+  const keyboardHelpId = useId();
   const editor = useRef<EditorView | null>(null);
   const change = useRef(onChange);
   useEffect(() => {
@@ -58,6 +59,7 @@ export default function CodeEditor({
           keymap.of([...defaultKeymap, ...historyKeymap, indentWithTab]),
           EditorView.contentAttributes.of({
             "aria-label": "Project code editor",
+            "aria-describedby": keyboardHelpId,
             spellcheck: "false",
           }),
           EditorView.updateListener.of((u) => {
@@ -82,7 +84,10 @@ export default function CodeEditor({
             ".cm-activeLine": { backgroundColor: "var(--soft)" },
             ".cm-activeLineGutter": { backgroundColor: "transparent" },
             ".cm-scroller": { overflow: "auto" },
-            "&.cm-focused": { outline: "none" },
+            "&.cm-focused": {
+              outline: "2px solid var(--accent)",
+              outlineOffset: "-2px",
+            },
           }),
         ],
       }),
@@ -93,7 +98,7 @@ export default function CodeEditor({
       editor.current = null;
     }; // The document is synchronized separately; edits must not recreate the editor and clear undo.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [unitId, runtime]);
+  }, [unitId, runtime, keyboardHelpId]);
   useEffect(() => {
     const v = editor.current;
     if (v && v.state.doc.toString() !== code)
@@ -101,5 +106,13 @@ export default function CodeEditor({
         changes: { from: 0, to: v.state.doc.length, insert: code },
       });
   }, [code]);
-  return <div ref={mount} className="code-editor" />;
+  return (
+    <>
+      <div ref={mount} className="code-editor" />
+      <p id={keyboardHelpId} className="editor-keyboard-help muted">
+        Tab indents code (moves it to the right). To leave the editor, press
+        Escape, then Tab. Ctrl + Z (Command + Z on Mac) undoes an edit.
+      </p>
+    </>
+  );
 }

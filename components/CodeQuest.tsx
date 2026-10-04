@@ -42,6 +42,13 @@ import PracticeStudio from "./PracticeStudio";
 import { clarificationQuestion } from "../lib/lesson-selection";
 import { readProject, writeProject } from "../lib/project-files";
 import { runProject } from "../lib/runner";
+import {
+  normalizeRoute,
+  parseRoute,
+  routeHash,
+  topicMatches,
+  type QuestRoute,
+} from "../lib/navigation";
 import type {
   Unit,
   Lesson,
@@ -183,7 +190,8 @@ export default function CodeQuest({
     [search, setSearch] = useState(""),
     [celebrate, setCelebrate] = useState(false),
     [runnerToken, setRunnerToken] = useState(""),
-    [manualReviewed, setManualReviewed] = useState(false);
+    [manualReviewed, setManualReviewed] = useState(false),
+    [navigationReady, setNavigationReady] = useState(false);
   const frame = useRef<HTMLIFrameElement>(null),
     abort = useRef<AbortController | null>(null),
     codeRef = useRef(""),
@@ -202,7 +210,14 @@ export default function CodeQuest({
     tutorSequence = useRef(0),
     tutorFlight = useRef(false),
     tutorContextRef = useRef(""),
-    apiKeyFileSettings = useRef<APIKeyFileSettingsHandle>(null);
+    apiKeyFileSettings = useRef<APIKeyFileSettingsHandle>(null),
+    mainContent = useRef<HTMLElement>(null),
+    navigationReplace = useRef(true),
+    navigationSequence = useRef(0),
+    navigationPending = useRef(""),
+    lastLocation = useRef(""),
+    previousView = useRef(""),
+    viewScroll = useRef<Record<string, number>>({});
   useEffect(() => {
     if (!theoryFocusRequested.current) return;
     theoryFocusRequested.current = false;
@@ -243,19 +258,24 @@ export default function CodeQuest({
         (u) =>
           u.track === state.profile.track &&
           u.level === state.profile.level &&
-          (!search ||
-            u.topic.toLowerCase().includes(search.toLowerCase()) ||
-            u.project.title.toLowerCase().includes(search.toLowerCase())),
+          topicMatches(u.topic, u.project.title, search),
       ),
     [units, state.profile.track, state.profile.level, search],
   );
   const next =
-    visible.find(
-      (u) => !state.progress.find((p) => p.unitId === u.id)?.completedAt,
-    ) ?? visible[0];
+    units.find(
+      (u) =>
+        u.track === unit?.track &&
+        u.level === unit?.level &&
+        !state.progress.find((p) => p.unitId === u.id)?.completedAt,
+    ) ?? units.find((u) => u.track === unit?.track && u.level === unit?.level);
   const draftKey = (id: string) =>
     "codequest-draft-" + draftScope.current + "-" + id;
-  const loadLesson = (id: string, records: QuestState["progress"]) => {
+  const loadLesson = (
+    id: string,
+    records: QuestState["progress"],
+    resetPosition = true,
+  ) => {
     const lesson = lessons.find((l) => l.id === id);
     if (!lesson) return;
     const saved = records.find((p) => p.unitId === id)?.code;
@@ -273,7 +293,7 @@ export default function CodeQuest({
     isDirty.current = !!local && local !== saved;
     setResult(null);
     setFeedback("");
-    setParagraph(0);
+    if (resetPosition) setParagraph(0);
     setHint(-1);
     setHelperText("");
     setHistory([]);
@@ -340,12 +360,40 @@ export default function CodeQuest({
     });
     device
       .initialize()
-      .then((d) => {
+      .then(async (d) => {
         draftScope.current = d.draftScope;
+        let saved: Partial<QuestRoute> = {};
+        try {
+          saved = JSON.parse(
+            localStorage.getItem("codequest-navigation-" + d.draftScope) ??
+              "{}",
+          );
+        } catch {}
+        const restored = safeRoute(
+          parseRoute(location.hash, d.profile.activeUnit, units, lessons) ??
+            normalizeRoute(saved, d.profile.activeUnit, units, lessons),
+          d,
+        );
+        if (restored.activeId !== d.profile.activeUnit) {
+          const selected = units.find((u) => u.id === restored.activeId)!;
+          d = await request({
+            action: "preferences",
+            settings: {
+              activeUnit: selected.id,
+              track: selected.track,
+              level: selected.level,
+            },
+          });
+        }
         setState(d);
-        setActiveId(d.profile.activeUnit);
-        loadLesson(d.profile.activeUnit, d.progress);
+        setActiveId(restored.activeId);
+        loadLesson(restored.activeId, d.progress, false);
+        setView(restored.view);
+        setStudioMode(restored.studioMode);
+        setPhase(restored.phase);
+        setParagraph(restored.paragraph);
         setReady(true);
+        setNavigationReady(true);
         setSaveStatus(
           device.status.pending
             ? "Saved on this device · waiting to sync"
@@ -377,6 +425,155 @@ export default function CodeQuest({
     // Loading a different save must never replace the open editor automatically.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [device]);
+  function safeRoute(route: QuestRoute, account: QuestState): QuestRoute {
+    const target = lessons.find((l) => l.id === route.activeId);
+    if (
+      route.phase === "math" &&
+      (!account.profile.mathEnabled || !target?.math)
+    )
+      return { ...route, phase: "build" };
+    if (
+      route.phase === "done" &&
+      !account.progress.some(
+        (p) => p.unitId === route.activeId && p.completedAt,
+      )
+    )
+      return { ...route, phase: "build" };
+    return route;
+  }
+  const applyLocation = useEffectEvent(async () => {
+    const parsed = parseRoute(location.hash, activeId, units, lessons);
+    if (!parsed) {
+      navigationSequence.current++;
+      navigationPending.current = "";
+      historyReplaceCurrent();
+      return;
+    }
+    const target = safeRoute(parsed, state),
+      signature = routeHash(target);
+    if (
+      signature === routeHash({ view, studioMode, phase, activeId, paragraph })
+    ) {
+      if (
+        navigationPending.current &&
+        navigationPending.current !== signature
+      ) {
+        navigationSequence.current++;
+        navigationPending.current = "";
+      }
+      window.history.replaceState(window.history.state, "", signature);
+      return;
+    }
+    if (navigationPending.current === signature) return;
+    navigationPending.current = signature;
+    const sequence = ++navigationSequence.current;
+    try {
+      if (target.activeId !== unitRef.current) {
+        await saveCode();
+        if (sequence !== navigationSequence.current) return;
+        loadLesson(target.activeId, device.current.progress, false);
+      }
+      navigationReplace.current = true;
+      setActiveId(target.activeId);
+      setView(target.view);
+      setStudioMode(target.studioMode);
+      setPhase(target.phase);
+      setParagraph(target.paragraph);
+      window.history.replaceState(window.history.state, "", signature);
+    } catch (e) {
+      if (sequence !== navigationSequence.current) return;
+      setError((e as Error).message);
+      historyReplaceCurrent();
+    } finally {
+      if (sequence === navigationSequence.current)
+        navigationPending.current = "";
+    }
+  });
+  function historyReplaceCurrent() {
+    window.history.replaceState(
+      window.history.state,
+      "",
+      routeHash({ view, studioMode, phase, activeId, paragraph }),
+    );
+  }
+  useEffect(() => {
+    if (!navigationReady) return;
+    const changed = () => {
+      void applyLocation();
+    };
+    window.addEventListener("popstate", changed);
+    window.addEventListener("hashchange", changed);
+    return () => {
+      window.removeEventListener("popstate", changed);
+      window.removeEventListener("hashchange", changed);
+    };
+  }, [navigationReady]);
+  useEffect(() => {
+    if (!navigationReady) return;
+    const route = { view, studioMode, phase, activeId, paragraph },
+      hash = routeHash(route);
+    if (navigationPending.current && navigationPending.current !== hash) {
+      navigationSequence.current++;
+      navigationPending.current = "";
+    }
+    if (location.hash !== hash) {
+      if (navigationReplace.current)
+        window.history.replaceState(window.history.state, "", hash);
+      else window.history.pushState(null, "", hash);
+    }
+    navigationReplace.current = false;
+    try {
+      localStorage.setItem(
+        "codequest-navigation-" + draftScope.current,
+        JSON.stringify(route),
+      );
+    } catch {}
+    const labels: Record<string, string> = {
+      quest: "Your quest",
+      studio:
+        studioMode === "practice"
+          ? "AI practice · Build studio"
+          : "Build studio",
+      path: "Skill path",
+      progress: "Your progress",
+      settings: "Settings",
+    };
+    document.title =
+      (labels[view] ?? "Your quest") +
+      (view === "quest" || (view === "studio" && studioMode === "course")
+        ? " · " + (lesson?.title ?? "Course")
+        : "") +
+      " — CodeQuest";
+    if (
+      lastLocation.current &&
+      lastLocation.current.split("&idea=")[0] !== hash.split("&idea=")[0]
+    ) {
+      mainContent.current?.focus({ preventScroll: true });
+      window.scrollTo({
+        top:
+          previousView.current !== view ? (viewScroll.current[view] ?? 0) : 0,
+        behavior: "instant",
+      });
+    }
+    lastLocation.current = hash;
+    previousView.current = view;
+  }, [
+    view,
+    studioMode,
+    phase,
+    activeId,
+    paragraph,
+    navigationReady,
+    lesson?.title,
+  ]);
+  useEffect(() => {
+    const saveScroll = () => {
+      if (previousView.current)
+        viewScroll.current[previousView.current] = window.scrollY;
+    };
+    window.addEventListener("scroll", saveScroll, { passive: true });
+    return () => window.removeEventListener("scroll", saveScroll);
+  }, []);
   useEffect(() => {
     if (!ready || !lesson || !isDirty.current) return;
     const timer = setTimeout(autosave, 1000);
@@ -450,21 +647,35 @@ export default function CodeQuest({
   };
   const select = async (id: string) => {
     if (completionLock.current) return;
+    const sequence = ++navigationSequence.current;
+    navigationPending.current = routeHash({
+      view: "quest",
+      studioMode,
+      phase: "learn",
+      activeId: id,
+      paragraph: 0,
+    });
     try {
       await saveCode();
+      if (sequence !== navigationSequence.current) return;
       abort.current?.abort();
       const u = units.find((v) => v.id === id)!;
       const d = await request({
         action: "preferences",
         settings: { activeUnit: id, track: u.track, level: u.level },
       });
+      if (sequence !== navigationSequence.current) return;
       setState(d);
       setActiveId(id);
       loadLesson(id, d.progress);
       setView("quest");
       setPhase("learn");
     } catch (e) {
-      setError((e as Error).message);
+      if (sequence === navigationSequence.current)
+        setError((e as Error).message);
+    } finally {
+      if (sequence === navigationSequence.current)
+        navigationPending.current = "";
     }
   };
   const answer = async (kind: "quiz" | "math", n: number) => {
@@ -576,6 +787,11 @@ export default function CodeQuest({
         manualReview: manualReviewed,
       });
       setState(d);
+      if (
+        unitRef.current !== completionUnit ||
+        writeProject(codeRef.current, filesRef.current) !== completionSource
+      )
+        return;
       setPhase("done");
       if (!state.profile.calm && state.profile.rewardsEnabled) {
         setCelebrate(true);
@@ -785,9 +1001,27 @@ export default function CodeQuest({
         (state.profile.largeText ? " large-reading" : "")
       }
     >
+      <a
+        className="skip-link"
+        href="#main-content"
+        onClick={(event) => {
+          event.preventDefault();
+          mainContent.current?.focus();
+          mainContent.current?.scrollIntoView({ block: "start" });
+        }}
+      >
+        Skip to learning content
+      </a>
       <header className="topbar">
-        {/* eslint-disable-next-line @next/next/no-html-link-for-pages -- Shared with the standalone offline shell. */}
-        <a className="brand" href="/" aria-label="CodeQuest home">
+        <a
+          className="brand"
+          href="#quest"
+          aria-label="CodeQuest home"
+          onClick={(event) => {
+            event.preventDefault();
+            setView("quest");
+          }}
+        >
           <span className="brand-icon">
             <Code2 size={26} />
           </span>
@@ -816,7 +1050,7 @@ export default function CodeQuest({
       <div className="shell">
         <aside className="sidebar">
           <p className="eyebrow">YOUR NEXT CHAPTER</p>
-          <nav>
+          <nav aria-label="Main navigation">
             {[
               { id: "quest", label: "Your quest", icon: Flag },
               { id: "studio", label: "Build studio", icon: Braces },
@@ -826,6 +1060,7 @@ export default function CodeQuest({
               <button
                 key={n.id}
                 className={view === n.id ? "nav-item active" : "nav-item"}
+                aria-current={view === n.id ? "page" : undefined}
                 onClick={() => {
                   setView(n.id);
                   if (n.id === "studio") setPhase("build");
@@ -873,7 +1108,13 @@ export default function CodeQuest({
             </button>
           </div>
         </aside>
-        <main inert={completing}>
+        <main
+          id="main-content"
+          ref={mainContent}
+          tabIndex={-1}
+          aria-label="Learning workspace"
+          inert={completing}
+        >
           {ready && (
             <div className="device-status" role="status">
               <span>
@@ -1009,7 +1250,11 @@ export default function CodeQuest({
                         Change course <Map size={17} />
                       </button>
                     </div>
-                    <div className="phase-nav" aria-label="Lesson steps">
+                    <div
+                      className="phase-nav"
+                      role="group"
+                      aria-label="Lesson steps"
+                    >
                       {[
                         { id: "learn", name: "Learn", n: 1 },
                         { id: "practice", name: "Try it", n: 2 },
@@ -1021,6 +1266,7 @@ export default function CodeQuest({
                         <button
                           key={p.id}
                           className={phase === p.id ? "selected" : ""}
+                          aria-pressed={phase === p.id}
                           onClick={() => {
                             setPhase(p.id);
                             setFeedback("");
@@ -1302,6 +1548,8 @@ export default function CodeQuest({
                                 }
                               }}
                               aria-label="Saved code history"
+                              aria-expanded={showHistory}
+                              aria-controls="course-code-history"
                             >
                               <History size={18} />
                             </button>
@@ -1322,7 +1570,10 @@ export default function CodeQuest({
                           </div>
                         </div>
                         {showHistory && (
-                          <div className="panel history-panel">
+                          <div
+                            className="panel history-panel"
+                            id="course-code-history"
+                          >
                             <h3>Your earlier saves</h3>
                             <p>
                               Pick a version to restore it. Your current code is
@@ -1426,6 +1677,15 @@ export default function CodeQuest({
                                 frame.current.dataset.ready = "yes";
                             }}
                           />
+                          <p className="sr-only" role="status">
+                            {running
+                              ? "Running your project."
+                              : result
+                                ? result.error
+                                  ? "Your project needs a change. Check the error below."
+                                  : `${result.checks.filter((c) => c.passed).length} of ${result.checks.length} checks passed. ${result.checks.every((c) => c.passed) ? "Review your result below." : "Check the suggestions below."}`
+                                : ""}
+                          </p>
                           {!result && (
                             <p className="muted">
                               Run your project to see what happens.
@@ -1813,6 +2073,7 @@ export default function CodeQuest({
                         (state.profile.track === id ? "chosen" : "")
                       }
                       key={id}
+                      aria-pressed={state.profile.track === id}
                       onClick={() =>
                         prefs({ track: id, level: "beginner" }).catch((e) =>
                           setError(e.message),
@@ -1831,11 +2092,16 @@ export default function CodeQuest({
                 })}
               </div>
               <div className="path-toolbar">
-                <div className="segmented">
+                <div
+                  className="segmented"
+                  role="group"
+                  aria-label="Course level"
+                >
                   {["beginner", "intermediate", "advanced"].map((l) => (
                     <button
                       key={l}
                       className={state.profile.level === l ? "selected" : ""}
+                      aria-pressed={state.profile.level === l}
                       onClick={() =>
                         prefs({ level: l }).catch((e) => setError(e.message))
                       }
@@ -1857,6 +2123,18 @@ export default function CodeQuest({
                   objects before this course. React also uses HTML and CSS.
                 </p>
               )}
+              <div className="path-search-summary" role="status">
+                <p>
+                  Searching {names[state.profile.track]} · {state.profile.level}
+                  . {visible.length} {visible.length === 1 ? "topic" : "topics"}{" "}
+                  found, in learning order.
+                </p>
+                {search && (
+                  <button className="text-button" onClick={() => setSearch("")}>
+                    Clear search <X size={14} />
+                  </button>
+                )}
+              </div>
               <div className="path-list">
                 {visible.map((u, i) => {
                   const l = lessons.find((l) => l.id === u.id),
@@ -1890,7 +2168,14 @@ export default function CodeQuest({
                 })}
                 {!visible.length && (
                   <div className="panel">
-                    <p>No topics match. Try another level or search.</p>
+                    <p>
+                      No topics match in {names[state.profile.track]} ·{" "}
+                      {state.profile.level}. Try another word, choose a
+                      different course above, or clear your search.
+                    </p>
+                    <button className="secondary" onClick={() => setSearch("")}>
+                      Show topics in this course
+                    </button>
                   </div>
                 )}
               </div>
@@ -1953,7 +2238,7 @@ export default function CodeQuest({
                 <div className="panel reward-stat">
                   <Zap />
                   <strong>{state.xp}</strong>
-                  <span>XP earned</span>
+                  <span>Experience points (XP) earned</span>
                 </div>
                 <div className="panel reward-stat">
                   <Flame />

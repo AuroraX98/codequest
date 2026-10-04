@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import {
   Check,
   Download,
@@ -49,6 +49,18 @@ type Props = {
   runnerToken: string;
   onOpenAISettings: () => void;
 };
+const courseNames: Record<string, string> = {
+  javascript: "JavaScript",
+  python: "Python",
+  html: "HTML",
+  css: "CSS",
+  sql: "SQL",
+  swift: "Swift",
+  typescript: "TypeScript",
+  react: "React",
+  backend: "Back-end development",
+  "developer-toolkit": "Developer toolkit",
+};
 function download(name: string, content: string, json = false) {
   const url = URL.createObjectURL(
     new Blob([content], {
@@ -77,6 +89,20 @@ function checksPassed(
 }
 export default function PracticeStudio(props: Props) {
   const scope = props.state.draftScope;
+  const panelId = useId();
+  const historyId = `${panelId}-practice-history`;
+  const solutionId = `${panelId}-practice-solution`;
+  const theoryStart = useRef<HTMLDivElement>(null);
+  const focusTheoryAfterChange = useRef(false);
+  const courseGroups = useMemo(() => {
+    const groups = new Map<string, Unit[]>();
+    for (const unit of props.units) {
+      const group = groups.get(unit.track) ?? [];
+      group.push(unit);
+      groups.set(unit.track, group);
+    }
+    return [...groups.entries()];
+  }, [props.units]);
   const latest = useRef(props);
   latest.current = props;
   const mounted = useRef(false);
@@ -133,6 +159,7 @@ export default function PracticeStudio(props: Props) {
   const contextRef = useRef(context);
   contextRef.current = context;
   const adopt = (item: PracticeDraft) => {
+    focusTheoryAfterChange.current = false;
     local.current = {
       id: item.project.id,
       code: item.code,
@@ -151,6 +178,12 @@ export default function PracticeStudio(props: Props) {
     setShowHistory(false);
     setStatus("Practice saved on this device.");
   };
+  useEffect(() => {
+    const shouldFocus = focusTheoryAfterChange.current;
+    focusTheoryAfterChange.current = false;
+    if (shouldFocus && props.visible)
+      theoryStart.current?.focus({ preventScroll: true });
+  }, [theory, props.visible]);
   const validScope = () =>
     mounted.current && latest.current.state.draftScope === scope;
   const save = async () => {
@@ -527,10 +560,15 @@ export default function PracticeStudio(props: Props) {
             disabled={!!busy}
             onChange={(event) => setBaseUnitId(event.target.value)}
           >
-            {props.units.map((unit) => (
-              <option key={unit.id} value={unit.id}>
-                {unit.track} · {unit.level} · {unit.topic}
-              </option>
+            {courseGroups.map(([track, units]) => (
+              <optgroup key={track} label={courseNames[track] ?? track}>
+                {units.map((unit) => (
+                  <option key={unit.id} value={unit.id}>
+                    {unit.level.charAt(0).toUpperCase() + unit.level.slice(1)} ·{" "}
+                    {unit.topic}
+                  </option>
+                ))}
+              </optgroup>
             ))}
           </select>
         </label>
@@ -717,7 +755,13 @@ export default function PracticeStudio(props: Props) {
                 ? "The example solution passed these generated checks, and the starter left work to do. The checks may still miss other cases."
                 : "The example solution has not been verified here. Review the explanations and run the project before relying on its checks."}
             </p>
-            <div className="concept">
+            <div
+              className="concept"
+              ref={theoryStart}
+              tabIndex={-1}
+              role="region"
+              aria-label={`Practice explanation ${theory + 1} of ${project.project.explanation.length}`}
+            >
               <span className="small-tag">ONE IDEA AT A TIME</span>
               <LessonContent
                 text={project.project.explanation[theory] ?? ""}
@@ -730,14 +774,20 @@ export default function PracticeStudio(props: Props) {
                 <button
                   className="text-button"
                   disabled={theory === 0}
-                  onClick={() => setTheory((value) => value - 1)}
+                  onClick={() => {
+                    focusTheoryAfterChange.current = true;
+                    setTheory((value) => value - 1);
+                  }}
                 >
                   Back
                 </button>
                 <button
                   className="secondary"
                   disabled={theory >= project.project.explanation.length - 1}
-                  onClick={() => setTheory((value) => value + 1)}
+                  onClick={() => {
+                    focusTheoryAfterChange.current = true;
+                    setTheory((value) => value + 1);
+                  }}
                 >
                   Next explanation
                 </button>
@@ -872,6 +922,8 @@ export default function PracticeStudio(props: Props) {
               </button>
               <button
                 className="secondary"
+                aria-expanded={showHistory}
+                aria-controls={historyId}
                 onClick={() => setShowHistory((value) => !value)}
               >
                 <History size={16} /> History
@@ -891,7 +943,7 @@ export default function PracticeStudio(props: Props) {
               </button>
             </div>
             {showHistory && (
-              <div className="history-list">
+              <div className="history-list" id={historyId}>
                 {!draft.versions.length && (
                   <p>
                     No earlier versions yet. Your next change keeps the previous
@@ -1034,6 +1086,8 @@ export default function PracticeStudio(props: Props) {
               </button>
               <button
                 className="text-button"
+                aria-expanded={showSolution}
+                aria-controls={solutionId}
                 onClick={() => setShowSolution((value) => !value)}
               >
                 {showSolution
@@ -1048,7 +1102,7 @@ export default function PracticeStudio(props: Props) {
               />
             )}
             {showSolution && (
-              <>
+              <div id={solutionId} className="content-flow">
                 <p className="muted">
                   This is one generated example. Try your own approach first;
                   passing its checks does not prove every possible case.
@@ -1061,7 +1115,7 @@ export default function PracticeStudio(props: Props) {
                       : project.project.runtime
                   }
                 />
-              </>
+              </div>
             )}
           </section>
         </>
