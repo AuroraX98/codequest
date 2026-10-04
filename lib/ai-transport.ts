@@ -1,5 +1,6 @@
 import { providers, type AIProvider } from "./ai-providers";
 type Message = { role: "user" | "assistant"; content: string };
+export type ProviderOptions = { maxOutputTokens?: number };
 export class AssistantError extends Error {
   constructor(
     message: string,
@@ -13,12 +14,19 @@ export function providerRequest(
   key: string,
   system: string,
   messages: Message[],
+  options: ProviderOptions = {},
 ): {
   url: string;
   headers: Record<string, string>;
   body: Record<string, unknown>;
 } {
   const common = { model: providers[provider].model, stream: false };
+  const budget = options.maxOutputTokens;
+  if (
+    budget !== undefined &&
+    (!Number.isInteger(budget) || budget < 1 || budget > 6000)
+  )
+    throw new AssistantError("The AI request could not be prepared.", 500);
   if (provider === "openai")
     return {
       url: "https://api.openai.com/v1/responses",
@@ -32,7 +40,7 @@ export function providerRequest(
         input: messages,
         store: false,
         reasoning: { effort: "low" },
-        max_output_tokens: 6000,
+        max_output_tokens: budget ?? 6000,
       },
     };
   if (provider === "anthropic")
@@ -43,7 +51,7 @@ export function providerRequest(
         "anthropic-version": "2023-06-01",
         "Content-Type": "application/json",
       },
-      body: { ...common, system, messages, max_tokens: 1600 },
+      body: { ...common, system, messages, max_tokens: budget ?? 1600 },
     };
   return {
     url: "https://api.deepseek.com/chat/completions",
@@ -54,7 +62,7 @@ export function providerRequest(
     body: {
       ...common,
       messages: [{ role: "system", content: system }, ...messages],
-      max_tokens: 1600,
+      max_tokens: budget ?? 1600,
       thinking: { type: "disabled" },
     },
   };
@@ -115,8 +123,9 @@ export async function askProvider(
   system: string,
   messages: Message[],
   send: typeof fetch = fetch,
+  options: ProviderOptions = {},
 ) {
-  const request = providerRequest(provider, key, system, messages),
+  const request = providerRequest(provider, key, system, messages, options),
     name = providers[provider].name;
   let response: Response;
   try {

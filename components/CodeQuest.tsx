@@ -30,12 +30,15 @@ import {
 import { defaultProfile } from "../lib/profile";
 import { LearningClient, type DeviceStatus } from "../lib/learning-client";
 import AIConnectionSettings from "./AIConnectionSettings";
-import APIKeyFileSettings, { type APIKeyFileSettingsHandle } from "./APIKeyFileSettings";
+import APIKeyFileSettings, {
+  type APIKeyFileSettingsHandle,
+} from "./APIKeyFileSettings";
 import { providers } from "../lib/ai-providers";
 import LearningSettings from "./LearningSettings";
 import LessonContent, { InlineCode } from "./LessonContent";
 import CodeEditor from "./CodeEditor";
 import SelectionClarifier from "./SelectionClarifier";
+import PracticeStudio from "./PracticeStudio";
 import { clarificationQuestion } from "../lib/lesson-selection";
 import { readProject, writeProject } from "../lib/project-files";
 import { runProject } from "../lib/runner";
@@ -154,6 +157,7 @@ export default function CodeQuest({
   const [state, setState] = useState<QuestState>(empty),
     [ready, setReady] = useState(false),
     [view, setView] = useState("quest"),
+    [studioMode, setStudioMode] = useState<"course" | "practice">("course"),
     [phase, setPhase] = useState("learn"),
     [activeId, setActiveId] = useState("javascript-01"),
     [code, setCode] = useState(""),
@@ -908,8 +912,31 @@ export default function CodeQuest({
               </button>
             </div>
           )}
+          {ready && view === "studio" && (
+            <div
+              className="button-row"
+              role="group"
+              aria-label="Build studio mode"
+            >
+              <button
+                className={studioMode === "course" ? "primary" : "secondary"}
+                aria-pressed={studioMode === "course"}
+                onClick={() => setStudioMode("course")}
+              >
+                Course project
+              </button>
+              <button
+                className={studioMode === "practice" ? "primary" : "secondary"}
+                aria-pressed={studioMode === "practice"}
+                onClick={() => setStudioMode("practice")}
+              >
+                AI practice
+              </button>
+            </div>
+          )}
           {ready &&
-            (view === "quest" || view === "studio") &&
+            (view === "quest" ||
+              (view === "studio" && studioMode === "course")) &&
             lesson &&
             unit && (
               <>
@@ -2082,7 +2109,10 @@ export default function CodeQuest({
                     setFeedback(message);
                   }}
                   onError={setError}
-                  beforeConnectionChange={() => apiKeyFileSettings.current?.disableAuto() ?? Promise.resolve()}
+                  beforeConnectionChange={() =>
+                    apiKeyFileSettings.current?.disableAuto() ??
+                    Promise.resolve()
+                  }
                 />
                 <section className="panel">
                   <h3>Your work stays with you</h3>
@@ -2160,13 +2190,30 @@ export default function CodeQuest({
               </div>
             </>
           )}
-          {ready && !lesson && (view === "quest" || view === "studio") && (
-            <div className="panel">
-              <h2>Your course is being prepared.</h2>
-              <button className="primary" onClick={() => setView("path")}>
-                Explore the catalog
-              </button>
-            </div>
+          {ready &&
+            !lesson &&
+            (view === "quest" ||
+              (view === "studio" && studioMode === "course")) && (
+              <div className="panel">
+                <h2>Your course is being prepared.</h2>
+                <button className="primary" onClick={() => setView("path")}>
+                  Explore the catalog
+                </button>
+              </div>
+            )}
+          {ready && (
+            <PracticeStudio
+              key={state.draftScope}
+              state={state}
+              online={deviceStatus.online}
+              visible={view === "studio" && studioMode === "practice"}
+              units={units}
+              lessons={lessons}
+              activeId={activeId}
+              runnerUrl={state.profile.runnerUrl}
+              runnerToken={runnerToken}
+              onOpenAISettings={() => setView("settings")}
+            />
           )}
           <APIKeyFileSettings
             ref={apiKeyFileSettings}
