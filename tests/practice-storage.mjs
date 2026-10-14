@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { mkdtemp, readFile, writeFile, rm, symlink } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
+import { pathToFileURL } from "node:url";
 import ts from "typescript";
 import "fake-indexeddb/auto";
 const temp = await mkdtemp(path.join(tmpdir(), "codequest-practice-storage-"));
@@ -9,7 +10,7 @@ try {
   await symlink(
     path.resolve("node_modules"),
     path.join(temp, "node_modules"),
-    "dir",
+    process.platform === "win32" ? "junction" : "dir",
   );
   for (const name of [
     "practice-storage",
@@ -27,8 +28,8 @@ try {
       .outputText.replace(/from "\.\/([^\"]+)"/g, 'from "./$1.mjs"');
     await writeFile(path.join(temp, `${name}.mjs`), compiled);
   }
-  const storage = await import(path.join(temp, "practice-storage.mjs"));
-  const { readDevice } = await import(path.join(temp, "device-db.mjs"));
+  const storage = await import(pathToFileURL(path.join(temp, "practice-storage.mjs")).href);
+  const { readDevice } = await import(pathToFileURL(path.join(temp, "device-db.mjs")).href);
   const scope = "e".repeat(64),
     otherScope = "f".repeat(64);
   const fixture = (title = "Three apples") => ({

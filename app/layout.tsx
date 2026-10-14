@@ -5,10 +5,7 @@ export const metadata: Metadata = {
   title: "CodeQuest — Learn, play, build",
   description:
     "Your personal coding quest: original lessons, real projects, and small steps that make sense.",
-  other: {
-    "codex-preview": "development",
-  },
-  manifest:"/manifest.webmanifest",
+  manifest: "/manifest.webmanifest",
   icons: {
     icon: "/favicon.svg",
     shortcut: "/favicon.svg",

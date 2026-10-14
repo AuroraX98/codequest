@@ -93,7 +93,7 @@ export default function LearningSettings({
           <WifiOff size={21} /> Learning offline
         </h3>
         <p>
-          Download all 103 lessons, projects, and coding tools while you’re
+          Download the full lesson library, projects, and coding tools while you’re
           online. Then you can reopen the app and learn without a connection.
         </p>
         <span className={"connection " + (pack.ready ? "connected" : "")}>

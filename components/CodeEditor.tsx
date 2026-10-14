@@ -16,12 +16,23 @@ import {
 } from "@codemirror/commands";
 import {
   syntaxHighlighting,
-  defaultHighlightStyle,
+  HighlightStyle,
   indentOnInput,
   bracketMatching,
 } from "@codemirror/language";
+import { tags } from "@lezer/highlight";
 import { codeLanguage } from "../lib/code-language";
 import type { Runtime } from "../lib/types";
+const charcoalHighlight = HighlightStyle.define([
+  { tag: [tags.keyword, tags.bool, tags.operator], color: "#c6a1ff" },
+  { tag: [tags.string, tags.regexp], color: "#9ed8ae" },
+  { tag: [tags.number, tags.literal], color: "#ffc39d" },
+  { tag: tags.comment, color: "#a9b4c2", fontStyle: "italic" },
+  {
+    tag: [tags.typeName, tags.propertyName, tags.attributeName, tags.tagName],
+    color: "#99c8ff",
+  },
+]);
 export default function CodeEditor({
   code,
   onChange,
@@ -54,7 +65,7 @@ export default function CodeEditor({
           highlightActiveLine(),
           indentOnInput(),
           bracketMatching(),
-          syntaxHighlighting(defaultHighlightStyle),
+          syntaxHighlighting(charcoalHighlight),
           lang,
           keymap.of([...defaultKeymap, ...historyKeymap, indentWithTab]),
           EditorView.contentAttributes.of({
@@ -65,30 +76,38 @@ export default function CodeEditor({
           EditorView.updateListener.of((u) => {
             if (u.docChanged) change.current(u.state.doc.toString());
           }),
-          EditorView.theme({
-            "&": {
-              minHeight: "320px",
-              fontSize: "15px",
-              backgroundColor: "var(--editor)",
+          EditorView.theme(
+            {
+              "&": {
+                minHeight: "320px",
+                fontSize: "15px",
+                backgroundColor: "var(--editor)",
+              },
+              ".cm-content": {
+                fontFamily: "ui-monospace, SFMono-Regular, Consolas, monospace",
+                padding: "18px 8px",
+                caretColor: "var(--text)",
+              },
+              ".cm-cursor, .cm-dropCursor": { borderLeftColor: "var(--text)" },
+              ".cm-selectionBackground, &.cm-focused .cm-selectionBackground": {
+                backgroundColor: "#7050cf66",
+              },
+              ".cm-gutters": {
+                backgroundColor: "transparent",
+                border: "none",
+                color: "var(--muted)",
+                paddingLeft: "8px",
+              },
+              ".cm-activeLine": { backgroundColor: "var(--soft)" },
+              ".cm-activeLineGutter": { backgroundColor: "transparent" },
+              ".cm-scroller": { overflow: "auto" },
+              "&.cm-focused": {
+                outline: "2px solid var(--accent)",
+                outlineOffset: "-2px",
+              },
             },
-            ".cm-content": {
-              fontFamily: "ui-monospace, SFMono-Regular, Consolas, monospace",
-              padding: "18px 8px",
-            },
-            ".cm-gutters": {
-              backgroundColor: "transparent",
-              border: "none",
-              color: "var(--muted)",
-              paddingLeft: "8px",
-            },
-            ".cm-activeLine": { backgroundColor: "var(--soft)" },
-            ".cm-activeLineGutter": { backgroundColor: "transparent" },
-            ".cm-scroller": { overflow: "auto" },
-            "&.cm-focused": {
-              outline: "2px solid var(--accent)",
-              outlineOffset: "-2px",
-            },
-          }),
+            { dark: true },
+          ),
         ],
       }),
     });

@@ -1,10 +1,11 @@
 import assert from 'node:assert/strict';
 import {mkdtemp,readFile,writeFile,rm} from 'node:fs/promises';
 import {tmpdir} from 'node:os';import path from 'node:path';
+import {pathToFileURL} from 'node:url';
 import ts from 'typescript';import 'fake-indexeddb/auto';
 const temp=await mkdtemp(path.join(tmpdir(),'codequest-client-'));
 for(const f of ['learning-client','device-db','profile']){let source=await readFile(`lib/${f}.ts`,'utf8');let js=ts.transpileModule(source,{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.ESNext}}).outputText.replace(/from "\.\/([^"]+)"/g,'from "./$1.mjs"');await writeFile(path.join(temp,f+'.mjs'),js);}
-const {LearningClient}=await import(path.join(temp,'learning-client.mjs'));const {defaultProfile}=await import(path.join(temp,'profile.mjs'));const {readDevice}=await import(path.join(temp,'device-db.mjs'));
+const {LearningClient}=await import(pathToFileURL(path.join(temp,'learning-client.mjs')).href);const {defaultProfile}=await import(pathToFileURL(path.join(temp,'profile.mjs')).href);const {readDevice}=await import(pathToFileURL(path.join(temp,'device-db.mjs')).href);
 const lessons=JSON.parse(await readFile('content/lessons.json','utf8'));const l=lessons.find(l=>l.id==='javascript-02');
 Object.defineProperty(globalThis,'navigator',{value:{onLine:true},configurable:true});
 let remote={draftScope:'a'.repeat(64),profile:{...defaultProfile,autoSync:false},progress:[],xp:0,completed:0,streak:0,todayCompleted:0,recentDays:[],keyConnected:false,tutorUsed:0};

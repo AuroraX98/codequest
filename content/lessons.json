@@ -3444,9 +3444,9 @@
     "explanation": [
       "Asynchronous work can wait without preventing other asynchronous tasks from making progress. Python's asyncio module coordinates this. Define an asynchronous function with async def. Calling it creates a coroutine object, an operation that still needs to be awaited or scheduled to run. Await pauses that coroutine while its awaited operation finishes, letting the event loop coordinate other work. This is concurrency, not a promise that CPU-heavy Python code runs on several processors.",
       "A coroutine normally runs inside an event loop. `asyncio.run(main())` starts a loop, runs the main coroutine, and finishes the local program's asynchronous work. Inside an async function, `await asyncio.sleep(seconds)` creates a nonblocking practice wait. These examples are standalone scripts, so run them in a setting where no event loop is already running. They simulate delays locally rather than opening sockets or contacting a service.",
-      "This complete example shows a timeout.\n```python\nimport asyncio\n\nasync def timed_wait(delay, timeout):\n    try:\n        await asyncio.wait_for(asyncio.sleep(delay), timeout=timeout)\n    except asyncio.TimeoutError:\n        return \"timed out\"\n    return \"finished\"\n\nasync def main():\n    print(await timed_wait(0.001, 0.01))\n    print(await timed_wait(0.03, 0.01))\n\nasyncio.run(main())\n```\nUnder ordinary scheduling it prints finished, then timed out. Wait_for limits the intended wait and raises TimeoutError if the awaited operation is too slow. It requests cancellation of the awaited work; completing cancellation can make the total wall-clock wait exceed the stated timeout.",
+      "This complete example shows a timeout.\n```python\nimport asyncio\n\nasync def timed_wait(delay, timeout):\n    try:\n        await asyncio.wait_for(asyncio.sleep(delay), timeout=timeout)\n    except asyncio.TimeoutError:\n        return \"timed out\"\n    return \"finished\"\n\nasync def main():\n    print(await timed_wait(0.001, 0.2))\n    print(await timed_wait(0.6, 0.2))\n\nasyncio.run(main())\n```\nUnder ordinary scheduling it prints finished, then timed out. Wait_for limits the intended wait and raises TimeoutError if the awaited operation is too slow. It requests cancellation of the awaited work; completing cancellation can make the total wall-clock wait exceed the stated timeout.",
       "Bounded retries put a limit on how many attempts are allowed. `outcomes[:attempts]` slices from the beginning and excludes entries past that limit. A default parameter such as attempts=2 supplies a value when the caller omits that argument. Inside a loop, continue skips to the next attempt. Return exits the entire coroutine call, so it can immediately report an ordinary success or a non-timeout failure.",
-      "Here is a complete retrying fixture with concurrent collection.\n```python\nimport asyncio\n\nasync def collect(outcomes, attempts=2, timeout=0.02):\n    for outcome in outcomes[:attempts]:\n        delay = 0.05 if outcome == \"timeout\" else 0.001\n        try:\n            await asyncio.wait_for(asyncio.sleep(delay), timeout=timeout)\n        except asyncio.TimeoutError:\n            continue\n        if outcome == \"error\":\n            return \"failed\"\n        return outcome\n    return \"timed out\"\n\nasync def main():\n    results = await asyncio.gather(\n        collect([\"timeout\", \"complete\"]),\n        collect([\"error\"])\n    )\n    print(results)\n\nasyncio.run(main())\n```\nUnder ordinary scheduling it prints `['complete', 'failed']`. Gather runs the awaitable operations concurrently and returns results in input order. The first collector retries after its first timeout; the second reports the supplied error without retrying forever.",
+      "Here is a complete retrying fixture with concurrent collection.\n```python\nimport asyncio\n\nasync def collect(outcomes, attempts=2, timeout=0.2):\n    for outcome in outcomes[:attempts]:\n        delay = 0.6 if outcome == \"timeout\" else 0.001\n        try:\n            await asyncio.wait_for(asyncio.sleep(delay), timeout=timeout)\n        except asyncio.TimeoutError:\n            continue\n        if outcome == \"error\":\n            return \"failed\"\n        return outcome\n    return \"timed out\"\n\nasync def main():\n    results = await asyncio.gather(\n        collect([\"timeout\", \"complete\"]),\n        collect([\"error\"])\n    )\n    print(results)\n\nasyncio.run(main())\n```\nUnder ordinary scheduling it prints `['complete', 'failed']`. Gather runs the awaitable operations concurrently and returns results in input order. The first collector retries after its first timeout; the second reports the supplied error without retrying forever. The fixture leaves a wide timing gap: ordinary responses wait 0.001 seconds, each attempt allows 0.2 seconds, and a deliberately slow response waits 0.6 seconds. Operating-system timers are not exact, so this gap keeps a normal response well away from the timeout boundary.",
       "Cancellation asks scheduled work to stop. Create_task schedules a coroutine and returns a task object. Cancel requests cancellation; awaiting the task lets you observe that outcome. Here is a complete cancellation example.\n```python\nimport asyncio\n\nasync def main():\n    task = asyncio.create_task(asyncio.sleep(10))\n    task.cancel()\n    try:\n        await task\n    except asyncio.CancelledError:\n        print(\"Cancellation observed\")\n\nasyncio.run(main())\n```\nIt prints Cancellation observed. The example catches cancellation to demonstrate observation. In ordinary application code, cleanup often uses finally and cancellation is usually allowed to propagate after cleanup instead of being mistaken for a successful result.",
       "The matching probability assumes independent tries: one outcome does not change the next try's chance. If each try succeeds with chance 0.5, each fails with chance 0.5. Two failures together have chance 0.5 times 0.5, or 0.25. At least one success is the complement: 1 minus 0.25 equals 0.75. This calculation is valid only under the stated independence and fixed-probability assumptions; it is not a guarantee for any particular run.",
       "Your checks require ready after timeout then ready, failed after error, and timed out when two allowed attempts both time out even if a third outcome exists. Collect_pair must await gather and return [\"ready\", \"timed out\"]. Cancellation_observed must cancel and await a task, catch CancelledError, and return True. A timeout ends waiting according to the async mechanism; it does not prove a remote server did no work. These delays remain local fixtures, and unusually delayed scheduling can affect timing demonstrations."
@@ -3461,8 +3461,8 @@
       "Simulate a delay longer than timeout for timeout outcomes.",
       "Catch the timeout, then return timed out when attempts end."
     ],
-    "starter": "import asyncio\nasync def collect(outcomes, attempts=2, timeout=0.02):\n    # TODO: add a timeout and bounded retries\n    return \"not implemented\"",
-    "solution": "import asyncio\nasync def collect(outcomes, attempts=2, timeout=0.02):\n    for outcome in outcomes[:attempts]:\n        try:\n            await asyncio.wait_for(asyncio.sleep(0.05 if outcome == \"timeout\" else 0.001), timeout=timeout)\n        except asyncio.TimeoutError:\n            continue\n        if outcome == \"error\": return \"failed\"\n        return outcome\n    return \"timed out\"\nasync def collect_pair():\n    return await asyncio.gather(collect([\"timeout\",\"ready\"]), collect([\"timeout\"]))\nasync def cancellation_observed():\n    task=asyncio.create_task(asyncio.sleep(10))\n    task.cancel()\n    try: await task\n    except asyncio.CancelledError: return True\n    return False",
+    "starter": "import asyncio\nasync def collect(outcomes, attempts=2, timeout=0.2):\n    # TODO: add a timeout and bounded retries\n    return \"not implemented\"",
+    "solution": "import asyncio\nasync def collect(outcomes, attempts=2, timeout=0.2):\n    for outcome in outcomes[:attempts]:\n        try:\n            await asyncio.wait_for(asyncio.sleep(0.6 if outcome == \"timeout\" else 0.001), timeout=timeout)\n        except asyncio.TimeoutError:\n            continue\n        if outcome == \"error\": return \"failed\"\n        return outcome\n    return \"timed out\"\nasync def collect_pair():\n    return await asyncio.gather(collect([\"timeout\",\"ready\"]), collect([\"timeout\"]))\nasync def cancellation_observed():\n    task=asyncio.create_task(asyncio.sleep(10))\n    task.cancel()\n    try: await task\n    except asyncio.CancelledError: return True\n    return False",
     "runtime": "python",
     "checks": [
       {
@@ -3475,14 +3475,14 @@
       }
     ],
     "quiz": {
-      "question": "What does wait_for(coro, timeout=0.02) do?",
+      "question": "What does wait_for(coro, timeout=0.2) do?",
       "choices": [
-        "Stops waiting after 0.02 seconds",
+        "Requests cancellation after 0.2 seconds if unfinished",
         "Retries forever",
         "Starts a separate process"
       ],
       "answer": 0,
-      "explanation": "wait_for limits the wait to 0.02 seconds; after that it raises a timeout for the caller to handle."
+      "explanation": "wait_for gives the coroutine 0.2 seconds before requesting cancellation and reporting a timeout. It waits for cancellation to finish, so the total wall-clock wait can be longer."
     },
     "hints": [
       "Loop only over outcomes[:attempts].",
@@ -7082,5 +7082,753 @@
       }
     ],
     "externalNotes": "The browser checks the release decision function. A real security and accessibility review requires the specific project and current dependency information; fill the checklist with actual evidence."
+  },
+  {
+    "id": "javascript-20",
+    "title": "A tidy name badge",
+    "summary": "Write badge(name): trim outside spaces and return \"Hello, \" plus the name. For an empty or spaces-only name, return \"Hello, guest\". Keep spaces inside the name.",
+    "explanation": [
+      "A name typed into a form can contain extra spaces. A string is text. This project changes how that text is displayed without changing the original input. You already know functions and conditions; now you will combine them with a string method, an action attached to a text value.",
+      "Calling trim() removes whitespace from both ends of a string. Whitespace includes spaces and line breaks. The dot selects the method; parentheses call it. It does not squeeze spaces inside a name or change capital letters. Store the returned string, because JavaScript strings are not edited in place.",
+      "Here is a complete example.\n```javascript\nconst typed = \"  River Park  \";\nconst clean = typed.trim();\nconsole.log(clean);\nconsole.log(typed.length > clean.length);\n```\nIt prints River Park, then true. The middle space stays. length counts the string's UTF-16 code units; it is useful for this empty-text check but does not always count visible letters.",
+      "An empty string is written \"\". After trimming, compare the result with \"\" using ===. That comparison produces true or false. Decide on your fallback after cleanup, or a string containing only spaces could accidentally become a blank badge.",
+      "A fallback is the value you use when the usual input is missing.\n```javascript\nfunction label(text) {\n  const clean = text.trim();\n  if (clean === \"\") return \"Unnamed\";\n  return \"Name: \" + clean;\n}\nconsole.log(label(\"  Oak  \"));\nconsole.log(label(\"   \"));\n```\nThis prints Name: Oak, then Unnamed. return ends this function call and gives a value back to its caller.",
+      "The plus sign joins strings here. Both \"Hello, \" and a cleaned name are strings. Keep the comma and one space in the greeting. This function accepts strings only; accepting numbers or objects would need a separate decision about validation. Do not silently change someone's name to a different capitalization.",
+      "Write badge(name) and keep it reusable: checks call it with different names, spaces and an empty string. Try a name containing two words. Predict which spaces should remain before running it. The checks examine returned values, so displaying a greeting with console.log alone does not complete the function."
+    ],
+    "analogy": {
+      "familiar": "A name card with empty space around the writing",
+      "connection": "Cleanup removes unwanted space around the name before adding a greeting.",
+      "limit": "This does not judge whether the name is valid or change its spelling."
+    },
+    "steps": [
+      "Create badge(name), which accepts a string.",
+      "Trim the input before checking whether it is empty.",
+      "Return Hello, guest for a blank value; otherwise return Hello, plus the cleaned name.",
+      "Run the checks and try a two-word name."
+    ],
+    "starter": "function badge(name) {\n  // TODO: clean the name and return its greeting.\n  return \"\";\n}\nconsole.log(badge(\"  Mira  \"));",
+    "solution": "function badge(name) {\n  const clean = name.trim();\n  return \"Hello, \" + (clean === \"\" ? \"guest\" : clean);\n}\nconsole.log(badge(\"  Mira  \"));",
+    "runtime": "javascript",
+    "checks": [
+      {
+        "label": "A name loses outside spaces",
+        "expression": "badge(\"  Mira  \") === \"Hello, Mira\""
+      },
+      {
+        "label": "Blank input gets a useful fallback",
+        "expression": "badge(\"\") === \"Hello, guest\" && badge(\" \\n\\t \") === \"Hello, guest\""
+      },
+      {
+        "label": "Inside spaces and letters are preserved",
+        "expression": "badge(\"  Ana  Lee  \") === \"Hello, Ana  Lee\" && badge(\"zoë\") === \"Hello, zoë\""
+      }
+    ],
+    "quiz": {
+      "question": "What does \"  Pine Grove  \".trim() return?",
+      "choices": [
+        "\"Pine Grove\"",
+        "\"PineGrove\"",
+        "\"  Pine Grove  \""
+      ],
+      "answer": 0,
+      "explanation": "trim removes outside whitespace and preserves the space between the two words."
+    },
+    "hints": [
+      "Keep the result of name.trim() in a variable.",
+      "Compare the cleaned string with \"\".",
+      "Join \"Hello, \" to either \"guest\" or the cleaned name."
+    ],
+    "math": null,
+    "filename": "main.js",
+    "estimatedMinutes": 18
+  },
+  {
+    "id": "javascript-21",
+    "title": "A shared supply list",
+    "summary": "Write totals(rows). Each row has item and quantity. Return a Map that adds quantities for identical item names. Keep first-seen item order and leave the input unchanged. Quantities are nonnegative integers.",
+    "explanation": [
+      "Several people can request the same supply. A grouped total combines rows with the same item name. The input is an array of objects; each object has item and quantity. Your output will be a Map, a JavaScript collection that connects keys with values. An item name is the key and its running total is the value.",
+      "Create an empty Map with new Map(). Use set(key, value) to store a value and get(key) to read it. Getting a missing key returns undefined. Map keeps the order in which distinct keys were first inserted. Updating an existing key changes its value without moving it to the end.",
+      "This small example stores and updates one total.\n```javascript\nconst counts = new Map();\ncounts.set(\"paper\", 2);\ncounts.set(\"paper\", counts.get(\"paper\") + 3);\nconsole.log(counts.get(\"paper\"));\nconsole.log(counts.size);\n```\nIt prints 5 and then 1: two updates still describe one distinct item.",
+      "The ?? operator chooses its right-hand value when its left-hand value is null or undefined. For a missing item, counts.get(item) ?? 0 gives you a starting total of zero. This also preserves an existing zero. A for...of loop can then visit every request exactly once.",
+      "Here is a complete grouping example with a different input shape.\n```javascript\nconst names = [\"pen\", \"tape\", \"pen\"];\nconst counts = new Map();\nfor (const name of names) {\n  counts.set(name, (counts.get(name) ?? 0) + 1);\n}\nconsole.log([...counts]);\n```\nThe entries are [\"pen\", 2] and [\"tape\", 1], in that order. In your project, add each row's quantity instead of always adding one.",
+      "Map treats ordinary strings such as \"constructor\" as ordinary keys. This avoids the special inherited properties found on a plain object. Names are compared exactly here: \"Pen\" and \"pen\" are separate items. The requirements do not ask you to clean names, so do not silently merge them.",
+      "Create a fresh Map inside totals each time. Read each row without changing it. An empty input should produce an empty Map, and a zero-quantity request should still create its item. The checks use repeated and unusual names as well as different totals; hard-coding the displayed sample will not satisfy them."
+    ],
+    "analogy": {
+      "familiar": "A supply sheet with one line per item",
+      "connection": "Each Map key identifies the line whose total you update.",
+      "limit": "Names are matched exactly; the Map does not know that two different spellings might mean the same item."
+    },
+    "steps": [
+      "Create a new Map inside totals.",
+      "Loop through rows and read the previous total, defaulting to zero.",
+      "Add quantity and store the new total under item.",
+      "Return the Map and try an empty list."
+    ],
+    "starter": "function totals(rows) {\n  // TODO: group row.quantity by row.item.\n  return new Map();\n}\nconsole.log([...totals([{item: \"pen\", quantity: 2}])]);",
+    "solution": "function totals(rows) {\n  const result = new Map();\n  for (const row of rows) {\n    result.set(row.item, (result.get(row.item) ?? 0) + row.quantity);\n  }\n  return result;\n}\nconsole.log([...totals([{item: \"pen\", quantity: 2}])]);",
+    "runtime": "javascript",
+    "checks": [
+      {
+        "label": "Repeated supplies add in first-seen order",
+        "expression": "JSON.stringify([...totals([{item:\"pen\",quantity:2},{item:\"tape\",quantity:4},{item:\"pen\",quantity:3}])]) === JSON.stringify([[\"pen\",5],[\"tape\",4]])"
+      },
+      {
+        "label": "Empty, zero and unusual names work",
+        "expression": "totals([]).size === 0 && totals([{item:\"constructor\",quantity:0},{item:\"constructor\",quantity:2}]).get(\"constructor\") === 2 && totals([{item:\"paper\",quantity:0}]).has(\"paper\")"
+      },
+      {
+        "label": "Input stays unchanged and case stays distinct",
+        "expression": "(() => { const rows = Object.freeze([Object.freeze({item:\"Pen\",quantity:1}),Object.freeze({item:\"pen\",quantity:2})]); const result = totals(rows); return result.size === 2 && rows[0].quantity === 1; })()"
+      }
+    ],
+    "quiz": {
+      "question": "After set(\"pen\", 2) and set(\"pen\", 7), how many entries use the key \"pen\"?",
+      "choices": [
+        "Two entries",
+        "One entry, whose value is 7",
+        "One entry, whose value is 9"
+      ],
+      "answer": 1,
+      "explanation": "set replaces the value at an existing key. You must explicitly add the old quantity to get a total."
+    },
+    "hints": [
+      "Read row.item and row.quantity without changing the row.",
+      "Use result.get(row.item) ?? 0.",
+      "set the sum, then return result after the loop."
+    ],
+    "math": null,
+    "filename": "main.js",
+    "estimatedMinutes": 25
+  },
+  {
+    "id": "javascript-22",
+    "title": "A task board that keeps its old copy",
+    "summary": "Write toggleTask(tasks, id). Return a new array; copy the matching task with done reversed. Leave all other task objects and the original array unchanged. IDs are unique strings. If the ID is missing, return a new array with the same task objects.",
+    "explanation": [
+      "A task board may need its old state for undo or comparison. Mutation means changing an existing value in place. An immutable update creates the changed parts as new values and keeps the old state intact. This project practices that pattern with an array of task objects.",
+      "An array contains references to objects. Copying the array with [...tasks] creates a new array, but its task objects are still shared. Changing copied[0].done would also affect the object seen through tasks[0]. To change one task safely, create a new object for that task too.",
+      "This example copies both the changed array and object.\n```javascript\nconst before = [{ id: \"a\", done: false }];\nconst after = before.map(task => ({ ...task, done: true }));\nconsole.log(before[0].done);\nconsole.log(after[0].done);\n```\nIt prints false, then true. The object spread copies properties into a new object. The later done property replaces only that property in the new copy.",
+      "map calls a function for each array item and builds a new array from the returned values. Return a new object for the matching ID. Return the existing task for other IDs: unchanged objects can be shared safely because your function does not edit them. Preserve task order.",
+      "A conditional update can leave most objects shared.\n```javascript\nconst tasks = [{ id: \"a\", done: false }, { id: \"b\", done: true }];\nconst changed = tasks.map(task => task.id === \"b\"\n  ? { ...task, done: !task.done }\n  : task);\nconsole.log(changed[1].done);\nconsole.log(changed[0] === tasks[0]);\n```\nIt prints false and true. ! reverses a Boolean. === between objects checks whether they are the very same object.",
+      "This is a shallow copy: nested objects would still be shared unless you copy the nested part you change. Our tasks contain an ID, a Boolean done value and optional other properties. Keep those properties with object spread. The function assumes unique IDs, so a single requested ID refers to at most one task.",
+      "Check four cases: an unfinished task becomes finished, a finished task becomes unfinished, a missing ID leaves values alone, and an empty list remains empty. All cases return a fresh array. Compare the original after each call: preserving its data is part of success, not just getting the new checkbox value right."
+    ],
+    "analogy": {
+      "familiar": "A revised task sheet while keeping the previous version",
+      "connection": "The new array represents the revision and the copied task represents the change.",
+      "limit": "Object spread is shallow, so nested data may still be shared."
+    },
+    "steps": [
+      "Map over tasks to create a new array.",
+      "For the matching id, copy the task and reverse done.",
+      "Return unchanged tasks directly for other IDs.",
+      "Check that old objects and any title fields are preserved."
+    ],
+    "starter": "function toggleTask(tasks, id) {\n  // TODO: return a new array and copy only the matching task.\n  return tasks;\n}",
+    "solution": "function toggleTask(tasks, id) {\n  return tasks.map(task => task.id === id ? { ...task, done: !task.done } : task);\n}",
+    "runtime": "javascript",
+    "checks": [
+      {
+        "label": "The selected task toggles without losing its title",
+        "expression": "(() => { const t=[{id:\"a\",title:\"Read\",done:false}]; const n=toggleTask(t,\"a\"); return n!==t && n[0]!==t[0] && n[0].done===true && n[0].title===\"Read\" && t[0].done===false; })()"
+      },
+      {
+        "label": "Other tasks retain their identity and order",
+        "expression": "(() => { const t=[Object.freeze({id:\"a\",done:false}),Object.freeze({id:\"b\",done:true})]; const n=toggleTask(Object.freeze(t),\"b\"); return n[0]===t[0] && n[1].id===\"b\" && n[1].done===false; })()"
+      },
+      {
+        "label": "Missing IDs and empty lists return fresh arrays",
+        "expression": "(() => { const t=[{id:\"a\",done:false}]; const n=toggleTask(t,\"missing\"); const empty=[]; const e=toggleTask(empty,\"a\"); return n!==t && n[0]===t[0] && e!==empty && e.length===0; })()"
+      }
+    ],
+    "quiz": {
+      "question": "Why is [...tasks] alone insufficient before changing a task object?",
+      "choices": [
+        "It does not copy the array",
+        "Its task objects are still shared with the original",
+        "It changes every task immediately"
+      ],
+      "answer": 1,
+      "explanation": "The array is new, but its entries still refer to the original objects. Copy the object you will change as well."
+    },
+    "hints": [
+      "Use task.id === id to choose the task.",
+      "Write { ...task, done: !task.done } for the changed object.",
+      "Return the result of tasks.map, including when no ID matches."
+    ],
+    "math": null,
+    "filename": "main.js",
+    "estimatedMinutes": 25
+  },
+  {
+    "id": "javascript-23",
+    "title": "A note editor with reversible history",
+    "summary": "Write createHistory(initial), where notes are strings. Return methods current(), edit(text), undo(), redo(). Each method returns the current string. Undo/redo stop at the ends. Editing after undo discards the redo branch; editing the current text does nothing.",
+    "explanation": [
+      "Undo needs more than the current note: it needs previous versions and a position within them. Model the editor with an array of strings and an index called a cursor. An invariant is a fact that must stay true: the cursor always points to an existing version, and current() returns that version.",
+      "A closure is a function that keeps access to variables from where it was created. createHistory can create versions and cursor, then return methods that share those variables. Each call to createHistory gets its own storage. The caller can operate the editor without directly changing its internal array.",
+      "This small closure keeps a private counter.\n```javascript\nfunction makeCounter() {\n  let count = 0;\n  return { next() { count += 1; return count; } };\n}\nconst a = makeCounter();\nconst b = makeCounter();\nconsole.log(a.next(), a.next(), b.next());\n```\nIt prints 1 2 1. The two objects have separate count variables, just as two note histories should remain separate.",
+      "Undo moves the cursor left if an earlier version exists. Redo moves it right if a later version exists. Neither action changes the array. At the first or last version, return the current text unchanged. Avoid negative indexes or reading past the final entry.",
+      "Editing after undo creates a new branch.\n```javascript\nlet versions = [\"A\", \"B\", \"C\"];\nlet cursor = 1;\nversions = versions.slice(0, cursor + 1);\nversions.push(\"D\");\ncursor = versions.length - 1;\nconsole.log(versions, versions[cursor]);\n```\nThe versions are A, B, D and the current text is D. slice excludes its end index, so cursor + 1 keeps the current version before appending.",
+      "If the new text equals the current text, return immediately. A repeated edit should not create a duplicate undo step or remove a useful redo branch. Strings suit this exercise because callers cannot mutate a saved string in place. Saving arbitrary objects would require a clear copy or immutability policy.",
+      "Test sequences, not just isolated methods: edit A to B to C, undo to B, then edit D. Redo must remain D because C belongs to the abandoned branch. Also test an empty string, repeated undo at the beginning, duplicate edits and two independent histories. Those transitions expose mistakes a single happy path would miss."
+    ],
+    "analogy": {
+      "familiar": "A row of saved note cards with a marker on the current one",
+      "connection": "Undo moves the marker; a new edit after undo replaces the cards ahead of it.",
+      "limit": "Real editors may group keystrokes and limit history size; this exercise treats each edit call as one version."
+    },
+    "steps": [
+      "Keep versions and cursor inside createHistory.",
+      "Return current, edit, undo and redo methods.",
+      "Clamp undo/redo at the ends; cut off future versions on a new edit.",
+      "Ignore identical edits and test two independent histories."
+    ],
+    "starter": "function createHistory(initial) {\n  // TODO: store versions and a cursor in this closure.\n  return { current: () => initial, edit: text => initial, undo: () => initial, redo: () => initial };\n}",
+    "solution": "function createHistory(initial) {\n  let versions = [initial];\n  let cursor = 0;\n  const current = () => versions[cursor];\n  return {\n    current,\n    edit(text) {\n      if (text === current()) return current();\n      versions = versions.slice(0, cursor + 1);\n      versions.push(text); cursor += 1; return current();\n    },\n    undo() { cursor = Math.max(0, cursor - 1); return current(); },\n    redo() { cursor = Math.min(versions.length - 1, cursor + 1); return current(); }\n  };\n}",
+    "runtime": "javascript",
+    "checks": [
+      {
+        "label": "Undo and redo stop at the history boundaries",
+        "expression": "(() => {const h=createHistory(\"\"); return h.undo()===\"\" && h.edit(\"A\")===\"A\" && h.edit(\"B\")===\"B\" && h.undo()===\"A\" && h.undo()===\"\" && h.undo()===\"\" && h.redo()===\"A\" && h.redo()===\"B\" && h.redo()===\"B\";})()"
+      },
+      {
+        "label": "A new branch discards old redo steps",
+        "expression": "(() => {const h=createHistory(\"A\");h.edit(\"B\");h.edit(\"C\");h.undo();h.edit(\"D\");return h.redo()===\"D\" && h.undo()===\"B\" && h.redo()===\"D\";})()"
+      },
+      {
+        "label": "Duplicate edits preserve redo; histories are independent",
+        "expression": "(() => {const a=createHistory(\"A\"),b=createHistory(\"X\");a.edit(\"B\");a.undo();a.edit(\"A\");return a.redo()===\"B\" && a.undo()===\"A\" && b.current()===\"X\";})()"
+      }
+    ],
+    "quiz": {
+      "question": "You edit A → B → C, undo to B, then edit D. What should redo return?",
+      "choices": [
+        "C",
+        "D",
+        "A"
+      ],
+      "answer": 1,
+      "explanation": "Editing after undo discards the old future. D is now the final version."
+    },
+    "hints": [
+      "Start with [initial] and cursor 0.",
+      "Keep versions.slice(0, cursor + 1) before adding a new version.",
+      "Check equality before trimming redo history."
+    ],
+    "math": null,
+    "filename": "main.js",
+    "estimatedMinutes": 35
+  },
+  {
+    "id": "python-22",
+    "title": "A shelf label maker",
+    "summary": "Write shelf_label(item, count). Return a string like \"Pencil: 1 item\" or \"Pencil: 3 items\". Count is a nonnegative integer. Use \"item\" only when count equals 1; return the item name unchanged.",
+    "explanation": [
+      "A shelf label combines a name, a number and a unit. A string is text, while an integer is a whole number. Your function will format these values into one string. Formatting means choosing how values appear as text; it does not change the values stored in the input variables.",
+      "An f-string starts with f immediately before its opening quote. Braces { } mark expressions Python should evaluate and insert. A plain quoted string leaves braces as ordinary characters. Use a parameter name inside braces to make the result follow the input on every call.",
+      "This complete example inserts two values.\n```python\nname = \"Tape\"\nrolls = 4\nlabel = f\"{name}: {rolls} rolls\"\nprint(label)\n```\nIt prints Tape: 4 rolls. Python converts the number to text within the f-string. The colon and spaces are literal characters that you chose for the label.",
+      "Choose the singular word when count == 1. The double equals sign compares values; a single equals sign assigns a value. Zero uses the plural form in this English label. The requirement accepts only nonnegative integer counts, so this exercise does not need to handle negative stock or fractions.",
+      "You can choose a word before formatting the final text.\n```python\ndef ticket_label(count):\n    word = \"ticket\" if count == 1 else \"tickets\"\n    return f\"{count} {word}\"\nprint(ticket_label(1))\nprint(ticket_label(0))\n```\nThe output is 1 ticket and 0 tickets. The conditional expression chooses one value. An ordinary if/else block would also work.",
+      "return gives the completed label to the caller. print displays something and returns None. Keep shelf_label useful for both screen display and later storage by returning the string. The caller can then decide whether to print it. Preserve punctuation and spaces as stated so labels have a consistent shape.",
+      "Test a count of zero, one and several items. Try a two-word name and a name with a non-English letter: the function should carry the name through unchanged. These examples check the boundary where the wording changes. A single sample with three items would not reveal a mistaken singular rule."
+    ],
+    "analogy": {
+      "familiar": "A printed label with spaces for a name and quantity",
+      "connection": "The f-string fills those spaces using the current values.",
+      "limit": "Formatting text does not change inventory or validate the count."
+    },
+    "steps": [
+      "Define shelf_label with item and count parameters.",
+      "Choose item when count == 1; otherwise choose items.",
+      "Use an f-string to return the exact requested punctuation and spacing.",
+      "Try zero, one, twelve and a two-word name."
+    ],
+    "starter": "def shelf_label(item, count):\n    # TODO: choose item/items and return the formatted label.\n    return \"\"\n\nprint(shelf_label(\"Pencil\", 3))",
+    "solution": "def shelf_label(item, count):\n    word = \"item\" if count == 1 else \"items\"\n    return f\"{item}: {count} {word}\"\n\nprint(shelf_label(\"Pencil\", 3))",
+    "runtime": "python",
+    "checks": [
+      {
+        "label": "One uses the singular label",
+        "expression": "shelf_label(\"Pencil\", 1) == \"Pencil: 1 item\""
+      },
+      {
+        "label": "Zero and larger counts use plural labels",
+        "expression": "shelf_label(\"Tape\", 0) == \"Tape: 0 items\" and shelf_label(\"Clips\", 12) == \"Clips: 12 items\""
+      },
+      {
+        "label": "Names are preserved exactly",
+        "expression": "shelf_label(\"Blue pen\", 2) == \"Blue pen: 2 items\" and shelf_label(\"Café\", 1) == \"Café: 1 item\""
+      }
+    ],
+    "quiz": {
+      "question": "Which count should use \"item\" in this project?",
+      "choices": [
+        "Only 1",
+        "0 and 1",
+        "Every count"
+      ],
+      "answer": 0,
+      "explanation": "English uses the singular unit for one item; zero and the other allowed counts use items."
+    },
+    "hints": [
+      "Begin an f-string with f before the quote.",
+      "Place item, count and your chosen word inside braces.",
+      "Return f\"{item}: {count} {word}\"."
+    ],
+    "math": null,
+    "filename": "main.py",
+    "estimatedMinutes": 18
+  },
+  {
+    "id": "python-23",
+    "title": "An inventory import report",
+    "summary": "Write read_stock(text). Parse CSV with headers item,quantity. Return {\"totals\": {...}, \"rejected\": n}. Trim item names; accept quantities containing only ASCII digits after trimming, including zero. Reject blank names and invalid or missing quantities. Add repeated valid items. Completely blank lines are ignored.",
+    "explanation": [
+      "CSV means comma-separated values. It stores rows as text, often from a spreadsheet. A comma can also be part of a field, such as \"Pens, blue\", so splitting every line at every comma is unsafe. Python's standard csv module handles quoted fields and escaped quote characters for you.",
+      "csv.DictReader reads the first row as column names and returns dictionaries for following rows. io.StringIO lets a string behave like a text file, so the reader can process supplied text without writing a file. Import both csv and io. The input contract supplies the item and quantity headers and well-formed CSV quoting.",
+      "Here is a complete example with a comma inside a quoted name.\n```python\nimport csv\nimport io\ntext = 'item,quantity\\n\"Pens, blue\",2\\nTape,1\\n'\nfor row in csv.DictReader(io.StringIO(text)):\n    print(row[\"item\"], row[\"quantity\"])\n```\nThe first item is the single string Pens, blue. Quantities are still strings at this stage; the CSV reader does not choose numeric types for you.",
+      "Validation decides whether a row meets the project's requirements before you use it. Trim the item and quantity fields. A quantity must be nonempty and contain only characters from \"0123456789\". Reject -2, 2.5 and two. Leading zeroes such as 003 are accepted and represent 3. Missing fields can be None, so replace None with an empty string before trimming.",
+      "Validate first, then convert to an integer.\n```python\nraw = \" 003 \".strip()\nvalid = bool(raw) and all(char in \"0123456789\" for char in raw)\nif valid:\n    amount = int(raw)\n    print(amount)\n```\nIt prints 3. The explicit character set matches this project's ASCII-digit contract; some broader Unicode digit tests accept characters that int cannot convert.",
+      "Keep totals in a dictionary. totals.get(item, 0) reads the existing amount or starts at zero. Increase rejected for each invalid record and continue to the next record. csv.DictReader ignores completely blank lines; a row such as comma plus a quantity is a real record with a blank name and must be rejected.",
+      "Return both the totals and the rejection count so the caller can see what happened. This exercise rejects individual bad records; malformed CSV syntax and missing headers are outside its stated input contract. Test quoted commas, duplicate names, zero stock, a missing quantity and an empty file with only headers. Do not count the header as a stock row."
+    ],
+    "analogy": {
+      "familiar": "Checking a delivery sheet before adding items to a shelf",
+      "connection": "Each valid row contributes stock; rejected rows are counted for review.",
+      "limit": "The importer follows the written format and cannot decide whether a plausible number was typed incorrectly."
+    },
+    "steps": [
+      "Read records with csv.DictReader and io.StringIO.",
+      "Trim each field and reject blank names or quantities that are not ASCII digits.",
+      "Convert valid quantities to int and add them by item name.",
+      "Return totals plus rejected and test a quoted comma."
+    ],
+    "starter": "import csv\nimport io\n\ndef read_stock(text):\n    # TODO: read, validate and total each record.\n    return {\"totals\": {}, \"rejected\": 0}",
+    "solution": "import csv\nimport io\n\ndef read_stock(text):\n    totals = {}\n    rejected = 0\n    for row in csv.DictReader(io.StringIO(text)):\n        item = (row.get(\"item\") or \"\").strip()\n        raw = (row.get(\"quantity\") or \"\").strip()\n        if not item or not raw or not all(char in \"0123456789\" for char in raw):\n            rejected += 1\n            continue\n        totals[item] = totals.get(item, 0) + int(raw)\n    return {\"totals\": totals, \"rejected\": rejected}",
+    "runtime": "python",
+    "checks": [
+      {
+        "label": "Quoted commas and duplicate names total correctly",
+        "expression": "read_stock('item,quantity\\n\"Pens, blue\",2\\nTape,1\\n\"Pens, blue\",3\\n') == {\"totals\": {\"Pens, blue\": 5, \"Tape\": 1}, \"rejected\": 0}"
+      },
+      {
+        "label": "Bad quantities, missing fields and blank names are rejected",
+        "expression": "read_stock(\"item,quantity\\nA,-1\\nB,2.5\\nC,two\\n,4\\nD\\nE,²\\n\") == {\"totals\": {}, \"rejected\": 6}"
+      },
+      {
+        "label": "Zero, padded digits and blank lines work",
+        "expression": "read_stock(\"item,quantity\\n\\n Pen , 003 \\nEmpty,0\\nPen,2\\n\") == {\"totals\": {\"Pen\": 5, \"Empty\": 0}, \"rejected\": 0} and read_stock(\"item,quantity\\n\") == {\"totals\": {}, \"rejected\": 0}"
+      }
+    ],
+    "quiz": {
+      "question": "Why use csv.DictReader instead of splitting each row on commas?",
+      "choices": [
+        "It automatically fixes every invalid quantity",
+        "Quoted fields can contain commas that are part of a value",
+        "It removes the need for headers"
+      ],
+      "answer": 1,
+      "explanation": "The CSV reader understands quoting, so a comma inside a quoted item name does not split that item into two columns."
+    },
+    "hints": [
+      "Use (row.get(\"quantity\") or \"\").strip() for missing values.",
+      "Check raw is nonempty before all(char in \"0123456789\" for char in raw).",
+      "Increase totals[item] using totals.get(item, 0), and count invalid records separately."
+    ],
+    "math": null,
+    "filename": "main.py",
+    "estimatedMinutes": 25
+  },
+  {
+    "id": "python-24",
+    "title": "A reading log summary",
+    "summary": "Write reading_summary(text). The JSON input is a list of objects with book (string) and pages (nonnegative integer). Return {\"books\": distinct count, \"pages\": total, \"by_book\": totals dictionary}. Repeated book names combine; empty input list gives zero totals. Valid JSON and the stated field types are supplied.",
+    "explanation": [
+      "JSON means JavaScript Object Notation, but many languages use it to exchange data. It stores strings, numbers, arrays, objects, true, false and null. Python's json module translates JSON text into Python values. Here, a JSON array becomes a list and each JSON object becomes a dictionary.",
+      "Use json.loads(text) to parse a string. The s in loads refers to a string; json.load instead reads from an open file. Parsing checks JSON syntax, but it does not prove the result has your intended fields. This exercise supplies valid records so you can focus on turning them into a useful summary.",
+      "This complete example reads two entries.\n```python\nimport json\ntext = '[{\"book\":\"River\",\"pages\":8},{\"book\":\"River\",\"pages\":3}]'\nentries = json.loads(text)\nprint(entries[0][\"book\"])\nprint(sum(entry[\"pages\"] for entry in entries))\n```\nIt prints River and 11. Index 0 selects the first list entry; the string key \"book\" selects a dictionary value.",
+      "A session is one record; a book may have several sessions. Counting records would overstate the number of distinct books. Group pages by the exact book name using a dictionary. Each new name creates one key, and later sessions add to that key. Capitalization is significant under this project's contract.",
+      "Here is a small grouped sum.\n```python\nby_book = {}\nfor entry in [{\"book\": \"Hill\", \"pages\": 4}, {\"book\": \"Hill\", \"pages\": 6}]:\n    name = entry[\"book\"]\n    by_book[name] = by_book.get(name, 0) + entry[\"pages\"]\nprint(len(by_book))\nprint(sum(by_book.values()))\n```\nIt prints 1 and 10. len counts keys in the dictionary, while values() provides the grouped page totals.",
+      "A zero-page session still records a book name, so keep that name with a total of zero. The empty array [] has no names or pages; sum of an empty collection is zero. Return a dictionary with exactly the three requested result fields so callers can use it without reading printed text.",
+      "You can use json.dumps to turn a Python result back into JSON text when exporting, but this function must return the Python dictionary itself. Never use eval to parse outside data: it executes Python expressions. Test several sessions, several books and the empty list. Parsing malformed JSON or validating arbitrary field types is a separate extension."
+    ],
+    "analogy": {
+      "familiar": "Combining several reading sessions under each book title",
+      "connection": "Each title gets one page total, even when it appears several times.",
+      "limit": "Exact titles are the identifiers here; a real library may need unique IDs for books with the same title."
+    },
+    "steps": [
+      "Parse the input string with json.loads.",
+      "Build a dictionary of page totals under each exact book name.",
+      "Count dictionary keys and sum dictionary values.",
+      "Return books, pages and by_book, including the empty-list case."
+    ],
+    "starter": "import json\n\ndef reading_summary(text):\n    # TODO: parse the entries and group pages by book.\n    return {\"books\": 0, \"pages\": 0, \"by_book\": {}}",
+    "solution": "import json\n\ndef reading_summary(text):\n    by_book = {}\n    for entry in json.loads(text):\n        name = entry[\"book\"]\n        by_book[name] = by_book.get(name, 0) + entry[\"pages\"]\n    return {\"books\": len(by_book), \"pages\": sum(by_book.values()), \"by_book\": by_book}",
+    "runtime": "python",
+    "checks": [
+      {
+        "label": "Repeated sessions combine while distinct books are counted",
+        "expression": "reading_summary('[{\"book\":\"River\",\"pages\":8},{\"book\":\"Hill\",\"pages\":5},{\"book\":\"River\",\"pages\":3}]') == {\"books\": 2, \"pages\": 16, \"by_book\": {\"River\": 11, \"Hill\": 5}}"
+      },
+      {
+        "label": "The empty list produces an empty summary",
+        "expression": "reading_summary(\"[]\") == {\"books\": 0, \"pages\": 0, \"by_book\": {}}"
+      },
+      {
+        "label": "Zero sessions and exact book names are preserved",
+        "expression": "reading_summary('[{\"book\":\"Café\",\"pages\":0},{\"book\":\"café\",\"pages\":2}]') == {\"books\": 2, \"pages\": 2, \"by_book\": {\"Café\": 0, \"café\": 2}}"
+      }
+    ],
+    "quiz": {
+      "question": "A log has three records, all for the same book. How many distinct books are there?",
+      "choices": [
+        "3",
+        "1",
+        "It depends on the page total"
+      ],
+      "answer": 1,
+      "explanation": "Sessions are separate records, but the same book name forms one dictionary key."
+    },
+    "hints": [
+      "A row is a dictionary; use entry[\"book\"] and entry[\"pages\"].",
+      "Use by_book.get(name, 0) before adding the next session.",
+      "len(by_book) counts distinct names; sum(by_book.values()) totals pages."
+    ],
+    "math": null,
+    "filename": "main.py",
+    "estimatedMinutes": 25
+  },
+  {
+    "id": "python-25",
+    "title": "A workshop preparation planner",
+    "summary": "Write plan(tasks), where a dictionary maps task names to lists of prerequisite names. Return each task once with all prerequisites before it. Visit task names and each prerequisite list in alphabetical order for a reproducible result. Return None if a prerequisite is missing or a cycle exists. Keep input unchanged; the empty dictionary returns [].",
+    "explanation": [
+      "A workshop has tasks that depend on other tasks: paint requires sanding, and sanding requires cutting. A dependency is a task that must happen first. A graph describes these relationships using nodes for tasks and edges for dependencies. A valid ordering puts every prerequisite before the task that needs it.",
+      "A depth-first search follows prerequisites before finishing the current task. Recursion means a function calls itself on a smaller part of the problem. Keep a result list, a set of finished tasks and a set of tasks currently being visited. The visiting set describes the unfinished chain of calls, not every task you have ever seen.",
+      "This small example explores dependencies before printing a task.\n```python\ntasks = {\"paint\": [\"sand\"], \"sand\": []}\nfinished = set()\ndef visit(name):\n    if name in finished:\n        return\n    for before in tasks[name]:\n        visit(before)\n    finished.add(name)\n    print(name)\nvisit(\"paint\")\n```\nIt prints sand before paint. This first example assumes no cycles; your project must add cycle and missing-task handling.",
+      "A cycle means a chain comes back to an unfinished task, such as A needing B while B needs A. Neither can begin. Detect it by checking whether a task is already in visiting when you enter it. A finished task is different: it is safe to reuse and should not be added to the result twice.",
+      "The two sets have distinct jobs.\n```python\nvisiting = {\"build\", \"prepare\"}\nfinished = {\"collect\"}\nprint(\"build\" in visiting)\nprint(\"collect\" in finished)\nvisiting.remove(\"prepare\")\nfinished.add(\"prepare\")\n```\nThe two printed values are true. Moving a name from visiting to finished represents completing that task after its dependencies have been handled.",
+      "Before reading tasks[name], check that name exists. Return failure for missing prerequisites instead of inventing a task. Sort keys and dependency lists before visiting them to make the result reproducible. Sorting produces new lists, so it need not change the input. Independent tasks can have many valid orders; this project chooses one traversal rule for predictable checks.",
+      "Return None when any visit fails; otherwise return the accumulated list. The result is called a topological ordering. Its dependency traversal visits nodes and edges once apart from sorting, but Python recursion has a depth limit, so very deep production graphs need an iterative version. Test a chain, shared prerequisites, a missing name, a self-cycle and a longer cycle."
+    ],
+    "analogy": {
+      "familiar": "Preparing workshop jobs in an order that lets each job start",
+      "connection": "A prerequisite must be ready before the job that uses it.",
+      "limit": "This plan orders dependencies only; it does not estimate time, people or parallel work."
+    },
+    "steps": [
+      "Track visiting, finished and the ordered result inside plan.",
+      "In visit, reject missing names or names already being visited.",
+      "Visit sorted prerequisites, then mark the task finished and append it once.",
+      "Visit sorted task names; return None for a failure, otherwise return the result."
+    ],
+    "starter": "def plan(tasks):\n    # TODO: visit prerequisites, detect unfinished cycles and missing names.\n    return []",
+    "solution": "def plan(tasks):\n    visiting = set()\n    finished = set()\n    result = []\n    def visit(name):\n        if name not in tasks or name in visiting:\n            return False\n        if name in finished:\n            return True\n        visiting.add(name)\n        for before in sorted(tasks[name]):\n            if not visit(before):\n                return False\n        visiting.remove(name)\n        finished.add(name)\n        result.append(name)\n        return True\n    for name in sorted(tasks):\n        if not visit(name):\n            return None\n    return result",
+    "runtime": "python",
+    "checks": [
+      {
+        "label": "Shared prerequisites appear once in reproducible order",
+        "expression": "plan({\"paint\": [\"sand\", \"cover\"], \"sand\": [\"cut\"], \"cut\": [], \"cover\": [\"cut\"]}) == [\"cut\", \"cover\", \"sand\", \"paint\"]"
+      },
+      {
+        "label": "Cycles and missing prerequisites are reported",
+        "expression": "plan({\"a\": [\"b\"], \"b\": [\"a\"]}) is None and plan({\"a\": [\"a\"]}) is None and plan({\"a\": [\"missing\"]}) is None"
+      },
+      {
+        "label": "Empty and independent tasks work without changing input",
+        "expression": "plan({}) == [] and plan({\"z\": [], \"a\": []}) == [\"a\", \"z\"] and (lambda d: (plan(d) == [\"a\", \"b\", \"z\"] and d == {\"z\": [\"b\", \"a\"], \"b\": [], \"a\": []}))({\"z\": [\"b\", \"a\"], \"b\": [], \"a\": []})"
+      }
+    ],
+    "quiz": {
+      "question": "Reaching a task already in the visiting set means what?",
+      "choices": [
+        "It is safely finished",
+        "The current unfinished chain contains a cycle",
+        "The task has no prerequisites"
+      ],
+      "answer": 1,
+      "explanation": "Visiting holds the current unfinished chain. Returning to one of those tasks creates a circular dependency."
+    },
+    "hints": [
+      "Check visiting before treating a node as finished.",
+      "Add to visiting before recursion and remove after all prerequisites succeed.",
+      "Use sorted(tasks) and sorted(tasks[name]) without sorting input lists in place."
+    ],
+    "math": null,
+    "filename": "main.py",
+    "estimatedMinutes": 35
+  },
+  {
+    "id": "sql-10",
+    "title": "A supply category directory",
+    "summary": "Create a view named category_directory with one column, category. Read supplies, omit NULL and empty-string categories, and keep each remaining category once. Display the view sorted by category. Keep spaces and capitalization as stored; the supplied categories need no cleanup.",
+    "explanation": [
+      "A directory should list each category once even when many supplies belong to it. A SQL table stores rows under named columns. SELECT chooses columns; FROM chooses a table. DISTINCT removes duplicate result rows. This lesson builds a reusable directory from the supplies table rather than manually typing the category names.",
+      "SELECT DISTINCT category returns each different category value once. DISTINCT applies to the whole selected row. If you also select item_name, two rows with the same category and different items remain different rows. Choose only the column that defines the directory entry.",
+      "This self-contained example uses a temporary set of values.\n```sql\nWITH supplies(category) AS (\n  VALUES ('paper'), ('tools'), ('paper')\n)\nSELECT DISTINCT category\nFROM supplies\nORDER BY category;\n```\nThe result has paper and tools once each. WITH gives this query a named input; it does not create a permanent table.",
+      "NULL represents missing information. It differs from the empty string, which is present text of length zero. Use category IS NOT NULL to omit missing values and category <> '' to omit empty text. The AND keyword requires both conditions to hold. Neither condition trims spaces or changes spelling.",
+      "A filter can run before duplicate removal.\n```sql\nWITH labels(name) AS (VALUES ('A'), (NULL), (''), ('A'), ('B'))\nSELECT DISTINCT name\nFROM labels\nWHERE name IS NOT NULL AND name <> ''\nORDER BY name;\n```\nThe result is A and B. ORDER BY requests output order explicitly; SQL does not promise a useful row order when it is omitted.",
+      "A view is a saved query, not a separate copy of its results. CREATE VIEW category_directory AS followed by SELECT defines the reusable query. Later, SELECT * FROM category_directory ORDER BY category displays it. If a new category is added to supplies, the view reads the new data without rebuilding a manual list.",
+      "The setup file creates supplies for each run. Your query should create the view without changing those source rows, then display the sorted directory. Checks look for duplicates and omitted empty values in the supplied data. After passing, add a new category in setup.sql and rerun: a real view derives its results from the source instead of storing a manually typed list."
+    ],
+    "analogy": {
+      "familiar": "A directory with one heading for each kind of supply",
+      "connection": "DISTINCT keeps each category heading once.",
+      "limit": "Distinctness follows database comparison rules; it does not know that differently spelled names might mean the same thing."
+    },
+    "steps": [
+      "Inspect supplies in setup.sql.",
+      "Create category_directory using SELECT DISTINCT category.",
+      "Exclude NULL and empty text.",
+      "Select the view with ORDER BY category and run the checks."
+    ],
+    "starter": "CREATE VIEW category_directory AS\nSELECT category FROM supplies WHERE 0;\n\nSELECT * FROM category_directory ORDER BY category;",
+    "solution": "CREATE VIEW category_directory AS\nSELECT DISTINCT category\nFROM supplies\nWHERE category IS NOT NULL AND category <> '';\n\nSELECT * FROM category_directory ORDER BY category;",
+    "runtime": "sql",
+    "checks": [
+      {
+        "label": "Each nonempty category appears once",
+        "expression": "SELECT count(*) = 3 AND count(DISTINCT category) = 3 FROM category_directory"
+      },
+      {
+        "label": "The directory contains the source categories",
+        "expression": "SELECT (SELECT group_concat(category, '|') FROM (SELECT category FROM category_directory ORDER BY category)) = 'craft|paper|tools'"
+      },
+      {
+        "label": "Empty and missing categories are absent",
+        "expression": "SELECT count(*) = 0 FROM category_directory WHERE category IS NULL OR category = ''"
+      }
+    ],
+    "quiz": {
+      "question": "Why select only category with DISTINCT?",
+      "choices": [
+        "DISTINCT removes duplicate complete result rows",
+        "DISTINCT always keeps the first three rows",
+        "Selecting more columns always removes more duplicates"
+      ],
+      "answer": 0,
+      "explanation": "A different item name would make the complete row different, even when its category matches another row."
+    },
+    "hints": [
+      "Keep only category in the view's SELECT list.",
+      "Use WHERE category IS NOT NULL AND category <> ''.",
+      "Place DISTINCT immediately after SELECT."
+    ],
+    "math": null,
+    "filename": "query.sql",
+    "estimatedMinutes": 18,
+    "extraFiles": [
+      {
+        "name": "setup.sql",
+        "code": "CREATE TABLE supplies(id INTEGER PRIMARY KEY, item_name TEXT NOT NULL, category TEXT);\nINSERT INTO supplies VALUES (1,'Notebook','paper'),(2,'Scissors','tools'),(3,'Card','paper'),(4,'Ribbon','craft'),(5,'Unknown',NULL),(6,'Unsorted','');"
+      }
+    ]
+  },
+  {
+    "id": "sql-11",
+    "title": "A reachable contact list",
+    "summary": "Create a view contact_choices with id, name and contact for every row in contacts. Prefer a nonempty trimmed email, then a nonempty trimmed phone, otherwise use \"No contact yet\". The stored values can be NULL, empty, or contain outside spaces. Do not change the source table.",
+    "explanation": [
+      "A contact record may be missing an email, a phone number or both. NULL means a missing or unknown value in SQL. An empty string and spaces-only text are present strings, so they need cleanup before a fallback can treat them as missing. This project makes one useful display value per person.",
+      "TRIM(text) removes outside spaces in SQLite. It preserves spaces inside a phone number. TRIM(NULL) remains NULL. NULLIF(value, '') returns NULL when value is an empty string and otherwise returns value. Combining them turns an empty or spaces-only field into NULL.",
+      "This example shows the cleanup step.\n```sql\nWITH data(email) AS (VALUES ('  a@example.org  '), (''), ('   '), (NULL))\nSELECT NULLIF(TRIM(email), '') AS cleaned\nFROM data;\n```\nThe first result is a@example.org. The remaining values are NULL. AS cleaned gives the output column a useful name.",
+      "COALESCE chooses the first argument that is not NULL. Its argument order expresses your preference: cleaned email first, cleaned phone second, a written fallback last. COALESCE does not consider a plain empty string missing; that is why the NULLIF cleanup matters.",
+      "Here is a complete fallback example.\n```sql\nWITH people(email, phone) AS (VALUES ('   ', ' 555 0100 '))\nSELECT COALESCE(\n  NULLIF(TRIM(email), ''),\n  NULLIF(TRIM(phone), ''),\n  'No contact yet'\n) AS contact\nFROM people;\n```\nIt returns 555 0100. The outside spaces disappear but the internal space remains.",
+      "This is a display choice, not proof that an email or phone number is valid or reachable. Do not invent stricter validation than the task requests. Keep id and name in the view so a caller can associate the chosen contact with the right person. Every input person should produce one output row.",
+      "Create the contact_choices view and display it ordered by id. Check a person with both fields, phone only, neither field and spaces-only email. The preference rule must keep email when both are available. The source table should remain unchanged because formatting a view need not edit saved contact details."
+    ],
+    "analogy": {
+      "familiar": "Choosing the first usable contact line on a form",
+      "connection": "The ordered fallbacks try email, then phone, then a clear missing-contact message.",
+      "limit": "A nonempty value can still be mistyped; choosing it does not verify that it works."
+    },
+    "steps": [
+      "Clean each contact field with TRIM and NULLIF.",
+      "Use COALESCE in email, phone, fallback order.",
+      "Create a view with id, name and contact for every person.",
+      "Display by id and inspect the source data preservation check."
+    ],
+    "starter": "CREATE VIEW contact_choices AS\nSELECT id, name, 'No contact yet' AS contact FROM contacts;\nSELECT * FROM contact_choices ORDER BY id;",
+    "solution": "CREATE VIEW contact_choices AS\nSELECT id, name, COALESCE(NULLIF(TRIM(email), ''), NULLIF(TRIM(phone), ''), 'No contact yet') AS contact\nFROM contacts;\nSELECT * FROM contact_choices ORDER BY id;",
+    "runtime": "sql",
+    "checks": [
+      {
+        "label": "Email is preferred and outside spaces are removed",
+        "expression": "SELECT count(*) = 1 FROM contact_choices WHERE id=1 AND name='Mira' AND contact='mira@example.org'"
+      },
+      {
+        "label": "Phone fallback preserves internal spaces",
+        "expression": "SELECT count(*) = 2 FROM contact_choices WHERE (id=2 AND contact='555 0102') OR (id=4 AND contact='555 0104')"
+      },
+      {
+        "label": "Every person remains, including a fully missing contact",
+        "expression": "SELECT (SELECT count(*) FROM contact_choices)=4 AND (SELECT contact FROM contact_choices WHERE id=3)='No contact yet'"
+      },
+      {
+        "label": "Display formatting does not edit stored data",
+        "expression": "SELECT email='  mira@example.org  ' FROM contacts WHERE id=1"
+      }
+    ],
+    "quiz": {
+      "question": "What does COALESCE('', 'phone') return?",
+      "choices": [
+        "phone",
+        "An empty string",
+        "NULL"
+      ],
+      "answer": 1,
+      "explanation": "COALESCE skips NULL values, but an empty string is not NULL. NULLIF can turn the empty string into NULL first."
+    },
+    "hints": [
+      "NULLIF(TRIM(email), '') handles empty and spaces-only email.",
+      "Apply the same cleanup to phone.",
+      "Put 'No contact yet' last in COALESCE."
+    ],
+    "math": null,
+    "filename": "query.sql",
+    "estimatedMinutes": 25,
+    "extraFiles": [
+      {
+        "name": "setup.sql",
+        "code": "CREATE TABLE contacts(id INTEGER PRIMARY KEY, name TEXT NOT NULL, email TEXT, phone TEXT);\nINSERT INTO contacts VALUES (1,'Mira','  mira@example.org  ','555 0101'),(2,'Sam',NULL,' 555 0102 '),(3,'Lee','','   '),(4,'Jo','   ','555 0104');"
+      }
+    ]
+  },
+  {
+    "id": "sql-12",
+    "title": "An order status dashboard",
+    "summary": "Create a view customer_orders with customer_id, name, total_orders, paid_orders and paid_cents. Include every customer, even those without orders. Count all their orders, count only status=\"paid\" orders, and sum only paid amounts. Missing totals must be zero. Amounts are nonnegative integer cents.",
+    "explanation": [
+      "A dashboard may need several summaries from the same data. Aggregation combines rows, using functions such as COUNT and SUM. Conditional aggregation adds a decision inside the aggregate so different summary columns can include different rows. Here, a customer can have paid, pending or cancelled orders.",
+      "Start from customers and LEFT JOIN orders using the customer ID. A left join keeps a customer even when no order matches. The unmatched order columns become NULL. COUNT(*) would count that retained row as one, so use COUNT(o.id) to count only real orders; COUNT(column) skips NULL.",
+      "CASE turns a condition into a value before SUM adds it.\n```sql\nWITH orders(status, cents) AS (VALUES ('paid', 300), ('pending', 500), ('paid', 200))\nSELECT SUM(CASE WHEN status = 'paid' THEN 1 ELSE 0 END) AS paid_orders,\n       SUM(CASE WHEN status = 'paid' THEN cents ELSE 0 END) AS paid_cents\nFROM orders;\n```\nThis returns 2 paid orders and 500 paid cents. The pending amount is deliberately excluded.",
+      "GROUP BY chooses which rows belong to each summary. Group by customer ID and name. Names alone are unsafe because two different customers can share a name. Aliases such as c for customers and o for orders shorten qualified column names, including c.id and o.customer_id.",
+      "This example keeps a customer with no order.\n```sql\nWITH customers(id) AS (VALUES (1), (2)),\norders(id, customer_id) AS (VALUES (10, 1))\nSELECT c.id, COUNT(o.id) AS total_orders\nFROM customers AS c LEFT JOIN orders AS o ON o.customer_id = c.id\nGROUP BY c.id\nORDER BY c.id;\n```\nCustomer 1 has one order; customer 2 has zero. An inner join would lose customer 2 entirely.",
+      "Do not place WHERE o.status = 'paid' after the join: it would remove unpaid orders before total_orders is counted and remove customers without paid orders. Put that condition inside each paid aggregate. CASE with ELSE 0 gives the retained no-order row a zero contribution.",
+      "Integer cents avoid floating-point rounding for this small monetary total. The view summarizes orders; it does not charge anyone or infer payment from an amount. Checks include two customers sharing a name, a customer with no orders and unpaid orders that must not count toward revenue. Display the final view ordered by customer_id."
+    ],
+    "analogy": {
+      "familiar": "One summary line for each customer on a shop report",
+      "connection": "Conditional totals count different kinds of orders without losing the customer.",
+      "limit": "A summary depends on the stored status; it does not verify that a real payment occurred."
+    },
+    "steps": [
+      "Left join customers to orders by customer ID.",
+      "Count o.id for all orders.",
+      "Use separate CASE expressions for paid order count and paid amount sum.",
+      "Group by customer ID and name, then display the view."
+    ],
+    "starter": "CREATE VIEW customer_orders AS\nSELECT id AS customer_id, name, 0 AS total_orders, 0 AS paid_orders, 0 AS paid_cents FROM customers;\nSELECT * FROM customer_orders ORDER BY customer_id;",
+    "solution": "CREATE VIEW customer_orders AS\nSELECT c.id AS customer_id, c.name, COUNT(o.id) AS total_orders,\n       SUM(CASE WHEN o.status = 'paid' THEN 1 ELSE 0 END) AS paid_orders,\n       SUM(CASE WHEN o.status = 'paid' THEN o.amount_cents ELSE 0 END) AS paid_cents\nFROM customers AS c LEFT JOIN orders AS o ON o.customer_id = c.id\nGROUP BY c.id, c.name;\nSELECT * FROM customer_orders ORDER BY customer_id;",
+    "runtime": "sql",
+    "checks": [
+      {
+        "label": "All orders count, but only paid amounts contribute",
+        "expression": "SELECT count(*)=1 FROM customer_orders WHERE customer_id=1 AND name='Alex' AND total_orders=3 AND paid_orders=2 AND paid_cents=1750"
+      },
+      {
+        "label": "A customer with no orders stays with zero totals",
+        "expression": "SELECT count(*)=1 FROM customer_orders WHERE customer_id=2 AND total_orders=0 AND paid_orders=0 AND paid_cents=0"
+      },
+      {
+        "label": "Matching names remain separate and unpaid orders stay unpaid",
+        "expression": "SELECT (SELECT count(*) FROM customer_orders)=3 AND (SELECT count(*) FROM customer_orders WHERE customer_id=3 AND name='Alex' AND total_orders=2 AND paid_orders=0 AND paid_cents=0)=1"
+      }
+    ],
+    "quiz": {
+      "question": "Why use COUNT(o.id) after a LEFT JOIN?",
+      "choices": [
+        "It counts the unmatched customer row as an order",
+        "It skips NULL order IDs for customers with no orders",
+        "It counts only paid orders automatically"
+      ],
+      "answer": 1,
+      "explanation": "The unmatched row has a NULL o.id. COUNT(o.id) ignores it, while COUNT(*) would count the retained row."
+    },
+    "hints": [
+      "Start from customers so people without orders remain.",
+      "Use SUM(CASE WHEN o.status = 'paid' THEN 1 ELSE 0 END).",
+      "For paid_cents, use o.amount_cents instead of 1; do not filter the whole query to paid rows."
+    ],
+    "math": null,
+    "filename": "query.sql",
+    "estimatedMinutes": 25,
+    "extraFiles": [
+      {
+        "name": "setup.sql",
+        "code": "CREATE TABLE customers(id INTEGER PRIMARY KEY, name TEXT NOT NULL);\nCREATE TABLE orders(id INTEGER PRIMARY KEY, customer_id INTEGER NOT NULL, status TEXT NOT NULL, amount_cents INTEGER NOT NULL);\nINSERT INTO customers VALUES (1,'Alex'),(2,'Rin'),(3,'Alex');\nINSERT INTO orders VALUES (10,1,'paid',1200),(11,1,'pending',900),(12,1,'paid',550),(13,3,'cancelled',800),(14,3,'pending',400);"
+      }
+    ]
+  },
+  {
+    "id": "sql-13",
+    "title": "A folder path explorer",
+    "summary": "Create a view folder_paths with id, path and depth from folders(id, name, parent_id). Roots have NULL parent_id, path equal to their name and depth 0. Children append \"/\" plus their name and increase depth by 1. Include every folder in the supplied acyclic forest. Names contain no slash; keep the source unchanged.",
+    "explanation": [
+      "A folder tree stores one row per folder and the ID of its parent. A root has no parent. A forest is a collection of separate trees, so there can be several roots. A recursive query repeatedly uses earlier results to find the next level. It can build full paths even when the depth varies.",
+      "A common table expression, or CTE, gives a query a temporary name after WITH. WITH RECURSIVE allows a CTE to refer to itself. It has an anchor query that provides starting rows and a recursive query that expands from them. UNION ALL combines the starting and later rows without removing duplicates.",
+      "This complete recursive example counts upward.\n```sql\nWITH RECURSIVE numbers(n) AS (\n  SELECT 0\n  UNION ALL\n  SELECT n + 1 FROM numbers WHERE n < 3\n)\nSELECT n FROM numbers ORDER BY n;\n```\nIt produces 0, 1, 2 and 3. The WHERE condition prevents further expansion after 3. A recursive query needs a reason to stop.",
+      "For folder paths, the anchor selects rows whose parent_id IS NULL. Give each root its own name as the path and zero as the depth. The recursive part joins a child folder to an already discovered parent path using child.parent_id = parent.id. When no undiscovered descendants remain to expand, the supplied acyclic tree is finished.",
+      "SQLite joins text with ||. Here is a small one-level example.\n```sql\nWITH parent(id, path, depth) AS (VALUES (1, 'Home', 0)),\nchild(id, name, parent_id) AS (VALUES (2, 'Notes', 1))\nSELECT child.id, parent.path || '/' || child.name AS path, parent.depth + 1 AS depth\nFROM child JOIN parent ON child.parent_id = parent.id;\n```\nThe output is ID 2, Home/Notes and depth 1. The full recursive query repeats that same expansion at every level.",
+      "The input contract guarantees an acyclic forest and existing parents. General untrusted graphs need cycle detection or another explicit bound; this exercise does not claim to handle arbitrary cycles. Start from every root so a second tree is not lost. Repeated folder names under different parents are allowed because IDs, not names, connect the rows.",
+      "Wrap the CTE query in CREATE VIEW folder_paths AS and select id, path and depth from its result. Display the view ORDER BY path. Checks include two roots, a deeper descendant and repeated names in different branches. A fixed number of self-joins would solve only a fixed depth; recursion expresses the repeated operation directly."
+    ],
+    "analogy": {
+      "familiar": "Following branches from each top-level folder",
+      "connection": "Each discovered parent provides the starting path for its children.",
+      "limit": "The supplied data is a tree; arbitrary cyclic relationships need additional handling."
+    },
+    "steps": [
+      "Create a recursive CTE with id, path and depth columns.",
+      "Anchor it with all roots at depth zero.",
+      "Join children to discovered parents, append names and add one to depth.",
+      "Expose the result as folder_paths and display ordered paths."
+    ],
+    "starter": "CREATE VIEW folder_paths AS\nSELECT id, name AS path, 0 AS depth FROM folders WHERE parent_id IS NULL;\nSELECT * FROM folder_paths ORDER BY path;",
+    "solution": "CREATE VIEW folder_paths AS\nWITH RECURSIVE paths(id, path, depth) AS (\n  SELECT id, name, 0 FROM folders WHERE parent_id IS NULL\n  UNION ALL\n  SELECT child.id, parent.path || '/' || child.name, parent.depth + 1\n  FROM folders AS child JOIN paths AS parent ON child.parent_id = parent.id\n)\nSELECT id, path, depth FROM paths;\nSELECT * FROM folder_paths ORDER BY path;",
+    "runtime": "sql",
+    "checks": [
+      {
+        "label": "Both roots start at depth zero",
+        "expression": "SELECT count(*)=2 FROM folder_paths WHERE (id=1 AND path='Home' AND depth=0) OR (id=6 AND path='Work' AND depth=0)"
+      },
+      {
+        "label": "Paths reach the deeper descendant",
+        "expression": "SELECT count(*)=1 FROM folder_paths WHERE id=4 AND path='Home/Notes/Projects/Code' AND depth=3"
+      },
+      {
+        "label": "Repeated names retain their distinct parents and every ID appears once",
+        "expression": "SELECT (SELECT count(*) FROM folder_paths)=7 AND (SELECT count(DISTINCT id) FROM folder_paths)=7 AND (SELECT count(*) FROM folder_paths WHERE (id=2 AND path='Home/Notes' AND depth=1) OR (id=7 AND path='Work/Notes' AND depth=1))=2"
+      }
+    ],
+    "quiz": {
+      "question": "What starts the recursive folder query?",
+      "choices": [
+        "Every folder at depth 0",
+        "Folders whose parent_id is NULL",
+        "Only the folder with the smallest name"
+      ],
+      "answer": 1,
+      "explanation": "Roots have no parent. They form the anchor rows, and recursive joins then discover their children."
+    },
+    "hints": [
+      "Use UNION ALL between anchor and recursive SELECT.",
+      "Join child.parent_id to parent.id, not the other way around.",
+      "Build parent.path || '/' || child.name and parent.depth + 1."
+    ],
+    "math": null,
+    "filename": "query.sql",
+    "estimatedMinutes": 35,
+    "extraFiles": [
+      {
+        "name": "setup.sql",
+        "code": "CREATE TABLE folders(id INTEGER PRIMARY KEY, name TEXT NOT NULL, parent_id INTEGER);\nINSERT INTO folders VALUES (1,'Home',NULL),(2,'Notes',1),(3,'Projects',2),(4,'Code',3),(5,'Photos',1),(6,'Work',NULL),(7,'Notes',6);"
+      }
+    ]
   }
 ]

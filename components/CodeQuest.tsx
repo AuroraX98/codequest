@@ -2142,7 +2142,7 @@ export default function CodeQuest({
                 )}
               </div>
               <div className="path-list">
-                {visible.map((u, i) => {
+                {visible.map((u) => {
                   const l = lessons.find((l) => l.id === u.id),
                     done = state.progress.find(
                       (p) => p.unitId === u.id,
@@ -2155,7 +2155,17 @@ export default function CodeQuest({
                       disabled={!l}
                     >
                       <span className="path-number">
-                        {done ? <Check size={23} /> : i + 1}
+                        {done ? (
+                          <Check size={23} />
+                        ) : (
+                          units
+                            .filter(
+                              (item) =>
+                                item.track === u.track &&
+                                item.level === u.level,
+                            )
+                            .findIndex((item) => item.id === u.id) + 1
+                        )}
                       </span>
                       <div>
                         <small>
@@ -2359,7 +2369,7 @@ export default function CodeQuest({
                   <label className="setting-row setting-field">
                     <span>
                       <b>Appearance</b>
-                      <small>Your purple palette in light or dark.</small>
+                      <small>Purple accents on charcoal surfaces.</small>
                     </span>
                     <select
                       value={state.profile.theme}
@@ -2369,8 +2379,8 @@ export default function CodeQuest({
                         )
                       }
                     >
-                      <option value="light">Light</option>
-                      <option value="dark">Dark</option>
+                      <option value="light">Charcoal</option>
+                      <option value="dark">Deep charcoal</option>
                     </select>
                   </label>
                   <label className="setting-row setting-field">

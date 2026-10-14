@@ -9,6 +9,7 @@ import {
 } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
+import { pathToFileURL } from "node:url";
 import ts from "typescript";
 import { JSDOM } from "jsdom";
 import React, { act } from "react";
@@ -83,7 +84,7 @@ try {
   await symlink(
     path.resolve("node_modules"),
     path.join(temp, "node_modules"),
-    "dir",
+    process.platform === "win32" ? "junction" : "dir",
   );
   for (const file of [
     "components/PracticeStudio.tsx",
@@ -116,9 +117,9 @@ try {
     `export async function runProject(frame,lesson,code,signal){const fixture=globalThis.__practiceRuntimeFixture;fixture.calls.push({runtime:lesson.runtime,code});return fixture.results.shift()??{output:[],checks:[],error:'Fixture has no result'};}`,
   );
   const { default: Studio } = await import(
-    path.join(temp, "components/PracticeStudio.mjs")
+    pathToFileURL(path.join(temp, "components/PracticeStudio.mjs")).href
   );
-  const storage = await import(path.join(temp, "lib/practice-storage.mjs"));
+  const storage = await import(pathToFileURL(path.join(temp, "lib/practice-storage.mjs")).href);
   let settingsOpened = 0;
   let props = {
     state: {
@@ -171,6 +172,7 @@ try {
       field.dispatchEvent(new dom.window.Event("input", { bubbles: true }));
     });
   await render();
+  assert.match(document.body.textContent, /No saved practice yet/);
   assert.equal(
     document.querySelector('select[aria-label="Practice difficulty"]').options
       .length,
@@ -231,6 +233,11 @@ try {
   await edit(generated.project.solution);
   runtime.results.push(passed);
   await click("Run practice");
+  assert.ok(
+    [...document.querySelectorAll('[role="status"]')].some((item) =>
+      item.textContent.includes("All practice checks passed"),
+    ),
+  );
   await click("Mark practice complete");
   const complete = await storage.loadPractices(scope);
   assert.ok(complete.drafts[0].completed);
@@ -322,8 +329,50 @@ try {
   props = { ...props, visible: true };
   await render();
   assert.equal(document.querySelector("textarea").value, reset.drafts[0].code);
+  // Capacity cancellation must preserve every saved draft and avoid paid generation.
+  props = { ...props, state: { ...props.state, aiProvider: "deepseek" } };
+  await render();
+  for (let index = 1; index < storage.maxPracticeProjects; index++) {
+    await storage.addPractice(scope, storage.starterPractice(fixture(), "verified"));
+  }
+  const full = await storage.loadPractices(scope);
+  const requestCount = requests.length;
+  const confirmations = [];
+  dom.window.confirm = (message) => {
+    confirmations.push(message);
+    return false;
+  };
+  await click("Generate practice project");
+  assert.equal(requests.length, requestCount);
+  assert.deepEqual(await storage.loadPractices(scope), full);
+  assert.match(confirmations.at(-1), /remove your oldest practice/);
+
+  const incoming = storage.starterPractice(fixture(), "unverified");
+  const backup = storage.exportPracticeBackup({
+    scope,
+    activeId: incoming.project.id,
+    drafts: [incoming],
+  });
+  const restoreInput = document.querySelector('input[aria-label="Restore practice backup"]');
+  Object.defineProperty(restoreInput, "files", {
+    configurable: true,
+    value: [{ size: backup.length, text: async () => backup }],
+  });
+  await act(async () => restoreInput.dispatchEvent(new dom.window.Event("change", { bubbles: true })));
+  await flush();
+  assert.deepEqual(await storage.loadPractices(scope), full);
+  assert.match(confirmations.at(-1), /remove 1 older saved practice/);
+
+  dom.window.confirm = () => true;
+  generated = fixture();
+  runtime.results.push(passed, failed);
+  await click("Generate practice project");
+  const afterConfirmed = await storage.loadPractices(scope);
+  assert.equal(afterConfirmed.drafts.length, storage.maxPracticeProjects);
+  assert.ok(afterConfirmed.drafts.some((item) => item.project.id === generated.id));
+  assert.ok(!afterConfirmed.drafts.some((item) => item.project.id === full.drafts[0].project.id));
   console.log(
-    "Passed practice difficulty/provider gating, reference/starter validation before adoption, theory-first editing, explicit solution reveal, source-bound completion without course XP, history-preserving reset, stale generation rejection, and saved state across navigation.",
+    "Passed practice difficulty/provider gating, reference/starter validation before adoption, theory-first editing, explicit solution reveal, source-bound completion without course XP, history-preserving reset, stale generation rejection, saved state across navigation, accessible result summary, and capacity cancellation/confirmed generation.",
   );
 } finally {
   if (root) await act(async () => root.unmount());

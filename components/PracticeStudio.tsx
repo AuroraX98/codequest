@@ -26,6 +26,7 @@ import {
   exportPracticeBackup,
   importPractices,
   loadPractices,
+  maxPracticeProjects,
   parsePracticeBackup,
   practiceSource,
   practiceSourceHash,
@@ -348,6 +349,19 @@ export default function PracticeStudio(props: Props) {
     try {
       await save();
       if (!current()) return;
+      const existing = await loadPractices(scope);
+      if (!current()) return;
+      if (
+        existing.drafts.length >= maxPracticeProjects &&
+        !window.confirm(
+          `You have ${maxPracticeProjects} saved practices. Saving a new project will remove your oldest practice from this browser. Choose Cancel to download a practice backup first, or OK to continue.`,
+        )
+      ) {
+        setStatus(
+          "Generation canceled. Download a practice backup below before making room for a new project.",
+        );
+        return;
+      }
       const response = await fetch("/api/practice", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -432,6 +446,22 @@ export default function PracticeStudio(props: Props) {
           );
         reference = "verified";
       }
+      const beforeSave = await loadPractices(scope);
+      if (!current()) return;
+      if (
+        beforeSave.drafts.length >= maxPracticeProjects &&
+        (existing.drafts.length < maxPracticeProjects ||
+          beforeSave.drafts[0]?.project.id !==
+            existing.drafts[0]?.project.id) &&
+        !window.confirm(
+          "Your saved practices changed while this project was being created. Saving it will remove the oldest practice from this browser. Choose Cancel to keep your saved practices, or OK to continue.",
+        )
+      ) {
+        setStatus(
+          "The new project was not saved. Your saved practices are still here.",
+        );
+        return;
+      }
       const next = await addPractice(scope, { ...initial, reference });
       if (!current()) return;
       setRecord(next);
@@ -490,7 +520,11 @@ export default function PracticeStudio(props: Props) {
     } catch (failure) {
       if (sequence.current === requestNumber) report(failure);
     } finally {
-      if (sequence.current === requestNumber) setBusy("");
+      if (sequence.current === requestNumber) {
+        setBusy("");
+        if (validScope() && controller.signal.aborted)
+          setStatus("Practice run stopped. Your code is kept.");
+      }
     }
   }
   const change = (value: string) => {
@@ -665,6 +699,20 @@ export default function PracticeStudio(props: Props) {
           this account on this browser. Download a separate practice backup to
           move them to another device.
         </p>
+        {loaded && !record.drafts.length && (
+          <p className="notice">
+            No saved practice yet. Choose a topic above and generate a project,
+            or restore a practice backup below. Course lessons stay available in
+            Course project without an AI connection.
+          </p>
+        )}
+        {record.drafts.length >= maxPracticeProjects && (
+          <p className="notice">
+            Your {maxPracticeProjects} practice spaces are full. Download a
+            practice backup before adding more; a new project removes the oldest
+            saved practice from this browser.
+          </p>
+        )}
         {!!record.drafts.length && (
           <select
             aria-label="Saved practice project"
@@ -725,6 +773,23 @@ export default function PracticeStudio(props: Props) {
               if (!validScope()) return;
               await save();
               if (!validScope()) return;
+              const existing = await loadPractices(scope);
+              if (!validScope()) return;
+              const removed = Math.max(
+                0,
+                existing.drafts.length + incoming.length - maxPracticeProjects,
+              );
+              if (
+                removed > 0 &&
+                !window.confirm(
+                  `Restoring this backup will remove ${removed} older saved ${removed === 1 ? "practice" : "practices"} from this browser to keep the latest ${maxPracticeProjects}. Choose Cancel to download your current practice backup first, or OK to restore.`,
+                )
+              ) {
+                setStatus(
+                  "Restore canceled. Your saved practices are still here.",
+                );
+                return;
+              }
               const next = await importPractices(scope, incoming);
               if (!validScope()) return;
               setRecord(next);
@@ -1012,7 +1077,22 @@ export default function PracticeStudio(props: Props) {
                 />
               </label>
             )}
-            {result?.error && <p className="notice">{result.error}</p>}
+            <p className="sr-only" role="status" aria-atomic="true">
+              {busy === "run"
+                ? "Running your practice project."
+                : result
+                  ? result.error
+                    ? "Practice run ended. Check the error below."
+                    : passed
+                      ? "All practice checks passed. You can mark this practice complete."
+                      : "Practice run finished. Review the checks and make a change."
+                  : ""}
+            </p>
+            {result?.error && (
+              <p className="notice" role="alert">
+                {result.error}
+              </p>
+            )}
             {result?.output.length ? (
               <pre className="output">{result.output.join("\n")}</pre>
             ) : null}
