@@ -314,16 +314,9 @@ export async function POST(req: Request) {
             math_passed: number;
             completed_at: string | null;
           }>();
-        const settings = {
-          ...defaults,
-          ...JSON.parse((await profile(user))!.settings),
-        };
-        if (
-          !p?.quiz_passed ||
-          (settings.mathEnabled && lesson.math && !p.math_passed)
-        )
+        if (!p?.quiz_passed)
           return Response.json(
-            { error: "Finish the practice and math question first." },
+            { error: "Finish the practice question first." },
             { status: 400 },
           );
         const proof = body.checks;

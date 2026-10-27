@@ -125,9 +125,9 @@ export class LearningClient {
     } else if (a.action === "complete") {
       if (
         validate &&
-        (!p.quizPassed || (s.profile.mathEnabled && l.math && !p.mathPassed))
+        !p.quizPassed
       )
-        throw new Error("Finish the practice and math question first.");
+        throw new Error("Finish the practice question first.");
       if (validate && a.code !== p.code)
         throw new Error("Save your project and run it again.");
       if (validate && l.externalNotes && !a.manualReview)

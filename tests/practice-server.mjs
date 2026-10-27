@@ -530,7 +530,7 @@ try {
       "advanced",
     );
     assert.match(prompt, /Any additional concept must be explained/);
-    assert.match(prompt, /at least two small worked examples/);
+    assert.match(prompt, /examples array containing two to four small worked examples/);
     assert.ok(prompt.length < 30000);
     assertions++;
   }

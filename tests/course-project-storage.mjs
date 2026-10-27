@@ -1,0 +1,17 @@
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import vm from 'node:vm';
+import ts from 'typescript';
+const records=new Map(); const exports={};
+vm.runInNewContext(ts.transpileModule(readFileSync('lib/course-project-storage.ts','utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText,{exports,require:()=>({readDevice:async(store,key)=>records.get(key),writeDevice:async(store,key,value)=>{records.set(key,structuredClone(value));}})});
+const p={id:'counter',version:1,starter:'',steps:[{},{}]};
+assert.equal((await exports.loadCourseProject('a',p,'legacy code')).code,'legacy code');
+await exports.saveCourseProject('a',p,{code:'print(6)',step:1,updatedAt:'now',completedSource:'print(6)'});
+assert.equal((await exports.loadCourseProject('a',p)).step,1);
+assert.equal((await exports.loadCourseProject('b',p)).code,'');
+assert.equal((await exports.loadCourseProject('a',{...p,id:'other'})).code,'');
+assert.equal((await exports.loadCourseProject('a',{...p,version:2})).code,'');
+assert.equal((await exports.loadCourseProject('a',p)).completedSource,'print(6)');
+await exports.saveCourseProject('a',p,{code:'bad',step:99,updatedAt:'now'});
+assert.equal((await exports.loadCourseProject('a',p)).step,0);
+console.log('Passed guided draft restore, account/project/version isolation, initial legacy-code retention and corrupt-step rejection.');

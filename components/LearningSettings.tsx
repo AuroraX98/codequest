@@ -55,11 +55,6 @@ export default function LearningSettings({
       "Show simple comparisons, such as a labeled box for a variable.",
     ],
     [
-      "mathEnabled",
-      "Math connections",
-      "Include the matching math question where it helps the coding topic.",
-    ],
-    [
       "rewardsEnabled",
       "XP, streaks, and badges",
       "Show game rewards. Your completed work stays saved when these are hidden.",

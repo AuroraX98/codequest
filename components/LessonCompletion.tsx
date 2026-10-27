@@ -120,12 +120,7 @@ export default function LessonCompletion({
           Completion tracks saved activities, not mastery. Attempts alone do not
           count; a quiz pass and recorded project completion do.
         </p>
-        {score.math.available && (
-          <p className="completion-math">
-            Optional math: {score.math.passed ? "passed" : "not yet passed"}.
-            Separate from this score.
-          </p>
-        )}
+
         {known && score.legacyReadingUnknown && (
           <p className="completion-legacy">
             Your earlier project completion is kept. Reading has not been

@@ -15,7 +15,7 @@ const views = new Set([
   "settings",
   "tools",
 ]);
-const steps = new Set(["learn", "practice", "build", "math", "done"]);
+const steps = new Set(["learn", "practice", "build", "done"]);
 export function normalizeRoute(
   input: Partial<QuestRoute>,
   fallbackId: string,
@@ -30,7 +30,7 @@ export function normalizeRoute(
   return {
     view: views.has(input.view ?? "") ? input.view! : "quest",
     studioMode: input.studioMode === "practice" ? "practice" : "course",
-    phase: steps.has(input.phase ?? "") ? input.phase! : "learn",
+    phase: input.phase === "math" ? "build" : steps.has(input.phase ?? "") ? input.phase! : "learn",
     activeId,
     ...(activeId === "python-01" &&
     ["program", "values", "strings", "names", "assignment", "output"].includes(

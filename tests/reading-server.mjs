@@ -373,7 +373,7 @@ try {
   }
   const all = (await checked(get(scopeAll))).reading;
   assert.equal(all.length, count);
-  assert.equal(new Set(all.map((r) => r.lessonId)).size, 115);
+  assert.equal(new Set(all.map((r) => r.lessonId)).size, lessons.length);
   assert.equal(all.filter((r) => r.lessonId === "python-01").length, 6);
   for (const lesson of lessons) {
     const score = model.getLessonCompletion(lesson, undefined, all);
@@ -416,7 +416,7 @@ try {
     "Old completion, code, quiz, math and timestamps remain byte-for-byte unchanged.",
   );
   console.log(
-    `Passed reading API tests using real generated SQLite migrations: ${count} canonical sections across 115 lessons, ${rejectionCases} rejected stale/invalid/unauthorized cases, authenticated account isolation, explicit mark/unmark, atomic concurrency, no-store responses, bounded input, no fabricated reading backfill, and unchanged old progress/profile data.`,
+    `Passed reading API tests using real generated SQLite migrations: ${count} canonical sections across ${lessons.length} lessons, ${rejectionCases} rejected stale/invalid/unauthorized cases, authenticated account isolation, explicit mark/unmark, atomic concurrency, no-store responses, bounded input, no fabricated reading backfill, and unchanged old progress/profile data.`,
   );
 } finally {
   database.close();

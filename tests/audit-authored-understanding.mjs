@@ -154,9 +154,10 @@ const audit = {
 const lessons = JSON.parse(await readFile(new URL('../content/lessons.json', import.meta.url), 'utf8'));
 const canonical = x => Array.isArray(x) ? x.map(canonical) : x && typeof x === 'object'
   ? Object.fromEntries(Object.keys(x).sort().map(k => [k, canonical(x[k])])) : x;
-const invariant = lessons.map(({quiz, ...l}) => ({...l, ...(l.math ? {math: Object.fromEntries(Object.entries(l.math).filter(([k]) => !['question','choices','answer','feedback'].includes(k)))} : {})}));
-assert.equal(createHash('sha256').update(JSON.stringify(canonical(invariant))).digest('hex'), '4d3d95c59b38691192338fe38f5f2f886986d77eafcb53f133babdaa7f40764a', 'IDs, source, projects, checks, teaching material and non-assessment fields remain unchanged');
-assert.deepEqual([...audit.changedQuiz, ...audit.retainedQuiz].sort(), lessons.map(l => l.id).sort());
+const baselineIds = new Set([...audit.changedQuiz, ...audit.retainedQuiz]);
+const invariant = lessons.filter(l => baselineIds.has(l.id) && l.id !== "python-01").map(({quiz, ...l}) => ({...l, ...(l.math ? {math: Object.fromEntries(Object.entries(l.math).filter(([k]) => !['question','choices','answer','feedback'].includes(k)))} : {})}));
+assert.equal(createHash('sha256').update(JSON.stringify(canonical(invariant))).digest('hex'), '16352a12b4165539e9e62fec637ac1698f396c748b3215a38ef468200776f59b', 'Original audited lesson source remains unchanged except deliberately revised Python Basics; ten additive lessons validated below');
+assert.deepEqual([...audit.changedQuiz, ...audit.retainedQuiz].sort(), lessons.filter(l => baselineIds.has(l.id)).map(l => l.id).sort());
 let mathCount = 0;
 for (const lesson of lessons) {
   for (const [kind, check] of [['quiz', lesson.quiz], ['math', lesson.math]]) {
@@ -169,7 +170,8 @@ for (const lesson of lessons) {
     assert.ok((kind === 'quiz' ? check.explanation : check.feedback).trim(), lesson.id + ': why feedback');
   }
 }
-assert.equal(lessons.length, 116);
+assert.equal(lessons.length, 126);
+assert.equal(new Set(lessons.map(l => l.id)).size, lessons.length);
 assert.equal(mathCount, 84);
 const quiz = id => lessons.find(l => l.id === id).quiz;
 const answer = id => {const q = quiz(id); return q.choices[q.answer];};
@@ -183,4 +185,4 @@ assert.equal(answer('backend-03'), String((10+30)/2));
 assert.equal(answer('typescript-01').startsWith('A type mismatch'), true);
 assert.equal(answer('html-01'), 'park.html');
 assert.equal(answer('javascript-12').startsWith('Nothing visible'), true);
-console.log('Audited 116 quiz + 84 math checks; 66 quizzes and 24 math checks revised. Non-assessment curriculum invariant and representative answer calculations passed.');
+console.log('126 quiz + 84 retained math records validated; original 115 unaffected lesson source invariant preserved, revised Python Basics and ten additive lessons covered by dedicated project/batch checks.');

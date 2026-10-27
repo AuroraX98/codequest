@@ -38,6 +38,8 @@ import LearningSettings from "./LearningSettings";
 import LessonContent, { InlineCode } from "./LessonContent";
 import { GlossaryScope, GlossaryText } from "./LessonGlossary";
 import CodeEditor from "./CodeEditor";
+import CourseProjectStudio from "./CourseProjectStudio";
+import { projectsForLesson, missingProjectReading } from "../lib/course-projects";
 import SelectionClarifier from "./SelectionClarifier";
 import PracticeStudio from "./PracticeStudio";
 import PythonInputLesson from "./PythonInputLesson";
@@ -53,7 +55,7 @@ import LessonCompletion from "./LessonCompletion";
 import ReadingMark from "./ReadingMark";
 import { useReadingProgress } from "../lib/reading-client";
 import { getLessonHeadings } from "../lib/lesson-headings";
-import { pythonConcepts } from "../lib/python-concepts";
+import { pythonConcepts, type ConceptId } from "../lib/python-concepts";
 import type { LessonNoteSource } from "../lib/lesson-notes";
 import { clarificationQuestion } from "../lib/lesson-selection";
 import { readProject, writeProject } from "../lib/project-files";
@@ -212,6 +214,8 @@ export default function CodeQuest({
     error: "",
   });
   const [helperText, setHelperText] = useState("");
+  const [selectedCourseProject, setSelectedCourseProject] = useState("");
+  const [returnToProject, setReturnToProject] = useState<string | null>(null);
   const [state, setState] = useState<QuestState>(empty),
     [ready, setReady] = useState(false),
     [view, setView] = useState("quest"),
@@ -338,6 +342,17 @@ export default function CodeQuest({
             : "text:" + paragraph,
       )
     : null;
+  useEffect(() => {
+    try { setSelectedCourseProject(localStorage.getItem(`codequest-project-choice:${state.draftScope}:${activeId}`) ?? ""); }
+    catch { setSelectedCourseProject(""); }
+  }, [state.draftScope, activeId]);
+  const chooseCourseProject = (id: string) => {
+    setSelectedCourseProject(id);
+    try { localStorage.setItem(`codequest-project-choice:${state.draftScope}:${activeId}`, id); } catch {}
+  };
+  const availableCourseProjects = projectsForLesson(activeId);
+  const selectedProject = availableCourseProjects.find(p => p.id === selectedCourseProject) ?? availableCourseProjects[0];
+  const projectReadingMissing = lesson ? missingProjectReading(lesson, reading.records) : [];
   const progress = state.progress.find((p) => p.unitId === unit?.id);
   const tutorContext = [
     state.draftScope,
@@ -537,11 +552,7 @@ export default function CodeQuest({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [device]);
   function safeRoute(route: QuestRoute, account: QuestState): QuestRoute {
-    const target = lessons.find((l) => l.id === route.activeId);
-    if (
-      route.phase === "math" &&
-      (!account.profile.mathEnabled || !target?.math)
-    )
+    if (route.phase === "math")
       return { ...route, phase: "build" };
     if (
       route.phase === "done" &&
@@ -758,7 +769,7 @@ export default function CodeQuest({
   const prefs = async (p: Partial<Profile>) => {
     const d = await request({ action: "preferences", settings: p });
     setState(d);
-    if (p.mathEnabled === false && phase === "math") setPhase("build");
+    if (phase === "math") setPhase("build");
   };
   const select = async (id: string, entry?: PythonTool) => {
     if (completionLock.current) return;
@@ -1279,6 +1290,7 @@ export default function CodeQuest({
               </button>
             </div>
           )}
+          {ready && returnToProject && phase === "learn" && <div className="notice"><span>Your project draft is waiting.</span><button className="secondary" onClick={() => { chooseCourseProject(returnToProject); setReturnToProject(null); setPhase("build"); }}>Back to project</button></div>}
           {ready && view === "studio" && (
             <div
               className="button-row studio-mode"
@@ -1389,9 +1401,7 @@ export default function CodeQuest({
                         { id: "learn", name: "Learn", n: 1 },
                         { id: "practice", name: "Try it", n: 2 },
                         { id: "build", name: "Build", n: 3 },
-                        ...(state.profile.mathEnabled && lesson.math
-                          ? [{ id: "math", name: "Math", n: 4 }]
-                          : []),
+
                       ].map((p) => (
                         <button
                           key={p.id}
@@ -1403,8 +1413,7 @@ export default function CodeQuest({
                           }}
                         >
                           <span>
-                            {(p.id === "practice" && progress?.quizPassed) ||
-                            (p.id === "math" && progress?.mathPassed) ? (
+                            {(p.id === "practice" && progress?.quizPassed) ? (
                               <Check size={13} />
                             ) : (
                               p.n
@@ -1613,7 +1622,35 @@ export default function CodeQuest({
                         )}
                       </div>
                     )}
-                    {phase === "build" && (
+                    {phase === "build" && selectedProject && (
+                      <>
+                        <div className="panel project-brief"><h3>Choose a Python Basics project</h3>
+                          <p>Use the same small set of skills in different situations.</p>
+                          <div className="course-project-choices">{availableCourseProjects.map(project => <button key={project.id} className={selectedProject.id === project.id ? "primary" : "secondary"} aria-pressed={selectedProject.id === project.id} onClick={() => chooseCourseProject(project.id)}>{project.title}</button>)}</div>
+                          <p>{selectedProject.description ?? (selectedProject.core ? "Create a short introduction from a name and an age." : "Change an age and let your program calculate next year’s age.")}</p>
+                          <p><strong>What you will make:</strong> {selectedProject.outcome ?? (selectedProject.core ? "A printed pet introduction using named values." : "A numeric result that updates when the starting age changes.")}</p>
+                          <details><summary>Skills this project uses</summary><p>{(selectedProject.skills ?? ["Strings", "Number values", "Names", "Assignment", "print", ...(selectedProject.quantitative ? ["Adding one"] : [])]).join(" · ")}</p>
+                            <div className="editor-actions">{pythonConcepts.map(concept => <button className="text-button" key={concept.id} onClick={() => { setReturnToProject(selectedProject.id); setPhase("learn"); setConceptTarget(concept.id); }}>Study {concept.title}</button>)}</div>
+                          </details>
+                        </div>
+                        {!reading.loaded || reading.error || projectReadingMissing.length ? <div className="panel">
+                          <h3>Cover the building blocks first</h3><p>These projects use the six Python Basics ideas. Mark each one as read after you study it. Reading marks record your activity, not mastery.</p>
+                          <p>{reading.error || (!reading.loaded ? "Loading reading progress…" : `${projectReadingMissing.length} ideas still need a reading mark.`)}</p>
+                          <button className="primary" onClick={() => { setReturnToProject(selectedProject.id); setPhase("learn"); setConceptTarget((projectReadingMissing[0]?.replace("concept:", "") ?? "program") as ConceptId); }}>Study the next idea</button>
+                        </div> : <CourseProjectStudio key={state.draftScope + selectedProject.id} project={selectedProject} lesson={lesson} scope={state.draftScope} initialCode={selectedProject.core ? progress?.code : undefined} onCompleteCore={async (source, checks) => {
+                          if (!progress?.quizPassed) throw new Error("Finish the Try it exercise before finishing the course project. Your draft is saved here.");
+                          if (completionLock.current) throw new Error("Project completion is already being saved.");
+                          completionLock.current = true;
+                          try {
+                            await request({ action: "save", unitId: lesson.id, code: source });
+                            const completed = await request({ action: "complete", unitId: lesson.id, code: source, checks });
+                            setState(completed);
+                          } finally { completionLock.current = false; }
+                          if (unitRef.current === lesson.id) restoreProject(source);
+                        }} />}
+                      </>
+                    )}
+                    {phase === "build" && !selectedProject && (
                       <div className="build-area">
                         <div className="panel project-brief">
                           <div className="heading-row">
@@ -1967,73 +2004,15 @@ export default function CodeQuest({
                           {passed && (
                             <button
                               className="primary"
-                              onClick={() => {
-                                if (
-                                  state.profile.mathEnabled &&
-                                  lesson.math &&
-                                  !progress?.mathPassed
-                                ) {
-                                  setPhase("math");
-                                  setFeedback("");
-                                } else complete();
-                              }}
+                              onClick={complete}
                             >
-                              {state.profile.mathEnabled &&
-                              lesson.math &&
-                              !progress?.mathPassed
-                                ? "Try the math connection"
-                                : "Finish this quest"}{" "}
+                              Finish this quest{" "}
                               <ArrowRight size={17} />
                             </button>
                           )}
                         </div>
                       </div>
                     )}
-                    {phase === "math" &&
-                      state.profile.mathEnabled &&
-                      lesson.math && (
-                        <div className="panel lesson-card">
-                          <span className="small-tag">
-                            MATH THAT HELPS YOUR CODE
-                          </span>
-                          <h3>{unit.math.topic}</h3>
-                          <LessonContent
-                          glossary
-                            text={lesson.math.explanation}
-                            runtime={lesson.runtime}
-                          />
-                          <LessonContent
-                          glossary
-                            text={lesson.math.question}
-                            runtime={lesson.runtime}
-                            as="h4"
-                          />
-                          <Choices
-                            q={lesson.math}
-                            passed={!!progress?.mathPassed}
-                            onAnswer={(n) => answer("math", n)}
-                          />
-                          {feedback && (
-                            <div className="notice" role="status">
-                              {feedback}
-                            </div>
-                          )}
-                          {!!progress?.mathPassed && (
-                            <button
-                              className="primary"
-                              onClick={() => {
-                                if (passed) complete();
-                                else setPhase("build");
-                              }}
-                            >
-                              {passed
-                                ? "Finish this quest"
-                                : "Back to your project"}{" "}
-                              <ArrowRight size={17} />
-                            </button>
-                          )}
-                        </div>
-                      )}
                     {phase === "done" && (
                       <div className="panel done-card">
                         <div className="reward-icon">
@@ -2404,7 +2383,7 @@ export default function CodeQuest({
                         <p>{u.project.title}</p>
                         <span className="path-meta">
                           {l ? l.estimatedMinutes + " min" : "Content loading"}
-                          {l?.math ? " · Math included" : ""}
+
                         </span>
                         {l && (
                           <LessonCompletion
