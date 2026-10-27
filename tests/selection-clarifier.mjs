@@ -211,6 +211,41 @@ try {
   assert.ok(popup());
   await act(async () => window.dispatchEvent(new dom.window.Event("scroll")));
   assert.equal(popup(), null);
+  const chatSelections = [];
+  props = {
+    ...props,
+    connected: false,
+    enabled: false,
+    online: false,
+    context: "chatgpt-no-api",
+    onAskChatGPT: (text) => chatSelections.push(text),
+  };
+  await render();
+  await select(inline);
+  assert.equal(document.querySelector("[data-chatgpt]"), null, "Removed ChatGPT action is not rendered");
+  assert.equal(button().disabled, true);
+  const sentBefore = sent.length;
+  const notes = [];
+  document.getElementById("prose").dataset.annotationSection = "concept:names";
+  props = {
+    ...props,
+    context: "notes-context",
+    onAddNote: (text, sectionKey) => notes.push({ text, sectionKey }),
+  };
+  await render();
+  await select(inline);
+  assert.equal(notes.length, 0);
+  assert.equal(document.querySelector("[data-add-note]").disabled, false);
+  await act(async () => document.querySelector("[data-add-note]").click());
+  assert.deepEqual(notes, [{ text: "pet_name", sectionKey: "concept:names" }]);
+  assert.equal(sent.length, sentBefore);
+  assert.equal(chatSelections.length, 0);
+  await select(document.getElementById("long").firstChild);
+  assert.equal(
+    document.querySelector("[data-add-note]").disabled,
+    true,
+    "Unanchored selection cannot be mislabeled",
+  );
   console.log(
     "Passed quote snapshots, inline/backwards/multiline selection, zero automatic sends, keyboard focus/Escape, unavailable/oversize gates, excluded controls/editable/outside ranges, page reset, and scroll dismissal.",
   );

@@ -3,8 +3,10 @@ import { readFile, writeFile, rm } from 'node:fs/promises';
 import ts from 'typescript';
 import React from 'react';import { renderToStaticMarkup } from 'react-dom/server';import { JSDOM } from 'jsdom';
 // Use a disposable local module bundle so the same renderer is exercised in Node.
-const files=['lib/code-language.ts','lib/lesson-markup.ts','components/LessonContent.tsx'];
+const files=['lib/code-language.ts','lib/lesson-markup.ts','lib/lesson-ideas.ts','lib/code-anatomy.ts','components/CodeAnatomy.tsx', 'components/LessonGlossary.tsx', 'lib/lesson-glossary.ts','components/LessonContent.tsx'];
 try {
+ await writeFile('components/CodeAnatomy.module.css.display-test.mjs', 'export default new Proxy({}, {get: (_, key) => String(key)});');
+ await writeFile('components/LessonGlossary.module.css.display-test.mjs', 'export default new Proxy({}, {get: (_, key) => String(key)});');
  for(const file of files){const source=await readFile(file,'utf8');const js=ts.transpileModule(source,{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.ESNext,jsx:ts.JsxEmit.ReactJSX}}).outputText.replace(/from "(\.\.?\/[^\"]+)"/g,'from "$1.display-test.mjs"');await writeFile(file.replace(/\.tsx?$/,'.display-test.mjs'),js);}
  const {lessonBlocks,codeTokens}=await import('../lib/lesson-markup.display-test.mjs');const {default:LessonContent}=await import('../components/LessonContent.display-test.mjs');
  const python='pet_name = "Milo"\npet_age = 3\nprint(f"{pet_name} is {pet_age} years old.")\n';
@@ -23,6 +25,11 @@ try {
  assert.equal(lessonBlocks('```python\nunfinished','python')[0].kind,'prose');
  const prose='Use **not** and **another phrase** beside `pet_name`. **Call `print()` once**; keep `2 ** 3` unchanged. An unmatched **marker stays literal. <img src="x" onerror="alert(1)">';
  const proseDom=new JSDOM(renderToStaticMarkup(React.createElement(LessonContent,{text:prose,runtime:'python'}))).window.document;
+ assert.equal(proseDom.querySelector('.lesson-content > p')?.textContent, proseDom.body.textContent, 'Non-bullet prose keeps the direct paragraph expected by tutor/quiz CSS');
+ for (const as of ['h3','h4']) {
+  const headingDom = new JSDOM(renderToStaticMarkup(React.createElement(LessonContent,{text:'A preserved heading',runtime:'python',as}))).window.document;
+  assert.equal(headingDom.querySelector('.lesson-content > '+as)?.textContent,'A preserved heading');
+ }
  assert.deepEqual([...proseDom.querySelectorAll('strong')].map(n=>n.textContent),['not','another phrase','Call print() once']);
  assert.deepEqual([...proseDom.querySelectorAll('.inline-code')].map(n=>n.textContent),['pet_name','print()','2 ** 3']);
  assert.equal(proseDom.querySelector('strong .inline-code').textContent,'print()');
@@ -41,4 +48,4 @@ try {
  assert.equal(unmatchedDom.querySelector('.inline-code').textContent,'**inside code**');
  assert.equal(unmatchedDom.body.textContent,'Plain **unfinished and **inside code** remain literal.');
  console.log('Passed exact source/indentation preservation for 8 runtimes, escaped HTML, inline bold/code combinations, literal exponent/output code, unmatched markers, syntax tokenization, and incomplete-fence fallback.');
-} finally {for(const file of files)await rm(file.replace(/\.tsx?$/,'.display-test.mjs'),{force:true});}
+} finally {await rm('components/LessonGlossary.module.css.display-test.mjs',{force:true});await rm('components/CodeAnatomy.module.css.display-test.mjs',{force:true});for(const file of files)await rm(file.replace(/\.tsx?$/,'.display-test.mjs'),{force:true});}

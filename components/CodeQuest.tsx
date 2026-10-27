@@ -36,9 +36,25 @@ import APIKeyFileSettings, {
 import { providers } from "../lib/ai-providers";
 import LearningSettings from "./LearningSettings";
 import LessonContent, { InlineCode } from "./LessonContent";
+import { GlossaryScope, GlossaryText } from "./LessonGlossary";
 import CodeEditor from "./CodeEditor";
 import SelectionClarifier from "./SelectionClarifier";
 import PracticeStudio from "./PracticeStudio";
+import PythonInputLesson from "./PythonInputLesson";
+import PythonTools from "./PythonTools";
+import type { PythonTool } from "../lib/python-tools";
+import PythonConceptLab from "./PythonConceptLab";
+import LessonVisual from "./LessonVisual";
+
+import LessonContents from "./LessonContents";
+import LessonStepFlow from "./LessonStepFlow";
+import LessonNotes from "./LessonNotes";
+import LessonCompletion from "./LessonCompletion";
+import ReadingMark from "./ReadingMark";
+import { useReadingProgress } from "../lib/reading-client";
+import { getLessonHeadings } from "../lib/lesson-headings";
+import { pythonConcepts } from "../lib/python-concepts";
+import type { LessonNoteSource } from "../lib/lesson-notes";
 import { clarificationQuestion } from "../lib/lesson-selection";
 import { readProject, writeProject } from "../lib/project-files";
 import { runProject } from "../lib/runner";
@@ -57,6 +73,39 @@ import type {
   Question,
   Profile,
 } from "../lib/types";
+function noteSource(lesson: Lesson, key: string): LessonNoteSource | null {
+  if (lesson.id === "python-01" && key.startsWith("concept:")) {
+    const index = pythonConcepts.findIndex(
+      (concept) => "concept:" + concept.id === key,
+    );
+    if (index < 0) return null;
+    const concept = pythonConcepts[index];
+    return {
+      lessonId: lesson.id,
+      lessonTitle: lesson.title,
+      sectionIndex: index,
+      sectionKey: key,
+      sectionTitle: concept.title,
+      sectionText: [
+        concept.short,
+        concept.why,
+        concept.imagine,
+        concept.limit,
+      ].join("\n\n"),
+    };
+  }
+  const match = /^text:(\d+)$/.exec(key);
+  const index = match ? Number(match[1]) : -1;
+  if (index < 0 || index >= lesson.explanation.length) return null;
+  return {
+    lessonId: lesson.id,
+    lessonTitle: lesson.title,
+    sectionIndex: index,
+    sectionKey: key,
+    sectionTitle: getLessonHeadings(lesson.id)[index],
+    sectionText: lesson.explanation[index],
+  };
+}
 const names: Record<string, string> = {
   javascript: "JavaScript",
   python: "Python",
@@ -179,6 +228,7 @@ export default function CodeQuest({
     [error, setError] = useState(""),
     [feedback, setFeedback] = useState(""),
     [paragraph, setParagraph] = useState(0),
+    [conceptTarget, setConceptTarget] = useState<string | undefined>(undefined),
     [hint, setHint] = useState(-1),
     [chat, setChat] = useState<Chat[]>([]),
     [question, setQuestion] = useState(""),
@@ -194,6 +244,51 @@ export default function CodeQuest({
     [runnerToken, setRunnerToken] = useState(""),
     [manualReviewed, setManualReviewed] = useState(false),
     [navigationReady, setNavigationReady] = useState(false);
+  const reading = useReadingProgress(state.draftScope);
+  const [tutorHidden, setTutorHidden] = useState(true);
+  const [flowBackTarget, setFlowBackTarget] = useState<string | null>(null);
+  useEffect(() => setFlowBackTarget(null), [activeId, paragraph]);
+  useEffect(() => {
+    try {
+      setTutorHidden(
+        state.draftScope
+          ? localStorage.getItem(
+              "codequest-buddy-hidden-" + state.draftScope,
+            ) !== "false"
+          : true,
+      );
+    } catch {
+      setTutorHidden(true);
+    }
+  }, [state.draftScope]);
+  const toggleTutor = () => {
+    const next = !tutorHidden;
+    setTutorHidden(next);
+    try {
+      if (state.draftScope)
+        localStorage.setItem(
+          "codequest-buddy-hidden-" + state.draftScope,
+          String(next),
+        );
+    } catch {
+      /* The visibility choice still works for this visit. */
+    }
+  };
+  const [noteSelection, setNoteSelection] = useState<{
+    context: string;
+    text: string;
+    requestId: number;
+    source: LessonNoteSource;
+  } | null>(null);
+  const [noteSection, setNoteSection] = useState<{
+    lessonId: string;
+    key: string;
+  } | null>(null);
+  const [labContext, setLabContext] = useState<{
+    code: string;
+    explanation: string;
+  } | null>(null);
+  const noteRequest = useRef(0);
   const frame = useRef<HTMLIFrameElement>(null),
     abort = useRef<AbortController | null>(null),
     codeRef = useRef(""),
@@ -231,6 +326,18 @@ export default function CodeQuest({
     units.find((u) => u.id === "javascript-01") ??
     units[0];
   const lesson = lessons.find((l) => l.id === unit?.id);
+  const noteContext = state.draftScope + ":" + lesson?.id;
+  const currentNoteSource = lesson
+    ? noteSource(
+        lesson,
+        noteSection?.lessonId === lesson.id &&
+          noteSection.key.startsWith("concept:")
+          ? noteSection.key
+          : lesson.id === "python-01" && noteSection?.lessonId !== lesson.id
+            ? "concept:program"
+            : "text:" + paragraph,
+      )
+    : null;
   const progress = state.progress.find((p) => p.unitId === unit?.id);
   const tutorContext = [
     state.draftScope,
@@ -394,6 +501,8 @@ export default function CodeQuest({
         setStudioMode(restored.studioMode);
         setPhase(restored.phase);
         setParagraph(restored.paragraph);
+        setConceptTarget(restored.concept);
+        if (restored.concept) setNoteSection({lessonId: restored.activeId,key:"concept:"+restored.concept});
         setReady(true);
         setNavigationReady(true);
         setSaveStatus(
@@ -454,7 +563,7 @@ export default function CodeQuest({
     const target = safeRoute(parsed, state),
       signature = routeHash(target);
     if (
-      signature === routeHash({ view, studioMode, phase, activeId, paragraph })
+      signature === routeHash({ view, studioMode, phase, activeId, paragraph, concept: conceptTarget })
     ) {
       if (
         navigationPending.current &&
@@ -481,6 +590,8 @@ export default function CodeQuest({
       setStudioMode(target.studioMode);
       setPhase(target.phase);
       setParagraph(target.paragraph);
+      setConceptTarget(target.concept);
+      if (target.concept) setNoteSection({lessonId: target.activeId,key:"concept:"+target.concept});
       window.history.replaceState(window.history.state, "", signature);
     } catch (e) {
       if (sequence !== navigationSequence.current) return;
@@ -495,7 +606,7 @@ export default function CodeQuest({
     window.history.replaceState(
       window.history.state,
       "",
-      routeHash({ view, studioMode, phase, activeId, paragraph }),
+      routeHash({ view, studioMode, phase, activeId, paragraph, concept: conceptTarget }),
     );
   }
   useEffect(() => {
@@ -512,7 +623,7 @@ export default function CodeQuest({
   }, [navigationReady]);
   useEffect(() => {
     if (!navigationReady) return;
-    const route = { view, studioMode, phase, activeId, paragraph },
+    const route = { view, studioMode, phase, activeId, paragraph, concept: conceptTarget },
       hash = routeHash(route);
     if (navigationPending.current && navigationPending.current !== hash) {
       navigationSequence.current++;
@@ -537,6 +648,7 @@ export default function CodeQuest({
           ? "AI practice · Build studio"
           : "Build studio",
       path: "Skill path",
+      tools: "Python tools and concepts",
       progress: "Your progress",
       settings: "Settings",
     };
@@ -565,6 +677,7 @@ export default function CodeQuest({
     phase,
     activeId,
     paragraph,
+    conceptTarget,
     navigationReady,
     lesson?.title,
   ]);
@@ -647,7 +760,7 @@ export default function CodeQuest({
     setState(d);
     if (p.mathEnabled === false && phase === "math") setPhase("build");
   };
-  const select = async (id: string) => {
+  const select = async (id: string, entry?: PythonTool) => {
     if (completionLock.current) return;
     const sequence = ++navigationSequence.current;
     navigationPending.current = routeHash({
@@ -655,7 +768,8 @@ export default function CodeQuest({
       studioMode,
       phase: "learn",
       activeId: id,
-      paragraph: 0,
+      paragraph: entry?.paragraph ?? 0,
+      concept: entry?.concept,
     });
     try {
       await saveCode();
@@ -670,6 +784,9 @@ export default function CodeQuest({
       setState(d);
       setActiveId(id);
       loadLesson(id, d.progress);
+      setParagraph(entry?.paragraph ?? 0);
+      setConceptTarget(entry?.concept);
+      if (entry?.concept) setNoteSection({lessonId:id,key:"concept:"+entry.concept});
       setView("quest");
       setPhase("learn");
     } catch (e) {
@@ -838,10 +955,13 @@ export default function CodeQuest({
     setError("");
     if (selected) {
       setPendingPassage(passage);
-      tutorPanel.current?.focus({ preventScroll: true });
-      tutorPanel.current?.scrollIntoView({
-        block: "nearest",
-        behavior: "auto",
+      setTutorHidden(false);
+      requestAnimationFrame(() => {
+        tutorPanel.current?.focus({ preventScroll: true });
+        tutorPanel.current?.scrollIntoView({
+          block: "nearest",
+          behavior: "auto",
+        });
       });
     } else setQuestion("");
     try {
@@ -995,7 +1115,7 @@ export default function CodeQuest({
   return (
     <div
       className={
-        "app " +
+        "app simple-learning " +
         state.profile.theme +
         (state.profile.calm ? " calm" : "") +
         (!state.profile.analogiesEnabled ? " no-analogies" : "") +
@@ -1054,10 +1174,10 @@ export default function CodeQuest({
           <p className="eyebrow">YOUR NEXT CHAPTER</p>
           <nav aria-label="Main navigation">
             {[
-              { id: "quest", label: "Your quest", icon: Flag },
-              { id: "studio", label: "Build studio", icon: Braces },
-              { id: "path", label: "Skill path", icon: Map },
-              { id: "progress", label: "Your progress", icon: Trophy },
+              { id: "quest", label: "Learn", icon: BookOpen },
+              { id: "studio", label: "Projects", icon: Braces },
+              { id: "path", label: "Courses", icon: Map },
+              { id: "progress", label: "Progress", icon: Trophy },
             ].map((n) => (
               <button
                 key={n.id}
@@ -1187,42 +1307,28 @@ export default function CodeQuest({
             lesson &&
             unit && (
               <>
-                <section className="hero">
-                  <div>
-                    <span className="pill">
-                      <Sparkles size={14} /> YOUR LEARNING ADVENTURE
+                {(state.profile.aiEnabled || state.profile.hintsEnabled) && (
+                  <div className="buddy-visibility">
+                    <button
+                      type="button"
+                      className="secondary"
+                      aria-controls="coding-buddy-panel"
+                      aria-expanded={!tutorHidden}
+                      onClick={toggleTutor}
+                    >
+                      {tutorHidden ? "Show coding buddy" : "Hide coding buddy"}
+                      <MessageCircle size={16} />
+                    </button>
+                    <span>
+                      {tutorHidden
+                        ? "More space for your lesson. Your chat and draft are kept."
+                        : "Hide the pane whenever you want a quieter workspace."}
                     </span>
-                    <h1>
-                      {view === "studio"
-                        ? "Make something that works."
-                        : "Small steps. Big “I made that.”"}
-                    </h1>
-                    <p>
-                      One idea, a little practice, and something you can build
-                      yourself.
-                    </p>
-                    <div className="hero-meta">
-                      <span>{names[unit.track]}</span>
-                      <span className="dot" />
-                      <span className="capitalize">{unit.level}</span>
-                      <span className="dot" />
-                      <span>About {lesson.estimatedMinutes} minutes</span>
-                    </div>
                   </div>
-                  <div className="hero-art" aria-hidden="true">
-                    <div className="orbit one" />
-                    <div className="orbit two" />
-                    <span className="floating-star">✦</span>
-                    <div className="code-tile">
-                      <Code2 size={54} />
-                      <span>YOU’VE GOT THIS</span>
-                    </div>
-                    <div className="mini-tag">
-                      <Check size={16} /> Made by you
-                    </div>
-                  </div>
-                </section>
-                <div className="workspace">
+                )}
+                <div
+                  className={"workspace" + (tutorHidden ? " buddy-hidden" : "")}
+                >
                   <section
                     className="lesson-area"
                     ref={lessonArea}
@@ -1240,20 +1346,38 @@ export default function CodeQuest({
                       onExplain={(text) => {
                         void ask(text);
                       }}
+                      onAddNote={(text, key) => {
+                        const source = key ? noteSource(lesson, key) : null;
+                        if (!source) return;
+                        setNoteSelection({
+                          context: noteContext,
+                          text,
+                          source,
+                          requestId: ++noteRequest.current,
+                        });
+                        requestAnimationFrame(() =>
+                          lessonArea.current
+                            ?.querySelector<HTMLElement>("[data-lesson-notes]")
+                            ?.scrollIntoView({
+                              block: "nearest",
+                              behavior: "smooth",
+                            }),
+                        );
+                      }}
                       onSettings={() => setView("settings")}
                     />
                     <div className="lesson-heading">
                       <div>
                         <p className="eyebrow">
-                          {view === "studio" ? "YOUR PROJECT" : "CURRENT QUEST"}
+                          {names[unit.track] + " · " + unit.level}
                         </p>
-                        <h2>{lesson.title}</h2>
+                        <h1>{lesson.title}</h1>
                       </div>
                       <button
                         className="course-change"
                         onClick={() => setView("path")}
                       >
-                        Change course <Map size={17} />
+                        Lessons <Map size={17} />
                       </button>
                     </div>
                     <div
@@ -1293,81 +1417,172 @@ export default function CodeQuest({
                     {phase === "learn" && (
                       <div className="panel lesson-card">
                         <span className="small-tag">ONE IDEA AT A TIME</span>
-                        <h3>{unit.topic}</h3>
-                        <p className="intro">{lesson.summary}</p>
-                        <p className="selection-guide">
-                          <Sparkles size={14} /> Highlight a word, passage, or
-                          code example to ask for clarification.
-                        </p>
-                        <div
-                          className="concept"
-                          ref={conceptStart}
-                          tabIndex={-1}
-                          role="region"
-                          aria-label={`Theory idea ${paragraph + 1} of ${lesson.explanation.length}`}
-                        >
-                          <LessonContent
-                            text={
-                              lesson.explanation[
-                                Math.min(
-                                  paragraph,
-                                  lesson.explanation.length - 1,
-                                )
-                              ]
+                        {lesson.runtime === "python" && <button className="text-button" onClick={()=>setView("tools")}>Browse Python tools and concepts</button>}
+                        {lesson.id === "python-input" && <PythonInputLesson lesson={lesson} resumeScope={state.draftScope} onContinue={()=>setPhase("practice")} onParagraphChange={setParagraph} renderReadingMark={index=><ReadingMark reading={reading} lessonId={lesson.id} sectionKey={"text:"+index} sectionTitle={getLessonHeadings(lesson.id)[index]} />} />}
+                        {lesson.id === "python-01" && (
+                          <PythonConceptLab
+                            key={state.draftScope + ":" + lesson.id}
+                            lesson={lesson}
+                            simple
+                            targetConcept={conceptTarget}
+                            resumeScope={state.draftScope}
+                            onContinue={() => setPhase("practice")}
+                            renderReadingMark={(id, title) => (
+                              <ReadingMark
+                                reading={reading}
+                                lessonId={lesson.id}
+                                sectionKey={"concept:" + id}
+                                sectionTitle={title}
+                              />
+                            )}
+                            onConceptChange={(id) => {
+                              setConceptTarget(id);
+                              setNoteSection({
+                                lessonId: lesson.id,
+                                key: "concept:" + id,
+                              });
+                            }}
+                            onContextChange={(next) =>
+                              setLabContext((previous) =>
+                                previous?.code === next.code &&
+                                previous.explanation === next.explanation
+                                  ? previous
+                                  : next,
+                              )
                             }
-                            runtime={lesson.runtime}
                           />
-                          <div className="concept-controls">
-                            <span>
-                              {paragraph + 1} of {lesson.explanation.length}
-                            </span>
-                            <button
-                              className="text-button"
-                              disabled={paragraph === 0}
-                              onClick={() => {
-                                theoryFocusRequested.current = true;
-                                setParagraph((p) => p - 1);
-                              }}
-                            >
-                              Back
-                            </button>
-                            <button
-                              className="secondary"
-                              onClick={() => {
-                                if (paragraph < lesson.explanation.length - 1) {
-                                  theoryFocusRequested.current = true;
-                                  setParagraph((p) => p + 1);
-                                } else setPhase("practice");
-                              }}
-                            >
-                              {paragraph < lesson.explanation.length - 1
-                                ? "Next small idea"
-                                : "Let’s try it"}{" "}
-                              <ArrowRight size={16} />
-                            </button>
-                          </div>
-                        </div>
-                        <details className="analogy">
+                        )}
+                        {!["python-01", "python-input"].includes(lesson.id) && <details
+                          className={
+                            "original-lesson" +
+                            (lesson.id === "python-01"
+                              ? " supplementary-reading"
+                              : " primary-reading")
+                          }
+                          open={!["python-01", "python-input"].includes(lesson.id) || paragraph > 0}
+                          onToggle={(event) => {
+                            if (event.currentTarget.open)
+                              setNoteSection({
+                                lessonId: lesson.id,
+                                key: "text:" + paragraph,
+                              });
+                          }}
+                        >
                           <summary>
-                            <Lightbulb size={19} /> A familiar way to picture it
+                            {lesson.id === "python-01"
+                              ? "Written lesson"
+                              : "Written lesson"}
                           </summary>
-                          <p>{lesson.analogy.familiar}</p>
-                          <p>{lesson.analogy.connection}</p>
-                          <small>{lesson.analogy.limit}</small>
-                        </details>
-                        <div className="project-callout">
-                          <Braces size={23} />
-                          <div>
-                            <b>You’ll make: {unit.project.title}</b>
-                            <p>{unit.project.task}</p>
+                          <div
+                            className="concept"
+                            ref={conceptStart}
+                            tabIndex={-1}
+                            role="region"
+                            aria-label={`Theory idea ${paragraph + 1} of ${lesson.explanation.length}`}
+                          >
+                            <LessonContents
+                              lessonId={lesson.id}
+                              simple
+                              index={paragraph}
+                              onSelect={(index) => {
+                                setParagraph(index);
+                                setNoteSection({
+                                  lessonId: lesson.id,
+                                  key: "text:" + index,
+                                });
+                              }}
+                            >
+                              <LessonStepFlow
+                                key={lesson.id + ":" + paragraph}
+                                resumeKey={state.draftScope ? `codequest-microstep-${state.draftScope}:${lesson.id}:${paragraph}` : undefined}
+                                referenceVisual={<LessonVisual unitId={lesson.id} paragraph={paragraph} />}
+                                title={getLessonHeadings(lesson.id)[paragraph]}
+                                text={
+                                  lesson.explanation[
+                                    Math.min(
+                                      paragraph,
+                                      lesson.explanation.length - 1,
+                                    )
+                                  ]
+                                }
+                                runtime={lesson.runtime}
+                                startAtEnd={
+                                  flowBackTarget === lesson.id + ":" + paragraph
+                                }
+                                backDisabled={paragraph === 0}
+                                onBack={() => {
+                                  theoryFocusRequested.current = true;
+                                  setFlowBackTarget(
+                                    lesson.id +
+                                      ":" +
+                                      Math.max(0, paragraph - 1),
+                                  );
+                                  setNoteSection({
+                                    lessonId: lesson.id,
+                                    key: "text:" + Math.max(0, paragraph - 1),
+                                  });
+                                  setParagraph((p) => Math.max(0, p - 1));
+                                }}
+                                onNext={() => {
+                                  if (
+                                    paragraph <
+                                    lesson.explanation.length - 1
+                                  ) {
+                                    theoryFocusRequested.current = true;
+                                    setNoteSection({
+                                      lessonId: lesson.id,
+                                      key: "text:" + (paragraph + 1),
+                                    });
+                                    setParagraph((p) => p + 1);
+                                  } else setPhase("practice");
+                                }}
+                                completion={
+                                  !["python-01", "python-input"].includes(lesson.id) ? (
+                                    <ReadingMark
+                                      reading={reading}
+                                      lessonId={lesson.id}
+                                      sectionKey={"text:" + paragraph}
+                                      sectionTitle={
+                                        getLessonHeadings(lesson.id)[paragraph]
+                                      }
+                                    />
+                                  ) : undefined
+                                }
+                              />
+
+                            </LessonContents>
                           </div>
-                        </div>
+                        </details>}
+
+
                       </div>
                     )}
+                    <div className="lesson-utilities">
+                      {currentNoteSource && (
+                        <LessonNotes
+                          scope={state.draftScope}
+                          {...currentNoteSource}
+                          selectedQuote={
+                            noteSelection?.context === noteContext
+                              ? noteSelection
+                              : undefined
+                          }
+                        />
+                      )}
+                      <details className="progress-disclosure">
+                        <summary>Lesson progress</summary>
+                        <LessonCompletion
+                          lesson={lesson}
+                          progress={progress}
+                          reading={reading}
+                        />
+                      </details>
+                    </div>
                     {phase === "practice" && (
                       <div className="panel lesson-card">
                         <span className="small-tag">A QUICK CHECK</span>
                         <LessonContent
+                          glossary
                           text={lesson.quiz.question}
                           runtime={lesson.runtime}
                           as="h3"
@@ -1405,7 +1620,8 @@ export default function CodeQuest({
                             <h3>{unit.project.title}</h3>
                             <span className="small-tag">MADE BY YOU</span>
                           </div>
-                          <p>{unit.project.task}</p>
+                          <GlossaryScope key={lesson.id} text={[unit.project.task, ...lesson.steps].join(" ")} runtime={lesson.runtime} wordsLabel="Words in these instructions">
+                          <p><GlossaryText text={unit.project.task} /></p>
                           <ol className="steps">
                             {lesson.steps.map((s, i) => (
                               <li key={i}>
@@ -1413,6 +1629,7 @@ export default function CodeQuest({
                               </li>
                             ))}
                           </ol>
+                          </GlossaryScope>
                           <details>
                             <summary>What finished looks like</summary>
                             <p>{unit.project.done_when}</p>
@@ -1781,10 +1998,12 @@ export default function CodeQuest({
                           </span>
                           <h3>{unit.math.topic}</h3>
                           <LessonContent
+                          glossary
                             text={lesson.math.explanation}
                             runtime={lesson.runtime}
                           />
                           <LessonContent
+                          glossary
                             text={lesson.math.question}
                             runtime={lesson.runtime}
                             as="h4"
@@ -1852,6 +2071,8 @@ export default function CodeQuest({
                   {(state.profile.aiEnabled || state.profile.hintsEnabled) && (
                     <aside
                       className="tutor-panel panel"
+                      id="coding-buddy-panel"
+                      hidden={tutorHidden}
                       ref={tutorPanel}
                       tabIndex={-1}
                       aria-label="AI assistant and lesson help"
@@ -1938,6 +2159,7 @@ export default function CodeQuest({
                             LESSON HINT {hint + 1}
                           </span>
                           <LessonContent
+                          glossary
                             text={lesson.hints[hint]}
                             runtime={lesson.runtime}
                           />
@@ -1947,6 +2169,7 @@ export default function CodeQuest({
                         <div className="authored-hint">
                           <span className="eyebrow">FROM THIS LESSON</span>
                           <LessonContent
+                          glossary
                             text={helperText}
                             runtime={lesson.runtime}
                           />
@@ -1980,6 +2203,7 @@ export default function CodeQuest({
                               <div key={i}>
                                 <p className="chat-question">{c.question}</p>
                                 <LessonContent
+                          glossary
                                   text={c.answer}
                                   runtime={lesson.runtime}
                                   className="chat-answer"
@@ -2054,6 +2278,7 @@ export default function CodeQuest({
                 </div>
               </>
             )}
+          {ready && view === "tools" && <PythonTools units={units} lessons={lessons} onOpen={item=>void select(item.lessonId,item)} onCourse={()=>{setView("path");void prefs({track:"python",level:"beginner"}).catch(e=>setError(e.message));}} />}
           {ready && view === "path" && (
             <>
               <div className="page-title">
@@ -2063,6 +2288,10 @@ export default function CodeQuest({
                   Start at beginner, then build toward the next level. You can
                   revisit any lesson.
                 </p>
+              </div>
+              <div className="segmented" role="group" aria-label="Python learning path">
+                <button className="selected" aria-pressed="true">Guided course</button>
+                <button onClick={()=>setView("tools")}>Python tools and concepts</button>
               </div>
               <div className="track-grid">
                 {Object.entries(names).map(([id, name]) => {
@@ -2092,7 +2321,7 @@ export default function CodeQuest({
                       <div className="meter">
                         <span style={{ width: (done / count) * 100 + "%" }} />
                       </div>
-                      <small>{done} finished</small>
+                      <small>{done} projects completed</small>
                     </button>
                   );
                 })}
@@ -2177,6 +2406,16 @@ export default function CodeQuest({
                           {l ? l.estimatedMinutes + " min" : "Content loading"}
                           {l?.math ? " · Math included" : ""}
                         </span>
+                        {l && (
+                          <LessonCompletion
+                            compact
+                            lesson={l}
+                            progress={state.progress.find(
+                              (p) => p.unitId === u.id,
+                            )}
+                            reading={reading}
+                          />
+                        )}
                       </div>
                       <ChevronRight size={22} />
                     </button>

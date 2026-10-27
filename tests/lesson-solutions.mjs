@@ -10,7 +10,7 @@ import React from "react";
 
 const lessons = JSON.parse(await fs.readFile("content/lessons.json", "utf8"));
 const catalog = JSON.parse(await fs.readFile("content/catalog.json", "utf8"));
-assert.equal(lessons.length, 115);
+assert.equal(lessons.length, 116);
 assert.equal(new Set(lessons.map((l) => l.id)).size, catalog.units.length);
 assert.deepEqual(
   new Set(lessons.map((l) => l.id)),

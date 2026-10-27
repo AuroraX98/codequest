@@ -5,8 +5,16 @@ export type QuestRoute = {
   phase: string;
   activeId: string;
   paragraph: number;
+  concept?: string;
 };
-const views = new Set(["quest", "studio", "path", "progress", "settings"]);
+const views = new Set([
+  "quest",
+  "studio",
+  "path",
+  "progress",
+  "settings",
+  "tools",
+]);
 const steps = new Set(["learn", "practice", "build", "math", "done"]);
 export function normalizeRoute(
   input: Partial<QuestRoute>,
@@ -24,6 +32,12 @@ export function normalizeRoute(
     studioMode: input.studioMode === "practice" ? "practice" : "course",
     phase: steps.has(input.phase ?? "") ? input.phase! : "learn",
     activeId,
+    ...(activeId === "python-01" &&
+    ["program", "values", "strings", "names", "assignment", "output"].includes(
+      input.concept ?? "",
+    )
+      ? { concept: input.concept }
+      : {}),
     paragraph: Math.max(
       0,
       Math.min(
@@ -39,6 +53,7 @@ export function routeHash(route: QuestRoute) {
     step: route.phase,
   });
   if (route.studioMode === "practice") params.set("mode", "practice");
+  if (route.concept) params.set("concept", route.concept);
   params.set("idea", String(route.paragraph + 1));
   return "#" + route.view + "?" + params;
 }
@@ -58,6 +73,7 @@ export function parseRoute(
       phase: params.get("step") ?? (view === "studio" ? "build" : "learn"),
       studioMode: params.get("mode") === "practice" ? "practice" : "course",
       paragraph: Number(params.get("idea") ?? 1) - 1,
+      concept: params.get("concept") ?? undefined,
     },
     fallbackId,
     units,

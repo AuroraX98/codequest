@@ -140,6 +140,6 @@ No saved provider key was read or copied. No new live AI request was required. P
 
 ## Final verification
 
-The updated site published successfully: source `13c37d2e032380c9b47c27eabdd195fb6bd1c7ac`, saved version 15, deployment `appgdep_6ac1e375b3bc81918828aef4baa7810c`.
+The updated site published successfully: source `13c37d2e032380c9b47c27eabdd195fb6bd1c7ac`, saved version 15, deployment `[deployment identifier omitted]`.
 
 B5: The production saved Pet Introduction remained selected with its untouched starter. Next explanation moved focus to Practice explanation 2 of 8; Back restored 1 of 8. History exposed expanded/collapsed states and its empty-version guidance. Show/Hide example solution exposed expanded/collapsed states and the example content. CodeQuest still showed 0 XP and the existing DeepSeek connection. No AI request was sent. Browser Back returned from Settings to AI practice with Pet Introduction retained. Production search for repeat found Python Loops. The updated offline pack finished with Ready. You can use this device offline. The original tab was returned to AI practice, theory page 1, with History and the solution closed. Viewport overrides were reset. The source remained clean after publishing. The final visual proof is outputs/navigation-search.jpg (local browser preview of the same published source); the hidden production browser panel could not provide a screenshot, so no production screenshot is claimed.

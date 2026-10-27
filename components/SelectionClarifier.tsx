@@ -13,7 +13,13 @@ import {
   selectedLessonPassage,
 } from "../lib/lesson-selection";
 
-type Passage = { text: string; left: number; top: number; bottom: number };
+type Passage = {
+  text: string;
+  left: number;
+  top: number;
+  bottom: number;
+  sectionKey?: string;
+};
 export default function SelectionClarifier({
   root,
   context,
@@ -24,6 +30,7 @@ export default function SelectionClarifier({
   provider,
   dark,
   onExplain,
+  onAddNote,
   onSettings,
 }: {
   root: RefObject<HTMLElement | null>;
@@ -35,6 +42,7 @@ export default function SelectionClarifier({
   provider: string;
   dark: boolean;
   onExplain: (text: string) => void;
+  onAddNote?: (text: string, sectionKey?: string) => void;
   onSettings: () => void;
 }) {
   const [passage, setPassage] = useState<Passage | null>(null);
@@ -65,6 +73,14 @@ export default function SelectionClarifier({
         return;
       }
       const rect = selected.range.getBoundingClientRect();
+      const anchor = (node: Node) =>
+        (node.nodeType === 1
+          ? (node as Element)
+          : node.parentElement
+        )?.closest<HTMLElement>("[data-annotation-section]")?.dataset
+          .annotationSection;
+      const startAnchor = anchor(selected.range.startContainer);
+      const endAnchor = anchor(selected.range.endContainer);
       if (rect.bottom < 0 || rect.top > window.innerHeight) {
         setPassage(null);
         return;
@@ -74,6 +90,7 @@ export default function SelectionClarifier({
         left: rect.left,
         top: rect.top,
         bottom: rect.bottom,
+        sectionKey: startAnchor === endAnchor ? startAnchor : undefined,
       });
     };
     const schedule = () => {
@@ -174,7 +191,8 @@ export default function SelectionClarifier({
     >
       <div className="selection-popover-heading">
         <b>
-          <Sparkles size={16} /> Ask {connected ? provider : "your assistant"}
+          <Sparkles size={16} />{" "}
+          {`Ask ${connected ? provider : "your assistant"}`}
         </b>
         <button
           type="button"
@@ -186,8 +204,29 @@ export default function SelectionClarifier({
         </button>
       </div>
       <blockquote>{passage.text}</blockquote>
-      {reason && <p role="status">{reason}</p>}
+      {reason && (
+        <p role="status">
+
+          {reason}
+        </p>
+      )}
       <div className="button-row">
+        {onAddNote && (
+          <button
+            data-add-note
+            type="button"
+            className="secondary"
+            disabled={!passage.sectionKey || passage.text.length > 12000}
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={() => {
+              const { text, sectionKey } = passage;
+              dismiss();
+              onAddNote(text, sectionKey);
+            }}
+          >
+            Add note
+          </button>
+        )}
         <button
           data-explain
           type="button"
@@ -200,7 +239,9 @@ export default function SelectionClarifier({
             onExplain(text);
           }}
         >
-          {busy ? "Assistant is answering…" : "Explain this"}
+          {busy
+            ? "Assistant is answering…"
+            : "Explain this"}
         </button>
         {!tooLong && online && (!enabled || !connected) && (
           <button

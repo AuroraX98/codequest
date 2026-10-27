@@ -1,12 +1,16 @@
 # CodeQuest
 
-A coding-learning app with 115 original topic projects across HTML, CSS, JavaScript, Python, SQL, Swift, TypeScript, React, backend development, and developer tools. Each track has beginner, intermediate, and advanced work, with math where it helps the project.
+A coding-learning app with 116 authored lessons (115 original topic projects plus input()) across HTML, CSS, JavaScript, Python, SQL, Swift, TypeScript, React, backend development, and developer tools. Each track has beginner, intermediate, and advanced work, with math where it helps the project.
 
 The charcoal and purple interface includes in-depth theory in small steps, familiar analogies, practice questions, a real code editor, project checks, a portfolio, XP, streaks, goals, and calm mode. Signed-in work and preferences save in D1. Device drafts belong to the current account; saved history keeps the previous 30 versions per topic. Backups export learning records and restore project files; completion records remain tied to checked lessons.
 
+## Simple learning view
+
+The learning screen now presents one short thought at a time, followed by a labeled code example and a small practice check where suitable. The full written material, conceptual illustrations and experiments remain available on demand. Notes, progress and all 116 lessons are preserved. See [single-idea learning](docs/single-idea-learning.md) for behavior and verification limits.
+
 ## Lesson explanations
 
-All 115 lessons have 7–9 focused theory pages, with 249 worked code examples. Each introduces required vocabulary and symbols, explains how the code works, gives expected results and changed-input cases, and covers the quiz/project requirements before practice. Relevant math stays with the lessons that use it. Examples use explicit language fences, exact whitespace and indentation, syntax colors for supported editor languages, horizontal scrolling, and raw-code copying. HTML examples render as text. Inline code terms are visually distinct. Paired ** markers display bold prose while literal asterisks in code stay unchanged. Back/Next focuses the start of the new theory page. Swift and terminal snippets preserve their source as plain monospace code.
+The curriculum contains 116 lessons and 822 written sections, including a dedicated input() microsequence. Each introduces required vocabulary and symbols, explains how the code works, gives expected results and changed-input cases, and covers the quiz/project requirements before practice. Relevant math stays with the lessons that use it. Examples use explicit language fences, exact whitespace and indentation, syntax colors for supported editor languages, horizontal scrolling, and raw-code copying. HTML examples render as text. Inline code terms are visually distinct. Paired ** markers display bold prose while literal asterisks in code stay unchanged. Back/Next focuses the start of the new theory page. Swift and terminal snippets preserve their source as plain monospace code.
 
 The SQL subquery project correlates each score with its own subject and includes a discriminating fixture. Python streaming work processes a one-shot input once and performs shallow-size comparison in a separate helper. CSS positioning checks use actual geometry and numeric transform/pivot values, including border-box layout. Real browser verification passed the intended CSS layout and rejected the wrong rotation.
 
@@ -27,7 +31,7 @@ Use your connected provider to create extra projects for a course topic at begin
 
 ## Running projects
 
-JavaScript, HTML, CSS, React, TypeScript, Python, and SQL run in isolated browser previews. TypeScript uses its real compiler; Python uses Pyodide; SQL uses SQLite through sql.js. Open Settings online and choose **Download offline pack** once on each device. The verified static pack is about 31.8 MB and contains the full app, all 115 lessons, and pinned Python, SQLite, TypeScript, and React runtimes. JavaScript, HTML, CSS, Python, SQL, TypeScript, and React browser projects then run offline. Swift still uses the Mac companion, and external packages, live websites, or deployment steps may need a connection. The preview cannot access the signed-in app's storage or APIs. JavaScript, Python, TypeScript and SQL computations run in workers, with a stop action and time limits. DOM/React previews use a separate opaque-origin frame.
+JavaScript, HTML, CSS, React, TypeScript, Python, and SQL run in isolated browser previews. TypeScript uses its real compiler; Python uses Pyodide; SQL uses SQLite through sql.js. Open Settings online and choose **Download offline pack** once on each device. The current static pack is about 33.5 MB and contains the full app, all 116 lessons, and pinned Python, SQLite, TypeScript, and React runtimes. JavaScript, HTML, CSS, Python, SQL, TypeScript, and React browser projects then run offline. Swift still uses the Mac companion, and external packages, live websites, or deployment steps may need a connection. The preview cannot access the signed-in app's storage or APIs. JavaScript, Python, TypeScript and SQL computations run in workers, with a stop action and time limits. DOM/React previews use a separate opaque-origin frame.
 
 Swift uses the downloadable macOS companion in Settings. It runs actual Swift compilation and checked programs in Apple's sandbox. SwiftUI interaction requires Xcode and manual confirmation. See the companion README for supported toolchains, browser local-network restrictions, and current Foundation compile limitations.
 
@@ -58,7 +62,7 @@ Validation: `node tests/local-mode.mjs` checks local request boundaries, spoofed
 
 ## Development
 
-This public repository is a clean source snapshot. It contains no API keys, user database, or private deployment history. The existing hosted app keeps its own access settings. To publish your own copy with Sites, register it as a new project; the included `.openai/hosting.json` contains generic database bindings and no live project ID. API key storage requires your deployment's own `AI_KEY_ENCRYPTION_KEY` server secret. Never commit that secret or a user's key.
+This repository is a clean source snapshot. It is currently private while updates are in progress. It contains no API keys, user database, or private deployment history. The existing hosted app keeps its own access settings. To publish your own copy with Sites, register it as a new project; the included `.openai/hosting.json` contains generic database bindings and no live project ID. API key storage requires your deployment's own `AI_KEY_ENCRYPTION_KEY` server secret. Never commit that secret or a user's key.
 
 Use Node 22.13 or newer and `npm install`, then `npm run dev`. The first dev/build run downloads the pinned third-party runtimes listed in `public/vendor/manifest.json` and verifies their sizes and SHA-256 checksums. Later runs reuse verified local copies. These generated copies are excluded from Git. Preserve the Sites Worker setup and `.openai/hosting.json`. Database migrations are in `drizzle/`; runtime tables are not created by requests. `.dev.vars`, local runtime state, credentials, and test databases are excluded from source publication.
 

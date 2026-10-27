@@ -1,0 +1,88 @@
+import { supportsCodeAnatomy } from "./code-anatomy";
+import { understandingPractice } from "./understanding-practice";
+import { lessonIdeas } from "./lesson-ideas";
+import { lessonBlocks } from "./lesson-markup";
+
+export type LessonPractice = {
+  kind: "practice";
+  code: string;
+  language: string;
+  question: string;
+  role: string;
+  answer: string;
+  options: string[];
+  explanation: string;
+  plainExplanation: string;
+};
+export type LessonStep =
+  | { kind: "explain"; text: string }
+  | { kind: "example"; code: string; language: string }
+  | { kind: "output"; code: string; language: string }
+  | LessonPractice;
+
+/** Use real sentence or semicolon boundaries; never turn a long idea into fragments. */
+export function shortLessonThoughts(text: string): string[] {
+  return lessonIdeas(text).flatMap((idea) => {
+    const thoughts: string[] = [];
+    let start = 0, inCode = false, inBold = false;
+    for (let i = 0; i < idea.length; i++) {
+      if (idea[i] === "`") { inCode = !inCode; continue; }
+      if (inCode) continue;
+      if (idea.slice(i, i + 2) === "**") { inBold = !inBold; i++; continue; }
+      if (!/[.!?;]/.test(idea[i])) continue;
+      // A sentence may end just inside a closing bold marker. Keep that marker.
+      const closesBold = inBold && idea.slice(i + 1, i + 3) === "**";
+      if (inBold && !closesBold) continue;
+      const end = i + (closesBold ? 3 : 1);
+      const tail = idea.slice(end);
+      const boundary = idea[i] === ";" ? /^\s+\S/ : /^\s+(?=(?:\*\*)?[A-Z0-9`"“])/;
+      if (!boundary.test(tail)) continue;
+      const thought = idea.slice(start, end).trim();
+      if (/\b(?:e\.g|i\.e|Mr|Mrs|Dr|vs)\.(?:\*\*)?$/i.test(thought)) continue;
+      thoughts.push(thought);
+      start = end;
+    }
+    if (idea.slice(start).trim()) thoughts.push(idea.slice(start).trim());
+    return thoughts;
+  });
+}
+
+/** Only reviewed consequence checks are generated. Unknown code stays an example;
+ * its authored lesson exercise supplies the understanding check instead. */
+export function codePartPractice(code: string, language: string): LessonPractice | null {
+  return understandingPractice(code, language);
+}
+
+/** A read-only view of the curriculum. The original text is the reference source. */
+export function buildLessonSteps(text: string, runtime: string): LessonStep[] {
+  const steps: LessonStep[] = [];
+  const examples = new Set<string>();
+  const addExample = (code: string, language: string) => {
+    if (!supportsCodeAnatomy(language)) {
+      steps.push({ kind: "output", code, language });
+      return;
+    }
+    const key = language.toLowerCase() + "\0" + code.trim();
+    if (examples.has(key)) return;
+    examples.add(key);
+    steps.push({ kind: "example", code, language });
+    const practice = codePartPractice(code, language);
+    if (practice) steps.push(practice);
+  };
+  for (const block of lessonBlocks(text, runtime)) {
+    if (block.kind === "code") {
+      addExample(block.code, block.language);
+      continue;
+    }
+    for (const paragraph of block.text.trim().split(/\n\s*\n/)) {
+      for (const thought of shortLessonThoughts(paragraph)) {
+        steps.push({ kind: "explain", text: thought });
+        for (const match of thought.matchAll(/`([^`\n]+)`/g)) {
+          const code = match[1];
+          if (/\w\s*\(|[A-Za-z_]\w*\s*=(?!=)|^["']/.test(code)) addExample(code, runtime);
+        }
+      }
+    }
+  }
+  return steps.length ? steps : [{ kind: "explain", text: "There is no reading in this section. Continue when you are ready." }];
+}
