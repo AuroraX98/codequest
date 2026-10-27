@@ -1,0 +1,12 @@
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import vm from 'node:vm';
+import ts from 'typescript';
+const exports={};vm.runInNewContext(ts.transpileModule(readFileSync('lib/study-label.ts','utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS}}).outputText,{exports});
+for(const title of ['A program','Values','print()','f-strings','HTML structure','SQL filters']) assert.equal(exports.studyLabel(title),`Study “${title}”`);
+assert.equal(exports.studyLabel(' print() '),'Study “print()”');
+const css=readFileSync('app/globals.css','utf8');
+assert.match(css,/\.course-project-choices > button \{[^}]*justify-content: flex-start/s);
+assert.match(css,/\.chat-log \{[^}]*padding-inline-end: 14px;[^}]*scrollbar-gutter: stable/s);
+assert.match(css,/\.project-prerequisites > \.primary \{ margin-top: 12px;/);
+console.log('Passed canonical quoted Study labels, code identifier casing and scoped layout declarations. Browser layout unverified by this static test.');

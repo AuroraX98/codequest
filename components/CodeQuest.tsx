@@ -28,6 +28,8 @@ import {
   Zap,
 } from "lucide-react";
 import { defaultProfile } from "../lib/profile";
+import { deviceStatusLabel } from "../lib/device-status-label";
+import { studyLabel } from "../lib/study-label";
 import { LearningClient, type DeviceStatus } from "../lib/learning-client";
 import AIConnectionSettings from "./AIConnectionSettings";
 import APIKeyFileSettings, {
@@ -350,6 +352,7 @@ export default function CodeQuest({
     setSelectedCourseProject(id);
     try { localStorage.setItem(`codequest-project-choice:${state.draftScope}:${activeId}`, id); } catch {}
   };
+  const syncLabel = deviceStatusLabel(deviceStatus, localMode);
   const availableCourseProjects = projectsForLesson(activeId);
   const selectedProject = availableCourseProjects.find(p => p.id === selectedCourseProject) ?? availableCourseProjects[0];
   const projectReadingMissing = lesson ? missingProjectReading(lesson, reading.records) : [];
@@ -1248,18 +1251,9 @@ export default function CodeQuest({
           aria-label="Learning workspace"
           inert={completing}
         >
-          {ready && (
+          {ready && syncLabel && (
             <div className="device-status" role="status">
-              <span>
-                {deviceStatus.online
-                  ? localMode
-                    ? "Local mode · This computer"
-                    : "Connected"
-                  : "Offline on this device"}
-                {deviceStatus.pending
-                  ? ` · ${deviceStatus.pending} changes waiting to sync`
-                  : ""}
-              </span>
+              <span>{syncLabel}</span>
               {(deviceStatus.pending > 0 ||
                 deviceStatus.conflict ||
                 deviceStatus.error) && (
@@ -1630,13 +1624,13 @@ export default function CodeQuest({
                           <p>{selectedProject.description ?? (selectedProject.core ? "Create a short introduction from a name and an age." : "Change an age and let your program calculate next year’s age.")}</p>
                           <p><strong>What you will make:</strong> {selectedProject.outcome ?? (selectedProject.core ? "A printed pet introduction using named values." : "A numeric result that updates when the starting age changes.")}</p>
                           <details><summary>Skills this project uses</summary><p>{(selectedProject.skills ?? ["Strings", "Number values", "Names", "Assignment", "print", ...(selectedProject.quantitative ? ["Adding one"] : [])]).join(" · ")}</p>
-                            <div className="editor-actions">{pythonConcepts.map(concept => <button className="text-button" key={concept.id} onClick={() => { setReturnToProject(selectedProject.id); setPhase("learn"); setConceptTarget(concept.id); }}>Study {concept.title}</button>)}</div>
+                            <div className="editor-actions">{pythonConcepts.map(concept => <button className="text-button" key={concept.id} onClick={() => { setReturnToProject(selectedProject.id); setPhase("learn"); setConceptTarget(concept.id); }}>{studyLabel(concept.title)}</button>)}</div>
                           </details>
                         </div>
-                        {!reading.loaded || reading.error || projectReadingMissing.length ? <div className="panel">
+                        {!reading.loaded || reading.error || projectReadingMissing.length ? <div className="panel project-prerequisites">
                           <h3>Cover the building blocks first</h3><p>These projects use the six Python Basics ideas. Mark each one as read after you study it. Reading marks record your activity, not mastery.</p>
                           <p>{reading.error || (!reading.loaded ? "Loading reading progress…" : `${projectReadingMissing.length} ideas still need a reading mark.`)}</p>
-                          <button className="primary" onClick={() => { setReturnToProject(selectedProject.id); setPhase("learn"); setConceptTarget((projectReadingMissing[0]?.replace("concept:", "") ?? "program") as ConceptId); }}>Study the next idea</button>
+                          <button className="primary" onClick={() => { setReturnToProject(selectedProject.id); setPhase("learn"); setConceptTarget((projectReadingMissing[0]?.replace("concept:", "") ?? "program") as ConceptId); }}>{studyLabel(pythonConcepts.find(c => c.id === projectReadingMissing[0]?.replace("concept:", ""))?.title ?? "A program")}</button>
                         </div> : <CourseProjectStudio key={state.draftScope + selectedProject.id} project={selectedProject} lesson={lesson} scope={state.draftScope} initialCode={selectedProject.core ? progress?.code : undefined} onCompleteCore={async (source, checks) => {
                           if (!progress?.quizPassed) throw new Error("Finish the Try it exercise before finishing the course project. Your draft is saved here.");
                           if (completionLock.current) throw new Error("Project completion is already being saved.");

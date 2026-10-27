@@ -1,4 +1,5 @@
 "use client";
+import { studyLabel } from "../lib/study-label";
 import { useMemo, useState } from "react";
 import { ArrowRight } from "lucide-react";
 import {
@@ -86,7 +87,7 @@ export default function PythonTools({
                     <h3>{item.title}</h3>
                     <p>{item.hint}</p>
                     <span className="python-tool-link">
-                      Study this <ArrowRight size={16} />
+                      {studyLabel(item.title)} <ArrowRight size={16} />
                     </span>
                   </button>
                 ))}

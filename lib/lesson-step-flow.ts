@@ -86,3 +86,16 @@ export function buildLessonSteps(text: string, runtime: string): LessonStep[] {
   }
   return steps.length ? steps : [{ kind: "explain", text: "There is no reading in this section. Continue when you are ready." }];
 }
+
+/** Optional detail must add information, not preview or repeat canonical steps. */
+export function distinctLessonReference(text: string, reference: string, runtime: string): string {
+  const normalized = (value: string) => value.replace(/\s+/g, " ").trim();
+  if (!reference.trim() || normalized(text).includes(normalized(reference))) return "";
+  const original = lessonBlocks(text, runtime);
+  const thoughts = new Set(original.filter(b => b.kind === "prose").flatMap(b => shortLessonThoughts(b.text)).map(normalized));
+  const code = new Set(original.filter(b => b.kind === "code").map(b => b.language + "\0" + b.code.trim()));
+  return lessonBlocks(reference, runtime).flatMap(block => {
+    if (block.kind === "code") return code.has(block.language + "\0" + block.code.trim()) ? [] : [`\`\`\`${block.language}\n${block.code.trimEnd()}\n\`\`\``];
+    return shortLessonThoughts(block.text).filter(thought => !thoughts.has(normalized(thought)));
+  }).join("\n\n");
+}

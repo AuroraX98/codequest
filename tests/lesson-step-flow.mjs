@@ -50,14 +50,14 @@ try {
   await symlink(path.join(cwd, 'node_modules'), path.join(temp, 'node_modules'), 'dir');
   await compile('components/LessonStepFlow.tsx');
   const { default: Flow } = await importFile('components/LessonStepFlow.tsx');
-  const { buildLessonSteps, codePartPractice, shortLessonThoughts } = await importFile('lib/lesson-step-flow.ts');
+  const { buildLessonSteps, codePartPractice, shortLessonThoughts, distinctLessonReference } = await importFile('lib/lesson-step-flow.ts');
   const { lessonBlocks } = await importFile('lib/lesson-markup.ts');
   const { codeAnatomy } = await importFile('lib/code-anatomy.ts');
   const { default: Content } = await importFile('components/LessonContent.tsx');
   const lessons = JSON.parse(await readFile(path.join(cwd, 'content/lessons.json'), 'utf8'));
   let sections = 0, ideas = 0, examples = 0, exercises = 0;
 
-  await check('Every authored section preserves prose words, inline code, and complete source in a closed reference', () => {
+  await check('Every authored section preserves canonical prose and examples without duplicate optional text', () => {
     const doc = new JSDOM('').window.document;
     for (const lesson of lessons) for (const text of lesson.explanation) {
       sections++;
@@ -79,21 +79,23 @@ try {
       ideas += prose.length;
       examples += steps.filter(step => step.kind === 'example').length;
       doc.body.innerHTML = renderToStaticMarkup(React.createElement(Flow, { text, runtime: lesson.runtime, onNext() {}, onBack() {}, backDisabled: true }));
-      const reference = doc.querySelector('[data-lesson-reference]');
-      assert.equal(reference.open, false);
-      const original = renderToStaticMarkup(React.createElement(Content, { text, runtime: lesson.runtime }));
-      const expected = new JSDOM(original).window.document;
-      const actualContent = reference.querySelector('.lesson-content').cloneNode(true);
-      for (const button of actualContent.querySelectorAll('[data-glossary-term]')) button.replaceWith(button.textContent);
-      assert.equal(actualContent.outerHTML, expected.querySelector('.lesson-content').outerHTML, lesson.id + ': original renderer preserved except optional term links');
-      assert.deepEqual([...reference.querySelectorAll('pre code')].map(node => node.textContent), blocks.filter(block => block.kind === 'code').map(block => block.code));
+      assert.equal(doc.querySelector('[data-lesson-reference]'), null, lesson.id + ': no duplicate source expander');
       assert.equal(doc.querySelectorAll('[data-step-kind]').length, 1);
-      expected.defaultView.close();
+
     }
     doc.defaultView.close();
     assert.equal(sections, lessons.reduce((sum, lesson) => sum + lesson.explanation.length, 0));
     assert.ok(examples > 249, 'Includes inline examples as well as fenced blocks');
     assert.ok(exercises > 0);
+  });
+
+  await check('Optional references keep only distinct clarification across shared templates', () => {
+    const text = 'Instructions that Python follows. A program turns a task you can describe into precise steps the computer can repeat.\n\n```python\nprint("Hello")\n```';
+    assert.equal(distinctLessonReference(text, text, 'python'), '');
+    assert.equal(distinctLessonReference(text, text.slice(text.indexOf('A program')), 'python'), '');
+    assert.equal(distinctLessonReference('First thought. Second thought.', 'Second thought. A new clarification.', 'python'), 'A new clarification.');
+    assert.ok(buildLessonSteps(text, 'python').some(s => s.kind === 'example' && s.code.includes('print("Hello")')));
+    assert.ok(buildLessonSteps(text, 'python').some(s => s.kind === 'explain' && s.text.startsWith('A program turns')));
   });
 
   await check('Short thoughts keep authored inline and bold units intact', () => {
@@ -188,7 +190,7 @@ try {
   });
 
   await check('Final practice gates manual completion, source changes reset, and first Back invokes parent only when allowed', async () => {
-    await render({ text: 'Use `print("Only")`.', backDisabled: false });
+    await render({ text: 'Use `print("Only")`.', referenceText: 'A distinct clarification.', backDisabled: false });
     assert.equal(document.querySelector('[data-lesson-step-flow]').dataset.stepIndex, '0');
     await click(document.querySelector('[data-step-back]'));
     assert.equal(back, 1);
@@ -202,7 +204,7 @@ try {
     assert.equal(document.querySelector('[data-lesson-reference]').open, true);
     await render({ text: 'A different short thought.' });
     assert.equal(document.querySelector('[data-lesson-step-flow]').dataset.stepIndex, '0');
-    assert.equal(document.querySelector('[data-lesson-reference]').open, false);
+    assert.equal(document.querySelector('[data-lesson-reference]'), null);
     assert.equal(panel().dataset.stepKind, 'explain');
     assert.deepEqual(externalCalls, []);
     await render({ text: 'First thought. Final thought.', startAtEnd: true });
@@ -238,7 +240,8 @@ try {
     const evil = '<img src=x onerror="alert(1)"><script>alert("no")</script>';
     await render({ text: '```html\n' + evil + '\n```' });
     assert.equal(document.querySelectorAll('img,script,iframe,[onclick],[onerror]').length, 0);
-    assert.equal(document.querySelector('[data-lesson-reference] pre code').textContent, evil + '\n');
+    assert.equal(document.querySelector('[data-lesson-reference]'), null);
+    assert.ok(buildLessonSteps('```html\n' + evil + '\n```', 'html').some(step => step.kind === 'example' && step.code.trim() === evil));
     await render({ text: '```output\n' + evil + '\n```' });
     assert.equal(panel().dataset.stepKind, 'output');
     assert.equal(document.querySelector('[data-code-anatomy]'), null);

@@ -1,0 +1,16 @@
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import vm from 'node:vm';
+import ts from 'typescript';
+const exports={}; vm.runInNewContext(ts.transpileModule(readFileSync('lib/device-status-label.ts','utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS}}).outputText,{exports});
+const label=exports.deviceStatusLabel, healthy={online:true,pending:0,syncing:false,storageAvailable:true,conflict:null,error:''};
+assert.equal(label(healthy,false),'');
+assert.equal(label({...healthy,syncing:true},false),'');
+assert.equal(label(healthy,true),'Local mode · This computer');
+assert.equal(label({...healthy,online:false},false),'Offline on this device');
+assert.equal(label({...healthy,pending:2},false),'2 changes waiting to sync');
+assert.equal(label({...healthy,conflict:{}},false),'Sync conflict needs review');
+assert.equal(label({...healthy,error:'detail'},false),'Sync needs attention');
+assert.equal(label({...healthy,storageAvailable:false},false),'Device saving unavailable');
+assert.equal(label({...healthy,online:false,pending:2},false),'Offline on this device · 2 changes waiting to sync');
+console.log('Passed healthy banner removal and preserved local/offline/pending/conflict/error/save warnings without dangling separators.');

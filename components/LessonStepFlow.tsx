@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from "react";
-import { buildLessonSteps, type LessonStep } from "../lib/lesson-step-flow";
+import { buildLessonSteps, distinctLessonReference, type LessonStep } from "../lib/lesson-step-flow";
 import CodeAnatomy from "./CodeAnatomy";
 import { codeAnatomy } from "../lib/code-anatomy";
 import LessonContent, { CodeExample, InlineCode } from "./LessonContent";
@@ -36,6 +36,7 @@ export default function LessonStepFlow(props: LessonStepFlowProps) {
 
 function StepFlow({ text, runtime, referenceText = text, referenceVisual, resumeKey, title, onNext, onBack, backDisabled, completion, startAtEnd = false, onStageChange }: LessonStepFlowProps) {
   const steps = useMemo(() => buildLessonSteps(text, runtime), [text, runtime]);
+  const extraReference = useMemo(() => distinctLessonReference(text, referenceText, runtime), [text, referenceText, runtime]);
   const [index, setIndex] = useState(() => startAtEnd ? steps.length - 1 : 0);
   const [selection, setSelection] = useState<string | null>(null);
   const [result, setResult] = useState<"correct" | "revealed" | null>(null);
@@ -139,13 +140,12 @@ function StepFlow({ text, runtime, referenceText = text, referenceVisual, resume
         {step.kind === "practice" && !result ? "Check" : isLast || result ? "Continue" : "Next"}
       </button>
     </nav>
-    <details key={`${index}:reference`} className={styles.reference} data-lesson-reference>
+    {(extraReference || referenceVisual) && <details key={`${index}:reference`} className={styles.reference} data-lesson-reference>
       <summary>Tell me more</summary>
       <div className={styles.referenceContent}>
-        <p className={styles.referenceLabel}>The full explanation and original examples.</p>
-        <LessonContent text={referenceText} runtime={runtime} glossary />
+        {extraReference && <LessonContent text={extraReference} runtime={runtime} glossary />}
         {referenceVisual}
       </div>
-    </details>
+    </details>}
   </section>;
 }
