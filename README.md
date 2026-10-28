@@ -44,6 +44,6 @@ The offline artifact test verifies all 57 file hashes, HTML transports and depen
 
 ## Licensing
 
-No blanket open-source license has been granted for CodeQuest's original application code or authored curriculum in this repository. Public visibility is not an MIT license or permission to redistribute/relicense those works. No MusicQuest license applies here. Existing file-specific licenses remain in force.
+CodeQuest's original application code is licensed under the [MIT License](LICENSE), copyright 2026 AuroraX98. Authored lessons, curriculum prose, explanations, exercises and other teaching content are excluded from this grant, including teaching content embedded in source files. Third-party code, data and assets retain their own licenses; existing file-specific licenses remain in force.
 
 Preserve [third-party notices](public/third-party/README.txt), vendor license files and source links when using covered components. [Notice scope](docs/third-party-notice-scope.md) records remaining attribution questions; this release does not assert legal clearance or complete dependency-license closure.
