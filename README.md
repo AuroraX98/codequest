@@ -1,5 +1,9 @@
 # CodeQuest
 
+**[Open the app online](https://codequest-personal-learning.aurorax.chatgpt.site)**
+
+Sign in with ChatGPT when prompted to access your own learning records.
+
 CodeQuest is a coding-learning app for people who want small, explained steps, worked examples and understanding checks. The current release contains **1,221 lessons across 21 courses** and **1,029 terminology entries**. Backend has 43 lessons, Developer Toolkit 24 and AI 32. This is a bounded curriculum, not a claim to cover every API or certify mastery.
 
 ## Online through ChatGPT / Sites
