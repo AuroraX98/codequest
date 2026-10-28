@@ -1,0 +1,344 @@
+[
+  {
+    "id": "c-25",
+    "quizTarget": "If p starts at a + 2 instead, what is printed?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "For an array a, a + 1 points to its second element, not its second byte. Dereference only an actual element. You may form a pointer one past the array for comparison, but must not dereference it."
+      },
+      {
+        "paragraph": 1,
+        "fact": "Subtract pointers only within the same array (including its one-past position). The result has type ptrdiff_t from <stddef.h>; printf uses %td for it. Array positions and distances must remain representable. In C17, reaching the closing brace of main returns status 0; this special rule does not supply a return value for ordinary non-void functions."
+      }
+    ],
+    "reasoning": "a + 2 designates the third element, whose value is 9; pointer subtraction counts two elements, not bytes.",
+    "source": "https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf",
+    "prerequisites": [
+      "c-24"
+    ]
+  },
+  {
+    "id": "c-26",
+    "quizTarget": "If the second counter() call is removed, what does *first print?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "A block-local ordinary object has automatic storage duration: its lifetime ends when execution leaves its block. Returning its address would not extend that lifetime. Do not read through a dangling pointer."
+      },
+      {
+        "paragraph": 1,
+        "fact": "A block-local static object exists for the entire program and is initialized once. Returning its address is valid, but callers share that same object. ++n adds one and stores it; this single-threaded example keeps the count small."
+      }
+    ],
+    "reasoning": "Both calls access the same static n. With only the first call, it has been incremented once from zero.",
+    "source": "https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf",
+    "prerequisites": [
+      "c-25"
+    ]
+  },
+  {
+    "id": "c-27",
+    "quizTarget": "If n = 8 becomes *p = 8, what happens?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "const int *p allows reading the pointed-to int but not assigning through *p. It does not freeze a separate non-const object against all other access paths."
+      },
+      {
+        "paragraph": 1,
+        "fact": "int * const p instead prevents changing the pointer itself, while permitting writes to its non-const target. Combining both const positions restricts both operations. Never cast away const to modify an object actually defined const."
+      }
+    ],
+    "reasoning": "The const qualifier on the pointed-to int prevents assignment through *p even though n itself remains modifiable through n.",
+    "source": "https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf",
+    "prerequisites": [
+      "c-26"
+    ]
+  },
+  {
+    "id": "c-28",
+    "quizTarget": "If measure(&n) becomes measure(NULL), what prints?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "NULL is a null pointer constant provided by standard headers. A null pointer points to no object; comparing it is allowed, dereferencing it is not."
+      },
+      {
+        "paragraph": 1,
+        "fact": "A function may accept NULL for an optional output only if its documented contract allows it. Here result receives the number only when non-null; the return value independently reports success. A caller-provided output must also point to a live writable int."
+      }
+    ],
+    "reasoning": "The null check skips the output assignment, leaving n at zero; the function still returns its independent success status of one.",
+    "source": "https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf",
+    "prerequisites": [
+      "c-27"
+    ]
+  },
+  {
+    "id": "c-29",
+    "quizTarget": "If n is 11 instead, what happens?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "Recursion means a function calls itself. A base case returns without another call, and each recursive call must move toward it."
+      },
+      {
+        "paragraph": 1,
+        "fact": "This sum accepts unsigned inputs only through 10. The caller rejects larger inputs before recursion, bounding both depth and arithmetic. This is not a claim that C guarantees unlimited call-stack space."
+      }
+    ],
+    "reasoning": "The caller checks the maximum before calling sum, so input eleven never enters the recursion.",
+    "source": "https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf",
+    "prerequisites": [
+      "c-28"
+    ]
+  },
+  {
+    "id": "c-30",
+    "quizTarget": "If p points to a instead of b, what prints?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "A struct holds named members. struct Point names the type; p.x accesses the member of an object. A designated initializer such as .x = 2 explicitly names the field being initialized."
+      },
+      {
+        "paragraph": 1,
+        "fact": "ptr->x means (*ptr).x. Assigning one structure to another copies its member values; it does not make the two structures aliases. Pointer-valued members, if present, would copy pointers rather than deep-copy their targets."
+      }
+    ],
+    "reasoning": "b already contains its own copied x value of two. Redirecting p to a makes the later member assignment affect a instead.",
+    "source": "https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf",
+    "prerequisites": [
+      "c-29"
+    ]
+  },
+  {
+    "id": "c-31",
+    "quizTarget": "If end.value is initialized to 12, what prints?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "typedef gives an existing type another name. typedef struct Node Node allows Node where you would otherwise write struct Node. It does not allocate a node."
+      },
+      {
+        "paragraph": 1,
+        "fact": "Within the structure definition, struct Node *next refers to a node without embedding a whole node. A structure cannot directly contain a full instance of itself: that would require an unbounded size. NULL can mark the end of this short chain."
+      }
+    ],
+    "reasoning": "start.next points to end, so following that link reads end.value after its changed initialization.",
+    "source": "https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf",
+    "prerequisites": [
+      "c-30"
+    ]
+  },
+  {
+    "id": "c-32",
+    "quizTarget": "If s starts as DONE, what prints?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "An enum declares named integer constants. Explicit values make the intended representation clear here. This is a C enum, not a C++ scoped enum or a class."
+      },
+      {
+        "paragraph": 1,
+        "fact": "C does not automatically enforce a state machine. The function below only moves READY to DONE; other inputs remain unchanged. A switch or an if still supplies the rules."
+      }
+    ],
+    "reasoning": "The condition is false for DONE, so finish returns the supplied DONE unchanged; comparison with DONE is true.",
+    "source": "https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf",
+    "prerequisites": [
+      "c-31"
+    ]
+  },
+  {
+    "id": "c-33",
+    "quizTarget": "If initialization consistently switches to FRACTION and .value.fraction = 2.5, what prints?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "A union overlays its members in shared storage; it does not hold independent copies of every member. This lesson reads only the member most recently stored."
+      },
+      {
+        "paragraph": 1,
+        "fact": "An enclosing enum tag tells our code whether the union contains an int or a double. The language does not maintain that relationship automatically. Update the tag together with its matching member; never pretend a mismatched read is a numeric conversion."
+      }
+    ],
+    "reasoning": "The changed tag selects the fraction branch, and the consistently initialized double prints with one digit after the decimal point.",
+    "source": "https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf",
+    "prerequisites": [
+      "c-32"
+    ]
+  },
+  {
+    "id": "c-34",
+    "quizTarget": "If the stored value becomes 19, what prints on successful allocation?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "malloc from <stdlib.h> requests a number of bytes and returns NULL on failure. In C, its void * result converts to an object pointer without a cast. sizeof *p requests the size of the pointed-to type without reading an uninitialized value."
+      },
+      {
+        "paragraph": 1,
+        "fact": "Successful malloc storage is not initialized. Store a value before reading it. free releases an allocation exactly once; do not use its former contents afterward. Allocation failure here returns a failure status, not the successful output."
+      }
+    ],
+    "reasoning": "The successful allocation is explicitly assigned nineteen before reading; malloc itself does not choose that value.",
+    "source": "https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf",
+    "prerequisites": [
+      "c-33"
+    ]
+  },
+  {
+    "id": "c-35",
+    "quizTarget": "If the assignment targets a[0] instead, what prints on success?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "calloc(count, element_size) allocates an array and initializes all bits of its storage to zero. Check NULL before use. For int elements this yields integer zero."
+      },
+      {
+        "paragraph": 1,
+        "fact": "All-bits-zero is not a portable promise of a null pointer representation or every floating representation. Here only int elements are read, and only indices below count are used."
+      }
+    ],
+    "reasoning": "calloc gives both int elements zero initially. Writing the first element leaves the second at zero.",
+    "source": "https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf",
+    "prerequisites": [
+      "c-34"
+    ]
+  },
+  {
+    "id": "c-36",
+    "quizTarget": "If the original a[0] is initialized to 6, what prints after successful growth?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "realloc can resize an existing allocation. For the positive size used here, failure returns NULL and leaves the original allocation valid. Success may move it and ends the old allocation; use the returned pointer afterward, not old aliases."
+      },
+      {
+        "paragraph": 1,
+        "fact": "Store the result in a temporary pointer. On failure free the original before returning. Preserved old elements retain their values; newly added bytes need initialization. Avoid zero-size realloc in this pattern."
+      }
+    ],
+    "reasoning": "Successful realloc preserves the original first element, and the second element receives nine after growth.",
+    "source": "https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf",
+    "prerequisites": [
+      "c-35"
+    ]
+  },
+  {
+    "id": "c-37",
+    "quizTarget": "If release(&p) is called a second time before printing, what happens?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "An owning pointer is responsible for eventually freeing an allocation. C does not enforce this responsibility. A borrowed pointer may access a live allocation but must not free it under this contract."
+      },
+      {
+        "paragraph": 1,
+        "fact": "The release contract requires owner itself to point to a live int * variable; owner must not be NULL. int **owner points to that int * variable. *owner accesses that pointer variable; free(*owner) releases its allocation, then *owner = NULL clears the caller\u2019s pointer. free(NULL) is allowed, so a second call with this cleared owner is safe. Other aliases are not automatically cleared."
+      }
+    ],
+    "reasoning": "The first release stores NULL in the caller pointer. The second call therefore passes NULL to free rather than passing the old allocation again.",
+    "source": "https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf",
+    "prerequisites": [
+      "c-36"
+    ]
+  },
+  {
+    "id": "c-38",
+    "quizTarget": "If count is zero, what happens?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "size_t is an unsigned size type. Multiplying count by element size can wrap to a smaller value. SIZE_MAX from <stdint.h> is its maximum. For nonzero element size, count > SIZE_MAX / element_size detects an unrepresentable product before multiplication."
+      },
+      {
+        "paragraph": 1,
+        "fact": "This example also rejects zero count as an application policy. A representable byte size is not proof that memory is available; allocation still needs a NULL check."
+      }
+    ],
+    "reasoning": "The zero-count branch returns before either multiplication or malloc; this is the chosen application policy.",
+    "source": "https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf",
+    "prerequisites": [
+      "c-37"
+    ]
+  },
+  {
+    "id": "c-39",
+    "quizTarget": "If the second appended value is 9 instead of 7, what prints on success?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "A dynamic array tracks data, length, and capacity. Only indices below length hold initialized elements in this example; capacity describes allocated slots. The invariant is length <= capacity."
+      },
+      {
+        "paragraph": 1,
+        "fact": "When full, reserve a larger allocation before writing. This deliberately bounded array grows from one to two slots only, rejecting further appends. Return status tells the caller whether append succeeded; do not increase length on failure. length++ uses the old index, then increments length."
+      }
+    ],
+    "reasoning": "Both appends succeed and increase length once each. The changed second value occupies index one; capacity growth does not add logical elements.",
+    "source": "https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf",
+    "prerequisites": [
+      "c-38"
+    ]
+  },
+  {
+    "id": "c-40",
+    "quizTarget": "If b.value is initialized to 11, what prints before cleanup?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "Each linked node holds a value and a pointer to the next node. The head is the first node; NULL ends the chain. Unlike an array, successive nodes need not occupy adjacent storage."
+      },
+      {
+        "paragraph": 1,
+        "fact": "Read the next pointer while the current node is still alive, then free the current node and advance. Reading current->next after freeing current would be invalid. If allocating a later node fails, release the earlier allocation. (struct Node){...} is a compound literal: it creates a structure value used here to initialize a node by assignment."
+      }
+    ],
+    "reasoning": "The next pointer in a leads to b, whose value is eleven. The print occurs while both nodes are alive, before cleanup.",
+    "source": "https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf",
+    "prerequisites": [
+      "c-39"
+    ]
+  },
+  {
+    "id": "c-41",
+    "quizTarget": "If apply receives plus_one instead, what prints?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "int (*operation)(int) declares a pointer to a function accepting an int and returning int. The parentheses matter: without them, int *operation(int) would declare a function returning a pointer."
+      },
+      {
+        "paragraph": 1,
+        "fact": "A function name can supply its function pointer. operation(value) calls it. The function-pointer type must match the called function; never cast an incompatible function pointer to bypass the contract. Here both functions are safe for the small input 4."
+      }
+    ],
+    "reasoning": "apply invokes the supplied function with four. plus_one adds one instead of doubling it.",
+    "source": "https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf",
+    "prerequisites": [
+      "c-40"
+    ]
+  },
+  {
+    "id": "c-42",
+    "quizTarget": "If the comparator reverses its signs to (*a < *b) - (*a > *b), what prints?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "qsort from <stdlib.h> receives an array address, element count, element byte size, and comparator. The comparator gets const void * addresses of two elements. In C, assigning these to const int * restores the known element type for this int array."
+      },
+      {
+        "paragraph": 1,
+        "fact": "Return negative, zero, or positive for less, equal, or greater. (a > b) - (a < b) produces 1, 0, or -1 without subtracting the possibly extreme values themselves. A comparator must give consistent ordering; qsort does not promise stable ordering among equal elements."
+      }
+    ],
+    "reasoning": "Reversing the signs tells qsort that larger int values come first, producing descending order.",
+    "source": "https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf",
+    "prerequisites": [
+      "c-41"
+    ]
+  }
+]

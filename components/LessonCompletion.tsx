@@ -107,10 +107,10 @@ export default function LessonCompletion({
             <span>Practice quiz passed</span>
             <strong>{score.quizPassed ? "1/1" : "0/1"}</strong>
           </li>
-          <li>
+          {lesson.learningMode !== "concept" && <li>
             <span>Project completion recorded</span>
             <strong>{score.projectCompleted ? "1/1" : "0/1"}</strong>
-          </li>
+          </li>}
         </ul>
         <p>
           Each required step counts equally. Opening a section, diagrams, notes
@@ -118,7 +118,7 @@ export default function LessonCompletion({
         </p>
         <p>
           Completion tracks saved activities, not mastery. Attempts alone do not
-          count; a quiz pass and recorded project completion do.
+          count; {lesson.learningMode === "concept" ? "marked reading and a saved quiz pass count for this concept lesson." : "a quiz pass and recorded project completion do."}
         </p>
 
         {known && score.legacyReadingUnknown && (

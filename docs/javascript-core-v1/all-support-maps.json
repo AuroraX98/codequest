@@ -1,0 +1,1046 @@
+[
+  {
+    "id": "javascript-35",
+    "quizTarget": "Why would parseInt(\"4.5tail\", 10) be wrong for the stated whole-value validation policy?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "Number(text) converts the whole string to a Number; surrounding whitespace is allowed. Empty or whitespace-only text converts to zero, so a form may deliberately reject that case first. String(value) returns a text representation without changing the original value."
+      },
+      {
+        "paragraph": 1,
+        "fact": "parseInt(text, 10) reads an integer prefix in base ten. For \"12px\" it returns 12, while Number(\"12px\") returns NaN, a special invalid-number value. Neither rule is universally the right validation policy. Number.isFinite(value) returns true only for a finite Number, not Infinity, NaN or a numeric string."
+      },
+      {
+        "paragraph": 2,
+        "fact": "toFinite receives a string. trim() returns a new string with surrounding whitespace removed. Reject a blank cleaned string, then use Number and Number.isFinite. Return the finite numeric value or null; this policy uses Number syntax, including an explicit hexadecimal string such as \"0x10\"."
+      },
+      {
+        "paragraph": 3,
+        "fact": "```javascript\nfunction toFinite(text) {\n  if (text.trim() === \"\") return null;\n  const value = Number(text);\n  return Number.isFinite(value) ? value : null;\n}\nconsole.log(toFinite(\"12px\"));\nconsole.log(parseInt(\"12px\", 10));\nconsole.log(String(Number(\"12px\")));\n```\nnull; 12; NaN"
+      },
+      {
+        "paragraph": 4,
+        "fact": "Implement toFinite(text) for string inputs. Reject blank text and non-finite conversions with null. Otherwise return Number(text); do not use parseInt to silently accept a numeric prefix."
+      }
+    ],
+    "reasoning": "parseInt is a prefix parser. The stated policy requires the whole cleaned string to convert to a finite Number.",
+    "source": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number",
+    "prerequisites": [
+      "javascript-02",
+      "javascript-20"
+    ]
+  },
+  {
+    "id": "javascript-36",
+    "quizTarget": "Why check the sum even when both input values are safe integers?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "Number uses binary floating-point. Number.MAX_SAFE_INTEGER is 9007199254740991: within the safe integer range, distinct neighboring integers are represented distinctly. Some larger integers are representable, but not every neighbor is."
+      },
+      {
+        "paragraph": 1,
+        "fact": "Number.isSafeInteger(value) returns true for an integer Number within the safe range, and false for fractions, strings or unsafe magnitudes. safeAdd accepts two values and returns null unless both inputs and their sum are safe integers. A safe pair can still produce an unsafe sum."
+      },
+      {
+        "paragraph": 2,
+        "fact": "The unsafe expressions Number.MAX_SAFE_INTEGER + 1 and Number.MAX_SAFE_INTEGER + 2 produce the same Number. Seeing no decimal point does not prove exact integer arithmetic. For larger exact counters use the separate BigInt lesson, not guessed rounding."
+      },
+      {
+        "paragraph": 3,
+        "fact": "```javascript\nfunction safeAdd(a, b) {\n  if (!Number.isSafeInteger(a) || !Number.isSafeInteger(b)) return null;\n  const total = a + b;\n  return Number.isSafeInteger(total) ? total : null;\n}\nconsole.log(safeAdd(4, 7));\nconsole.log(safeAdd(Number.MAX_SAFE_INTEGER, 1));\nconsole.log(Number.MAX_SAFE_INTEGER + 1 === Number.MAX_SAFE_INTEGER + 2);\n```\n11; null; true"
+      },
+      {
+        "paragraph": 4,
+        "fact": "Implement safeAdd(a, b). Return their sum only when both inputs and the result satisfy Number.isSafeInteger; otherwise return null."
+      }
+    ],
+    "reasoning": "Input validity does not imply the result stays in the supported representation range.",
+    "source": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/isSafeInteger",
+    "prerequisites": [
+      "javascript-02",
+      "javascript-35"
+    ]
+  },
+  {
+    "id": "javascript-37",
+    "quizTarget": "Why should addCounters convert the original strings directly to BigInt?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "BigInt represents integers without the Number safe-range restriction. A literal such as 2n is a BigInt, not a Number. BigInt(text) converts a valid integer string directly, avoiding a rounded Number intermediate. BigInt does not represent fractions."
+      },
+      {
+        "paragraph": 1,
+        "fact": "Adding a BigInt to a Number throws TypeError; write 1n rather than 1 when adding to a BigInt. String(bigintValue) produces decimal text without the literal suffix n. Converting an already rounded Number to BigInt cannot recover lost digits. In the worked try/catch, catch binds the thrown error to error; error.name reads its error-category string."
+      },
+      {
+        "paragraph": 2,
+        "fact": "addCounters receives two valid decimal integer strings and returns their BigInt sum. Validation of arbitrary user strings is outside this small contract. The result remains BigInt until a deliberate text conversion for display."
+      },
+      {
+        "paragraph": 3,
+        "fact": "```javascript\nfunction addCounters(left, right) {\n  return BigInt(left) + BigInt(right);\n}\nconsole.log(String(addCounters(\"9007199254740993\", \"2\")));\ntry { console.log(2n + 1); } catch (error) { console.log(error.name); }\n```\n9007199254740995; TypeError"
+      },
+      {
+        "paragraph": 4,
+        "fact": "Implement addCounters(left, right) for valid decimal integer strings. Convert each directly with BigInt, return a BigInt sum, and do not pass through Number."
+      }
+    ],
+    "reasoning": "BigInt preserves the integer described by a valid string; it cannot infer digits lost in an earlier Number conversion.",
+    "source": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/BigInt",
+    "prerequisites": [
+      "javascript-02",
+      "javascript-36"
+    ]
+  },
+  {
+    "id": "javascript-38",
+    "quizTarget": "What happens for readWhen(0, reader)?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "The && operator is not a Boolean-conversion function. It evaluates its left operand first. If that value is falsy, it returns that value without evaluating the right side. Otherwise it evaluates and returns the right side."
+      },
+      {
+        "paragraph": 1,
+        "fact": "readWhen(flag, reader) returns flag && reader(). reader is a supplied zero-argument function. If flag is 0, the result is the number 0 and reader is never called. If flag is true, the result is whatever reader returns, even an empty string. The example () => \"ready\" is a zero-argument arrow function that returns \"ready\" when called; passing it does not call it yet."
+      },
+      {
+        "paragraph": 2,
+        "fact": "Use this behavior when preserving the actual operand result is intended. If an API requires a Boolean result instead, explicitly convert it rather than assuming && always returns true or false. This extends the earlier ||/?? lesson without changing their rules."
+      },
+      {
+        "paragraph": 3,
+        "fact": "```javascript\nfunction readWhen(flag, reader) {\n  return flag && reader();\n}\nlet calls = 0;\nconsole.log(readWhen(0, () => ++calls));\nconsole.log(calls);\nconsole.log(readWhen(true, () => \"ready\"));\n```\n0; 0; ready"
+      },
+      {
+        "paragraph": 4,
+        "fact": "Implement readWhen(flag, reader). Return flag && reader() exactly, preserving falsy flag values and the reader result. Do not call reader when flag is falsy."
+      }
+    ],
+    "reasoning": "Falsy 0 is returned directly, and the right operand is skipped.",
+    "source": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Logical_AND",
+    "prerequisites": [
+      "javascript-26",
+      "javascript-06"
+    ]
+  },
+  {
+    "id": "javascript-39",
+    "quizTarget": "Why does the \"letter\" case reach the same return as \"card\"?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "switch(value) compares its value against case expressions using strict equality. A matching case starts execution there. It does not automatically stop at the next case label; without break or return, execution can fall through."
+      },
+      {
+        "paragraph": 1,
+        "fact": "delivery(kind) groups \"letter\" and \"card\" before one return. A parcel gets a different result, and default handles anything else. return exits the whole function, so these branches do not need an additional break."
+      },
+      {
+        "paragraph": 2,
+        "fact": "Grouping adjacent labels deliberately shares one action. If you only assign a result and then continue into another case, add break when that continuation is not intended. A string \"1\" does not match numeric case 1."
+      },
+      {
+        "paragraph": 3,
+        "fact": "```javascript\nfunction delivery(kind) {\n  switch (kind) {\n    case \"letter\":\n    case \"card\":\n      return \"small\";\n    case \"parcel\":\n      return \"large\";\n    default:\n      return \"unknown\";\n  }\n}\nconsole.log(delivery(\"letter\"));\nconsole.log(delivery(\"parcel\"));\nconsole.log(delivery(\"CARD\"));\n```\nsmall; large; unknown"
+      },
+      {
+        "paragraph": 4,
+        "fact": "Implement delivery(kind) with grouped letter/card cases returning \"small\", parcel returning \"large\", and all other inputs returning \"unknown\". Match exact strings."
+      }
+    ],
+    "reasoning": "Adjacent labels can intentionally share an action; return then exits the function and prevents further fallthrough.",
+    "source": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/switch",
+    "prerequisites": [
+      "javascript-03",
+      "javascript-06"
+    ]
+  },
+  {
+    "id": "javascript-40",
+    "quizTarget": "What does positiveBeforeStop([-2, 4, 0, 8]) return?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "continue skips the remaining body of the current loop iteration, then proceeds with the loop’s next iteration. In positiveBeforeStop, negative values are skipped rather than copied. This does not stop the entire loop."
+      },
+      {
+        "paragraph": 1,
+        "fact": "break exits the nearest loop immediately. Here the sentinel 0 ends collection, so positive values after that point are not visited or returned. These two control actions solve different problems."
+      },
+      {
+        "paragraph": 2,
+        "fact": "A do...while loop runs its body before testing its condition, so it runs at least once. In oneVisit(limit), count is incremented before count < limit is checked. Thus even limit 0 produces one visit. This is a separate demonstration, not a reason to force do...while into the collection task. JSON.stringify(value) formats these simple arrays/objects as JSON text for display; it returns a string and does not edit the value."
+      },
+      {
+        "paragraph": 3,
+        "fact": "```javascript\nfunction positiveBeforeStop(values) {\n  const result = [];\n  for (const value of values) {\n    if (value === 0) break;\n    if (value < 0) continue;\n    result.push(value);\n  }\n  return result;\n}\nfunction oneVisit(limit) {\n  let count = 0;\n  do { count += 1; } while (count < limit);\n  return count;\n}\nconsole.log(JSON.stringify(positiveBeforeStop([2, -1, 3, 0, 9])));\nconsole.log(oneVisit(0));\n```\n[2,3]; 1"
+      },
+      {
+        "paragraph": 4,
+        "fact": "Implement positiveBeforeStop(values): scan integers in order, skip negatives, stop at the first zero, and return the preceding positive values in a new array. Keep the supplied oneVisit demonstration unchanged."
+      }
+    ],
+    "reasoning": "The negative is skipped, 4 is copied, and zero breaks the loop before 8.",
+    "source": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/do...while",
+    "prerequisites": [
+      "javascript-04",
+      "javascript-28",
+      "javascript-06"
+    ]
+  },
+  {
+    "id": "javascript-41",
+    "quizTarget": "What prefix is used by labelList(\"\", \"A\")?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "A default parameter is used when the caller omits that argument or supplies undefined. It is not used for null, zero or an empty string. This distinction preserves intentionally supplied values."
+      },
+      {
+        "paragraph": 1,
+        "fact": "The final parameter ...items gathers remaining arguments into a new array. Rest must be last. In labelList(prefix = \"Items\", ...items), the first argument belongs to prefix and all later arguments become items."
+      },
+      {
+        "paragraph": 2,
+        "fact": "items.join(\",\") returns a string containing the items separated by commas, without changing the array. Template interpolation turns the supplied prefix into text. This lesson accepts printable simple values; it does not validate a user-facing schema."
+      },
+      {
+        "paragraph": 3,
+        "fact": "```javascript\nfunction labelList(prefix = \"Items\", ...items) {\n  return `${prefix}: ${items.join(\",\")}`;\n}\nconsole.log(labelList(undefined, \"A\", \"B\"));\nconsole.log(labelList(\"\", \"A\"));\n```\nItems: A,B; : A"
+      },
+      {
+        "paragraph": 4,
+        "fact": "Implement labelList(prefix = \"Items\", ...items) returning prefix + \": \" + the comma-joined items. Apply the default only for omitted/undefined prefix and preserve an empty prefix."
+      }
+    ],
+    "reasoning": "A default parameter activates for undefined, not every falsy value.",
+    "source": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/rest_parameters",
+    "prerequisites": [
+      "javascript-06",
+      "javascript-08"
+    ]
+  },
+  {
+    "id": "javascript-42",
+    "quizTarget": "If note.name is null, what value does title receive?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "In const {name: title} = object, name is the source property and title is the new local variable. This does not rename object.name. The earlier destructuring lesson introduced extraction; this one adds aliases, defaults and a remaining-properties object."
+      },
+      {
+        "paragraph": 1,
+        "fact": "The pattern {name: title = \"Untitled\"} uses the default when name is absent or undefined, not when it is null or an empty string. The rest pattern ...rest collects remaining own enumerable properties into a new object."
+      },
+      {
+        "paragraph": 2,
+        "fact": "summarizeNote reads name into title and puts other properties in rest. The outer rest object is new, but nested object values remain shared references. Destructuring is not a deep clone and does not remove properties from the source. JSON.stringify(value) formats these simple arrays/objects as JSON text for display; it returns a string and does not edit the value."
+      },
+      {
+        "paragraph": 3,
+        "fact": "```javascript\nfunction summarizeNote(note) {\n  const {name: title = \"Untitled\", ...rest} = note;\n  return {title, rest};\n}\nconsole.log(JSON.stringify(summarizeNote({name: \"Moon\", pages: 3})));\nconsole.log(summarizeNote({name: null}).title);\n```\n{\"title\":\"Moon\",\"rest\":{\"pages\":3}}; null"
+      },
+      {
+        "paragraph": 4,
+        "fact": "Implement summarizeNote(note) using the alias/default/rest pattern. Return {title, rest}. Keep null and empty names unchanged and leave the source object intact."
+      }
+    ],
+    "reasoning": "A destructuring default replaces undefined, not null. The alias changes the local binding name, not the value.",
+    "source": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Destructuring",
+    "prerequisites": [
+      "javascript-09",
+      "javascript-06"
+    ]
+  },
+  {
+    "id": "javascript-64",
+    "quizTarget": "Why does (base + fee) * count violate the stated contract when count is 3?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "In 2 + 3 * 4, multiplication runs before addition, giving 14. Parentheses change the grouping: (2 + 3) * 4 gives 20. ** means exponentiation, so 2 ** 3 is 8; it is not the same as multiplying by three."
+      },
+      {
+        "paragraph": 1,
+        "fact": "With Number operands, 7 / 2 is 3.5 rather than integer division. The % operator gives a remainder; a negative dividend can produce a negative remainder, such as -7 % 3 being -1. Do not assume it is a nonnegative mathematical modulo."
+      },
+      {
+        "paragraph": 2,
+        "fact": "priceTotal(base, count, fee) multiplies base by count before adding one fee. Inputs are ordinary finite Numbers within the small lesson range. A different grouping would multiply the fee too, changing the meaning rather than just the style."
+      },
+      {
+        "paragraph": 3,
+        "fact": "```javascript\nfunction priceTotal(base, count, fee) {\n  return base * count + fee;\n}\nconsole.log(priceTotal(5, 3, 2));\nconsole.log(7 / 2);\nconsole.log(-7 % 3);\nconsole.log(2 ** 3);\n```\n17; 3.5; -1; 8"
+      },
+      {
+        "paragraph": 4,
+        "fact": "Implement priceTotal(base, count, fee) as base * count + fee. Keep the fee outside the repeated item cost. Use the visible examples to explain division, remainder and exponentiation separately."
+      }
+    ],
+    "reasoning": "Parentheses change grouping. The contract places the fee outside the repeated item cost.",
+    "source": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Operator_precedence",
+    "prerequisites": [
+      "javascript-01",
+      "javascript-06",
+      "javascript-02"
+    ]
+  },
+  {
+    "id": "javascript-65",
+    "quizTarget": "What does \"Moon\".indexOf(\"M\") return, and why is a truthiness test misleading?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "text.includes(part) returns a Boolean telling whether a substring occurs. text.indexOf(part) returns its first zero-based UTF-16 index, or -1 if missing. Zero is a valid found position, so do not test indexOf directly as a truthy/falsy found flag."
+      },
+      {
+        "paragraph": 1,
+        "fact": "text.slice(start, end) returns text from start up to but excluding end; it does not change the original. toLowerCase() and toUpperCase() return case-converted strings. These operations are not a complete locale-aware or Unicode-normalization policy."
+      },
+      {
+        "paragraph": 2,
+        "fact": "text.replace(\"cat\", \"dog\") returns text with the first matching literal occurrence replaced. This call does not replace every occurrence. Strings are immutable: assign the result if you want a name to refer to the changed text."
+      },
+      {
+        "paragraph": 3,
+        "fact": "preview(text, limit) returns the first limit UTF-16 code units, converted to lower case. Inputs here are ASCII text and a nonnegative integer limit, so the exercise does not accidentally split a surrogate pair. Unicode boundaries are handled separately in lesson45."
+      },
+      {
+        "paragraph": 4,
+        "fact": "```javascript\nfunction preview(text, limit) {\n  return text.slice(0, limit).toLowerCase();\n}\nconsole.log(preview(\"MOON NOTES\", 4));\nconsole.log(\"Moon\".includes(\"oo\"));\nconsole.log(\"Moon\".indexOf(\"M\"));\nconsole.log(\"Moon\".toUpperCase());\nconsole.log(\"cat cat\".replace(\"cat\", \"dog\"));\n```\nmoon; true; 0; MOON; dog cat"
+      },
+      {
+        "paragraph": 5,
+        "fact": "Implement preview(text, limit) for ASCII strings and a nonnegative integer limit. Return a lower-case prefix without changing the original text."
+      }
+    ],
+    "reasoning": "indexOf reports a position or -1. A found position of zero is not a Boolean success flag.",
+    "source": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String",
+    "prerequisites": [
+      "javascript-20"
+    ]
+  },
+  {
+    "id": "javascript-66",
+    "quizTarget": "Why must index !== -1 be checked before splice(index, 1, newValue)?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "Array.indexOf(value) returns the first matching index or -1. For the string arrays in this lesson it finds exact matching text. A missing value must be handled before splice: using index -1 would target the last element rather than do nothing."
+      },
+      {
+        "paragraph": 1,
+        "fact": "array.splice(start, deleteCount, ...items) removes deleteCount elements at start and inserts any supplied items there. It mutates that array and returns a new array of the removed elements. To preserve a caller’s source, first make a shallow copy with slice()."
+      },
+      {
+        "paragraph": 2,
+        "fact": "forEach(callback) calls the callback for each present element and returns undefined. A callback’s returned values are ignored; use map when you want a result array. The example uses forEach to accumulate a total only as a clear side-effect demonstration."
+      },
+      {
+        "paragraph": 3,
+        "fact": "replaceFirst(values, oldValue, newValue) copies the input string array, finds its first exact oldValue, replaces that one entry if found, and returns the copy. Leave later duplicates unchanged and never remove the final entry on a miss. JSON.stringify(value) formats these simple arrays/objects as JSON text for display; it returns a string and does not edit the value."
+      },
+      {
+        "paragraph": 4,
+        "fact": "```javascript\nfunction replaceFirst(values, oldValue, newValue) {\n  const result = values.slice();\n  const index = result.indexOf(oldValue);\n  if (index !== -1) result.splice(index, 1, newValue);\n  return result;\n}\nconsole.log(JSON.stringify(replaceFirst([\"A\", \"B\", \"A\"], \"A\", \"X\")));\nconst items = [\"A\", \"B\"];\nconsole.log(JSON.stringify(items.splice(0, 1, \"X\")));\nconsole.log(JSON.stringify(items));\nlet total = 0;\nconst returned = [2, 3].forEach(value => { total += value; });\nconsole.log(total);\nconsole.log(returned === undefined);\n```\n[\"X\",\"B\",\"A\"]; [\"A\"]; [\"X\",\"B\"]; 5; true"
+      },
+      {
+        "paragraph": 5,
+        "fact": "Implement replaceFirst for string arrays. Preserve the original, replace only the first exact match, and return a distinct copy even if no match exists."
+      }
+    ],
+    "reasoning": "The two APIs assign different meanings to -1: a search miss versus a position counted from the end.",
+    "source": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/splice",
+    "prerequisites": [
+      "javascript-05",
+      "javascript-10"
+    ]
+  },
+  {
+    "id": "javascript-67",
+    "quizTarget": "What are Math.floor(-1.2) and Math.ceil(-1.2)?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "Math.floor(value) returns the greatest integer not above value; Math.ceil(value) returns the least integer not below it. For -1.2, floor is -2 and ceil is -1. These are direction rules, not simply removing the fractional digits."
+      },
+      {
+        "paragraph": 1,
+        "fact": "Math.random() returns a Number at least zero and less than one. It is not a cryptographic security tool. Multiplying a sample by a positive item count and taking floor normally maps it to an index; floating-point rounding near boundaries should be considered when generalizing arbitrary ranges."
+      },
+      {
+        "paragraph": 2,
+        "fact": "chooseIndex(sample, size) accepts a sample in [0,1) and a positive integer size from 1 through 1000. It returns Math.min(size - 1, Math.floor(sample * size)), explicitly clamping the upper index against rounding. Math.min selects the smaller numeric argument. Number.isInteger(size) returns true only when size is an integer Number, without converting strings. Reject invalid inputs with null; use supplied samples to test boundaries rather than demand a particular random outcome."
+      },
+      {
+        "paragraph": 3,
+        "fact": "```javascript\nfunction chooseIndex(sample, size) {\n  if (!Number.isFinite(sample) || sample < 0 || sample >= 1) return null;\n  if (!Number.isInteger(size) || size < 1 || size > 1000) return null;\n  return Math.min(size - 1, Math.floor(sample * size));\n}\nconsole.log(Math.floor(-1.2));\nconsole.log(Math.ceil(-1.2));\nconsole.log(chooseIndex(0.5, 4));\nconst sample = Math.random();\nconsole.log(sample >= 0 && sample < 1);\n```\n-2; -1; 2; true"
+      },
+      {
+        "paragraph": 4,
+        "fact": "Implement chooseIndex(sample, size). Accept a finite Number sample from 0 inclusive to 1 exclusive, and an integer size 1..1000. Return a clamped index 0..size-1 or null for invalid inputs. Do not call Math.random inside this function."
+      }
+    ],
+    "reasoning": "Floor moves toward the lower integer and ceil toward the upper integer, including for negative values.",
+    "source": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/random",
+    "prerequisites": [
+      "javascript-35",
+      "javascript-64"
+    ]
+  },
+  {
+    "id": "javascript-43",
+    "quizTarget": "What does numericCopy([20, 4, 11]) return?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "sort() without a comparator compares string representations, so numbers can appear in an unexpected order. A numeric comparator (a, b) => a - b returns a negative number when a belongs before b, zero for equal order, and a positive number when a belongs after b. It must be consistent; returning only true/false is not the same contract."
+      },
+      {
+        "paragraph": 1,
+        "fact": "array.sort(comparator) rearranges that array in place and returns the same array reference. array.slice() with no arguments returns a shallow copy. Sorting the copy preserves the caller’s order; nested objects, if present, would still be shared. This exercise accepts finite numbers only, avoiding NaN and mixed-type ordering."
+      },
+      {
+        "paragraph": 2,
+        "fact": "numericCopy(values) returns a new ascending numeric array. The arrow function has two parameters and implicitly returns their difference. join(\",\") converts each displayed array into comma-separated text and does not reorder it.\n```javascript\nfunction numericCopy(values) {\n  return values.slice().sort((a, b) => a - b);\n}\nconst source = [12, 3, 2];\nconsole.log(source.slice().sort().join(\",\"));\nconsole.log(numericCopy(source).join(\",\"));\nconsole.log(source.join(\",\"));\n```\nOutput: 12,2,3; 2,3,12; 12,3,2."
+      },
+      {
+        "paragraph": 3,
+        "fact": "Implement numericCopy without modifying values, including empty input. Optional practice: change a-b to b-a and explain why the sign reversal produces descending order, without predicting a particular sort implementation’s comparison sequence."
+      }
+    ],
+    "reasoning": "The comparator uses numeric differences instead of default string order, and the copied array is rearranged.",
+    "source": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/sort",
+    "prerequisites": [
+      "javascript-05",
+      "javascript-10"
+    ]
+  },
+  {
+    "id": "javascript-44",
+    "quizTarget": "If Object.fromEntries receives [[\"x\", 2], [\"x\", 7]], what is the final x value?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "Object.entries(object) returns an array of [key,value] pairs for own enumerable string-keyed properties. Inherited properties and symbol keys are excluded. Here the input is a plain data object with finite numeric own values; no getters or hostile proxies are part of the contract."
+      },
+      {
+        "paragraph": 1,
+        "fact": "Object.fromEntries(pairs) takes an iterable of key/value pairs and returns a new ordinary object. Repeated keys keep the last supplied value. This builds an object; it does not modify the source or install a sanitization policy. The loop’s [key,value] syntax destructures each pair; pairs.push(pair) appends one pair and returns the array’s new length, which we ignore."
+      },
+      {
+        "paragraph": 2,
+        "fact": "doubleOwn returns doubled own values in a new object. Object.create(proto) creates an object with that prototype, letting the example distinguish inherited data from assigned own properties. JSON.stringify serializes this small data object for readable output.\n```javascript\nfunction doubleOwn(source) {\n  const pairs = [];\n  for (const [key, value] of Object.entries(source)) {\n    pairs.push([key, value * 2]);\n  }\n  return Object.fromEntries(pairs);\n}\nconst source = Object.create({inherited: 90});\nsource.read = 2;\nsource.write = 3;\nconst result = doubleOwn(source);\nconsole.log(JSON.stringify(result));\nconsole.log(source.read);\n```\nOutput: {\"read\":4,\"write\":6} then 2. The inherited value is absent and the source remains unchanged."
+      },
+      {
+        "paragraph": 3,
+        "fact": "Implement doubleOwn by transforming entries, not by iterating inherited names. Optional practice: call Object.fromEntries([[\"read\",1],[\"read\",5]]) and explain why the resulting own read value is 5."
+      }
+    ],
+    "reasoning": "Both pairs define the same own key; the later supplied value replaces the earlier one.",
+    "source": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/entries",
+    "prerequisites": [
+      "javascript-07",
+      "javascript-09"
+    ]
+  },
+  {
+    "id": "javascript-45",
+    "quizTarget": "For \"🌱🌱\", what are the UTF-16 unit count and code-point count?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "A JavaScript string’s length counts UTF-16 code units. Many characters use one unit, but a supplementary code point such as 🌱 uses a surrogate pair: two units. Neither this length nor code-point count necessarily equals the number of visible grapheme clusters."
+      },
+      {
+        "paragraph": 1,
+        "fact": "for...of over a string yields strings representing Unicode code points rather than splitting a valid surrogate pair. textCounts(text) counts those iterations and returns {units,points}. The shortened property points means points: points. This exercise uses well-formed Unicode strings; it does not repair isolated surrogates or normalize combining marks."
+      },
+      {
+        "paragraph": 2,
+        "fact": "```javascript\nfunction textCounts(text) {\n  let points = 0;\n  for (const point of text) {\n    points += 1;\n  }\n  return {units: text.length, points};\n}\nconsole.log(JSON.stringify(textCounts(\"A🌱\")));\nconsole.log(JSON.stringify(textCounts(\"e\\u0301\")));\n```\nOutput: {\"units\":3,\"points\":2} then {\"units\":2,\"points\":2}. A🌱 has two code points but three UTF-16 units. e followed by a combining acute mark can look like one letter while containing two code points. JSON.stringify only formats these result objects; it does not change text."
+      },
+      {
+        "paragraph": 3,
+        "fact": "Use the count that answers your actual question. Code-point iteration is not full grapheme segmentation. Optional practice: compare \"é\" and \"e\\u0301\" and explain why visually similar text can have different counts without changing either input."
+      }
+    ],
+    "reasoning": "Each supplementary code point uses two UTF-16 code units but one for...of iteration.",
+    "source": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String",
+    "prerequisites": [
+      "javascript-20"
+    ]
+  },
+  {
+    "id": "javascript-46",
+    "quizTarget": "After importing count and increment, call increment twice. What does reading count produce?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "This is a native Node module lesson, not an in-app browser exercise. Save the two files below in the same disposable folder and run node main.mjs with the installed Node toolchain. The .mjs extension selects ECMAScript module parsing in Node. Browser module loading needs its own URL, server and policy verification; this lesson does not claim that the app’s classic-script worker supports imports."
+      },
+      {
+        "paragraph": 1,
+        "fact": "Save counter.mjs:\n```javascript\nexport let count = 0;\nexport function increment() {\n  count += 1;\n  return count;\n}\n```\nexport exposes named bindings. count can be reassigned inside its defining module. increment() takes no arguments, adds one to that module state, and returns the updated number."
+      },
+      {
+        "paragraph": 2,
+        "fact": "Save main.mjs:\n```javascript\nimport { count, increment } from \"./counter.mjs\";\nconsole.log(count);\nconsole.log(increment());\nconsole.log(count);\n```\nThe relative string names the companion file, including its extension. The braces request named exports; they are not object destructuring of a snapshot. Output is 0,1,1 on separate lines: the imported count observes the exporter’s updated binding. Module code uses strict mode automatically."
+      },
+      {
+        "paragraph": 3,
+        "fact": "An importer cannot reassign count. Adding count = 9 to main.mjs throws TypeError at execution, even though counter.mjs declared the exported binding with let. Update the exporter through its explicit function instead. Optional local practice: call increment twice and predict both its returned value and the next read of count; verify with Node, not an untested browser workaround."
+      }
+    ],
+    "reasoning": "The imported binding remains connected to the exporter’s count, and both calls update that exported state.",
+    "source": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Modules",
+    "prerequisites": [
+      "javascript-16"
+    ]
+  },
+  {
+    "id": "javascript-47",
+    "quizTarget": "If a TimedTask’s title changes to \"Walk\" before describe(), what does super.describe() read?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "extends establishes an inheritance relationship. TimedTask instances can use Task behavior and add their own minutes. A derived constructor must call super(...) before accessing this; that call initializes the instance through the parent constructor."
+      },
+      {
+        "paragraph": 1,
+        "fact": "TimedTask.describe overrides the inherited method. super.describe() calls the parent implementation with the same instance as its receiver. It returns the title text; the override adds duration text. Calling this.describe() from this override instead would recurse into itself, not select the parent method."
+      },
+      {
+        "paragraph": 2,
+        "fact": "new TimedTask(title,minutes) receives a title string and finite nonnegative minutes and constructs an instance. describe() takes no explicit arguments and returns text without changing the task. instanceof tests the instance’s prototype relationship; it does not copy or convert it.\n```javascript\nclass Task {\n  constructor(title) { this.title = title; }\n  describe() { return \"Task: \" + this.title; }\n}\nclass TimedTask extends Task {\n  constructor(title, minutes) {\n    super(title);\n    this.minutes = minutes;\n  }\n  describe() {\n    return super.describe() + \" / \" + this.minutes + \" min\";\n  }\n}\nconst task = new TimedTask(\"Read\", 15);\nconsole.log(task.describe());\nconsole.log(task instanceof Task);\n```\nOutput: Task: Read / 15 min, then true."
+      },
+      {
+        "paragraph": 3,
+        "fact": "Keep Task unchanged and implement TimedTask. Optional practice: assign a different title after construction and predict why the parent method reads the current title from the same instance."
+      }
+    ],
+    "reasoning": "super selects the parent method, but the method still receives the existing task as this.",
+    "source": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes/extends",
+    "prerequisites": [
+      "javascript-15",
+      "javascript-30"
+    ]
+  },
+  {
+    "id": "javascript-48",
+    "quizTarget": "After a Session accepts 12, assigning 61 throws. What does reading minutes return afterward?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "A getter runs when a property is read; a setter runs when it is assigned. session.minutes uses property syntax, not session.minutes(). get minutes() returns a value; set minutes(value) receives the assigned value. A setter’s return value is not how the assigned value is read."
+      },
+      {
+        "paragraph": 1,
+        "fact": "The setter uses Number.isInteger(value), which returns a Boolean without converting strings, then enforces the inclusive 0..60 range. new RangeError(message) constructs an error and throw transfers control to the caller. Only after validation do we store _minutes, so a rejected assignment preserves the old state. The underscore is just a naming convention, not access control."
+      },
+      {
+        "paragraph": 2,
+        "fact": "new Session(minutes) initializes by assigning through the same setter, so invalid construction also fails. The getter reads the backing field; assigning this.minutes inside its own setter would recursively invoke that setter instead.\n```javascript\nclass Session {\n  constructor(minutes) { this.minutes = minutes; }\n  get minutes() { return this._minutes; }\n  set minutes(value) {\n    if (!Number.isInteger(value) || value < 0 || value > 60) {\n      throw new RangeError(\"minutes must be an integer from 0 to 60\");\n    }\n    this._minutes = value;\n  }\n}\nconst session = new Session(10);\nsession.minutes = 20;\nconsole.log(session.minutes);\ntry { session.minutes = -1; }\ncatch (error) { console.log(error instanceof RangeError); }\nconsole.log(session.minutes);\n```\nOutput: 20, true,20. The failed negative assignment does not replace the accepted value."
+      },
+      {
+        "paragraph": 3,
+        "fact": "Implement the class with one validation path used for initialization and later assignment. Optional practice: try the string \"5\" and explain why it is rejected rather than silently converted."
+      }
+    ],
+    "reasoning": "Validation throws before the backing-field assignment, leaving the earlier accepted value in place.",
+    "source": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/set",
+    "prerequisites": [
+      "javascript-15",
+      "javascript-47"
+    ]
+  },
+  {
+    "id": "javascript-49",
+    "quizTarget": "If a=Counter.zero() and b=Counter.zero(), then a.add(2), what does b.read() return?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "#value is a private field declared in the class body. Methods of this class access it as this.#value. It is not the same as a public property named \"#value\", and outside code cannot directly write first.#value. This is language-level encapsulation, not encryption or a promise that an object can safely hold secrets against all program code."
+      },
+      {
+        "paragraph": 1,
+        "fact": "static zero() is called on Counter, not on an instance. It takes no arguments and returns a fresh Counter initialized to 0. Each constructor call creates separate private state. add(amount) adds the supplied finite number and returns the updated value; read() returns the current value with no mutation."
+      },
+      {
+        "paragraph": 2,
+        "fact": "```javascript\nclass Counter {\n  #value;\n  constructor(initial) { this.#value = initial; }\n  add(amount) { this.#value += amount; return this.#value; }\n  read() { return this.#value; }\n  static zero() { return new Counter(0); }\n}\nconst first = Counter.zero();\nconst second = Counter.zero();\nconsole.log(first.add(3));\nconsole.log(second.read());\nconsole.log(typeof first.zero);\n```\nOutput: 3,0,undefined. Changing first does not change second. typeof first.zero is undefined because the static method is not an instance method. The constructor accepts an initial finite number; this focused exercise does not add input validation."
+      },
+      {
+        "paragraph": 3,
+        "fact": "Implement Counter with the declared private field and the class-bound zero factory. Optional practice: compare Counter.zero().read() with new Counter(7).read(). An external private-field access is rejected by the parser; do not paste invalid syntax into the main runnable solution. Bracket access with the string \"#value\" creates a separate public property, not access to the declared private name. With Counter defined above, this prints 0 9:\n```javascript\nconst c = Counter.zero();\nc[\"#value\"] = 9;\nconsole.log(c.read(), c[\"#value\"]);\n```"
+      }
+    ],
+    "reasoning": "The factory constructs a new Counter each time, so the private fields belong to distinct instances.",
+    "source": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes/Private_elements",
+    "prerequisites": [
+      "javascript-15",
+      "javascript-47",
+      "javascript-48"
+    ]
+  },
+  {
+    "id": "javascript-50",
+    "quizTarget": "Which operation can still succeed on the returned object?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "Object.defineProperty(object,name,descriptor) defines an own property and returns that same object. A data descriptor supplies value plus writable, enumerable and configurable flags. Here version is visible to ordinary own-key enumeration, but cannot be assigned a new value or deleted/reconfigured. Omitted flags default to false for a newly defined property."
+      },
+      {
+        "paragraph": 1,
+        "fact": "Object.freeze(object) returns that same object after preventing new own properties and making its own data properties non-writable and non-configurable. It does not recursively freeze a nested object. In this lesson theme still refers to a mutable inner object. A const binding alone would not apply these property restrictions."
+      },
+      {
+        "paragraph": 2,
+        "fact": "makeSettings takes no arguments and returns the outer frozen object. Object.getOwnPropertyDescriptor reads one own property’s descriptor, or undefined if missing; its writable flag reports the rule. The \"use strict\" directive makes assigning the read-only version throw TypeError instead of silently doing nothing.\n```javascript\n\"use strict\";\nfunction makeSettings() {\n  const settings = {theme: {dark: false}};\n  Object.defineProperty(settings, \"version\", {\n    value: 1, writable: false, enumerable: true, configurable: false\n  });\n  return Object.freeze(settings);\n}\nconst settings = makeSettings();\nconsole.log(Object.getOwnPropertyDescriptor(settings, \"version\").writable);\ntry { settings.version = 2; }\ncatch (error) { console.log(error instanceof TypeError); }\nsettings.theme.dark = true;\nconsole.log(settings.version, settings.theme.dark);\n```\nOutput: false; true; 1 true. The nested dark assignment still succeeds. Object.isFrozen(object) returns whether that object is frozen, without changing it. With settings above, this call prints true false:\n```javascript\nconsole.log(Object.isFrozen(settings), Object.isFrozen(settings.theme));\n```"
+      },
+      {
+        "paragraph": 3,
+        "fact": "Implement the outer frozen settings object while keeping the nested theme object unfrozen. Optional practice: explain why replacing settings.theme and editing settings.theme.dark are different operations."
+      }
+    ],
+    "reasoning": "Freezing the outer object protects its own property bindings, not the properties of the referenced nested theme.",
+    "source": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/freeze",
+    "prerequisites": [
+      "javascript-22",
+      "javascript-30",
+      "javascript-48"
+    ]
+  },
+  {
+    "id": "javascript-51",
+    "quizTarget": "For valid {\"label\":\"Map\"} input, does returning from try skip finally?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "A custom LoadError extends Error. super(message,{cause}) supplies the error message and retains the original thrown value in the cause property; {cause} is shorthand for {cause:cause}. Setting name makes the diagnostic category explicit. Constructing an error does not throw it until throw is used."
+      },
+      {
+        "paragraph": 1,
+        "fact": "readLabel(raw,events) parses JSON text, returns a string label if valid, or throws a LoadError wrapping a parse/shape failure. JSON.parse returns a decoded value or throws SyntaxError. data?.label reads label unless data is null or undefined, in which case it yields undefined. The explicit type guard rejects non-string labels with TypeError. finally appends \"finished\" to the supplied event array whether the try returned or threw; push returns the new length, which we ignore."
+      },
+      {
+        "paragraph": 2,
+        "fact": "```javascript\nclass LoadError extends Error {\n  constructor(message, cause) {\n    super(message, {cause});\n    this.name = \"LoadError\";\n  }\n}\nfunction readLabel(raw, events) {\n  try {\n    const data = JSON.parse(raw);\n    if (typeof data?.label !== \"string\") {\n      throw new TypeError(\"label must be text\");\n    }\n    return data.label;\n  } catch (cause) {\n    throw new LoadError(\"Cannot load label\", cause);\n  } finally {\n    events.push(\"finished\");\n  }\n}\nconst events = [];\ntry { readLabel('{\"label\":7}', events); }\ncatch (error) { console.log(error.name, error.cause instanceof TypeError); }\nconsole.log(events.join(\",\"));\n```\nOutput: LoadError true, then finished. The cause is the original TypeError object, not merely its text. This array event demonstrates finalization order; it does not acquire or close a real external resource."
+      },
+      {
+        "paragraph": 3,
+        "fact": "A return or throw inside finally can replace an earlier result or failure, so this finally only records completion. Optional practice: use valid {\"label\":\"Sky\"} input and explain why the returned string and the finished event both occur."
+      }
+    ],
+    "reasoning": "The finalization block runs before the return completes. Since it does not return or throw itself, the original result is preserved.",
+    "source": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error/cause",
+    "prerequisites": [
+      "javascript-19",
+      "javascript-47"
+    ]
+  },
+  {
+    "id": "javascript-68",
+    "quizTarget": "What happens after setActive(button,true) is called twice?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "This lesson requires a DOM document containing the following button. DOM APIs belong to the document host, not plain Node JavaScript. A DOM harness can verify attributes/classes but does not prove browser layout, assistive-technology announcements or real keyboard interaction.\n```html\n<button id=\"toggle\" class=\"control\" aria-pressed=\"false\">Focus</button>\n```"
+      },
+      {
+        "paragraph": 1,
+        "fact": "setAttribute(name,value) writes the named attribute and returns undefined. getAttribute(name) reads its string value or null if absent. String(active) converts the supplied Boolean to \"true\" or \"false\" for aria-pressed. ARIA state describes this button’s toggle state; it does not automatically install an event handler."
+      },
+      {
+        "paragraph": 2,
+        "fact": "button.classList is a token-list view of its class attribute. toggle(\"active\",active) uses the Boolean second argument to add or remove that one token and returns whether it is present afterward. Calling it twice with true leaves the token present; it is not an inversion each time. contains(token) returns membership without changing the list. Other tokens, such as control, remain untouched."
+      },
+      {
+        "paragraph": 3,
+        "fact": "setActive(button,active) receives an existing button and Boolean, updates its attribute/class, and returns the token’s final state. querySelector(\"#toggle\") returns the first matching element or null; this supplied markup guarantees a match.\n```javascript\nfunction setActive(button, active) {\n  button.setAttribute(\"aria-pressed\", String(active));\n  return button.classList.toggle(\"active\", active);\n}\nconst button = document.querySelector(\"#toggle\");\nconsole.log(setActive(button, true));\nconsole.log(button.getAttribute(\"aria-pressed\"));\nconsole.log(button.classList.contains(\"control\"), button.classList.contains(\"active\"));\nconsole.log(setActive(button, false));\n```\nOutput: true; true; true true; false. The second line is attribute text, even though it looks like the first line’s Boolean."
+      },
+      {
+        "paragraph": 4,
+        "fact": "Implement setActive without replacing the entire class attribute or changing button text. Optional practice: call it twice with true, then once with false, and explain why unrelated classes remain. Check for null when selecting from an uncertain page outside this fixed fixture."
+      }
+    ],
+    "reasoning": "The second argument forces the requested membership, so repeating the same desired state leaves it unchanged rather than inverting it.",
+    "source": "https://developer.mozilla.org/en-US/docs/Web/API/Element/classList",
+    "prerequisites": [
+      "javascript-11",
+      "javascript-12"
+    ]
+  },
+  {
+    "id": "javascript-69",
+    "quizTarget": "Why is returning 0 whenever the broken result is NaN not a correct fix?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "A minimal failing case keeps only the data needed to expose a bug. The intended total of [5] is 5, and the total of [] is 0. This broken function parses and runs, but returns the wrong value: it is a logic/bounds defect, not a syntax error.\n```javascript\nfunction brokenTotal(values) {\n  let total = 0;\n  for (let i = 0; i <= values.length; i += 1) {\n    total += values[i];\n  }\n  return total;\n}\nconsole.log(brokenTotal([5]));\nconsole.log(Number.isNaN(brokenTotal([])));\n```\nOutput: NaN then true. Number.isNaN(value) returns whether the value is the special numeric NaN, without converting strings."
+      },
+      {
+        "paragraph": 1,
+        "fact": "For a one-item array the only valid index is 0; length is 1. The <= test permits an extra iteration at index 1. Reading that missing entry gives undefined; adding it produces NaN. Trace the state before each update:\n```javascript\nconst values = [5];\nlet total = 0;\nfor (let i = 0; i <= values.length; i += 1) {\n  console.log(i, values[i]);\n  total += values[i];\n}\nconsole.log(total);\n```\nOutput: 0 5; 1 undefined; NaN. A debugger’s breakpoint/watch can help inspect the same state, but this scripted trace does not demonstrate an actual DevTools session."
+      },
+      {
+        "paragraph": 2,
+        "fact": "The loop must stop when i equals length. Replacing <= with < avoids the nonexistent entry. Do not merely replace NaN with 0 afterward: that would hide the defect and lose valid totals. totalValues receives a finite-number array and returns its sum without modifying it.\n```javascript\nfunction totalValues(values) {\n  let total = 0;\n  for (let i = 0; i < values.length; i += 1) {\n    total += values[i];\n  }\n  return total;\n}\nconsole.log(totalValues([5]));\nconsole.log(totalValues([]));\n```\nOutput: 5 then 0."
+      },
+      {
+        "paragraph": 3,
+        "fact": "A regression check saves the smallest failing input so a later change can expose the same bug again. Also check a longer input to avoid a one-case patch. Optional practice: explain why [0] still needs correct bounds even though its intended total is zero. Finite tests are evidence for their cases, not proof for every possible program input."
+      }
+    ],
+    "reasoning": "The bug is visiting an invalid index. Fixing the bound preserves valid sums instead of substituting an unrelated answer.",
+    "source": "https://developer.mozilla.org/en-US/docs/Learn_web_development/Core/Scripting/What_went_wrong",
+    "prerequisites": [
+      "javascript-03",
+      "javascript-06",
+      "javascript-04",
+      "javascript-05"
+    ]
+  },
+  {
+    "id": "javascript-52",
+    "quizTarget": "If finally returns 99 normally after the chain fulfills with 8, what does the returned promise fulfill with?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "then(onFulfilled) returns a new Promise. A returned value fulfills that next promise; a thrown error rejects it. Returning another promise makes the chain wait for that promise. Promise.resolve(value) supplies the initial fulfilled promise here. Callbacks run after the current synchronous work, not inside the call to then."
+      },
+      {
+        "paragraph": 1,
+        "fact": "catch(onRejected) handles rejection and returns a new promise. Returning -1 recovers with that value; throwing would continue rejection. finally(onFinally) runs on either outcome without receiving the value/error. A normal return from finally does not replace the prior outcome, but throwing or returning a rejected promise from it can replace it."
+      },
+      {
+        "paragraph": 2,
+        "fact": "transformed(value, fail, events) doubles a number or recovers to -1, then appends cleanup to the supplied list. The Error constructor takes a message; throw rejects the chain. join(\",\") returns a display String from the recorded entries. Await the returned promise so cleanup finishes before inspecting events.\n```javascript\nfunction transformed(value, fail, events) {\n  return Promise.resolve(value)\n    .then(number => {\n      if (fail) throw new Error(\"invalid\");\n      return number * 2;\n    })\n    .catch(error => -1)\n    .finally(() => { events.push(\"cleanup\"); });\n}\nconst events = [];\nconsole.log(await transformed(4, false, events));\nconsole.log(events.join(\",\"));\n```\nOutput: 8 then cleanup."
+      },
+      {
+        "paragraph": 3,
+        "fact": "Omitting return from a then callback fulfills the next promise with undefined, not the value you computed and discarded. Optional practice: make the recovery callback return a different sentinel and trace the chain. This known synthetic failure policy is not a recommendation to turn every real failure into success.\nThe separate failure path below actually constructs and throws the diagnostic Error, then recovers and cleans up.\n```javascript\nfunction transformed(value, fail, events) {\n  return Promise.resolve(value)\n    .then(number => {\n      if (fail) throw new Error(\"invalid\");\n      return number * 2;\n    })\n    .catch(error => -1)\n    .finally(() => { events.push(\"cleanup\"); });\n}\nconst events = [];\nconsole.log(await transformed(4, true, events));\nconsole.log(events.join(\",\"));\n```\nOutput: -1 then cleanup."
+      }
+    ],
+    "reasoning": "finally observes completion for cleanup; unlike then, its ordinary return value is not used as the new fulfilled value. Throwing would be a different outcome.",
+    "source": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/then",
+    "prerequisites": [
+      "javascript-14"
+    ]
+  },
+  {
+    "id": "javascript-53",
+    "quizTarget": "If the rejecting input is replaced by Promise.resolve(\"B\"), what does Promise.all produce?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "Promise.all(iterable) returns a promise for an array of fulfilled values in input order. If an input rejects, the result rejects with a rejection reason; this does not cancel the other operations. It is useful when every result is needed."
+      },
+      {
+        "paragraph": 1,
+        "fact": "Promise.allSettled(iterable) waits until every input settles and fulfills with records in input order. A fulfilled record has status and value; a rejected record has status and reason. It does not turn a failed operation into a successful one: it preserves the failure as data."
+      },
+      {
+        "paragraph": 2,
+        "fact": "Promise.reject(reason) creates a rejected promise; handlers are attached immediately in this example. settledLabels maps the records to small display Strings. JSON.stringify serializes the arrays for exact output. No network work is started.\n```javascript\nasync function settledLabels(promises) {\n  const outcomes = await Promise.allSettled(promises);\n  return outcomes.map(item => item.status === \"fulfilled\"\n    ? \"ok:\" + item.value : \"error:\" + item.reason);\n}\nconst inputs = [Promise.resolve(\"A\"), Promise.reject(\"no\")];\nconsole.log(JSON.stringify(await settledLabels(inputs)));\ntry { await Promise.all(inputs); }\ncatch (reason) { console.log(\"all:\" + reason); }\n```\nOutput: [\"ok:A\",\"error:no\"] then all:no."
+      },
+      {
+        "paragraph": 3,
+        "fact": "The result arrays follow input order, not whichever operation happens to finish first. Empty input produces an empty array. Optional practice: reverse the two supplied promises and predict the returned record order before running."
+      }
+    ],
+    "reasoning": "Both supplied inputs now fulfill, so all can fulfill with their ordered values; it does not remember a prior array from another run.",
+    "source": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/allSettled",
+    "prerequisites": [
+      "javascript-14",
+      "javascript-52"
+    ]
+  },
+  {
+    "id": "javascript-54",
+    "quizTarget": "Why can the zero-delay first callback be cancelled immediately after setTimeout returns?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "setTimeout(callback, delay) schedules a callback for later and returns a host-specific handle. The delay is a minimum scheduling request in milliseconds, not an exact appointment or a pause in the current function. A zero delay still waits until the current synchronous work finishes. Browsers and Node provide this host API; it is not an ECMAScript language timer."
+      },
+      {
+        "paragraph": 1,
+        "fact": "clearTimeout(handle) cancels that pending timer and returns undefined. It does not undo a callback that already ran. Keep the handle instead of trying to cancel by callback name. The first timer below is cancelled synchronously, before it can run."
+      },
+      {
+        "paragraph": 2,
+        "fact": "new Promise(executor) calls its executor immediately with resolve (and an optional reject parameter). resolve(events) fulfills this promise with the recorded array. timerLabels returns that promise, and only its retained callback resolves it.\n```javascript\nfunction timerLabels(label) {\n  return new Promise(resolve => {\n    const events = [];\n    const discarded = setTimeout(() => { events.push(\"discarded\"); }, 0);\n    clearTimeout(discarded);\n    setTimeout(() => {\n      events.push(label);\n      resolve(events);\n    }, 0);\n  });\n}\nconsole.log((await timerLabels(\"kept\")).join(\",\"));\n```\nOutput: kept. No elapsed duration is asserted."
+      },
+      {
+        "paragraph": 3,
+        "fact": "The cancelled callback contributes no entry. The other callback appends the supplied label and completes the promise. Optional practice: change that label and predict the output; do not infer a precise delay or benchmark from it. Repeated scheduling needs an explicit lifetime/cleanup design rather than abandoned timers."
+      }
+    ],
+    "reasoning": "Timer scheduling does not interrupt the current synchronous execution. Cancellation affects the pending callback, not already-completed work.",
+    "source": "https://developer.mozilla.org/en-US/docs/Web/API/Window/setTimeout",
+    "prerequisites": [
+      "javascript-13",
+      "javascript-14"
+    ]
+  },
+  {
+    "id": "javascript-55",
+    "quizTarget": "If two Symbol calls use the same description, may they safely be treated as the same key?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "Symbol(description) returns a new unique primitive Symbol. Two calls with the same description still produce unequal values. Do not use new Symbol. The description is for diagnostics, not a shared-key lookup."
+      },
+      {
+        "paragraph": 1,
+        "fact": "[token]: label is a computed property name: the Symbol value, rather than the letters token, becomes the key. record[token] retrieves that property. taggedRecord returns the token alongside the record so its caller can perform the lookup."
+      },
+      {
+        "paragraph": 2,
+        "fact": "Object.keys(record) returns enumerable String keys, excluding Symbols. Reflect.ownKeys(record) includes own String and Symbol keys, so Symbol-keyed data can still be discovered. The Symbol is not encryption or an access-control boundary.\n```javascript\nfunction taggedRecord(label) {\n  const token = Symbol(\"note\");\n  const record = {title: \"public\", [token]: label};\n  return {token, record};\n}\nconst first = taggedRecord(\"hidden label\");\nconst second = taggedRecord(\"hidden label\");\nconsole.log(first.token === second.token);\nconsole.log(first.record[first.token]);\nconsole.log(Object.keys(first.record).join(\",\"));\nconsole.log(Reflect.ownKeys(first.record).length);\n```\nOutput: false, hidden label, title, 2 on separate lines."
+      },
+      {
+        "paragraph": 3,
+        "fact": "Changing the stored label does not make independently constructed tokens equal. Optional practice: reuse the same token in a second object and explain how sharing a key differs from sharing the stored object."
+      }
+    ],
+    "reasoning": "The key identity comes from the Symbol value, not its description or the contents stored under it.",
+    "source": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol",
+    "prerequisites": [
+      "javascript-07"
+    ]
+  },
+  {
+    "id": "javascript-56",
+    "quizTarget": "After one iterator is exhausted, what happens when for...of starts again on this countdown iterable?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "An object is iterable when its [Symbol.iterator] method returns an iterator. The brackets compute the method key from the well-known Symbol; this is not a newly invented Symbol(\"iterator\"). for...of calls that method and repeatedly asks the returned iterator for its next item."
+      },
+      {
+        "paragraph": 1,
+        "fact": "iterator.next() returns an object with value and done. done:false supplies another item; done:true marks completion. The current-- expression returns the old counter then decreases it. Our iterator keeps returning done:true after exhaustion. Each new Symbol.iterator call gets a fresh counter, so this iterable can start again."
+      },
+      {
+        "paragraph": 2,
+        "fact": "countdown(start) accepts a small nonnegative integer and returns the iterable, not an array. The explicit protocol calls show the same mechanism later used by for...of. JSON.stringify omits the undefined value property at completion.\n```javascript\nfunction countdown(start) {\n  return {\n    [Symbol.iterator]() {\n      let current = start;\n      return {\n        next() {\n          if (current > 0) return {value: current--, done: false};\n          return {value: undefined, done: true};\n        }\n      };\n    }\n  };\n}\nconst values = countdown(2);\nconst iterator = values[Symbol.iterator]();\nconsole.log(JSON.stringify(iterator.next()));\nconsole.log(JSON.stringify(iterator.next()));\nconsole.log(iterator.next().done);\nconst again = [];\nfor (const value of values) again.push(value);\nconsole.log(again.join(\",\"));\n```\nOutput: {\"value\":2,\"done\":false}, {\"value\":1,\"done\":false}, true, then 2,1."
+      },
+      {
+        "paragraph": 3,
+        "fact": "Reusing one exhausted iterator does not restart it. Asking this iterable for another iterator does. Optional practice: obtain two iterators and advance one without changing the other; neither owns an external resource in this bounded example."
+      }
+    ],
+    "reasoning": "The iterable’s method constructs a new closure-held counter each time; an individual iterator still advances only forward.",
+    "source": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols",
+    "prerequisites": [
+      "javascript-33",
+      "javascript-55"
+    ]
+  },
+  {
+    "id": "javascript-57",
+    "quizTarget": "If firstLabel returns after the first yielded value, when should the generator’s finally run?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "async function* defines an async generator. Calling asyncLabels(labels, events) returns an async iterator; its body advances when requested. Its Symbol.asyncIterator method returns that iterator, and next() returns a Promise for a value/done record. for await...of awaits each record rather than treating a Promise as the item."
+      },
+      {
+        "paragraph": 1,
+        "fact": "yield await Promise.resolve(label) yields one resolved label. The surrounding finally appends closed when the generator exits. Returning from inside for await...of asks the iterator to close, including awaiting its return() cleanup when that method exists. This is cooperative protocol cleanup, not an automatic cancellation rule for arbitrary background operations."
+      },
+      {
+        "paragraph": 2,
+        "fact": "firstLabel returns the first label or null for empty input. Its return inside the loop triggers the generator’s cleanup before the function’s promise completes.\n```javascript\nasync function* asyncLabels(labels, events) {\n  try {\n    for (const label of labels) yield await Promise.resolve(label);\n  } finally {\n    events.push(\"closed\");\n  }\n}\nasync function firstLabel(labels, events) {\n  for await (const label of asyncLabels(labels, events)) return label;\n  return null;\n}\nconst events = [];\nconsole.log(await firstLabel([\"read\", \"draw\"], events));\nconsole.log(events.join(\",\"));\n```\nOutput: read then closed."
+      },
+      {
+        "paragraph": 3,
+        "fact": "This direct call shows Symbol.asyncIterator returning the same async-generator iterator, next returning a Promise for a record, and return requesting early completion. Awaiting return runs finally before inspection.\n```javascript\nasync function* asyncLabels(labels, events) {\n  try {\n    for (const label of labels) yield await Promise.resolve(label);\n  } finally {\n    events.push(\"closed\");\n  }\n}\nasync function firstLabel(labels, events) {\n  for await (const label of asyncLabels(labels, events)) return label;\n  return null;\n}\nconst events = [];\nconst iterator = asyncLabels([\"one\", \"two\"], events);\nconsole.log(iterator[Symbol.asyncIterator]() === iterator);\nconsole.log((await iterator.next()).value);\nconsole.log((await iterator.return()).done);\nconsole.log(events.join(\",\"));\n```\nOutput: true, one, true, closed. Optional practice: consume all labels with for await...of and explain why cleanup still runs."
+      }
+    ],
+    "reasoning": "The loop awaits the async iterator closing protocol on this early return; the generator’s finally records that cleanup.",
+    "source": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/for-await...of",
+    "prerequisites": [
+      "javascript-14",
+      "javascript-33",
+      "javascript-56"
+    ]
+  },
+  {
+    "id": "javascript-58",
+    "quizTarget": "If the synthetic child click has bubbles:false, does the div listener record it?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "In this DOM example a click starts on the inner span and bubbles through its ancestors. event.target is the originating element; event.currentTarget is the element whose listener is currently running. A listener on the containing div can handle child controls without registering a separate listener on each one."
+      },
+      {
+        "paragraph": 1,
+        "fact": "target.closest(\"button[data-topic]\") returns the nearest matching element, including target itself, or null. root.contains(button) checks that the result is still within the delegated area. dataset.topic reads the data-topic attribute. Inputs here are click events from Elements in the supplied markup, not arbitrary non-Element event targets."
+      },
+      {
+        "paragraph": 2,
+        "fact": "Save this supplied index.html beside main.js:\n```html\n<div id=\"topics\"><button type=\"button\" data-topic=\"read\"><span id=\"icon\">Read</span></button><p id=\"blank\">No action</p></div>\n```\nquerySelector finds the named element. addEventListener registers onClick for click events; removeEventListener later removes that same callback. MouseEvent(type, options) constructs a synthetic event and dispatchEvent sends it synchronously through DOM listeners. This tests propagation, not a trusted human click.\n```javascript\nfunction installDelegation(root, log) {\n  function onClick(event) {\n    const button = event.target.closest(\"button[data-topic]\");\n    if (!button || !root.contains(button)) return;\n    log.push({topic: button.dataset.topic,\n      target: event.target.id, current: event.currentTarget.id});\n  }\n  root.addEventListener(\"click\", onClick);\n  return () => root.removeEventListener(\"click\", onClick);\n}\nconst root = document.querySelector(\"#topics\");\nconst log = [];\nconst dispose = installDelegation(root, log);\nconst icon = document.querySelector(\"#icon\");\nicon.dispatchEvent(new MouseEvent(\"click\", {bubbles: true}));\nconsole.log(JSON.stringify(log));\ndispose();\n```\nOutput: [{\"topic\":\"read\",\"target\":\"icon\",\"current\":\"topics\"}]."
+      },
+      {
+        "paragraph": 3,
+        "fact": "installDelegation returns dispose, a no-argument function that detaches the listener. With bubbles:false the ancestor listener does not receive this child event. Optional practice: dispatch on the non-action paragraph and explain why nothing is recorded. Actual local evidence may use JSDOM with the production frame harness; that is not a real-browser interaction or rendering test."
+      }
+    ],
+    "reasoning": "The listener is registered on the ancestor for the bubbling phase; this event never reaches that listener by bubbling.",
+    "source": "https://developer.mozilla.org/en-US/docs/Learn_web_development/Core/Scripting/Event_bubbling",
+    "prerequisites": [
+      "javascript-11",
+      "javascript-12"
+    ]
+  },
+  {
+    "id": "javascript-59",
+    "quizTarget": "If the input contains only spaces, what should the handler do?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "A real form submission normally has browser behavior beyond running a listener. A non-passive submit listener can call event.preventDefault() on a cancelable event to request that its default action not occur. This does not stop propagation and is not the same as a validation rule."
+      },
+      {
+        "paragraph": 1,
+        "fact": "form.querySelector finds the named input inside that form. value is its current String; trim() returns a new String without outer whitespace. The authored rule requires nonempty trimmed text. Assigning output.textContent displays literal text rather than treating a submitted topic as HTML. A client-side rule does not replace server-side validation."
+      },
+      {
+        "paragraph": 2,
+        "fact": "Use this index.html:\n```html\n<form id=\"study\"><label>Topic <input id=\"topic\" name=\"topic\"></label><button type=\"submit\">Save</button><output id=\"result\"></output></form>\n```\nnew Event(\"submit\", options) constructs a synthetic cancelable event. dispatchEvent returns false when that event is cancelled, while defaultPrevented becomes true. These observations do not simulate native form constraint validation, a real navigation, or a trusted submit action.\n```javascript\nfunction installForm(form, output) {\n  function onSubmit(event) {\n    event.preventDefault();\n    const topic = form.querySelector('[name=\"topic\"]').value.trim();\n    output.textContent = topic ? \"Saved: \" + topic : \"Topic required\";\n  }\n  form.addEventListener(\"submit\", onSubmit);\n  return () => form.removeEventListener(\"submit\", onSubmit);\n}\nconst form = document.querySelector(\"#study\");\nconst output = document.querySelector(\"#result\");\nconst stop = installForm(form, output);\nform.querySelector('[name=\"topic\"]').value = \"  Maps  \";\nconst event = new Event(\"submit\", {bubbles: true, cancelable: true});\nconst allowed = form.dispatchEvent(event);\nconsole.log(allowed, event.defaultPrevented);\nconsole.log(output.textContent);\nstop();\n```\nOutput: false true then Saved: Maps."
+      },
+      {
+        "paragraph": 3,
+        "fact": "installForm returns a cleanup closure that removes its named submit listener. Empty text gets Topic required while cancellation still occurs. Optional practice: submit literal angle brackets and verify textContent does not create markup. Production-frame/JSDOM checks establish these local event contracts, not real-browser form behavior."
+      }
+    ],
+    "reasoning": "Cancellation and validation are separate decisions. This handler always cancels the synthetic submit default and then applies its nonempty-text rule.",
+    "source": "https://developer.mozilla.org/en-US/docs/Web/API/Event/preventDefault",
+    "prerequisites": [
+      "javascript-11",
+      "javascript-58"
+    ]
+  },
+  {
+    "id": "javascript-60",
+    "quizTarget": "If the signal was aborted before waitForAbort was called, why is the initial aborted check required?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "new AbortController() creates a controller with a signal. controller.abort(reason) marks that signal aborted, stores its reason and dispatches its abort event. It returns undefined. The signal is one-shot: a later abort does not reset it or replace the first reason. This is a host API, not a forced interruption of arbitrary JavaScript."
+      },
+      {
+        "paragraph": 1,
+        "fact": "waitForAbort(signal) returns a promise that rejects with the signal’s reason. Check signal.aborted before listening, because an earlier abort will not replay its event for a new listener. Otherwise addEventListener(\"abort\", callback, {once:true}) registers one callback that is removed after its first invocation."
+      },
+      {
+        "paragraph": 2,
+        "fact": "The Promise executor receives resolve and reject; this function only uses reject(reason). The pending promise has its listener installed before abort is called. No fetch, timer or external service is required.\n```javascript\nfunction waitForAbort(signal) {\n  return new Promise((resolve, reject) => {\n    if (signal.aborted) {\n      reject(signal.reason);\n      return;\n    }\n    signal.addEventListener(\"abort\", () => reject(signal.reason), {once: true});\n  });\n}\nconst controller = new AbortController();\nconst pending = waitForAbort(controller.signal);\ncontroller.abort(\"stop\");\ntry { await pending; }\ncatch (reason) { console.log(reason); }\nconsole.log(controller.signal.aborted);\n```\nOutput: stop then true."
+      },
+      {
+        "paragraph": 3,
+        "fact": "Calling waitForAbort after abort still rejects immediately through its initial check. Optional practice: abort twice with different reasons and explain why the first remains. A real operation must observe its signal and release its own resources; merely creating an AbortController does not cancel unrelated work."
+      }
+    ],
+    "reasoning": "The signal state persists, but event delivery is not a historical replay. The initial branch prevents waiting forever for a request that already occurred.",
+    "source": "https://developer.mozilla.org/en-US/docs/Web/API/AbortController/abort",
+    "prerequisites": [
+      "javascript-18",
+      "javascript-54"
+    ]
+  },
+  {
+    "id": "javascript-61",
+    "quizTarget": "If append(\"tag\", value) is replaced with set(\"tag\", value) inside the loop, what happens with two tags?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "new URL(relative, base) resolves a relative reference against an absolute base and returns a URL object. new URL(absolute) parses an absolute URL. These calls do not open a network connection. The fixed example.invalid host is only data here."
+      },
+      {
+        "paragraph": 1,
+        "fact": "url.searchParams is a URLSearchParams object. set(name, value) replaces that name’s existing values; append(name, value) adds another entry without removing earlier ones. Both mutate the parameters and return undefined. Spaces serialize as + in this query format, while a slash inside a value is encoded rather than becoming URL structure."
+      },
+      {
+        "paragraph": 2,
+        "fact": "href is the serialized full URL. get(name) returns the first decoded value or null when absent; getAll(name) returns all decoded values in an array, or an empty array. topicURL builds the value using explicit topic and tag inputs.\n```javascript\nfunction topicURL(topic, tags) {\n  const url = new URL(\"/study\", \"https://example.invalid\");\n  url.searchParams.set(\"topic\", topic);\n  for (const tag of tags) url.searchParams.append(\"tag\", tag);\n  return url.href;\n}\nconst text = topicURL(\"read maps\", [\"a/b\", \"next\"]);\nconsole.log(text);\nconst parsed = new URL(text);\nconsole.log(parsed.searchParams.get(\"topic\"));\nconsole.log(JSON.stringify(parsed.searchParams.getAll(\"tag\")));\n```\nOutput: https://example.invalid/study?topic=read+maps&tag=a%2Fb&tag=next, then read maps, then [\"a/b\",\"next\"]."
+      },
+      {
+        "paragraph": 3,
+        "fact": "Parsing or encoding a URL does not approve its destination or scheme. Real applications need an explicit destination policy before navigation or requests. Optional practice: replace an existing query name using set and contrast it with append; do not concatenate unchecked data into structural separators."
+      }
+    ],
+    "reasoning": "set and append have different multiplicity policies; neither performs a request.",
+    "source": "https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams",
+    "prerequisites": [
+      "javascript-20",
+      "javascript-35"
+    ]
+  },
+  {
+    "id": "javascript-62",
+    "quizTarget": "If a Node test assertion expects 1 while clamp(-1) returns 0, what is meaningful evidence of the failure?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "checkEqual(actual, expected, name) compares with strict inequality, throws an Error naming a failed case, and returns true otherwise. runChecks(candidate) calls that assertion after invoking the supplied function at three boundaries. Math.min selects the smaller number and Math.max the larger, so clamp bounds its result to zero through ten.\n```javascript\nfunction clamp(value) {\n  return Math.max(0, Math.min(10, value));\n}\nfunction checkEqual(actual, expected, name) {\n  if (actual !== expected) throw new Error(\"failed: \" + name);\n  return true;\n}\nfunction runChecks(candidate) {\n  checkEqual(candidate(-1), 0, \"lower\");\n  checkEqual(candidate(7), 7, \"inside\");\n  checkEqual(candidate(11), 10, \"upper\");\n  return \"passed 3\";\n}\nconsole.log(runChecks(clamp));\n```\nOutput: passed 3. The browser exercise runs these explicit checks, not Node’s test runner."
+      },
+      {
+        "paragraph": 1,
+        "fact": "The following companion is native Node only. Save it as clamp.test.mjs. The imports load Node built-ins, not browser packages or network dependencies. test(name, callback) registers a test whose callback is executed by the runner; assert.strictEqual(actual, expected) returns undefined when equal or throws AssertionError.\n```javascript\nimport test from \"node:test\";\nimport assert from \"node:assert/strict\";\nfunction clamp(value) { return Math.max(0, Math.min(10, value)); }\ntest(\"lower boundary\", () => {\n  assert.strictEqual(clamp(-1), 0);\n});\n```\nRun node --test --test-reporter=tap in that isolated directory. Node discovers the .test.mjs file and reports one passing lower boundary test. Timing lines vary. This is separate from the in-app function check."
+      },
+      {
+        "paragraph": 2,
+        "fact": "Changing the expected zero in the native assertion to one makes that discovered test fail and the process exit nonzero. Merely printing passed would not establish that any assertion ran. The native fixture checks both the named test and the runner’s test count. Its modules and CLI are not executed by the browser worker."
+      },
+      {
+        "paragraph": 3,
+        "fact": "The application task asks you to complete the real checking function, not return a canned passed String. Optional practice: add an exact upper-bound case in the native test file, rerun it, then intentionally change one expectation and inspect the failure. No claim about coverage percentage or production correctness follows from three small checks. The supplied catchesError helper is test infrastructure; keep it unchanged while implementing checkEqual."
+      }
+    ],
+    "reasoning": "Assertions compare observed behavior with the written expectation. A failed test is reported as failure rather than modifying the implementation.",
+    "source": "https://nodejs.org/docs/latest-v24.x/api/test.html",
+    "prerequisites": [
+      "javascript-19",
+      "javascript-46",
+      "javascript-16"
+    ]
+  },
+  {
+    "id": "javascript-63",
+    "quizTarget": "What should readTopic do for a locally constructed 404 response containing malformed JSON?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "new Response(body, options) constructs a local response with the supplied body, status and headers. It does not call fetch or contact a server. response.ok is true for statuses 200 through 299; status exposes the actual code. A response with status 404 is still a response object, not automatically a thrown transport error."
+      },
+      {
+        "paragraph": 1,
+        "fact": "response.json() takes no arguments and returns a Promise for the parsed body value. It consumes the body; bodyUsed records that use. A second read of this consumed body rejects with TypeError. Malformed JSON rejects with SyntaxError, while valid JSON can still have the wrong shape. The Content-Type header does not enforce our application’s topic field."
+      },
+      {
+        "paragraph": 2,
+        "fact": "readTopic first applies the status policy, then reads and checks a non-null object with a String topic. TypeError(message) creates the chosen shape failure. The already-used body is deliberately read again to observe its contract.\n```javascript\nasync function readTopic(response) {\n  if (!response.ok) return \"HTTP:\" + response.status;\n  const data = await response.json();\n  if (data === null || typeof data !== \"object\" || typeof data.topic !== \"string\") {\n    throw new TypeError(\"topic must be text\");\n  }\n  return data.topic;\n}\nconst response = new Response('{\"topic\":\"Maps\"}', {\n  status: 200, headers: {\"Content-Type\": \"application/json\"}\n});\nconsole.log(await readTopic(response));\nconsole.log(response.bodyUsed);\ntry { await response.json(); }\ncatch (error) { console.log(error instanceof TypeError); }\n```\nOutput: Maps, true, true on separate lines. This is local Response behavior, not an HTTP server test."
+      },
+      {
+        "paragraph": 3,
+        "fact": "For status 404 the function returns HTTP:404 without consuming the body. For a successful status with invalid JSON, the parsing rejection propagates; for valid JSON without a String topic, the explicit shape rejection propagates. Optional practice: construct a fresh response for each case. Reusing a consumed response would test body lifetime instead of the intended parsing case.\nThis complete shape-failure companion actually reaches the explicit TypeError constructor after valid JSON is parsed.\n```javascript\nasync function readTopic(response) {\n  if (!response.ok) return \"HTTP:\" + response.status;\n  const data = await response.json();\n  if (data === null || typeof data !== \"object\" || typeof data.topic !== \"string\") {\n    throw new TypeError(\"topic must be text\");\n  }\n  return data.topic;\n}\ntry {\n  await readTopic(new Response('{\"topic\":3}', {status: 200}));\n} catch (error) {\n  console.log(error instanceof TypeError, error.message);\n}\n```\nOutput: true topic must be text."
+      }
+    ],
+    "reasoning": "The status guard runs first and returns before json is called. This separates the authored status policy from body parsing.",
+    "source": "https://developer.mozilla.org/en-US/docs/Web/API/Response/json",
+    "prerequisites": [
+      "javascript-14",
+      "javascript-24",
+      "javascript-60"
+    ]
+  }
+]

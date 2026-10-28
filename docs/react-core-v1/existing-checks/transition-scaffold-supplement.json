@@ -1,0 +1,27 @@
+{
+  "scope": "Supplied scaffold only, not learner project grading. Hook aliases can bypass this instrument. Invocation is not scheduling or performance proof.",
+  "cases": [
+    {
+      "id": "react-14-scaffold-invocation",
+      "code": "function App() {\n const [selected,setSelected] = React.useState(\"all\");\n const [filter,setFilter] = React.useState(\"all\");\n const [isPending,startTransition] = React.useTransition();\n const items = [\"apple\",\"apricot\",\"berry\"];\n function choose(next) {\n  setSelected(next);\n  startTransition(() => setFilter(next));\n }\n const shown = items.filter(item=>filter === \"all\" || item.startsWith(filter));\n return <main><button onClick={()=>choose(\"a\")}>Show a</button><button onClick={()=>choose(\"b\")}>Show b</button><button onClick={()=>choose(\"all\")}>Show all</button>\n <p data-selected={selected}>Selected: {selected}</p><p role=\"status\">{isPending ? \"Updating\" : \"Ready\"}</p><ul>{shown.map(item=><li key={item}>{item}</li>)}</ul></main>;\n}",
+      "checks": [
+        {
+          "label": "Latest selection settles through a transition invocation",
+          "expression": "(async()=>{const until=async test=>{const end=Date.now()+1500;while(!test()){if(Date.now()>end)return false;await new Promise(r=>setTimeout(r,10));}return true;};const click=text=>{const b=[...document.querySelectorAll('button')].find(b=>b.textContent===text||b.getAttribute('aria-label')===text);if(!b)throw new Error('Missing button: '+text);ReactDOM.flushSync(()=>b.click());};const type=(input,value)=>ReactDOM.flushSync(()=>{Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(input,value);input.dispatchEvent(new Event('input',{bubbles:true}));});const original=React.useTransition;let starts=0;React.useTransition=function(){const [pending,start]=original();return [pending,callback=>{starts+=1;return start(callback);}];};const results=()=>[...document.querySelectorAll('li')].map(e=>e.textContent).join(',');try{click('Show a');if(!await until(()=>results()==='apple,apricot'&&document.querySelector('[role=status]')?.textContent==='Ready'))return false;const before=starts;click('Show b');click('Show all');if(!await until(()=>document.querySelector('[data-selected]')?.dataset.selected==='all'&&results()==='apple,apricot,berry'&&document.querySelector('[role=status]')?.textContent==='Ready'))return false;return starts>before;}finally{React.useTransition=original;click('Show a');click('Show all');await until(()=>results()==='apple,apricot,berry'&&document.querySelector('[role=status]')?.textContent==='Ready');}})()"
+        }
+      ],
+      "expectedPass": true
+    },
+    {
+      "id": "react-14-scaffold-no-transition",
+      "code": "function App() {\n const [selected,setSelected] = React.useState(\"all\");\n const [filter,setFilter] = React.useState(\"all\");\n const [isPending,startTransition] = React.useTransition();\n const items = [\"apple\",\"apricot\",\"berry\"];\n function choose(next) {\n  setSelected(next);\n  setFilter(next);\n }\n const shown = items.filter(item=>filter === \"all\" || item.startsWith(filter));\n return <main><button onClick={()=>choose(\"a\")}>Show a</button><button onClick={()=>choose(\"b\")}>Show b</button><button onClick={()=>choose(\"all\")}>Show all</button>\n <p data-selected={selected}>Selected: {selected}</p><p role=\"status\">{isPending ? \"Updating\" : \"Ready\"}</p><ul>{shown.map(item=><li key={item}>{item}</li>)}</ul></main>;\n}",
+      "checks": [
+        {
+          "label": "Latest selection settles through a transition invocation",
+          "expression": "(async()=>{const until=async test=>{const end=Date.now()+1500;while(!test()){if(Date.now()>end)return false;await new Promise(r=>setTimeout(r,10));}return true;};const click=text=>{const b=[...document.querySelectorAll('button')].find(b=>b.textContent===text||b.getAttribute('aria-label')===text);if(!b)throw new Error('Missing button: '+text);ReactDOM.flushSync(()=>b.click());};const type=(input,value)=>ReactDOM.flushSync(()=>{Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(input,value);input.dispatchEvent(new Event('input',{bubbles:true}));});const original=React.useTransition;let starts=0;React.useTransition=function(){const [pending,start]=original();return [pending,callback=>{starts+=1;return start(callback);}];};const results=()=>[...document.querySelectorAll('li')].map(e=>e.textContent).join(',');try{click('Show a');if(!await until(()=>results()==='apple,apricot'&&document.querySelector('[role=status]')?.textContent==='Ready'))return false;const before=starts;click('Show b');click('Show all');if(!await until(()=>document.querySelector('[data-selected]')?.dataset.selected==='all'&&results()==='apple,apricot,berry'&&document.querySelector('[role=status]')?.textContent==='Ready'))return false;return starts>before;}finally{React.useTransition=original;click('Show a');click('Show all');await until(()=>results()==='apple,apricot,berry'&&document.querySelector('[role=status]')?.textContent==='Ready');}})()"
+        }
+      ],
+      "expectedPass": false
+    }
+  ]
+}

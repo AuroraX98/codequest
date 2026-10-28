@@ -50,18 +50,7 @@ type Props = {
   runnerToken: string;
   onOpenAISettings: () => void;
 };
-const courseNames: Record<string, string> = {
-  javascript: "JavaScript",
-  python: "Python",
-  html: "HTML",
-  css: "CSS",
-  sql: "SQL",
-  swift: "Swift",
-  typescript: "TypeScript",
-  react: "React",
-  backend: "Back-end development",
-  "developer-toolkit": "Developer toolkit",
-};
+import {courseNames,compareCourseNames} from "../lib/course-order";
 function download(name: string, content: string, json = false) {
   const url = URL.createObjectURL(
     new Blob([content], {
@@ -98,12 +87,13 @@ export default function PracticeStudio(props: Props) {
   const courseGroups = useMemo(() => {
     const groups = new Map<string, Unit[]>();
     for (const unit of props.units) {
+      if (props.lessons.find(lesson => lesson.id === unit.id)?.learningMode === "concept") continue;
       const group = groups.get(unit.track) ?? [];
       group.push(unit);
       groups.set(unit.track, group);
     }
-    return [...groups.entries()];
-  }, [props.units]);
+    return [...groups.entries()].sort((a,b)=>compareCourseNames(courseNames[a[0]]??a[0],courseNames[b[0]]??b[0]));
+  }, [props.units, props.lessons]);
   const latest = useRef(props);
   latest.current = props;
   const mounted = useRef(false);
@@ -125,6 +115,13 @@ export default function PracticeStudio(props: Props) {
   });
   const [loaded, setLoaded] = useState(false);
   const [baseUnitId, setBaseUnitId] = useState(props.activeId);
+  const [courseNotice,setCourseNotice] = useState("");
+  useEffect(()=>{
+    const selected = props.lessons.find(lesson=>lesson.id===baseUnitId);
+    if(selected && selected.learningMode !== "concept")return;
+    const fallback=props.units.find(unit=>{const lesson=props.lessons.find(l=>l.id===unit.id);return lesson && lesson.learningMode !== "concept";});
+    if(fallback){setBaseUnitId(fallback.id);setCourseNotice("This topic has concept lessons, not an in-browser coding project. Choose a supported coding topic below; your saved drafts are unchanged.");}
+  },[baseUnitId,props.units,props.lessons]);
   const [difficulty, setDifficulty] = useState<PracticeDifficulty>("beginner");
   const [idea, setIdea] = useState("");
   const [active, setActive] = useState("");
@@ -143,6 +140,7 @@ export default function PracticeStudio(props: Props) {
   const [completedCurrent, setCompletedCurrent] = useState(false);
   const draft = record.drafts.find((item) => item.project.id === active);
   const project = draft?.project;
+  const projectSupported = !project || props.lessons.find(lesson=>lesson.id===project.baseUnitId)?.learningMode !== "concept";
   const course = props.lessons.find((item) => item.id === baseUnitId);
   const allowed =
     props.online && props.state.profile.aiEnabled && props.state.keyConnected;
@@ -333,7 +331,7 @@ export default function PracticeStudio(props: Props) {
     );
   }
   async function generate() {
-    if (!allowed || busy || !course || !loaded) return;
+    if (!allowed || busy || !course || course.learningMode === "concept" || !loaded) return;
     setError("");
     const captured = contextRef.current;
     const requestNumber = ++sequence.current;
@@ -487,7 +485,7 @@ export default function PracticeStudio(props: Props) {
     }
   }
   async function run() {
-    if (!project || busy) return;
+    if (!project || busy || !projectSupported) return;
     const snapshot = { ...local.current, files: { ...local.current.files } };
     const source = practiceSource(snapshot.code, snapshot.files);
     const requestNumber = ++sequence.current;
@@ -583,6 +581,8 @@ export default function PracticeStudio(props: Props) {
         <h3>
           <Sparkles size={20} /> Create a practice project
         </h3>
+        {courseNotice && <p role="status">{courseNotice}</p>}
+        <p className="muted">Only topics with a coding runtime appear here. Concept-only courses remain available in Learn, Tools and concepts, and Terminology.</p>
         <label className="setting-row setting-field">
           <span>
             <b>Course topic</b>
@@ -592,7 +592,7 @@ export default function PracticeStudio(props: Props) {
             aria-label="Practice course topic"
             value={baseUnitId}
             disabled={!!busy}
-            onChange={(event) => setBaseUnitId(event.target.value)}
+            onChange={(event) => {setBaseUnitId(event.target.value);setCourseNotice("");}}
           >
             {courseGroups.map(([track, units]) => (
               <optgroup key={track} label={courseNames[track] ?? track}>
@@ -641,7 +641,7 @@ export default function PracticeStudio(props: Props) {
         <div className="button-row">
           <button
             className="primary"
-            disabled={!allowed || !!busy || !loaded}
+            disabled={!allowed || !!busy || !loaded || !course || course.learningMode === "concept"}
             onClick={() => void generate()}
           >
             <Sparkles size={17} />
@@ -935,12 +935,13 @@ export default function PracticeStudio(props: Props) {
             <div className="editor-actions">
               <button
                 className="primary"
-                disabled={!!busy}
+                disabled={!!busy || !projectSupported}
                 onClick={() => void run()}
               >
                 <Play size={16} />
                 {busy === "run" ? "Running…" : "Run practice"}
               </button>
+              {!projectSupported && <p role="status">This saved draft belongs to a concept-only topic without a supported coding runtime. Its code is kept, but Run is unavailable.</p>}
               {busy === "run" && (
                 <button
                   className="secondary"

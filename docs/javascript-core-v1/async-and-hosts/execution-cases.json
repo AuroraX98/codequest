@@ -1,0 +1,243 @@
+[
+  {
+    "lessonId": "javascript-52",
+    "id": "javascript-52-worked",
+    "paragraph": 2,
+    "code": "function transformed(value, fail, events) {\n  return Promise.resolve(value)\n    .then(number => {\n      if (fail) throw new Error(\"invalid\");\n      return number * 2;\n    })\n    .catch(error => -1)\n    .finally(() => { events.push(\"cleanup\"); });\n}\nconst events = [];\nconsole.log(await transformed(4, false, events));\nconsole.log(events.join(\",\"));\n",
+    "expected": "8\ncleanup",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "javascript-52",
+    "id": "javascript-52-changed",
+    "paragraph": 3,
+    "code": "function transformed(value, fail, events) {\n  return Promise.resolve(value)\n    .then(number => {\n      if (fail) throw new Error(\"invalid\");\n      return number * 2;\n    })\n    .catch(error => -1)\n    .finally(() => { events.push(\"cleanup\"); });\n}\nconst events = [];\nconsole.log(await transformed(4, true, events));\nconsole.log(events.join(\",\"));\n",
+    "expected": "-1\ncleanup",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "javascript-53",
+    "id": "javascript-53-worked",
+    "paragraph": 2,
+    "code": "async function settledLabels(promises) {\n  const outcomes = await Promise.allSettled(promises);\n  return outcomes.map(item => item.status === \"fulfilled\"\n    ? \"ok:\" + item.value : \"error:\" + item.reason);\n}\nconst inputs = [Promise.resolve(\"A\"), Promise.reject(\"no\")];\nconsole.log(JSON.stringify(await settledLabels(inputs)));\ntry { await Promise.all(inputs); }\ncatch (reason) { console.log(\"all:\" + reason); }\n",
+    "expected": "[\"ok:A\",\"error:no\"]\nall:no",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "javascript-53",
+    "id": "javascript-53-changed",
+    "paragraph": 2,
+    "code": "async function settledLabels(promises) {\n  const outcomes = await Promise.allSettled(promises);\n  return outcomes.map(item => item.status === \"fulfilled\"\n    ? \"ok:\" + item.value : \"error:\" + item.reason);\n}\nconst inputs = [Promise.resolve(\"A\"), Promise.resolve(\"B\")];\nconsole.log(JSON.stringify(await settledLabels(inputs)));\nconsole.log(JSON.stringify(await Promise.all(inputs)));\n",
+    "expected": "[\"ok:A\",\"ok:B\"]\n[\"A\",\"B\"]",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "javascript-54",
+    "id": "javascript-54-worked",
+    "paragraph": 2,
+    "code": "function timerLabels(label) {\n  return new Promise(resolve => {\n    const events = [];\n    const discarded = setTimeout(() => { events.push(\"discarded\"); }, 0);\n    clearTimeout(discarded);\n    setTimeout(() => {\n      events.push(label);\n      resolve(events);\n    }, 0);\n  });\n}\nconsole.log((await timerLabels(\"kept\")).join(\",\"));\n",
+    "expected": "kept",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "javascript-54",
+    "id": "javascript-54-changed",
+    "paragraph": 2,
+    "code": "function timerLabels(label) {\n  return new Promise(resolve => {\n    const events = [];\n    const discarded = setTimeout(() => { events.push(\"discarded\"); }, 0);\n    clearTimeout(discarded);\n    setTimeout(() => {\n      events.push(label);\n      resolve(events);\n    }, 0);\n  });\n}\nconsole.log((await timerLabels(\"changed\")).join(\",\"));\n",
+    "expected": "changed",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "javascript-55",
+    "id": "javascript-55-worked",
+    "paragraph": 2,
+    "code": "function taggedRecord(label) {\n  const token = Symbol(\"note\");\n  const record = {title: \"public\", [token]: label};\n  return {token, record};\n}\nconst first = taggedRecord(\"hidden label\");\nconst second = taggedRecord(\"hidden label\");\nconsole.log(first.token === second.token);\nconsole.log(first.record[first.token]);\nconsole.log(Object.keys(first.record).join(\",\"));\nconsole.log(Reflect.ownKeys(first.record).length);\n",
+    "expected": "false\nhidden label\ntitle\n2",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "javascript-55",
+    "id": "javascript-55-changed",
+    "paragraph": 2,
+    "code": "function taggedRecord(label) {\n  const token = Symbol(\"note\");\n  const record = {title: \"public\", [token]: label};\n  return {token, record};\n}\nconst first = taggedRecord(\"changed\");\nconst second = taggedRecord(\"changed\");\nconsole.log(first.token === second.token);\nconsole.log(first.record[first.token]);\nconsole.log(Object.keys(first.record).join(\",\"));\nconsole.log(Reflect.ownKeys(first.record).length);\n",
+    "expected": "false\nchanged\ntitle\n2",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "javascript-56",
+    "id": "javascript-56-worked",
+    "paragraph": 2,
+    "code": "function countdown(start) {\n  return {\n    [Symbol.iterator]() {\n      let current = start;\n      return {\n        next() {\n          if (current > 0) return {value: current--, done: false};\n          return {value: undefined, done: true};\n        }\n      };\n    }\n  };\n}\nconst values = countdown(2);\nconst iterator = values[Symbol.iterator]();\nconsole.log(JSON.stringify(iterator.next()));\nconsole.log(JSON.stringify(iterator.next()));\nconsole.log(iterator.next().done);\nconst again = [];\nfor (const value of values) again.push(value);\nconsole.log(again.join(\",\"));\n",
+    "expected": "{\"value\":2,\"done\":false}\n{\"value\":1,\"done\":false}\ntrue\n2,1",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "javascript-56",
+    "id": "javascript-56-changed",
+    "paragraph": 2,
+    "code": "function countdown(start) {\n  return {\n    [Symbol.iterator]() {\n      let current = start;\n      return {\n        next() {\n          if (current > 0) return {value: current--, done: false};\n          return {value: undefined, done: true};\n        }\n      };\n    }\n  };\n}\nconst values = countdown(1);\nconst iterator = values[Symbol.iterator]();\nconsole.log(JSON.stringify(iterator.next()));\nconsole.log(JSON.stringify(iterator.next()));\nconsole.log(iterator.next().done);\nconst again = [];\nfor (const value of values) again.push(value);\nconsole.log(again.join(\",\"));\n",
+    "expected": "{\"value\":1,\"done\":false}\n{\"done\":true}\ntrue\n1",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "javascript-57",
+    "id": "javascript-57-worked",
+    "paragraph": 2,
+    "code": "async function* asyncLabels(labels, events) {\n  try {\n    for (const label of labels) yield await Promise.resolve(label);\n  } finally {\n    events.push(\"closed\");\n  }\n}\nasync function firstLabel(labels, events) {\n  for await (const label of asyncLabels(labels, events)) return label;\n  return null;\n}\nconst events = [];\nconsole.log(await firstLabel([\"read\", \"draw\"], events));\nconsole.log(events.join(\",\"));\n",
+    "expected": "read\nclosed",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "javascript-57",
+    "id": "javascript-57-changed",
+    "paragraph": 2,
+    "code": "async function* asyncLabels(labels, events) {\n  try {\n    for (const label of labels) yield await Promise.resolve(label);\n  } finally {\n    events.push(\"closed\");\n  }\n}\nasync function firstLabel(labels, events) {\n  for await (const label of asyncLabels(labels, events)) return label;\n  return null;\n}\nconst events = [];\nconsole.log(await firstLabel([], events));\nconsole.log(events.join(\",\"));\n",
+    "expected": "null\nclosed",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "javascript-57",
+    "id": "javascript-57-direct-worked",
+    "paragraph": 3,
+    "code": "async function* asyncLabels(labels, events) {\n  try {\n    for (const label of labels) yield await Promise.resolve(label);\n  } finally {\n    events.push(\"closed\");\n  }\n}\nasync function firstLabel(labels, events) {\n  for await (const label of asyncLabels(labels, events)) return label;\n  return null;\n}\nconst events = [];\nconst iterator = asyncLabels([\"one\", \"two\"], events);\nconsole.log(iterator[Symbol.asyncIterator]() === iterator);\nconsole.log((await iterator.next()).value);\nconsole.log((await iterator.return()).done);\nconsole.log(events.join(\",\"));",
+    "expected": "true\none\ntrue\nclosed",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "javascript-58",
+    "id": "javascript-58-worked",
+    "paragraph": 2,
+    "code": "function installDelegation(root, log) {\n  function onClick(event) {\n    const button = event.target.closest(\"button[data-topic]\");\n    if (!button || !root.contains(button)) return;\n    log.push({topic: button.dataset.topic,\n      target: event.target.id, current: event.currentTarget.id});\n  }\n  root.addEventListener(\"click\", onClick);\n  return () => root.removeEventListener(\"click\", onClick);\n}\nconst root = document.querySelector(\"#topics\");\nconst log = [];\nconst dispose = installDelegation(root, log);\nconst icon = document.querySelector(\"#icon\");\nicon.dispatchEvent(new MouseEvent(\"click\", {bubbles: true}));\nconsole.log(JSON.stringify(log));\ndispose();\n",
+    "expected": "[{\"topic\":\"read\",\"target\":\"icon\",\"current\":\"topics\"}]",
+    "outcome": "success",
+    "extraFiles": [
+      {
+        "name": "index.html",
+        "code": "<div id=\"topics\"><button type=\"button\" data-topic=\"read\"><span id=\"icon\">Read</span></button><p id=\"blank\">No action</p></div>"
+      }
+    ]
+  },
+  {
+    "lessonId": "javascript-58",
+    "id": "javascript-58-changed",
+    "paragraph": 2,
+    "code": "function installDelegation(root, log) {\n  function onClick(event) {\n    const button = event.target.closest(\"button[data-topic]\");\n    if (!button || !root.contains(button)) return;\n    log.push({topic: button.dataset.topic,\n      target: event.target.id, current: event.currentTarget.id});\n  }\n  root.addEventListener(\"click\", onClick);\n  return () => root.removeEventListener(\"click\", onClick);\n}\nconst root = document.querySelector(\"#topics\");\nconst log = [];\nconst dispose = installDelegation(root, log);\nconst icon = document.querySelector(\"#icon\");\nicon.dispatchEvent(new MouseEvent(\"click\", {bubbles: false}));\nconsole.log(JSON.stringify(log));\ndispose();\n",
+    "expected": "[]",
+    "outcome": "success",
+    "extraFiles": [
+      {
+        "name": "index.html",
+        "code": "<div id=\"topics\"><button type=\"button\" data-topic=\"read\"><span id=\"icon\">Read</span></button><p id=\"blank\">No action</p></div>"
+      }
+    ]
+  },
+  {
+    "lessonId": "javascript-59",
+    "id": "javascript-59-worked",
+    "paragraph": 2,
+    "code": "function installForm(form, output) {\n  function onSubmit(event) {\n    event.preventDefault();\n    const topic = form.querySelector('[name=\"topic\"]').value.trim();\n    output.textContent = topic ? \"Saved: \" + topic : \"Topic required\";\n  }\n  form.addEventListener(\"submit\", onSubmit);\n  return () => form.removeEventListener(\"submit\", onSubmit);\n}\nconst form = document.querySelector(\"#study\");\nconst output = document.querySelector(\"#result\");\nconst stop = installForm(form, output);\nform.querySelector('[name=\"topic\"]').value = \"  Maps  \";\nconst event = new Event(\"submit\", {bubbles: true, cancelable: true});\nconst allowed = form.dispatchEvent(event);\nconsole.log(allowed, event.defaultPrevented);\nconsole.log(output.textContent);\nstop();\n",
+    "expected": "false true\nSaved: Maps",
+    "outcome": "success",
+    "extraFiles": [
+      {
+        "name": "index.html",
+        "code": "<form id=\"study\"><label>Topic <input id=\"topic\" name=\"topic\"></label><button type=\"submit\">Save</button><output id=\"result\"></output></form>"
+      }
+    ]
+  },
+  {
+    "lessonId": "javascript-59",
+    "id": "javascript-59-changed",
+    "paragraph": 2,
+    "code": "function installForm(form, output) {\n  function onSubmit(event) {\n    event.preventDefault();\n    const topic = form.querySelector('[name=\"topic\"]').value.trim();\n    output.textContent = topic ? \"Saved: \" + topic : \"Topic required\";\n  }\n  form.addEventListener(\"submit\", onSubmit);\n  return () => form.removeEventListener(\"submit\", onSubmit);\n}\nconst form = document.querySelector(\"#study\");\nconst output = document.querySelector(\"#result\");\nconst stop = installForm(form, output);\nform.querySelector('[name=\"topic\"]').value = \"   \";\nconst event = new Event(\"submit\", {bubbles: true, cancelable: true});\nconst allowed = form.dispatchEvent(event);\nconsole.log(allowed, event.defaultPrevented);\nconsole.log(output.textContent);\nstop();\n",
+    "expected": "false true\nTopic required",
+    "outcome": "success",
+    "extraFiles": [
+      {
+        "name": "index.html",
+        "code": "<form id=\"study\"><label>Topic <input id=\"topic\" name=\"topic\"></label><button type=\"submit\">Save</button><output id=\"result\"></output></form>"
+      }
+    ]
+  },
+  {
+    "lessonId": "javascript-60",
+    "id": "javascript-60-worked",
+    "paragraph": 2,
+    "code": "function waitForAbort(signal) {\n  return new Promise((resolve, reject) => {\n    if (signal.aborted) {\n      reject(signal.reason);\n      return;\n    }\n    signal.addEventListener(\"abort\", () => reject(signal.reason), {once: true});\n  });\n}\nconst controller = new AbortController();\nconst pending = waitForAbort(controller.signal);\ncontroller.abort(\"stop\");\ntry { await pending; }\ncatch (reason) { console.log(reason); }\nconsole.log(controller.signal.aborted);\n",
+    "expected": "stop\ntrue",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "javascript-60",
+    "id": "javascript-60-changed",
+    "paragraph": 2,
+    "code": "function waitForAbort(signal) {\n  return new Promise((resolve, reject) => {\n    if (signal.aborted) {\n      reject(signal.reason);\n      return;\n    }\n    signal.addEventListener(\"abort\", () => reject(signal.reason), {once: true});\n  });\n}\nconst controller = new AbortController();\ncontroller.abort(\"already stopped\");\ntry { await waitForAbort(controller.signal); }\ncatch (reason) { console.log(reason); }\n",
+    "expected": "already stopped",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "javascript-61",
+    "id": "javascript-61-worked",
+    "paragraph": 2,
+    "code": "function topicURL(topic, tags) {\n  const url = new URL(\"/study\", \"https://example.invalid\");\n  url.searchParams.set(\"topic\", topic);\n  for (const tag of tags) url.searchParams.append(\"tag\", tag);\n  return url.href;\n}\nconst text = topicURL(\"read maps\", [\"a/b\", \"next\"]);\nconsole.log(text);\nconst parsed = new URL(text);\nconsole.log(parsed.searchParams.get(\"topic\"));\nconsole.log(JSON.stringify(parsed.searchParams.getAll(\"tag\")));\n",
+    "expected": "https://example.invalid/study?topic=read+maps&tag=a%2Fb&tag=next\nread maps\n[\"a/b\",\"next\"]",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "javascript-61",
+    "id": "javascript-61-changed",
+    "paragraph": 2,
+    "code": "function topicURL(topic, tags) {\n  const url = new URL(\"/study\", \"https://example.invalid\");\n  url.searchParams.set(\"topic\", topic);\n  for (const tag of tags) url.searchParams.append(\"tag\", tag);\n  return url.href;\n}\nconst text = topicURL(\"music\", []);\nconsole.log(text);\nconst parsed = new URL(text);\nconsole.log(parsed.searchParams.get(\"topic\"));\nconsole.log(JSON.stringify(parsed.searchParams.getAll(\"tag\")));\n",
+    "expected": "https://example.invalid/study?topic=music\nmusic\n[]",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "javascript-62",
+    "id": "javascript-62-worked",
+    "paragraph": 0,
+    "code": "function clamp(value) {\n  return Math.max(0, Math.min(10, value));\n}\nfunction checkEqual(actual, expected, name) {\n  if (actual !== expected) throw new Error(\"failed: \" + name);\n  return true;\n}\nfunction runChecks(candidate) {\n  checkEqual(candidate(-1), 0, \"lower\");\n  checkEqual(candidate(7), 7, \"inside\");\n  checkEqual(candidate(11), 10, \"upper\");\n  return \"passed 3\";\n}\nconsole.log(runChecks(clamp));\n",
+    "expected": "passed 3",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "javascript-62",
+    "id": "javascript-62-changed",
+    "paragraph": 0,
+    "code": "function clamp(value) {\n  return Math.max(0, Math.min(10, value));\n}\nfunction checkEqual(actual, expected, name) {\n  if (actual !== expected) throw new Error(\"failed: \" + name);\n  return true;\n}\nfunction runChecks(candidate) {\n  checkEqual(candidate(-1), 0, \"lower\");\n  checkEqual(candidate(7), 7, \"inside\");\n  checkEqual(candidate(11), 10, \"upper\");\n  return \"passed 3\";\n}\nconsole.log(runChecks(value => value));\n",
+    "expected": "",
+    "outcome": "runtime-failure",
+    "errorContains": "failed: lower"
+  },
+  {
+    "lessonId": "javascript-63",
+    "id": "javascript-63-worked",
+    "paragraph": 2,
+    "code": "async function readTopic(response) {\n  if (!response.ok) return \"HTTP:\" + response.status;\n  const data = await response.json();\n  if (data === null || typeof data !== \"object\" || typeof data.topic !== \"string\") {\n    throw new TypeError(\"topic must be text\");\n  }\n  return data.topic;\n}\nconst response = new Response('{\"topic\":\"Maps\"}', {\n  status: 200, headers: {\"Content-Type\": \"application/json\"}\n});\nconsole.log(await readTopic(response));\nconsole.log(response.bodyUsed);\ntry { await response.json(); }\ncatch (error) { console.log(error instanceof TypeError); }\n",
+    "expected": "Maps\ntrue\ntrue",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "javascript-63",
+    "id": "javascript-63-changed",
+    "paragraph": 2,
+    "code": "async function readTopic(response) {\n  if (!response.ok) return \"HTTP:\" + response.status;\n  const data = await response.json();\n  if (data === null || typeof data !== \"object\" || typeof data.topic !== \"string\") {\n    throw new TypeError(\"topic must be text\");\n  }\n  return data.topic;\n}\nconst response = new Response('{\"topic\":\"Maps\"}', {\n  status: 404, headers: {\"Content-Type\": \"application/json\"}\n});\nconsole.log(await readTopic(response));\nconsole.log(response.bodyUsed);\n\n",
+    "expected": "HTTP:404\nfalse",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "javascript-63",
+    "id": "javascript-63-shape-worked",
+    "paragraph": 3,
+    "code": "async function readTopic(response) {\n  if (!response.ok) return \"HTTP:\" + response.status;\n  const data = await response.json();\n  if (data === null || typeof data !== \"object\" || typeof data.topic !== \"string\") {\n    throw new TypeError(\"topic must be text\");\n  }\n  return data.topic;\n}\ntry {\n  await readTopic(new Response('{\"topic\":3}', {status: 200}));\n} catch (error) {\n  console.log(error instanceof TypeError, error.message);\n}",
+    "expected": "true topic must be text",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "javascript-52",
+    "id": "javascript-52-finally-return-check",
+    "paragraph": 1,
+    "code": "function transformed(value, fail, events) {\n  return Promise.resolve(value)\n    .then(number => {\n      if (fail) throw new Error(\"invalid\");\n      return number * 2;\n    })\n    .catch(error => -1)\n    .finally(() => { events.push(\"cleanup\"); return 99; });\n}\nconst events = [];\nconsole.log(await transformed(4, false, events));\nconsole.log(events.join(\",\"));\n",
+    "expected": "8\ncleanup",
+    "outcome": "success"
+  }
+]

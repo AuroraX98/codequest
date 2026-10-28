@@ -1,0 +1,2733 @@
+[
+  {
+    "lesson": {
+      "id": "backend-15",
+      "title": "Match both method and path",
+      "summary": "Implement routeName(method, path). Match the worked contract and the changed-input checks without modifying the supplied input values.",
+      "explanation": [
+        "A route selects a handler using both the requested action and the resource path. Two requests can share a path while asking for different actions.",
+        "This exercise is a small pure JavaScript model. Its inputs are supplied directly; it does not receive live HTTP requests, operate a database, or deploy a service.",
+        "Worked example:\n\n```javascript\nfunction routeName(method, path) {\n  return method === \"GET\" && path === \"/notes\" ? \"list\" : \"missing\";\n}\nconsole.log(routeName(\"GET\", \"/notes\"));\n```\nThe returned value is \"list\".",
+        "The && operator requires both comparisons to be true. The conditional expression chooses one result; it does not start a server.",
+        "Read the function call routeName(\"GET\", \"/notes\") from the inside out: the arguments supply the inputs, routeName runs the body once, and return sends its result back to the caller. console.log displays that result; it does not change it.",
+        "POST /notes reaches this GET-only route. Which result follows? Both method and path must match; a matching path alone is insufficient."
+      ],
+      "analogy": {
+        "familiar": "",
+        "connection": "",
+        "limit": "The practice is a bounded policy or data transformation, not a running backend."
+      },
+      "steps": [
+        "Read the contract and trace the worked example.",
+        "Replace the unfinished return in the starter.",
+        "Run the changed-input checks.",
+        "Explain the boundary in the understanding question."
+      ],
+      "starter": "function routeName(method, path) {\n  // TODO: implement the stated contract.\n  return null;\n}",
+      "solution": "function routeName(method, path) {\n  return method === \"GET\" && path === \"/notes\" ? \"list\" : \"missing\";\n}",
+      "runtime": "javascript",
+      "checks": [
+        {
+          "label": "Case 1: [\"GET\",\"/notes\"] gives \"list\"",
+          "expression": "JSON.stringify(routeName(\"GET\",\"/notes\"))===\"\\\"list\\\"\""
+        },
+        {
+          "label": "Case 2: [\"POST\",\"/notes\"] gives \"missing\"",
+          "expression": "JSON.stringify(routeName(\"POST\",\"/notes\"))===\"\\\"missing\\\"\""
+        },
+        {
+          "label": "Case 3: [\"GET\",\"/notes/1\"] gives \"missing\"",
+          "expression": "JSON.stringify(routeName(\"GET\",\"/notes/1\"))===\"\\\"missing\\\"\""
+        },
+        {
+          "label": "The function preserves the supplied input values",
+          "expression": "(()=>{const args=[\"GET\",\"/notes\"];const before=JSON.stringify(args);routeName(...args);return JSON.stringify(args)===before;})()"
+        }
+      ],
+      "quiz": {
+        "question": "POST /notes reaches this GET-only route. Which result follows?",
+        "choices": [
+          "missing",
+          "list",
+          "A note is automatically created"
+        ],
+        "answer": 0,
+        "explanation": "Both method and path must match; a matching path alone is insufficient."
+      },
+      "hints": [
+        "The && operator requires both comparisons to be true. The conditional expression chooses one result; it does not start a server."
+      ],
+      "math": null,
+      "filename": "main.js",
+      "estimatedMinutes": 8,
+      "externalNotes": "Runs as a pure JavaScript function in the browser. Passing checks does not establish live HTTP behavior, database durability, concurrency safety, authentication security, queue delivery guarantees, or production readiness."
+    },
+    "unit": {
+      "id": "backend-15",
+      "track": "backend",
+      "level": "beginner",
+      "topic": "Match both method and path",
+      "origin": "original bounded backend continuation",
+      "source": {
+        "url": "https://expressjs.com/en/guide/routing/"
+      },
+      "project": {
+        "title": "Match both method and path",
+        "task": "Implement routeName(method, path). Match the worked contract and the changed-input checks without modifying the supplied input values.",
+        "done_when": "Pass the changed-input checks and explain the understanding question. Live-service behavior is outside this model."
+      },
+      "math": {
+        "level": null,
+        "topic": null,
+        "task": null
+      },
+      "prerequisite_ids": [
+        "javascript-06",
+        "javascript-10"
+      ],
+      "interaction_pattern": [
+        "one idea",
+        "worked example",
+        "code breakdown",
+        "changed input",
+        "understanding check"
+      ]
+    }
+  },
+  {
+    "lesson": {
+      "id": "backend-16",
+      "title": "Separate a path from its query",
+      "summary": "Implement requestPath(target). Match the worked contract and the changed-input checks without modifying the supplied input values.",
+      "explanation": [
+        "A request target may contain a path followed by query settings. Route selection should not accidentally treat the query as part of the path.",
+        "This exercise is a small pure JavaScript model. Its inputs are supplied directly; it does not receive live HTTP requests, operate a database, or deploy a service.",
+        "Worked example:\n\n```javascript\nfunction requestPath(target) {\n  return new URL(target, \"https://example.test\").pathname;\n}\nconsole.log(requestPath(\"/notes?limit=2\"));\n```\nThe returned value is \"/notes\".",
+        "new URL(target, base) parses the relative target using a fixed origin. .pathname reads only the path; it does not make a network request.",
+        "Read the function call requestPath(\"/notes?limit=2\") from the inside out: the arguments supply the inputs, requestPath runs the body once, and return sends its result back to the caller. console.log displays that result; it does not change it.",
+        "What path comes from /notes?limit=5? The question mark begins the query. The pathname remains /notes."
+      ],
+      "analogy": {
+        "familiar": "",
+        "connection": "",
+        "limit": "The practice is a bounded policy or data transformation, not a running backend."
+      },
+      "steps": [
+        "Read the contract and trace the worked example.",
+        "Replace the unfinished return in the starter.",
+        "Run the changed-input checks.",
+        "Explain the boundary in the understanding question."
+      ],
+      "starter": "function requestPath(target) {\n  // TODO: implement the stated contract.\n  return null;\n}",
+      "solution": "function requestPath(target) {\n  return new URL(target, \"https://example.test\").pathname;\n}",
+      "runtime": "javascript",
+      "checks": [
+        {
+          "label": "Case 1: [\"/notes?limit=2\"] gives \"/notes\"",
+          "expression": "JSON.stringify(requestPath(\"/notes?limit=2\"))===\"\\\"/notes\\\"\""
+        },
+        {
+          "label": "Case 2: [\"/notes/7?draft=true\"] gives \"/notes/7\"",
+          "expression": "JSON.stringify(requestPath(\"/notes/7?draft=true\"))===\"\\\"/notes/7\\\"\""
+        },
+        {
+          "label": "Case 3: [\"/\"] gives \"/\"",
+          "expression": "JSON.stringify(requestPath(\"/\"))===\"\\\"/\\\"\""
+        },
+        {
+          "label": "The function preserves the supplied input values",
+          "expression": "(()=>{const args=[\"/notes?limit=2\"];const before=JSON.stringify(args);requestPath(...args);return JSON.stringify(args)===before;})()"
+        }
+      ],
+      "quiz": {
+        "question": "What path comes from /notes?limit=5?",
+        "choices": [
+          "/notes?limit=5",
+          "/notes",
+          "limit=5"
+        ],
+        "answer": 1,
+        "explanation": "The question mark begins the query. The pathname remains /notes."
+      },
+      "hints": [
+        "new URL(target, base) parses the relative target using a fixed origin. .pathname reads only the path; it does not make a network request."
+      ],
+      "math": null,
+      "filename": "main.js",
+      "estimatedMinutes": 8,
+      "externalNotes": "Runs as a pure JavaScript function in the browser. Passing checks does not establish live HTTP behavior, database durability, concurrency safety, authentication security, queue delivery guarantees, or production readiness."
+    },
+    "unit": {
+      "id": "backend-16",
+      "track": "backend",
+      "level": "beginner",
+      "topic": "Separate a path from its query",
+      "origin": "original bounded backend continuation",
+      "source": {
+        "url": "https://nodejs.org/api/url.html"
+      },
+      "project": {
+        "title": "Separate a path from its query",
+        "task": "Implement requestPath(target). Match the worked contract and the changed-input checks without modifying the supplied input values.",
+        "done_when": "Pass the changed-input checks and explain the understanding question. Live-service behavior is outside this model."
+      },
+      "math": {
+        "level": null,
+        "topic": null,
+        "task": null
+      },
+      "prerequisite_ids": [
+        "backend-15"
+      ],
+      "interaction_pattern": [
+        "one idea",
+        "worked example",
+        "code breakdown",
+        "changed input",
+        "understanding check"
+      ]
+    }
+  },
+  {
+    "lesson": {
+      "id": "backend-17",
+      "title": "Reject repeated single-value queries",
+      "summary": "Implement readLimit(target). Match the worked contract and the changed-input checks without modifying the supplied input values.",
+      "explanation": [
+        "Some query settings should occur once. Silently choosing the first or last repeated value can make two layers interpret a request differently.",
+        "This exercise is a small pure JavaScript model. Its inputs are supplied directly; it does not receive live HTTP requests, operate a database, or deploy a service.",
+        "Worked example:\n\n```javascript\nfunction readLimit(target) {\n  const values = new URL(target, \"https://example.test\").searchParams.getAll(\"limit\");\n  return values.length === 1 ? values[0] : null;\n}\nconsole.log(readLimit(\"/notes?limit=2\"));\n```\nThe returned value is \"2\".",
+        "searchParams.getAll(\"limit\") returns every occurrence as an array. length checks how many were supplied. This step checks multiplicity, not whether the text is a valid number.",
+        "Read the function call readLimit(\"/notes?limit=2\") from the inside out: the arguments supply the inputs, readLimit runs the body once, and return sends its result back to the caller. console.log displays that result; it does not change it.",
+        "A request contains limit=2&limit=8. What does this contract return? Two values violate the exactly-one rule. Number validation is a separate step."
+      ],
+      "analogy": {
+        "familiar": "",
+        "connection": "",
+        "limit": "The practice is a bounded policy or data transformation, not a running backend."
+      },
+      "steps": [
+        "Read the contract and trace the worked example.",
+        "Replace the unfinished return in the starter.",
+        "Run the changed-input checks.",
+        "Explain the boundary in the understanding question."
+      ],
+      "starter": "function readLimit(target) {\n  // TODO: implement the stated contract.\n  return null;\n}",
+      "solution": "function readLimit(target) {\n  const values = new URL(target, \"https://example.test\").searchParams.getAll(\"limit\");\n  return values.length === 1 ? values[0] : null;\n}",
+      "runtime": "javascript",
+      "checks": [
+        {
+          "label": "Case 1: [\"/notes?limit=2\"] gives \"2\"",
+          "expression": "JSON.stringify(readLimit(\"/notes?limit=2\"))===\"\\\"2\\\"\""
+        },
+        {
+          "label": "Case 2: [\"/notes?limit=2&limit=8\"] gives null",
+          "expression": "JSON.stringify(readLimit(\"/notes?limit=2&limit=8\"))===\"null\""
+        },
+        {
+          "label": "Case 3: [\"/notes\"] gives null",
+          "expression": "JSON.stringify(readLimit(\"/notes\"))===\"null\""
+        },
+        {
+          "label": "The function preserves the supplied input values",
+          "expression": "(()=>{const args=[\"/notes?limit=2\"];const before=JSON.stringify(args);readLimit(...args);return JSON.stringify(args)===before;})()"
+        }
+      ],
+      "quiz": {
+        "question": "A request contains limit=2&limit=8. What does this contract return?",
+        "choices": [
+          "8",
+          "2",
+          "null"
+        ],
+        "answer": 2,
+        "explanation": "Two values violate the exactly-one rule. Number validation is a separate step."
+      },
+      "hints": [
+        "searchParams.getAll(\"limit\") returns every occurrence as an array. length checks how many were supplied. This step checks multiplicity, not whether the text is a valid number."
+      ],
+      "math": null,
+      "filename": "main.js",
+      "estimatedMinutes": 8,
+      "externalNotes": "Runs as a pure JavaScript function in the browser. Passing checks does not establish live HTTP behavior, database durability, concurrency safety, authentication security, queue delivery guarantees, or production readiness."
+    },
+    "unit": {
+      "id": "backend-17",
+      "track": "backend",
+      "level": "beginner",
+      "topic": "Reject repeated single-value queries",
+      "origin": "original bounded backend continuation",
+      "source": {
+        "url": "https://nodejs.org/api/url.html"
+      },
+      "project": {
+        "title": "Reject repeated single-value queries",
+        "task": "Implement readLimit(target). Match the worked contract and the changed-input checks without modifying the supplied input values.",
+        "done_when": "Pass the changed-input checks and explain the understanding question. Live-service behavior is outside this model."
+      },
+      "math": {
+        "level": null,
+        "topic": null,
+        "task": null
+      },
+      "prerequisite_ids": [
+        "backend-16"
+      ],
+      "interaction_pattern": [
+        "one idea",
+        "worked example",
+        "code breakdown",
+        "changed input",
+        "understanding check"
+      ]
+    }
+  },
+  {
+    "lesson": {
+      "id": "backend-18",
+      "title": "Handle malformed JSON text",
+      "summary": "Implement parseBody(text). Match the worked contract and the changed-input checks without modifying the supplied input values.",
+      "explanation": [
+        "JSON parsing turns text into a JavaScript value. Invalid syntax causes JSON.parse to throw. A request handler needs an explicit failure path.",
+        "This exercise is a small pure JavaScript model. Its inputs are supplied directly; it does not receive live HTTP requests, operate a database, or deploy a service.",
+        "Worked example:\n\n```javascript\nfunction parseBody(text) {\n  try { return {ok:true,value:JSON.parse(text)}; }\n  catch { return {ok:false}; }\n}\nconsole.log(parseBody(\"{\\\"minutes\\\":5}\"));\n```\nThe returned value is {\"ok\":true,\"value\":{\"minutes\":5}}.",
+        "try contains the operation that can fail. catch handles a parsing failure. Successful parsing can still produce null, a number, or an array; it does not prove a valid request shape.",
+        "Read the function call parseBody(\"{\\\"minutes\\\":5}\") from the inside out: the arguments supply the inputs, parseBody runs the body once, and return sends its result back to the caller. console.log displays that result; it does not change it.",
+        "The text null parses successfully. Does that prove it is a valid note object? Parsing verifies syntax. A later validator must check the value required by the application."
+      ],
+      "analogy": {
+        "familiar": "",
+        "connection": "",
+        "limit": "The practice is a bounded policy or data transformation, not a running backend."
+      },
+      "steps": [
+        "Read the contract and trace the worked example.",
+        "Replace the unfinished return in the starter.",
+        "Run the changed-input checks.",
+        "Explain the boundary in the understanding question."
+      ],
+      "starter": "function parseBody(text) {\n  // TODO: implement the stated contract.\n  return null;\n}",
+      "solution": "function parseBody(text) {\n  try { return {ok:true,value:JSON.parse(text)}; }\n  catch { return {ok:false}; }\n}",
+      "runtime": "javascript",
+      "checks": [
+        {
+          "label": "Case 1: [\"{\\\"minutes\\\":5}\"] gives {\"ok\":true,\"value\":{\"minutes\":5}}",
+          "expression": "JSON.stringify(parseBody(\"{\\\"minutes\\\":5}\"))===\"{\\\"ok\\\":true,\\\"value\\\":{\\\"minutes\\\":5}}\""
+        },
+        {
+          "label": "Case 2: [\"{\\\"minutes\\\":\"] gives {\"ok\":false}",
+          "expression": "JSON.stringify(parseBody(\"{\\\"minutes\\\":\"))===\"{\\\"ok\\\":false}\""
+        },
+        {
+          "label": "Case 3: [\"null\"] gives {\"ok\":true,\"value\":null}",
+          "expression": "JSON.stringify(parseBody(\"null\"))===\"{\\\"ok\\\":true,\\\"value\\\":null}\""
+        },
+        {
+          "label": "The function preserves the supplied input values",
+          "expression": "(()=>{const args=[\"{\\\"minutes\\\":5}\"];const before=JSON.stringify(args);parseBody(...args);return JSON.stringify(args)===before;})()"
+        }
+      ],
+      "quiz": {
+        "question": "The text null parses successfully. Does that prove it is a valid note object?",
+        "choices": [
+          "Yes, every JSON value is an object",
+          "No, shape validation is still needed",
+          "No, JSON cannot contain null"
+        ],
+        "answer": 1,
+        "explanation": "Parsing verifies syntax. A later validator must check the value required by the application."
+      },
+      "hints": [
+        "try contains the operation that can fail. catch handles a parsing failure. Successful parsing can still produce null, a number, or an array; it does not prove a valid request shape."
+      ],
+      "math": null,
+      "filename": "main.js",
+      "estimatedMinutes": 8,
+      "externalNotes": "Runs as a pure JavaScript function in the browser. Passing checks does not establish live HTTP behavior, database durability, concurrency safety, authentication security, queue delivery guarantees, or production readiness."
+    },
+    "unit": {
+      "id": "backend-18",
+      "track": "backend",
+      "level": "beginner",
+      "topic": "Handle malformed JSON text",
+      "origin": "original bounded backend continuation",
+      "source": {
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/parse"
+      },
+      "project": {
+        "title": "Handle malformed JSON text",
+        "task": "Implement parseBody(text). Match the worked contract and the changed-input checks without modifying the supplied input values.",
+        "done_when": "Pass the changed-input checks and explain the understanding question. Live-service behavior is outside this model."
+      },
+      "math": {
+        "level": null,
+        "topic": null,
+        "task": null
+      },
+      "prerequisite_ids": [
+        "backend-17"
+      ],
+      "interaction_pattern": [
+        "one idea",
+        "worked example",
+        "code breakdown",
+        "changed input",
+        "understanding check"
+      ]
+    }
+  },
+  {
+    "lesson": {
+      "id": "backend-19",
+      "title": "Require a record-shaped body",
+      "summary": "Implement isRecord(value). Match the worked contract and the changed-input checks without modifying the supplied input values.",
+      "explanation": [
+        "After JSON parsing, require an object before reading named fields. Arrays and null need explicit rejection for this record-shaped request contract.",
+        "This exercise is a small pure JavaScript model. Its inputs are supplied directly; it does not receive live HTTP requests, operate a database, or deploy a service.",
+        "Worked example:\n\n```javascript\nfunction isRecord(value) {\n  return value !== null && typeof value === \"object\" && !Array.isArray(value);\n}\nconsole.log(isRecord({\"title\":\"Moon\"}));\n```\nThe returned value is true.",
+        "typeof null is \"object\", so the first comparison matters. Array.isArray detects arrays. The ! operator reverses its answer. This model accepts ordinary values produced by JSON.parse, not arbitrary class instances.",
+        "Read the function call isRecord({\"title\":\"Moon\"}) from the inside out: the arguments supply the inputs, isRecord runs the body once, and return sends its result back to the caller. console.log displays that result; it does not change it.",
+        "Why is typeof value === \"object\" insufficient by itself? Null and arrays satisfy that typeof comparison. Named-field requirements come after this guard."
+      ],
+      "analogy": {
+        "familiar": "",
+        "connection": "",
+        "limit": "The practice is a bounded policy or data transformation, not a running backend."
+      },
+      "steps": [
+        "Read the contract and trace the worked example.",
+        "Replace the unfinished return in the starter.",
+        "Run the changed-input checks.",
+        "Explain the boundary in the understanding question."
+      ],
+      "starter": "function isRecord(value) {\n  // TODO: implement the stated contract.\n  return null;\n}",
+      "solution": "function isRecord(value) {\n  return value !== null && typeof value === \"object\" && !Array.isArray(value);\n}",
+      "runtime": "javascript",
+      "checks": [
+        {
+          "label": "Case 1: [{\"title\":\"Moon\"}] gives true",
+          "expression": "JSON.stringify(isRecord({\"title\":\"Moon\"}))===\"true\""
+        },
+        {
+          "label": "Case 2: [null] gives false",
+          "expression": "JSON.stringify(isRecord(null))===\"false\""
+        },
+        {
+          "label": "Case 3: [[]] gives false",
+          "expression": "JSON.stringify(isRecord([]))===\"false\""
+        },
+        {
+          "label": "Case 4: [\"Moon\"] gives false",
+          "expression": "JSON.stringify(isRecord(\"Moon\"))===\"false\""
+        },
+        {
+          "label": "The function preserves the supplied input values",
+          "expression": "(()=>{const args=[{\"title\":\"Moon\"}];const before=JSON.stringify(args);isRecord(...args);return JSON.stringify(args)===before;})()"
+        }
+      ],
+      "quiz": {
+        "question": "Why is typeof value === \"object\" insufficient by itself?",
+        "choices": [
+          "It also accepts null and arrays",
+          "It rejects every JSON object",
+          "It proves the title is valid"
+        ],
+        "answer": 0,
+        "explanation": "Null and arrays satisfy that typeof comparison. Named-field requirements come after this guard."
+      },
+      "hints": [
+        "typeof null is \"object\", so the first comparison matters. Array.isArray detects arrays. The ! operator reverses its answer. This model accepts ordinary values produced by JSON.parse, not arbitrary class instances."
+      ],
+      "math": null,
+      "filename": "main.js",
+      "estimatedMinutes": 8,
+      "externalNotes": "Runs as a pure JavaScript function in the browser. Passing checks does not establish live HTTP behavior, database durability, concurrency safety, authentication security, queue delivery guarantees, or production readiness."
+    },
+    "unit": {
+      "id": "backend-19",
+      "track": "backend",
+      "level": "beginner",
+      "topic": "Require a record-shaped body",
+      "origin": "original bounded backend continuation",
+      "source": {
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/typeof"
+      },
+      "project": {
+        "title": "Require a record-shaped body",
+        "task": "Implement isRecord(value). Match the worked contract and the changed-input checks without modifying the supplied input values.",
+        "done_when": "Pass the changed-input checks and explain the understanding question. Live-service behavior is outside this model."
+      },
+      "math": {
+        "level": null,
+        "topic": null,
+        "task": null
+      },
+      "prerequisite_ids": [
+        "backend-18"
+      ],
+      "interaction_pattern": [
+        "one idea",
+        "worked example",
+        "code breakdown",
+        "changed input",
+        "understanding check"
+      ]
+    }
+  },
+  {
+    "lesson": {
+      "id": "backend-20",
+      "title": "Normalize only surrounding whitespace",
+      "summary": "Implement cleanTitle(title). Match the worked contract and the changed-input checks without modifying the supplied input values.",
+      "explanation": [
+        "A title may have accidental spaces at its edges. Normalization should follow a stated rule instead of silently rewriting meaningful internal spacing.",
+        "This exercise is a small pure JavaScript model. Its inputs are supplied directly; it does not receive live HTTP requests, operate a database, or deploy a service.",
+        "Worked example:\n\n```javascript\nfunction cleanTitle(title) {\n  return typeof title === \"string\" && title.trim().length > 0 ? title.trim() : null;\n}\nconsole.log(cleanTitle(\"  Moon notes  \"));\n```\nThe returned value is \"Moon notes\".",
+        "trim() returns a new string with surrounding whitespace removed. It does not change the original string. The type guard prevents calling a string method on a number.",
+        "Read the function call cleanTitle(\"  Moon notes  \") from the inside out: the arguments supply the inputs, cleanTitle runs the body once, and return sends its result back to the caller. console.log displays that result; it does not change it.",
+        "What happens to the two spaces inside \" A  B \"? Only surrounding whitespace is removed by this rule. The internal text stays unchanged."
+      ],
+      "analogy": {
+        "familiar": "",
+        "connection": "",
+        "limit": "The practice is a bounded policy or data transformation, not a running backend."
+      },
+      "steps": [
+        "Read the contract and trace the worked example.",
+        "Replace the unfinished return in the starter.",
+        "Run the changed-input checks.",
+        "Explain the boundary in the understanding question."
+      ],
+      "starter": "function cleanTitle(title) {\n  // TODO: implement the stated contract.\n  return null;\n}",
+      "solution": "function cleanTitle(title) {\n  return typeof title === \"string\" && title.trim().length > 0 ? title.trim() : null;\n}",
+      "runtime": "javascript",
+      "checks": [
+        {
+          "label": "Case 1: [\"  Moon notes  \"] gives \"Moon notes\"",
+          "expression": "JSON.stringify(cleanTitle(\"  Moon notes  \"))===\"\\\"Moon notes\\\"\""
+        },
+        {
+          "label": "Case 2: [\" A  B \"] gives \"A  B\"",
+          "expression": "JSON.stringify(cleanTitle(\" A  B \"))===\"\\\"A  B\\\"\""
+        },
+        {
+          "label": "Case 3: [\"   \"] gives null",
+          "expression": "JSON.stringify(cleanTitle(\"   \"))===\"null\""
+        },
+        {
+          "label": "Case 4: [8] gives null",
+          "expression": "JSON.stringify(cleanTitle(8))===\"null\""
+        },
+        {
+          "label": "The function preserves the supplied input values",
+          "expression": "(()=>{const args=[\"  Moon notes  \"];const before=JSON.stringify(args);cleanTitle(...args);return JSON.stringify(args)===before;})()"
+        }
+      ],
+      "quiz": {
+        "question": "What happens to the two spaces inside \" A  B \"?",
+        "choices": [
+          "They are both removed",
+          "They remain",
+          "The title is rejected"
+        ],
+        "answer": 1,
+        "explanation": "Only surrounding whitespace is removed by this rule. The internal text stays unchanged."
+      },
+      "hints": [
+        "trim() returns a new string with surrounding whitespace removed. It does not change the original string. The type guard prevents calling a string method on a number."
+      ],
+      "math": null,
+      "filename": "main.js",
+      "estimatedMinutes": 8,
+      "externalNotes": "Runs as a pure JavaScript function in the browser. Passing checks does not establish live HTTP behavior, database durability, concurrency safety, authentication security, queue delivery guarantees, or production readiness."
+    },
+    "unit": {
+      "id": "backend-20",
+      "track": "backend",
+      "level": "beginner",
+      "topic": "Normalize only surrounding whitespace",
+      "origin": "original bounded backend continuation",
+      "source": {
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/trim"
+      },
+      "project": {
+        "title": "Normalize only surrounding whitespace",
+        "task": "Implement cleanTitle(title). Match the worked contract and the changed-input checks without modifying the supplied input values.",
+        "done_when": "Pass the changed-input checks and explain the understanding question. Live-service behavior is outside this model."
+      },
+      "math": {
+        "level": null,
+        "topic": null,
+        "task": null
+      },
+      "prerequisite_ids": [
+        "backend-19"
+      ],
+      "interaction_pattern": [
+        "one idea",
+        "worked example",
+        "code breakdown",
+        "changed input",
+        "understanding check"
+      ]
+    }
+  },
+  {
+    "lesson": {
+      "id": "backend-21",
+      "title": "Validate a whole-number range",
+      "summary": "Implement validMinutes(value). Match the worked contract and the changed-input checks without modifying the supplied input values.",
+      "explanation": [
+        "A numeric field needs both a type rule and an allowed range. This contract accepts whole numbers from 1 through 180, including both endpoints.",
+        "This exercise is a small pure JavaScript model. Its inputs are supplied directly; it does not receive live HTTP requests, operate a database, or deploy a service.",
+        "Worked example:\n\n```javascript\nfunction validMinutes(value) {\n  return Number.isInteger(value) && value >= 1 && value <= 180;\n}\nconsole.log(validMinutes(1));\n```\nThe returned value is true.",
+        "Number.isInteger does not coerce text into a number. >= and <= include the endpoint values. && means all three conditions must pass.",
+        "Read the function call validMinutes(1) from the inside out: the arguments supply the inputs, validMinutes runs the body once, and return sends its result back to the caller. console.log displays that result; it does not change it.",
+        "Does the string \"25\" satisfy this numeric JSON-field contract? The contract accepts a number. A query-text parser would use a different, explicit conversion step."
+      ],
+      "analogy": {
+        "familiar": "",
+        "connection": "",
+        "limit": "The practice is a bounded policy or data transformation, not a running backend."
+      },
+      "steps": [
+        "Read the contract and trace the worked example.",
+        "Replace the unfinished return in the starter.",
+        "Run the changed-input checks.",
+        "Explain the boundary in the understanding question."
+      ],
+      "starter": "function validMinutes(value) {\n  // TODO: implement the stated contract.\n  return null;\n}",
+      "solution": "function validMinutes(value) {\n  return Number.isInteger(value) && value >= 1 && value <= 180;\n}",
+      "runtime": "javascript",
+      "checks": [
+        {
+          "label": "Case 1: [1] gives true",
+          "expression": "JSON.stringify(validMinutes(1))===\"true\""
+        },
+        {
+          "label": "Case 2: [180] gives true",
+          "expression": "JSON.stringify(validMinutes(180))===\"true\""
+        },
+        {
+          "label": "Case 3: [0] gives false",
+          "expression": "JSON.stringify(validMinutes(0))===\"false\""
+        },
+        {
+          "label": "Case 4: [181] gives false",
+          "expression": "JSON.stringify(validMinutes(181))===\"false\""
+        },
+        {
+          "label": "Case 5: [1.5] gives false",
+          "expression": "JSON.stringify(validMinutes(1.5))===\"false\""
+        },
+        {
+          "label": "Case 6: [\"25\"] gives false",
+          "expression": "JSON.stringify(validMinutes(\"25\"))===\"false\""
+        },
+        {
+          "label": "The function preserves the supplied input values",
+          "expression": "(()=>{const args=[1];const before=JSON.stringify(args);validMinutes(...args);return JSON.stringify(args)===before;})()"
+        }
+      ],
+      "quiz": {
+        "question": "Does the string \"25\" satisfy this numeric JSON-field contract?",
+        "choices": [
+          "Yes, because it looks numeric",
+          "No, because strings are not numbers",
+          "Only if it is below 180"
+        ],
+        "answer": 1,
+        "explanation": "The contract accepts a number. A query-text parser would use a different, explicit conversion step."
+      },
+      "hints": [
+        "Number.isInteger does not coerce text into a number. >= and <= include the endpoint values. && means all three conditions must pass."
+      ],
+      "math": null,
+      "filename": "main.js",
+      "estimatedMinutes": 8,
+      "externalNotes": "Runs as a pure JavaScript function in the browser. Passing checks does not establish live HTTP behavior, database durability, concurrency safety, authentication security, queue delivery guarantees, or production readiness."
+    },
+    "unit": {
+      "id": "backend-21",
+      "track": "backend",
+      "level": "beginner",
+      "topic": "Validate a whole-number range",
+      "origin": "original bounded backend continuation",
+      "source": {
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/isInteger"
+      },
+      "project": {
+        "title": "Validate a whole-number range",
+        "task": "Implement validMinutes(value). Match the worked contract and the changed-input checks without modifying the supplied input values.",
+        "done_when": "Pass the changed-input checks and explain the understanding question. Live-service behavior is outside this model."
+      },
+      "math": {
+        "level": null,
+        "topic": null,
+        "task": null
+      },
+      "prerequisite_ids": [
+        "backend-20"
+      ],
+      "interaction_pattern": [
+        "one idea",
+        "worked example",
+        "code breakdown",
+        "changed input",
+        "understanding check"
+      ]
+    }
+  },
+  {
+    "lesson": {
+      "id": "backend-22",
+      "title": "Allow only intended write fields",
+      "summary": "Implement titlePatch(body). Match the worked contract and the changed-input checks without modifying the supplied input values.",
+      "explanation": [
+        "A validated request can still contain fields the caller must not control. Build the write object from an explicit list of permitted fields.",
+        "This exercise is a small pure JavaScript model. Its inputs are supplied directly; it does not receive live HTTP requests, operate a database, or deploy a service.",
+        "Worked example:\n\n```javascript\nfunction titlePatch(body) {\n  return {title:body.title};\n}\nconsole.log(titlePatch({\"title\":\"Moon\",\"ownerId\":\"attacker\"}));\n```\nThe returned value is {\"title\":\"Moon\"}.",
+        "The object literal creates a new object with only title. Spreading the entire body would also copy ownerId or admin. This step assumes title was already validated.",
+        "Read the function call titlePatch({\"title\":\"Moon\",\"ownerId\":\"attacker\"}) from the inside out: the arguments supply the inputs, titlePatch runs the body once, and return sends its result back to the caller. console.log displays that result; it does not change it.",
+        "Why not use {...body} for this update? An allowlist determines writable fields. Ownership must come from a trusted session and stored record."
+      ],
+      "analogy": {
+        "familiar": "",
+        "connection": "",
+        "limit": "The practice is a bounded policy or data transformation, not a running backend."
+      },
+      "steps": [
+        "Read the contract and trace the worked example.",
+        "Replace the unfinished return in the starter.",
+        "Run the changed-input checks.",
+        "Explain the boundary in the understanding question."
+      ],
+      "starter": "function titlePatch(body) {\n  // TODO: implement the stated contract.\n  return null;\n}",
+      "solution": "function titlePatch(body) {\n  return {title:body.title};\n}",
+      "runtime": "javascript",
+      "checks": [
+        {
+          "label": "Case 1: [{\"title\":\"Moon\",\"ownerId\":\"attacker\"}] gives {\"title\":\"Moon\"}",
+          "expression": "JSON.stringify(titlePatch({\"title\":\"Moon\",\"ownerId\":\"attacker\"}))===\"{\\\"title\\\":\\\"Moon\\\"}\""
+        },
+        {
+          "label": "Case 2: [{\"title\":\"Sea\",\"admin\":true}] gives {\"title\":\"Sea\"}",
+          "expression": "JSON.stringify(titlePatch({\"title\":\"Sea\",\"admin\":true}))===\"{\\\"title\\\":\\\"Sea\\\"}\""
+        },
+        {
+          "label": "The function preserves the supplied input values",
+          "expression": "(()=>{const args=[{\"title\":\"Moon\",\"ownerId\":\"attacker\"}];const before=JSON.stringify(args);titlePatch(...args);return JSON.stringify(args)===before;})()"
+        }
+      ],
+      "quiz": {
+        "question": "Why not use {...body} for this update?",
+        "choices": [
+          "It always deletes title",
+          "It may copy fields the caller must not control",
+          "It validates ownership automatically"
+        ],
+        "answer": 1,
+        "explanation": "An allowlist determines writable fields. Ownership must come from a trusted session and stored record."
+      },
+      "hints": [
+        "The object literal creates a new object with only title. Spreading the entire body would also copy ownerId or admin. This step assumes title was already validated."
+      ],
+      "math": null,
+      "filename": "main.js",
+      "estimatedMinutes": 8,
+      "externalNotes": "Runs as a pure JavaScript function in the browser. Passing checks does not establish live HTTP behavior, database durability, concurrency safety, authentication security, queue delivery guarantees, or production readiness."
+    },
+    "unit": {
+      "id": "backend-22",
+      "track": "backend",
+      "level": "beginner",
+      "topic": "Allow only intended write fields",
+      "origin": "original bounded backend continuation",
+      "source": {
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Object_initializer"
+      },
+      "project": {
+        "title": "Allow only intended write fields",
+        "task": "Implement titlePatch(body). Match the worked contract and the changed-input checks without modifying the supplied input values.",
+        "done_when": "Pass the changed-input checks and explain the understanding question. Live-service behavior is outside this model."
+      },
+      "math": {
+        "level": null,
+        "topic": null,
+        "task": null
+      },
+      "prerequisite_ids": [
+        "backend-21"
+      ],
+      "interaction_pattern": [
+        "one idea",
+        "worked example",
+        "code breakdown",
+        "changed input",
+        "understanding check"
+      ]
+    }
+  },
+  {
+    "lesson": {
+      "id": "backend-23",
+      "title": "Project a public response",
+      "summary": "Implement publicNote(note). Match the worked contract and the changed-input checks without modifying the supplied input values.",
+      "explanation": [
+        "The stored object may contain information a response should not reveal. Construct an explicit response rather than returning the whole stored row.",
+        "This exercise is a small pure JavaScript model. Its inputs are supplied directly; it does not receive live HTTP requests, operate a database, or deploy a service.",
+        "Worked example:\n\n```javascript\nfunction publicNote(note) {\n  return {id:note.id,title:note.title};\n}\nconsole.log(publicNote({\"id\":1,\"title\":\"Moon\",\"ownerEmail\":\"private@example.test\"}));\n```\nThe returned value is {\"id\":1,\"title\":\"Moon\"}.",
+        "Reading note.id and note.title selects those values. The returned object has no ownerEmail or token field. Projection is separate from deciding who may read the note.",
+        "Read the function call publicNote({\"id\":1,\"title\":\"Moon\",\"ownerEmail\":\"private@example.test\"}) from the inside out: the arguments supply the inputs, publicNote runs the body once, and return sends its result back to the caller. console.log displays that result; it does not change it.",
+        "A new private field is added to the stored row. What happens with this explicit projection? Only the named response fields are copied, so an unrelated stored field stays out."
+      ],
+      "analogy": {
+        "familiar": "",
+        "connection": "",
+        "limit": "The practice is a bounded policy or data transformation, not a running backend."
+      },
+      "steps": [
+        "Read the contract and trace the worked example.",
+        "Replace the unfinished return in the starter.",
+        "Run the changed-input checks.",
+        "Explain the boundary in the understanding question."
+      ],
+      "starter": "function publicNote(note) {\n  // TODO: implement the stated contract.\n  return null;\n}",
+      "solution": "function publicNote(note) {\n  return {id:note.id,title:note.title};\n}",
+      "runtime": "javascript",
+      "checks": [
+        {
+          "label": "Case 1: [{\"id\":1,\"title\":\"Moon\",\"ownerEmail\":\"private@example.test\"}] gives {\"id\":1,\"title\":\"Moon\"}",
+          "expression": "JSON.stringify(publicNote({\"id\":1,\"title\":\"Moon\",\"ownerEmail\":\"private@example.test\"}))===\"{\\\"id\\\":1,\\\"title\\\":\\\"Moon\\\"}\""
+        },
+        {
+          "label": "Case 2: [{\"id\":2,\"title\":\"Sea\",\"token\":\"secret\"}] gives {\"id\":2,\"title\":\"Sea\"}",
+          "expression": "JSON.stringify(publicNote({\"id\":2,\"title\":\"Sea\",\"token\":\"secret\"}))===\"{\\\"id\\\":2,\\\"title\\\":\\\"Sea\\\"}\""
+        },
+        {
+          "label": "The function preserves the supplied input values",
+          "expression": "(()=>{const args=[{\"id\":1,\"title\":\"Moon\",\"ownerEmail\":\"private@example.test\"}];const before=JSON.stringify(args);publicNote(...args);return JSON.stringify(args)===before;})()"
+        }
+      ],
+      "quiz": {
+        "question": "A new private field is added to the stored row. What happens with this explicit projection?",
+        "choices": [
+          "It is automatically returned",
+          "The response stops working",
+          "It remains excluded"
+        ],
+        "answer": 2,
+        "explanation": "Only the named response fields are copied, so an unrelated stored field stays out."
+      },
+      "hints": [
+        "Reading note.id and note.title selects those values. The returned object has no ownerEmail or token field. Projection is separate from deciding who may read the note."
+      ],
+      "math": null,
+      "filename": "main.js",
+      "estimatedMinutes": 8,
+      "externalNotes": "Runs as a pure JavaScript function in the browser. Passing checks does not establish live HTTP behavior, database durability, concurrency safety, authentication security, queue delivery guarantees, or production readiness."
+    },
+    "unit": {
+      "id": "backend-23",
+      "track": "backend",
+      "level": "beginner",
+      "topic": "Project a public response",
+      "origin": "original bounded backend continuation",
+      "source": {
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Object_initializer"
+      },
+      "project": {
+        "title": "Project a public response",
+        "task": "Implement publicNote(note). Match the worked contract and the changed-input checks without modifying the supplied input values.",
+        "done_when": "Pass the changed-input checks and explain the understanding question. Live-service behavior is outside this model."
+      },
+      "math": {
+        "level": null,
+        "topic": null,
+        "task": null
+      },
+      "prerequisite_ids": [
+        "backend-22"
+      ],
+      "interaction_pattern": [
+        "one idea",
+        "worked example",
+        "code breakdown",
+        "changed input",
+        "understanding check"
+      ]
+    }
+  },
+  {
+    "lesson": {
+      "id": "backend-24",
+      "title": "Represent an empty successful response",
+      "summary": "Implement deleteReply(removed). Match the worked contract and the changed-input checks without modifying the supplied input values.",
+      "explanation": [
+        "A successful deletion may use status 204, which has no response body. A missing record can use a different status under the chosen API contract.",
+        "This exercise is a small pure JavaScript model. Its inputs are supplied directly; it does not receive live HTTP requests, operate a database, or deploy a service.",
+        "Worked example:\n\n```javascript\nfunction deleteReply(removed) {\n  return removed ? {status:204,body:null} : {status:404,body:{error:\"Not found\"}};\n}\nconsole.log(deleteReply(true));\n```\nThe returned value is {\"status\":204,\"body\":null}.",
+        "The conditional expression selects the status and body together. null here models the absence of a body; a real adapter must not serialize the word null into a 204 response.",
+        "Read the function call deleteReply(true) from the inside out: the arguments supply the inputs, deleteReply runs the body once, and return sends its result back to the caller. console.log displays that result; it does not change it.",
+        "Should the real HTTP adapter send the JSON text null for the 204 branch? The helper uses null as a model marker. HTTP 204 means there is no response content."
+      ],
+      "analogy": {
+        "familiar": "",
+        "connection": "",
+        "limit": "The practice is a bounded policy or data transformation, not a running backend."
+      },
+      "steps": [
+        "Read the contract and trace the worked example.",
+        "Replace the unfinished return in the starter.",
+        "Run the changed-input checks.",
+        "Explain the boundary in the understanding question."
+      ],
+      "starter": "function deleteReply(removed) {\n  // TODO: implement the stated contract.\n  return null;\n}",
+      "solution": "function deleteReply(removed) {\n  return removed ? {status:204,body:null} : {status:404,body:{error:\"Not found\"}};\n}",
+      "runtime": "javascript",
+      "checks": [
+        {
+          "label": "Case 1: [true] gives {\"status\":204,\"body\":null}",
+          "expression": "JSON.stringify(deleteReply(true))===\"{\\\"status\\\":204,\\\"body\\\":null}\""
+        },
+        {
+          "label": "Case 2: [false] gives {\"status\":404,\"body\":{\"error\":\"Not found\"}}",
+          "expression": "JSON.stringify(deleteReply(false))===\"{\\\"status\\\":404,\\\"body\\\":{\\\"error\\\":\\\"Not found\\\"}}\""
+        },
+        {
+          "label": "The function preserves the supplied input values",
+          "expression": "(()=>{const args=[true];const before=JSON.stringify(args);deleteReply(...args);return JSON.stringify(args)===before;})()"
+        }
+      ],
+      "quiz": {
+        "question": "Should the real HTTP adapter send the JSON text null for the 204 branch?",
+        "choices": [
+          "No, it should send no body",
+          "Yes, every response needs JSON",
+          "Only if the note was private"
+        ],
+        "answer": 0,
+        "explanation": "The helper uses null as a model marker. HTTP 204 means there is no response content."
+      },
+      "hints": [
+        "The conditional expression selects the status and body together. null here models the absence of a body; a real adapter must not serialize the word null into a 204 response."
+      ],
+      "math": null,
+      "filename": "main.js",
+      "estimatedMinutes": 8,
+      "externalNotes": "Runs as a pure JavaScript function in the browser. Passing checks does not establish live HTTP behavior, database durability, concurrency safety, authentication security, queue delivery guarantees, or production readiness."
+    },
+    "unit": {
+      "id": "backend-24",
+      "track": "backend",
+      "level": "beginner",
+      "topic": "Represent an empty successful response",
+      "origin": "original bounded backend continuation",
+      "source": {
+        "url": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Status/204"
+      },
+      "project": {
+        "title": "Represent an empty successful response",
+        "task": "Implement deleteReply(removed). Match the worked contract and the changed-input checks without modifying the supplied input values.",
+        "done_when": "Pass the changed-input checks and explain the understanding question. Live-service behavior is outside this model."
+      },
+      "math": {
+        "level": null,
+        "topic": null,
+        "task": null
+      },
+      "prerequisite_ids": [
+        "backend-23"
+      ],
+      "interaction_pattern": [
+        "one idea",
+        "worked example",
+        "code breakdown",
+        "changed input",
+        "understanding check"
+      ]
+    }
+  },
+  {
+    "lesson": {
+      "id": "backend-25",
+      "title": "Use a deterministic tie-breaker",
+      "summary": "Implement orderedNotes(notes). Match the worked contract and the changed-input checks without modifying the supplied input values.",
+      "explanation": [
+        "Pagination needs predictable ordering. When two records share a creation value, an identity tie-breaker gives them a defined order.",
+        "This exercise is a small pure JavaScript model. Its inputs are supplied directly; it does not receive live HTTP requests, operate a database, or deploy a service.",
+        "Worked example:\n\n```javascript\nfunction orderedNotes(notes) {\n  return [...notes].sort((a,b)=>a.created-b.created || a.id-b.id);\n}\nconsole.log(orderedNotes([{\"id\":2,\"created\":10},{\"id\":1,\"created\":10}]));\n```\nThe returned value is [{\"id\":1,\"created\":10},{\"id\":2,\"created\":10}].",
+        "[...notes] copies the array before sort changes it. The first subtraction orders by created. A zero result makes || choose the identity comparison. Records are assumed to have distinct integer IDs.",
+        "Read the function call orderedNotes([{\"id\":2,\"created\":10},{\"id\":1,\"created\":10}]) from the inside out: the arguments supply the inputs, orderedNotes runs the body once, and return sends its result back to the caller. console.log displays that result; it does not change it.",
+        "Two notes have the same created value. Which field decides their order? The second comparison orders tied records by ID. This avoids relying on input arrival order."
+      ],
+      "analogy": {
+        "familiar": "",
+        "connection": "",
+        "limit": "The practice is a bounded policy or data transformation, not a running backend."
+      },
+      "steps": [
+        "Read the contract and trace the worked example.",
+        "Replace the unfinished return in the starter.",
+        "Run the changed-input checks.",
+        "Explain the boundary in the understanding question."
+      ],
+      "starter": "function orderedNotes(notes) {\n  // TODO: implement the stated contract.\n  return null;\n}",
+      "solution": "function orderedNotes(notes) {\n  return [...notes].sort((a,b)=>a.created-b.created || a.id-b.id);\n}",
+      "runtime": "javascript",
+      "checks": [
+        {
+          "label": "Case 1: [[{\"id\":2,\"created\":10},{\"id\":1,\"created\":10}]] gives [{\"id\":1,\"created\":10},{\"id\":2,\"created\":10}]",
+          "expression": "JSON.stringify(orderedNotes([{\"id\":2,\"created\":10},{\"id\":1,\"created\":10}]))===\"[{\\\"id\\\":1,\\\"created\\\":10},{\\\"id\\\":2,\\\"created\\\":10}]\""
+        },
+        {
+          "label": "Case 2: [[{\"id\":3,\"created\":1},{\"id\":1,\"created\":2}]] gives [{\"id\":3,\"created\":1},{\"id\":1,\"created\":2}]",
+          "expression": "JSON.stringify(orderedNotes([{\"id\":3,\"created\":1},{\"id\":1,\"created\":2}]))===\"[{\\\"id\\\":3,\\\"created\\\":1},{\\\"id\\\":1,\\\"created\\\":2}]\""
+        },
+        {
+          "label": "The function preserves the supplied input values",
+          "expression": "(()=>{const args=[[{\"id\":2,\"created\":10},{\"id\":1,\"created\":10}]];const before=JSON.stringify(args);orderedNotes(...args);return JSON.stringify(args)===before;})()"
+        }
+      ],
+      "quiz": {
+        "question": "Two notes have the same created value. Which field decides their order?",
+        "choices": [
+          "Their original array position",
+          "Their title length",
+          "Their id"
+        ],
+        "answer": 2,
+        "explanation": "The second comparison orders tied records by ID. This avoids relying on input arrival order."
+      },
+      "hints": [
+        "[...notes] copies the array before sort changes it. The first subtraction orders by created. A zero result makes || choose the identity comparison. Records are assumed to have distinct integer IDs."
+      ],
+      "math": null,
+      "filename": "main.js",
+      "estimatedMinutes": 8,
+      "externalNotes": "Runs as a pure JavaScript function in the browser. Passing checks does not establish live HTTP behavior, database durability, concurrency safety, authentication security, queue delivery guarantees, or production readiness."
+    },
+    "unit": {
+      "id": "backend-25",
+      "track": "backend",
+      "level": "beginner",
+      "topic": "Use a deterministic tie-breaker",
+      "origin": "original bounded backend continuation",
+      "source": {
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/sort"
+      },
+      "project": {
+        "title": "Use a deterministic tie-breaker",
+        "task": "Implement orderedNotes(notes). Match the worked contract and the changed-input checks without modifying the supplied input values.",
+        "done_when": "Pass the changed-input checks and explain the understanding question. Live-service behavior is outside this model."
+      },
+      "math": {
+        "level": null,
+        "topic": null,
+        "task": null
+      },
+      "prerequisite_ids": [
+        "backend-24"
+      ],
+      "interaction_pattern": [
+        "one idea",
+        "worked example",
+        "code breakdown",
+        "changed input",
+        "understanding check"
+      ]
+    }
+  },
+  {
+    "lesson": {
+      "id": "backend-26",
+      "title": "Find a record by identity",
+      "summary": "Implement findNote(notes,id). Match the worked contract and the changed-input checks without modifying the supplied input values.",
+      "explanation": [
+        "An identity is not an array position. Deletions and reordering can make the second array element have an ID other than two.",
+        "This exercise is a small pure JavaScript model. Its inputs are supplied directly; it does not receive live HTTP requests, operate a database, or deploy a service.",
+        "Worked example:\n\n```javascript\nfunction findNote(notes,id) {\n  return notes.find(note=>note.id === id) ?? null;\n}\nconsole.log(findNote([{\"id\":4,\"title\":\"Moon\"},{\"id\":9,\"title\":\"Sea\"}], 9));\n```\nThe returned value is {\"id\":9,\"title\":\"Sea\"}.",
+        "find calls its predicate on records until one matches. === compares the stored ID with the requested ID. ?? converts the missing result, undefined, into this API’s null marker.",
+        "Read the function call findNote([{\"id\":4,\"title\":\"Moon\"},{\"id\":9,\"title\":\"Sea\"}], 9) from the inside out: the arguments supply the inputs, findNote runs the body once, and return sends its result back to the caller. console.log displays that result; it does not change it.",
+        "A note has ID 9 but is the first item. Which lookup is correct? Identity lookup searches the ID field. Its current position is incidental."
+      ],
+      "analogy": {
+        "familiar": "",
+        "connection": "",
+        "limit": "The practice is a bounded policy or data transformation, not a running backend."
+      },
+      "steps": [
+        "Read the contract and trace the worked example.",
+        "Replace the unfinished return in the starter.",
+        "Run the changed-input checks.",
+        "Explain the boundary in the understanding question."
+      ],
+      "starter": "function findNote(notes,id) {\n  // TODO: implement the stated contract.\n  return null;\n}",
+      "solution": "function findNote(notes,id) {\n  return notes.find(note=>note.id === id) ?? null;\n}",
+      "runtime": "javascript",
+      "checks": [
+        {
+          "label": "Case 1: [[{\"id\":4,\"title\":\"Moon\"},{\"id\":9,\"title\":\"Sea\"}],9] gives {\"id\":9,\"title\":\"Sea\"}",
+          "expression": "JSON.stringify(findNote([{\"id\":4,\"title\":\"Moon\"},{\"id\":9,\"title\":\"Sea\"}],9))===\"{\\\"id\\\":9,\\\"title\\\":\\\"Sea\\\"}\""
+        },
+        {
+          "label": "Case 2: [[{\"id\":4,\"title\":\"Moon\"}],2] gives null",
+          "expression": "JSON.stringify(findNote([{\"id\":4,\"title\":\"Moon\"}],2))===\"null\""
+        },
+        {
+          "label": "The function preserves the supplied input values",
+          "expression": "(()=>{const args=[[{\"id\":4,\"title\":\"Moon\"},{\"id\":9,\"title\":\"Sea\"}],9];const before=JSON.stringify(args);findNote(...args);return JSON.stringify(args)===before;})()"
+        }
+      ],
+      "quiz": {
+        "question": "A note has ID 9 but is the first item. Which lookup is correct?",
+        "choices": [
+          "notes[9]",
+          "Find the item whose id is 9",
+          "Always read notes[0]"
+        ],
+        "answer": 1,
+        "explanation": "Identity lookup searches the ID field. Its current position is incidental."
+      },
+      "hints": [
+        "find calls its predicate on records until one matches. === compares the stored ID with the requested ID. ?? converts the missing result, undefined, into this API’s null marker."
+      ],
+      "math": null,
+      "filename": "main.js",
+      "estimatedMinutes": 8,
+      "externalNotes": "Runs as a pure JavaScript function in the browser. Passing checks does not establish live HTTP behavior, database durability, concurrency safety, authentication security, queue delivery guarantees, or production readiness."
+    },
+    "unit": {
+      "id": "backend-26",
+      "track": "backend",
+      "level": "intermediate",
+      "topic": "Find a record by identity",
+      "origin": "original bounded backend continuation",
+      "source": {
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/find"
+      },
+      "project": {
+        "title": "Find a record by identity",
+        "task": "Implement findNote(notes,id). Match the worked contract and the changed-input checks without modifying the supplied input values.",
+        "done_when": "Pass the changed-input checks and explain the understanding question. Live-service behavior is outside this model."
+      },
+      "math": {
+        "level": null,
+        "topic": null,
+        "task": null
+      },
+      "prerequisite_ids": [
+        "backend-25"
+      ],
+      "interaction_pattern": [
+        "one idea",
+        "worked example",
+        "code breakdown",
+        "changed input",
+        "understanding check"
+      ]
+    }
+  },
+  {
+    "lesson": {
+      "id": "backend-27",
+      "title": "Append without losing existing records",
+      "summary": "Implement appendNote(notes,note). Match the worked contract and the changed-input checks without modifying the supplied input values.",
+      "explanation": [
+        "Adding one record must preserve every earlier record and append the requested content. Checking only the new length could miss overwritten or incorrect records.",
+        "This exercise is a small pure JavaScript model. Its inputs are supplied directly; it does not receive live HTTP requests, operate a database, or deploy a service.",
+        "Worked example:\n\n```javascript\nfunction appendNote(notes,note) {\n  return [...notes,{...note}];\n}\nconsole.log(appendNote([{\"id\":1,\"title\":\"Moon\"}], {\"id\":2,\"title\":\"Sea\"}));\n```\nThe returned value is [{\"id\":1,\"title\":\"Moon\"},{\"id\":2,\"title\":\"Sea\"}].",
+        "The array spread copies existing entries into a new array. The object spread copies the new record’s top-level fields. This is a shallow copy; nested objects would still need their own ownership policy.",
+        "Read the function call appendNote([{\"id\":1,\"title\":\"Moon\"}], {\"id\":2,\"title\":\"Sea\"}) from the inside out: the arguments supply the inputs, appendNote runs the body once, and return sends its result back to the caller. console.log displays that result; it does not change it.",
+        "A result has the right length but replaces the old title. Has it met the append contract? The contract includes exact old content and the exact added item. Counts alone cannot establish either."
+      ],
+      "analogy": {
+        "familiar": "",
+        "connection": "",
+        "limit": "The practice is a bounded policy or data transformation, not a running backend."
+      },
+      "steps": [
+        "Read the contract and trace the worked example.",
+        "Replace the unfinished return in the starter.",
+        "Run the changed-input checks.",
+        "Explain the boundary in the understanding question."
+      ],
+      "starter": "function appendNote(notes,note) {\n  // TODO: implement the stated contract.\n  return null;\n}",
+      "solution": "function appendNote(notes,note) {\n  return [...notes,{...note}];\n}",
+      "runtime": "javascript",
+      "checks": [
+        {
+          "label": "Case 1: [[{\"id\":1,\"title\":\"Moon\"}],{\"id\":2,\"title\":\"Sea\"}] gives [{\"id\":1,\"title\":\"Moon\"},{\"id\":2,\"title\":\"Sea\"}]",
+          "expression": "JSON.stringify(appendNote([{\"id\":1,\"title\":\"Moon\"}],{\"id\":2,\"title\":\"Sea\"}))===\"[{\\\"id\\\":1,\\\"title\\\":\\\"Moon\\\"},{\\\"id\\\":2,\\\"title\\\":\\\"Sea\\\"}]\""
+        },
+        {
+          "label": "Case 2: [[],{\"id\":7,\"title\":\"Sky\"}] gives [{\"id\":7,\"title\":\"Sky\"}]",
+          "expression": "JSON.stringify(appendNote([],{\"id\":7,\"title\":\"Sky\"}))===\"[{\\\"id\\\":7,\\\"title\\\":\\\"Sky\\\"}]\""
+        },
+        {
+          "label": "The function preserves the supplied input values",
+          "expression": "(()=>{const args=[[{\"id\":1,\"title\":\"Moon\"}],{\"id\":2,\"title\":\"Sea\"}];const before=JSON.stringify(args);appendNote(...args);return JSON.stringify(args)===before;})()"
+        }
+      ],
+      "quiz": {
+        "question": "A result has the right length but replaces the old title. Has it met the append contract?",
+        "choices": [
+          "Yes, length is enough",
+          "No, old record content must survive",
+          "Yes, if the new record is correct"
+        ],
+        "answer": 1,
+        "explanation": "The contract includes exact old content and the exact added item. Counts alone cannot establish either."
+      },
+      "hints": [
+        "The array spread copies existing entries into a new array. The object spread copies the new record’s top-level fields. This is a shallow copy; nested objects would still need their own ownership policy."
+      ],
+      "math": null,
+      "filename": "main.js",
+      "estimatedMinutes": 8,
+      "externalNotes": "Runs as a pure JavaScript function in the browser. Passing checks does not establish live HTTP behavior, database durability, concurrency safety, authentication security, queue delivery guarantees, or production readiness."
+    },
+    "unit": {
+      "id": "backend-27",
+      "track": "backend",
+      "level": "intermediate",
+      "topic": "Append without losing existing records",
+      "origin": "original bounded backend continuation",
+      "source": {
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Spread_syntax"
+      },
+      "project": {
+        "title": "Append without losing existing records",
+        "task": "Implement appendNote(notes,note). Match the worked contract and the changed-input checks without modifying the supplied input values.",
+        "done_when": "Pass the changed-input checks and explain the understanding question. Live-service behavior is outside this model."
+      },
+      "math": {
+        "level": null,
+        "topic": null,
+        "task": null
+      },
+      "prerequisite_ids": [
+        "backend-26"
+      ],
+      "interaction_pattern": [
+        "one idea",
+        "worked example",
+        "code breakdown",
+        "changed input",
+        "understanding check"
+      ]
+    }
+  },
+  {
+    "lesson": {
+      "id": "backend-28",
+      "title": "Replace one record without changing the input",
+      "summary": "Implement renameNote(notes,id,title). Match the worked contract and the changed-input checks without modifying the supplied input values.",
+      "explanation": [
+        "An immutable update returns a new collection while leaving the caller’s existing collection unchanged. Only the matching record receives the new title.",
+        "This exercise is a small pure JavaScript model. Its inputs are supplied directly; it does not receive live HTTP requests, operate a database, or deploy a service.",
+        "Worked example:\n\n```javascript\nfunction renameNote(notes,id,title) {\n  return notes.map(note=>note.id === id ? {...note,title} : note);\n}\nconsole.log(renameNote([{\"id\":1,\"title\":\"Moon\"},{\"id\":2,\"title\":\"Sea\"}], 2, \"Ocean\"));\n```\nThe returned value is [{\"id\":1,\"title\":\"Moon\"},{\"id\":2,\"title\":\"Ocean\"}].",
+        "map creates a new array. For the matching ID, {...note,title} copies the record and replaces its title. Unmatched records are reused because this function does not mutate them.",
+        "Read the function call renameNote([{\"id\":1,\"title\":\"Moon\"},{\"id\":2,\"title\":\"Sea\"}], 2, \"Ocean\") from the inside out: the arguments supply the inputs, renameNote runs the body once, and return sends its result back to the caller. console.log displays that result; it does not change it.",
+        "Why test with ordinary mutable input as well as frozen input? An accidental write can fail silently on frozen objects. Comparing mutable input before and after catches a real change."
+      ],
+      "analogy": {
+        "familiar": "",
+        "connection": "",
+        "limit": "The practice is a bounded policy or data transformation, not a running backend."
+      },
+      "steps": [
+        "Read the contract and trace the worked example.",
+        "Replace the unfinished return in the starter.",
+        "Run the changed-input checks.",
+        "Explain the boundary in the understanding question."
+      ],
+      "starter": "function renameNote(notes,id,title) {\n  // TODO: implement the stated contract.\n  return null;\n}",
+      "solution": "function renameNote(notes,id,title) {\n  return notes.map(note=>note.id === id ? {...note,title} : note);\n}",
+      "runtime": "javascript",
+      "checks": [
+        {
+          "label": "Case 1: [[{\"id\":1,\"title\":\"Moon\"},{\"id\":2,\"title\":\"Sea\"}],2,\"Ocean\"] gives [{\"id\":1,\"title\":\"Moon\"},{\"id\":2,\"title\":\"Ocean\"}]",
+          "expression": "JSON.stringify(renameNote([{\"id\":1,\"title\":\"Moon\"},{\"id\":2,\"title\":\"Sea\"}],2,\"Ocean\"))===\"[{\\\"id\\\":1,\\\"title\\\":\\\"Moon\\\"},{\\\"id\\\":2,\\\"title\\\":\\\"Ocean\\\"}]\""
+        },
+        {
+          "label": "Case 2: [[{\"id\":1,\"title\":\"Moon\"}],9,\"Sky\"] gives [{\"id\":1,\"title\":\"Moon\"}]",
+          "expression": "JSON.stringify(renameNote([{\"id\":1,\"title\":\"Moon\"}],9,\"Sky\"))===\"[{\\\"id\\\":1,\\\"title\\\":\\\"Moon\\\"}]\""
+        },
+        {
+          "label": "The function preserves the supplied input values",
+          "expression": "(()=>{const args=[[{\"id\":1,\"title\":\"Moon\"},{\"id\":2,\"title\":\"Sea\"}],2,\"Ocean\"];const before=JSON.stringify(args);renameNote(...args);return JSON.stringify(args)===before;})()"
+        }
+      ],
+      "quiz": {
+        "question": "Why test with ordinary mutable input as well as frozen input?",
+        "choices": [
+          "Frozen input proves every side effect",
+          "Mutable input lets the test observe accidental writes directly",
+          "Mutable input disables assertions"
+        ],
+        "answer": 1,
+        "explanation": "An accidental write can fail silently on frozen objects. Comparing mutable input before and after catches a real change."
+      },
+      "hints": [
+        "map creates a new array. For the matching ID, {...note,title} copies the record and replaces its title. Unmatched records are reused because this function does not mutate them."
+      ],
+      "math": null,
+      "filename": "main.js",
+      "estimatedMinutes": 8,
+      "externalNotes": "Runs as a pure JavaScript function in the browser. Passing checks does not establish live HTTP behavior, database durability, concurrency safety, authentication security, queue delivery guarantees, or production readiness."
+    },
+    "unit": {
+      "id": "backend-28",
+      "track": "backend",
+      "level": "intermediate",
+      "topic": "Replace one record without changing the input",
+      "origin": "original bounded backend continuation",
+      "source": {
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/map"
+      },
+      "project": {
+        "title": "Replace one record without changing the input",
+        "task": "Implement renameNote(notes,id,title). Match the worked contract and the changed-input checks without modifying the supplied input values.",
+        "done_when": "Pass the changed-input checks and explain the understanding question. Live-service behavior is outside this model."
+      },
+      "math": {
+        "level": null,
+        "topic": null,
+        "task": null
+      },
+      "prerequisite_ids": [
+        "backend-27"
+      ],
+      "interaction_pattern": [
+        "one idea",
+        "worked example",
+        "code breakdown",
+        "changed input",
+        "understanding check"
+      ]
+    }
+  },
+  {
+    "lesson": {
+      "id": "backend-29",
+      "title": "Remove only the selected identity",
+      "summary": "Implement removeNote(notes,id). Match the worked contract and the changed-input checks without modifying the supplied input values.",
+      "explanation": [
+        "Deletion should specify what disappears and what survives. Removing an unknown ID leaves the contents unchanged under this contract.",
+        "This exercise is a small pure JavaScript model. Its inputs are supplied directly; it does not receive live HTTP requests, operate a database, or deploy a service.",
+        "Worked example:\n\n```javascript\nfunction removeNote(notes,id) {\n  return notes.filter(note=>note.id !== id);\n}\nconsole.log(removeNote([{\"id\":1},{\"id\":2},{\"id\":3}], 2));\n```\nThe returned value is [{\"id\":1},{\"id\":3}].",
+        "filter keeps records whose predicate is true. !== keeps every ID except the selected one. filter returns a new array without changing the input array.",
+        "Read the function call removeNote([{\"id\":1},{\"id\":2},{\"id\":3}], 2) from the inside out: the arguments supply the inputs, removeNote runs the body once, and return sends its result back to the caller. console.log displays that result; it does not change it.",
+        "The requested ID is absent. What should this helper return? Every existing record passes the not-equal predicate, so all survive."
+      ],
+      "analogy": {
+        "familiar": "",
+        "connection": "",
+        "limit": "The practice is a bounded policy or data transformation, not a running backend."
+      },
+      "steps": [
+        "Read the contract and trace the worked example.",
+        "Replace the unfinished return in the starter.",
+        "Run the changed-input checks.",
+        "Explain the boundary in the understanding question."
+      ],
+      "starter": "function removeNote(notes,id) {\n  // TODO: implement the stated contract.\n  return null;\n}",
+      "solution": "function removeNote(notes,id) {\n  return notes.filter(note=>note.id !== id);\n}",
+      "runtime": "javascript",
+      "checks": [
+        {
+          "label": "Case 1: [[{\"id\":1},{\"id\":2},{\"id\":3}],2] gives [{\"id\":1},{\"id\":3}]",
+          "expression": "JSON.stringify(removeNote([{\"id\":1},{\"id\":2},{\"id\":3}],2))===\"[{\\\"id\\\":1},{\\\"id\\\":3}]\""
+        },
+        {
+          "label": "Case 2: [[{\"id\":1}],8] gives [{\"id\":1}]",
+          "expression": "JSON.stringify(removeNote([{\"id\":1}],8))===\"[{\\\"id\\\":1}]\""
+        },
+        {
+          "label": "Case 3: [[],1] gives []",
+          "expression": "JSON.stringify(removeNote([],1))===\"[]\""
+        },
+        {
+          "label": "The function preserves the supplied input values",
+          "expression": "(()=>{const args=[[{\"id\":1},{\"id\":2},{\"id\":3}],2];const before=JSON.stringify(args);removeNote(...args);return JSON.stringify(args)===before;})()"
+        }
+      ],
+      "quiz": {
+        "question": "The requested ID is absent. What should this helper return?",
+        "choices": [
+          "An empty array",
+          "The same records in a new array",
+          "The first record removed"
+        ],
+        "answer": 1,
+        "explanation": "Every existing record passes the not-equal predicate, so all survive."
+      },
+      "hints": [
+        "filter keeps records whose predicate is true. !== keeps every ID except the selected one. filter returns a new array without changing the input array."
+      ],
+      "math": null,
+      "filename": "main.js",
+      "estimatedMinutes": 8,
+      "externalNotes": "Runs as a pure JavaScript function in the browser. Passing checks does not establish live HTTP behavior, database durability, concurrency safety, authentication security, queue delivery guarantees, or production readiness."
+    },
+    "unit": {
+      "id": "backend-29",
+      "track": "backend",
+      "level": "intermediate",
+      "topic": "Remove only the selected identity",
+      "origin": "original bounded backend continuation",
+      "source": {
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/filter"
+      },
+      "project": {
+        "title": "Remove only the selected identity",
+        "task": "Implement removeNote(notes,id). Match the worked contract and the changed-input checks without modifying the supplied input values.",
+        "done_when": "Pass the changed-input checks and explain the understanding question. Live-service behavior is outside this model."
+      },
+      "math": {
+        "level": null,
+        "topic": null,
+        "task": null
+      },
+      "prerequisite_ids": [
+        "backend-28"
+      ],
+      "interaction_pattern": [
+        "one idea",
+        "worked example",
+        "code breakdown",
+        "changed input",
+        "understanding check"
+      ]
+    }
+  },
+  {
+    "lesson": {
+      "id": "backend-30",
+      "title": "Detect duplicate identities",
+      "summary": "Implement hasDuplicateIds(notes). Match the worked contract and the changed-input checks without modifying the supplied input values.",
+      "explanation": [
+        "Unique identities make record lookup unambiguous. A repeated ID is a data problem even if the titles differ.",
+        "This exercise is a small pure JavaScript model. Its inputs are supplied directly; it does not receive live HTTP requests, operate a database, or deploy a service.",
+        "Worked example:\n\n```javascript\nfunction hasDuplicateIds(notes) {\n  const ids=notes.map(note=>note.id);\n  return new Set(ids).size !== ids.length;\n}\nconsole.log(hasDuplicateIds([{\"id\":1},{\"id\":2}]));\n```\nThe returned value is false.",
+        "map extracts IDs. Set stores each distinct value once. If its size is smaller than the original list, at least one identity occurred more than once. IDs here are integers.",
+        "Read the function call hasDuplicateIds([{\"id\":1},{\"id\":2}]) from the inside out: the arguments supply the inputs, hasDuplicateIds runs the body once, and return sends its result back to the caller. console.log displays that result; it does not change it.",
+        "Two records have ID 3 and different titles. Are their IDs unique? Uniqueness concerns the ID field, independent of title or position."
+      ],
+      "analogy": {
+        "familiar": "",
+        "connection": "",
+        "limit": "The practice is a bounded policy or data transformation, not a running backend."
+      },
+      "steps": [
+        "Read the contract and trace the worked example.",
+        "Replace the unfinished return in the starter.",
+        "Run the changed-input checks.",
+        "Explain the boundary in the understanding question."
+      ],
+      "starter": "function hasDuplicateIds(notes) {\n  // TODO: implement the stated contract.\n  return null;\n}",
+      "solution": "function hasDuplicateIds(notes) {\n  const ids=notes.map(note=>note.id);\n  return new Set(ids).size !== ids.length;\n}",
+      "runtime": "javascript",
+      "checks": [
+        {
+          "label": "Case 1: [[{\"id\":1},{\"id\":2}]] gives false",
+          "expression": "JSON.stringify(hasDuplicateIds([{\"id\":1},{\"id\":2}]))===\"false\""
+        },
+        {
+          "label": "Case 2: [[{\"id\":1},{\"id\":1}]] gives true",
+          "expression": "JSON.stringify(hasDuplicateIds([{\"id\":1},{\"id\":1}]))===\"true\""
+        },
+        {
+          "label": "Case 3: [[]] gives false",
+          "expression": "JSON.stringify(hasDuplicateIds([]))===\"false\""
+        },
+        {
+          "label": "The function preserves the supplied input values",
+          "expression": "(()=>{const args=[[{\"id\":1},{\"id\":2}]];const before=JSON.stringify(args);hasDuplicateIds(...args);return JSON.stringify(args)===before;})()"
+        }
+      ],
+      "quiz": {
+        "question": "Two records have ID 3 and different titles. Are their IDs unique?",
+        "choices": [
+          "Yes, because the titles differ",
+          "No, the identity repeats",
+          "Only if they are adjacent"
+        ],
+        "answer": 1,
+        "explanation": "Uniqueness concerns the ID field, independent of title or position."
+      },
+      "hints": [
+        "map extracts IDs. Set stores each distinct value once. If its size is smaller than the original list, at least one identity occurred more than once. IDs here are integers."
+      ],
+      "math": null,
+      "filename": "main.js",
+      "estimatedMinutes": 8,
+      "externalNotes": "Runs as a pure JavaScript function in the browser. Passing checks does not establish live HTTP behavior, database durability, concurrency safety, authentication security, queue delivery guarantees, or production readiness."
+    },
+    "unit": {
+      "id": "backend-30",
+      "track": "backend",
+      "level": "intermediate",
+      "topic": "Detect duplicate identities",
+      "origin": "original bounded backend continuation",
+      "source": {
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set"
+      },
+      "project": {
+        "title": "Detect duplicate identities",
+        "task": "Implement hasDuplicateIds(notes). Match the worked contract and the changed-input checks without modifying the supplied input values.",
+        "done_when": "Pass the changed-input checks and explain the understanding question. Live-service behavior is outside this model."
+      },
+      "math": {
+        "level": null,
+        "topic": null,
+        "task": null
+      },
+      "prerequisite_ids": [
+        "backend-29"
+      ],
+      "interaction_pattern": [
+        "one idea",
+        "worked example",
+        "code breakdown",
+        "changed input",
+        "understanding check"
+      ]
+    }
+  },
+  {
+    "lesson": {
+      "id": "backend-31",
+      "title": "Reject a stale version update",
+      "summary": "Implement updateVersion(record,expected,title). Match the worked contract and the changed-input checks without modifying the supplied input values.",
+      "explanation": [
+        "Two clients may edit the same record. A version comparison can reject a request based on an older version instead of silently replacing a newer change.",
+        "This exercise is a small pure JavaScript model. Its inputs are supplied directly; it does not receive live HTTP requests, operate a database, or deploy a service.",
+        "Worked example:\n\n```javascript\nfunction updateVersion(record,expected,title) {\n  if(record.version !== expected) return {status:409};\n  return {status:200,record:{...record,title,version:record.version+1}};\n}\nconsole.log(updateVersion({\"id\":1,\"title\":\"Moon\",\"version\":3}, 3, \"Sea\"));\n```\nThe returned value is {\"status\":200,\"record\":{\"id\":1,\"title\":\"Sea\",\"version\":4}}.",
+        "The early return rejects a mismatch. The success branch copies the record and increments its version. In a real database, comparison and update must be one atomic operation; this pure helper does not solve concurrency.",
+        "Read the function call updateVersion({\"id\":1,\"title\":\"Moon\",\"version\":3}, 3, \"Sea\") from the inside out: the arguments supply the inputs, updateVersion runs the body once, and return sends its result back to the caller. console.log displays that result; it does not change it.",
+        "A client expects version 2, but storage has version 3. What follows? The client’s starting version is stale. The application must reconcile before retrying an update."
+      ],
+      "analogy": {
+        "familiar": "",
+        "connection": "",
+        "limit": "The practice is a bounded policy or data transformation, not a running backend."
+      },
+      "steps": [
+        "Read the contract and trace the worked example.",
+        "Replace the unfinished return in the starter.",
+        "Run the changed-input checks.",
+        "Explain the boundary in the understanding question."
+      ],
+      "starter": "function updateVersion(record,expected,title) {\n  // TODO: implement the stated contract.\n  return null;\n}",
+      "solution": "function updateVersion(record,expected,title) {\n  if(record.version !== expected) return {status:409};\n  return {status:200,record:{...record,title,version:record.version+1}};\n}",
+      "runtime": "javascript",
+      "checks": [
+        {
+          "label": "Case 1: [{\"id\":1,\"title\":\"Moon\",\"version\":3},3,\"Sea\"] gives {\"status\":200,\"record\":{\"id\":1,\"title\":\"Sea\",\"version\":4}}",
+          "expression": "JSON.stringify(updateVersion({\"id\":1,\"title\":\"Moon\",\"version\":3},3,\"Sea\"))===\"{\\\"status\\\":200,\\\"record\\\":{\\\"id\\\":1,\\\"title\\\":\\\"Sea\\\",\\\"version\\\":4}}\""
+        },
+        {
+          "label": "Case 2: [{\"id\":1,\"title\":\"Moon\",\"version\":3},2,\"Sea\"] gives {\"status\":409}",
+          "expression": "JSON.stringify(updateVersion({\"id\":1,\"title\":\"Moon\",\"version\":3},2,\"Sea\"))===\"{\\\"status\\\":409}\""
+        },
+        {
+          "label": "The function preserves the supplied input values",
+          "expression": "(()=>{const args=[{\"id\":1,\"title\":\"Moon\",\"version\":3},3,\"Sea\"];const before=JSON.stringify(args);updateVersion(...args);return JSON.stringify(args)===before;})()"
+        }
+      ],
+      "quiz": {
+        "question": "A client expects version 2, but storage has version 3. What follows?",
+        "choices": [
+          "Overwrite version 3",
+          "Return a conflict",
+          "Pretend version 2 still exists"
+        ],
+        "answer": 1,
+        "explanation": "The client’s starting version is stale. The application must reconcile before retrying an update."
+      },
+      "hints": [
+        "The early return rejects a mismatch. The success branch copies the record and increments its version. In a real database, comparison and update must be one atomic operation; this pure helper does not solve concurrency."
+      ],
+      "math": null,
+      "filename": "main.js",
+      "estimatedMinutes": 8,
+      "externalNotes": "Runs as a pure JavaScript function in the browser. Passing checks does not establish live HTTP behavior, database durability, concurrency safety, authentication security, queue delivery guarantees, or production readiness."
+    },
+    "unit": {
+      "id": "backend-31",
+      "track": "backend",
+      "level": "intermediate",
+      "topic": "Reject a stale version update",
+      "origin": "original bounded backend continuation",
+      "source": {
+        "url": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Conditional_requests"
+      },
+      "project": {
+        "title": "Reject a stale version update",
+        "task": "Implement updateVersion(record,expected,title). Match the worked contract and the changed-input checks without modifying the supplied input values.",
+        "done_when": "Pass the changed-input checks and explain the understanding question. Live-service behavior is outside this model."
+      },
+      "math": {
+        "level": null,
+        "topic": null,
+        "task": null
+      },
+      "prerequisite_ids": [
+        "backend-30"
+      ],
+      "interaction_pattern": [
+        "one idea",
+        "worked example",
+        "code breakdown",
+        "changed input",
+        "understanding check"
+      ]
+    }
+  },
+  {
+    "lesson": {
+      "id": "backend-32",
+      "title": "Keep SQL text separate from values",
+      "summary": "Implement lookupQuery(id). Match the worked contract and the changed-input checks without modifying the supplied input values.",
+      "explanation": [
+        "A bound query keeps the SQL structure fixed while supplying values separately. User text must not become part of the SQL program.",
+        "This exercise is a small pure JavaScript model. Its inputs are supplied directly; it does not receive live HTTP requests, operate a database, or deploy a service.",
+        "Worked example:\n\n```javascript\nfunction lookupQuery(id) {\n  return {sql:\"SELECT id, title FROM notes WHERE id = ?\",params:[id]};\n}\nconsole.log(lookupQuery(\"7\"));\n```\nThe returned value is {\"sql\":\"SELECT id, title FROM notes WHERE id = ?\",\"params\":[\"7\"]}.",
+        "The question mark is a value placeholder. params holds the value to bind through a database API. Returning this object does not execute SQL; the adapter must actually use parameter binding.",
+        "Read the function call lookupQuery(\"7\") from the inside out: the arguments supply the inputs, lookupQuery runs the body once, and return sends its result back to the caller. console.log displays that result; it does not change it.",
+        "What happens to the text \"7 OR 1=1\" in this query model? The SQL text stays fixed. A correctly binding database adapter treats the parameter as data."
+      ],
+      "analogy": {
+        "familiar": "",
+        "connection": "",
+        "limit": "The practice is a bounded policy or data transformation, not a running backend."
+      },
+      "steps": [
+        "Read the contract and trace the worked example.",
+        "Replace the unfinished return in the starter.",
+        "Run the changed-input checks.",
+        "Explain the boundary in the understanding question."
+      ],
+      "starter": "function lookupQuery(id) {\n  // TODO: implement the stated contract.\n  return null;\n}",
+      "solution": "function lookupQuery(id) {\n  return {sql:\"SELECT id, title FROM notes WHERE id = ?\",params:[id]};\n}",
+      "runtime": "javascript",
+      "checks": [
+        {
+          "label": "Case 1: [\"7\"] gives {\"sql\":\"SELECT id, title FROM notes WHERE id = ?\",\"params\":[\"7\"]}",
+          "expression": "JSON.stringify(lookupQuery(\"7\"))===\"{\\\"sql\\\":\\\"SELECT id, title FROM notes WHERE id = ?\\\",\\\"params\\\":[\\\"7\\\"]}\""
+        },
+        {
+          "label": "Case 2: [\"7 OR 1=1\"] gives {\"sql\":\"SELECT id, title FROM notes WHERE id = ?\",\"params\":[\"7 OR 1=1\"]}",
+          "expression": "JSON.stringify(lookupQuery(\"7 OR 1=1\"))===\"{\\\"sql\\\":\\\"SELECT id, title FROM notes WHERE id = ?\\\",\\\"params\\\":[\\\"7 OR 1=1\\\"]}\""
+        },
+        {
+          "label": "The function preserves the supplied input values",
+          "expression": "(()=>{const args=[\"7\"];const before=JSON.stringify(args);lookupQuery(...args);return JSON.stringify(args)===before;})()"
+        }
+      ],
+      "quiz": {
+        "question": "What happens to the text \"7 OR 1=1\" in this query model?",
+        "choices": [
+          "It becomes extra SQL instructions",
+          "It stays one parameter value",
+          "It changes the SELECT columns"
+        ],
+        "answer": 1,
+        "explanation": "The SQL text stays fixed. A correctly binding database adapter treats the parameter as data."
+      },
+      "hints": [
+        "The question mark is a value placeholder. params holds the value to bind through a database API. Returning this object does not execute SQL; the adapter must actually use parameter binding."
+      ],
+      "math": null,
+      "filename": "main.js",
+      "estimatedMinutes": 8,
+      "externalNotes": "Runs as a pure JavaScript function in the browser. Passing checks does not establish live HTTP behavior, database durability, concurrency safety, authentication security, queue delivery guarantees, or production readiness."
+    },
+    "unit": {
+      "id": "backend-32",
+      "track": "backend",
+      "level": "intermediate",
+      "topic": "Keep SQL text separate from values",
+      "origin": "original bounded backend continuation",
+      "source": {
+        "url": "https://www.sqlite.org/c3ref/bind_blob.html"
+      },
+      "project": {
+        "title": "Keep SQL text separate from values",
+        "task": "Implement lookupQuery(id). Match the worked contract and the changed-input checks without modifying the supplied input values.",
+        "done_when": "Pass the changed-input checks and explain the understanding question. Live-service behavior is outside this model."
+      },
+      "math": {
+        "level": null,
+        "topic": null,
+        "task": null
+      },
+      "prerequisite_ids": [
+        "backend-31"
+      ],
+      "interaction_pattern": [
+        "one idea",
+        "worked example",
+        "code breakdown",
+        "changed input",
+        "understanding check"
+      ]
+    }
+  },
+  {
+    "lesson": {
+      "id": "backend-33",
+      "title": "Separate identity from permission",
+      "summary": "Implement accessDecision(session,allowed). Match the worked contract and the changed-input checks without modifying the supplied input values.",
+      "explanation": [
+        "Authentication establishes who is making a request. Authorization decides whether that identity may perform the requested action.",
+        "This exercise is a small pure JavaScript model. Its inputs are supplied directly; it does not receive live HTTP requests, operate a database, or deploy a service.",
+        "Worked example:\n\n```javascript\nfunction accessDecision(session,allowed) {\n  if(!session) return \"sign-in\";\n  return allowed ? \"allow\" : \"forbid\";\n}\nconsole.log(accessDecision(null, true));\n```\nThe returned value is \"sign-in\".",
+        "The first branch handles a missing trusted session. Only after an identity exists does the allowed decision matter. This helper does not create or validate session tokens.",
+        "Read the function call accessDecision(null, true) from the inside out: the arguments supply the inputs, accessDecision runs the body once, and return sends its result back to the caller. console.log displays that result; it does not change it.",
+        "A signed-in user lacks permission. Which result fits? Being signed in does not grant every permission. The identity is known, but this action is forbidden."
+      ],
+      "analogy": {
+        "familiar": "",
+        "connection": "",
+        "limit": "The practice is a bounded policy or data transformation, not a running backend."
+      },
+      "steps": [
+        "Read the contract and trace the worked example.",
+        "Replace the unfinished return in the starter.",
+        "Run the changed-input checks.",
+        "Explain the boundary in the understanding question."
+      ],
+      "starter": "function accessDecision(session,allowed) {\n  // TODO: implement the stated contract.\n  return null;\n}",
+      "solution": "function accessDecision(session,allowed) {\n  if(!session) return \"sign-in\";\n  return allowed ? \"allow\" : \"forbid\";\n}",
+      "runtime": "javascript",
+      "checks": [
+        {
+          "label": "Case 1: [null,true] gives \"sign-in\"",
+          "expression": "JSON.stringify(accessDecision(null,true))===\"\\\"sign-in\\\"\""
+        },
+        {
+          "label": "Case 2: [{\"userId\":\"a\"},false] gives \"forbid\"",
+          "expression": "JSON.stringify(accessDecision({\"userId\":\"a\"},false))===\"\\\"forbid\\\"\""
+        },
+        {
+          "label": "Case 3: [{\"userId\":\"a\"},true] gives \"allow\"",
+          "expression": "JSON.stringify(accessDecision({\"userId\":\"a\"},true))===\"\\\"allow\\\"\""
+        },
+        {
+          "label": "The function preserves the supplied input values",
+          "expression": "(()=>{const args=[null,true];const before=JSON.stringify(args);accessDecision(...args);return JSON.stringify(args)===before;})()"
+        }
+      ],
+      "quiz": {
+        "question": "A signed-in user lacks permission. Which result fits?",
+        "choices": [
+          "allow",
+          "sign-in",
+          "forbid"
+        ],
+        "answer": 2,
+        "explanation": "Being signed in does not grant every permission. The identity is known, but this action is forbidden."
+      },
+      "hints": [
+        "The first branch handles a missing trusted session. Only after an identity exists does the allowed decision matter. This helper does not create or validate session tokens."
+      ],
+      "math": null,
+      "filename": "main.js",
+      "estimatedMinutes": 8,
+      "externalNotes": "Runs as a pure JavaScript function in the browser. Passing checks does not establish live HTTP behavior, database durability, concurrency safety, authentication security, queue delivery guarantees, or production readiness."
+    },
+    "unit": {
+      "id": "backend-33",
+      "track": "backend",
+      "level": "advanced",
+      "topic": "Separate identity from permission",
+      "origin": "original bounded backend continuation",
+      "source": {
+        "url": "https://cheatsheetseries.owasp.org/cheatsheets/Authorization_Cheat_Sheet.html"
+      },
+      "project": {
+        "title": "Separate identity from permission",
+        "task": "Implement accessDecision(session,allowed). Match the worked contract and the changed-input checks without modifying the supplied input values.",
+        "done_when": "Pass the changed-input checks and explain the understanding question. Live-service behavior is outside this model."
+      },
+      "math": {
+        "level": null,
+        "topic": null,
+        "task": null
+      },
+      "prerequisite_ids": [
+        "backend-32"
+      ],
+      "interaction_pattern": [
+        "one idea",
+        "worked example",
+        "code breakdown",
+        "changed input",
+        "understanding check"
+      ]
+    }
+  },
+  {
+    "lesson": {
+      "id": "backend-34",
+      "title": "Check ownership against stored data",
+      "summary": "Implement ownsNote(session,note). Match the worked contract and the changed-input checks without modifying the supplied input values.",
+      "explanation": [
+        "A private record belongs to an owner stored by the application. Compare that owner with a trusted session, rather than accepting an owner claim from the request body.",
+        "This exercise is a small pure JavaScript model. Its inputs are supplied directly; it does not receive live HTTP requests, operate a database, or deploy a service.",
+        "Worked example:\n\n```javascript\nfunction ownsNote(session,note) {\n  return Boolean(session && session.userId === note.ownerId);\n}\nconsole.log(ownsNote({\"userId\":\"a\"}, {\"ownerId\":\"a\"}));\n```\nThe returned value is true.",
+        "&& stops when the session is absent. === compares the trusted session ID with the stored owner ID. Boolean converts the result to exactly true or false.",
+        "Read the function call ownsNote({\"userId\":\"a\"}, {\"ownerId\":\"a\"}) from the inside out: the arguments supply the inputs, ownsNote runs the body once, and return sends its result back to the caller. console.log displays that result; it does not change it.",
+        "A caller changes body.ownerId to match themselves. Should that grant access to someone else’s stored note? The request body is caller-controlled. It cannot redefine ownership for the permission check."
+      ],
+      "analogy": {
+        "familiar": "",
+        "connection": "",
+        "limit": "The practice is a bounded policy or data transformation, not a running backend."
+      },
+      "steps": [
+        "Read the contract and trace the worked example.",
+        "Replace the unfinished return in the starter.",
+        "Run the changed-input checks.",
+        "Explain the boundary in the understanding question."
+      ],
+      "starter": "function ownsNote(session,note) {\n  // TODO: implement the stated contract.\n  return null;\n}",
+      "solution": "function ownsNote(session,note) {\n  return Boolean(session && session.userId === note.ownerId);\n}",
+      "runtime": "javascript",
+      "checks": [
+        {
+          "label": "Case 1: [{\"userId\":\"a\"},{\"ownerId\":\"a\"}] gives true",
+          "expression": "JSON.stringify(ownsNote({\"userId\":\"a\"},{\"ownerId\":\"a\"}))===\"true\""
+        },
+        {
+          "label": "Case 2: [{\"userId\":\"b\"},{\"ownerId\":\"a\"}] gives false",
+          "expression": "JSON.stringify(ownsNote({\"userId\":\"b\"},{\"ownerId\":\"a\"}))===\"false\""
+        },
+        {
+          "label": "Case 3: [null,{\"ownerId\":\"a\"}] gives false",
+          "expression": "JSON.stringify(ownsNote(null,{\"ownerId\":\"a\"}))===\"false\""
+        },
+        {
+          "label": "The function preserves the supplied input values",
+          "expression": "(()=>{const args=[{\"userId\":\"a\"},{\"ownerId\":\"a\"}];const before=JSON.stringify(args);ownsNote(...args);return JSON.stringify(args)===before;})()"
+        }
+      ],
+      "quiz": {
+        "question": "A caller changes body.ownerId to match themselves. Should that grant access to someone else’s stored note?",
+        "choices": [
+          "Yes, the body is authoritative",
+          "No, compare against the stored owner",
+          "Only for updates"
+        ],
+        "answer": 1,
+        "explanation": "The request body is caller-controlled. It cannot redefine ownership for the permission check."
+      },
+      "hints": [
+        "&& stops when the session is absent. === compares the trusted session ID with the stored owner ID. Boolean converts the result to exactly true or false."
+      ],
+      "math": null,
+      "filename": "main.js",
+      "estimatedMinutes": 8,
+      "externalNotes": "Runs as a pure JavaScript function in the browser. Passing checks does not establish live HTTP behavior, database durability, concurrency safety, authentication security, queue delivery guarantees, or production readiness."
+    },
+    "unit": {
+      "id": "backend-34",
+      "track": "backend",
+      "level": "advanced",
+      "topic": "Check ownership against stored data",
+      "origin": "original bounded backend continuation",
+      "source": {
+        "url": "https://cheatsheetseries.owasp.org/cheatsheets/Authorization_Cheat_Sheet.html"
+      },
+      "project": {
+        "title": "Check ownership against stored data",
+        "task": "Implement ownsNote(session,note). Match the worked contract and the changed-input checks without modifying the supplied input values.",
+        "done_when": "Pass the changed-input checks and explain the understanding question. Live-service behavior is outside this model."
+      },
+      "math": {
+        "level": null,
+        "topic": null,
+        "task": null
+      },
+      "prerequisite_ids": [
+        "backend-33"
+      ],
+      "interaction_pattern": [
+        "one idea",
+        "worked example",
+        "code breakdown",
+        "changed input",
+        "understanding check"
+      ]
+    }
+  },
+  {
+    "lesson": {
+      "id": "backend-35",
+      "title": "Make the session-expiry boundary explicit",
+      "summary": "Implement sessionActive(session,now). Match the worked contract and the changed-input checks without modifying the supplied input values.",
+      "explanation": [
+        "An expiry time defines when a session stops being valid. This contract treats the exact expiry instant as expired.",
+        "This exercise is a small pure JavaScript model. Its inputs are supplied directly; it does not receive live HTTP requests, operate a database, or deploy a service.",
+        "Worked example:\n\n```javascript\nfunction sessionActive(session,now) {\n  return Boolean(session && now < session.expiresAt);\n}\nconsole.log(sessionActive({\"expiresAt\":100}, 99));\n```\nThe returned value is true.",
+        "now and expiresAt use the same supplied time unit. The strict less-than comparison excludes equality. A real service needs a trusted clock and validated session data; browser-provided time is not an authority.",
+        "Read the function call sessionActive({\"expiresAt\":100}, 99) from the inside out: the arguments supply the inputs, sessionActive runs the body once, and return sends its result back to the caller. console.log displays that result; it does not change it.",
+        "now equals expiresAt. Is the session active? The accepted interval ends before expiresAt. Equality is outside it."
+      ],
+      "analogy": {
+        "familiar": "",
+        "connection": "",
+        "limit": "The practice is a bounded policy or data transformation, not a running backend."
+      },
+      "steps": [
+        "Read the contract and trace the worked example.",
+        "Replace the unfinished return in the starter.",
+        "Run the changed-input checks.",
+        "Explain the boundary in the understanding question."
+      ],
+      "starter": "function sessionActive(session,now) {\n  // TODO: implement the stated contract.\n  return null;\n}",
+      "solution": "function sessionActive(session,now) {\n  return Boolean(session && now < session.expiresAt);\n}",
+      "runtime": "javascript",
+      "checks": [
+        {
+          "label": "Case 1: [{\"expiresAt\":100},99] gives true",
+          "expression": "JSON.stringify(sessionActive({\"expiresAt\":100},99))===\"true\""
+        },
+        {
+          "label": "Case 2: [{\"expiresAt\":100},100] gives false",
+          "expression": "JSON.stringify(sessionActive({\"expiresAt\":100},100))===\"false\""
+        },
+        {
+          "label": "Case 3: [{\"expiresAt\":100},101] gives false",
+          "expression": "JSON.stringify(sessionActive({\"expiresAt\":100},101))===\"false\""
+        },
+        {
+          "label": "Case 4: [null,0] gives false",
+          "expression": "JSON.stringify(sessionActive(null,0))===\"false\""
+        },
+        {
+          "label": "The function preserves the supplied input values",
+          "expression": "(()=>{const args=[{\"expiresAt\":100},99];const before=JSON.stringify(args);sessionActive(...args);return JSON.stringify(args)===before;})()"
+        }
+      ],
+      "quiz": {
+        "question": "now equals expiresAt. Is the session active?",
+        "choices": [
+          "Yes, equality extends it",
+          "No, the strict comparison fails",
+          "Only if the user reloads"
+        ],
+        "answer": 1,
+        "explanation": "The accepted interval ends before expiresAt. Equality is outside it."
+      },
+      "hints": [
+        "now and expiresAt use the same supplied time unit. The strict less-than comparison excludes equality. A real service needs a trusted clock and validated session data; browser-provided time is not an authority."
+      ],
+      "math": null,
+      "filename": "main.js",
+      "estimatedMinutes": 8,
+      "externalNotes": "Runs as a pure JavaScript function in the browser. Passing checks does not establish live HTTP behavior, database durability, concurrency safety, authentication security, queue delivery guarantees, or production readiness."
+    },
+    "unit": {
+      "id": "backend-35",
+      "track": "backend",
+      "level": "advanced",
+      "topic": "Make the session-expiry boundary explicit",
+      "origin": "original bounded backend continuation",
+      "source": {
+        "url": "https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html"
+      },
+      "project": {
+        "title": "Make the session-expiry boundary explicit",
+        "task": "Implement sessionActive(session,now). Match the worked contract and the changed-input checks without modifying the supplied input values.",
+        "done_when": "Pass the changed-input checks and explain the understanding question. Live-service behavior is outside this model."
+      },
+      "math": {
+        "level": null,
+        "topic": null,
+        "task": null
+      },
+      "prerequisite_ids": [
+        "backend-34"
+      ],
+      "interaction_pattern": [
+        "one idea",
+        "worked example",
+        "code breakdown",
+        "changed input",
+        "understanding check"
+      ]
+    }
+  },
+  {
+    "lesson": {
+      "id": "backend-36",
+      "title": "Distinguish origin policy from permission",
+      "summary": "Implement allowedOrigin(origin). Match the worked contract and the changed-input checks without modifying the supplied input values.",
+      "explanation": [
+        "An origin combines scheme, host, and port. A browser cross-origin policy may allow selected origins to read a response, but it is not a substitute for authentication or authorization.",
+        "This exercise is a small pure JavaScript model. Its inputs are supplied directly; it does not receive live HTTP requests, operate a database, or deploy a service.",
+        "Worked example:\n\n```javascript\nfunction allowedOrigin(origin) {\n  return [\"https://notes.example.test\"].includes(origin);\n}\nconsole.log(allowedOrigin(\"https://notes.example.test\"));\n```\nThe returned value is true.",
+        "includes performs exact membership comparison in this small allowlist. A substring check could accept a lookalike host. This exercise returns a policy decision; it does not configure CORS response headers.",
+        "Read the function call allowedOrigin(\"https://notes.example.test\") from the inside out: the arguments supply the inputs, allowedOrigin runs the body once, and return sends its result back to the caller. console.log displays that result; it does not change it.",
+        "An origin is allowed. Does that prove its user owns a private record? Origin policy governs browser access. It does not identify a particular user or grant record ownership."
+      ],
+      "analogy": {
+        "familiar": "",
+        "connection": "",
+        "limit": "The practice is a bounded policy or data transformation, not a running backend."
+      },
+      "steps": [
+        "Read the contract and trace the worked example.",
+        "Replace the unfinished return in the starter.",
+        "Run the changed-input checks.",
+        "Explain the boundary in the understanding question."
+      ],
+      "starter": "function allowedOrigin(origin) {\n  // TODO: implement the stated contract.\n  return null;\n}",
+      "solution": "function allowedOrigin(origin) {\n  return [\"https://notes.example.test\"].includes(origin);\n}",
+      "runtime": "javascript",
+      "checks": [
+        {
+          "label": "Case 1: [\"https://notes.example.test\"] gives true",
+          "expression": "JSON.stringify(allowedOrigin(\"https://notes.example.test\"))===\"true\""
+        },
+        {
+          "label": "Case 2: [\"https://notes.example.test.evil.test\"] gives false",
+          "expression": "JSON.stringify(allowedOrigin(\"https://notes.example.test.evil.test\"))===\"false\""
+        },
+        {
+          "label": "Case 3: [\"http://notes.example.test\"] gives false",
+          "expression": "JSON.stringify(allowedOrigin(\"http://notes.example.test\"))===\"false\""
+        },
+        {
+          "label": "Case 4: [null] gives false",
+          "expression": "JSON.stringify(allowedOrigin(null))===\"false\""
+        },
+        {
+          "label": "The function preserves the supplied input values",
+          "expression": "(()=>{const args=[\"https://notes.example.test\"];const before=JSON.stringify(args);allowedOrigin(...args);return JSON.stringify(args)===before;})()"
+        }
+      ],
+      "quiz": {
+        "question": "An origin is allowed. Does that prove its user owns a private record?",
+        "choices": [
+          "Yes, origins identify record owners",
+          "No, ownership still needs its own check",
+          "Yes, if HTTPS is used"
+        ],
+        "answer": 1,
+        "explanation": "Origin policy governs browser access. It does not identify a particular user or grant record ownership."
+      },
+      "hints": [
+        "includes performs exact membership comparison in this small allowlist. A substring check could accept a lookalike host. This exercise returns a policy decision; it does not configure CORS response headers."
+      ],
+      "math": null,
+      "filename": "main.js",
+      "estimatedMinutes": 8,
+      "externalNotes": "Runs as a pure JavaScript function in the browser. Passing checks does not establish live HTTP behavior, database durability, concurrency safety, authentication security, queue delivery guarantees, or production readiness."
+    },
+    "unit": {
+      "id": "backend-36",
+      "track": "backend",
+      "level": "advanced",
+      "topic": "Distinguish origin policy from permission",
+      "origin": "original bounded backend continuation",
+      "source": {
+        "url": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CORS"
+      },
+      "project": {
+        "title": "Distinguish origin policy from permission",
+        "task": "Implement allowedOrigin(origin). Match the worked contract and the changed-input checks without modifying the supplied input values.",
+        "done_when": "Pass the changed-input checks and explain the understanding question. Live-service behavior is outside this model."
+      },
+      "math": {
+        "level": null,
+        "topic": null,
+        "task": null
+      },
+      "prerequisite_ids": [
+        "backend-35"
+      ],
+      "interaction_pattern": [
+        "one idea",
+        "worked example",
+        "code breakdown",
+        "changed input",
+        "understanding check"
+      ]
+    }
+  },
+  {
+    "lesson": {
+      "id": "backend-37",
+      "title": "Log only diagnostic fields",
+      "summary": "Implement logSummary(event). Match the worked contract and the changed-input checks without modifying the supplied input values.",
+      "explanation": [
+        "A diagnostic log can help connect a failed request with a status without copying the whole request. Explicitly select the fields needed for that investigation.",
+        "This exercise is a small pure JavaScript model. Its inputs are supplied directly; it does not receive live HTTP requests, operate a database, or deploy a service.",
+        "Worked example:\n\n```javascript\nfunction logSummary(event) {\n  return {requestId:event.requestId,status:event.status};\n}\nconsole.log(logSummary({\"requestId\":\"r1\",\"status\":500,\"token\":\"secret\",\"body\":\"private\"}));\n```\nThe returned value is {\"requestId\":\"r1\",\"status\":500}.",
+        "The object literal copies only requestId and status. This example assumes requestId is an application-generated safe identifier. It is not a universal sanitizer for arbitrary nested event objects.",
+        "Read the function call logSummary({\"requestId\":\"r1\",\"status\":500,\"token\":\"secret\",\"body\":\"private\"}) from the inside out: the arguments supply the inputs, logSummary runs the body once, and return sends its result back to the caller. console.log displays that result; it does not change it.",
+        "The incoming event gains a password field. What will this summary contain? The explicit projection excludes additional fields. Real logging also needs appropriate access and retention policies."
+      ],
+      "analogy": {
+        "familiar": "",
+        "connection": "",
+        "limit": "The practice is a bounded policy or data transformation, not a running backend."
+      },
+      "steps": [
+        "Read the contract and trace the worked example.",
+        "Replace the unfinished return in the starter.",
+        "Run the changed-input checks.",
+        "Explain the boundary in the understanding question."
+      ],
+      "starter": "function logSummary(event) {\n  // TODO: implement the stated contract.\n  return null;\n}",
+      "solution": "function logSummary(event) {\n  return {requestId:event.requestId,status:event.status};\n}",
+      "runtime": "javascript",
+      "checks": [
+        {
+          "label": "Case 1: [{\"requestId\":\"r1\",\"status\":500,\"token\":\"secret\",\"body\":\"private\"}] gives {\"requestId\":\"r1\",\"status\":500}",
+          "expression": "JSON.stringify(logSummary({\"requestId\":\"r1\",\"status\":500,\"token\":\"secret\",\"body\":\"private\"}))===\"{\\\"requestId\\\":\\\"r1\\\",\\\"status\\\":500}\""
+        },
+        {
+          "label": "Case 2: [{\"requestId\":\"r2\",\"status\":200,\"password\":\"secret\"}] gives {\"requestId\":\"r2\",\"status\":200}",
+          "expression": "JSON.stringify(logSummary({\"requestId\":\"r2\",\"status\":200,\"password\":\"secret\"}))===\"{\\\"requestId\\\":\\\"r2\\\",\\\"status\\\":200}\""
+        },
+        {
+          "label": "The function preserves the supplied input values",
+          "expression": "(()=>{const args=[{\"requestId\":\"r1\",\"status\":500,\"token\":\"secret\",\"body\":\"private\"}];const before=JSON.stringify(args);logSummary(...args);return JSON.stringify(args)===before;})()"
+        }
+      ],
+      "quiz": {
+        "question": "The incoming event gains a password field. What will this summary contain?",
+        "choices": [
+          "The password too",
+          "Only requestId and status",
+          "No fields at all"
+        ],
+        "answer": 1,
+        "explanation": "The explicit projection excludes additional fields. Real logging also needs appropriate access and retention policies."
+      },
+      "hints": [
+        "The object literal copies only requestId and status. This example assumes requestId is an application-generated safe identifier. It is not a universal sanitizer for arbitrary nested event objects."
+      ],
+      "math": null,
+      "filename": "main.js",
+      "estimatedMinutes": 8,
+      "externalNotes": "Runs as a pure JavaScript function in the browser. Passing checks does not establish live HTTP behavior, database durability, concurrency safety, authentication security, queue delivery guarantees, or production readiness."
+    },
+    "unit": {
+      "id": "backend-37",
+      "track": "backend",
+      "level": "advanced",
+      "topic": "Log only diagnostic fields",
+      "origin": "original bounded backend continuation",
+      "source": {
+        "url": "https://cheatsheetseries.owasp.org/cheatsheets/Logging_Cheat_Sheet.html"
+      },
+      "project": {
+        "title": "Log only diagnostic fields",
+        "task": "Implement logSummary(event). Match the worked contract and the changed-input checks without modifying the supplied input values.",
+        "done_when": "Pass the changed-input checks and explain the understanding question. Live-service behavior is outside this model."
+      },
+      "math": {
+        "level": null,
+        "topic": null,
+        "task": null
+      },
+      "prerequisite_ids": [
+        "backend-36"
+      ],
+      "interaction_pattern": [
+        "one idea",
+        "worked example",
+        "code breakdown",
+        "changed input",
+        "understanding check"
+      ]
+    }
+  },
+  {
+    "lesson": {
+      "id": "backend-38",
+      "title": "Retry only an eligible operation",
+      "summary": "Implement canRetry(method,status). Match the worked contract and the changed-input checks without modifying the supplied input values.",
+      "explanation": [
+        "A retry repeats an operation after a failure. Repeating an operation that creates a new record may duplicate work, so the retry policy must consider the operation as well as the failure.",
+        "This exercise is a small pure JavaScript model. Its inputs are supplied directly; it does not receive live HTTP requests, operate a database, or deploy a service.",
+        "Worked example:\n\n```javascript\nfunction canRetry(method,status) {\n  return method === \"GET\" && [502,503,504].includes(status);\n}\nconsole.log(canRetry(\"GET\", 503));\n```\nThe returned value is true.",
+        "This deliberately narrow policy allows only GET with three selected transient gateway/service statuses. It is an application policy, not a list of all retriable HTTP situations.",
+        "Read the function call canRetry(\"GET\", 503) from the inside out: the arguments supply the inputs, canRetry runs the body once, and return sends its result back to the caller. console.log displays that result; it does not change it.",
+        "A POST creation receives 503. Does this narrow policy automatically retry it? This policy permits GET only. Retrying a write requires a deliberate idempotency design."
+      ],
+      "analogy": {
+        "familiar": "",
+        "connection": "",
+        "limit": "The practice is a bounded policy or data transformation, not a running backend."
+      },
+      "steps": [
+        "Read the contract and trace the worked example.",
+        "Replace the unfinished return in the starter.",
+        "Run the changed-input checks.",
+        "Explain the boundary in the understanding question."
+      ],
+      "starter": "function canRetry(method,status) {\n  // TODO: implement the stated contract.\n  return null;\n}",
+      "solution": "function canRetry(method,status) {\n  return method === \"GET\" && [502,503,504].includes(status);\n}",
+      "runtime": "javascript",
+      "checks": [
+        {
+          "label": "Case 1: [\"GET\",503] gives true",
+          "expression": "JSON.stringify(canRetry(\"GET\",503))===\"true\""
+        },
+        {
+          "label": "Case 2: [\"POST\",503] gives false",
+          "expression": "JSON.stringify(canRetry(\"POST\",503))===\"false\""
+        },
+        {
+          "label": "Case 3: [\"GET\",400] gives false",
+          "expression": "JSON.stringify(canRetry(\"GET\",400))===\"false\""
+        },
+        {
+          "label": "Case 4: [\"GET\",200] gives false",
+          "expression": "JSON.stringify(canRetry(\"GET\",200))===\"false\""
+        },
+        {
+          "label": "The function preserves the supplied input values",
+          "expression": "(()=>{const args=[\"GET\",503];const before=JSON.stringify(args);canRetry(...args);return JSON.stringify(args)===before;})()"
+        }
+      ],
+      "quiz": {
+        "question": "A POST creation receives 503. Does this narrow policy automatically retry it?",
+        "choices": [
+          "Yes, any 503 is safe",
+          "No, POST is outside the allowed policy",
+          "Yes, because status codes prevent duplicates"
+        ],
+        "answer": 1,
+        "explanation": "This policy permits GET only. Retrying a write requires a deliberate idempotency design."
+      },
+      "hints": [
+        "This deliberately narrow policy allows only GET with three selected transient gateway/service statuses. It is an application policy, not a list of all retriable HTTP situations."
+      ],
+      "math": null,
+      "filename": "main.js",
+      "estimatedMinutes": 8,
+      "externalNotes": "Runs as a pure JavaScript function in the browser. Passing checks does not establish live HTTP behavior, database durability, concurrency safety, authentication security, queue delivery guarantees, or production readiness."
+    },
+    "unit": {
+      "id": "backend-38",
+      "track": "backend",
+      "level": "advanced",
+      "topic": "Retry only an eligible operation",
+      "origin": "original bounded backend continuation",
+      "source": {
+        "url": "https://developer.mozilla.org/en-US/docs/Glossary/Idempotent"
+      },
+      "project": {
+        "title": "Retry only an eligible operation",
+        "task": "Implement canRetry(method,status). Match the worked contract and the changed-input checks without modifying the supplied input values.",
+        "done_when": "Pass the changed-input checks and explain the understanding question. Live-service behavior is outside this model."
+      },
+      "math": {
+        "level": null,
+        "topic": null,
+        "task": null
+      },
+      "prerequisite_ids": [
+        "backend-37"
+      ],
+      "interaction_pattern": [
+        "one idea",
+        "worked example",
+        "code breakdown",
+        "changed input",
+        "understanding check"
+      ]
+    }
+  },
+  {
+    "lesson": {
+      "id": "backend-39",
+      "title": "Put a bound on retry attempts",
+      "summary": "Implement retryDelay(attempt). Match the worked contract and the changed-input checks without modifying the supplied input values.",
+      "explanation": [
+        "A retry loop needs a stopping condition. This model allows attempts numbered 0, 1, and 2, then returns null to mean stop.",
+        "This exercise is a small pure JavaScript model. Its inputs are supplied directly; it does not receive live HTTP requests, operate a database, or deploy a service.",
+        "Worked example:\n\n```javascript\nfunction retryDelay(attempt) {\n  return Number.isInteger(attempt) && attempt >= 0 && attempt < 3 ? 100 * 2 ** attempt : null;\n}\nconsole.log(retryDelay(0));\n```\nThe returned value is 100.",
+        "** raises two to a power. Multiplying by 100 yields increasing delays in milliseconds. Returning a number does not wait; a caller must schedule it and respect cancellation and server guidance.",
+        "Read the function call retryDelay(0) from the inside out: the arguments supply the inputs, retryDelay runs the body once, and return sends its result back to the caller. console.log displays that result; it does not change it.",
+        "What does attempt 3 return under this zero-based budget? There are three permitted attempts: 0, 1, and 2. The next one is outside the budget."
+      ],
+      "analogy": {
+        "familiar": "",
+        "connection": "",
+        "limit": "The practice is a bounded policy or data transformation, not a running backend."
+      },
+      "steps": [
+        "Read the contract and trace the worked example.",
+        "Replace the unfinished return in the starter.",
+        "Run the changed-input checks.",
+        "Explain the boundary in the understanding question."
+      ],
+      "starter": "function retryDelay(attempt) {\n  // TODO: implement the stated contract.\n  return null;\n}",
+      "solution": "function retryDelay(attempt) {\n  return Number.isInteger(attempt) && attempt >= 0 && attempt < 3 ? 100 * 2 ** attempt : null;\n}",
+      "runtime": "javascript",
+      "checks": [
+        {
+          "label": "Case 1: [0] gives 100",
+          "expression": "JSON.stringify(retryDelay(0))===\"100\""
+        },
+        {
+          "label": "Case 2: [1] gives 200",
+          "expression": "JSON.stringify(retryDelay(1))===\"200\""
+        },
+        {
+          "label": "Case 3: [2] gives 400",
+          "expression": "JSON.stringify(retryDelay(2))===\"400\""
+        },
+        {
+          "label": "Case 4: [3] gives null",
+          "expression": "JSON.stringify(retryDelay(3))===\"null\""
+        },
+        {
+          "label": "Case 5: [-1] gives null",
+          "expression": "JSON.stringify(retryDelay(-1))===\"null\""
+        },
+        {
+          "label": "Case 6: [1.5] gives null",
+          "expression": "JSON.stringify(retryDelay(1.5))===\"null\""
+        },
+        {
+          "label": "The function preserves the supplied input values",
+          "expression": "(()=>{const args=[0];const before=JSON.stringify(args);retryDelay(...args);return JSON.stringify(args)===before;})()"
+        }
+      ],
+      "quiz": {
+        "question": "What does attempt 3 return under this zero-based budget?",
+        "choices": [
+          "800",
+          "0",
+          "null"
+        ],
+        "answer": 2,
+        "explanation": "There are three permitted attempts: 0, 1, and 2. The next one is outside the budget."
+      },
+      "hints": [
+        "** raises two to a power. Multiplying by 100 yields increasing delays in milliseconds. Returning a number does not wait; a caller must schedule it and respect cancellation and server guidance."
+      ],
+      "math": null,
+      "filename": "main.js",
+      "estimatedMinutes": 8,
+      "externalNotes": "Runs as a pure JavaScript function in the browser. Passing checks does not establish live HTTP behavior, database durability, concurrency safety, authentication security, queue delivery guarantees, or production readiness."
+    },
+    "unit": {
+      "id": "backend-39",
+      "track": "backend",
+      "level": "advanced",
+      "topic": "Put a bound on retry attempts",
+      "origin": "original bounded backend continuation",
+      "source": {
+        "url": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Retry-After"
+      },
+      "project": {
+        "title": "Put a bound on retry attempts",
+        "task": "Implement retryDelay(attempt). Match the worked contract and the changed-input checks without modifying the supplied input values.",
+        "done_when": "Pass the changed-input checks and explain the understanding question. Live-service behavior is outside this model."
+      },
+      "math": {
+        "level": null,
+        "topic": null,
+        "task": null
+      },
+      "prerequisite_ids": [
+        "backend-38"
+      ],
+      "interaction_pattern": [
+        "one idea",
+        "worked example",
+        "code breakdown",
+        "changed input",
+        "understanding check"
+      ]
+    }
+  },
+  {
+    "lesson": {
+      "id": "backend-40",
+      "title": "Do not infer failure from a client timeout",
+      "summary": "Implement timeoutOutcome(clientTimedOut,receipt). Match the worked contract and the changed-input checks without modifying the supplied input values.",
+      "explanation": [
+        "A client timeout means the client stopped waiting. It does not prove whether a remote write completed before or after that point.",
+        "This exercise is a small pure JavaScript model. Its inputs are supplied directly; it does not receive live HTTP requests, operate a database, or deploy a service.",
+        "Worked example:\n\n```javascript\nfunction timeoutOutcome(clientTimedOut,receipt) {\n  if(receipt) return \"confirmed\";\n  return clientTimedOut ? \"unknown\" : \"waiting\";\n}\nconsole.log(timeoutOutcome(true, null));\n```\nThe returned value is \"unknown\".",
+        "The first branch accepts an actual successful operation receipt in this model. Without one, a timeout gives an unknown outcome. Reconcile that outcome before repeating a non-idempotent action.",
+        "Read the function call timeoutOutcome(true, null) from the inside out: the arguments supply the inputs, timeoutOutcome runs the body once, and return sends its result back to the caller. console.log displays that result; it does not change it.",
+        "The client times out after sending a creation request. Is it safe to claim nothing was created? The server may have completed the write while the response was lost or delayed."
+      ],
+      "analogy": {
+        "familiar": "",
+        "connection": "",
+        "limit": "The practice is a bounded policy or data transformation, not a running backend."
+      },
+      "steps": [
+        "Read the contract and trace the worked example.",
+        "Replace the unfinished return in the starter.",
+        "Run the changed-input checks.",
+        "Explain the boundary in the understanding question."
+      ],
+      "starter": "function timeoutOutcome(clientTimedOut,receipt) {\n  // TODO: implement the stated contract.\n  return null;\n}",
+      "solution": "function timeoutOutcome(clientTimedOut,receipt) {\n  if(receipt) return \"confirmed\";\n  return clientTimedOut ? \"unknown\" : \"waiting\";\n}",
+      "runtime": "javascript",
+      "checks": [
+        {
+          "label": "Case 1: [true,null] gives \"unknown\"",
+          "expression": "JSON.stringify(timeoutOutcome(true,null))===\"\\\"unknown\\\"\""
+        },
+        {
+          "label": "Case 2: [true,{\"id\":7}] gives \"confirmed\"",
+          "expression": "JSON.stringify(timeoutOutcome(true,{\"id\":7}))===\"\\\"confirmed\\\"\""
+        },
+        {
+          "label": "Case 3: [false,null] gives \"waiting\"",
+          "expression": "JSON.stringify(timeoutOutcome(false,null))===\"\\\"waiting\\\"\""
+        },
+        {
+          "label": "The function preserves the supplied input values",
+          "expression": "(()=>{const args=[true,null];const before=JSON.stringify(args);timeoutOutcome(...args);return JSON.stringify(args)===before;})()"
+        }
+      ],
+      "quiz": {
+        "question": "The client times out after sending a creation request. Is it safe to claim nothing was created?",
+        "choices": [
+          "Yes, timeout rolls back every server",
+          "No, the outcome may be unknown",
+          "Yes, if there is no response body"
+        ],
+        "answer": 1,
+        "explanation": "The server may have completed the write while the response was lost or delayed."
+      },
+      "hints": [
+        "The first branch accepts an actual successful operation receipt in this model. Without one, a timeout gives an unknown outcome. Reconcile that outcome before repeating a non-idempotent action."
+      ],
+      "math": null,
+      "filename": "main.js",
+      "estimatedMinutes": 8,
+      "externalNotes": "Runs as a pure JavaScript function in the browser. Passing checks does not establish live HTTP behavior, database durability, concurrency safety, authentication security, queue delivery guarantees, or production readiness."
+    },
+    "unit": {
+      "id": "backend-40",
+      "track": "backend",
+      "level": "advanced",
+      "topic": "Do not infer failure from a client timeout",
+      "origin": "original bounded backend continuation",
+      "source": {
+        "url": "https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal/timeout_static"
+      },
+      "project": {
+        "title": "Do not infer failure from a client timeout",
+        "task": "Implement timeoutOutcome(clientTimedOut,receipt). Match the worked contract and the changed-input checks without modifying the supplied input values.",
+        "done_when": "Pass the changed-input checks and explain the understanding question. Live-service behavior is outside this model."
+      },
+      "math": {
+        "level": null,
+        "topic": null,
+        "task": null
+      },
+      "prerequisite_ids": [
+        "backend-39"
+      ],
+      "interaction_pattern": [
+        "one idea",
+        "worked example",
+        "code breakdown",
+        "changed input",
+        "understanding check"
+      ]
+    }
+  },
+  {
+    "lesson": {
+      "id": "backend-41",
+      "title": "Separate readiness from process existence",
+      "summary": "Implement ready(state). Match the worked contract and the changed-input checks without modifying the supplied input values.",
+      "explanation": [
+        "A running process is not necessarily ready to accept work. Readiness reflects the dependencies and lifecycle conditions required by the application.",
+        "This exercise is a small pure JavaScript model. Its inputs are supplied directly; it does not receive live HTTP requests, operate a database, or deploy a service.",
+        "Worked example:\n\n```javascript\nfunction ready(state) {\n  return state.databaseConnected && !state.draining;\n}\nconsole.log(ready({\"databaseConnected\":true,\"draining\":false}));\n```\nThe returned value is true.",
+        "The && requires both an available database and no draining state. ! reverses draining. This model assumes boolean inputs supplied by actual probes; it does not probe a database itself.",
+        "Read the function call ready({\"databaseConnected\":true,\"draining\":false}) from the inside out: the arguments supply the inputs, ready runs the body once, and return sends its result back to the caller. console.log displays that result; it does not change it.",
+        "The process runs but its required database is disconnected. Is it ready by this contract? This application’s readiness requires the database connection, not merely a live process."
+      ],
+      "analogy": {
+        "familiar": "",
+        "connection": "",
+        "limit": "The practice is a bounded policy or data transformation, not a running backend."
+      },
+      "steps": [
+        "Read the contract and trace the worked example.",
+        "Replace the unfinished return in the starter.",
+        "Run the changed-input checks.",
+        "Explain the boundary in the understanding question."
+      ],
+      "starter": "function ready(state) {\n  // TODO: implement the stated contract.\n  return null;\n}",
+      "solution": "function ready(state) {\n  return state.databaseConnected && !state.draining;\n}",
+      "runtime": "javascript",
+      "checks": [
+        {
+          "label": "Case 1: [{\"databaseConnected\":true,\"draining\":false}] gives true",
+          "expression": "JSON.stringify(ready({\"databaseConnected\":true,\"draining\":false}))===\"true\""
+        },
+        {
+          "label": "Case 2: [{\"databaseConnected\":false,\"draining\":false}] gives false",
+          "expression": "JSON.stringify(ready({\"databaseConnected\":false,\"draining\":false}))===\"false\""
+        },
+        {
+          "label": "Case 3: [{\"databaseConnected\":true,\"draining\":true}] gives false",
+          "expression": "JSON.stringify(ready({\"databaseConnected\":true,\"draining\":true}))===\"false\""
+        },
+        {
+          "label": "The function preserves the supplied input values",
+          "expression": "(()=>{const args=[{\"databaseConnected\":true,\"draining\":false}];const before=JSON.stringify(args);ready(...args);return JSON.stringify(args)===before;})()"
+        }
+      ],
+      "quiz": {
+        "question": "The process runs but its required database is disconnected. Is it ready by this contract?",
+        "choices": [
+          "Yes, a running process is always ready",
+          "No, a required dependency is unavailable",
+          "Only if the homepage is cached"
+        ],
+        "answer": 1,
+        "explanation": "This application’s readiness requires the database connection, not merely a live process."
+      },
+      "hints": [
+        "The && requires both an available database and no draining state. ! reverses draining. This model assumes boolean inputs supplied by actual probes; it does not probe a database itself."
+      ],
+      "math": null,
+      "filename": "main.js",
+      "estimatedMinutes": 8,
+      "externalNotes": "Runs as a pure JavaScript function in the browser. Passing checks does not establish live HTTP behavior, database durability, concurrency safety, authentication security, queue delivery guarantees, or production readiness."
+    },
+    "unit": {
+      "id": "backend-41",
+      "track": "backend",
+      "level": "advanced",
+      "topic": "Separate readiness from process existence",
+      "origin": "original bounded backend continuation",
+      "source": {
+        "url": "https://expressjs.com/en/advanced/healthcheck-graceful-shutdown.html"
+      },
+      "project": {
+        "title": "Separate readiness from process existence",
+        "task": "Implement ready(state). Match the worked contract and the changed-input checks without modifying the supplied input values.",
+        "done_when": "Pass the changed-input checks and explain the understanding question. Live-service behavior is outside this model."
+      },
+      "math": {
+        "level": null,
+        "topic": null,
+        "task": null
+      },
+      "prerequisite_ids": [
+        "backend-40"
+      ],
+      "interaction_pattern": [
+        "one idea",
+        "worked example",
+        "code breakdown",
+        "changed input",
+        "understanding check"
+      ]
+    }
+  },
+  {
+    "lesson": {
+      "id": "backend-42",
+      "title": "Acknowledge after durable work",
+      "summary": "Implement shouldAcknowledge(job). Match the worked contract and the changed-input checks without modifying the supplied input values.",
+      "explanation": [
+        "A queue acknowledgement tells the queue the consumer is finished. Acknowledging before the required durable result exists can lose work if the consumer crashes.",
+        "This exercise is a small pure JavaScript model. Its inputs are supplied directly; it does not receive live HTTP requests, operate a database, or deploy a service.",
+        "Worked example:\n\n```javascript\nfunction shouldAcknowledge(job) {\n  return job.saved === true;\n}\nconsole.log(shouldAcknowledge({\"saved\":false}));\n```\nThe returned value is false.",
+        "The strict comparison accepts only a confirmed saved flag in this model. It does not perform persistence. Real consumers also need to tolerate repeated delivery when a save succeeds but acknowledgement is lost.",
+        "Read the function call shouldAcknowledge({\"saved\":false}) from the inside out: the arguments supply the inputs, shouldAcknowledge runs the body once, and return sends its result back to the caller. console.log displays that result; it does not change it.",
+        "The result was saved, but acknowledgement was lost. What must a robust consumer expect? Delivery and persistence are separate events. Idempotent processing handles a repeated job safely."
+      ],
+      "analogy": {
+        "familiar": "",
+        "connection": "",
+        "limit": "The practice is a bounded policy or data transformation, not a running backend."
+      },
+      "steps": [
+        "Read the contract and trace the worked example.",
+        "Replace the unfinished return in the starter.",
+        "Run the changed-input checks.",
+        "Explain the boundary in the understanding question."
+      ],
+      "starter": "function shouldAcknowledge(job) {\n  // TODO: implement the stated contract.\n  return null;\n}",
+      "solution": "function shouldAcknowledge(job) {\n  return job.saved === true;\n}",
+      "runtime": "javascript",
+      "checks": [
+        {
+          "label": "Case 1: [{\"saved\":false}] gives false",
+          "expression": "JSON.stringify(shouldAcknowledge({\"saved\":false}))===\"false\""
+        },
+        {
+          "label": "Case 2: [{\"saved\":true}] gives true",
+          "expression": "JSON.stringify(shouldAcknowledge({\"saved\":true}))===\"true\""
+        },
+        {
+          "label": "Case 3: [{}] gives false",
+          "expression": "JSON.stringify(shouldAcknowledge({}))===\"false\""
+        },
+        {
+          "label": "The function preserves the supplied input values",
+          "expression": "(()=>{const args=[{\"saved\":false}];const before=JSON.stringify(args);shouldAcknowledge(...args);return JSON.stringify(args)===before;})()"
+        }
+      ],
+      "quiz": {
+        "question": "The result was saved, but acknowledgement was lost. What must a robust consumer expect?",
+        "choices": [
+          "The queue can never redeliver",
+          "The same job may arrive again",
+          "The saved result is automatically erased"
+        ],
+        "answer": 1,
+        "explanation": "Delivery and persistence are separate events. Idempotent processing handles a repeated job safely."
+      },
+      "hints": [
+        "The strict comparison accepts only a confirmed saved flag in this model. It does not perform persistence. Real consumers also need to tolerate repeated delivery when a save succeeds but acknowledgement is lost."
+      ],
+      "math": null,
+      "filename": "main.js",
+      "estimatedMinutes": 8,
+      "externalNotes": "Runs as a pure JavaScript function in the browser. Passing checks does not establish live HTTP behavior, database durability, concurrency safety, authentication security, queue delivery guarantees, or production readiness."
+    },
+    "unit": {
+      "id": "backend-42",
+      "track": "backend",
+      "level": "advanced",
+      "topic": "Acknowledge after durable work",
+      "origin": "original bounded backend continuation",
+      "source": {
+        "url": "https://www.rabbitmq.com/docs/confirms"
+      },
+      "project": {
+        "title": "Acknowledge after durable work",
+        "task": "Implement shouldAcknowledge(job). Match the worked contract and the changed-input checks without modifying the supplied input values.",
+        "done_when": "Pass the changed-input checks and explain the understanding question. Live-service behavior is outside this model."
+      },
+      "math": {
+        "level": null,
+        "topic": null,
+        "task": null
+      },
+      "prerequisite_ids": [
+        "backend-41"
+      ],
+      "interaction_pattern": [
+        "one idea",
+        "worked example",
+        "code breakdown",
+        "changed input",
+        "understanding check"
+      ]
+    }
+  },
+  {
+    "lesson": {
+      "id": "backend-43",
+      "title": "Drain active work before stopping",
+      "summary": "Implement shutdownState(active,elapsed,deadline). Match the worked contract and the changed-input checks without modifying the supplied input values.",
+      "explanation": [
+        "Graceful shutdown stops accepting new work and gives active work a bounded chance to finish. An unbounded wait can leave a process stuck forever.",
+        "This exercise is a small pure JavaScript model. Its inputs are supplied directly; it does not receive live HTTP requests, operate a database, or deploy a service.",
+        "Worked example:\n\n```javascript\nfunction shutdownState(active,elapsed,deadline) {\n  if(active === 0) return \"stop\";\n  return elapsed >= deadline ? \"deadline\" : \"drain\";\n}\nconsole.log(shutdownState(0, 0, 100));\n```\nThe returned value is \"stop\".",
+        "The first branch stops when no active work remains. Otherwise the deadline comparison distinguishes waiting from timeout. A deadline result does not prove unfinished work succeeded; the surrounding service must define cancellation and recovery.",
+        "Read the function call shutdownState(0, 0, 100) from the inside out: the arguments supply the inputs, shutdownState runs the body once, and return sends its result back to the caller. console.log displays that result; it does not change it.",
+        "The deadline arrives while two jobs remain active. What can this helper honestly report? The deadline bounds waiting. It provides no success receipt for unfinished work."
+      ],
+      "analogy": {
+        "familiar": "",
+        "connection": "",
+        "limit": "The practice is a bounded policy or data transformation, not a running backend."
+      },
+      "steps": [
+        "Read the contract and trace the worked example.",
+        "Replace the unfinished return in the starter.",
+        "Run the changed-input checks.",
+        "Explain the boundary in the understanding question."
+      ],
+      "starter": "function shutdownState(active,elapsed,deadline) {\n  // TODO: implement the stated contract.\n  return null;\n}",
+      "solution": "function shutdownState(active,elapsed,deadline) {\n  if(active === 0) return \"stop\";\n  return elapsed >= deadline ? \"deadline\" : \"drain\";\n}",
+      "runtime": "javascript",
+      "checks": [
+        {
+          "label": "Case 1: [0,0,100] gives \"stop\"",
+          "expression": "JSON.stringify(shutdownState(0,0,100))===\"\\\"stop\\\"\""
+        },
+        {
+          "label": "Case 2: [2,99,100] gives \"drain\"",
+          "expression": "JSON.stringify(shutdownState(2,99,100))===\"\\\"drain\\\"\""
+        },
+        {
+          "label": "Case 3: [2,100,100] gives \"deadline\"",
+          "expression": "JSON.stringify(shutdownState(2,100,100))===\"\\\"deadline\\\"\""
+        },
+        {
+          "label": "The function preserves the supplied input values",
+          "expression": "(()=>{const args=[0,0,100];const before=JSON.stringify(args);shutdownState(...args);return JSON.stringify(args)===before;})()"
+        }
+      ],
+      "quiz": {
+        "question": "The deadline arrives while two jobs remain active. What can this helper honestly report?",
+        "choices": [
+          "Every job succeeded",
+          "The deadline was reached",
+          "There was no active work"
+        ],
+        "answer": 1,
+        "explanation": "The deadline bounds waiting. It provides no success receipt for unfinished work."
+      },
+      "hints": [
+        "The first branch stops when no active work remains. Otherwise the deadline comparison distinguishes waiting from timeout. A deadline result does not prove unfinished work succeeded; the surrounding service must define cancellation and recovery."
+      ],
+      "math": null,
+      "filename": "main.js",
+      "estimatedMinutes": 8,
+      "externalNotes": "Runs as a pure JavaScript function in the browser. Passing checks does not establish live HTTP behavior, database durability, concurrency safety, authentication security, queue delivery guarantees, or production readiness."
+    },
+    "unit": {
+      "id": "backend-43",
+      "track": "backend",
+      "level": "advanced",
+      "topic": "Drain active work before stopping",
+      "origin": "original bounded backend continuation",
+      "source": {
+        "url": "https://expressjs.com/en/advanced/healthcheck-graceful-shutdown.html"
+      },
+      "project": {
+        "title": "Drain active work before stopping",
+        "task": "Implement shutdownState(active,elapsed,deadline). Match the worked contract and the changed-input checks without modifying the supplied input values.",
+        "done_when": "Pass the changed-input checks and explain the understanding question. Live-service behavior is outside this model."
+      },
+      "math": {
+        "level": null,
+        "topic": null,
+        "task": null
+      },
+      "prerequisite_ids": [
+        "backend-42"
+      ],
+      "interaction_pattern": [
+        "one idea",
+        "worked example",
+        "code breakdown",
+        "changed input",
+        "understanding check"
+      ]
+    }
+  }
+]

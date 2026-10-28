@@ -1,0 +1,3225 @@
+{
+  "scope": "Each case uses a separate Node process, fresh JS realm/SQL.js module/VFS; actual bundled SQLite3.49.1, not browser UI",
+  "sourceHashes": {
+    "lessons.json": "e8bf84230d0ff3c17cb785c3612d9bdd1d95c6e5fb2707c626b451fe3ce0d929",
+    "execution-cases.json": "bf1e57555d435ca7fed374f7361b4eb38473b9ccbd0e1e8453b5a897f329fe96"
+  },
+  "jobs": [
+    {
+      "id": "sql-25-solution",
+      "lessonId": "sql-25",
+      "kind": "solution",
+      "code": "CREATE VIEW labels AS\nSELECT id,owner || ': ' || (quantity + 1) AS label\nFROM parcels;\nSELECT *\nFROM labels\nORDER BY id;",
+      "setup": "CREATE TABLE parcels(id INTEGER PRIMARY KEY,owner TEXT,quantity INTEGER);\nINSERT INTO parcels VALUES(1,'Rin''s kit',2),(2,'Sol',4);",
+      "checks": [
+        {
+          "label": "Exact labels rows and multiplicities",
+          "expression": "WITH expected(\"id\",\"label\") AS (VALUES (1,'Rin''s kit: 3'),(2,'Sol: 5')), actual AS (SELECT \"id\",\"label\",COUNT(*) AS multiplicity FROM \"labels\" GROUP BY \"id\",\"label\"), wanted AS (SELECT \"id\",\"label\",COUNT(*) AS multiplicity FROM expected GROUP BY \"id\",\"label\") SELECT NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+        },
+        {
+          "label": "Exact parcels rows and multiplicities",
+          "expression": "WITH expected(\"id\",\"owner\",\"quantity\") AS (VALUES (1,'Rin''s kit',2),(2,'Sol',4)), actual AS (SELECT \"id\",\"owner\",\"quantity\",COUNT(*) AS multiplicity FROM \"parcels\" GROUP BY \"id\",\"owner\",\"quantity\"), wanted AS (SELECT \"id\",\"owner\",\"quantity\",COUNT(*) AS multiplicity FROM expected GROUP BY \"id\",\"owner\",\"quantity\") SELECT NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+        }
+      ],
+      "outcome": "success",
+      "expectedPass": true
+    },
+    {
+      "id": "sql-25-starter",
+      "lessonId": "sql-25",
+      "kind": "starter",
+      "code": "CREATE VIEW labels AS\nSELECT id,owner AS label\nFROM parcels;",
+      "setup": "CREATE TABLE parcels(id INTEGER PRIMARY KEY,owner TEXT,quantity INTEGER);\nINSERT INTO parcels VALUES(1,'Rin''s kit',2),(2,'Sol',4);",
+      "checks": [
+        {
+          "label": "Exact labels rows and multiplicities",
+          "expression": "WITH expected(\"id\",\"label\") AS (VALUES (1,'Rin''s kit: 3'),(2,'Sol: 5')), actual AS (SELECT \"id\",\"label\",COUNT(*) AS multiplicity FROM \"labels\" GROUP BY \"id\",\"label\"), wanted AS (SELECT \"id\",\"label\",COUNT(*) AS multiplicity FROM expected GROUP BY \"id\",\"label\") SELECT NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+        },
+        {
+          "label": "Exact parcels rows and multiplicities",
+          "expression": "WITH expected(\"id\",\"owner\",\"quantity\") AS (VALUES (1,'Rin''s kit',2),(2,'Sol',4)), actual AS (SELECT \"id\",\"owner\",\"quantity\",COUNT(*) AS multiplicity FROM \"parcels\" GROUP BY \"id\",\"owner\",\"quantity\"), wanted AS (SELECT \"id\",\"owner\",\"quantity\",COUNT(*) AS multiplicity FROM expected GROUP BY \"id\",\"owner\",\"quantity\") SELECT NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+        }
+      ],
+      "outcome": "success",
+      "expectedPass": false
+    },
+    {
+      "id": "sql-26-solution",
+      "lessonId": "sql-26",
+      "kind": "solution",
+      "code": "CREATE VIEW unfinished AS\nSELECT id\nFROM jobs\nWHERE state <> 'done' OR state IS NULL;\nSELECT *\nFROM unfinished\nORDER BY id;",
+      "setup": "CREATE TABLE jobs(id INTEGER PRIMARY KEY,state TEXT);\nINSERT INTO jobs VALUES(1,'done'),(2,'waiting'),(3,NULL);",
+      "checks": [
+        {
+          "label": "Exact unfinished rows and multiplicities",
+          "expression": "WITH expected(\"id\") AS (VALUES (2),(3)), actual AS (SELECT \"id\",COUNT(*) AS multiplicity FROM \"unfinished\" GROUP BY \"id\"), wanted AS (SELECT \"id\",COUNT(*) AS multiplicity FROM expected GROUP BY \"id\") SELECT NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+        },
+        {
+          "label": "Exact jobs rows and multiplicities",
+          "expression": "WITH expected(\"id\",\"state\") AS (VALUES (1,'done'),(2,'waiting'),(3,NULL)), actual AS (SELECT \"id\",\"state\",COUNT(*) AS multiplicity FROM \"jobs\" GROUP BY \"id\",\"state\"), wanted AS (SELECT \"id\",\"state\",COUNT(*) AS multiplicity FROM expected GROUP BY \"id\",\"state\") SELECT NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+        }
+      ],
+      "outcome": "success",
+      "expectedPass": true
+    },
+    {
+      "id": "sql-26-starter",
+      "lessonId": "sql-26",
+      "kind": "starter",
+      "code": "CREATE VIEW unfinished AS\nSELECT id\nFROM jobs\nWHERE state <> 'done';",
+      "setup": "CREATE TABLE jobs(id INTEGER PRIMARY KEY,state TEXT);\nINSERT INTO jobs VALUES(1,'done'),(2,'waiting'),(3,NULL);",
+      "checks": [
+        {
+          "label": "Exact unfinished rows and multiplicities",
+          "expression": "WITH expected(\"id\") AS (VALUES (2),(3)), actual AS (SELECT \"id\",COUNT(*) AS multiplicity FROM \"unfinished\" GROUP BY \"id\"), wanted AS (SELECT \"id\",COUNT(*) AS multiplicity FROM expected GROUP BY \"id\") SELECT NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+        },
+        {
+          "label": "Exact jobs rows and multiplicities",
+          "expression": "WITH expected(\"id\",\"state\") AS (VALUES (1,'done'),(2,'waiting'),(3,NULL)), actual AS (SELECT \"id\",\"state\",COUNT(*) AS multiplicity FROM \"jobs\" GROUP BY \"id\",\"state\"), wanted AS (SELECT \"id\",\"state\",COUNT(*) AS multiplicity FROM expected GROUP BY \"id\",\"state\") SELECT NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+        }
+      ],
+      "outcome": "success",
+      "expectedPass": false
+    },
+    {
+      "id": "sql-27-solution",
+      "lessonId": "sql-27",
+      "kind": "solution",
+      "code": "CREATE VIEW selected AS\nSELECT id\nFROM entries\nWHERE score BETWEEN 4 AND 8;\nSELECT *\nFROM selected\nORDER BY id;",
+      "setup": "CREATE TABLE entries(id INTEGER PRIMARY KEY,score INTEGER);\nINSERT INTO entries VALUES(1,3),(2,4),(3,8),(4,9);",
+      "checks": [
+        {
+          "label": "Exact selected rows and multiplicities",
+          "expression": "WITH expected(\"id\") AS (VALUES (2),(3)), actual AS (SELECT \"id\",COUNT(*) AS multiplicity FROM \"selected\" GROUP BY \"id\"), wanted AS (SELECT \"id\",COUNT(*) AS multiplicity FROM expected GROUP BY \"id\") SELECT NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+        },
+        {
+          "label": "Exact entries rows and multiplicities",
+          "expression": "WITH expected(\"id\",\"score\") AS (VALUES (1,3),(2,4),(3,8),(4,9)), actual AS (SELECT \"id\",\"score\",COUNT(*) AS multiplicity FROM \"entries\" GROUP BY \"id\",\"score\"), wanted AS (SELECT \"id\",\"score\",COUNT(*) AS multiplicity FROM expected GROUP BY \"id\",\"score\") SELECT NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+        }
+      ],
+      "outcome": "success",
+      "expectedPass": true
+    },
+    {
+      "id": "sql-27-starter",
+      "lessonId": "sql-27",
+      "kind": "starter",
+      "code": "CREATE VIEW selected AS\nSELECT id\nFROM entries\nWHERE score>4 AND score<8;",
+      "setup": "CREATE TABLE entries(id INTEGER PRIMARY KEY,score INTEGER);\nINSERT INTO entries VALUES(1,3),(2,4),(3,8),(4,9);",
+      "checks": [
+        {
+          "label": "Exact selected rows and multiplicities",
+          "expression": "WITH expected(\"id\") AS (VALUES (2),(3)), actual AS (SELECT \"id\",COUNT(*) AS multiplicity FROM \"selected\" GROUP BY \"id\"), wanted AS (SELECT \"id\",COUNT(*) AS multiplicity FROM expected GROUP BY \"id\") SELECT NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+        },
+        {
+          "label": "Exact entries rows and multiplicities",
+          "expression": "WITH expected(\"id\",\"score\") AS (VALUES (1,3),(2,4),(3,8),(4,9)), actual AS (SELECT \"id\",\"score\",COUNT(*) AS multiplicity FROM \"entries\" GROUP BY \"id\",\"score\"), wanted AS (SELECT \"id\",\"score\",COUNT(*) AS multiplicity FROM expected GROUP BY \"id\",\"score\") SELECT NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+        }
+      ],
+      "outcome": "success",
+      "expectedPass": false
+    },
+    {
+      "id": "sql-28-solution",
+      "lessonId": "sql-28",
+      "kind": "solution",
+      "code": "CREATE VIEW chosen AS\nSELECT id\nFROM tags\nWHERE colour IN('green','violet');\nSELECT *\nFROM chosen\nORDER BY id;",
+      "setup": "CREATE TABLE tags(id INTEGER PRIMARY KEY,colour TEXT);\nINSERT INTO tags VALUES(1,'green'),(2,'orange'),(3,'violet'),(4,'green');",
+      "checks": [
+        {
+          "label": "Exact chosen rows and multiplicities",
+          "expression": "WITH expected(\"id\") AS (VALUES (1),(3),(4)), actual AS (SELECT \"id\",COUNT(*) AS multiplicity FROM \"chosen\" GROUP BY \"id\"), wanted AS (SELECT \"id\",COUNT(*) AS multiplicity FROM expected GROUP BY \"id\") SELECT NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+        },
+        {
+          "label": "Exact tags rows and multiplicities",
+          "expression": "WITH expected(\"id\",\"colour\") AS (VALUES (1,'green'),(2,'orange'),(3,'violet'),(4,'green')), actual AS (SELECT \"id\",\"colour\",COUNT(*) AS multiplicity FROM \"tags\" GROUP BY \"id\",\"colour\"), wanted AS (SELECT \"id\",\"colour\",COUNT(*) AS multiplicity FROM expected GROUP BY \"id\",\"colour\") SELECT NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+        }
+      ],
+      "outcome": "success",
+      "expectedPass": true
+    },
+    {
+      "id": "sql-28-starter",
+      "lessonId": "sql-28",
+      "kind": "starter",
+      "code": "CREATE VIEW chosen AS\nSELECT id\nFROM tags\nWHERE colour='green';",
+      "setup": "CREATE TABLE tags(id INTEGER PRIMARY KEY,colour TEXT);\nINSERT INTO tags VALUES(1,'green'),(2,'orange'),(3,'violet'),(4,'green');",
+      "checks": [
+        {
+          "label": "Exact chosen rows and multiplicities",
+          "expression": "WITH expected(\"id\") AS (VALUES (1),(3),(4)), actual AS (SELECT \"id\",COUNT(*) AS multiplicity FROM \"chosen\" GROUP BY \"id\"), wanted AS (SELECT \"id\",COUNT(*) AS multiplicity FROM expected GROUP BY \"id\") SELECT NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+        },
+        {
+          "label": "Exact tags rows and multiplicities",
+          "expression": "WITH expected(\"id\",\"colour\") AS (VALUES (1,'green'),(2,'orange'),(3,'violet'),(4,'green')), actual AS (SELECT \"id\",\"colour\",COUNT(*) AS multiplicity FROM \"tags\" GROUP BY \"id\",\"colour\"), wanted AS (SELECT \"id\",\"colour\",COUNT(*) AS multiplicity FROM expected GROUP BY \"id\",\"colour\") SELECT NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+        }
+      ],
+      "outcome": "success",
+      "expectedPass": false
+    },
+    {
+      "id": "sql-29-solution",
+      "lessonId": "sql-29",
+      "kind": "solution",
+      "code": "CREATE VIEW matches AS\nSELECT id\nFROM labels\nWHERE label LIKE 'box!_%' ESCAPE '!';\nSELECT *\nFROM matches\nORDER BY id;",
+      "setup": "CREATE TABLE labels(id INTEGER PRIMARY KEY,label TEXT);\nINSERT INTO labels VALUES(1,'box_a'),(2,'boxXa'),(3,'box_'),(4,'crate');",
+      "checks": [
+        {
+          "label": "Exact matches rows and multiplicities",
+          "expression": "WITH expected(\"id\") AS (VALUES (1),(3)), actual AS (SELECT \"id\",COUNT(*) AS multiplicity FROM \"matches\" GROUP BY \"id\"), wanted AS (SELECT \"id\",COUNT(*) AS multiplicity FROM expected GROUP BY \"id\") SELECT NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+        },
+        {
+          "label": "Exact labels rows and multiplicities",
+          "expression": "WITH expected(\"id\",\"label\") AS (VALUES (1,'box_a'),(2,'boxXa'),(3,'box_'),(4,'crate')), actual AS (SELECT \"id\",\"label\",COUNT(*) AS multiplicity FROM \"labels\" GROUP BY \"id\",\"label\"), wanted AS (SELECT \"id\",\"label\",COUNT(*) AS multiplicity FROM expected GROUP BY \"id\",\"label\") SELECT NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+        }
+      ],
+      "outcome": "success",
+      "expectedPass": true
+    },
+    {
+      "id": "sql-29-starter",
+      "lessonId": "sql-29",
+      "kind": "starter",
+      "code": "CREATE VIEW matches AS\nSELECT id\nFROM labels\nWHERE label LIKE 'box_%';",
+      "setup": "CREATE TABLE labels(id INTEGER PRIMARY KEY,label TEXT);\nINSERT INTO labels VALUES(1,'box_a'),(2,'boxXa'),(3,'box_'),(4,'crate');",
+      "checks": [
+        {
+          "label": "Exact matches rows and multiplicities",
+          "expression": "WITH expected(\"id\") AS (VALUES (1),(3)), actual AS (SELECT \"id\",COUNT(*) AS multiplicity FROM \"matches\" GROUP BY \"id\"), wanted AS (SELECT \"id\",COUNT(*) AS multiplicity FROM expected GROUP BY \"id\") SELECT NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+        },
+        {
+          "label": "Exact labels rows and multiplicities",
+          "expression": "WITH expected(\"id\",\"label\") AS (VALUES (1,'box_a'),(2,'boxXa'),(3,'box_'),(4,'crate')), actual AS (SELECT \"id\",\"label\",COUNT(*) AS multiplicity FROM \"labels\" GROUP BY \"id\",\"label\"), wanted AS (SELECT \"id\",\"label\",COUNT(*) AS multiplicity FROM expected GROUP BY \"id\",\"label\") SELECT NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+        }
+      ],
+      "outcome": "success",
+      "expectedPass": false
+    },
+    {
+      "id": "sql-30-solution",
+      "lessonId": "sql-30",
+      "kind": "solution",
+      "code": "CREATE VIEW bands AS\nSELECT id,CASE WHEN score IS NULL THEN 'unknown' WHEN score>=20 THEN 'high' WHEN score>=10 THEN 'middle' ELSE 'low' END AS band\nFROM scores;\nSELECT *\nFROM bands\nORDER BY id;",
+      "setup": "CREATE TABLE scores(id INTEGER PRIMARY KEY,score INTEGER);\nINSERT INTO scores VALUES(1,20),(2,10),(3,9),(4,NULL);",
+      "checks": [
+        {
+          "label": "Exact bands rows and multiplicities",
+          "expression": "WITH expected(\"id\",\"band\") AS (VALUES (1,'high'),(2,'middle'),(3,'low'),(4,'unknown')), actual AS (SELECT \"id\",\"band\",COUNT(*) AS multiplicity FROM \"bands\" GROUP BY \"id\",\"band\"), wanted AS (SELECT \"id\",\"band\",COUNT(*) AS multiplicity FROM expected GROUP BY \"id\",\"band\") SELECT NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+        },
+        {
+          "label": "Exact scores rows and multiplicities",
+          "expression": "WITH expected(\"id\",\"score\") AS (VALUES (1,20),(2,10),(3,9),(4,NULL)), actual AS (SELECT \"id\",\"score\",COUNT(*) AS multiplicity FROM \"scores\" GROUP BY \"id\",\"score\"), wanted AS (SELECT \"id\",\"score\",COUNT(*) AS multiplicity FROM expected GROUP BY \"id\",\"score\") SELECT NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+        }
+      ],
+      "outcome": "success",
+      "expectedPass": true
+    },
+    {
+      "id": "sql-30-starter",
+      "lessonId": "sql-30",
+      "kind": "starter",
+      "code": "CREATE VIEW bands AS\nSELECT id,CASE WHEN score>=10 THEN 'middle' ELSE 'low' END AS band\nFROM scores;",
+      "setup": "CREATE TABLE scores(id INTEGER PRIMARY KEY,score INTEGER);\nINSERT INTO scores VALUES(1,20),(2,10),(3,9),(4,NULL);",
+      "checks": [
+        {
+          "label": "Exact bands rows and multiplicities",
+          "expression": "WITH expected(\"id\",\"band\") AS (VALUES (1,'high'),(2,'middle'),(3,'low'),(4,'unknown')), actual AS (SELECT \"id\",\"band\",COUNT(*) AS multiplicity FROM \"bands\" GROUP BY \"id\",\"band\"), wanted AS (SELECT \"id\",\"band\",COUNT(*) AS multiplicity FROM expected GROUP BY \"id\",\"band\") SELECT NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+        },
+        {
+          "label": "Exact scores rows and multiplicities",
+          "expression": "WITH expected(\"id\",\"score\") AS (VALUES (1,20),(2,10),(3,9),(4,NULL)), actual AS (SELECT \"id\",\"score\",COUNT(*) AS multiplicity FROM \"scores\" GROUP BY \"id\",\"score\"), wanted AS (SELECT \"id\",\"score\",COUNT(*) AS multiplicity FROM expected GROUP BY \"id\",\"score\") SELECT NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+        }
+      ],
+      "outcome": "success",
+      "expectedPass": false
+    },
+    {
+      "id": "sql-31-solution",
+      "lessonId": "sql-31",
+      "kind": "solution",
+      "code": "CREATE VIEW prefixes AS\nSELECT id,substr(name,1,3) AS prefix,length(name) AS size\nFROM names;\nSELECT *\nFROM prefixes\nORDER BY id;",
+      "setup": "CREATE TABLE names(id INTEGER PRIMARY KEY,name TEXT);\nINSERT INTO names VALUES(1,'Lantern'),(2,'Go'),(3,''),(4,NULL);",
+      "checks": [
+        {
+          "label": "Exact prefixes rows and multiplicities",
+          "expression": "WITH expected(\"id\",\"prefix\",\"size\") AS (VALUES (1,'Lan',7),(2,'Go',2),(3,'',0),(4,NULL,NULL)), actual AS (SELECT \"id\",\"prefix\",\"size\",COUNT(*) AS multiplicity FROM \"prefixes\" GROUP BY \"id\",\"prefix\",\"size\"), wanted AS (SELECT \"id\",\"prefix\",\"size\",COUNT(*) AS multiplicity FROM expected GROUP BY \"id\",\"prefix\",\"size\") SELECT NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+        },
+        {
+          "label": "Exact names rows and multiplicities",
+          "expression": "WITH expected(\"id\",\"name\") AS (VALUES (1,'Lantern'),(2,'Go'),(3,''),(4,NULL)), actual AS (SELECT \"id\",\"name\",COUNT(*) AS multiplicity FROM \"names\" GROUP BY \"id\",\"name\"), wanted AS (SELECT \"id\",\"name\",COUNT(*) AS multiplicity FROM expected GROUP BY \"id\",\"name\") SELECT NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+        }
+      ],
+      "outcome": "success",
+      "expectedPass": true
+    },
+    {
+      "id": "sql-31-starter",
+      "lessonId": "sql-31",
+      "kind": "starter",
+      "code": "CREATE VIEW prefixes AS\nSELECT id,name AS prefix,0 AS size\nFROM names;",
+      "setup": "CREATE TABLE names(id INTEGER PRIMARY KEY,name TEXT);\nINSERT INTO names VALUES(1,'Lantern'),(2,'Go'),(3,''),(4,NULL);",
+      "checks": [
+        {
+          "label": "Exact prefixes rows and multiplicities",
+          "expression": "WITH expected(\"id\",\"prefix\",\"size\") AS (VALUES (1,'Lan',7),(2,'Go',2),(3,'',0),(4,NULL,NULL)), actual AS (SELECT \"id\",\"prefix\",\"size\",COUNT(*) AS multiplicity FROM \"prefixes\" GROUP BY \"id\",\"prefix\",\"size\"), wanted AS (SELECT \"id\",\"prefix\",\"size\",COUNT(*) AS multiplicity FROM expected GROUP BY \"id\",\"prefix\",\"size\") SELECT NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+        },
+        {
+          "label": "Exact names rows and multiplicities",
+          "expression": "WITH expected(\"id\",\"name\") AS (VALUES (1,'Lantern'),(2,'Go'),(3,''),(4,NULL)), actual AS (SELECT \"id\",\"name\",COUNT(*) AS multiplicity FROM \"names\" GROUP BY \"id\",\"name\"), wanted AS (SELECT \"id\",\"name\",COUNT(*) AS multiplicity FROM expected GROUP BY \"id\",\"name\") SELECT NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+        }
+      ],
+      "outcome": "success",
+      "expectedPass": false
+    },
+    {
+      "id": "sql-32-solution",
+      "lessonId": "sql-32",
+      "kind": "solution",
+      "code": "CREATE VIEW shares AS\nSELECT id,CAST(total AS REAL)/people AS average\nFROM supplies;\nSELECT *\nFROM shares\nORDER BY id;",
+      "setup": "CREATE TABLE supplies(id INTEGER PRIMARY KEY,total INTEGER,people INTEGER);\nINSERT INTO supplies VALUES(1,7,2),(2,6,3),(3,5,0);",
+      "checks": [
+        {
+          "label": "Exact shares rows and multiplicities",
+          "expression": "WITH expected(\"id\",\"average\") AS (VALUES (1,3.5),(2,2),(3,NULL)), actual AS (SELECT \"id\",\"average\",COUNT(*) AS multiplicity FROM \"shares\" GROUP BY \"id\",\"average\"), wanted AS (SELECT \"id\",\"average\",COUNT(*) AS multiplicity FROM expected GROUP BY \"id\",\"average\") SELECT NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+        },
+        {
+          "label": "Exact supplies rows and multiplicities",
+          "expression": "WITH expected(\"id\",\"total\",\"people\") AS (VALUES (1,7,2),(2,6,3),(3,5,0)), actual AS (SELECT \"id\",\"total\",\"people\",COUNT(*) AS multiplicity FROM \"supplies\" GROUP BY \"id\",\"total\",\"people\"), wanted AS (SELECT \"id\",\"total\",\"people\",COUNT(*) AS multiplicity FROM expected GROUP BY \"id\",\"total\",\"people\") SELECT NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+        }
+      ],
+      "outcome": "success",
+      "expectedPass": true
+    },
+    {
+      "id": "sql-32-starter",
+      "lessonId": "sql-32",
+      "kind": "starter",
+      "code": "CREATE VIEW shares AS\nSELECT id,total/people AS average\nFROM supplies;",
+      "setup": "CREATE TABLE supplies(id INTEGER PRIMARY KEY,total INTEGER,people INTEGER);\nINSERT INTO supplies VALUES(1,7,2),(2,6,3),(3,5,0);",
+      "checks": [
+        {
+          "label": "Exact shares rows and multiplicities",
+          "expression": "WITH expected(\"id\",\"average\") AS (VALUES (1,3.5),(2,2),(3,NULL)), actual AS (SELECT \"id\",\"average\",COUNT(*) AS multiplicity FROM \"shares\" GROUP BY \"id\",\"average\"), wanted AS (SELECT \"id\",\"average\",COUNT(*) AS multiplicity FROM expected GROUP BY \"id\",\"average\") SELECT NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+        },
+        {
+          "label": "Exact supplies rows and multiplicities",
+          "expression": "WITH expected(\"id\",\"total\",\"people\") AS (VALUES (1,7,2),(2,6,3),(3,5,0)), actual AS (SELECT \"id\",\"total\",\"people\",COUNT(*) AS multiplicity FROM \"supplies\" GROUP BY \"id\",\"total\",\"people\"), wanted AS (SELECT \"id\",\"total\",\"people\",COUNT(*) AS multiplicity FROM expected GROUP BY \"id\",\"total\",\"people\") SELECT NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+        }
+      ],
+      "outcome": "success",
+      "expectedPass": false
+    },
+    {
+      "id": "sql-33-solution",
+      "lessonId": "sql-33",
+      "kind": "solution",
+      "code": "CREATE TABLE readings(id INTEGER PRIMARY KEY,value INTEGER);\nINSERT INTO readings VALUES(1,'17'),(2,'unknown');\nCREATE VIEW observed AS\nSELECT id,typeof(value) AS kind\nFROM readings;\nSELECT *\nFROM observed\nORDER BY id;",
+      "setup": "",
+      "checks": [
+        {
+          "label": "Exact observed rows and multiplicities",
+          "expression": "WITH expected(\"id\",\"kind\") AS (VALUES (1,'integer'),(2,'text')), actual AS (SELECT \"id\",\"kind\",COUNT(*) AS multiplicity FROM \"observed\" GROUP BY \"id\",\"kind\"), wanted AS (SELECT \"id\",\"kind\",COUNT(*) AS multiplicity FROM expected GROUP BY \"id\",\"kind\") SELECT NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+        },
+        {
+          "label": "Exact readings rows and multiplicities",
+          "expression": "WITH expected(\"id\",\"value\") AS (VALUES (1,17),(2,'unknown')), actual AS (SELECT \"id\",\"value\",COUNT(*) AS multiplicity FROM \"readings\" GROUP BY \"id\",\"value\"), wanted AS (SELECT \"id\",\"value\",COUNT(*) AS multiplicity FROM expected GROUP BY \"id\",\"value\") SELECT NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+        },
+        {
+          "label": "Integer-affinity column declaration",
+          "expression": "SELECT count(*)=1 FROM pragma_table_info('readings') WHERE name='value' AND instr(upper(type),'INT')>0"
+        },
+        {
+          "label": "Ordinary non-STRICT table",
+          "expression": "SELECT count(*)=1 FROM pragma_table_list WHERE name='readings' AND schema='main' AND strict=0"
+        }
+      ],
+      "outcome": "success",
+      "expectedPass": true
+    },
+    {
+      "id": "sql-33-starter",
+      "lessonId": "sql-33",
+      "kind": "starter",
+      "code": "CREATE TABLE readings(id INTEGER PRIMARY KEY,value TEXT);\nINSERT INTO readings VALUES(1,'17'),(2,'unknown');\nCREATE VIEW observed AS\nSELECT id,typeof(value) AS kind\nFROM readings;",
+      "setup": "",
+      "checks": [
+        {
+          "label": "Exact observed rows and multiplicities",
+          "expression": "WITH expected(\"id\",\"kind\") AS (VALUES (1,'integer'),(2,'text')), actual AS (SELECT \"id\",\"kind\",COUNT(*) AS multiplicity FROM \"observed\" GROUP BY \"id\",\"kind\"), wanted AS (SELECT \"id\",\"kind\",COUNT(*) AS multiplicity FROM expected GROUP BY \"id\",\"kind\") SELECT NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+        },
+        {
+          "label": "Exact readings rows and multiplicities",
+          "expression": "WITH expected(\"id\",\"value\") AS (VALUES (1,17),(2,'unknown')), actual AS (SELECT \"id\",\"value\",COUNT(*) AS multiplicity FROM \"readings\" GROUP BY \"id\",\"value\"), wanted AS (SELECT \"id\",\"value\",COUNT(*) AS multiplicity FROM expected GROUP BY \"id\",\"value\") SELECT NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+        },
+        {
+          "label": "Integer-affinity column declaration",
+          "expression": "SELECT count(*)=1 FROM pragma_table_info('readings') WHERE name='value' AND instr(upper(type),'INT')>0"
+        },
+        {
+          "label": "Ordinary non-STRICT table",
+          "expression": "SELECT count(*)=1 FROM pragma_table_list WHERE name='readings' AND schema='main' AND strict=0"
+        }
+      ],
+      "outcome": "success",
+      "expectedPass": false
+    },
+    {
+      "id": "sql-34-solution",
+      "lessonId": "sql-34",
+      "kind": "solution",
+      "code": "CREATE TABLE readings(id INTEGER PRIMARY KEY,value INTEGER NOT NULL) STRICT;\nINSERT INTO readings VALUES(1,'14'),(2,9);\nSELECT *\nFROM readings\nORDER BY id;",
+      "setup": "",
+      "checks": [
+        {
+          "label": "Exact readings rows and multiplicities",
+          "expression": "WITH expected(\"id\",\"value\") AS (VALUES (1,14),(2,9)), actual AS (SELECT \"id\",\"value\",COUNT(*) AS multiplicity FROM \"readings\" GROUP BY \"id\",\"value\"), wanted AS (SELECT \"id\",\"value\",COUNT(*) AS multiplicity FROM expected GROUP BY \"id\",\"value\") SELECT NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+        },
+        {
+          "label": "Strict-table metadata",
+          "expression": "SELECT count(*)=1 FROM pragma_table_list WHERE name='readings' AND schema='main' AND strict=1"
+        },
+        {
+          "label": "Missing values disallowed by schema",
+          "expression": "SELECT count(*)=1 FROM pragma_table_info('readings') WHERE name='value' AND \"notnull\"=1"
+        },
+        {
+          "label": "Integer stored types",
+          "expression": "SELECT count(*)=2 AND sum(typeof(value)='integer')=2 FROM readings"
+        },
+        {
+          "label": "Integer-affinity column declaration",
+          "expression": "SELECT count(*)=1 FROM pragma_table_info('readings') WHERE name='value' AND instr(upper(type),'INT')>0"
+        }
+      ],
+      "outcome": "success",
+      "expectedPass": true
+    },
+    {
+      "id": "sql-34-starter",
+      "lessonId": "sql-34",
+      "kind": "starter",
+      "code": "CREATE TABLE readings(id INTEGER PRIMARY KEY,value INTEGER NOT NULL);\nINSERT INTO readings VALUES(1,'14'),(2,9);",
+      "setup": "",
+      "checks": [
+        {
+          "label": "Exact readings rows and multiplicities",
+          "expression": "WITH expected(\"id\",\"value\") AS (VALUES (1,14),(2,9)), actual AS (SELECT \"id\",\"value\",COUNT(*) AS multiplicity FROM \"readings\" GROUP BY \"id\",\"value\"), wanted AS (SELECT \"id\",\"value\",COUNT(*) AS multiplicity FROM expected GROUP BY \"id\",\"value\") SELECT NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+        },
+        {
+          "label": "Strict-table metadata",
+          "expression": "SELECT count(*)=1 FROM pragma_table_list WHERE name='readings' AND schema='main' AND strict=1"
+        },
+        {
+          "label": "Missing values disallowed by schema",
+          "expression": "SELECT count(*)=1 FROM pragma_table_info('readings') WHERE name='value' AND \"notnull\"=1"
+        },
+        {
+          "label": "Integer stored types",
+          "expression": "SELECT count(*)=2 AND sum(typeof(value)='integer')=2 FROM readings"
+        },
+        {
+          "label": "Integer-affinity column declaration",
+          "expression": "SELECT count(*)=1 FROM pragma_table_info('readings') WHERE name='value' AND instr(upper(type),'INT')>0"
+        }
+      ],
+      "outcome": "success",
+      "expectedPass": false
+    },
+    {
+      "lessonId": "sql-25",
+      "id": "sql-25-worked",
+      "paragraph": 2,
+      "code": "CREATE TEMP VIEW shown AS\nSELECT 'Lena''s notes' AS title, 3 + 2 AS copies;\nSELECT title,copies\nFROM shown;",
+      "checks": [
+        {
+          "label": "Worked result",
+          "expression": "SELECT title='Lena''s notes' AND copies=5 FROM shown"
+        }
+      ],
+      "expectedResults": [
+        {
+          "columns": [
+            "title",
+            "copies"
+          ],
+          "values": [
+            [
+              "Lena's notes",
+              5
+            ]
+          ]
+        }
+      ],
+      "outcome": "success",
+      "kind": "example",
+      "expectedPass": true
+    },
+    {
+      "lessonId": "sql-25",
+      "id": "sql-25-changed",
+      "paragraph": 3,
+      "code": "CREATE TEMP VIEW shown AS\nSELECT 'Milo''s map' AS title, 4 + 2 AS copies;\nSELECT title,copies\nFROM shown;",
+      "checks": [
+        {
+          "label": "Changed result",
+          "expression": "SELECT title='Milo''s map' AND copies=6 FROM shown"
+        }
+      ],
+      "expectedResults": [
+        {
+          "columns": [
+            "title",
+            "copies"
+          ],
+          "values": [
+            [
+              "Milo's map",
+              6
+            ]
+          ]
+        }
+      ],
+      "outcome": "success",
+      "kind": "example",
+      "expectedPass": true
+    },
+    {
+      "lessonId": "sql-26",
+      "id": "sql-26-worked",
+      "paragraph": 2,
+      "code": "CREATE TEMP VIEW shown AS\nSELECT NULL = 3 AS comparison,NULL IS NULL AS missing,1 OR NULL AS either,0 AND NULL AS both;\nSELECT *\nFROM shown;",
+      "checks": [
+        {
+          "label": "Worked result",
+          "expression": "SELECT comparison IS NULL AND missing=1 AND either=1 AND both=0 FROM shown"
+        }
+      ],
+      "expectedResults": [
+        {
+          "columns": [
+            "comparison",
+            "missing",
+            "either",
+            "both"
+          ],
+          "values": [
+            [
+              null,
+              1,
+              1,
+              0
+            ]
+          ]
+        }
+      ],
+      "outcome": "success",
+      "kind": "example",
+      "expectedPass": true
+    },
+    {
+      "lessonId": "sql-26",
+      "id": "sql-26-changed",
+      "paragraph": 3,
+      "code": "CREATE TEMP VIEW shown AS\nSELECT NOT NULL AS negated,0 OR NULL AS either,1 AND NULL AS both;\nSELECT *\nFROM shown;",
+      "checks": [
+        {
+          "label": "Changed result",
+          "expression": "SELECT negated IS NULL AND either IS NULL AND both IS NULL FROM shown"
+        }
+      ],
+      "expectedResults": [
+        {
+          "columns": [
+            "negated",
+            "either",
+            "both"
+          ],
+          "values": [
+            [
+              null,
+              null,
+              null
+            ]
+          ]
+        }
+      ],
+      "outcome": "success",
+      "kind": "example",
+      "expectedPass": true
+    },
+    {
+      "lessonId": "sql-27",
+      "id": "sql-27-worked",
+      "paragraph": 2,
+      "code": "CREATE TABLE visits(minutes INTEGER);\nINSERT INTO visits VALUES(4),(5),(9),(10);\nCREATE TEMP VIEW shown AS\nSELECT minutes\nFROM visits\nWHERE minutes BETWEEN 5 AND 9;\nSELECT *\nFROM shown\nORDER BY minutes;",
+      "checks": [
+        {
+          "label": "Worked result",
+          "expression": "SELECT count(*)=2 AND sum(minutes)=14 FROM shown"
+        }
+      ],
+      "expectedResults": [
+        {
+          "columns": [
+            "minutes"
+          ],
+          "values": [
+            [
+              5
+            ],
+            [
+              9
+            ]
+          ]
+        }
+      ],
+      "outcome": "success",
+      "kind": "example",
+      "expectedPass": true
+    },
+    {
+      "lessonId": "sql-27",
+      "id": "sql-27-changed",
+      "paragraph": 3,
+      "code": "CREATE TABLE visits(minutes INTEGER);\nINSERT INTO visits VALUES(4),(5),(9),(10);\nCREATE TEMP VIEW shown AS\nSELECT minutes\nFROM visits\nWHERE minutes NOT BETWEEN 5 AND 9;\nSELECT *\nFROM shown\nORDER BY minutes;",
+      "checks": [
+        {
+          "label": "Changed result",
+          "expression": "SELECT count(*)=2 AND sum(minutes)=14 AND min(minutes)=4 FROM shown"
+        }
+      ],
+      "expectedResults": [
+        {
+          "columns": [
+            "minutes"
+          ],
+          "values": [
+            [
+              4
+            ],
+            [
+              10
+            ]
+          ]
+        }
+      ],
+      "outcome": "success",
+      "kind": "example",
+      "expectedPass": true
+    },
+    {
+      "lessonId": "sql-28",
+      "id": "sql-28-worked",
+      "paragraph": 2,
+      "code": "CREATE TABLE tiles(colour TEXT);\nINSERT INTO tiles VALUES('blue'),('red'),('gold');\nCREATE TEMP VIEW shown AS\nSELECT colour\nFROM tiles\nWHERE colour IN('blue','gold');\nSELECT *\nFROM shown\nORDER BY colour;",
+      "checks": [
+        {
+          "label": "Worked result",
+          "expression": "SELECT count(*)=2 AND sum(colour IN('blue','gold'))=2 FROM shown"
+        }
+      ],
+      "expectedResults": [
+        {
+          "columns": [
+            "colour"
+          ],
+          "values": [
+            [
+              "blue"
+            ],
+            [
+              "gold"
+            ]
+          ]
+        }
+      ],
+      "outcome": "success",
+      "kind": "example",
+      "expectedPass": true
+    },
+    {
+      "lessonId": "sql-28",
+      "id": "sql-28-changed",
+      "paragraph": 3,
+      "code": "CREATE TABLE tiles(colour TEXT);\nINSERT INTO tiles VALUES('blue'),('red'),('gold');\nCREATE TEMP VIEW shown AS\nSELECT colour\nFROM tiles\nWHERE colour IN('blue','blue');\nSELECT *\nFROM shown;",
+      "checks": [
+        {
+          "label": "Changed result",
+          "expression": "SELECT count(*)=1 AND min(colour)='blue' FROM shown"
+        }
+      ],
+      "expectedResults": [
+        {
+          "columns": [
+            "colour"
+          ],
+          "values": [
+            [
+              "blue"
+            ]
+          ]
+        }
+      ],
+      "outcome": "success",
+      "kind": "example",
+      "expectedPass": true
+    },
+    {
+      "lessonId": "sql-29",
+      "id": "sql-29-worked",
+      "paragraph": 2,
+      "code": "CREATE TEMP VIEW shown AS\nSELECT 'box_a' LIKE 'box!_%' ESCAPE '!' AS literal_match,'boxXa' LIKE 'box!_%' ESCAPE '!' AS not_literal;\nSELECT *\nFROM shown;",
+      "checks": [
+        {
+          "label": "Worked result",
+          "expression": "SELECT literal_match=1 AND not_literal=0 FROM shown"
+        }
+      ],
+      "expectedResults": [
+        {
+          "columns": [
+            "literal_match",
+            "not_literal"
+          ],
+          "values": [
+            [
+              1,
+              0
+            ]
+          ]
+        }
+      ],
+      "outcome": "success",
+      "kind": "example",
+      "expectedPass": true
+    },
+    {
+      "lessonId": "sql-29",
+      "id": "sql-29-changed",
+      "paragraph": 3,
+      "code": "CREATE TEMP VIEW shown AS\nSELECT 'box_' LIKE 'box!_%' ESCAPE '!' AS empty_tail,'a' LIKE 'A' AS ascii_fold,'æ' LIKE 'Æ' AS unicode_fold;\nSELECT *\nFROM shown;",
+      "checks": [
+        {
+          "label": "Changed result",
+          "expression": "SELECT empty_tail=1 AND ascii_fold=1 AND unicode_fold=0 FROM shown"
+        }
+      ],
+      "expectedResults": [
+        {
+          "columns": [
+            "empty_tail",
+            "ascii_fold",
+            "unicode_fold"
+          ],
+          "values": [
+            [
+              1,
+              1,
+              0
+            ]
+          ]
+        }
+      ],
+      "outcome": "success",
+      "kind": "example",
+      "expectedPass": true
+    },
+    {
+      "lessonId": "sql-30",
+      "id": "sql-30-worked",
+      "paragraph": 2,
+      "code": "CREATE TABLE scores(score INTEGER);\nINSERT INTO scores VALUES(22),(12),(4),(NULL);\nCREATE TEMP VIEW shown AS\nSELECT score,CASE WHEN score IS NULL THEN 'unknown' WHEN score>=20 THEN 'high' WHEN score>=10 THEN 'middle' ELSE 'low' END AS band\nFROM scores;\nSELECT *\nFROM shown\nORDER BY score;",
+      "checks": [
+        {
+          "label": "Worked result",
+          "expression": "SELECT count(*)=4 AND sum(band IN('unknown','high','middle','low'))=4 FROM shown"
+        }
+      ],
+      "expectedResults": [
+        {
+          "columns": [
+            "score",
+            "band"
+          ],
+          "values": [
+            [
+              null,
+              "unknown"
+            ],
+            [
+              4,
+              "low"
+            ],
+            [
+              12,
+              "middle"
+            ],
+            [
+              22,
+              "high"
+            ]
+          ]
+        }
+      ],
+      "outcome": "success",
+      "kind": "example",
+      "expectedPass": true
+    },
+    {
+      "lessonId": "sql-30",
+      "id": "sql-30-changed",
+      "paragraph": 3,
+      "code": "CREATE TEMP VIEW shown AS\nSELECT CASE WHEN 22>=10 THEN 'middle' WHEN 22>=20 THEN 'high' ELSE 'low' END AS band;\nSELECT *\nFROM shown;",
+      "checks": [
+        {
+          "label": "Changed result",
+          "expression": "SELECT band='middle' FROM shown"
+        }
+      ],
+      "expectedResults": [
+        {
+          "columns": [
+            "band"
+          ],
+          "values": [
+            [
+              "middle"
+            ]
+          ]
+        }
+      ],
+      "outcome": "success",
+      "kind": "example",
+      "expectedPass": true
+    },
+    {
+      "lessonId": "sql-31",
+      "id": "sql-31-worked",
+      "paragraph": 2,
+      "code": "CREATE TEMP VIEW shown AS\nSELECT length('Lantern') AS size,substr('Lantern',2,3) AS piece;\nSELECT *\nFROM shown;",
+      "checks": [
+        {
+          "label": "Worked result",
+          "expression": "SELECT size=7 AND piece='ant' FROM shown"
+        }
+      ],
+      "expectedResults": [
+        {
+          "columns": [
+            "size",
+            "piece"
+          ],
+          "values": [
+            [
+              7,
+              "ant"
+            ]
+          ]
+        }
+      ],
+      "outcome": "success",
+      "kind": "example",
+      "expectedPass": true
+    },
+    {
+      "lessonId": "sql-31",
+      "id": "sql-31-changed",
+      "paragraph": 3,
+      "code": "CREATE TEMP VIEW shown AS\nSELECT length('') AS empty_size,substr('Map',5,2) AS beyond,substr(NULL,1,2) AS missing;\nSELECT *\nFROM shown;",
+      "checks": [
+        {
+          "label": "Changed result",
+          "expression": "SELECT empty_size=0 AND beyond='' AND missing IS NULL FROM shown"
+        }
+      ],
+      "expectedResults": [
+        {
+          "columns": [
+            "empty_size",
+            "beyond",
+            "missing"
+          ],
+          "values": [
+            [
+              0,
+              "",
+              null
+            ]
+          ]
+        }
+      ],
+      "outcome": "success",
+      "kind": "example",
+      "expectedPass": true
+    },
+    {
+      "lessonId": "sql-32",
+      "id": "sql-32-worked",
+      "paragraph": 2,
+      "code": "CREATE TEMP VIEW shown AS\nSELECT 7/2 AS whole,CAST(7 AS REAL)/2 AS fraction,-7/2 AS negative;\nSELECT *\nFROM shown;",
+      "checks": [
+        {
+          "label": "Worked result",
+          "expression": "SELECT whole=3 AND fraction=3.5 AND negative=-3 FROM shown"
+        }
+      ],
+      "expectedResults": [
+        {
+          "columns": [
+            "whole",
+            "fraction",
+            "negative"
+          ],
+          "values": [
+            [
+              3,
+              3.5,
+              -3
+            ]
+          ]
+        }
+      ],
+      "outcome": "success",
+      "kind": "example",
+      "expectedPass": true
+    },
+    {
+      "lessonId": "sql-32",
+      "id": "sql-32-changed",
+      "paragraph": 3,
+      "code": "CREATE TEMP VIEW shown AS\nSELECT 5/2 AS whole,5/2.0 AS fraction,5/0 AS missing;\nSELECT *\nFROM shown;",
+      "checks": [
+        {
+          "label": "Changed result",
+          "expression": "SELECT whole=2 AND fraction=2.5 AND missing IS NULL FROM shown"
+        }
+      ],
+      "expectedResults": [
+        {
+          "columns": [
+            "whole",
+            "fraction",
+            "missing"
+          ],
+          "values": [
+            [
+              2,
+              2.5,
+              null
+            ]
+          ]
+        }
+      ],
+      "outcome": "success",
+      "kind": "example",
+      "expectedPass": true
+    },
+    {
+      "lessonId": "sql-33",
+      "id": "sql-33-worked",
+      "paragraph": 2,
+      "code": "CREATE TABLE readings(id INTEGER PRIMARY KEY,value INTEGER);\nINSERT INTO readings VALUES(1,'12'),(2,'twelve');\nCREATE TEMP VIEW shown AS\nSELECT id,value,typeof(value) AS kind\nFROM readings;\nSELECT *\nFROM shown\nORDER BY id;",
+      "checks": [
+        {
+          "label": "Worked result",
+          "expression": "SELECT count(*)=2 AND sum((id=1 AND kind='integer' AND value=12)OR(id=2 AND kind='text' AND value='twelve'))=2 FROM shown"
+        }
+      ],
+      "expectedResults": [
+        {
+          "columns": [
+            "id",
+            "value",
+            "kind"
+          ],
+          "values": [
+            [
+              1,
+              12,
+              "integer"
+            ],
+            [
+              2,
+              "twelve",
+              "text"
+            ]
+          ]
+        }
+      ],
+      "outcome": "success",
+      "kind": "example",
+      "expectedPass": true
+    },
+    {
+      "lessonId": "sql-33",
+      "id": "sql-33-changed",
+      "paragraph": 3,
+      "code": "CREATE TABLE readings(id INTEGER PRIMARY KEY,value TEXT);\nINSERT INTO readings VALUES(1,12),(2,NULL);\nCREATE TEMP VIEW shown AS\nSELECT id,value,typeof(value) AS kind\nFROM readings;\nSELECT *\nFROM shown\nORDER BY id;",
+      "checks": [
+        {
+          "label": "Changed result",
+          "expression": "SELECT count(*)=2 AND sum((id=1 AND kind='text' AND value='12')OR(id=2 AND kind='null' AND value IS NULL))=2 FROM shown"
+        }
+      ],
+      "expectedResults": [
+        {
+          "columns": [
+            "id",
+            "value",
+            "kind"
+          ],
+          "values": [
+            [
+              1,
+              "12",
+              "text"
+            ],
+            [
+              2,
+              null,
+              "null"
+            ]
+          ]
+        }
+      ],
+      "outcome": "success",
+      "kind": "example",
+      "expectedPass": true
+    },
+    {
+      "lessonId": "sql-34",
+      "id": "sql-34-worked",
+      "paragraph": 2,
+      "code": "CREATE TABLE readings(id INTEGER PRIMARY KEY,value INTEGER) STRICT;\nINSERT INTO readings VALUES(1,'12');\nCREATE TEMP VIEW shown AS\nSELECT value,typeof(value) AS kind\nFROM readings;\nSELECT *\nFROM shown;",
+      "checks": [
+        {
+          "label": "Worked result",
+          "expression": "SELECT value=12 AND kind='integer' FROM shown"
+        }
+      ],
+      "expectedResults": [
+        {
+          "columns": [
+            "value",
+            "kind"
+          ],
+          "values": [
+            [
+              12,
+              "integer"
+            ]
+          ]
+        }
+      ],
+      "outcome": "success",
+      "kind": "example",
+      "expectedPass": true
+    },
+    {
+      "lessonId": "sql-34",
+      "id": "sql-34-changed",
+      "paragraph": 3,
+      "code": "CREATE TABLE readings(id INTEGER PRIMARY KEY,value INTEGER) STRICT;\nINSERT INTO readings VALUES(1,'06');\nCREATE TEMP VIEW shown AS\nSELECT value,typeof(value) AS kind\nFROM readings;\nSELECT *\nFROM shown;",
+      "checks": [
+        {
+          "label": "Changed result",
+          "expression": "SELECT value=6 AND kind='integer' FROM shown"
+        }
+      ],
+      "expectedResults": [
+        {
+          "columns": [
+            "value",
+            "kind"
+          ],
+          "values": [
+            [
+              6,
+              "integer"
+            ]
+          ]
+        }
+      ],
+      "outcome": "success",
+      "kind": "example",
+      "expectedPass": true
+    },
+    {
+      "id": "sql-34-incompatible-text",
+      "paragraph": 5,
+      "setup": "CREATE TABLE sample(value INTEGER) STRICT;\nINSERT INTO sample VALUES(4);",
+      "code": "INSERT INTO sample VALUES('cloudy');",
+      "outcome": "expected-error",
+      "errorContains": "cannot store TEXT value in INTEGER column sample.value",
+      "postChecks": [
+        {
+          "label": "Earlier row remains",
+          "expression": "SELECT count(*)=1 AND min(value)=4 FROM sample"
+        }
+      ],
+      "supplemental": true,
+      "gradingScope": "Author-validated rejection fixture; not current learner SELECT-check capability.",
+      "lessonId": "sql-34",
+      "kind": "example",
+      "expectedPass": true
+    }
+  ],
+  "results": [
+    {
+      "id": "sql-25-solution",
+      "output": [
+        {
+          "columns": [
+            "id",
+            "label"
+          ],
+          "values": [
+            [
+              1,
+              "Rin's kit: 3"
+            ],
+            [
+              2,
+              "Sol: 5"
+            ]
+          ]
+        }
+      ],
+      "error": null,
+      "postOutput": null,
+      "postError": null,
+      "checks": [
+        {
+          "label": "Exact labels rows and multiplicities",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Exact parcels rows and multiplicities",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": true,
+      "expectedPass": true,
+      "validated": true,
+      "sourceHash": "b8e104669ba91a55c4c1557e98728de1e846791dc0f33ab4e2c7c14fdcb6cf97"
+    },
+    {
+      "id": "sql-25-starter",
+      "output": [],
+      "error": null,
+      "postOutput": null,
+      "postError": null,
+      "checks": [
+        {
+          "label": "Exact labels rows and multiplicities",
+          "passed": false,
+          "actual": [
+            {
+              "columns": [
+                "NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+              ],
+              "values": [
+                [
+                  0
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Exact parcels rows and multiplicities",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": false,
+      "expectedPass": false,
+      "validated": true,
+      "sourceHash": "a487a6c5d915f4287318f859cbb90b48f18df87480baa259ecebde1128575032"
+    },
+    {
+      "id": "sql-26-solution",
+      "output": [
+        {
+          "columns": [
+            "id"
+          ],
+          "values": [
+            [
+              2
+            ],
+            [
+              3
+            ]
+          ]
+        }
+      ],
+      "error": null,
+      "postOutput": null,
+      "postError": null,
+      "checks": [
+        {
+          "label": "Exact unfinished rows and multiplicities",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Exact jobs rows and multiplicities",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": true,
+      "expectedPass": true,
+      "validated": true,
+      "sourceHash": "7c0599d405ef08f519098ea95081ebc949b00c8ef00abbd979f0dbbfe2b11490"
+    },
+    {
+      "id": "sql-26-starter",
+      "output": [],
+      "error": null,
+      "postOutput": null,
+      "postError": null,
+      "checks": [
+        {
+          "label": "Exact unfinished rows and multiplicities",
+          "passed": false,
+          "actual": [
+            {
+              "columns": [
+                "NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+              ],
+              "values": [
+                [
+                  0
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Exact jobs rows and multiplicities",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": false,
+      "expectedPass": false,
+      "validated": true,
+      "sourceHash": "2841b3ceaf8c1aa8ba4332606afae09cf136a7f1312ebbdc02ee72a8f74b07c4"
+    },
+    {
+      "id": "sql-27-solution",
+      "output": [
+        {
+          "columns": [
+            "id"
+          ],
+          "values": [
+            [
+              2
+            ],
+            [
+              3
+            ]
+          ]
+        }
+      ],
+      "error": null,
+      "postOutput": null,
+      "postError": null,
+      "checks": [
+        {
+          "label": "Exact selected rows and multiplicities",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Exact entries rows and multiplicities",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": true,
+      "expectedPass": true,
+      "validated": true,
+      "sourceHash": "30ed92dd67aaae7b107728aeb91befbb8751728dd0ac696d8edfc9098b0e218d"
+    },
+    {
+      "id": "sql-27-starter",
+      "output": [],
+      "error": null,
+      "postOutput": null,
+      "postError": null,
+      "checks": [
+        {
+          "label": "Exact selected rows and multiplicities",
+          "passed": false,
+          "actual": [
+            {
+              "columns": [
+                "NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+              ],
+              "values": [
+                [
+                  0
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Exact entries rows and multiplicities",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": false,
+      "expectedPass": false,
+      "validated": true,
+      "sourceHash": "0e76c7cf4655a4f7642be326bec34c6987e752fc7474ab1b44a50ac5def90a31"
+    },
+    {
+      "id": "sql-28-solution",
+      "output": [
+        {
+          "columns": [
+            "id"
+          ],
+          "values": [
+            [
+              1
+            ],
+            [
+              3
+            ],
+            [
+              4
+            ]
+          ]
+        }
+      ],
+      "error": null,
+      "postOutput": null,
+      "postError": null,
+      "checks": [
+        {
+          "label": "Exact chosen rows and multiplicities",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Exact tags rows and multiplicities",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": true,
+      "expectedPass": true,
+      "validated": true,
+      "sourceHash": "05e581a374287a171f54e83b235a38c1af58c107c82b75410bfcc065fca5f055"
+    },
+    {
+      "id": "sql-28-starter",
+      "output": [],
+      "error": null,
+      "postOutput": null,
+      "postError": null,
+      "checks": [
+        {
+          "label": "Exact chosen rows and multiplicities",
+          "passed": false,
+          "actual": [
+            {
+              "columns": [
+                "NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+              ],
+              "values": [
+                [
+                  0
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Exact tags rows and multiplicities",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": false,
+      "expectedPass": false,
+      "validated": true,
+      "sourceHash": "616f8455d965d821ad8876691257d8581e5b3043f748c5d0f8d6e94552b5c832"
+    },
+    {
+      "id": "sql-29-solution",
+      "output": [
+        {
+          "columns": [
+            "id"
+          ],
+          "values": [
+            [
+              1
+            ],
+            [
+              3
+            ]
+          ]
+        }
+      ],
+      "error": null,
+      "postOutput": null,
+      "postError": null,
+      "checks": [
+        {
+          "label": "Exact matches rows and multiplicities",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Exact labels rows and multiplicities",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": true,
+      "expectedPass": true,
+      "validated": true,
+      "sourceHash": "f46551c4ee9bba54aa89fd773526dd155617a200929883526084c8e858e2bf37"
+    },
+    {
+      "id": "sql-29-starter",
+      "output": [],
+      "error": null,
+      "postOutput": null,
+      "postError": null,
+      "checks": [
+        {
+          "label": "Exact matches rows and multiplicities",
+          "passed": false,
+          "actual": [
+            {
+              "columns": [
+                "NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+              ],
+              "values": [
+                [
+                  0
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Exact labels rows and multiplicities",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": false,
+      "expectedPass": false,
+      "validated": true,
+      "sourceHash": "95a93206a672f506a1803ba5d397bbd86f8b658d470ff1b3046fe1239613c727"
+    },
+    {
+      "id": "sql-30-solution",
+      "output": [
+        {
+          "columns": [
+            "id",
+            "band"
+          ],
+          "values": [
+            [
+              1,
+              "high"
+            ],
+            [
+              2,
+              "middle"
+            ],
+            [
+              3,
+              "low"
+            ],
+            [
+              4,
+              "unknown"
+            ]
+          ]
+        }
+      ],
+      "error": null,
+      "postOutput": null,
+      "postError": null,
+      "checks": [
+        {
+          "label": "Exact bands rows and multiplicities",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Exact scores rows and multiplicities",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": true,
+      "expectedPass": true,
+      "validated": true,
+      "sourceHash": "b20100fb4aeac3e374e7d1307b26f5de1f0f5e9fbee508867abc38b791fb14c2"
+    },
+    {
+      "id": "sql-30-starter",
+      "output": [],
+      "error": null,
+      "postOutput": null,
+      "postError": null,
+      "checks": [
+        {
+          "label": "Exact bands rows and multiplicities",
+          "passed": false,
+          "actual": [
+            {
+              "columns": [
+                "NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+              ],
+              "values": [
+                [
+                  0
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Exact scores rows and multiplicities",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": false,
+      "expectedPass": false,
+      "validated": true,
+      "sourceHash": "bc5a0be5b03a508c49ab9698eb7fcb72e6f7ef69170efa318f0c14ac0a99fe52"
+    },
+    {
+      "id": "sql-31-solution",
+      "output": [
+        {
+          "columns": [
+            "id",
+            "prefix",
+            "size"
+          ],
+          "values": [
+            [
+              1,
+              "Lan",
+              7
+            ],
+            [
+              2,
+              "Go",
+              2
+            ],
+            [
+              3,
+              "",
+              0
+            ],
+            [
+              4,
+              null,
+              null
+            ]
+          ]
+        }
+      ],
+      "error": null,
+      "postOutput": null,
+      "postError": null,
+      "checks": [
+        {
+          "label": "Exact prefixes rows and multiplicities",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Exact names rows and multiplicities",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": true,
+      "expectedPass": true,
+      "validated": true,
+      "sourceHash": "cc6a411e0aaa45bbb042455a87fc24e15f156a376edb88a3cd456302cb04a9f4"
+    },
+    {
+      "id": "sql-31-starter",
+      "output": [],
+      "error": null,
+      "postOutput": null,
+      "postError": null,
+      "checks": [
+        {
+          "label": "Exact prefixes rows and multiplicities",
+          "passed": false,
+          "actual": [
+            {
+              "columns": [
+                "NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+              ],
+              "values": [
+                [
+                  0
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Exact names rows and multiplicities",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": false,
+      "expectedPass": false,
+      "validated": true,
+      "sourceHash": "02597fe96c43b4b0a04177b116e18a599430bc5e3410c4499609e10a1b0f94ba"
+    },
+    {
+      "id": "sql-32-solution",
+      "output": [
+        {
+          "columns": [
+            "id",
+            "average"
+          ],
+          "values": [
+            [
+              1,
+              3.5
+            ],
+            [
+              2,
+              2
+            ],
+            [
+              3,
+              null
+            ]
+          ]
+        }
+      ],
+      "error": null,
+      "postOutput": null,
+      "postError": null,
+      "checks": [
+        {
+          "label": "Exact shares rows and multiplicities",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Exact supplies rows and multiplicities",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": true,
+      "expectedPass": true,
+      "validated": true,
+      "sourceHash": "0db0eebd3291fcea084605787837f7c5bc21af37644b738756487dfa9466c640"
+    },
+    {
+      "id": "sql-32-starter",
+      "output": [],
+      "error": null,
+      "postOutput": null,
+      "postError": null,
+      "checks": [
+        {
+          "label": "Exact shares rows and multiplicities",
+          "passed": false,
+          "actual": [
+            {
+              "columns": [
+                "NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+              ],
+              "values": [
+                [
+                  0
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Exact supplies rows and multiplicities",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": false,
+      "expectedPass": false,
+      "validated": true,
+      "sourceHash": "054b9f0f54caf3ceb648c1de206d4f3e89f6a0ae249bd4d68f76aae63d6595fb"
+    },
+    {
+      "id": "sql-33-solution",
+      "output": [
+        {
+          "columns": [
+            "id",
+            "kind"
+          ],
+          "values": [
+            [
+              1,
+              "integer"
+            ],
+            [
+              2,
+              "text"
+            ]
+          ]
+        }
+      ],
+      "error": null,
+      "postOutput": null,
+      "postError": null,
+      "checks": [
+        {
+          "label": "Exact observed rows and multiplicities",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Exact readings rows and multiplicities",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Integer-affinity column declaration",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "count(*)=1"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Ordinary non-STRICT table",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "count(*)=1"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": true,
+      "expectedPass": true,
+      "validated": true,
+      "sourceHash": "9a6714b66c90ad030035d71fe64a42a5e351f6fbdb6d78c883a2a40ea38d5f6f"
+    },
+    {
+      "id": "sql-33-starter",
+      "output": [],
+      "error": null,
+      "postOutput": null,
+      "postError": null,
+      "checks": [
+        {
+          "label": "Exact observed rows and multiplicities",
+          "passed": false,
+          "actual": [
+            {
+              "columns": [
+                "NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+              ],
+              "values": [
+                [
+                  0
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Exact readings rows and multiplicities",
+          "passed": false,
+          "actual": [
+            {
+              "columns": [
+                "NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+              ],
+              "values": [
+                [
+                  0
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Integer-affinity column declaration",
+          "passed": false,
+          "actual": [
+            {
+              "columns": [
+                "count(*)=1"
+              ],
+              "values": [
+                [
+                  0
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Ordinary non-STRICT table",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "count(*)=1"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": false,
+      "expectedPass": false,
+      "validated": true,
+      "sourceHash": "013628063feceaeec69c4f0f2776edcb7ecc0cfc75cb6fadd22212057a96ac95"
+    },
+    {
+      "id": "sql-34-solution",
+      "output": [
+        {
+          "columns": [
+            "id",
+            "value"
+          ],
+          "values": [
+            [
+              1,
+              14
+            ],
+            [
+              2,
+              9
+            ]
+          ]
+        }
+      ],
+      "error": null,
+      "postOutput": null,
+      "postError": null,
+      "checks": [
+        {
+          "label": "Exact readings rows and multiplicities",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Strict-table metadata",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "count(*)=1"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Missing values disallowed by schema",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "count(*)=1"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Integer stored types",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "count(*)=2 AND sum(typeof(value)='integer')=2"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Integer-affinity column declaration",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "count(*)=1"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": true,
+      "expectedPass": true,
+      "validated": true,
+      "sourceHash": "0da80a819fdcfe440c057496a4c6e94941623786a7da58ceaff560100abafd84"
+    },
+    {
+      "id": "sql-34-starter",
+      "output": [],
+      "error": null,
+      "postOutput": null,
+      "postError": null,
+      "checks": [
+        {
+          "label": "Exact readings rows and multiplicities",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Strict-table metadata",
+          "passed": false,
+          "actual": [
+            {
+              "columns": [
+                "count(*)=1"
+              ],
+              "values": [
+                [
+                  0
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Missing values disallowed by schema",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "count(*)=1"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Integer stored types",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "count(*)=2 AND sum(typeof(value)='integer')=2"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Integer-affinity column declaration",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "count(*)=1"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": false,
+      "expectedPass": false,
+      "validated": true,
+      "sourceHash": "40170c196846ae306a1adf24079d8703fc4953a59d0ba8b97441db9eb288035f"
+    },
+    {
+      "id": "sql-25-worked",
+      "output": [
+        {
+          "columns": [
+            "title",
+            "copies"
+          ],
+          "values": [
+            [
+              "Lena's notes",
+              5
+            ]
+          ]
+        }
+      ],
+      "error": null,
+      "postOutput": null,
+      "postError": null,
+      "checks": [
+        {
+          "label": "Worked result",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "title='Lena''s notes' AND copies=5"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": true,
+      "expectedPass": true,
+      "validated": true,
+      "sourceHash": "03263a771cd6df7bdab4c01bbc7621ad5ef279c57757848c34409e9299a3949f"
+    },
+    {
+      "id": "sql-25-changed",
+      "output": [
+        {
+          "columns": [
+            "title",
+            "copies"
+          ],
+          "values": [
+            [
+              "Milo's map",
+              6
+            ]
+          ]
+        }
+      ],
+      "error": null,
+      "postOutput": null,
+      "postError": null,
+      "checks": [
+        {
+          "label": "Changed result",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "title='Milo''s map' AND copies=6"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": true,
+      "expectedPass": true,
+      "validated": true,
+      "sourceHash": "29e67b5cee558a491ff1be986d314dce4dd89d37bd829c676218d2638065527b"
+    },
+    {
+      "id": "sql-26-worked",
+      "output": [
+        {
+          "columns": [
+            "comparison",
+            "missing",
+            "either",
+            "both"
+          ],
+          "values": [
+            [
+              null,
+              1,
+              1,
+              0
+            ]
+          ]
+        }
+      ],
+      "error": null,
+      "postOutput": null,
+      "postError": null,
+      "checks": [
+        {
+          "label": "Worked result",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "comparison IS NULL AND missing=1 AND either=1 AND both=0"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": true,
+      "expectedPass": true,
+      "validated": true,
+      "sourceHash": "d502c532918a9eabc6c8d02d08b0b8d5538d1da196ca49b771b92153f7b00956"
+    },
+    {
+      "id": "sql-26-changed",
+      "output": [
+        {
+          "columns": [
+            "negated",
+            "either",
+            "both"
+          ],
+          "values": [
+            [
+              null,
+              null,
+              null
+            ]
+          ]
+        }
+      ],
+      "error": null,
+      "postOutput": null,
+      "postError": null,
+      "checks": [
+        {
+          "label": "Changed result",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "negated IS NULL AND either IS NULL AND both IS NULL"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": true,
+      "expectedPass": true,
+      "validated": true,
+      "sourceHash": "29bb3f27ac7542de33334838b0fa07f5b9149ff70be92dd7e50fe10dd3a47de8"
+    },
+    {
+      "id": "sql-27-worked",
+      "output": [
+        {
+          "columns": [
+            "minutes"
+          ],
+          "values": [
+            [
+              5
+            ],
+            [
+              9
+            ]
+          ]
+        }
+      ],
+      "error": null,
+      "postOutput": null,
+      "postError": null,
+      "checks": [
+        {
+          "label": "Worked result",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "count(*)=2 AND sum(minutes)=14"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": true,
+      "expectedPass": true,
+      "validated": true,
+      "sourceHash": "802a8caa623282df5048d979dfbc8919fa3f98921ff2fd9d6428e20ca79ec446"
+    },
+    {
+      "id": "sql-27-changed",
+      "output": [
+        {
+          "columns": [
+            "minutes"
+          ],
+          "values": [
+            [
+              4
+            ],
+            [
+              10
+            ]
+          ]
+        }
+      ],
+      "error": null,
+      "postOutput": null,
+      "postError": null,
+      "checks": [
+        {
+          "label": "Changed result",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "count(*)=2 AND sum(minutes)=14 AND min(minutes)=4"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": true,
+      "expectedPass": true,
+      "validated": true,
+      "sourceHash": "cf0a6812efc17999acdcf929f83c011c1d15d66d7f285121ecd33cc1dc4788d6"
+    },
+    {
+      "id": "sql-28-worked",
+      "output": [
+        {
+          "columns": [
+            "colour"
+          ],
+          "values": [
+            [
+              "blue"
+            ],
+            [
+              "gold"
+            ]
+          ]
+        }
+      ],
+      "error": null,
+      "postOutput": null,
+      "postError": null,
+      "checks": [
+        {
+          "label": "Worked result",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "count(*)=2 AND sum(colour IN('blue','gold'))=2"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": true,
+      "expectedPass": true,
+      "validated": true,
+      "sourceHash": "98134aad54ee65ef7af9094c84f5dc522e2d0512da5fbd17724c7919406490aa"
+    },
+    {
+      "id": "sql-28-changed",
+      "output": [
+        {
+          "columns": [
+            "colour"
+          ],
+          "values": [
+            [
+              "blue"
+            ]
+          ]
+        }
+      ],
+      "error": null,
+      "postOutput": null,
+      "postError": null,
+      "checks": [
+        {
+          "label": "Changed result",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "count(*)=1 AND min(colour)='blue'"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": true,
+      "expectedPass": true,
+      "validated": true,
+      "sourceHash": "608e3c511e1b90ee84aeb05ee7ab2dd3e179338120658ce04e6caaedb4e2a53a"
+    },
+    {
+      "id": "sql-29-worked",
+      "output": [
+        {
+          "columns": [
+            "literal_match",
+            "not_literal"
+          ],
+          "values": [
+            [
+              1,
+              0
+            ]
+          ]
+        }
+      ],
+      "error": null,
+      "postOutput": null,
+      "postError": null,
+      "checks": [
+        {
+          "label": "Worked result",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "literal_match=1 AND not_literal=0"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": true,
+      "expectedPass": true,
+      "validated": true,
+      "sourceHash": "51357109264840b67c54e281c460b78bf54a1f5d574e3f0bd7091f448c766237"
+    },
+    {
+      "id": "sql-29-changed",
+      "output": [
+        {
+          "columns": [
+            "empty_tail",
+            "ascii_fold",
+            "unicode_fold"
+          ],
+          "values": [
+            [
+              1,
+              1,
+              0
+            ]
+          ]
+        }
+      ],
+      "error": null,
+      "postOutput": null,
+      "postError": null,
+      "checks": [
+        {
+          "label": "Changed result",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "empty_tail=1 AND ascii_fold=1 AND unicode_fold=0"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": true,
+      "expectedPass": true,
+      "validated": true,
+      "sourceHash": "3f5332575ff3ca722c5ebf77e020ee03a059627e043c635de00a8d6e7802ddd7"
+    },
+    {
+      "id": "sql-30-worked",
+      "output": [
+        {
+          "columns": [
+            "score",
+            "band"
+          ],
+          "values": [
+            [
+              null,
+              "unknown"
+            ],
+            [
+              4,
+              "low"
+            ],
+            [
+              12,
+              "middle"
+            ],
+            [
+              22,
+              "high"
+            ]
+          ]
+        }
+      ],
+      "error": null,
+      "postOutput": null,
+      "postError": null,
+      "checks": [
+        {
+          "label": "Worked result",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "count(*)=4 AND sum(band IN('unknown','high','middle','low'))=4"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": true,
+      "expectedPass": true,
+      "validated": true,
+      "sourceHash": "dbaa2b0d57a56acd20d2943e392f648145824203d7cf406f167b5a1ea4f3c944"
+    },
+    {
+      "id": "sql-30-changed",
+      "output": [
+        {
+          "columns": [
+            "band"
+          ],
+          "values": [
+            [
+              "middle"
+            ]
+          ]
+        }
+      ],
+      "error": null,
+      "postOutput": null,
+      "postError": null,
+      "checks": [
+        {
+          "label": "Changed result",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "band='middle'"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": true,
+      "expectedPass": true,
+      "validated": true,
+      "sourceHash": "5fd2ec403f074bb9c0d2100685873c5437d9f5b3751993f580d7745b35ad20c0"
+    },
+    {
+      "id": "sql-31-worked",
+      "output": [
+        {
+          "columns": [
+            "size",
+            "piece"
+          ],
+          "values": [
+            [
+              7,
+              "ant"
+            ]
+          ]
+        }
+      ],
+      "error": null,
+      "postOutput": null,
+      "postError": null,
+      "checks": [
+        {
+          "label": "Worked result",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "size=7 AND piece='ant'"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": true,
+      "expectedPass": true,
+      "validated": true,
+      "sourceHash": "a46f2e27a6761bdcdda353eb939975d980432c985dd197b89644411e56bf01ae"
+    },
+    {
+      "id": "sql-31-changed",
+      "output": [
+        {
+          "columns": [
+            "empty_size",
+            "beyond",
+            "missing"
+          ],
+          "values": [
+            [
+              0,
+              "",
+              null
+            ]
+          ]
+        }
+      ],
+      "error": null,
+      "postOutput": null,
+      "postError": null,
+      "checks": [
+        {
+          "label": "Changed result",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "empty_size=0 AND beyond='' AND missing IS NULL"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": true,
+      "expectedPass": true,
+      "validated": true,
+      "sourceHash": "3f44980cf062131f54f3c76c336a06ea2e99c46eb44df4448e5aa1335adf9902"
+    },
+    {
+      "id": "sql-32-worked",
+      "output": [
+        {
+          "columns": [
+            "whole",
+            "fraction",
+            "negative"
+          ],
+          "values": [
+            [
+              3,
+              3.5,
+              -3
+            ]
+          ]
+        }
+      ],
+      "error": null,
+      "postOutput": null,
+      "postError": null,
+      "checks": [
+        {
+          "label": "Worked result",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "whole=3 AND fraction=3.5 AND negative=-3"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": true,
+      "expectedPass": true,
+      "validated": true,
+      "sourceHash": "5b7a6e00c1dc68ab385bf24dde100fbe43b34cd3bb82157b06506de9bd4778a2"
+    },
+    {
+      "id": "sql-32-changed",
+      "output": [
+        {
+          "columns": [
+            "whole",
+            "fraction",
+            "missing"
+          ],
+          "values": [
+            [
+              2,
+              2.5,
+              null
+            ]
+          ]
+        }
+      ],
+      "error": null,
+      "postOutput": null,
+      "postError": null,
+      "checks": [
+        {
+          "label": "Changed result",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "whole=2 AND fraction=2.5 AND missing IS NULL"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": true,
+      "expectedPass": true,
+      "validated": true,
+      "sourceHash": "942bcb08188712eea9b4d431a21b5a977464254778ef32e071a0184ce16b1a2a"
+    },
+    {
+      "id": "sql-33-worked",
+      "output": [
+        {
+          "columns": [
+            "id",
+            "value",
+            "kind"
+          ],
+          "values": [
+            [
+              1,
+              12,
+              "integer"
+            ],
+            [
+              2,
+              "twelve",
+              "text"
+            ]
+          ]
+        }
+      ],
+      "error": null,
+      "postOutput": null,
+      "postError": null,
+      "checks": [
+        {
+          "label": "Worked result",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "count(*)=2 AND sum((id=1 AND kind='integer' AND value=12)OR(id=2 AND kind='text' AND value='twelve'))=2"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": true,
+      "expectedPass": true,
+      "validated": true,
+      "sourceHash": "3036ef9ba67b3a8bc89e87f0ecb623e5cc1decb83d2b9915a4bc3eb46f089017"
+    },
+    {
+      "id": "sql-33-changed",
+      "output": [
+        {
+          "columns": [
+            "id",
+            "value",
+            "kind"
+          ],
+          "values": [
+            [
+              1,
+              "12",
+              "text"
+            ],
+            [
+              2,
+              null,
+              "null"
+            ]
+          ]
+        }
+      ],
+      "error": null,
+      "postOutput": null,
+      "postError": null,
+      "checks": [
+        {
+          "label": "Changed result",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "count(*)=2 AND sum((id=1 AND kind='text' AND value='12')OR(id=2 AND kind='null' AND value IS NULL))=2"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": true,
+      "expectedPass": true,
+      "validated": true,
+      "sourceHash": "7167200136f2c94a1d947a8780093737d6319a1b9c490fee83571190f41df2f9"
+    },
+    {
+      "id": "sql-34-worked",
+      "output": [
+        {
+          "columns": [
+            "value",
+            "kind"
+          ],
+          "values": [
+            [
+              12,
+              "integer"
+            ]
+          ]
+        }
+      ],
+      "error": null,
+      "postOutput": null,
+      "postError": null,
+      "checks": [
+        {
+          "label": "Worked result",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "value=12 AND kind='integer'"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": true,
+      "expectedPass": true,
+      "validated": true,
+      "sourceHash": "43f6b74e769fc062299f6cdd69f0dced942b3a21f26e6e2755e4a8f72cc1f31e"
+    },
+    {
+      "id": "sql-34-changed",
+      "output": [
+        {
+          "columns": [
+            "value",
+            "kind"
+          ],
+          "values": [
+            [
+              6,
+              "integer"
+            ]
+          ]
+        }
+      ],
+      "error": null,
+      "postOutput": null,
+      "postError": null,
+      "checks": [
+        {
+          "label": "Changed result",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "value=6 AND kind='integer'"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": true,
+      "expectedPass": true,
+      "validated": true,
+      "sourceHash": "7b347d5c332e379b7661ab65d0a1ea09aa5c9334616f4e58212fa07a68787ae8"
+    },
+    {
+      "id": "sql-34-incompatible-text",
+      "output": [],
+      "error": "cannot store TEXT value in INTEGER column sample.value",
+      "postOutput": null,
+      "postError": null,
+      "checks": [
+        {
+          "label": "Earlier row remains",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "count(*)=1 AND min(value)=4"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": true,
+      "expectedPass": true,
+      "validated": true,
+      "sourceHash": "1034e0bd6f298da2637552f30cdba4d9be298a327a99148a5dba48c3e50800c7"
+    }
+  ],
+  "passed": true,
+  "count": 41
+}

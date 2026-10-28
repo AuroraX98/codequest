@@ -1,0 +1,272 @@
+[
+  {
+    "lessonId": "swift-35",
+    "id": "swift-35-worked",
+    "paragraph": 2,
+    "code": "func shift(_ value: inout Int, by amount: Int) {\n    value += amount\n}\nvar position = 4\nshift(&position, by: 3)\nprint(position)",
+    "outcome": "success",
+    "expectedStdout": "7",
+    "checks": []
+  },
+  {
+    "lessonId": "swift-35",
+    "id": "swift-35-changed",
+    "paragraph": 3,
+    "code": "func shift(_ value: inout Int, by amount: Int) {\n    value += amount\n}\nvar position = -2\nshift(&position, by: 5)\nprint(position)",
+    "outcome": "success",
+    "expectedStdout": "3",
+    "checks": []
+  },
+  {
+    "lessonId": "swift-35",
+    "id": "swift-35-rejected",
+    "paragraph": 5,
+    "code": "func moveOne(_ source: inout Int, to destination: inout Int) {\n    source -= 1\n    destination += 1\n}\nfunc demonstrateConflict() {\n    var count = 5\n    moveOne(&count, to: &count)\n}\ndemonstrateConflict()",
+    "outcome": "compile-rejection",
+    "diagnosticContains": "inout arguments are not allowed to alias each other",
+    "gradingScope": "Author-validated local compiler rejection, not an extra learner runtime check."
+  },
+  {
+    "lessonId": "swift-36",
+    "id": "swift-36-worked",
+    "paragraph": 2,
+    "code": "func apply(_ operation: (Int) -> Int, to value: Int) -> Int {\n    return operation(value)\n}\nfunc makeCounter(start: Int) -> () -> Int {\n    var current = start\n    return {\n        current += 1\n        return current\n    }\n}\nlet twice: (Int) -> Int = { value in return value * 2 }\nprint(apply(twice, to: 6))\nlet counter = makeCounter(start: 2)\nlet alias = counter\nlet other = makeCounter(start: 2)\nprint(counter())\nprint(alias())\nprint(other())",
+    "outcome": "success",
+    "expectedStdout": "12\n3\n4\n3",
+    "checks": []
+  },
+  {
+    "lessonId": "swift-36",
+    "id": "swift-36-changed",
+    "paragraph": 3,
+    "code": "func apply(_ operation: (Int) -> Int, to value: Int) -> Int {\n    return operation(value)\n}\nfunc makeCounter(start: Int) -> () -> Int {\n    var current = start\n    return {\n        current += 1\n        return current\n    }\n}\nlet twice: (Int) -> Int = { value in return value + 5 }\nprint(apply(twice, to: 1))\nlet counter = makeCounter(start: 10)\nlet alias = counter\nlet other = makeCounter(start: 10)\nprint(counter())\nprint(alias())\nprint(other())",
+    "outcome": "success",
+    "expectedStdout": "6\n11\n12\n11",
+    "checks": []
+  },
+  {
+    "lessonId": "swift-37",
+    "id": "swift-37-worked",
+    "paragraph": 2,
+    "code": "struct DeferredNote {\n    var action: (() -> String)? = nil\n    mutating func store(_ action: @escaping () -> String) {\n        self.action = action\n    }\n    func read() -> String {\n        if let saved = action {\n            return saved()\n        }\n        return \"empty\"\n    }\n}\nvar note = DeferredNote()\nvar label = \"draft\"\nnote.store { [label] in return label }\nlabel = \"revised\"\nprint(note.read())",
+    "outcome": "success",
+    "expectedStdout": "draft",
+    "checks": []
+  },
+  {
+    "lessonId": "swift-37",
+    "id": "swift-37-changed",
+    "paragraph": 3,
+    "code": "struct DeferredNote {\n    var action: (() -> String)? = nil\n    mutating func store(_ action: @escaping () -> String) {\n        self.action = action\n    }\n    func read() -> String {\n        if let saved = action {\n            return saved()\n        }\n        return \"empty\"\n    }\n}\nvar note = DeferredNote()\nvar label = \"first\"\nnote.store { return label }\nlabel = \"second\"\nprint(note.read())",
+    "outcome": "success",
+    "expectedStdout": "second",
+    "checks": []
+  },
+  {
+    "lessonId": "swift-37",
+    "id": "swift-37-rejected",
+    "paragraph": 5,
+    "code": "struct DeferredNote {\n    var action: (() -> String)? = nil\n    mutating func store(_ action: () -> String) {\n        self.action = action\n    }\n    func read() -> String {\n        if let saved = action {\n            return saved()\n        }\n        return \"empty\"\n    }\n}\nvar note = DeferredNote()\nvar label = \"draft\"\nnote.store { [label] in return label }\nlabel = \"revised\"\nprint(note.read())",
+    "outcome": "compile-rejection",
+    "diagnosticContains": "assigning non-escaping parameter",
+    "gradingScope": "Author-validated local compiler rejection, not an extra learner runtime check."
+  },
+  {
+    "lessonId": "swift-38",
+    "id": "swift-38-worked",
+    "paragraph": 2,
+    "code": "struct StepMeter {\n    var steps: Int\n    mutating func advance(by amount: Int) {\n        steps += amount\n    }\n}\nvar first = StepMeter(steps: 3)\nvar second = first\nsecond.advance(by: 4)\nprint(first.steps)\nprint(second.steps)",
+    "outcome": "success",
+    "expectedStdout": "3\n7",
+    "checks": []
+  },
+  {
+    "lessonId": "swift-38",
+    "id": "swift-38-changed",
+    "paragraph": 3,
+    "code": "struct StepMeter {\n    var steps: Int\n    mutating func advance(by amount: Int) {\n        steps += amount\n    }\n}\nvar first = StepMeter(steps: 3)\nvar second = first\nfirst.advance(by: 2)\nsecond.advance(by: 6)\nprint(first.steps)\nprint(second.steps)",
+    "outcome": "success",
+    "expectedStdout": "5\n9",
+    "checks": []
+  },
+  {
+    "lessonId": "swift-38",
+    "id": "swift-38-rejected",
+    "paragraph": 5,
+    "code": "struct StepMeter {\n    var steps: Int\n    mutating func advance(by amount: Int) {\n        steps += amount\n    }\n}\nvar first = StepMeter(steps: 3)\nlet second = first\nsecond.advance(by: 4)\nprint(first.steps)\nprint(second.steps)",
+    "outcome": "compile-rejection",
+    "diagnosticContains": "cannot use mutating member on immutable value",
+    "gradingScope": "Author-validated local compiler rejection, not an extra learner runtime check."
+  },
+  {
+    "lessonId": "swift-39",
+    "id": "swift-39-worked",
+    "paragraph": 2,
+    "code": "struct Percentage {\n    let value: Int\n    init?(_ value: Int) {\n        guard value >= 0 && value <= 100 else {\n            return nil\n        }\n        self.value = value\n    }\n}\nif let accepted = Percentage(75) {\n    print(accepted.value)\n}\nprint(Percentage(101) == nil)",
+    "outcome": "success",
+    "expectedStdout": "75\ntrue",
+    "checks": []
+  },
+  {
+    "lessonId": "swift-39",
+    "id": "swift-39-changed",
+    "paragraph": 3,
+    "code": "struct Percentage {\n    let value: Int\n    init?(_ value: Int) {\n        guard value >= 0 && value <= 100 else {\n            return nil\n        }\n        self.value = value\n    }\n}\nif let accepted = Percentage(0) {\n    print(accepted.value)\n}\nprint(Percentage(-1) == nil)",
+    "outcome": "success",
+    "expectedStdout": "0\ntrue",
+    "checks": []
+  },
+  {
+    "lessonId": "swift-40",
+    "id": "swift-40-worked",
+    "paragraph": 2,
+    "code": "struct Duration {\n    var seconds: Double\n    var minutes: Double {\n        get { return seconds / 60 }\n        set { seconds = newValue * 60 }\n    }\n}\nvar duration = Duration(seconds: 90)\nprint(duration.minutes)\nduration.minutes = 2.5\nprint(duration.seconds)",
+    "outcome": "success",
+    "expectedStdout": "1.5\n150.0",
+    "checks": []
+  },
+  {
+    "lessonId": "swift-40",
+    "id": "swift-40-changed",
+    "paragraph": 3,
+    "code": "struct Duration {\n    var seconds: Double\n    var minutes: Double {\n        get { return seconds / 60 }\n        set { seconds = newValue * 60 }\n    }\n}\nvar duration = Duration(seconds: 30)\nprint(duration.minutes)\nduration.minutes = 0.25\nprint(duration.seconds)",
+    "outcome": "success",
+    "expectedStdout": "0.5\n15.0",
+    "checks": []
+  },
+  {
+    "lessonId": "swift-41",
+    "id": "swift-41-worked",
+    "paragraph": 2,
+    "code": "struct Label {\n    static let prefix = \"item:\"\n    var text: String\n    static func decorate(_ text: String) -> String {\n        return prefix + text\n    }\n}\nvar first = Label(text: \"map\")\nlet second = Label(text: \"lamp\")\nfirst.text = \"book\"\nprint(Label.prefix)\nprint(Label.decorate(first.text))\nprint(Label.decorate(second.text))",
+    "outcome": "success",
+    "expectedStdout": "item:\nitem:book\nitem:lamp",
+    "checks": []
+  },
+  {
+    "lessonId": "swift-41",
+    "id": "swift-41-changed",
+    "paragraph": 3,
+    "code": "struct Label {\n    static let prefix = \"item:\"\n    var text: String\n    static func decorate(_ text: String) -> String {\n        return prefix + text\n    }\n}\nvar first = Label(text: \"map\")\nlet second = Label(text: \"key\")\nfirst.text = \"cup\"\nprint(Label.prefix)\nprint(Label.decorate(first.text))\nprint(Label.decorate(second.text))",
+    "outcome": "success",
+    "expectedStdout": "item:\nitem:cup\nitem:key",
+    "checks": []
+  },
+  {
+    "lessonId": "swift-42",
+    "id": "swift-42-worked",
+    "paragraph": 2,
+    "code": "class Notice {\n    func message() -> String {\n        return \"Ready\"\n    }\n}\nclass UrgentNotice: Notice {\n    override func message() -> String {\n        return super.message() + \" now\"\n    }\n}\nlet basic = Notice()\nlet selected: Notice = UrgentNotice()\nprint(basic.message())\nprint(selected.message())",
+    "outcome": "success",
+    "expectedStdout": "Ready\nReady now",
+    "checks": []
+  },
+  {
+    "lessonId": "swift-42",
+    "id": "swift-42-changed",
+    "paragraph": 3,
+    "code": "class Notice {\n    func message() -> String {\n        return \"Ready\"\n    }\n}\nclass UrgentNotice: Notice {\n    override func message() -> String {\n        return super.message() + \" now\"\n    }\n}\nlet basic = Notice()\nlet selected: Notice = Notice()\nprint(basic.message())\nprint(selected.message())",
+    "outcome": "success",
+    "expectedStdout": "Ready\nReady",
+    "checks": []
+  },
+  {
+    "lessonId": "swift-42",
+    "id": "swift-42-rejected",
+    "paragraph": 5,
+    "code": "class Notice {\n    func message() -> String {\n        return \"Ready\"\n    }\n}\nclass UrgentNotice: Notice {\n    func message() -> String {\n        return super.message() + \" now\"\n    }\n}\nlet basic = Notice()\nlet selected: Notice = UrgentNotice()\nprint(basic.message())\nprint(selected.message())",
+    "outcome": "compile-rejection",
+    "diagnosticContains": "overriding declaration requires an",
+    "gradingScope": "Author-validated local compiler rejection, not an extra learner runtime check."
+  },
+  {
+    "lessonId": "swift-43",
+    "id": "swift-43-worked",
+    "paragraph": 2,
+    "code": "class Entry {}\nclass BookEntry: Entry {\n    let pages: Int\n    init(pages: Int) {\n        self.pages = pages\n    }\n}\nfunc describe(_ entry: Entry) -> String {\n    if let book = entry as? BookEntry {\n        return \"pages=\" + String(book.pages)\n    }\n    return \"other\"\n}\nlet entry: Entry = BookEntry(pages: 80)\nprint(entry is BookEntry)\nprint(describe(entry))\nprint(describe(Entry()))",
+    "outcome": "success",
+    "expectedStdout": "true\npages=80\nother",
+    "checks": []
+  },
+  {
+    "lessonId": "swift-43",
+    "id": "swift-43-changed",
+    "paragraph": 3,
+    "code": "class Entry {}\nclass BookEntry: Entry {\n    let pages: Int\n    init(pages: Int) {\n        self.pages = pages\n    }\n}\nfunc describe(_ entry: Entry) -> String {\n    if let book = entry as? BookEntry {\n        return \"pages=\" + String(book.pages)\n    }\n    return \"other\"\n}\nlet entry: Entry = Entry()\nprint(entry is BookEntry)\nprint(describe(entry))\nprint(describe(Entry()))",
+    "outcome": "success",
+    "expectedStdout": "false\nother\nother",
+    "checks": []
+  },
+  {
+    "lessonId": "swift-44",
+    "id": "swift-44-worked",
+    "paragraph": 2,
+    "code": "enum Priority: Int {\n    case low = 1\n    case normal = 4\n    case high = 8\n}\nfunc priorityText(_ raw: Int) -> String {\n    guard let value = Priority(rawValue: raw) else {\n        return \"unknown\"\n    }\n    switch value {\n    case .low: return \"low\"\n    case .normal: return \"normal\"\n    case .high: return \"high\"\n    }\n}\nprint(Priority.high.rawValue)\nprint(priorityText(4))\nprint(priorityText(5))",
+    "outcome": "success",
+    "expectedStdout": "8\nnormal\nunknown",
+    "checks": []
+  },
+  {
+    "lessonId": "swift-44",
+    "id": "swift-44-changed",
+    "paragraph": 3,
+    "code": "enum Priority: Int {\n    case low = 1\n    case normal = 4\n    case high = 8\n}\nfunc priorityText(_ raw: Int) -> String {\n    guard let value = Priority(rawValue: raw) else {\n        return \"unknown\"\n    }\n    switch value {\n    case .low: return \"low\"\n    case .normal: return \"normal\"\n    case .high: return \"high\"\n    }\n}\nprint(Priority.high.rawValue)\nprint(priorityText(8))\nprint(priorityText(0))",
+    "outcome": "success",
+    "expectedStdout": "8\nhigh\nunknown",
+    "checks": []
+  },
+  {
+    "lessonId": "swift-45",
+    "id": "swift-45-worked",
+    "paragraph": 2,
+    "code": "struct ShelfKey: Hashable {\n    let room: String\n    let shelf: Int\n}\nlet a = ShelfKey(room: \"east\", shelf: 2)\nlet same = ShelfKey(room: \"east\", shelf: 2)\nlet different = ShelfKey(room: \"east\", shelf: 3)\nlet keys: Set<ShelfKey> = [a, same, different]\nprint(a == same)\nprint(a == different)\nprint(keys.count)\nprint(keys.contains(same))",
+    "outcome": "success",
+    "expectedStdout": "true\nfalse\n2\ntrue",
+    "checks": []
+  },
+  {
+    "lessonId": "swift-45",
+    "id": "swift-45-changed",
+    "paragraph": 3,
+    "code": "struct ShelfKey: Hashable {\n    let room: String\n    let shelf: Int\n}\nlet a = ShelfKey(room: \"east\", shelf: 2)\nlet same = ShelfKey(room: \"east\", shelf: 2)\nlet different = ShelfKey(room: \"west\", shelf: 2)\nlet keys: Set<ShelfKey> = [a, same, different]\nprint(a == same)\nprint(a == different)\nprint(keys.count)\nprint(keys.contains(same))",
+    "outcome": "success",
+    "expectedStdout": "true\nfalse\n2\ntrue",
+    "checks": []
+  },
+  {
+    "id": "swift-45-application",
+    "paragraph": 4,
+    "code": "struct ShelfKey: Hashable {\n    let room: String\n    let shelf: Int\n}\nfunc uniqueShelfCount(_ keys: [ShelfKey]) -> Int {\n    return Set(keys).count\n}\nlet key = ShelfKey(room: \"west\", shelf: 7)\nprint(uniqueShelfCount([key, key]))",
+    "outcome": "success",
+    "expectedStdout": "1",
+    "checks": [],
+    "lessonId": "swift-45"
+  },
+  {
+    "lessonId": "swift-46",
+    "id": "swift-46-worked",
+    "paragraph": 2,
+    "code": "protocol NamedCard {\n    var name: String { get }\n    func caption() -> String\n}\nextension NamedCard {\n    func caption() -> String {\n        return \"Card: \" + name\n    }\n}\nstruct PlainCard: NamedCard {\n    let name: String\n}\nstruct SpecialCard: NamedCard {\n    let name: String\n    func caption() -> String {\n        return \"Special: \" + name\n    }\n}\nfunc show(_ card: any NamedCard) -> String {\n    return card.caption()\n}\nprint(show(PlainCard(name: \"oak\")))\nprint(show(SpecialCard(name: \"ash\")))",
+    "outcome": "success",
+    "expectedStdout": "Card: oak\nSpecial: ash",
+    "checks": []
+  },
+  {
+    "lessonId": "swift-46",
+    "id": "swift-46-changed",
+    "paragraph": 3,
+    "code": "protocol NamedCard {\n    var name: String { get }\n    func caption() -> String\n}\nextension NamedCard {\n    func caption() -> String {\n        return \"Card: \" + name\n    }\n}\nstruct PlainCard: NamedCard {\n    let name: String\n}\nstruct SpecialCard: NamedCard {\n    let name: String\n    func caption() -> String {\n        return \"Featured: \" + name\n    }\n}\nfunc show(_ card: any NamedCard) -> String {\n    return card.caption()\n}\nprint(show(PlainCard(name: \"oak\")))\nprint(show(SpecialCard(name: \"elm\")))",
+    "outcome": "success",
+    "expectedStdout": "Card: oak\nFeatured: elm",
+    "checks": []
+  },
+  {
+    "lessonId": "swift-35",
+    "id": "swift-35-separate-access",
+    "paragraph": 6,
+    "code": "func moveOne(_ source: inout Int, to destination: inout Int) {\n    source -= 1\n    destination += 1\n}\nfunc demonstrateSeparateValues() {\n    var source = 5\n    var destination = 1\n    moveOne(&source, to: &destination)\n    print(source)\n    print(destination)\n}\ndemonstrateSeparateValues()",
+    "outcome": "success",
+    "expectedStdout": "4\n2",
+    "checks": []
+  }
+]

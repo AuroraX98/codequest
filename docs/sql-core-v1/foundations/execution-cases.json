@@ -1,0 +1,598 @@
+[
+  {
+    "lessonId": "sql-25",
+    "id": "sql-25-worked",
+    "paragraph": 2,
+    "code": "CREATE TEMP VIEW shown AS\nSELECT 'Lena''s notes' AS title, 3 + 2 AS copies;\nSELECT title,copies\nFROM shown;",
+    "checks": [
+      {
+        "label": "Worked result",
+        "expression": "SELECT title='Lena''s notes' AND copies=5 FROM shown"
+      }
+    ],
+    "expectedResults": [
+      {
+        "columns": [
+          "title",
+          "copies"
+        ],
+        "values": [
+          [
+            "Lena's notes",
+            5
+          ]
+        ]
+      }
+    ],
+    "outcome": "success"
+  },
+  {
+    "lessonId": "sql-25",
+    "id": "sql-25-changed",
+    "paragraph": 3,
+    "code": "CREATE TEMP VIEW shown AS\nSELECT 'Milo''s map' AS title, 4 + 2 AS copies;\nSELECT title,copies\nFROM shown;",
+    "checks": [
+      {
+        "label": "Changed result",
+        "expression": "SELECT title='Milo''s map' AND copies=6 FROM shown"
+      }
+    ],
+    "expectedResults": [
+      {
+        "columns": [
+          "title",
+          "copies"
+        ],
+        "values": [
+          [
+            "Milo's map",
+            6
+          ]
+        ]
+      }
+    ],
+    "outcome": "success"
+  },
+  {
+    "lessonId": "sql-26",
+    "id": "sql-26-worked",
+    "paragraph": 2,
+    "code": "CREATE TEMP VIEW shown AS\nSELECT NULL = 3 AS comparison,NULL IS NULL AS missing,1 OR NULL AS either,0 AND NULL AS both;\nSELECT *\nFROM shown;",
+    "checks": [
+      {
+        "label": "Worked result",
+        "expression": "SELECT comparison IS NULL AND missing=1 AND either=1 AND both=0 FROM shown"
+      }
+    ],
+    "expectedResults": [
+      {
+        "columns": [
+          "comparison",
+          "missing",
+          "either",
+          "both"
+        ],
+        "values": [
+          [
+            null,
+            1,
+            1,
+            0
+          ]
+        ]
+      }
+    ],
+    "outcome": "success"
+  },
+  {
+    "lessonId": "sql-26",
+    "id": "sql-26-changed",
+    "paragraph": 3,
+    "code": "CREATE TEMP VIEW shown AS\nSELECT NOT NULL AS negated,0 OR NULL AS either,1 AND NULL AS both;\nSELECT *\nFROM shown;",
+    "checks": [
+      {
+        "label": "Changed result",
+        "expression": "SELECT negated IS NULL AND either IS NULL AND both IS NULL FROM shown"
+      }
+    ],
+    "expectedResults": [
+      {
+        "columns": [
+          "negated",
+          "either",
+          "both"
+        ],
+        "values": [
+          [
+            null,
+            null,
+            null
+          ]
+        ]
+      }
+    ],
+    "outcome": "success"
+  },
+  {
+    "lessonId": "sql-27",
+    "id": "sql-27-worked",
+    "paragraph": 2,
+    "code": "CREATE TABLE visits(minutes INTEGER);\nINSERT INTO visits VALUES(4),(5),(9),(10);\nCREATE TEMP VIEW shown AS\nSELECT minutes\nFROM visits\nWHERE minutes BETWEEN 5 AND 9;\nSELECT *\nFROM shown\nORDER BY minutes;",
+    "checks": [
+      {
+        "label": "Worked result",
+        "expression": "SELECT count(*)=2 AND sum(minutes)=14 FROM shown"
+      }
+    ],
+    "expectedResults": [
+      {
+        "columns": [
+          "minutes"
+        ],
+        "values": [
+          [
+            5
+          ],
+          [
+            9
+          ]
+        ]
+      }
+    ],
+    "outcome": "success"
+  },
+  {
+    "lessonId": "sql-27",
+    "id": "sql-27-changed",
+    "paragraph": 3,
+    "code": "CREATE TABLE visits(minutes INTEGER);\nINSERT INTO visits VALUES(4),(5),(9),(10);\nCREATE TEMP VIEW shown AS\nSELECT minutes\nFROM visits\nWHERE minutes NOT BETWEEN 5 AND 9;\nSELECT *\nFROM shown\nORDER BY minutes;",
+    "checks": [
+      {
+        "label": "Changed result",
+        "expression": "SELECT count(*)=2 AND sum(minutes)=14 AND min(minutes)=4 FROM shown"
+      }
+    ],
+    "expectedResults": [
+      {
+        "columns": [
+          "minutes"
+        ],
+        "values": [
+          [
+            4
+          ],
+          [
+            10
+          ]
+        ]
+      }
+    ],
+    "outcome": "success"
+  },
+  {
+    "lessonId": "sql-28",
+    "id": "sql-28-worked",
+    "paragraph": 2,
+    "code": "CREATE TABLE tiles(colour TEXT);\nINSERT INTO tiles VALUES('blue'),('red'),('gold');\nCREATE TEMP VIEW shown AS\nSELECT colour\nFROM tiles\nWHERE colour IN('blue','gold');\nSELECT *\nFROM shown\nORDER BY colour;",
+    "checks": [
+      {
+        "label": "Worked result",
+        "expression": "SELECT count(*)=2 AND sum(colour IN('blue','gold'))=2 FROM shown"
+      }
+    ],
+    "expectedResults": [
+      {
+        "columns": [
+          "colour"
+        ],
+        "values": [
+          [
+            "blue"
+          ],
+          [
+            "gold"
+          ]
+        ]
+      }
+    ],
+    "outcome": "success"
+  },
+  {
+    "lessonId": "sql-28",
+    "id": "sql-28-changed",
+    "paragraph": 3,
+    "code": "CREATE TABLE tiles(colour TEXT);\nINSERT INTO tiles VALUES('blue'),('red'),('gold');\nCREATE TEMP VIEW shown AS\nSELECT colour\nFROM tiles\nWHERE colour IN('blue','blue');\nSELECT *\nFROM shown;",
+    "checks": [
+      {
+        "label": "Changed result",
+        "expression": "SELECT count(*)=1 AND min(colour)='blue' FROM shown"
+      }
+    ],
+    "expectedResults": [
+      {
+        "columns": [
+          "colour"
+        ],
+        "values": [
+          [
+            "blue"
+          ]
+        ]
+      }
+    ],
+    "outcome": "success"
+  },
+  {
+    "lessonId": "sql-29",
+    "id": "sql-29-worked",
+    "paragraph": 2,
+    "code": "CREATE TEMP VIEW shown AS\nSELECT 'box_a' LIKE 'box!_%' ESCAPE '!' AS literal_match,'boxXa' LIKE 'box!_%' ESCAPE '!' AS not_literal;\nSELECT *\nFROM shown;",
+    "checks": [
+      {
+        "label": "Worked result",
+        "expression": "SELECT literal_match=1 AND not_literal=0 FROM shown"
+      }
+    ],
+    "expectedResults": [
+      {
+        "columns": [
+          "literal_match",
+          "not_literal"
+        ],
+        "values": [
+          [
+            1,
+            0
+          ]
+        ]
+      }
+    ],
+    "outcome": "success"
+  },
+  {
+    "lessonId": "sql-29",
+    "id": "sql-29-changed",
+    "paragraph": 3,
+    "code": "CREATE TEMP VIEW shown AS\nSELECT 'box_' LIKE 'box!_%' ESCAPE '!' AS empty_tail,'a' LIKE 'A' AS ascii_fold,'æ' LIKE 'Æ' AS unicode_fold;\nSELECT *\nFROM shown;",
+    "checks": [
+      {
+        "label": "Changed result",
+        "expression": "SELECT empty_tail=1 AND ascii_fold=1 AND unicode_fold=0 FROM shown"
+      }
+    ],
+    "expectedResults": [
+      {
+        "columns": [
+          "empty_tail",
+          "ascii_fold",
+          "unicode_fold"
+        ],
+        "values": [
+          [
+            1,
+            1,
+            0
+          ]
+        ]
+      }
+    ],
+    "outcome": "success"
+  },
+  {
+    "lessonId": "sql-30",
+    "id": "sql-30-worked",
+    "paragraph": 2,
+    "code": "CREATE TABLE scores(score INTEGER);\nINSERT INTO scores VALUES(22),(12),(4),(NULL);\nCREATE TEMP VIEW shown AS\nSELECT score,CASE WHEN score IS NULL THEN 'unknown' WHEN score>=20 THEN 'high' WHEN score>=10 THEN 'middle' ELSE 'low' END AS band\nFROM scores;\nSELECT *\nFROM shown\nORDER BY score;",
+    "checks": [
+      {
+        "label": "Worked result",
+        "expression": "SELECT count(*)=4 AND sum(band IN('unknown','high','middle','low'))=4 FROM shown"
+      }
+    ],
+    "expectedResults": [
+      {
+        "columns": [
+          "score",
+          "band"
+        ],
+        "values": [
+          [
+            null,
+            "unknown"
+          ],
+          [
+            4,
+            "low"
+          ],
+          [
+            12,
+            "middle"
+          ],
+          [
+            22,
+            "high"
+          ]
+        ]
+      }
+    ],
+    "outcome": "success"
+  },
+  {
+    "lessonId": "sql-30",
+    "id": "sql-30-changed",
+    "paragraph": 3,
+    "code": "CREATE TEMP VIEW shown AS\nSELECT CASE WHEN 22>=10 THEN 'middle' WHEN 22>=20 THEN 'high' ELSE 'low' END AS band;\nSELECT *\nFROM shown;",
+    "checks": [
+      {
+        "label": "Changed result",
+        "expression": "SELECT band='middle' FROM shown"
+      }
+    ],
+    "expectedResults": [
+      {
+        "columns": [
+          "band"
+        ],
+        "values": [
+          [
+            "middle"
+          ]
+        ]
+      }
+    ],
+    "outcome": "success"
+  },
+  {
+    "lessonId": "sql-31",
+    "id": "sql-31-worked",
+    "paragraph": 2,
+    "code": "CREATE TEMP VIEW shown AS\nSELECT length('Lantern') AS size,substr('Lantern',2,3) AS piece;\nSELECT *\nFROM shown;",
+    "checks": [
+      {
+        "label": "Worked result",
+        "expression": "SELECT size=7 AND piece='ant' FROM shown"
+      }
+    ],
+    "expectedResults": [
+      {
+        "columns": [
+          "size",
+          "piece"
+        ],
+        "values": [
+          [
+            7,
+            "ant"
+          ]
+        ]
+      }
+    ],
+    "outcome": "success"
+  },
+  {
+    "lessonId": "sql-31",
+    "id": "sql-31-changed",
+    "paragraph": 3,
+    "code": "CREATE TEMP VIEW shown AS\nSELECT length('') AS empty_size,substr('Map',5,2) AS beyond,substr(NULL,1,2) AS missing;\nSELECT *\nFROM shown;",
+    "checks": [
+      {
+        "label": "Changed result",
+        "expression": "SELECT empty_size=0 AND beyond='' AND missing IS NULL FROM shown"
+      }
+    ],
+    "expectedResults": [
+      {
+        "columns": [
+          "empty_size",
+          "beyond",
+          "missing"
+        ],
+        "values": [
+          [
+            0,
+            "",
+            null
+          ]
+        ]
+      }
+    ],
+    "outcome": "success"
+  },
+  {
+    "lessonId": "sql-32",
+    "id": "sql-32-worked",
+    "paragraph": 2,
+    "code": "CREATE TEMP VIEW shown AS\nSELECT 7/2 AS whole,CAST(7 AS REAL)/2 AS fraction,-7/2 AS negative;\nSELECT *\nFROM shown;",
+    "checks": [
+      {
+        "label": "Worked result",
+        "expression": "SELECT whole=3 AND fraction=3.5 AND negative=-3 FROM shown"
+      }
+    ],
+    "expectedResults": [
+      {
+        "columns": [
+          "whole",
+          "fraction",
+          "negative"
+        ],
+        "values": [
+          [
+            3,
+            3.5,
+            -3
+          ]
+        ]
+      }
+    ],
+    "outcome": "success"
+  },
+  {
+    "lessonId": "sql-32",
+    "id": "sql-32-changed",
+    "paragraph": 3,
+    "code": "CREATE TEMP VIEW shown AS\nSELECT 5/2 AS whole,5/2.0 AS fraction,5/0 AS missing;\nSELECT *\nFROM shown;",
+    "checks": [
+      {
+        "label": "Changed result",
+        "expression": "SELECT whole=2 AND fraction=2.5 AND missing IS NULL FROM shown"
+      }
+    ],
+    "expectedResults": [
+      {
+        "columns": [
+          "whole",
+          "fraction",
+          "missing"
+        ],
+        "values": [
+          [
+            2,
+            2.5,
+            null
+          ]
+        ]
+      }
+    ],
+    "outcome": "success"
+  },
+  {
+    "lessonId": "sql-33",
+    "id": "sql-33-worked",
+    "paragraph": 2,
+    "code": "CREATE TABLE readings(id INTEGER PRIMARY KEY,value INTEGER);\nINSERT INTO readings VALUES(1,'12'),(2,'twelve');\nCREATE TEMP VIEW shown AS\nSELECT id,value,typeof(value) AS kind\nFROM readings;\nSELECT *\nFROM shown\nORDER BY id;",
+    "checks": [
+      {
+        "label": "Worked result",
+        "expression": "SELECT count(*)=2 AND sum((id=1 AND kind='integer' AND value=12)OR(id=2 AND kind='text' AND value='twelve'))=2 FROM shown"
+      }
+    ],
+    "expectedResults": [
+      {
+        "columns": [
+          "id",
+          "value",
+          "kind"
+        ],
+        "values": [
+          [
+            1,
+            12,
+            "integer"
+          ],
+          [
+            2,
+            "twelve",
+            "text"
+          ]
+        ]
+      }
+    ],
+    "outcome": "success"
+  },
+  {
+    "lessonId": "sql-33",
+    "id": "sql-33-changed",
+    "paragraph": 3,
+    "code": "CREATE TABLE readings(id INTEGER PRIMARY KEY,value TEXT);\nINSERT INTO readings VALUES(1,12),(2,NULL);\nCREATE TEMP VIEW shown AS\nSELECT id,value,typeof(value) AS kind\nFROM readings;\nSELECT *\nFROM shown\nORDER BY id;",
+    "checks": [
+      {
+        "label": "Changed result",
+        "expression": "SELECT count(*)=2 AND sum((id=1 AND kind='text' AND value='12')OR(id=2 AND kind='null' AND value IS NULL))=2 FROM shown"
+      }
+    ],
+    "expectedResults": [
+      {
+        "columns": [
+          "id",
+          "value",
+          "kind"
+        ],
+        "values": [
+          [
+            1,
+            "12",
+            "text"
+          ],
+          [
+            2,
+            null,
+            "null"
+          ]
+        ]
+      }
+    ],
+    "outcome": "success"
+  },
+  {
+    "lessonId": "sql-34",
+    "id": "sql-34-worked",
+    "paragraph": 2,
+    "code": "CREATE TABLE readings(id INTEGER PRIMARY KEY,value INTEGER) STRICT;\nINSERT INTO readings VALUES(1,'12');\nCREATE TEMP VIEW shown AS\nSELECT value,typeof(value) AS kind\nFROM readings;\nSELECT *\nFROM shown;",
+    "checks": [
+      {
+        "label": "Worked result",
+        "expression": "SELECT value=12 AND kind='integer' FROM shown"
+      }
+    ],
+    "expectedResults": [
+      {
+        "columns": [
+          "value",
+          "kind"
+        ],
+        "values": [
+          [
+            12,
+            "integer"
+          ]
+        ]
+      }
+    ],
+    "outcome": "success"
+  },
+  {
+    "lessonId": "sql-34",
+    "id": "sql-34-changed",
+    "paragraph": 3,
+    "code": "CREATE TABLE readings(id INTEGER PRIMARY KEY,value INTEGER) STRICT;\nINSERT INTO readings VALUES(1,'06');\nCREATE TEMP VIEW shown AS\nSELECT value,typeof(value) AS kind\nFROM readings;\nSELECT *\nFROM shown;",
+    "checks": [
+      {
+        "label": "Changed result",
+        "expression": "SELECT value=6 AND kind='integer' FROM shown"
+      }
+    ],
+    "expectedResults": [
+      {
+        "columns": [
+          "value",
+          "kind"
+        ],
+        "values": [
+          [
+            6,
+            "integer"
+          ]
+        ]
+      }
+    ],
+    "outcome": "success"
+  },
+  {
+    "id": "sql-34-incompatible-text",
+    "paragraph": 5,
+    "setup": "CREATE TABLE sample(value INTEGER) STRICT;\nINSERT INTO sample VALUES(4);",
+    "code": "INSERT INTO sample VALUES('cloudy');",
+    "outcome": "expected-error",
+    "errorContains": "cannot store TEXT value in INTEGER column sample.value",
+    "postChecks": [
+      {
+        "label": "Earlier row remains",
+        "expression": "SELECT count(*)=1 AND min(value)=4 FROM sample"
+      }
+    ],
+    "supplemental": true,
+    "gradingScope": "Author-validated rejection fixture; not current learner SELECT-check capability.",
+    "lessonId": "sql-34"
+  }
+]

@@ -1,0 +1,420 @@
+[
+  {
+    "id": "swift-22",
+    "quizTarget": "What are 14 / 4 and 14 % 4 when both operands are Int?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "For Int values, / produces a whole-number quotient, truncating toward zero. % produces the remainder; it keeps the dividend’s sign when nonzero. Thus -17 / 5 is -3 and -17 % 5 is -2. This differs from rounding down. Convert both operands to Double when a fractional division result is wanted."
+      },
+      {
+        "paragraph": 1,
+        "fact": "Int.min is the smallest representable Int. Dividing or taking the remainder of Int.min by -1 would overflow; dividing by zero is also invalid. The supplied guard returns invalid before either operation. || means either condition; && requires both. divisionLabel receives the value and labeled divisor and returns a String containing quotient and remainder separated by a colon. Double(17) converts the integer to a floating-point value, without changing 17 itself."
+      },
+      {
+        "paragraph": 2,
+        "fact": "\n```swift\nfunc divisionLabel(_ value: Int, by divisor: Int) -> String {\n    if divisor == 0 || (value == Int.min && divisor == -1) {\n        return \"invalid\"\n    }\n    return \"\\(value / divisor):\\(value % divisor)\"\n}\nprint(divisionLabel(17, by: 5))\nprint(divisionLabel(-17, by: 5))\nprint(Double(17) / Double(5))\n```\nOutput:\n```text\n3:2\n-3:-2\n3.4\n```"
+      },
+      {
+        "paragraph": 3,
+        "fact": "\n```swift\nfunc divisionLabel(_ value: Int, by divisor: Int) -> String {\n    if divisor == 0 || (value == Int.min && divisor == -1) {\n        return \"invalid\"\n    }\n    return \"\\(value / divisor):\\(value % divisor)\"\n}\nprint(divisionLabel(12, by: 4))\nprint(divisionLabel(12, by: 0))\nprint(Double(12) / Double(4))\n```\nOutput:\n```text\n3:0\ninvalid\n3.0\n```"
+      },
+      {
+        "paragraph": 4,
+        "fact": "Packing full groups uses a quotient; the remainder counts what did not fit. The negative case here teaches the language rule, not a negative physical package count. Do not run an overflowing expression as an experiment."
+      }
+    ],
+    "reasoning": "Three whole groups use 12; two remain. Integer division does not produce 3.5.",
+    "source": "https://docs.swift.org/swift-book/documentation/the-swift-programming-language/basicoperators/",
+    "prerequisites": [
+      "swift-01",
+      "swift-02",
+      "swift-06"
+    ]
+  },
+  {
+    "id": "swift-23",
+    "quizTarget": "A function returns (width: 3, height: 8). After let (a, b) = result, what is b?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "A tuple groups a fixed number of values into one result. (boxes: Int, items: Int) names two positions and states their types. This is not an array that grows. The box counts and products in this exercise are small enough to fit in Int. The labels let the caller read shipment.items without remembering which position it occupies."
+      },
+      {
+        "paragraph": 1,
+        "fact": "let (boxCount, itemCount) = shipment gives each position its own local name in order. Reading .0 or .1 is also possible, but a meaningful field name is clearer here. packed receives box and per-box counts and returns both the original box count and their product. It does not modify an outside shipment."
+      },
+      {
+        "paragraph": 2,
+        "fact": "\n```swift\nfunc packed(_ boxes: Int, each: Int) -> (boxes: Int, items: Int) {\n    return (boxes: boxes, items: boxes * each)\n}\nlet shipment = packed(3, each: 4)\nlet (boxCount, itemCount) = shipment\nprint(shipment.items)\nprint(boxCount)\nprint(itemCount)\n```\nOutput:\n```text\n12\n3\n12\n```"
+      },
+      {
+        "paragraph": 3,
+        "fact": "\n```swift\nfunc packed(_ boxes: Int, each: Int) -> (boxes: Int, items: Int) {\n    return (boxes: boxes, items: boxes * each)\n}\nlet shipment = packed(2, each: 7)\nlet (boxCount, itemCount) = shipment\nprint(shipment.items)\nprint(boxCount)\nprint(itemCount)\n```\nOutput:\n```text\n14\n2\n14\n```"
+      },
+      {
+        "paragraph": 4,
+        "fact": "A small report can return several related results together. Keep the order of destructured names aligned with the declared positions; changing the local names does not rearrange the values."
+      }
+    ],
+    "reasoning": "Destructuring follows positions. The second stored value is 8.",
+    "source": "https://docs.swift.org/swift-book/documentation/the-swift-programming-language/thebasics/",
+    "prerequisites": [
+      "swift-06"
+    ]
+  },
+  {
+    "id": "swift-24",
+    "quizTarget": "With an initially false condition, how many body visits do while and repeat-while make?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "while checks its Bool condition before each iteration. If it starts false, the body runs zero times. A loop must change relevant state or otherwise reach an exit; merely repeating the same true test would not finish. before += 1 adds one and stores it back."
+      },
+      {
+        "paragraph": 1,
+        "fact": "repeat runs its body before testing the condition. Therefore it makes at least one visit, even when limit is 0. The visits function returns a named tuple comparing the two loop counts for small nonnegative limits. The trailing while belongs to repeat, not a second independent loop."
+      },
+      {
+        "paragraph": 2,
+        "fact": "\n```swift\nfunc visits(_ limit: Int) -> (before: Int, after: Int) {\n    var before = 0\n    while before < limit {\n        before += 1\n    }\n    var after = 0\n    repeat {\n        after += 1\n    } while after < limit\n    return (before, after)\n}\nlet result = visits(3)\nprint(result.before)\nprint(result.after)\n```\nOutput:\n```text\n3\n3\n```"
+      },
+      {
+        "paragraph": 3,
+        "fact": "\n```swift\nfunc visits(_ limit: Int) -> (before: Int, after: Int) {\n    var before = 0\n    while before < limit {\n        before += 1\n    }\n    var after = 0\n    repeat {\n        after += 1\n    } while after < limit\n    return (before, after)\n}\nlet result = visits(0)\nprint(result.before)\nprint(result.after)\n```\nOutput:\n```text\n0\n1\n```"
+      },
+      {
+        "paragraph": 4,
+        "fact": "A retry or input loop must deliberately choose whether an initial attempt is required. Use these tiny finite counters to trace the distinction, not to implement a busy wait."
+      }
+    ],
+    "reasoning": "while tests first; repeat executes once before its first test.",
+    "source": "https://docs.swift.org/swift-book/documentation/the-swift-programming-language/controlflow/",
+    "prerequisites": [
+      "swift-02",
+      "swift-04",
+      "swift-23"
+    ]
+  },
+  {
+    "id": "swift-25",
+    "quizTarget": "For [3, -1, 0, 8], what remains under this policy?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "continue skips the remaining statements of the current loop iteration. It does not remove a value from the original array. In this example a negative input never reaches append, but later inputs can still be accepted."
+      },
+      {
+        "paragraph": 1,
+        "fact": "break ends the nearest enclosing loop. Here zero is a stop marker, so even positive entries after it are not visited. accepted receives an ordered Int array and returns a new array of positive entries before the first zero. The original input is only read."
+      },
+      {
+        "paragraph": 2,
+        "fact": "\n```swift\nfunc accepted(_ values: [Int]) -> [Int] {\n    var result: [Int] = []\n    for value in values {\n        if value == 0 {\n            break\n        }\n        if value < 0 {\n            continue\n        }\n        result.append(value)\n    }\n    return result\n}\nprint(accepted([4, -2, 7, 0, 9]))\n```\nOutput:\n```text\n[4, 7]\n```"
+      },
+      {
+        "paragraph": 3,
+        "fact": "\n```swift\nfunc accepted(_ values: [Int]) -> [Int] {\n    var result: [Int] = []\n    for value in values {\n        if value == 0 {\n            break\n        }\n        if value < 0 {\n            continue\n        }\n        result.append(value)\n    }\n    return result\n}\nprint(accepted([-3, 8, 6]))\n```\nOutput:\n```text\n[8, 6]\n```"
+      },
+      {
+        "paragraph": 4,
+        "fact": "A sequence may contain both entries to ignore and a marker that ends processing. Those are different policies. The worked function tests the stop marker before the skip rule so their purposes remain visible."
+      }
+    ],
+    "reasoning": "The negative entry is skipped; zero stops the loop before 8.",
+    "source": "https://docs.swift.org/swift-book/documentation/the-swift-programming-language/controlflow/",
+    "prerequisites": [
+      "swift-04",
+      "swift-24"
+    ]
+  },
+  {
+    "id": "swift-26",
+    "quizTarget": "What branch does if let choose for an optional containing \"\"?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "String? can hold a String or nil. if let present = name enters its block only when name contains a value. Inside, present has type String, not String?, so interpolation uses the unwrapped text. Outside the block, that local binding is unavailable."
+      },
+      {
+        "paragraph": 1,
+        "fact": "An empty String is a real value. Optional binding succeeds for it; it is not the nil branch. greeting takes optional text and returns either a personalized String or Guest. Unlike ??, the binding block can perform several operations using the present value."
+      },
+      {
+        "paragraph": 2,
+        "fact": "\n```swift\nfunc greeting(_ name: String?) -> String {\n    if let present = name {\n        return \"Hello, \\(present)\"\n    }\n    return \"Guest\"\n}\nprint(greeting(\"Mira\"))\nprint(greeting(nil))\n```\nOutput:\n```text\nHello, Mira\nGuest\n```"
+      },
+      {
+        "paragraph": 3,
+        "fact": "\n```swift\nfunc greeting(_ name: String?) -> String {\n    if let present = name {\n        return \"Hello, \\(present)\"\n    }\n    return \"Guest\"\n}\nprint(greeting(\"\"))\nprint(greeting(\"Oren\"))\n```\nOutput:\n```text\nHello, \nHello, Oren\n```"
+      },
+      {
+        "paragraph": 4,
+        "fact": "Use optional binding when a missing field changes which work should happen. Do not force unwrap a value that your data allows to be missing."
+      }
+    ],
+    "reasoning": "An empty String still exists, so binding succeeds.",
+    "source": "https://docs.swift.org/swift-book/documentation/the-swift-programming-language/thebasics/",
+    "prerequisites": [
+      "swift-02",
+      "swift-06"
+    ]
+  },
+  {
+    "id": "swift-27",
+    "quizTarget": "Int(\"12\") succeeds, but the allowed range is1 through8. Which step rejects it?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "Int(text) attempts to construct an integer from text and returns Int?. It returns nil for text that cannot represent an Int, including an out-of-range integer string. It does not return zero as a general parse-failure signal. Our function deliberately chooses 0 as its own rejected-input result."
+      },
+      {
+        "paragraph": 1,
+        "fact": "guard let number = Int(text) else requires the failure branch to exit this function. After the guard succeeds, number stays available in the remaining function body. The next guard checks the separate application range 1 through 8. Parsing and range validation answer different questions."
+      },
+      {
+        "paragraph": 2,
+        "fact": "\n```swift\nfunc seats(_ text: String) -> Int {\n    guard let number = Int(text) else {\n        return 0\n    }\n    guard number >= 1 && number <= 8 else {\n        return 0\n    }\n    return number\n}\nprint(seats(\"4\"))\nprint(seats(\"many\"))\n```\nOutput:\n```text\n4\n0\n```"
+      },
+      {
+        "paragraph": 3,
+        "fact": "\n```swift\nfunc seats(_ text: String) -> Int {\n    guard let number = Int(text) else {\n        return 0\n    }\n    guard number >= 1 && number <= 8 else {\n        return 0\n    }\n    return number\n}\nprint(seats(\"9\"))\nprint(seats(\"8\"))\n```\nOutput:\n```text\n0\n8\n```"
+      },
+      {
+        "paragraph": 4,
+        "fact": "A booking form can reject malformed text before checking its policy. Explain which step rejects \"many\" and which rejects \"9\"; do not describe every rejected input as a parsing error."
+      }
+    ],
+    "reasoning": "12 is a valid integer, but it is outside this application’s accepted range.",
+    "source": "https://docs.swift.org/swift-book/documentation/the-swift-programming-language/controlflow/",
+    "prerequisites": [
+      "swift-26",
+      "swift-06"
+    ]
+  },
+  {
+    "id": "swift-28",
+    "quizTarget": "A method returns Int, but you call it through a possibly nil object using ?. What can the entire call return?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "The ? in holder.ticket?.message() checks the optional ticket before calling its method. If ticket is nil, message is not called and the chain produces nil. If it is present, the method runs. This is different from !, which would demand a value and could fail."
+      },
+      {
+        "paragraph": 1,
+        "fact": "Ticket.message takes no explicit argument and returns a String. Calling it through optional chaining produces String?, because the whole call might be skipped. ?? then supplies the nonoptional fallback. The structs store a ticket value and its holder; constructing a Holder with nil is valid."
+      },
+      {
+        "paragraph": 2,
+        "fact": "\n```swift\nstruct Ticket {\n    let label: String\n    func message() -> String {\n        \"Ticket: \\(label)\"\n    }\n}\nstruct Holder {\n    let ticket: Ticket?\n}\nlet holder = Holder(ticket: Ticket(label: \"Balcony\"))\nlet text = holder.ticket?.message() ?? \"No ticket\"\nprint(text)\n```\nOutput:\n```text\nTicket: Balcony\n```"
+      },
+      {
+        "paragraph": 3,
+        "fact": "\n```swift\nstruct Ticket {\n    let label: String\n    func message() -> String {\n        \"Ticket: \\(label)\"\n    }\n}\nstruct Holder {\n    let ticket: Ticket?\n}\nlet holder = Holder(ticket: nil)\nlet text = holder.ticket?.message() ?? \"No ticket\"\nprint(text)\n```\nOutput:\n```text\nNo ticket\n```"
+      },
+      {
+        "paragraph": 4,
+        "fact": "A nested optional field can stop a chain without nested force unwraps. The absence of the ticket is not the same as a present ticket whose label is empty."
+      }
+    ],
+    "reasoning": "The call itself can be skipped, so the chain has an optional result.",
+    "source": "https://docs.swift.org/swift-book/documentation/the-swift-programming-language/optionalchaining/",
+    "prerequisites": [
+      "swift-26",
+      "swift-08"
+    ]
+  },
+  {
+    "id": "swift-29",
+    "quizTarget": "The String \"e\\u{301}\" contains e plus a combining accent. What do these examples establish?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "Iterating a String visits Character values. A visible accented character can consist of multiple Unicode scalars, and UTF-8 encodes text in bytes. Character count and byte count therefore answer different questions. text.count counts Characters; text.utf8.count counts bytes in the UTF-8 view."
+      },
+      {
+        "paragraph": 1,
+        "fact": "The escape \\u{301} represents a combining acute accent. In \"e\\u{301}\", it combines with e into one Character but uses three UTF-8 bytes. The precomposed é is also one Character but uses two bytes. This lesson counts the representations; it does not promise every visual symbol is one Character or one byte. The loop binding character names each visited Character, although only the visit count is needed here."
+      },
+      {
+        "paragraph": 2,
+        "fact": "\n```swift\nfunc textProfile(_ text: String) -> String {\n    var visited = 0\n    for character in text {\n        visited += 1\n    }\n    return \"\\(visited) characters; \\(text.utf8.count) bytes\"\n}\nprint(textProfile(\"Cafe\"))\nprint(textProfile(\"é\"))\n```\nOutput:\n```text\n4 characters; 4 bytes\n1 characters; 2 bytes\n```"
+      },
+      {
+        "paragraph": 3,
+        "fact": "\n```swift\nfunc textProfile(_ text: String) -> String {\n    var visited = 0\n    for character in text {\n        visited += 1\n    }\n    return \"\\(visited) characters; \\(text.utf8.count) bytes\"\n}\nprint(textProfile(\"\"))\nprint(textProfile(\"e\\u{301}\"))\n```\nOutput:\n```text\n0 characters; 0 bytes\n1 characters; 3 bytes\n```"
+      },
+      {
+        "paragraph": 4,
+        "fact": "A character limit for a short label is not the same as a storage-byte limit. Never use a byte count as a String subscript position. textProfile receives text and returns a descriptive String; it does not change the input."
+      }
+    ],
+    "reasoning": "The demonstrated combining sequence is one Character and three UTF-8 bytes.",
+    "source": "https://docs.swift.org/swift-book/documentation/the-swift-programming-language/stringsandcharacters/",
+    "prerequisites": [
+      "swift-01",
+      "swift-05",
+      "swift-04",
+      "swift-06"
+    ]
+  },
+  {
+    "id": "swift-30",
+    "quizTarget": "A String has three Characters. What does limitedBy: endIndex protect in this prefix example?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "A String uses String.Index positions, not arbitrary integer subscripts. startIndex is its beginning; endIndex is the position after its last Character and must not be subscripted as an element. index(_:offsetBy:limitedBy:) moves by Character positions and returns an optional index when constrained by a limit. Here a request beyond the end uses endIndex as the fallback."
+      },
+      {
+        "paragraph": 1,
+        "fact": "text[..<stop] selects a prefix excluding stop. The result is Substring, a view that can share the original text’s storage. String(piece) constructs a String value for independent long-term use. It is an ownership choice, not a promise that every implementation immediately duplicates every byte. A negative requested count returns an empty String before moving an index."
+      },
+      {
+        "paragraph": 2,
+        "fact": "\n```swift\nfunc leadingText(_ text: String, count: Int) -> String {\n    guard count >= 0 else {\n        return \"\"\n    }\n    let stop = text.index(text.startIndex, offsetBy: count, limitedBy: text.endIndex) ?? text.endIndex\n    let piece = text[..<stop]\n    return String(piece)\n}\nprint(leadingText(\"AéZ\", count: 2))\nprint(leadingText(\"Hi\", count: 8))\n```\nOutput:\n```text\nAé\nHi\n```"
+      },
+      {
+        "paragraph": 3,
+        "fact": "\n```swift\nfunc leadingText(_ text: String, count: Int) -> String {\n    guard count >= 0 else {\n        return \"\"\n    }\n    let stop = text.index(text.startIndex, offsetBy: count, limitedBy: text.endIndex) ?? text.endIndex\n    let piece = text[..<stop]\n    return String(piece)\n}\nprint(leadingText(\"AéZ\", count: 0))\nprint(leadingText(\"\", count: 2))\n```\nOutput:\n```text\n\n\n```"
+      },
+      {
+        "paragraph": 4,
+        "fact": "A short preview should stop at a Character boundary rather than split an encoded byte sequence. The function takes text and a requested character count, then returns an owned String prefix; it leaves the source unchanged. The changed program prints two empty lines."
+      }
+    ],
+    "reasoning": "The limit bounds movement. endIndex still denotes the position after the last Character.",
+    "source": "https://docs.swift.org/swift-book/documentation/the-swift-programming-language/stringsandcharacters/",
+    "prerequisites": [
+      "swift-29",
+      "swift-26"
+    ]
+  },
+  {
+    "id": "swift-31",
+    "quizTarget": "An ArraySlice starts at original index3. Which operation gives a new Array starting at index0?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "An Array starts at index 0. Its indices property gives valid element positions; an empty array has none. A subscript with an invalid position fails at runtime, so test membership before reading it. numbers.indices.contains(3) receives an index and returns whether that index is valid; the position 4 is just beyond this array. first instead returns an optional first element, which can be handled without a subscript. The firstNumber helper chooses -1 only as this demonstration’s missing-result marker."
+      },
+      {
+        "paragraph": 1,
+        "fact": "numbers[2...] selects an ArraySlice beginning at original index 2. Its first element is tail[2], not tail[0]. Array(tail) constructs an Array with indices beginning at 0. A slice can share storage and retain the original allocation; construct an Array when keeping only the selected elements for longer. Neither operation changes numbers here."
+      },
+      {
+        "paragraph": 2,
+        "fact": "\n```swift\nlet numbers = [10, 20, 30, 40]\nlet tail = numbers[2...]\nprint(tail.startIndex)\nprint(tail[2])\nlet rebased = Array(tail)\nprint(rebased.startIndex)\nprint(rebased[0])\nfunc firstNumber(_ values: [Int]) -> Int {\n    values.first ?? -1\n}\nprint(firstNumber([]))\nprint(numbers.indices.contains(3))\nprint(numbers.indices.contains(4))\n```\nOutput:\n```text\n2\n30\n0\n30\n-1\ntrue\nfalse\n```"
+      },
+      {
+        "paragraph": 3,
+        "fact": "\n```swift\nlet numbers = [10, 20, 30, 40]\nlet tail = numbers[1...]\nprint(tail.startIndex)\nprint(tail[1])\nlet rebased = Array(tail)\nprint(rebased.startIndex)\nprint(rebased[0])\nfunc firstNumber(_ values: [Int]) -> Int {\n    values.first ?? -1\n}\nprint(firstNumber([7]))\nprint(numbers.indices.contains(3))\nprint(numbers.indices.contains(4))\n```\nOutput:\n```text\n1\n20\n0\n20\n7\ntrue\nfalse\n```"
+      },
+      {
+        "paragraph": 4,
+        "fact": "A safe lookup can return Int? so a real -1 element is not confused with missing data. The exercise uses that optional contract; the earlier firstNumber demonstration intentionally uses a simpler sentinel."
+      }
+    ],
+    "reasoning": "Array initialization creates an Array value with its usual zero-based indices. A slice keeps its original index positions.",
+    "source": "https://developer.apple.com/documentation/swift/arrayslice",
+    "prerequisites": [
+      "swift-05",
+      "swift-26"
+    ]
+  },
+  {
+    "id": "swift-32",
+    "quizTarget": "updateValue(6, forKey: \"new\") is called for an absent key. What does it return?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "A [String: Int] dictionary stores one Int for each distinct String key. Reading seats[\"East\"] returns Int?: nil if that key is absent. A missing key differs from an existing key with value 0. A plain lookup does not insert the missing key. Dictionary iteration order is not an alphabetical display contract."
+      },
+      {
+        "paragraph": 1,
+        "fact": "updateValue(_:forKey:) stores a value and returns the previous value as an optional; nil means no previous entry. removeValue(forKey:) removes the entry and returns its former optional value, or nil when absent. These mutating methods act on the dictionary before the dot. The demonstration fallback -1 is only for printing a missing old value."
+      },
+      {
+        "paragraph": 2,
+        "fact": "\n```swift\nvar seats = [\"North\": 3, \"South\": 5]\nprint(seats[\"East\"] == nil)\nlet earlier = seats.updateValue(7, forKey: \"North\")\nprint(earlier ?? -1)\nlet removed = seats.removeValue(forKey: \"South\")\nprint(removed ?? -1)\nprint(seats[\"North\"] ?? 0)\nprint(seats.count)\n```\nOutput:\n```text\ntrue\n3\n5\n7\n1\n```"
+      },
+      {
+        "paragraph": 3,
+        "fact": "\n```swift\nvar seats = [\"North\": 3, \"South\": 5]\nprint(seats[\"East\"] == nil)\nlet earlier = seats.updateValue(7, forKey: \"East\")\nprint(earlier ?? -1)\nlet removed = seats.removeValue(forKey: \"Missing\")\nprint(removed ?? -1)\nprint(seats[\"North\"] ?? 0)\nprint(seats.count)\n```\nOutput:\n```text\ntrue\n-1\n-1\n3\n3\n```"
+      },
+      {
+        "paragraph": 4,
+        "fact": "To revise a supplied value without changing the original, copy it into a var, change that dictionary, and return the result. In the exercise, update happens before removal; if both keys are equal, the final dictionary has no such entry."
+      }
+    ],
+    "reasoning": "The return value describes the old entry, not the new one. The update still takes effect.",
+    "source": "https://docs.swift.org/swift-book/documentation/the-swift-programming-language/collectiontypes/",
+    "prerequisites": [
+      "swift-26",
+      "swift-05"
+    ]
+  },
+  {
+    "id": "swift-33",
+    "quizTarget": "For A={red, blue} and B={blue, green}, what is A subtracting B?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "union returns values present in either set. intersection returns values present in both. Set(morningItems) constructs a Set from the array and removes repeated equal values. Each result is another Set, so duplicates are not repeated and iteration order is not a display promise. sorted() converts the result into a predictable ordered array for these String examples."
+      },
+      {
+        "paragraph": 1,
+        "fact": "morning.subtracting(evening) returns morning’s values that are absent from evening. Reversing the operands can change the result. These nonmutating operations leave morning and evening unchanged; mutating alternatives have different names and are outside this lesson."
+      },
+      {
+        "paragraph": 2,
+        "fact": "\n```swift\nlet morningItems = [\"draw\", \"walk\", \"draw\"]\nlet morning = Set(morningItems)\nlet evening: Set<String> = [\"walk\", \"read\"]\nprint(morning.union(evening).sorted())\nprint(morning.intersection(evening).sorted())\nprint(morning.subtracting(evening).sorted())\nprint(morning.sorted())\n```\nOutput:\n```text\n[\"draw\", \"read\", \"walk\"]\n[\"walk\"]\n[\"draw\"]\n[\"draw\", \"walk\"]\n```"
+      },
+      {
+        "paragraph": 3,
+        "fact": "\n```swift\nlet morningItems = [\"draw\", \"walk\", \"draw\"]\nlet morning = Set(morningItems)\nlet evening: Set<String> = [\"swim\"]\nprint(morning.union(evening).sorted())\nprint(morning.intersection(evening).sorted())\nprint(morning.subtracting(evening).sorted())\nprint(morning.sorted())\n```\nOutput:\n```text\n[\"draw\", \"swim\", \"walk\"]\n[]\n[\"draw\", \"walk\"]\n[\"draw\", \"walk\"]\n```"
+      },
+      {
+        "paragraph": 4,
+        "fact": "Comparing two lists of chosen activities can reveal shared choices or choices unique to one list. Convert arrays to sets only when repeated occurrences should no longer matter."
+      }
+    ],
+    "reasoning": "Subtraction keeps only members of the first set that are not in the second.",
+    "source": "https://docs.swift.org/swift-book/documentation/the-swift-programming-language/collectiontypes/",
+    "prerequisites": [
+      "swift-14"
+    ]
+  },
+  {
+    "id": "swift-34",
+    "quizTarget": "How does a variadic Int... parameter appear inside its function body?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "Int... declares a variadic parameter: the caller can supply zero or more Int arguments, and the function body receives them as [Int]. The three dots belong to this parameter syntax, not a closed range. totalPoints receives every supplied value, accumulates their sum and returns an Int."
+      },
+      {
+        "paragraph": 1,
+        "fact": "totalPoints(2, 5, 3) supplies three separate arguments. An existing [Int] array cannot simply be passed as one Int argument or spread with another language’s syntax. Write an array-taking function when the caller already owns a collection. A default parameter, as in the inventory lesson, supplies one omitted value instead; it is not variadic."
+      },
+      {
+        "paragraph": 2,
+        "fact": "\n```swift\nfunc totalPoints(_ values: Int...) -> Int {\n    var total = 0\n    for value in values {\n        total += value\n    }\n    return total\n}\nprint(totalPoints())\nprint(totalPoints(2, 5, 3))\n```\nOutput:\n```text\n0\n10\n```"
+      },
+      {
+        "paragraph": 3,
+        "fact": "\n```swift\nfunc totalPoints(_ values: Int...) -> Int {\n    var total = 0\n    for value in values {\n        total += value\n    }\n    return total\n}\nprint(totalPoints(7))\nprint(totalPoints(-2, 5))\n```\nOutput:\n```text\n7\n3\n```"
+      },
+      {
+        "paragraph": 4,
+        "fact": "A small fixed call site can conveniently provide several independent values. The empty call needs a defined result; this summing function starts at 0 so no arguments return 0. These tiny examples avoid integer overflow."
+      }
+    ],
+    "reasoning": "The function receives [Int], including an empty array when no arguments were supplied.",
+    "source": "https://docs.swift.org/swift-book/documentation/the-swift-programming-language/functions/",
+    "prerequisites": [
+      "swift-06",
+      "swift-05"
+    ]
+  }
+]

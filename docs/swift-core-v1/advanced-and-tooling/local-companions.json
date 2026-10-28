@@ -1,0 +1,127 @@
+[
+  {
+    "id": "swift-55-local-worked",
+    "lessonId": "swift-55",
+    "paragraph": 2,
+    "files": {
+      "RouteKit.swift": "public struct RouteLabel {\n    private let prefix: String\n    let internalTag = \"local\"\n    public init(prefix: String) {\n        self.prefix = prefix\n    }\n    public func text(for place: String) -> String {\n        return prefix + \":\" + place\n    }\n}",
+      "main.swift": "import RouteKit\nlet label = RouteLabel(prefix: \"Walk\")\nprint(label.text(for: \"Pond\"))"
+    },
+    "commands": [
+      "swiftc -swift-version 6 -emit-module -emit-object -parse-as-library -module-name RouteKit RouteKit.swift -o RouteKit.o",
+      "swiftc -swift-version 6 -I . main.swift RouteKit.o -o demo",
+      "./demo"
+    ],
+    "expectedBehavior": "The final command prints exactly `Walk:Pond` followed by a newline. Build commands must succeed first.",
+    "outcome": "success"
+  },
+  {
+    "id": "swift-55-local-changed",
+    "lessonId": "swift-55",
+    "paragraph": 3,
+    "files": {
+      "RouteKit.swift": "public struct RouteLabel {\n    private let prefix: String\n    let internalTag = \"local\"\n    public init(prefix: String) {\n        self.prefix = prefix\n    }\n    public func text(for place: String) -> String {\n        return prefix + \":\" + place\n    }\n}",
+      "main.swift": "import RouteKit\nlet label = RouteLabel(prefix: \"Ride\")\nprint(label.text(for: \"Hill\"))"
+    },
+    "commands": [
+      "swiftc -swift-version 6 -emit-module -emit-object -parse-as-library -module-name RouteKit RouteKit.swift -o RouteKit.o",
+      "swiftc -swift-version 6 -I . main.swift RouteKit.o -o demo",
+      "./demo"
+    ],
+    "expectedBehavior": "The final command prints exactly `Ride:Hill` followed by a newline.",
+    "outcome": "success"
+  },
+  {
+    "id": "swift-55-local-rejection",
+    "lessonId": "swift-55",
+    "paragraph": 5,
+    "files": {
+      "RouteKit.swift": "public struct RouteLabel {\n    private let prefix: String\n    let internalTag = \"local\"\n    public init(prefix: String) {\n        self.prefix = prefix\n    }\n    public func text(for place: String) -> String {\n        return prefix + \":\" + place\n    }\n}",
+      "main.swift": "import RouteKit\nlet label = RouteLabel(prefix: \"Walk\")\nprint(label.internalTag)"
+    },
+    "commands": [
+      "swiftc -swift-version 6 -emit-module -emit-object -parse-as-library -module-name RouteKit RouteKit.swift -o RouteKit.o",
+      "swiftc -swift-version 6 -I . main.swift RouteKit.o -o demo",
+      "./demo"
+    ],
+    "outcome": "compile-rejection",
+    "diagnosticContains": "'internalTag' is inaccessible due to 'internal' protection level"
+  },
+  {
+    "id": "swift-56-local-worked",
+    "lessonId": "swift-56",
+    "paragraph": 2,
+    "files": {
+      "Package.swift": "// swift-tools-version: 6.0\nimport PackageDescription\nlet package = Package(\n    name: \"TrailStudy\",\n    products: [\n        .library(name: \"TrailKit\", targets: [\"TrailKit\"]),\n        .executable(name: \"TrailDemo\", targets: [\"TrailDemo\"])\n    ],\n    targets: [\n        .target(name: \"TrailKit\"),\n        .executableTarget(name: \"TrailDemo\", dependencies: [\"TrailKit\"])\n    ]\n)",
+      "Sources/TrailKit/Route.swift": "public func routeName(_ place: String) -> String {\n    return \"Route:\" + place\n}",
+      "Sources/TrailDemo/main.swift": "import TrailKit\nprint(routeName(\"Lake\"))"
+    },
+    "commands": [
+      "swift build",
+      "swift run --skip-build TrailDemo"
+    ],
+    "expectedBehavior": "Build succeeds without an external dependency. The run command prints exactly `Route:Lake` followed by a newline. Build progress text and paths are not stable output contracts.",
+    "outcome": "success"
+  },
+  {
+    "id": "swift-56-local-changed",
+    "lessonId": "swift-56",
+    "paragraph": 3,
+    "files": {
+      "Package.swift": "// swift-tools-version: 6.0\nimport PackageDescription\nlet package = Package(\n    name: \"TrailStudy\",\n    products: [\n        .library(name: \"TrailKit\", targets: [\"TrailKit\"]),\n        .executable(name: \"TrailDemo\", targets: [\"TrailDemo\"])\n    ],\n    targets: [\n        .target(name: \"TrailKit\"),\n        .executableTarget(name: \"TrailDemo\", dependencies: [\"TrailKit\"])\n    ]\n)",
+      "Sources/TrailKit/Route.swift": "public func routeName(_ place: String) -> String {\n    return \"Route:\" + place\n}",
+      "Sources/TrailDemo/main.swift": "import TrailKit\nprint(routeName(\"Bridge\"))"
+    },
+    "commands": [
+      "swift build",
+      "swift run --skip-build TrailDemo"
+    ],
+    "expectedBehavior": "In the fresh changed tree, build then run prints exactly `Route:Bridge` followed by a newline.",
+    "outcome": "success"
+  },
+  {
+    "id": "swift-57-local-worked",
+    "lessonId": "swift-57",
+    "paragraph": 2,
+    "files": {
+      "Package.swift": "// swift-tools-version: 6.0\nimport PackageDescription\nlet package = Package(\n    name: \"TrailTests\",\n    targets: [\n        .target(name: \"TrailKit\"),\n        .testTarget(name: \"TrailKitTests\", dependencies: [\"TrailKit\"])\n    ]\n)",
+      "Sources/TrailKit/Route.swift": "public func routeName(_ place: String) -> String {\n    return \"Route:\" + place\n}",
+      "Tests/TrailKitTests/TrailTests.swift": "import Testing\nimport TrailKit\n@Test func prefixesPlace() {\n    #expect(routeName(\"Cove\") == \"Route:Cove\")\n    #expect(routeName(\"\") == \"Route:\")\n}"
+    },
+    "commands": [
+      "swift test"
+    ],
+    "expectedBehavior": "The Swift Testing run discovers `prefixesPlace`, executes its two expectations, and reports 1 test passed. The process succeeds. Timing and build output are not exact contracts.",
+    "outcome": "success"
+  },
+  {
+    "id": "swift-57-local-changed",
+    "lessonId": "swift-57",
+    "paragraph": 3,
+    "files": {
+      "Package.swift": "// swift-tools-version: 6.0\nimport PackageDescription\nlet package = Package(\n    name: \"TrailTests\",\n    targets: [\n        .target(name: \"TrailKit\"),\n        .testTarget(name: \"TrailKitTests\", dependencies: [\"TrailKit\"])\n    ]\n)",
+      "Sources/TrailKit/Route.swift": "public func routeName(_ place: String) -> String {\n    return \"Route:\" + place\n}",
+      "Tests/TrailKitTests/TrailTests.swift": "import Testing\nimport TrailKit\n@Test func prefixesPlace() {\n    #expect(routeName(\"Cove\") == \"Cove\")\n    #expect(routeName(\"\") == \"Route:\")\n}"
+    },
+    "commands": [
+      "swift test"
+    ],
+    "expectedBehavior": "The changed expectation wrongly expects `Cove` without the prefix. The named test runs and fails, with a diagnostic showing `Route:Cove` versus `Cove`; the process exits unsuccessfully. This is an intentional behavioral failure, not a build error.",
+    "outcome": "test-failure"
+  },
+  {
+    "id": "swift-57-local-zero",
+    "lessonId": "swift-57",
+    "paragraph": 5,
+    "files": {
+      "Package.swift": "// swift-tools-version: 6.0\nimport PackageDescription\nlet package = Package(\n    name: \"TrailTests\",\n    targets: [\n        .target(name: \"TrailKit\"),\n        .testTarget(name: \"TrailKitTests\", dependencies: [\"TrailKit\"])\n    ]\n)",
+      "Sources/TrailKit/Route.swift": "public func routeName(_ place: String) -> String {\n    return \"Route:\" + place\n}",
+      "Tests/TrailKitTests/TrailTests.swift": "import Testing\nimport TrailKit\nfunc prefixesPlace() {\n    #expect(routeName(\"Cove\") == \"Route:Cove\")\n}"
+    },
+    "commands": [
+      "swift test"
+    ],
+    "outcome": "zero-tests",
+    "expectedBehavior": "Swift Testing reports zero tests; not evidence that the intended test passed."
+  }
+]

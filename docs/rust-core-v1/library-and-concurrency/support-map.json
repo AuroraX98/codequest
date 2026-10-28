@@ -1,0 +1,420 @@
+[
+  {
+    "id": "rust-47",
+    "quizTarget": "If the unit test expects 1 for clamp(-1), what happens?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "The clamp method caps n to the inclusive endpoints zero and ten. Save the main snippet as src/lib.rs. #[cfg(test)] includes the tests module only for test builds; #[test] registers a test function. use super::clamp brings the parent module\u2019s function into scope. assert_eq! compares actual and expected values and reports a failing assertion."
+      },
+      {
+        "paragraph": 1,
+        "fact": "Create Cargo.toml containing [package], name = \"study-lib\", version = \"0.1.0\", edition = \"2024\" on separate lines. In tests/public.rs put the following external-crate test, then run cargo test --offline. The package hyphen becomes an underscore in the Rust crate path. Unit tests can reach private implementation details; integration tests consume exported items.\n```rust\n#[test]\nfn upper_boundary() {\n    assert_eq!(study_lib::clamp(11), 10);\n}\n```"
+      }
+    ],
+    "reasoning": "The changed expectation is wrong; cargo test reports failure rather than modifying the function.",
+    "source": "https://doc.rust-lang.org/book/ch11-03-test-organization.html",
+    "prerequisites": [
+      "rust-46"
+    ]
+  },
+  {
+    "id": "rust-48",
+    "quizTarget": "If the input is \"0\", which result is displayed?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "InvalidMinutes is a custom error type. Deriving Debug supports diagnostic formatting; implementing Display supplies the user-facing message. The fmt method borrows a Formatter destination; its underscore lifetime placeholder is inferred. fmt::Result is the formatting Result type, and write! returns that Result. Implementing std::error::Error marks it as a standard error type. It does not automatically add recovery or validation."
+      },
+      {
+        "paragraph": 1,
+        "fact": "parse::<u8> may fail for nonnumeric text or values outside u8. map_err converts that error into InvalidMinutes; ? propagates it from parse_minutes. The range 1..=60 includes both endpoints. A separate range check rejects otherwise parsed values outside 1 through 60. This intentionally loses the original parse cause; richer errors could preserve it when useful."
+      }
+    ],
+    "reasoning": "Zero parses as u8 but fails the explicit domain range and becomes the custom error.",
+    "source": "https://doc.rust-lang.org/std/error/trait.Error.html",
+    "prerequisites": [
+      "rust-47"
+    ]
+  },
+  {
+    "id": "rust-49",
+    "quizTarget": "If the second stored value changes from 4 to 9, what is the sum?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "A recursive enum cannot contain another full copy of itself directly with no indirection. Box<List> stores an owning pointer to a heap-allocated List, giving the enum a finite representation. Dropping the box releases its owned allocation and nested values."
+      },
+      {
+        "paragraph": 1,
+        "fact": "The tiny list owns a tail through Box. Matching &self borrows each node; n and tail are borrowed values, and the sum method reads them without taking ownership. The example uses two nodes only: recursive processing and recursive destruction are not a promise of unlimited stack capacity."
+      }
+    ],
+    "reasoning": "The borrowed traversal adds the head three to the changed tail nine.",
+    "source": "https://doc.rust-lang.org/std/boxed/index.html",
+    "prerequisites": [
+      "rust-48"
+    ]
+  },
+  {
+    "id": "rust-50",
+    "quizTarget": "If second is instead a new independent Rc allocation, what counts does first report?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "Rc<T> is a reference-counted pointer for shared ownership within one thread. Rc::clone adds another strong owner of the same allocation. It does not clone the String itself. Rc::strong_count reports the current strong owner count in this controlled example."
+      },
+      {
+        "paragraph": 1,
+        "fact": "drop(second) consumes and drops that owner now rather than waiting for its enclosing scope to end. The allocation remains while a strong owner exists. Rc uses non-atomic reference counts and is not Send or Sync; do not use it to share ownership across threads. Strong reference cycles can prevent reclamation; Weak is a separate tool for breaking those cycles."
+      }
+    ],
+    "reasoning": "An independent Rc does not add an owner of first\u2019s allocation, even when its String has equal contents.",
+    "source": "https://doc.rust-lang.org/std/rc/index.html",
+    "prerequisites": [
+      "rust-49"
+    ]
+  },
+  {
+    "id": "rust-51",
+    "quizTarget": "If the shared guard is dropped before try_borrow_mut, what is printed?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "RefCell permits interior mutability through a shared reference, while enforcing the usual one-mutable-or-many-shared borrow rule at runtime. borrow and borrow_mut panic if the rule is violated; try_borrow_mut instead returns a Result so a conflict can be handled without a panic."
+      },
+      {
+        "paragraph": 1,
+        "fact": "The value returned by borrow is a guard. While read remains alive, a mutable borrow cannot be granted. Explicitly dropping it ends that shared borrow, allowing the later mutable guard to change the value. RefCell is not a thread synchronization primitive."
+      }
+    ],
+    "reasoning": "With no live shared guard, the temporary mutable borrow succeeds; the later update still stores nine.",
+    "source": "https://doc.rust-lang.org/std/cell/struct.RefCell.html",
+    "prerequisites": [
+      "rust-50"
+    ]
+  },
+  {
+    "id": "rust-52",
+    "quizTarget": "If other is a separate Arc::new(7) rather than a clone, what is printed?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "Arc<T> uses atomic reference counting for shared ownership. Arc can be sent and shared only when its inner type satisfies the required Send and Sync bounds. Arc alone does not make arbitrary inner mutation thread-safe; a Mutex or atomic payload may still be necessary."
+      },
+      {
+        "paragraph": 1,
+        "fact": "Arc::get_mut returns an optional mutable reference only when there are no other Arc or Weak pointers to that allocation. With two strong owners it returns None. After dropping the other owner, this example has unique ownership and receives Some. No threads are started yet; the next lessons separate mutation and thread lifetime."
+      }
+    ],
+    "reasoning": "The independent allocation adds no owner of value, so value remains uniquely owned at both observations.",
+    "source": "https://doc.rust-lang.org/std/sync/struct.Arc.html",
+    "prerequisites": [
+      "rust-51"
+    ]
+  },
+  {
+    "id": "rust-53",
+    "quizTarget": "If the protected addition changes from 4 to 9, what prints after the first guard is dropped?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "Mutex::lock returns a Result containing a guard. Dereferencing the guard accesses the protected value. Dropping the guard releases the lock. Here expect makes the example stop with context if the mutex is poisoned, typically after a thread panicked while holding it; production recovery is a deliberate policy, not something to ignore."
+      },
+      {
+        "paragraph": 1,
+        "fact": "The inner block bounds the first guard\u2019s lifetime. The later lock occurs only after that guard was dropped, avoiding a recursive-lock assumption. This first example is single-threaded to isolate guard ownership; concurrent updates must all use the same mutex."
+      }
+    ],
+    "reasoning": "The guard mutates the protected integer and releases the lock at block exit; the later guard observes twelve.",
+    "source": "https://doc.rust-lang.org/std/sync/struct.Mutex.html",
+    "prerequisites": [
+      "rust-52"
+    ]
+  },
+  {
+    "id": "rust-54",
+    "quizTarget": "If the moved String is \"explore\", what result does join obtain?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "thread::spawn starts a new operating-system thread. The move closure takes ownership of its captured String, so the worker does not borrow a local that might disappear. The final closure expression returns the String length."
+      },
+      {
+        "paragraph": 1,
+        "fact": "JoinHandle::join waits and returns a Result containing the worker result or a panic payload. expect here makes a worker panic explicit rather than silently ignoring it. Dropping the handle would detach the worker, not wait for it. The sample makes no execution-order or speed promise."
+      }
+    ],
+    "reasoning": "The worker owns the changed String and returns its seven-byte length before join completes.",
+    "source": "https://doc.rust-lang.org/std/thread/fn.spawn.html",
+    "prerequisites": [
+      "rust-53"
+    ]
+  },
+  {
+    "id": "rust-55",
+    "quizTarget": "If the sent String becomes \"finished\", what is received before the loop ends?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "mpsc::channel creates a multi-producer, single-consumer channel with a Sender and Receiver. send moves this String into the channel; the sending code cannot keep using that moved String. Here only one worker sends, then its sender is dropped when the closure returns."
+      },
+      {
+        "paragraph": 1,
+        "fact": "The for loop receives messages until all senders have been dropped and queued messages drained. Keeping an unused sender alive would keep the loop waiting. After collection, join still explicitly observes the worker\u2019s completion and any panic."
+      }
+    ],
+    "reasoning": "The owned finished String is delivered; dropping the last sender ends iteration only after the queue is drained.",
+    "source": "https://doc.rust-lang.org/std/sync/mpsc/index.html",
+    "prerequisites": [
+      "rust-54"
+    ]
+  },
+  {
+    "id": "rust-56",
+    "quizTarget": "If this example uses Rc instead of Arc, what happens?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "Send means a value\u2019s ownership may be transferred between threads; Sync means sharing &T between threads is safe. These are marker traits, usually derived automatically from a type\u2019s contents. Do not write unsafe implementations merely to suppress a compiler error."
+      },
+      {
+        "paragraph": 1,
+        "fact": "The worked value is Arc<i32>, which satisfies the relevant bounds. Replacing Arc with Rc asks thread::spawn to capture a non-Send reference-counted pointer; the compiler rejects that boundary before any thread executes. The correct repair depends on ownership and access needs, not just silencing a diagnostic."
+      }
+    ],
+    "reasoning": "Rc itself lacks Send; a safe inner integer does not repair its non-atomic shared ownership mechanism.",
+    "source": "https://doc.rust-lang.org/std/marker/trait.Send.html",
+    "prerequisites": [
+      "rust-55"
+    ]
+  },
+  {
+    "id": "rust-57",
+    "quizTarget": "If each atomic update adds 2 instead of 1, what prints after both joins?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "AtomicUsize::fetch_add performs an atomic addition and returns the previous value, which this example ignores. Arc lets the two workers own handles to the same counter. Each worker performs a bounded one hundred increments."
+      },
+      {
+        "paragraph": 1,
+        "fact": "Ordering::SeqCst requests sequentially consistent ordering. It does not make several unrelated operations a single transaction or guarantee performance. Joining both workers bounds lifetime before the final load; no racy ordinary-counter variant or relaxed-ordering experiment is run."
+      }
+    ],
+    "reasoning": "Two workers perform one hundred additions of two each; atomic updates avoid lost increments.",
+    "source": "https://doc.rust-lang.org/std/sync/atomic/index.html",
+    "prerequisites": [
+      "rust-56"
+    ]
+  },
+  {
+    "id": "rust-58",
+    "quizTarget": "If the file is inside a nonexistent parent directory in this fixture, what happens?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "std::fs::write and read_to_string return Results. io::Result<T> aliases Result<T, io::Error>. The ? operator returns an error immediately from the helper when an operation fails. The caller decides how to report it. read_to_string also requires valid UTF-8, not merely a readable file."
+      },
+      {
+        "paragraph": 1,
+        "fact": "Run only in a disposable working directory: this example creates or replaces notes.txt. These convenience functions manage their file handles, but successful writing is not a promise of durable storage after a power failure. Dropping a File does not provide a returned close error; durability and explicit synchronization require a separate policy."
+      }
+    ],
+    "reasoning": "fs::write cannot create the missing parent directory; ? returns that error before reading.",
+    "source": "https://doc.rust-lang.org/std/fs/fn.write.html",
+    "prerequisites": [
+      "rust-57"
+    ]
+  },
+  {
+    "id": "rust-59",
+    "quizTarget": "If a third valid line is appended, what does this bounded parser report?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "BufRead::lines yields Result<String> values with line endings removed. Use ? for each line read, not just when creating the reader. enumerate pairs each item with its zero-based index. Cursor makes this example read a fixed in-memory byte sequence, with no file or network access."
+      },
+      {
+        "paragraph": 1,
+        "fact": "The helper checks the entire supplied input is at most thirty-two bytes before constructing the reader, then accepts at most two lines and minute values 1 through 60. Thus the sum is at most 120. On an unbounded external stream, checking a String length after lines allocated it would be too late; this lesson\u2019s fixed input cap is part of its contract."
+      }
+    ],
+    "reasoning": "Enumeration reaches index two for the third line, triggering the explicit line-count rejection.",
+    "source": "https://doc.rust-lang.org/std/io/trait.BufRead.html#method.lines",
+    "prerequisites": [
+      "rust-58"
+    ]
+  },
+  {
+    "id": "rust-60",
+    "quizTarget": "If the joined final name becomes tomorrow.txt, what prints?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "Path borrows a path and PathBuf owns one. join constructs a new path value; it does not create a directory or file. The representation and separator conventions depend on the target platform."
+      },
+      {
+        "paragraph": 1,
+        "fact": "file_name returns an Option because some paths have no final filename. These literal relative paths do. Converting that OsStr with to_str is also optional because operating-system paths need not be valid UTF-8. Option::and_then calls its closure only for Some and flattens the returned Option rather than nesting it. The sample handles that possibility with a fallback instead of assuming every path is a String."
+      }
+    ],
+    "reasoning": "join and file_name manipulate path values, not filesystem contents.",
+    "source": "https://doc.rust-lang.org/std/path/index.html",
+    "prerequisites": [
+      "rust-59"
+    ]
+  },
+  {
+    "id": "rust-61",
+    "quizTarget": "With no user argument, what prints?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "std::env::args yields Unicode command-line argument Strings. skip(1) omits the conventional program-name entry, then collect::<Vec<String>> stores the user arguments. If non-Unicode arguments must be supported, use args_os instead; args can panic on invalid Unicode."
+      },
+      {
+        "paragraph": 1,
+        "fact": "Run this example as ./app read for the worked output. A slice pattern [topic] matches exactly one argument, borrowing that String. The fallback handles zero or several user arguments without indexing a missing item. This is an application policy, not shell parsing implemented by Rust."
+      }
+    ],
+    "reasoning": "The empty argument slice does not match [topic], so the fallback handles it without indexing.",
+    "source": "https://doc.rust-lang.org/std/env/fn.args.html",
+    "prerequisites": [
+      "rust-60"
+    ]
+  },
+  {
+    "id": "rust-62",
+    "quizTarget": "If the input changes to \"61\", what is returned to the display branch?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "parse::<u32> checks whether text is a representable unsigned integer. It does not know whether a study session should permit zero or a very large duration. trim deliberately accepts leading and trailing whitespace; that normalization is part of the chosen policy."
+      },
+      {
+        "paragraph": 1,
+        "fact": "The helper returns a descriptive Result after enforcing 1 through 60. This sample uses static string error messages, so no owned error allocation is needed. The success branch receives only a validated minute count; parse failure and range failure remain distinguishable."
+      }
+    ],
+    "reasoning": "Sixty-one parses successfully but violates the explicit application range.",
+    "source": "https://doc.rust-lang.org/std/primitive.str.html#method.parse",
+    "prerequisites": [
+      "rust-61"
+    ]
+  },
+  {
+    "id": "rust-63",
+    "quizTarget": "If minutes becomes 20, what does the same Display implementation produce?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "Implementing fmt::Display lets {} format a type. The fmt method borrows self and a mutable Formatter, then returns fmt::Result. The placeholder lifetime '_ means the compiler infers the borrow lifetime; it is not a new stored lifetime parameter on Session."
+      },
+      {
+        "paragraph": 1,
+        "fact": "write!(f, ...) sends output to the caller\u2019s formatter and returns any formatting error. The trailing expression returns that Result directly. Debug and Display serve different purposes; deriving Debug does not create this Display representation."
+      }
+    ],
+    "reasoning": "The implementation reads the current field and writes it followed by the chosen unit label.",
+    "source": "https://doc.rust-lang.org/std/fmt/trait.Display.html",
+    "prerequisites": [
+      "rust-62"
+    ]
+  },
+  {
+    "id": "rust-64",
+    "quizTarget": "If drop(future) is replaced by future.await in this ordinary main, what happens?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "An async block produces a Future value describing work. Its body progresses only when the future is polled. Creating the future does not spawn a thread, start a timer or install an executor. This example deliberately drops an unpolled future."
+      },
+      {
+        "paragraph": 1,
+        "fact": "The .await syntax is allowed inside an async function or block, not this ordinary main. An executor is responsible for polling and wakeups for general asynchronous work. No Tokio or other runtime is used here; the next lesson polls only an already-ready standard-library future once, not arbitrary I/O."
+      }
+    ],
+    "reasoning": "A future remains lazy, and .await has a language context requirement; a normal main cannot use it directly.",
+    "source": "https://doc.rust-lang.org/std/future/trait.Future.html",
+    "prerequisites": [
+      "rust-63"
+    ]
+  },
+  {
+    "id": "rust-65",
+    "quizTarget": "If ready is constructed with 11, what does the one poll produce?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "Future::poll takes a pinned mutable receiver and a task Context, returning Poll::Ready(value) or Poll::Pending. Box::pin constructs a pinned heap value; as_mut reborrows it as Pin<&mut _>. Pin supports address-stability contracts for types that require them, not a blanket ban on moving every Rust value."
+      },
+      {
+        "paragraph": 1,
+        "fact": "future::ready returns a future guaranteed to produce Ready on its poll. Waker::noop ignores wake requests, so it cannot drive general futures that become ready later. Context::from_waker supplies that waker for this single bounded poll. Never turn this into a spin loop or poll the completed future again; this is not a general executor."
+      }
+    ],
+    "reasoning": "The ready constructor already owns its final output, so one poll returns the changed value immediately.",
+    "source": "https://doc.rust-lang.org/std/future/fn.ready.html",
+    "prerequisites": [
+      "rust-64"
+    ]
+  },
+  {
+    "id": "rust-66",
+    "quizTarget": "If the expansion becomes ($value) + ($value), what prints?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "macro_rules! defines syntax patterns. In ($value:expr), $value captures one expression; the expansion uses it in ordinary Rust code. The ! at a call site distinguishes macro invocation from a normal function call."
+      },
+      {
+        "paragraph": 1,
+        "fact": "This twice macro binds the captured expression once to a local value, then uses that value twice. The input block increments calls and returns three. Duplicating $value in two evaluated positions instead would evaluate the input twice; a macro does not automatically guarantee single evaluation."
+      }
+    ],
+    "reasoning": "Each expanded occurrence executes the block, incrementing calls once; both returned threes still add to six.",
+    "source": "https://doc.rust-lang.org/reference/macros-by-example.html",
+    "prerequisites": [
+      "rust-65"
+    ]
+  },
+  {
+    "id": "rust-67",
+    "quizTarget": "If the requested index is 1, what does the safe access produce?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "Unsafe operations have conditions the programmer must uphold when the compiler cannot verify them. An unsafe block does not disable borrowing rules everywhere, make invalid memory valid or turn undefined behavior into a predictable demonstration. Safe public wrappers must enforce their own invariants before relying on unsafe internals."
+      },
+      {
+        "paragraph": 1,
+        "fact": "slice.get returns an Option after checking the index, so this example needs no unsafe block at all. By contrast, get_unchecked requires a valid in-bounds index even if its result is not later used. We do not call it with an invalid index or execute any undefined-behavior example."
+      }
+    ],
+    "reasoning": "Index one is within the two-element slice, so get returns a valid borrowed element.",
+    "source": "https://doc.rust-lang.org/std/primitive.slice.html#method.get_unchecked",
+    "prerequisites": [
+      "rust-66"
+    ]
+  },
+  {
+    "id": "rust-68",
+    "quizTarget": "If the first text changes to \"70\", what is collected and summed?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "This fixed array contains four text inputs. parse::<u32>().ok() converts a parse Result to an Option, and filter_map keeps only Some values. The range filter then keeps minute counts from 1 through 60. This intentionally skips invalid inputs rather than misrepresenting them as valid zero-minute sessions."
+      },
+      {
+        "paragraph": 1,
+        "fact": "take(2) keeps at most two accepted values. collect builds a Vec<u32>, and iter().sum::<u32>() totals its borrowed elements. Since each retained value is at most sixty, the total is bounded by 120. This is an in-memory teaching pipeline, not durable storage or a complete error-reporting application."
+      }
+    ],
+    "reasoning": "Seventy parses but fails the range rule; bad fails parsing and zero fails the range, leaving only twenty.",
+    "source": "https://doc.rust-lang.org/std/iter/trait.Iterator.html#method.filter_map",
+    "prerequisites": [
+      "rust-67"
+    ]
+  }
+]

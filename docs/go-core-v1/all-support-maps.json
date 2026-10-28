@@ -1,0 +1,1289 @@
+{
+  "foundations": [
+    {
+      "id": "go-07",
+      "quizTarget": "You edit main.go but run the previously built executable without rebuilding. What can appear?",
+      "essentialSupport": [
+        {
+          "paragraph": 0,
+          "fact": "An executable program uses package main and a main function. Imports name packages whose exported operations the code uses, such as fmt.Println."
+        },
+        {
+          "paragraph": 1,
+          "fact": "go build translates the program into an executable. go run also builds before running; it is not an interpreter reading source statement by statement."
+        },
+        {
+          "paragraph": 2,
+          "fact": "Editing main.go does not change an executable already built from an earlier version."
+        },
+        {
+          "paragraph": 3,
+          "fact": "This course uses official Go 1.27.3. In the shared environment /usr/bin/go is an unrelated game, so validation uses the approved workspace-local compiler path."
+        }
+      ],
+      "reasoning": "The earlier executable contains the old compilation, not the edited file.",
+      "source": "https://go.dev/doc/tutorial/getting-started",
+      "prerequisites": [
+        "go-06"
+      ]
+    },
+    {
+      "id": "go-08",
+      "quizTarget": "Change 5 to 5.0 in the short declaration. What prints?",
+      "essentialSupport": [
+        {
+          "paragraph": 0,
+          "fact": "count := 3 declares a variable whose inferred type is int. Type inference does not make its type change on each assignment."
+        },
+        {
+          "paragraph": 1,
+          "fact": "int is either 32 or 64 bits depending on the implementation. int64 explicitly selects a signed 64-bit type; float64 represents approximate fractional values."
+        },
+        {
+          "paragraph": 2,
+          "fact": "A constant such as 3 can be used where a compatible numeric type is expected if its value fits. A typed numeric variable follows stricter assignment rules."
+        },
+        {
+          "paragraph": 3,
+          "fact": "Two integer operands produce an integer result. A floating-point operand can make this division floating-point."
+        }
+      ],
+      "reasoning": "The untyped floating constant changes the division and inferred variable type.",
+      "source": "https://go.dev/ref/spec",
+      "prerequisites": [
+        "go-07"
+      ]
+    },
+    {
+      "id": "go-09",
+      "quizTarget": "Change value to 3.9. What prints?",
+      "essentialSupport": [
+        {
+          "paragraph": 0,
+          "fact": "int(value) converts a numeric value to int. It does not parse a String; text parsing belongs to functions such as strconv.Atoi."
+        },
+        {
+          "paragraph": 1,
+          "fact": "For an ordinary in-range float64 value, conversion to int discards its fractional part toward zero rather than rounding to nearest."
+        },
+        {
+          "paragraph": 2,
+          "fact": "A conversion is not proof that an external value is sensible or safely representable. Avoid relying on out-of-range conversion results."
+        },
+        {
+          "paragraph": 3,
+          "fact": "A non-integer constant cannot be converted to an integer type unless representable as that type. This example deliberately converts a runtime float64 variable."
+        }
+      ],
+      "reasoning": "The small positive value is in range, so truncation keeps its whole-number part.",
+      "source": "https://go.dev/ref/spec",
+      "prerequisites": [
+        "go-08"
+      ]
+    },
+    {
+      "id": "go-10",
+      "quizTarget": "Assign count=4 before printing. What prints?",
+      "essentialSupport": [
+        {
+          "paragraph": 0,
+          "fact": "var count int starts at 0. bool starts false and string starts empty. This gives a defined initial state rather than uninitialized local data."
+        },
+        {
+          "paragraph": 1,
+          "fact": "Arrays and structs have recursively zero-valued elements or fields. Some reference-like types have nil zero values and require care before mutation."
+        },
+        {
+          "paragraph": 2,
+          "fact": "A zero-valued quantity may still violate a business rule; language initialization does not validate meaning."
+        },
+        {
+          "paragraph": 3,
+          "fact": "A later assignment changes that variable from its zero value to the assigned one."
+        }
+      ],
+      "reasoning": "Zero initialization supplies a starting value, not a permanent value.",
+      "source": "https://go.dev/ref/spec",
+      "prerequisites": [
+        "go-09"
+      ]
+    },
+    {
+      "id": "go-11",
+      "quizTarget": "Set denominator to 0. What prints?",
+      "essentialSupport": [
+        {
+          "paragraph": 0,
+          "fact": "Go if conditions use bool expressions. Integers and strings are not automatically treated as true or false."
+        },
+        {
+          "paragraph": 1,
+          "fact": "&& skips its right operand when the left is false. || skips the right operand when the left is true."
+        },
+        {
+          "paragraph": 2,
+          "fact": "denominator !=0 comes first. When it is false, the division is not evaluated."
+        },
+        {
+          "paragraph": 3,
+          "fact": "Short-circuiting controls evaluation as well as the final truth value."
+        }
+      ],
+      "reasoning": "The false left operand prevents division by zero.",
+      "source": "https://go.dev/ref/spec",
+      "prerequisites": [
+        "go-10"
+      ]
+    },
+    {
+      "id": "go-12",
+      "quizTarget": "Change the text to \"A\". What prints?",
+      "essentialSupport": [
+        {
+          "paragraph": 0,
+          "fact": "len(text) counts bytes, not necessarily Unicode characters. UTF-8 encodes many non-ASCII code points using multiple bytes."
+        },
+        {
+          "paragraph": 1,
+          "fact": "rune is an alias for int32. The conversion []rune(text) decodes UTF-8 into runes; len of that slice counts code points, not user-perceived grapheme clusters."
+        },
+        {
+          "paragraph": 2,
+          "fact": "byte is an alias for uint8. Indexing a String returns a byte; ranging over text decodes runes."
+        },
+        {
+          "paragraph": 3,
+          "fact": "The UTF-8 source literal \u00e9 occupies two bytes and one Unicode code point. ASCII A occupies one byte and one code point."
+        }
+      ],
+      "reasoning": "The units happen to agree for the ASCII sample; they need not agree for other text.",
+      "source": "https://go.dev/ref/spec",
+      "prerequisites": [
+        "go-11"
+      ]
+    },
+    {
+      "id": "go-13",
+      "quizTarget": "Change the format from %q to %s. What prints?",
+      "essentialSupport": [
+        {
+          "paragraph": 0,
+          "fact": "fmt.Printf uses a format string. %d formats an integer in decimal; %q formats a quoted escaped representation for a String. %s prints String content without surrounding quotation marks."
+        },
+        {
+          "paragraph": 1,
+          "fact": "The escape \\n adds a newline. fmt.Println adds its own line ending and spaces between separate arguments."
+        },
+        {
+          "paragraph": 2,
+          "fact": "Displaying a value as text does not change the stored value\u2019s type."
+        },
+        {
+          "paragraph": 3,
+          "fact": "Use a suitable formatting verb instead of assuming every verb means the same thing. Go can report formatting mismatch text; that is not correct data output."
+        }
+      ],
+      "reasoning": "%s prints the String content rather than its quoted representation.",
+      "source": "https://pkg.go.dev/fmt",
+      "prerequisites": [
+        "go-12"
+      ]
+    },
+    {
+      "id": "go-14",
+      "quizTarget": "Replace the inner := with =. What prints?",
+      "essentialSupport": [
+        {
+          "paragraph": 0,
+          "fact": "Inside a function, := is a short variable declaration. In the same block it needs at least one new non-blank name."
+        },
+        {
+          "paragraph": 1,
+          "fact": "A new score declared inside braces is distinct from an outer score. Updating that inner object does not update the outer one."
+        },
+        {
+          "paragraph": 2,
+          "fact": "= assigns an existing name instead of declaring a new one. Scope determines which existing variable is selected."
+        },
+        {
+          "paragraph": 3,
+          "fact": "Similar spelling is not proof of the same object. Read the block boundaries and declaration operator."
+        }
+      ],
+      "reasoning": "Without a new declaration the inner assignment uses the existing outer score.",
+      "source": "https://go.dev/ref/spec",
+      "prerequisites": [
+        "go-13"
+      ]
+    },
+    {
+      "id": "go-15",
+      "quizTarget": "Set choice to 2. What prints?",
+      "essentialSupport": [
+        {
+          "paragraph": 0,
+          "fact": "An expression switch selects a matching case or default when none match."
+        },
+        {
+          "paragraph": 1,
+          "fact": "After the selected case body ends, the switch ends. Explicit fallthrough exists but is not the default behavior."
+        },
+        {
+          "paragraph": 2,
+          "fact": "A default clause can handle values not listed elsewhere."
+        },
+        {
+          "paragraph": 3,
+          "fact": "Selecting a case does not assign its case value back to the subject."
+        }
+      ],
+      "reasoning": "Only the selected case body runs in this switch.",
+      "source": "https://go.dev/ref/spec",
+      "prerequisites": [
+        "go-14"
+      ]
+    },
+    {
+      "id": "go-16",
+      "quizTarget": "Replace continue with break. What prints?",
+      "essentialSupport": [
+        {
+          "paragraph": 0,
+          "fact": "for i:=0; i<4; i++ initializes once, tests before each body and updates after each completed body."
+        },
+        {
+          "paragraph": 1,
+          "fact": "continue proceeds to the next iteration; the update still runs before the next test."
+        },
+        {
+          "paragraph": 2,
+          "fact": "break stops this nearest loop instead of skipping only one pass."
+        },
+        {
+          "paragraph": 3,
+          "fact": "This example uses a small finite range. A loop\u2019s syntax does not by itself prove termination."
+        }
+      ],
+      "reasoning": "break exits before any later iteration.",
+      "source": "https://go.dev/ref/spec",
+      "prerequisites": [
+        "go-15"
+      ]
+    },
+    {
+      "id": "go-17",
+      "quizTarget": "Change only the copy assignment value from 9 to 7. What prints?",
+      "essentialSupport": [
+        {
+          "paragraph": 0,
+          "fact": "[3]int is an array of exactly three ints. A different length is a different array type."
+        },
+        {
+          "paragraph": 1,
+          "fact": "Assigning one array variable to another copies its array value. A later element assignment to the copy does not mutate the original array."
+        },
+        {
+          "paragraph": 2,
+          "fact": "Index 0 selects the first element. A runtime out-of-range index panics; it does not grow the array."
+        },
+        {
+          "paragraph": 3,
+          "fact": "Do not transfer the copy rule to slices or pointers without examining their semantics."
+        }
+      ],
+      "reasoning": "The second independent array changes while the first remains unchanged.",
+      "source": "https://go.dev/ref/spec",
+      "prerequisites": [
+        "go-16"
+      ]
+    },
+    {
+      "id": "go-18",
+      "quizTarget": "Change view[0]=9 to view[1]=9. What does the unchanged print show?",
+      "essentialSupport": [
+        {
+          "paragraph": 0,
+          "fact": "A slice carries a reference to underlying array storage plus length and capacity. Assigning a slice copies this descriptor, not all its elements."
+        },
+        {
+          "paragraph": 1,
+          "fact": "values[1:3] includes indices 1 and 2, excluding 3. Updating view[0] updates the underlying element at values[1]."
+        },
+        {
+          "paragraph": 2,
+          "fact": "len(view) gives the accessible length. Capacity is a separate concept used for reslicing and growth."
+        },
+        {
+          "paragraph": 3,
+          "fact": "Changing a shared element is visible through any overlapping slice or array view."
+        }
+      ],
+      "reasoning": "The slice starts at original index 1, so its second element is original index 2.",
+      "source": "https://go.dev/ref/spec",
+      "prerequisites": [
+        "go-17"
+      ]
+    },
+    {
+      "id": "go-19",
+      "quizTarget": "Create the initial slice with capacity 2 instead of 1. What prints after the same append/update?",
+      "essentialSupport": [
+        {
+          "paragraph": 0,
+          "fact": "append adds values and returns a slice descriptor. Store that result because length or underlying storage may change."
+        },
+        {
+          "paragraph": 1,
+          "fact": "make([]int,1,1) creates a slice with length 1 and capacity 1. Appending one more value requires a new backing array in this case."
+        },
+        {
+          "paragraph": 2,
+          "fact": "An alias to the old full-capacity slice still refers to the old array after append allocates a new one."
+        },
+        {
+          "paragraph": 3,
+          "fact": "The exact chosen new capacity is an implementation detail. This example relies only on the documented need to grow beyond capacity."
+        }
+      ],
+      "reasoning": "The existing capacity now accommodates the extra element, so both slices share the updated first slot.",
+      "source": "https://go.dev/ref/spec",
+      "prerequisites": [
+        "go-18"
+      ]
+    },
+    {
+      "id": "go-20",
+      "quizTarget": "Replace the allocation and copy with target:=source. What prints after target[0]=9?",
+      "essentialSupport": [
+        {
+          "paragraph": 0,
+          "fact": "copy(dst,src) copies up to the smaller length and returns the number copied. It does not automatically grow the destination."
+        },
+        {
+          "paragraph": 1,
+          "fact": "make([]int,len(source)) provides separate storage for the destination elements."
+        },
+        {
+          "paragraph": 2,
+          "fact": "target := source would share backing storage. Calling copy after separate allocation copies the elements instead."
+        },
+        {
+          "paragraph": 3,
+          "fact": "For int elements this separates the values. A slice of pointers or nested slices can still share referenced objects; this is not a universal deep copy."
+        }
+      ],
+      "reasoning": "The replacement copies the slice descriptor instead of creating independent element storage.",
+      "source": "https://go.dev/ref/spec",
+      "prerequisites": [
+        "go-19"
+      ]
+    },
+    {
+      "id": "go-21",
+      "quizTarget": "Change the alias update to 7. What prints?",
+      "essentialSupport": [
+        {
+          "paragraph": 0,
+          "fact": "map[string]int maps String keys to int values. A map literal creates initialized map storage."
+        },
+        {
+          "paragraph": 1,
+          "fact": "Assigning a map variable does not clone its entries. Mutating through an alias is visible through the original."
+        },
+        {
+          "paragraph": 2,
+          "fact": "A map\u2019s nil zero value supports reading and len, but assignment of an entry requires an initialized map, such as one made with make or a literal."
+        },
+        {
+          "paragraph": 3,
+          "fact": "Do not depend on map iteration order for deterministic output. This example looks up a known key directly."
+        }
+      ],
+      "reasoning": "The write reaches the shared map entry.",
+      "source": "https://go.dev/ref/spec",
+      "prerequisites": [
+        "go-20"
+      ]
+    },
+    {
+      "id": "go-22",
+      "quizTarget": "Look up \"rest\" instead. What prints?",
+      "essentialSupport": [
+        {
+          "paragraph": 0,
+          "fact": "Looking up an absent key in map[string]int returns 0. That alone cannot distinguish absence from a stored zero."
+        },
+        {
+          "paragraph": 1,
+          "fact": "value,ok := counts[key] returns the value and a Boolean indicating whether the key exists."
+        },
+        {
+          "paragraph": 2,
+          "fact": "A missing lookup does not create a map entry."
+        },
+        {
+          "paragraph": 3,
+          "fact": "Treating a missing score as a real zero can hide incomplete data; inspect ok when the distinction matters."
+        }
+      ],
+      "reasoning": "The value remains the int zero value but the presence Boolean changes.",
+      "source": "https://go.dev/ref/spec",
+      "prerequisites": [
+        "go-21"
+      ]
+    },
+    {
+      "id": "go-23",
+      "quizTarget": "Replace value+=1 with values[i]+=1. What is the final printed slice?",
+      "essentialSupport": [
+        {
+          "paragraph": 0,
+          "fact": "for i,value := range values visits each slice element with its index and a copy of its element value."
+        },
+        {
+          "paragraph": 1,
+          "fact": "value += 1 adds one and stores the result in value. Assigning to this local value variable does not by itself update values[i]. Use the indexed assignment to mutate the slot."
+        },
+        {
+          "paragraph": 2,
+          "fact": "_ discards an unwanted range result. This example uses both results to make their roles visible."
+        },
+        {
+          "paragraph": 3,
+          "fact": "Range over maps has unspecified order; range over Strings decodes runes. This example ranges over a slice."
+        }
+      ],
+      "reasoning": "The indexed expression selects the actual element instead of the range value copy.",
+      "source": "https://go.dev/ref/spec",
+      "prerequisites": [
+        "go-22"
+      ]
+    },
+    {
+      "id": "go-24",
+      "quizTarget": "Call divide(8,0). What prints?",
+      "essentialSupport": [
+        {
+          "paragraph": 0,
+          "fact": "The result list (int,bool) declares two returned values. The caller can receive both using a multiple assignment."
+        },
+        {
+          "paragraph": 1,
+          "fact": "divide returns a quotient and a Boolean success flag. The flag distinguishes a valid zero quotient from a rejected denominator."
+        },
+        {
+          "paragraph": 2,
+          "fact": "The zero returned on failure is a placeholder under this function contract, not a successful calculation."
+        },
+        {
+          "paragraph": 3,
+          "fact": "The denominator check runs before division so the failure path does not divide by zero."
+        }
+      ],
+      "reasoning": "The guard returns its failure pair without performing division.",
+      "source": "https://go.dev/ref/spec",
+      "prerequisites": [
+        "go-23"
+      ]
+    },
+    {
+      "id": "go-25",
+      "quizTarget": "Replace the call with total() and remove the now-unused values declaration. What prints?",
+      "essentialSupport": [
+        {
+          "paragraph": 0,
+          "fact": "func total(values ...int) receives the provided ints as a slice inside the function."
+        },
+        {
+          "paragraph": 1,
+          "fact": "total(values...) supplies slice elements to the variadic parameter. The dots are part of call syntax, not a loop."
+        },
+        {
+          "paragraph": 2,
+          "fact": "Calling total() gives no elements. The loop body runs zero times, leaving the initialized sum at 0."
+        },
+        {
+          "paragraph": 3,
+          "fact": "Variadic calls change how many values are supplied, not the declared element type. Go rejects unused local variable declarations, so remove a local values declaration if its only use is removed."
+        }
+      ],
+      "reasoning": "The loop has no values to add.",
+      "source": "https://go.dev/ref/spec",
+      "prerequisites": [
+        "go-24"
+      ]
+    },
+    {
+      "id": "go-26",
+      "quizTarget": "Change the assignment before invocation to factor=5. What prints?",
+      "essentialSupport": [
+        {
+          "paragraph": 0,
+          "fact": "func(value int) int { ... } can be assigned to a variable and called later."
+        },
+        {
+          "paragraph": 1,
+          "fact": "The literal refers to factor from its surrounding scope. Calling it reads that variable\u2019s current value rather than necessarily freezing the creation-time value."
+        },
+        {
+          "paragraph": 2,
+          "fact": "The function body runs at transform(3), after the assignment to factor."
+        },
+        {
+          "paragraph": 3,
+          "fact": "This single-threaded example is deterministic. Capturing a variable does not make concurrent reads and writes automatically safe."
+        }
+      ],
+      "reasoning": "The call multiplies 3 by the captured variable\u2019s new value.",
+      "source": "https://go.dev/ref/spec",
+      "prerequisites": [
+        "go-25"
+      ]
+    }
+  ],
+  "types-and-design": [
+    {
+      "id": "go-27",
+      "quizTarget": "If b.X is assigned 7 rather than 9, what prints?",
+      "essentialSupport": [
+        {
+          "paragraph": 0,
+          "fact": "A struct groups named fields. A keyed composite literal such as Point{X: 2} names the fields it initializes; omitted fields receive their zero values. Use a dot to access a field."
+        },
+        {
+          "paragraph": 1,
+          "fact": "Assigning a struct copies its fields. Two copies with int fields can change independently. This is not a universal deep copy: a copied slice or map field still refers to shared underlying data."
+        }
+      ],
+      "reasoning": "Only the copied struct b is changed; a retains its original X field.",
+      "source": "https://go.dev/ref/spec",
+      "prerequisites": [
+        "go-26"
+      ]
+    },
+    {
+      "id": "go-28",
+      "quizTarget": "If c initially contains 8, what prints?",
+      "essentialSupport": [
+        {
+          "paragraph": 0,
+          "fact": "A method declaration adds a receiver before the function name: func (c Counter) Next(). That receiver identifies the value on which the method is called."
+        },
+        {
+          "paragraph": 1,
+          "fact": "A value receiver copies the receiver value. Changing its int field does not change the caller\u2019s Counter. A returned value can still report the calculation. Copying a receiver with map or slice fields would not deep-copy referenced data."
+        }
+      ],
+      "reasoning": "Next increments its copied receiver and returns nine; the original remains eight.",
+      "source": "https://go.dev/ref/spec",
+      "prerequisites": [
+        "go-27"
+      ]
+    },
+    {
+      "id": "go-29",
+      "quizTarget": "If c.Add() is called twice before printing, what prints?",
+      "essentialSupport": [
+        {
+          "paragraph": 0,
+          "fact": "*Counter is a pointer type; &c obtains a pointer to c. *p dereferences a pointer to access its target. Field access through a struct pointer can use p.N directly. A nil pointer must not be dereferenced."
+        },
+        {
+          "paragraph": 1,
+          "fact": "func (c *Counter) Add() receives a pointer copy that still refers to the caller\u2019s object. For an addressable variable c, Go permits c.Add() as shorthand for (&c).Add(). This convenience does not make Counter and *Counter have identical method sets."
+        }
+      ],
+      "reasoning": "Each pointer-receiver call updates the same original field rather than a copied struct.",
+      "source": "https://go.dev/ref/spec",
+      "prerequisites": [
+        "go-28"
+      ]
+    },
+    {
+      "id": "go-30",
+      "quizTarget": "If the embedded Address uses City: \"Oslo\", what prints?",
+      "essentialSupport": [
+        {
+          "paragraph": 0,
+          "fact": "An embedded field uses a type name without a separate field name, such as Address inside Person. The outer value contains that field. Its accessible fields and methods can be promoted for convenient selection."
+        },
+        {
+          "paragraph": 1,
+          "fact": "p.City below means p.Address.City. Person is not automatically an Address subtype. Composite literals still initialize the embedded field explicitly; promoted names are not direct keys in Person{...}."
+        }
+      ],
+      "reasoning": "The promoted selector still reads the City field inside the embedded Address.",
+      "source": "https://go.dev/ref/spec",
+      "prerequisites": [
+        "go-29"
+      ]
+    },
+    {
+      "id": "go-31",
+      "quizTarget": "If show receives c instead of &c, what happens?",
+      "essentialSupport": [
+        {
+          "paragraph": 0,
+          "fact": "An interface names required methods. A type implements it by having the necessary method set; there is no implements declaration. Interfaces describe behavior, not a requirement to share a base struct."
+        },
+        {
+          "paragraph": 1,
+          "fact": "For a defined type Counter, methods with value receivers belong to both Counter and *Counter. A method declared on *Counter is not in Counter\u2019s method set. The shorthand call on an addressable value does not change interface satisfaction."
+        }
+      ],
+      "reasoning": "Automatic shorthand for a direct method call does not add pointer-receiver methods to Counter\u2019s interface method set.",
+      "source": "https://go.dev/ref/spec",
+      "prerequisites": [
+        "go-30"
+      ]
+    },
+    {
+      "id": "go-32",
+      "quizTarget": "If value is initialized to nil instead of p, what prints?",
+      "essentialSupport": [
+        {
+          "paragraph": 0,
+          "fact": "An interface value conceptually holds a dynamic type and a dynamic value. Its zero value is nil: neither is present. any is an alias for the empty interface, which can hold values of any type."
+        },
+        {
+          "paragraph": 1,
+          "fact": "A nil *Counter pointer stored in any still supplies the dynamic type *Counter. The interface is therefore not equal to nil, even though its contained pointer is nil. This example only compares; it never dereferences the nil pointer."
+        }
+      ],
+      "reasoning": "The interface now has no dynamic type or value; p is still a nil pointer separately.",
+      "source": "https://go.dev/ref/spec",
+      "prerequisites": [
+        "go-31"
+      ]
+    },
+    {
+      "id": "go-33",
+      "quizTarget": "If value contains 7 instead, what prints?",
+      "essentialSupport": [
+        {
+          "paragraph": 0,
+          "fact": "value.(string) asserts that an interface contains a string. The two-result form text, ok := value.(string) reports false instead of panicking on a mismatch; text then receives the string zero value."
+        },
+        {
+          "paragraph": 1,
+          "fact": "A type switch uses switch v := value.(type) with cases such as string and int. Inside a single-type case v has that type. Use this when several dynamic types need distinct handling, not as a replacement for a well-chosen interface."
+        }
+      ],
+      "reasoning": "The dynamic type is int, so the checked assertion reports false and supplies the empty string.",
+      "source": "https://go.dev/ref/spec",
+      "prerequisites": [
+        "go-32"
+      ]
+    },
+    {
+      "id": "go-34",
+      "quizTarget": "If minutes receives -1, what prints?",
+      "essentialSupport": [
+        {
+          "paragraph": 0,
+          "fact": "The built-in error interface has Error() string. A function can return a useful value and an error; nil error conventionally means success. errors.New creates an error with a message."
+        },
+        {
+          "paragraph": 1,
+          "fact": "Here negative minutes return zero plus an error. The caller must inspect err before treating the numeric result as valid. A failure zero is not automatically an accepted zero-minute session."
+        }
+      ],
+      "reasoning": "The non-nil error selects the early-return branch, so the invalid numeric result is not used.",
+      "source": "https://pkg.go.dev/errors",
+      "prerequisites": [
+        "go-33"
+      ]
+    },
+    {
+      "id": "go-35",
+      "quizTarget": "If %w changes to %v, what prints?",
+      "essentialSupport": [
+        {
+          "paragraph": 0,
+          "fact": "fmt.Errorf(\"load: %w\", err) wraps an error with context. The %w verb preserves a chain that inspection helpers can traverse; %v only formats the error as text."
+        },
+        {
+          "paragraph": 1,
+          "fact": "errors.Is tests whether an error matches a target, including through wrapping. Comparing strings is brittle. errors.As instead finds a matching error type in a chain; it is useful when callers need typed details, not just a sentinel identity."
+        }
+      ],
+      "reasoning": "Text formatting does not retain missing as a wrapped cause, so errors.Is cannot find that target.",
+      "source": "https://pkg.go.dev/errors",
+      "prerequisites": [
+        "go-34"
+      ]
+    },
+    {
+      "id": "go-36",
+      "quizTarget": "If n becomes 3 instead of 2, what is printed?",
+      "essentialSupport": [
+        {
+          "paragraph": 0,
+          "fact": "defer schedules a call for when the surrounding function returns, including during panic unwinding. Arguments to the deferred call are evaluated when defer executes, not later."
+        },
+        {
+          "paragraph": 1,
+          "fact": "Multiple deferred calls run in reverse scheduling order. This makes defer useful for cleanup, but a defer inside a long loop still waits for the whole function to return. Close errors may need explicit handling; defer is not proof that cleanup succeeded."
+        }
+      ],
+      "reasoning": "The first defer already captured one; the second captures three and executes before the first during return.",
+      "source": "https://go.dev/ref/spec",
+      "prerequisites": [
+        "go-35"
+      ]
+    },
+    {
+      "id": "go-37",
+      "quizTarget": "If panic(\"broken\") is replaced by fmt.Println(\"normal\"), what prints?",
+      "essentialSupport": [
+        {
+          "paragraph": 0,
+          "fact": "panic stops normal execution and unwinds the current goroutine, running deferred calls. Prefer returned errors for expected failures. recover can stop a panic only when called directly in a deferred function in that panicking goroutine."
+        },
+        {
+          "paragraph": 1,
+          "fact": "After recovery, the panicking function does not resume at the panic statement. It returns to its caller once deferred work finishes. With no active panic, recover returns nil. This small boundary prints a recovery message and lets main continue; it is not a policy of hiding arbitrary faults."
+        }
+      ],
+      "reasoning": "Without an active panic, recover returns nil and the deferred handler prints nothing.",
+      "source": "https://go.dev/ref/spec",
+      "prerequisites": [
+        "go-36"
+      ]
+    },
+    {
+      "id": "go-38",
+      "quizTarget": "If First receives []int{}, what prints?",
+      "essentialSupport": [
+        {
+          "paragraph": 0,
+          "fact": "A type parameter appears in square brackets after the function name. First[T any] permits any element type and returns a T. The compiler can infer T from a typed slice argument."
+        },
+        {
+          "paragraph": 1,
+          "fact": "A generic function still needs ordinary bounds checks. var zero T declares T\u2019s zero value. Returning (zero, false) on an empty slice avoids indexing it; the Boolean tells the caller whether an element existed."
+        }
+      ],
+      "reasoning": "The length guard returns int\u2019s zero value with false before indexing the empty slice.",
+      "source": "https://go.dev/ref/spec",
+      "prerequisites": [
+        "go-37"
+      ]
+    },
+    {
+      "id": "go-39",
+      "quizTarget": "If Add is called with two float64 values, what happens?",
+      "essentialSupport": [
+        {
+          "paragraph": 0,
+          "fact": "An interface used as a constraint may specify a type set. The union ~int | ~int64 permits types whose underlying type is int or int64. ~ includes defined types with that underlying type; plain int alone would not include a distinct defined type. An interface with these type-set terms is used as a constraint, not as an ordinary variable type."
+        },
+        {
+          "paragraph": 1,
+          "fact": "The compiler permits + because every allowed type supports it. type Count int defines a distinct type with underlying int, so Count satisfies this constraint. These small values avoid overflow; the constraint does not provide checked arithmetic."
+        }
+      ],
+      "reasoning": "The permitted set contains only types with underlying int or int64, not floating types.",
+      "source": "https://go.dev/ref/spec",
+      "prerequisites": [
+        "go-38"
+      ]
+    },
+    {
+      "id": "go-40",
+      "quizTarget": "If Same is called with []int{1} and []int{1} instead, what happens?",
+      "essentialSupport": [
+        {
+          "paragraph": 0,
+          "fact": "comparable is a predeclared constraint usable for map-key type parameters. Concrete int and string keys fit; slices, maps and functions cannot be ordinary comparable map keys."
+        },
+        {
+          "paragraph": 1,
+          "fact": "Interface values can be comparable as types while a comparison of a particular dynamic non-comparable value can panic. Keep this example to concrete string keys; a comparable constraint does not validate every possible dynamic value hidden inside an interface."
+        }
+      ],
+      "reasoning": "The generic equality function requires comparable arguments, but slice equality is not supported.",
+      "source": "https://go.dev/ref/spec",
+      "prerequisites": [
+        "go-39"
+      ]
+    },
+    {
+      "id": "go-41",
+      "quizTarget": "If Label is renamed label in both helper.go and the caller, what happens?",
+      "essentialSupport": [
+        {
+          "paragraph": 0,
+          "fact": "Files in a directory normally belong to one package. An identifier beginning with an uppercase letter is exported from its package. Lowercase names are not accessible through an import from another package."
+        },
+        {
+          "paragraph": 1,
+          "fact": "Save these separate files.\n```text\n// go.mod\nmodule example.test/lesson\ngo 1.27.0\n```\n```go\n// helper/helper.go\npackage helper\nfunc Label() string { return \"review\" }\n```\nFrom the root, go run . builds the main package and this local helper; the import path is the module path plus /helper, not a download request in this fixture."
+        }
+      ],
+      "reasoning": "Sharing a module does not bypass package export rules; the caller is in package main rather than helper.",
+      "source": "https://go.dev/ref/spec",
+      "prerequisites": [
+        "go-40"
+      ]
+    },
+    {
+      "id": "go-42",
+      "quizTarget": "If Double is implemented as n * 3 instead, what prints after rebuilding?",
+      "essentialSupport": [
+        {
+          "paragraph": 0,
+          "fact": "go.mod records the module path and Go language requirement. Imports use module paths, while package names are identifiers used in source. A module can contain several packages."
+        },
+        {
+          "paragraph": 1,
+          "fact": "A require records a dependency version; replace can redirect that module to a local directory. Save the files below and run go run . with GOTOOLCHAIN=local and GOPROXY=off to prevent toolchain or dependency downloads. A replacement needs the local module\u2019s own go.mod; it is not copied into the main module automatically.\n```text\n// go.mod\nmodule example.test/app\ngo 1.27.0\nrequire example.test/math v0.0.0\nreplace example.test/math => ./localmath\n// localmath/go.mod\nmodule example.test/math\ngo 1.27.0\n// localmath/math.go (Go source)\npackage math\nfunc Double(n int) int { return n * 2 }\n```"
+        }
+      ],
+      "reasoning": "The import resolves to the supplied local module source, so rebuilding uses its changed implementation.",
+      "source": "https://go.dev/doc/modules/gomod-ref",
+      "prerequisites": [
+        "go-41"
+      ]
+    },
+    {
+      "id": "go-43",
+      "quizTarget": "If the argument becomes \"seven\" while %d stays, what should go vet report?",
+      "essentialSupport": [
+        {
+          "paragraph": 0,
+          "fact": "gofmt applies standard Go layout; gofmt -w main.go rewrites that file. Formatting is not a correctness check and should not be confused with compiling or testing."
+        },
+        {
+          "paragraph": 1,
+          "fact": "go vet inspects suspicious code that can still compile, including a Printf format verb incompatible with an argument. %d expects an integer-like value; %s formats a string. Vet is useful evidence, not proof of absence of bugs. Run go vet main.go on this standalone example."
+        }
+      ],
+      "reasoning": "The literal format demands an integer-like argument but the supplied value is a string; vet checks this mismatch.",
+      "source": "https://pkg.go.dev/cmd/vet",
+      "prerequisites": [
+        "go-42"
+      ]
+    },
+    {
+      "id": "go-44",
+      "quizTarget": "If Twice returns n + 2 instead, what happens when the test runs?",
+      "essentialSupport": [
+        {
+          "paragraph": 0,
+          "fact": "A file ending _test.go can contain tests named TestXxx(t *testing.T). The testing package supplies t; t.Fatalf records failure, formats a message and stops that test. go test runs tests; go run does not."
+        },
+        {
+          "paragraph": 1,
+          "fact": "Save the visible helper/main as main.go and the test below as main_test.go in a module. Run go test -count=1 to avoid using a cached test result. The if initializer got := Twice(3) binds got for the condition and body of that if. The comparison asks whether Twice(3) actually returns six; the successful main print alone is not the test.\n```go\npackage main\nimport \"testing\"\nfunc TestTwice(t *testing.T) {\n if got := Twice(3); got != 6 { t.Fatalf(\"got %d, want 6\", got) }\n}\n```"
+        }
+      ],
+      "reasoning": "The recorded expectation remains six while the changed implementation computes five, so the assertion exposes the regression.",
+      "source": "https://pkg.go.dev/testing",
+      "prerequisites": [
+        "go-43"
+      ]
+    }
+  ],
+  "library-and-concurrency": [
+    {
+      "id": "go-45",
+      "quizTarget": "If the above row expects 11 instead of 10, what happens?",
+      "essentialSupport": [
+        {
+          "paragraph": 0,
+          "fact": "A table-driven test stores named inputs and expected results in a slice of struct values. Here []struct declares a slice whose element type is an anonymous structure; each row fills name, input and want in order. The same assertion runs for every row."
+        },
+        {
+          "paragraph": 1,
+          "fact": "Save this complete example as main_test.go in a local module and run go test -run TestClamp -v. t.Run names each subtest; its callback receives that subtest\u2019s *testing.T. t.Fatalf reports the actual and wanted values and ends the failing subtest. PASS and timing lines come from the test runner, not a hardcoded program print."
+        }
+      ],
+      "reasoning": "The changed expectation disagrees with the unchanged upper-bound behavior; the failure is localized by its subtest name.",
+      "source": "https://pkg.go.dev/testing#T.Run",
+      "prerequisites": [
+        "go-44"
+      ]
+    },
+    {
+      "id": "go-46",
+      "quizTarget": "If the implementation caps at 11 instead of 10, what does seed 11 reveal?",
+      "essentialSupport": [
+        {
+          "paragraph": 0,
+          "fact": "This fuzz target checks that clamp always returns a value from zero through ten. f.Add records seed inputs, and f.Fuzz supplies the function exercised by the testing engine. A property can be incomplete: a function that always returns zero passes this range invariant while still being a wrong clamp."
+        },
+        {
+          "paragraph": 1,
+          "fact": "Save as main_test.go and run go test -run FuzzClamp -v to execute only the seed corpus. An active search needs an explicit command such as go test -fuzz FuzzClamp -fuzztime 2s and has different resource costs. The lesson\u2019s deterministic verification runs seeds only; it does not claim a long fuzzing campaign or proof for all integers."
+        }
+      ],
+      "reasoning": "The existing seed reaches the changed bad boundary and produces eleven, which the invariant rejects.",
+      "source": "https://pkg.go.dev/testing#hdr-Fuzzing",
+      "prerequisites": [
+        "go-45"
+      ]
+    },
+    {
+      "id": "go-47",
+      "quizTarget": "If the join separator becomes \"-\" but the expected result stays \"ab\", what happens?",
+      "essentialSupport": [
+        {
+          "paragraph": 0,
+          "fact": "BenchmarkJoin accepts *testing.B. strings.Join(parts, separator) combines the strings with that separator between neighboring items. The b.N loop repeats the operation a count chosen by the runner; a package variable sink keeps the result observable. Benchmarks are not automatically a realistic application workload, and allocation patterns and machine conditions affect measurements."
+        },
+        {
+          "paragraph": 1,
+          "fact": "Save as main_test.go and run go test -run ^$ -bench BenchmarkJoin -benchtime=1x. The anchored empty test pattern skips ordinary tests; 1x requests one measured iteration, useful as a smoke check, not a stable performance comparison. Timing output varies. A correctness guard still rejects an unexpected joined string."
+        }
+      ],
+      "reasoning": "The new result is a-b, so the unchanged correctness condition fails; a timing number cannot repair wrong behavior.",
+      "source": "https://pkg.go.dev/testing#hdr-Benchmarks",
+      "prerequisites": [
+        "go-46"
+      ]
+    },
+    {
+      "id": "go-48",
+      "quizTarget": "If the source text becomes \"go\", what prints?",
+      "essentialSupport": [
+        {
+          "paragraph": 0,
+          "fact": "io.Reader fills a supplied byte slice and returns a byte count plus an error. A reader may return data and an error together, so process n bytes before deciding what the error means. io.Writer must report how much it accepted; a short write requires an error."
+        },
+        {
+          "paragraph": 1,
+          "fact": "io.Copy transfers until EOF or another failure and returns the total bytes written plus an error. strings.NewReader supplies text bytes and bytes.Buffer collects them, so this example uses no files or network. Normal source exhaustion is not returned as an io.Copy error."
+        }
+      ],
+      "reasoning": "The two source bytes are copied successfully; normal EOF finishes io.Copy without an error.",
+      "source": "https://pkg.go.dev/io#Copy",
+      "prerequisites": [
+        "go-47"
+      ]
+    },
+    {
+      "id": "go-49",
+      "quizTarget": "If the path names a file inside a nonexistent directory in this fixture, what prints?",
+      "essentialSupport": [
+        {
+          "paragraph": 0,
+          "fact": "os.Create creates or truncates a file. Run this sample only in a disposable directory because it replaces notes.txt. Check the returned error before using the *os.File; a failed creation does not provide a usable file."
+        },
+        {
+          "paragraph": 1,
+          "fact": "WriteString can fail, and Close can report a final failure. This helper closes explicitly after attempting the write, then prioritizes the write error while still observing the close result. A bare deferred Close would run but its error would be ignored unless handled deliberately."
+        }
+      ],
+      "reasoning": "Creation fails and the helper returns that error before trying to write.",
+      "source": "https://pkg.go.dev/os#File.Close",
+      "prerequisites": [
+        "go-48"
+      ]
+    },
+    {
+      "id": "go-50",
+      "quizTarget": "If the input is a twenty-character line, what happens under this configured limit?",
+      "essentialSupport": [
+        {
+          "paragraph": 0,
+          "fact": "bufio.Scanner splits input into tokens; its default split is lines with line endings removed. Scanner has a maximum token size, so it is not an unlimited line reader. Buffer configures the starting buffer and maximum before scanning starts."
+        },
+        {
+          "paragraph": 1,
+          "fact": "Scan returning false can mean end-of-input or a failure. Always inspect Err after the loop. This fixture chooses a tiny maximum of eight bytes and prints a stable label rather than depending on the exact error text. A larger configured limit still needs an application size policy."
+        }
+      ],
+      "reasoning": "The token exceeds the small configured maximum, and Err distinguishes that failure from normal exhaustion.",
+      "source": "https://pkg.go.dev/bufio#Scanner",
+      "prerequisites": [
+        "go-49"
+      ]
+    },
+    {
+      "id": "go-51",
+      "quizTarget": "If the JSON minutes value is 0, what prints?",
+      "essentialSupport": [
+        {
+          "paragraph": 0,
+          "fact": "encoding/json.Unmarshal decodes into exported fields. The backtick tag `json:\"minutes\"` maps the field to a JSON key; a raw Go string literal uses backticks to hold JSON without escaping its quotes. Successful decoding does not enforce application ranges."
+        },
+        {
+          "paragraph": 1,
+          "fact": "The Session struct holds an integer minute count, and the separate check allows only 1 through 60. A missing field becomes the zero value and is rejected by this policy. Unmarshal ignores unknown fields by default; stricter schemas need an explicit decoder policy."
+        }
+      ],
+      "reasoning": "Zero is valid JSON and decodes as an int, but the application\u2019s range check rejects it.",
+      "source": "https://pkg.go.dev/encoding/json#Unmarshal",
+      "prerequisites": [
+        "go-50"
+      ]
+    },
+    {
+      "id": "go-52",
+      "quizTarget": "If the text changes to \"90\" without a unit, what happens?",
+      "essentialSupport": [
+        {
+          "paragraph": 0,
+          "fact": "time.Duration represents a signed nanosecond count. time.ParseDuration accepts unit-marked text such as 1m30s and returns a duration plus an error. A bare number without a unit is not interpreted as minutes."
+        },
+        {
+          "paragraph": 1,
+          "fact": "This example converts a fixed duration to seconds using Seconds, which returns float64. It does not call time.Now or sleep. For calendar events, location and date rules are separate concerns; duration arithmetic alone does not model daylight-saving transitions."
+        }
+      ],
+      "reasoning": "The duration grammar requires a unit for this nonzero number; the checked error path handles rejection.",
+      "source": "https://pkg.go.dev/time#ParseDuration",
+      "prerequisites": [
+        "go-51"
+      ]
+    },
+    {
+      "id": "go-53",
+      "quizTarget": "If cancel is called twice before waiting, what prints?",
+      "essentialSupport": [
+        {
+          "paragraph": 0,
+          "fact": "context.WithCancel derives a cancellable context and returns a CancelFunc. The notation <-ctx.Done() receives from that channel, waiting until cancellation closes it; channel operations are developed in the following lessons. Calling cancel closes the context\u2019s Done channel; it does not forcibly terminate arbitrary code. Operations must observe cancellation and stop cooperatively."
+        },
+        {
+          "paragraph": 1,
+          "fact": "Defer cancel even when another branch may cancel earlier; repeated calls are safe. After cancellation, Err reports context.Canceled. Background has no deadline and is a root context, not an automatic timeout. This fixture cancels immediately without waiting for a timer."
+        }
+      ],
+      "reasoning": "Cancellation remains in effect and repeated CancelFunc calls do not undo it.",
+      "source": "https://pkg.go.dev/context#WithCancel",
+      "prerequisites": [
+        "go-52"
+      ]
+    },
+    {
+      "id": "go-54",
+      "quizTarget": "If the worker assigns 11, what prints after receiving from done?",
+      "essentialSupport": [
+        {
+          "paragraph": 0,
+          "fact": "go invokes a function concurrently with its caller. The func() { ... }() form declares and immediately invokes an anonymous function; go changes that invocation into a goroutine. main does not automatically wait for every goroutine before the program exits."
+        },
+        {
+          "paragraph": 1,
+          "fact": "make(chan struct{}) creates an unbuffered channel carrying empty-struct signals. The worker writes result and closes done. Receiving from the closed channel unblocks main; that synchronization orders the preceding write before the read. Only the worker owns closing done, and no sleep guesses are involved."
+        }
+      ],
+      "reasoning": "The completion receive occurs after the worker\u2019s write and close, so the later read observes eleven.",
+      "source": "https://go.dev/ref/mem",
+      "prerequisites": [
+        "go-53"
+      ]
+    },
+    {
+      "id": "go-55",
+      "quizTarget": "If the worker sends 8 instead, what prints?",
+      "essentialSupport": [
+        {
+          "paragraph": 0,
+          "fact": "make(chan int) creates an unbuffered channel. A send ch <- value and a receive <-ch rendezvous; the sender cannot finish the send until a receiver is ready. Channels communicate typed values, not arbitrary shared memory transactions."
+        },
+        {
+          "paragraph": 1,
+          "fact": "The worker sends one integer, then closes a separate completion channel. main receives the value and waits for done so the worker\u2019s lifetime is complete before returning. Closing the data channel is unnecessary when the receiver knows exactly one value is expected."
+        }
+      ],
+      "reasoning": "The receiver obtains eight and the unchanged calculation doubles it.",
+      "source": "https://go.dev/ref/spec#Channel_types",
+      "prerequisites": [
+        "go-54"
+      ]
+    },
+    {
+      "id": "go-56",
+      "quizTarget": "If the second queued value becomes 9, what is the drained total?",
+      "essentialSupport": [
+        {
+          "paragraph": 0,
+          "fact": "make(chan int, 2) creates a channel with room for two queued integers. These two sends can complete without a receiver. Buffering does not make an unlimited queue or guarantee that another goroutine has finished processing a value."
+        },
+        {
+          "paragraph": 1,
+          "fact": "Closing announces that no more values will be sent; it does not discard queued values. range drains the buffered values and stops after the closed channel is empty. Sending after close or closing twice panics; this example performs neither invalid operation."
+        }
+      ],
+      "reasoning": "Both queued integers remain available after close, so range sums three and nine.",
+      "source": "https://go.dev/ref/spec#Close",
+      "prerequisites": [
+        "go-55"
+      ]
+    },
+    {
+      "id": "go-57",
+      "quizTarget": "If the initial send is removed, which branch runs?",
+      "essentialSupport": [
+        {
+          "paragraph": 0,
+          "fact": "select waits until a communication case can proceed; if several are ready, it chooses among them rather than honoring source-order priority. A default branch runs only when no communication can proceed immediately."
+        },
+        {
+          "paragraph": 1,
+          "fact": "This fixture places one value in a buffered channel before select, so the receive is ready and default cannot run. The changed fixture leaves the channel empty with no sender, so default runs instead. No time.Sleep or scheduler-order assertion is needed."
+        }
+      ],
+      "reasoning": "An open empty channel has no immediately available value and no sender, so default is selected.",
+      "source": "https://go.dev/ref/spec#Select_statements",
+      "prerequisites": [
+        "go-56"
+      ]
+    },
+    {
+      "id": "go-58",
+      "quizTarget": "If the worker stores 11, what prints after Wait?",
+      "essentialSupport": [
+        {
+          "paragraph": 0,
+          "fact": "sync.WaitGroup tracks outstanding tasks. Add(1) runs before launching the goroutine; the worker defers Done so its task count decreases when it returns. Wait blocks until the count reaches zero. Do not copy a WaitGroup after first use."
+        },
+        {
+          "paragraph": 1,
+          "fact": "WaitGroup coordinates lifetime, not arbitrary simultaneous writes. This example has one worker writing result and main reads only after Wait, so there is no competing access. Adding concurrent writers would require a separate synchronization policy."
+        }
+      ],
+      "reasoning": "The registered worker completes its write before Done lets Wait return.",
+      "source": "https://pkg.go.dev/sync#WaitGroup",
+      "prerequisites": [
+        "go-57"
+      ]
+    },
+    {
+      "id": "go-59",
+      "quizTarget": "If each worker increments 25 times, what is the final count?",
+      "essentialSupport": [
+        {
+          "paragraph": 0,
+          "fact": "count++ is not atomic. Every concurrent update here locks the same sync.Mutex, changes count and unlocks it. A mutex\u2019s zero value is usable; never copy it after use. Different mutex objects would not protect this one shared counter."
+        },
+        {
+          "paragraph": 1,
+          "fact": "Two workers each make 100 protected increments. WaitGroup counts both before launch and each worker defers Done. After Wait, neither worker accesses count again, so the final observation is safe. The fixture does not run an intentionally racy unlocked variant."
+        }
+      ],
+      "reasoning": "Both workers contribute twenty-five serialized updates before the final read.",
+      "source": "https://pkg.go.dev/sync#Mutex",
+      "prerequisites": [
+        "go-58"
+      ]
+    },
+    {
+      "id": "go-60",
+      "quizTarget": "If each update adds 2 instead of 1, what prints?",
+      "essentialSupport": [
+        {
+          "paragraph": 0,
+          "fact": "atomic.Int64 provides Add and Load operations on an integer. Its zero value starts at zero, and Add returns the new value. Do not copy an atomic object after first use. Atomic operations have sequentially consistent ordering, not a promise about a particular implementation speed."
+        },
+        {
+          "paragraph": 1,
+          "fact": "Two workers update the same typed atomic and finish before Load. This avoids lost increments for the one counter. Combining several separate Load and Store calls would not automatically make an entire algorithm atomic or preserve an invariant involving other fields."
+        }
+      ],
+      "reasoning": "There are two hundred atomic additions of two, yielding four hundred.",
+      "source": "https://pkg.go.dev/sync/atomic#Int64",
+      "prerequisites": [
+        "go-59"
+      ]
+    },
+    {
+      "id": "go-61",
+      "quizTarget": "If cancellation happens before starting the goroutine instead, what prints after done?",
+      "essentialSupport": [
+        {
+          "paragraph": 0,
+          "fact": "Cancellation alone does not wait for a goroutine to exit. This owner supplies a context, cancels it and then waits for a separate done channel. The worker owns closing done using defer, so main returns only after cleanup and result assignment."
+        },
+        {
+          "paragraph": 1,
+          "fact": "The worker receives from ctx.Done; if cancellation already happened, that receive is immediately ready. This handles both cancellation before start and cancellation while waiting without a timing assumption. A worker doing other blocking work would also need cancellation-aware operations at those boundaries."
+        }
+      ],
+      "reasoning": "Context cancellation is a persistent signal; the later receiver does not need to have been waiting at the instant of cancellation.",
+      "source": "https://pkg.go.dev/context#Context",
+      "prerequisites": [
+        "go-60"
+      ]
+    },
+    {
+      "id": "go-62",
+      "quizTarget": "If the request method becomes POST, what status and body result?",
+      "essentialSupport": [
+        {
+          "paragraph": 0,
+          "fact": "An HTTP handler receives an http.ResponseWriter and *http.Request. Set headers before WriteHeader or the first body write; the first body write would otherwise imply status 200. Once headers are committed, later header edits generally cannot change the response already sent."
+        },
+        {
+          "paragraph": 1,
+          "fact": "httptest.NewRequest constructs an in-memory incoming request, and NewRecorder records handler output. Calling handler directly performs no HTTP network request. This example accepts GET and returns a 405 rejection with an Allow: GET header for other methods; fmt.Fprint\u2019s write error is checked, although the in-memory recorder does not simulate a broken network connection."
+        }
+      ],
+      "reasoning": "The method guard writes the 405 error and returns before the success path.",
+      "source": "https://pkg.go.dev/net/http#Handler",
+      "prerequisites": [
+        "go-61"
+      ]
+    },
+    {
+      "id": "go-63",
+      "quizTarget": "If the requested path changes to /missing, what fails first?",
+      "essentialSupport": [
+        {
+          "paragraph": 0,
+          "fact": "ResponseRecorder implements ResponseWriter, so a test can invoke the handler directly and inspect the recorded status and body. This isolates handler behavior; it does not test a real listener, TLS, socket failures or deployment configuration."
+        },
+        {
+          "paragraph": 1,
+          "fact": "Save as main_test.go and run go test -run TestHandler -v. This test expects status 200 and exactly ready. The missing path branch uses http.NotFound, so changing the request path should fail the unchanged success expectation with a precise status diagnostic."
+        }
+      ],
+      "reasoning": "The handler\u2019s path guard writes NotFound and returns; the test then detects the non-200 status.",
+      "source": "https://pkg.go.dev/net/http/httptest#ResponseRecorder",
+      "prerequisites": [
+        "go-62"
+      ]
+    },
+    {
+      "id": "go-64",
+      "quizTarget": "If the context deadline is already in the past, what does this fake transaction report?",
+      "essentialSupport": [
+        {
+          "paragraph": 0,
+          "fact": "http.Client delegates a single transaction to its RoundTripper. This fake transport returns an in-memory response and never calls the default transport, DNS, a listener or a socket. io.NopCloser wraps the strings.Reader with a Close method that does nothing; it does not acquire or release an external resource. Its RoundTrip checks the request context. Real custom transports must also honor cancellation during their actual blocking work."
+        },
+        {
+          "paragraph": 1,
+          "fact": "NewRequestWithContext attaches the context; a one-hour timeout here is a bound, not a timing assertion. Defer cancel releases context resources. On successful Do, close the response body even when reading fails. A received HTTP error status is not automatically a Do transport error; inspect StatusCode separately. The fixture reads only its known tiny in-memory body."
+        }
+      ],
+      "reasoning": "The expired context yields DeadlineExceeded; errors.Is recognizes it even through the client\u2019s wrapping error.",
+      "source": "https://pkg.go.dev/net/http#RoundTripper",
+      "prerequisites": [
+        "go-63"
+      ]
+    },
+    {
+      "id": "go-65",
+      "quizTarget": "If the first input changes from 15 to 70, what is the total?",
+      "essentialSupport": [
+        {
+          "paragraph": 0,
+          "fact": "This producer considers a fixed list of minute counts. It sends only values 1 through 60, choosing to skip invalid inputs rather than convert them to zero. The send-only chan<- int parameter documents that the producer sends and closes but does not receive."
+        },
+        {
+          "paragraph": 1,
+          "fact": "The producer defers closing the values channel and a completion channel. The consumer ranges until values is closed, then waits for done before printing its total. A fixed source bounds this exercise; a consumer that exits early would need a cancellation-aware send so the producer cannot remain blocked. No early-exit consumer is used here."
+        }
+      ],
+      "reasoning": "Seventy fails the upper-bound check, negative one and zero also fail, and twenty is the only accepted value.",
+      "source": "https://go.dev/ref/spec#Channel_types",
+      "prerequisites": [
+        "go-64"
+      ]
+    }
+  ]
+}

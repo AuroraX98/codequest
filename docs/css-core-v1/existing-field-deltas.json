@@ -1,0 +1,295 @@
+[
+  {
+    "kind": "lesson",
+    "id": "css-02",
+    "path": [
+      "extraFiles",
+      0,
+      "code"
+    ],
+    "before": "<!doctype html><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"><main id=\"app\"><article class=\"card\"><span class=\"badge\">Curious</span><h1>Riley</h1><img alt=\"A tiny landscape\" src=\"data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=\"><p>I collect interesting little facts.</p></article></main>",
+    "after": "<!doctype html><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"><main id=\"app\"><article class=\"card\"><span class=\"badge\">Curious</span><h1>Riley</h1><img alt=\"A tiny landscape\" src=\"data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%221200%22%20height%3D%22600%22%20viewBox%3D%220%200%201200%20600%22%3E%3Cpath%20fill%3D%22teal%22%20d%3D%22M0%200h1200v600H0z%22%2F%3E%3Ccircle%20fill%3D%22gold%22%20cx%3D%22600%22%20cy%3D%22300%22%20r%3D%22150%22%2F%3E%3C%2Fsvg%3E\"><p>I collect interesting little facts.</p></article></main>",
+    "reason": "Original local 2:1 image makes responsive-fit/aspect tests meaningful; replaces uninformative 1px fixture, no external request."
+  },
+  {
+    "kind": "lesson",
+    "id": "css-02",
+    "path": [
+      "checks"
+    ],
+    "before": [
+      {
+        "label": "Card has a width cap",
+        "expression": "parseFloat(getComputedStyle(document.querySelector(\".card\")).maxWidth)>0"
+      },
+      {
+        "label": "Image is constrained",
+        "expression": "parseFloat(getComputedStyle(document.querySelector(\".card img\")).maxWidth)<=100"
+      },
+      {
+        "label": "Card uses border-box sizing",
+        "expression": "getComputedStyle(document.querySelector(\".card\")).boxSizing===\"border-box\""
+      }
+    ],
+    "after": [
+      {
+        "label": "Card has a width cap",
+        "expression": "parseFloat(getComputedStyle(document.querySelector(\".card\")).maxWidth)>0"
+      },
+      {
+        "label": "Image uses the percentage constraint",
+        "expression": "getComputedStyle(document.querySelector(\".card img\")).maxWidth===\"100%\""
+      },
+      {
+        "label": "Card uses border-box sizing",
+        "expression": "getComputedStyle(document.querySelector(\".card\")).boxSizing===\"border-box\""
+      },
+      {
+        "label": "Loaded image fits and preserves its aspect ratio",
+        "expression": "(()=>{const i=document.querySelector(\".card img\"),c=document.querySelector(\".card\"),s=getComputedStyle(c),r=i.getBoundingClientRect();const available=c.clientWidth-parseFloat(s.paddingLeft)-parseFloat(s.paddingRight);return i.naturalWidth===1200&&i.naturalHeight===600&&r.width<=available+1&&Math.abs(r.width/r.height-2)<0.01})()"
+      }
+    ],
+    "reason": "Reject 100px false-positive and verify actual loaded-image geometry rather than only parsing a number."
+  },
+  {
+    "kind": "lesson",
+    "id": "css-02",
+    "path": [
+      "explanation",
+      6
+    ],
+    "before": "For the supplied profile, use .card with width: 100%, a positive max-width, border-box sizing, and automatic side margins. Constrain .card img with max-width: 100% and height: auto. Keep the badge and description inside the card on narrow screens. The checks confirm a width cap, image constraint, and border-box, but they do not fully measure every overflow case. Resize the preview and watch the actual edges. Explain why width and max-width do different jobs, and calculate a percentage width before trying a different percentage.",
+    "after": "For the supplied profile, use .card with width: 100%, a positive max-width, border-box sizing, and automatic side margins. Constrain .card img with max-width: 100% and height: auto. Keep the badge and description inside the card on narrow screens. The checks confirm a width cap, the percentage image constraint, border-box sizing, and the supplied local image’s fit and 2:1 aspect ratio. They do not measure every possible overflow case. Resize the preview and watch the actual edges. Explain why width and max-width do different jobs, and calculate a percentage width before trying a different percentage.",
+    "reason": "Keep assessed scope precise."
+  },
+  {
+    "kind": "lesson",
+    "id": "css-05",
+    "path": [
+      "checks"
+    ],
+    "before": [
+      {
+        "label": "A spacing token exists",
+        "expression": "getComputedStyle(document.documentElement).getPropertyValue(\"--space\").trim()!==\"\""
+      },
+      {
+        "label": "Heading size is bounded",
+        "expression": "getComputedStyle(document.querySelector(\".panel h2\")).fontSize!==\"\""
+      },
+      {
+        "label": "Wrapper is a query container",
+        "expression": "getComputedStyle(document.querySelector(\".panel-wrap\")).containerType.includes(\"inline-size\")"
+      }
+    ],
+    "after": [
+      {
+        "label": "A spacing token exists",
+        "expression": "getComputedStyle(document.documentElement).getPropertyValue(\"--space\").trim()!==\"\""
+      },
+      {
+        "label": "Heading reacts to the lower and upper size bounds",
+        "expression": "(()=>{const root=document.documentElement,h=document.querySelector(\".panel h2\"),old=root.style.fontSize;try{const preferred=innerWidth*0.03;root.style.fontSize=(preferred/4)+\"px\";const small=parseFloat(getComputedStyle(h).fontSize);root.style.fontSize=(preferred*2)+\"px\";const large=parseFloat(getComputedStyle(h).fontSize);return Math.abs(small-preferred/2)<0.5&&Math.abs(large-preferred*2.4)<0.5}finally{root.style.fontSize=old}})()"
+      },
+      {
+        "label": "Wrapper is a query container",
+        "expression": "getComputedStyle(document.querySelector(\".panel-wrap\")).containerType.includes(\"inline-size\")"
+      },
+      {
+        "label": "Container width changes the panel layout",
+        "expression": "(()=>{const w=document.querySelector(\".panel-wrap\"),p=document.querySelector(\".panel\"),old=w.style.width;try{w.style.width=\"480px\";const narrow=getComputedStyle(p).display;w.style.width=\"520px\";const s=getComputedStyle(p),tracks=s.gridTemplateColumns.split(/\\s+/).map(Number.parseFloat);return narrow!==\"grid\"&&s.display===\"grid\"&&tracks.length===2&&Math.abs(tracks[1]/tracks[0]-2)<0.05}finally{w.style.width=old}})()"
+      }
+    ],
+    "reason": "Replace nonempty-font false-positive with tested bounds and actual narrow/wide container geometry."
+  },
+  {
+    "kind": "lesson",
+    "id": "css-05",
+    "path": [
+      "explanation",
+      6
+    ],
+    "before": "For the exercise, define --space and a bounded --title-size on :root. Use var() for padding and heading size. Mark .panel-wrap with container-type: inline-size, and use a container query at a minimum width of 500px to switch .panel into the required layout. The checks find the token, a computed font size, and the container setting. A nonempty font size alone does not prove you used clamp or correct bounds, so inspect the authored rule and resize the container. Try small and large preferred values and explain which bound wins.",
+    "after": "For the exercise, define --space: 1rem and --title-size: clamp(1.2rem, 3vw, 2rem) on :root. Use var() for padding and heading size. Mark .panel-wrap with container-type: inline-size, and use a container query at a minimum width of 500px to switch .panel into a two-column grid with 1fr 2fr tracks. The supplied checks change the root font size to inspect both bounds, and change the wrapper from 480px to 520px to inspect the layout switch; they restore those values afterward. Inspect the authored rule too: matching a few computed results does not prove every possible size behaves correctly. Try small and large preferred values and explain which bound wins.",
+    "reason": "State exact size/layout contract before strengthened checks; helper mutations are explained infrastructure."
+  },
+  {
+    "kind": "lesson",
+    "id": "css-07",
+    "path": [
+      "explanation",
+      4
+    ],
+    "before": "A transform changes how an element is drawn. rotate(45deg) turns it by an angle. deg means degrees: a full turn is 360 degrees, a half turn is 180 degrees, and a quarter turn is 90 degrees. translateX(6px) shifts along an x direction; scale() would resize the drawing. Those are different operations. A transform does not make the surrounding layout recalculate as though the item had a new ordinary-flow size. A rotated pointer can therefore reach outside its original rectangle, so inspect its actual position and edges.",
+    "after": "A transform changes how an element is drawn. rotate(45deg) turns it by an angle. deg means degrees: a full turn is 360 degrees, a half turn is 180 degrees, and a quarter turn is 90 degrees. translateX(6px) shifts along an x direction; scaling is a separate transform operation, outside this exercise. These are different operations. A transform does not make the surrounding layout recalculate as though the item had a new ordinary-flow size. A rotated pointer can therefore reach outside its original rectangle, so inspect its actual position and edges.",
+    "reason": "Explicitly defer unworked scaling rather than advertise an unsupported taught callable."
+  },
+  {
+    "kind": "lesson",
+    "id": "css-12",
+    "path": [
+      "explanation",
+      2
+    ],
+    "before": "A child with z-index: 999 cannot escape a parent context below a sibling context. Raise the appropriate parent when the whole group should be above.",
+    "after": "A child with z-index: 999 cannot escape a parent context below a sibling context. Raise the appropriate parent when the whole group should be above.\n\nFor this independent worked page, the teal child stays behind the silver sibling even with its large local number.\n\n```html\n<div class=\"stack-example\"><div class=\"low\"><span class=\"tag\">Teal label</span></div><div class=\"high\">Silver cover</div></div>\n```\n\n```css\n.stack-example { position: relative; width: 180px; height: 80px; }\n.low, .high { position: absolute; inset: 0; }\n.low { z-index: 0; }\n.tag { position: absolute; inset: 0; z-index: 500; background: teal; }\n.high { z-index: 1; background: silver; }\n```\n\nHere inset: 0 sets all four offsets to zero, filling the reference box. The positioned .low and .high elements each create a context. Changing .low to z-index: 2 raises its whole group, including the child; changing only .tag cannot raise that group.",
+    "reason": "Add complete independent visible stacking example before project; preserve paragraph anchors."
+  },
+  {
+    "kind": "lesson",
+    "id": "css-12",
+    "path": [
+      "quiz",
+      "question"
+    ],
+    "before": "A badge has z-index: 500 inside a parent at0. An overlapping sibling context is at1. What is the right first investigation?",
+    "after": "A badge has z-index: 500 inside a parent at 0. An overlapping sibling context is at 1. What is the right first investigation?",
+    "reason": "Readable prose spacing, no assessment meaning change."
+  },
+  {
+    "kind": "lesson",
+    "id": "css-15",
+    "path": [
+      "quiz",
+      "question"
+    ],
+    "before": "Two columns need120px each and the gap is12px. A container is240px wide. Should this rule fit both columns side by side?",
+    "after": "Two columns need 120px each and the gap is 12px. A container is 240px wide. Should this rule fit both columns side by side?",
+    "reason": "Readable prose spacing, no assessment meaning change."
+  },
+  {
+    "kind": "lesson",
+    "id": "css-15",
+    "path": [
+      "quiz",
+      "explanation"
+    ],
+    "before": "The two minimum widths use240px and their gap needs another12px. One track fits within240px under this rule.",
+    "after": "The two minimum widths use 240px and their gap needs another 12px. One track fits within 240px under this rule.",
+    "reason": "Readable prose spacing, no assessment meaning change."
+  },
+  {
+    "kind": "unit",
+    "id": "css-01",
+    "path": [
+      "prerequisite_ids"
+    ],
+    "before": null,
+    "after": [],
+    "reason": "Place existing applications after their genuine foundations; remove unrelated flex-sizing dependency from grid auto-fit."
+  },
+  {
+    "kind": "unit",
+    "id": "css-02",
+    "path": [
+      "prerequisite_ids"
+    ],
+    "before": null,
+    "after": [
+      "css-01"
+    ],
+    "reason": "Place existing applications after their genuine foundations; remove unrelated flex-sizing dependency from grid auto-fit."
+  },
+  {
+    "kind": "unit",
+    "id": "css-03",
+    "path": [
+      "prerequisite_ids"
+    ],
+    "before": null,
+    "after": [
+      "css-02",
+      "css-10"
+    ],
+    "reason": "Place existing applications after their genuine foundations; remove unrelated flex-sizing dependency from grid auto-fit."
+  },
+  {
+    "kind": "unit",
+    "id": "css-04",
+    "path": [
+      "prerequisite_ids"
+    ],
+    "before": null,
+    "after": [
+      "css-02",
+      "css-10"
+    ],
+    "reason": "Place existing applications after their genuine foundations; remove unrelated flex-sizing dependency from grid auto-fit."
+  },
+  {
+    "kind": "unit",
+    "id": "css-05",
+    "path": [
+      "prerequisite_ids"
+    ],
+    "before": null,
+    "after": [
+      "css-04",
+      "css-23",
+      "css-24"
+    ],
+    "reason": "Place existing applications after their genuine foundations; remove unrelated flex-sizing dependency from grid auto-fit."
+  },
+  {
+    "kind": "unit",
+    "id": "css-06",
+    "path": [
+      "prerequisite_ids"
+    ],
+    "before": null,
+    "after": [
+      "css-45"
+    ],
+    "reason": "Place existing applications after their genuine foundations; remove unrelated flex-sizing dependency from grid auto-fit."
+  },
+  {
+    "kind": "unit",
+    "id": "css-07",
+    "path": [
+      "prerequisite_ids"
+    ],
+    "before": null,
+    "after": [
+      "css-36"
+    ],
+    "reason": "Place existing applications after their genuine foundations; remove unrelated flex-sizing dependency from grid auto-fit."
+  },
+  {
+    "kind": "unit",
+    "id": "css-15",
+    "path": [
+      "prerequisite_ids"
+    ],
+    "before": [
+      "css-04",
+      "css-10",
+      "css-11"
+    ],
+    "after": [
+      "css-04",
+      "css-10",
+      "css-34"
+    ],
+    "reason": "Place existing applications after their genuine foundations; remove unrelated flex-sizing dependency from grid auto-fit."
+  },
+  {
+    "kind": "unit",
+    "id": "css-02",
+    "path": [
+      "level"
+    ],
+    "before": "intermediate",
+    "after": "beginner",
+    "reason": "Box sizing and responsive width are foundations for existing beginner display lesson10."
+  },
+  {
+    "kind": "unit",
+    "id": "css-12",
+    "path": [
+      "level"
+    ],
+    "before": "intermediate",
+    "after": "advanced",
+    "reason": "Stacking application depends on existing advanced positioning07; cross-level Study links remain available."
+  }
+]

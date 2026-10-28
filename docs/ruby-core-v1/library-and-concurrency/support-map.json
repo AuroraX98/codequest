@@ -1,0 +1,382 @@
+[
+  {
+    "id": "ruby-45",
+    "quizTarget": "If minutes changes to 5, which path runs?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "raise ArgumentError, message stops the normal path by raising an exception. A begin/rescue region handles matching classes; rescue ArgumentError => error binds the exception object, whose message explains the failure."
+      },
+      {
+        "paragraph": 1,
+        "fact": "An unqualified rescue handles StandardError subclasses, not every Exception. Rescue only failures you can meaningfully handle; catching too broadly can disguise programming mistakes. Code after the failing expression in begin is skipped."
+      }
+    ],
+    "reasoning": "The guard is false for 5, so no exception transfers control into rescue.",
+    "source": "https://docs.ruby-lang.org/en/4.0/syntax/exceptions_rdoc.html",
+    "prerequisites": [
+      "ruby-44"
+    ]
+  },
+  {
+    "id": "ruby-46",
+    "quizTarget": "If the failure guard becomes attempts < 1, how many attempts occur?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "ensure runs when leaving its begin region through normal completion or an exception. Use it to release resources, not to return a replacement result or raise a new error that masks the original."
+      },
+      {
+        "paragraph": 1,
+        "fact": "retry inside rescue restarts the associated begin region. Bare raise inside rescue re-raises the current exception. Already performed side effects are not undone. This example counts attempts outside begin and retries at most once; never turn every error into an infinite retry."
+      }
+    ],
+    "reasoning": "The first attempt no longer raises; rescue does not execute, but leaving begin still executes ensure.",
+    "source": "https://docs.ruby-lang.org/en/4.0/syntax/exceptions_rdoc.html",
+    "prerequisites": [
+      "ruby-45"
+    ]
+  },
+  {
+    "id": "ruby-47",
+    "quizTarget": "If select becomes reject, which mapped array is printed?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "Enumerable supplies iteration helpers to classes with each. map builds results from each block return; select keeps original elements with truthy block results; reject keeps those whose block results are false or nil."
+      },
+      {
+        "paragraph": 1,
+        "fact": "These non-bang array operations return new arrays rather than replacing the receiver. even? tests integer parity; p prints an inspected array with brackets, making its shape visible."
+      }
+    ],
+    "reasoning": "reject retains the odd original values; map then multiplies those retained values by ten.",
+    "source": "https://docs.ruby-lang.org/en/4.0/Enumerable.html",
+    "prerequisites": [
+      "ruby-46"
+    ]
+  },
+  {
+    "id": "ruby-48",
+    "quizTarget": "If \"moon\" becomes \"to\", what total and sorted sequence result?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "reduce(initial) passes an accumulator and each element to the block; the block return becomes the next accumulator. An explicit zero makes this sum defined even for an empty array."
+      },
+      {
+        "paragraph": 1,
+        "fact": "group_by returns a hash from each block key to matching original elements. sort_by orders by computed keys. String#length supplies a length here; join(\",\") combines array strings with a comma between them."
+      }
+    ],
+    "reasoning": "Lengths become 3, 1 and 2; reduction sums them and sort_by orders ascending by those lengths.",
+    "source": "https://docs.ruby-lang.org/en/4.0/Enumerable.html",
+    "prerequisites": [
+      "ruby-47"
+    ]
+  },
+  {
+    "id": "ruby-49",
+    "quizTarget": "If take(3) becomes take(1), what is realized?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "Calling each without a block returns an Enumerator. lazy builds a demand-driven pipeline rather than eagerly computing a full intermediate collection; force materializes the requested lazy results."
+      },
+      {
+        "paragraph": 1,
+        "fact": "The endless range 1.. can keep producing values. take(3) limits demand before force, so this pipeline terminates. Do not force an unbounded stream or assume laziness makes an expensive individual element cheap."
+      }
+    ],
+    "reasoning": "take bounds the number of mapped values requested, so only the first doubled value is materialized.",
+    "source": "https://docs.ruby-lang.org/en/4.0/Enumerator/Lazy.html",
+    "prerequisites": [
+      "ruby-48"
+    ]
+  },
+  {
+    "id": "ruby-50",
+    "quizTarget": "If the input becomes minutes=15x, what is printed?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "Regexp#match returns MatchData or nil. The pattern delimiters are slashes; \\A and \\z anchor the entire string, [0-9]+ accepts one or more ASCII digits, and parentheses capture a group."
+      },
+      {
+        "paragraph": 1,
+        "fact": "The ternary expression condition ? yes : no selects one result based on truthiness. match[1] retrieves the first captured group, while match[0] is the whole match. A match test does not establish numeric bounds or make arbitrary regexes safe against excessive input; validation still needs size and domain limits."
+      }
+    ],
+    "reasoning": "The end anchor requires every character after the equals sign to belong to the digit group; trailing x prevents a match.",
+    "source": "https://docs.ruby-lang.org/en/4.0/Regexp.html",
+    "prerequisites": [
+      "ruby-49"
+    ]
+  },
+  {
+    "id": "ruby-51",
+    "quizTarget": "If the text changes to ASCII A, which counts result?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "A Ruby String stores bytes with an encoding label. In UTF-8, bytesize counts storage bytes and length counts characters, so an accented character may occupy multiple bytes. Neither measure is a universal count of visible grapheme clusters."
+      },
+      {
+        "paragraph": 1,
+        "fact": "encode converts representation when possible; force_encoding only changes how existing bytes are interpreted. valid_encoding? checks whether bytes fit the label. Do not silently relabel corrupted external data as valid text."
+      }
+    ],
+    "reasoning": "ASCII A is encoded by one UTF-8 byte; both counts are therefore one.",
+    "source": "https://docs.ruby-lang.org/en/4.0/String.html",
+    "prerequisites": [
+      "ruby-50"
+    ]
+  },
+  {
+    "id": "ruby-52",
+    "quizTarget": "If write receives an empty string, is the file left open?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "File.open(path, mode) with a block closes the file when the block exits, including through an exception. Mode w creates or truncates a file; read reads its contents. Use this only on the disposable fixture path."
+      },
+      {
+        "paragraph": 1,
+        "fact": "An IO object retained after the block is closed; closed? lets this example inspect that lifecycle. File errors are exceptions, not proof that a partial operation succeeded. Production paths and permissions require separate validation."
+      }
+    ],
+    "reasoning": "Block exit closes the handle independently of byte count, and w already truncated the file.",
+    "source": "https://docs.ruby-lang.org/en/4.0/File.html",
+    "prerequisites": [
+      "ruby-51"
+    ]
+  },
+  {
+    "id": "ruby-53",
+    "quizTarget": "If the suffix becomes .log, what changes?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "require \"tempfile\" loads the available library. Tempfile.create with a block creates a uniquely named temporary file and closes and removes it on block exit; do not construct predictable global temporary filenames yourself."
+      },
+      {
+        "paragraph": 1,
+        "fact": "File.basename extracts the final path component; File.join assembles components but does not prevent traversal or authorize a user-supplied path. rewind resets the file position to the beginning before read; otherwise reading immediately after writing would start at the end. end_with? tests a string suffix. The generated temporary path stays local here and is not printed."
+      }
+    ],
+    "reasoning": "Only the generated suffix changes; the unchanged .txt predicate is false while block cleanup still removes the file.",
+    "source": "https://docs.ruby-lang.org/en/4.0/Tempfile.html",
+    "prerequisites": [
+      "ruby-52"
+    ]
+  },
+  {
+    "id": "ruby-54",
+    "quizTarget": "If minutes is the JSON string \"15\" rather than number 15, what happens?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "require \"json\" loads the available JSON library. JSON.parse returns Ruby values: an object normally becomes a Hash with string keys, while arrays, numbers and null produce other shapes. Valid JSON alone is not a valid study entry."
+      },
+      {
+        "paragraph": 1,
+        "fact": "is_a?(Class) checks whether a value belongs to that class or a subclass. Range#cover? tests whether a value lies within its endpoints, inclusive for 1..60. Check the container, Integer type and range before use. JSON::ParserError is a syntax failure and is handled separately. The example uses fixed tiny input; external input also needs a size limit and an appropriate nesting policy. Do not replace JSON parsing with eval or unsafe object deserialization."
+      }
+    ],
+    "reasoning": "The JSON is syntactically valid, but its field is a String rather than the explicitly accepted Integer.",
+    "source": "https://docs.ruby-lang.org/en/4.0/JSON.html",
+    "prerequisites": [
+      "ruby-53"
+    ]
+  },
+  {
+    "id": "ruby-55",
+    "quizTarget": "If the quoted topic becomes \"write, test\", how many topic fields are read?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "require \"csv\" loads the available CSV library. CSV.parse handles delimiters inside quoted fields; splitting each line on commas does not. With headers: true, the first row names columns instead of becoming a data record."
+      },
+      {
+        "paragraph": 1,
+        "fact": "A CSV row supports header lookup, and values remain strings unless conversion is explicitly chosen. Missing or duplicate headers and field-size limits require a deliberate import policy; this fixed example assumes exactly the shown two headers."
+      }
+    ],
+    "reasoning": "The quotes make the comma part of the field value; CSV parsing preserves it rather than treating it as a separator.",
+    "source": "https://ruby.github.io/csv/CSV.html",
+    "prerequisites": [
+      "ruby-54"
+    ]
+  },
+  {
+    "id": "ruby-56",
+    "quizTarget": "If the offset becomes +02:00, what local date and time result?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "Time.utc constructs a known UTC instant. getlocal(offset) returns a new Time representation with that offset; it does not change the original. strftime formats fields using directives such as %Y year, %m month, %d day and %H:%M time."
+      },
+      {
+        "paragraph": 1,
+        "fact": "The -05:00 offset here is explicit and fixed. It does not model a region with daylight-saving transitions. Avoid current-clock assertions, and distinguish elapsed duration from calendar-day arithmetic. Ruby Time also has mutating conversions such as localtime; do not assume every time API is immutable."
+      }
+    ],
+    "reasoning": "A positive two-hour offset represents the same instant two hours ahead of UTC; getlocal returns a separate representation.",
+    "source": "https://docs.ruby-lang.org/en/4.0/Time.html",
+    "prerequisites": [
+      "ruby-55"
+    ]
+  },
+  {
+    "id": "ruby-57",
+    "quizTarget": "If the allowed range is narrowed to 1..10 with the same --minutes 15, what prints?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "ARGV is the array of command-line argument strings. require \"optparse\" loads OptionParser; on(\"--minutes N\", Integer) declares a value-bearing option and requests integer conversion. parse! consumes recognized options, leaving positional arguments in ARGV."
+      },
+      {
+        "paragraph": 1,
+        "fact": "For this example run ruby main.rb --minutes 15. A parsed integer can still be outside 1..60, and unexpected positional arguments are rejected. OptionParser::ParseError covers malformed or unknown options; neither option parsing nor shell quoting is permission to evaluate user text."
+      }
+    ],
+    "reasoning": "Conversion succeeded, but the separate domain check now excludes 15.",
+    "source": "https://docs.ruby-lang.org/en/4.0/OptionParser.html",
+    "prerequisites": [
+      "ruby-56"
+    ]
+  },
+  {
+    "id": "ruby-58",
+    "quizTarget": "If expected 10 becomes 11, what does the assertion report?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "require \"minitest/autorun\" loads the installed Minitest 6 test library and runs discovered tests when the process exits. A subclass of Minitest::Test exposes test_ methods. Integer#clamp returns a value capped at its inclusive lower and upper bounds. assert_equal(expected, actual) checks a value; a failed assertion makes the test command fail."
+      },
+      {
+        "paragraph": 1,
+        "fact": "The local command is ruby main.rb --verbose. Inspect the named test and assertion count, not just the process launching. Runtime durations and random seeds vary; the evidence checks stable result markers instead of pretending those details are fixed."
+      }
+    ],
+    "reasoning": "Integer#clamp caps a value at the inclusive bounds; changing the expected value does not change the implementation.",
+    "source": "https://docs.seattlerb.org/minitest/",
+    "prerequisites": [
+      "ruby-57"
+    ]
+  },
+  {
+    "id": "ruby-59",
+    "quizTarget": "If the candidate version becomes 7.0.0, is it admitted?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "Ruby interpreter and gem versions are different. Gem::Version compares version components, and Gem::Requirement checks a declared requirement. The constraint >= 6.0, < 7.0 admits compatible-major candidates, not proof that every API or application behavior works."
+      },
+      {
+        "paragraph": 1,
+        "fact": "require loads an available library; a Gemfile and reviewed lockfile describe a reproducible application dependency resolution when using Bundler. This example only evaluates local version requirements: it installs nothing and makes no network request. Native extensions and platform compatibility need separate checks."
+      }
+    ],
+    "reasoning": "The lower bound is satisfied but the explicit exclusive upper bound rejects major version 7.",
+    "source": "https://guides.rubygems.org/patterns/",
+    "prerequisites": [
+      "ruby-58"
+    ]
+  },
+  {
+    "id": "ruby-60",
+    "quizTarget": "If the worker raises ArgumentError, \"worker failed\" instead of returning 22, what happens at join?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "Thread.new starts a concurrent block. join waits for its termination; value waits and returns the block result. Do not let the main program exit while required workers remain unfinished, and do not infer scheduling order from thread creation order."
+      },
+      {
+        "paragraph": 1,
+        "fact": "A failed worker exception is re-raised to code joining or reading its value, so handle it deliberately. Thread.current.report_on_exception = false disables the automatic background diagnostic for this owned worker, not the exception itself; join still re-raises it. The worked case has no worker failure and prints only after joining. Interpreter scheduling and the GVL do not promise faster CPU execution or replace synchronization."
+      }
+    ],
+    "reasoning": "Disabling automatic background diagnostics does not turn failure into a result; joining observes and re-raises the worker exception.",
+    "source": "https://docs.ruby-lang.org/en/4.0/Thread.html",
+    "prerequisites": [
+      "ruby-59"
+    ]
+  },
+  {
+    "id": "ruby-61",
+    "quizTarget": "If each worker performs 3 increments instead of 100, what is the total?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "Mutex#synchronize acquires a lock, runs its block and releases the lock on exit. A shared read-modify-write such as count += 1 belongs entirely inside the protected region; a runtime lock is not a substitute for this application invariant."
+      },
+      {
+        "paragraph": 1,
+        "fact": "Array.new(2) with a block builds two elements by running the block twice; n.times repeats its block n times. Both workers share the same mutex and count. Each performs a finite number of increments, and the main thread joins every worker before reading. No sleep or assumed interleaving is needed; avoid calling unrelated blocking work while holding a lock."
+      }
+    ],
+    "reasoning": "Two joined workers each contribute three increments protected by the same mutex, so all six updates are retained.",
+    "source": "https://docs.ruby-lang.org/en/4.0/Thread/Mutex.html",
+    "prerequisites": [
+      "ruby-60"
+    ]
+  },
+  {
+    "id": "ruby-62",
+    "quizTarget": "If the producer sends [2, 3, 4], what changes?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "SizedQueue.new(1) creates a synchronized queue holding at most one waiting item. push blocks while full, pop blocks while empty, and the queue coordinates the handoff without guessing worker timing."
+      },
+      {
+        "paragraph": 1,
+        "fact": "The single producer closes this queue after pushing all values. pop returns nil once the closed queue is empty, so nil is reserved here as end-of-stream and never sent as data. The assignment in while stores each popped item and tests its truthiness; false would also stop this loop, so the protocol sends only integers. The consumer drains before joining the producer; joining first could deadlock if the producer is blocked on a full buffer."
+      }
+    ],
+    "reasoning": "Capacity limits buffered items, not the total stream; synchronized consumption makes room until closure signals completion.",
+    "source": "https://docs.ruby-lang.org/en/4.0/Thread/SizedQueue.html",
+    "prerequisites": [
+      "ruby-61"
+    ]
+  },
+  {
+    "id": "ruby-63",
+    "quizTarget": "If the second resume argument becomes next, what is returned?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "Fiber.new creates a suspended computation. resume starts it or continues from its last Fiber.yield; yield hands a value back to the resumer. The next resume argument becomes the value returned from that suspended yield expression."
+      },
+      {
+        "paragraph": 1,
+        "fact": "This example resumes exactly twice: once to yield and once to finish. alive? is false after completion, and resuming again would raise FiberError. Fibers do not automatically supply parallelism or nonblocking I/O. Ractor isolation, scheduler implementation and native-extension specialization are deferred."
+      }
+    ],
+    "reasoning": "The resumed yield expression returns the new argument, which is interpolated into the final result.",
+    "source": "https://docs.ruby-lang.org/en/4.0/Fiber.html",
+    "prerequisites": [
+      "ruby-62"
+    ]
+  },
+  {
+    "id": "ruby-64",
+    "quizTarget": "If the first input changes from 15 to 70, what remains?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "A study-log pipeline can parse a string, reject invalid domain values and keep a finite number of accepted entries. Integer(text, 10, exception: false) returns nil for invalid decimal text instead of raising; range cover? checks the inclusive 1..60 domain."
+      },
+      {
+        "paragraph": 1,
+        "fact": "next skips invalid input; break stops once two valid entries have been accepted. Array << appends and sum adds the accepted integers. This tiny finite input does not establish streaming size limits, persistence or a complete import-error reporting policy."
+      }
+    ],
+    "reasoning": "70 exceeds the upper bound, bad is not an integer and zero is below the lower bound; only 20 is accepted.",
+    "source": "https://docs.ruby-lang.org/en/4.0/Kernel.html",
+    "prerequisites": [
+      "ruby-63"
+    ]
+  }
+]

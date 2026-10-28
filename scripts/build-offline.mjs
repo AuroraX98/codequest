@@ -62,6 +62,7 @@ const list = [
         (transport) => file === path.join(publicRoot, transport.slice(1)),
       ),
   ),
+  ...(await paths(path.join(publicRoot, "third-party"))),
   ...vendors.map((v) => path.join(publicRoot, v.path.slice(1))),
 ];
 const files = [];

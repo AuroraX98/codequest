@@ -1,0 +1,240 @@
+[
+  {
+    "id": "sql-44",
+    "quizTarget": "Change the fallback from -1 to 99 without changing the worked data. What does row 3 receive?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "LAG(value,1,-1) reads value from one earlier row in the window order. Its second argument is the row offset, not a time interval; its third is the fallback when no such row exists. PARTITION BY room starts a separate sequence per room. ORDER BY tick,id makes ties in tick deterministic. The outer ORDER BY id controls display, separately from the window order."
+      },
+      {
+        "paragraph": 1,
+        "fact": "\n```sql\nCREATE TABLE readings(id INTEGER PRIMARY KEY, room TEXT, tick INTEGER, value INTEGER);\nINSERT INTO readings VALUES (1,'east',1,8),(2,'east',2,NULL),(3,'east',3,12),(4,'west',1,5);\nSELECT id, LAG(value,1,-1) OVER (PARTITION BY room ORDER BY tick,id) AS previous\nFROM readings\nORDER BY id;\n```\nThe id/previous rows are (1,-1),(2,8),(3,NULL),(4,-1). East row 3 follows an existing row whose value is NULL, so the fallback does not replace it. West starts its own partition and has no previous row. This query reads observations without changing them."
+      },
+      {
+        "paragraph": 2,
+        "fact": "\n```sql\nCREATE TABLE readings(id INTEGER PRIMARY KEY, room TEXT, tick INTEGER, value INTEGER);\nINSERT INTO readings VALUES (1,'east',1,8),(2,'east',2,9),(3,'east',3,12),(4,'west',1,5);\nSELECT id, LAG(value,1,-1) OVER (PARTITION BY room ORDER BY tick,id) AS previous\nFROM readings\nORDER BY id;\n```\nNow row 3 has previous=9; the first row of each room still gets -1. Optional practice: change the offset to 2 and trace which earlier row exists before running it."
+      }
+    ],
+    "reasoning": "The previous row exists and stores NULL. LAG uses its fallback only when the offset row is absent.",
+    "source": "https://www.sqlite.org/windowfunctions.html",
+    "prerequisites": [
+      "sql-07",
+      "sql-26"
+    ]
+  },
+  {
+    "id": "sql-45",
+    "quizTarget": "Add (4,2,5) to the original worked data. What RANGE total do both tick 2 rows receive?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "A window frame selects the rows used by an aggregate for the current result row. RANGE ending at CURRENT ROW includes peers: rows equal on all window ordering expressions. ROWS counts positions instead. For ordered aggregate windows, the default is RANGE from the start through the current peer group. Here we spell both frames out."
+      },
+      {
+        "paragraph": 1,
+        "fact": "\n```sql\nCREATE TABLE moves(id INTEGER PRIMARY KEY, tick INTEGER, amount INTEGER);\nINSERT INTO moves VALUES (1,1,4),(2,1,7),(3,2,3);\nSELECT id, SUM(amount) OVER (ORDER BY tick RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS peers_total, SUM(amount) OVER (ORDER BY tick,id ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS row_total\nFROM moves\nORDER BY id;\n```\nSUM(amount) adds the amounts in each frame. UNBOUNDED PRECEDING starts at the partition beginning. The RANGE order is tick alone, so both tick 1 rows share total 11. The ROWS order tick,id is unique, giving 4 then 11 then 14. Adding id to RANGE would remove those peer ties; it would answer a different ordering question."
+      },
+      {
+        "paragraph": 2,
+        "fact": "\n```sql\nCREATE TABLE moves(id INTEGER PRIMARY KEY, tick INTEGER, amount INTEGER);\nINSERT INTO moves VALUES (1,1,4),(2,3,7),(3,2,3);\nSELECT id, SUM(amount) OVER (ORDER BY tick RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS peers_total, SUM(amount) OVER (ORDER BY tick,id ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS row_total\nFROM moves\nORDER BY id;\n```\nDisplayed by id, the rows become (1,4,4),(2,14,14),(3,7,7). Window calculation order and final display order differ. Optional practice: add another tick 2 row and predict both totals."
+      }
+    ],
+    "reasoning": "RANGE includes the full tick2 peer group and all earlier ticks:4+7+3+5=19.",
+    "source": "https://www.sqlite.org/windowfunctions.html",
+    "prerequisites": [
+      "sql-07",
+      "sql-43"
+    ]
+  },
+  {
+    "id": "sql-46",
+    "quizTarget": "If moss has one done=1 row with minutes=NULL, what are its filtered COUNT(*) and SUM(minutes)?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "FILTER (WHERE done=1) sends only matching rows into the aggregate immediately before it. It does not remove those rows from the whole query. GROUP BY team still forms groups from all sessions. A query-level WHERE done=1 would remove unfinished rows before grouping and would remove moss entirely in this example."
+      },
+      {
+        "paragraph": 1,
+        "fact": "\n```sql\nCREATE TABLE sessions(id INTEGER PRIMARY KEY, team TEXT, done INTEGER, minutes INTEGER);\nINSERT INTO sessions VALUES (1,'fern',1,10),(2,'fern',0,20),(3,'moss',0,7);\nSELECT team, COUNT(*) AS all_rows, COUNT(*) FILTER (WHERE done=1) AS done_rows, SUM(minutes) FILTER (WHERE done=1) AS done_minutes\nFROM sessions\nGROUP BY team\nORDER BY team;\n```\nCOUNT(*) counts input rows, so the filtered count for moss is 0. SUM(minutes) adds non-NULL minute values; with no matching inputs it returns NULL, not 0. Fern has 2 total rows but only 1 completed row and 10 completed minutes. FILTER is a clause, not a function call."
+      },
+      {
+        "paragraph": 2,
+        "fact": "\n```sql\nCREATE TABLE sessions(id INTEGER PRIMARY KEY, team TEXT, done INTEGER, minutes INTEGER);\nINSERT INTO sessions VALUES (1,'fern',1,10),(2,'fern',0,20),(3,'moss',1,7);\nSELECT team, COUNT(*) AS all_rows, COUNT(*) FILTER (WHERE done=1) AS done_rows, SUM(minutes) FILTER (WHERE done=1) AS done_minutes\nFROM sessions\nGROUP BY team\nORDER BY team;\n```\nMoss now has (all_rows,done_rows,done_minutes)=(1,1,7). Fern is unchanged. Optional practice: set that completed row’s minutes to NULL. Its row still counts, but its value contributes nothing to SUM."
+      }
+    ],
+    "reasoning": "COUNT(*) counts the matching row even when minutes is NULL; SUM has no non-NULL values to add.",
+    "source": "https://www.sqlite.org/lang_aggfunc.html",
+    "prerequisites": [
+      "sql-04",
+      "sql-12",
+      "sql-14"
+    ]
+  },
+  {
+    "id": "sql-47",
+    "quizTarget": "After running the changed ROLLBACK example, which columns remain?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "A schema describes table and column definitions. ALTER TABLE plans ADD COLUMN appends a column; RENAME COLUMN changes its name, not its values. We use a disposable database and a transaction so a deliberate ROLLBACK can undo these changes before commit. Real migrations also need backups and application compatibility checks; this is not a production migration recipe."
+      },
+      {
+        "paragraph": 1,
+        "fact": "\n```sql\nCREATE TABLE plans(id INTEGER PRIMARY KEY, title TEXT);\nINSERT INTO plans VALUES (1,'Map'),(2,'Sketch');\nBEGIN;\nALTER TABLE plans ADD COLUMN status TEXT NOT NULL DEFAULT 'draft';\nALTER TABLE plans RENAME COLUMN title TO label;\nCOMMIT;\nSELECT id,label,status\nFROM plans\nORDER BY id;\n```\nThe result is (1,'Map','draft'),(2,'Sketch','draft'). Existing rows read the new default. NOT NULL rejects missing status values, and DEFAULT supplies a value when it is omitted. SQLite 3.49.1 ADD COLUMN has restrictions: on this populated table, adding a NOT NULL column without a non-NULL default fails. Newer ALTER COLUMN features are not taught here."
+      },
+      {
+        "paragraph": 2,
+        "fact": "\n```sql\nCREATE TABLE plans(id INTEGER PRIMARY KEY, title TEXT);\nINSERT INTO plans VALUES (1,'Map'),(2,'Sketch');\nBEGIN;\nALTER TABLE plans ADD COLUMN status TEXT NOT NULL DEFAULT 'draft';\nALTER TABLE plans RENAME COLUMN title TO label;\nROLLBACK;\nSELECT id,title\nFROM plans\nORDER BY id;\n```\nROLLBACK restores the original title column and removes status. The final query returns (1,Map),(2,Sketch). A failed statement is not an automatic substitute for rolling back a whole multi-statement migration. The supplemental failed-add fixture checks its diagnostic and preserved schema; the learner’s SELECT checks do not grade intentional errors."
+      },
+      {
+        "paragraph": 3,
+        "fact": "Author-validated rejection example, separate from the normal successful project. Use a fresh disposable database and run this complete setup plus intentional failing statement:\n```sql\nCREATE TABLE plans(id INTEGER PRIMARY KEY, title TEXT);\nINSERT INTO plans VALUES (1,'Map'),(2,'Sketch');\nALTER TABLE plans ADD COLUMN status TEXT NOT NULL;\n```\nExpected diagnostic in the pinned engine: Cannot add a NOT NULL column with default value NULL. After catching the statement error, run the following separately to inspect preserved data:\n```sql\nSELECT id,title\nFROM plans\nORDER BY id;\n```\nThe original two id/title rows remain and no status column was added. Current learner SELECT grades do not run expected-error assertions; an error in your normal solution is still an error, not a pass."
+      }
+    ],
+    "reasoning": "The transaction’s ADD and RENAME are both undone, returning to the original table definition.",
+    "source": "https://www.sqlite.org/lang_altertable.html",
+    "prerequisites": [
+      "sql-02",
+      "sql-35",
+      "sql-09"
+    ]
+  },
+  {
+    "id": "sql-48",
+    "quizTarget": "Under the same cascade policy, delete folder 2 from the original setup. How many notes remain?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "With foreign-key enforcement enabled, the default deletion action is NO ACTION. For the ordinary immediate constraint used here, deleting a referenced parent fails unless the references are repaired in the statement. ON DELETE CASCADE instead removes dependent child rows automatically. Choose this policy deliberately: deleting a folder will also delete its notes in this small model."
+      },
+      {
+        "paragraph": 1,
+        "fact": "\n```sql\nPRAGMA foreign_keys=ON;\nCREATE TABLE folders(id INTEGER PRIMARY KEY);\nCREATE TABLE notes(id INTEGER PRIMARY KEY, folder_id INTEGER NOT NULL REFERENCES folders(id) ON DELETE CASCADE);\nINSERT INTO folders VALUES (1),(2);\nINSERT INTO notes VALUES (10,1),(11,1),(12,2);\nDELETE\nFROM folders\nWHERE id=1;\nSELECT id,folder_id\nFROM notes\nORDER BY id;\n```\nOnly note 12 in folder 2 remains. PRAGMA foreign_keys=ON must run before opening a transaction; changing it inside a transaction does not enable enforcement. The child REFERENCES clause names folders(id), and ON DELETE CASCADE states the deletion action. No unrelated folder or note is removed."
+      },
+      {
+        "paragraph": 2,
+        "fact": "\n```sql\nPRAGMA foreign_keys=ON;\nCREATE TABLE folders(id INTEGER PRIMARY KEY);\nCREATE TABLE notes(id INTEGER PRIMARY KEY, folder_id INTEGER NOT NULL REFERENCES folders(id) ON DELETE CASCADE);\nINSERT INTO folders VALUES (1),(2);\nINSERT INTO notes VALUES (10,1),(11,1),(12,2);\nDELETE\nFROM folders\nWHERE id=2;\nSELECT id,folder_id\nFROM notes\nORDER BY id;\n```\nNotes 10 and 11 remain, both in folder 1. Optional practice: predict deleting a folder with no notes. If CASCADE is omitted, our separately validated failed DELETE reports FOREIGN KEY constraint failed and preserves all rows. Current learner checks inspect successful state, not expected-error handling. NO ACTION is not interchangeable with RESTRICT for deferred constraints: RESTRICT acts as soon as the key change occurs even if its constraint is deferred; deferred timing is outside this exercise."
+      },
+      {
+        "paragraph": 3,
+        "fact": "Author-validated rejection example, separate from the normal successful project. Use a fresh disposable database and run this complete setup plus intentional failing statement:\n```sql\nPRAGMA foreign_keys=ON;\nCREATE TABLE folders(id INTEGER PRIMARY KEY);\nCREATE TABLE notes(id INTEGER PRIMARY KEY, folder_id INTEGER NOT NULL REFERENCES folders(id));\nINSERT INTO folders VALUES (1),(2);\nINSERT INTO notes VALUES (10,1),(11,1),(12,2);\nDELETE\nFROM folders\nWHERE id=1;\n```\nExpected diagnostic in the pinned engine: FOREIGN KEY constraint failed. After catching the statement error, run the following separately to inspect preserved data:\n```sql\nSELECT id\nFROM folders\nORDER BY id;\nSELECT id,folder_id\nFROM notes\nORDER BY id;\n```\nBoth parents and all three original notes remain. This is the ordinary immediate NO ACTION case, not a deferred RESTRICT demonstration. Current learner SELECT grades do not run expected-error assertions; an error in your normal solution is still an error, not a pass."
+      }
+    ],
+    "reasoning": "Only note12 references folder2, so notes10 and11 remain.",
+    "source": "https://www.sqlite.org/foreignkeys.html",
+    "prerequisites": [
+      "sql-15",
+      "sql-38"
+    ]
+  },
+  {
+    "id": "sql-49",
+    "quizTarget": "An UPDATE returned a row, then its enclosing transaction was rolled back. Is that update necessarily saved?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "RETURNING adds output expressions to a top-level INSERT, UPDATE or DELETE. INSERT and UPDATE report the changed values of each directly affected row; DELETE reports its removed values. The result is returned to the caller, not saved as an answer table. Output row order is not guaranteed. These one-row examples avoid relying on it."
+      },
+      {
+        "paragraph": 1,
+        "fact": "\n```sql\nCREATE TABLE tickets(id INTEGER PRIMARY KEY, label TEXT, status TEXT DEFAULT 'new');\nINSERT INTO tickets(label) VALUES ('Atlas')\nRETURNING id,label,status;\n```\nThe returned row is (1,'Atlas','new'). The table was empty, so this INTEGER PRIMARY KEY receives 1; status uses its default. RETURNING id,label,status selects those three output fields. A normal caller should use the returned key instead of guessing which key was allocated."
+      },
+      {
+        "paragraph": 2,
+        "fact": "\n```sql\nCREATE TABLE tickets(id INTEGER PRIMARY KEY, label TEXT, status TEXT DEFAULT 'new');\nINSERT INTO tickets(label) VALUES ('Atlas');\nBEGIN;\nUPDATE tickets SET status='done'\nWHERE id=1\nRETURNING id,status;\nROLLBACK;\nSELECT id,status\nFROM tickets\nORDER BY id;\n```\nThe UPDATE returns (1,'done'), but the later SELECT returns (1,'new'). Seeing returned data did not force the surrounding transaction to commit. This course’s learner SELECT checks verify final state, not that RETURNING was used or that the caller received rows. The complete worked fixtures separately verify actual write output. Optional practice: change the update to a nonexistent id; no affected row means no RETURNING row."
+      }
+    ],
+    "reasoning": "RETURNING provides statement output; transaction outcome and durable saving are separate matters.",
+    "source": "https://www.sqlite.org/lang_returning.html",
+    "prerequisites": [
+      "sql-02",
+      "sql-35"
+    ]
+  },
+  {
+    "id": "sql-50",
+    "quizTarget": "If job 4 has status=NULL, is it included in this partial index?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "A partial index includes only rows for which its WHERE condition is true. CREATE INDEX open_priority ON jobs(priority,id) WHERE status='open' indexes the two named keys for open rows. Closed rows and NULL statuses remain in the table but are absent from this index. The index changes an access option, not the query’s meaning."
+      },
+      {
+        "paragraph": 1,
+        "fact": "\n```sql\nCREATE TABLE jobs(id INTEGER PRIMARY KEY, status TEXT, priority INTEGER);\nINSERT INTO jobs VALUES (1,'open',2),(2,'closed',1),(3,'open',1),(4,NULL,0);\nCREATE INDEX open_priority ON jobs(priority,id)\nWHERE status='open';\nSELECT id,priority\nFROM jobs\nWHERE status='open'\nORDER BY priority,id;\n```\nThe result is (3,1),(1,2). The query explicitly requires status=open, so it can use the index without losing a required closed row. An index is not a guarantee of speed: the planner chooses using the query and available statistics. EXPLAIN QUERY PLAN followed by the SELECT can display its chosen access strategy; the plan text is diagnostic, not a stable application interface."
+      },
+      {
+        "paragraph": 2,
+        "fact": "\n```sql\nCREATE TABLE jobs(id INTEGER PRIMARY KEY, status TEXT, priority INTEGER);\nINSERT INTO jobs VALUES (1,'open',2),(2,'closed',1),(3,'open',1),(4,NULL,0);\nCREATE INDEX open_priority ON jobs(priority,id)\nWHERE status='open';\nSELECT id,priority\nFROM jobs\nWHERE status='closed'\nORDER BY priority,id;\n```\nThis query returns (2,1), even though that closed row is not in open_priority. SQLite must choose a strategy that can find the required rows. A partial index cannot serve as a complete list of closed jobs. Optional practice: inspect plans for both queries locally; do not infer that a tiny timing difference proves a general speedup. The project checks confirm result rows, source preservation, a partial-index flag and indexed columns. They do not prove the exact index WHERE predicate or a chosen execution plan; inspect that declaration and explain why open rows are eligible."
+      },
+      {
+        "paragraph": 3,
+        "fact": "A complete local plan inspection uses the same fresh setup:\n```sql\nCREATE TABLE jobs(id INTEGER PRIMARY KEY, status TEXT, priority INTEGER);\nINSERT INTO jobs VALUES (1,'open',2),(2,'closed',1),(3,'open',1),(4,NULL,0);\nCREATE INDEX open_priority ON jobs(priority,id)\nWHERE status='open';\nEXPLAIN QUERY PLAN\nSELECT id,priority\nFROM jobs\nWHERE status='open'\nORDER BY priority,id;\n```\nIn the tested SQLite 3.49.1 build the detail is SCAN jobs USING COVERING INDEX open_priority. Covering means this index contains the values needed by this query, so a separate table lookup is unnecessary for those values. The numeric plan fields and detail wording are version-specific diagnostics, not stable output contracts or measured performance. The ordinary SELECT remains the behavior contract."
+      }
+    ],
+    "reasoning": "The predicate status=open is unknown for NULL, not true. Only true-predicate rows enter the partial index.",
+    "source": "https://www.sqlite.org/partialindex.html",
+    "prerequisites": [
+      "sql-08",
+      "sql-03"
+    ]
+  },
+  {
+    "id": "sql-51",
+    "quizTarget": "Can binding $label also choose the table name for FROM $label?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "Local companion only: this page’s SQL editor does not run JavaScript, bind host values or save files. Use an already available Node.js installation and the pinned SQL.js 1.13.0 distribution, containing sql-wasm.js and sql-wasm.wasm. In a fresh disposable directory, make vendor/, copy those two files there, and name the JavaScript copy sql-wasm.cjs so require treats it as CommonJS. Keep the supplied dependency license with these files. No download, package installation, remote server or credentials are part of this lesson. Save the complete program below as main.cjs and run `node main.cjs` from that directory. The validated engine is SQLite 3.49.1, not a claim about every SQL.js version. Basic JavaScript const, arrays, objects, callbacks, promises and try/finally are prerequisites; review those before the optional local exercise. The SQL template fixes the query structure. A placeholder such as $label is a value slot; binding supplies data for that slot without turning its apostrophes or comment-like characters into SQL syntax. It cannot stand in for a table name or ORDER BY direction. For those structural choices, choose from fixed, trusted query alternatives rather than joining untrusted text."
+      },
+      {
+        "paragraph": 1,
+        "fact": "\n```javascript\nconst initSqlJs = require('./vendor/sql-wasm.cjs');\ninitSqlJs({ locateFile: file => __dirname + '/vendor/' + file }).then(SQL => {\n  const db = new SQL.Database();\n  try {\n    db.run(`CREATE TABLE labels(id INTEGER PRIMARY KEY, label TEXT);\nINSERT INTO labels VALUES (1,'Map'),(2,'Map'' OR 1=1 --');`);\n    const input = \"Map' OR 1=1 --\";\n    const stmt = db.prepare('SELECT id,label FROM labels WHERE label=$label ORDER BY id');\n    const rows = [];\n    try {\n      stmt.bind({ $label: input });\n      while (stmt.step()) rows.push(stmt.getAsObject());\n    } finally {\n      stmt.free();\n    }\n    console.log(JSON.stringify(rows));\n    console.log(db.exec('SELECT COUNT(*) FROM labels')[0].values[0][0]);\n  } finally {\n    db.close();\n  }\n}).catch(error => { console.error(error.message); process.exitCode = 1; });\n```\nThe first output is [{\"id\":2,\"label\":\"Map' OR 1=1 --\"}], followed by 2 on the next line. The unusual string matches one saved label, not all labels. The doubled apostrophe in the fixed INSERT is SQL literal escaping; the later host input is bound instead. Do not copy this setup’s fixed INSERT construction as a way to concatenate user input."
+      },
+      {
+        "paragraph": 2,
+        "fact": "require loads the local CommonJS initializer. initSqlJs returns a promise; locateFile tells it where the matching WASM file is. __dirname is the host file’s directory. new SQL.Database() creates an empty in-memory database. db.run executes the fixed setup and returns the database object, not selected rows. db.prepare compiles the fixed SELECT and returns a statement. stmt.bind receives an object mapping the exact $label placeholder to a JavaScript value. stmt.step advances to the next result row and returns true while a row exists. stmt.getAsObject reads that current row as named fields. rows.push appends that object to the result array. finally runs cleanup even when the enclosed work throws: stmt.free releases statement resources, then db.close releases the database. Do not use either object after release. In this host file, backticks enclose a multiline JavaScript string containing SQL. They are not sent as SQL identifier quotes."
+      },
+      {
+        "paragraph": 3,
+        "fact": "\n```javascript\nconst initSqlJs = require('./vendor/sql-wasm.cjs');\ninitSqlJs({ locateFile: file => __dirname + '/vendor/' + file }).then(SQL => {\n  const db = new SQL.Database();\n  try {\n    db.run(`CREATE TABLE labels(id INTEGER PRIMARY KEY, label TEXT);\nINSERT INTO labels VALUES (1,'Map'),(2,'Map'' OR 1=1 --');`);\n    const input = \"Missing\";\n    const stmt = db.prepare('SELECT id,label FROM labels WHERE label=$label ORDER BY id');\n    const rows = [];\n    try {\n      stmt.bind({ $label: input });\n      while (stmt.step()) rows.push(stmt.getAsObject());\n    } finally {\n      stmt.free();\n    }\n    console.log(JSON.stringify(rows));\n    console.log(db.exec('SELECT COUNT(*) FROM labels')[0].values[0][0]);\n  } finally {\n    db.close();\n  }\n}).catch(error => { console.error(error.message); process.exitCode = 1; });\n```\nThe changed input prints [] and then 2. The query returned no rows; the table was not deleted. JSON.stringify turns the result array into display text, console.log prints it, and db.exec returns result sets whose first result’s values[0][0] is the count in this known one-cell query. The final catch reports an error and sets a failing process exit code; it is not database rollback. Optional practice: bind Map and predict the one matching row. These local examples do not prove security for arbitrary SQL assembled elsewhere."
+      }
+    ],
+    "reasoning": "The prepared query’s structure is fixed. Dynamic identifiers require a separate trusted structural choice, not a value parameter.",
+    "source": "https://github.com/sql-js/sql.js/tree/v1.13.0",
+    "prerequisites": [
+      "sql-25",
+      "sql-03"
+    ]
+  },
+  {
+    "id": "sql-52",
+    "quizTarget": "Export bytes, then add a row to the original database without exporting again. Does reopening the first byte array include that row?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "Local companion only: this page’s SQL editor does not run JavaScript, bind host values or save files. Use an already available Node.js installation and the pinned SQL.js 1.13.0 distribution, containing sql-wasm.js and sql-wasm.wasm. In a fresh disposable directory, make vendor/, copy those two files there, and name the JavaScript copy sql-wasm.cjs so require treats it as CommonJS. Keep the supplied dependency license with these files. No download, package installation, remote server or credentials are part of this lesson. Save the complete program below as main.cjs and run `node main.cjs` from that directory. The validated engine is SQLite 3.49.1, not a claim about every SQL.js version. Basic JavaScript const, arrays, objects, callbacks, promises and try/finally are prerequisites; review those before the optional local exercise. This file-writing example creates study.sqlite in the current working directory. Use a fresh directory for each version. It deliberately refuses to overwrite an existing file. A SQL.js database lives in memory until a host explicitly saves its bytes; closing it is not automatic persistence. We export this isolated main database after successful ordinary writes, with no active transaction or concurrent writer."
+      },
+      {
+        "paragraph": 1,
+        "fact": "\n```javascript\nconst initSqlJs = require('./vendor/sql-wasm.cjs');\nconst { writeFileSync, readFileSync } = require('node:fs');\ninitSqlJs({ locateFile: file => __dirname + '/vendor/' + file }).then(SQL => {\n  const db = new SQL.Database();\n  let bytes;\n  try {\n    db.run(`CREATE TABLE notes(id INTEGER PRIMARY KEY, text TEXT);\nINSERT INTO notes VALUES (1,'First');`);\n    bytes = db.export();\n    db.run(`INSERT INTO notes VALUES (2,'Later');`);\n    console.log(db.exec('SELECT COUNT(*) FROM notes')[0].values[0][0]);\n  } finally {\n    db.close();\n  }\n  writeFileSync('study.sqlite', bytes, { flag: 'wx' });\n  const saved = readFileSync('study.sqlite');\n  const reopened = new SQL.Database(saved);\n  try {\n    console.log(JSON.stringify(reopened.exec('SELECT id,text FROM notes ORDER BY id')[0].values));\n  } finally {\n    reopened.close();\n  }\n}).catch(error => { console.error(error.message); process.exitCode = 1; });\n```\nThe output is 2, then [[1,\"First\"]]. The original in-memory database gained a second note after the export, but the exported bytes describe the earlier one-row state. Writing those bytes and reopening them does not retroactively include the later insert. The export is binary database content, not a string of SQL statements."
+      },
+      {
+        "paragraph": 2,
+        "fact": "db.export() returns a Uint 8Array of SQLite bytes. writeFileSync(path,bytes,{flag:\"wx\"}) writes them to a new file synchronously; wx fails if the path already exists, avoiding silent overwrite. A write error is reported rather than called a successful save. readFileSync(path) returns a Buffer of bytes; Buffer is usable as byte input to new SQL.Database(saved). That constructor opens an independent in-memory database from the snapshot. db.exec returns query-result arrays; values contains row arrays. db.close and reopened.close release their respective handles, not the saved file. initSqlJs and locateFile initialize the local pinned engine as in the previous companion. JSON.stringify and console.log display rows; require loads the local library and Node file API. Backticks in db.run delimit the multiline JavaScript SQL string; they are not SQL identifier quotes."
+      },
+      {
+        "paragraph": 3,
+        "fact": "\n```javascript\nconst initSqlJs = require('./vendor/sql-wasm.cjs');\nconst { writeFileSync, readFileSync } = require('node:fs');\ninitSqlJs({ locateFile: file => __dirname + '/vendor/' + file }).then(SQL => {\n  const db = new SQL.Database();\n  let bytes;\n  try {\n    db.run(`CREATE TABLE notes(id INTEGER PRIMARY KEY, text TEXT);\nINSERT INTO notes VALUES (1,'First');`);\n    db.run(`INSERT INTO notes VALUES (2,'Later');`);\n    bytes = db.export();\n    console.log(db.exec('SELECT COUNT(*) FROM notes')[0].values[0][0]);\n  } finally {\n    db.close();\n  }\n  writeFileSync('study.sqlite', bytes, { flag: 'wx' });\n  const saved = readFileSync('study.sqlite');\n  const reopened = new SQL.Database(saved);\n  try {\n    console.log(JSON.stringify(reopened.exec('SELECT id,text FROM notes ORDER BY id')[0].values));\n  } finally {\n    reopened.close();\n  }\n}).catch(error => { console.error(error.message); process.exitCode = 1; });\n```\nNow the output is 2, then [[1,\"First\"],[2,\"Later\"]], because both inserts precede export. Optional practice: reopen the file in another fresh local process with the same pinned library and compare its rows. This is a small isolated snapshot demonstration, not a live-backup algorithm, multi-connection consistency claim, browser-storage feature or guarantee against disk failure. Never overwrite your only copy of valuable data to try an example."
+      }
+    ],
+    "reasoning": "The byte array describes the database when export was called. Later mutations require another deliberate snapshot.",
+    "source": "https://github.com/sql-js/sql.js/tree/v1.13.0",
+    "prerequisites": [
+      "sql-02",
+      "sql-09"
+    ]
+  }
+]

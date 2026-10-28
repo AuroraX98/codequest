@@ -1,0 +1,542 @@
+[
+  {
+    "id": "go-07",
+    "quizTarget": "You edit main.go but run the previously built executable without rebuilding. What can appear?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "An executable program uses package main and a main function. Imports name packages whose exported operations the code uses, such as fmt.Println."
+      },
+      {
+        "paragraph": 1,
+        "fact": "go build translates the program into an executable. go run also builds before running; it is not an interpreter reading source statement by statement."
+      },
+      {
+        "paragraph": 2,
+        "fact": "Editing main.go does not change an executable already built from an earlier version."
+      },
+      {
+        "paragraph": 3,
+        "fact": "This course uses official Go 1.27.3. In the shared environment /usr/bin/go is an unrelated game, so validation uses the approved workspace-local compiler path."
+      }
+    ],
+    "reasoning": "The earlier executable contains the old compilation, not the edited file.",
+    "source": "https://go.dev/doc/tutorial/getting-started",
+    "prerequisites": [
+      "go-06"
+    ]
+  },
+  {
+    "id": "go-08",
+    "quizTarget": "Change 5 to 5.0 in the short declaration. What prints?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "count := 3 declares a variable whose inferred type is int. Type inference does not make its type change on each assignment."
+      },
+      {
+        "paragraph": 1,
+        "fact": "int is either 32 or 64 bits depending on the implementation. int64 explicitly selects a signed 64-bit type; float64 represents approximate fractional values."
+      },
+      {
+        "paragraph": 2,
+        "fact": "A constant such as 3 can be used where a compatible numeric type is expected if its value fits. A typed numeric variable follows stricter assignment rules."
+      },
+      {
+        "paragraph": 3,
+        "fact": "Two integer operands produce an integer result. A floating-point operand can make this division floating-point."
+      }
+    ],
+    "reasoning": "The untyped floating constant changes the division and inferred variable type.",
+    "source": "https://go.dev/ref/spec",
+    "prerequisites": [
+      "go-07"
+    ]
+  },
+  {
+    "id": "go-09",
+    "quizTarget": "Change value to 3.9. What prints?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "int(value) converts a numeric value to int. It does not parse a String; text parsing belongs to functions such as strconv.Atoi."
+      },
+      {
+        "paragraph": 1,
+        "fact": "For an ordinary in-range float64 value, conversion to int discards its fractional part toward zero rather than rounding to nearest."
+      },
+      {
+        "paragraph": 2,
+        "fact": "A conversion is not proof that an external value is sensible or safely representable. Avoid relying on out-of-range conversion results."
+      },
+      {
+        "paragraph": 3,
+        "fact": "A non-integer constant cannot be converted to an integer type unless representable as that type. This example deliberately converts a runtime float64 variable."
+      }
+    ],
+    "reasoning": "The small positive value is in range, so truncation keeps its whole-number part.",
+    "source": "https://go.dev/ref/spec",
+    "prerequisites": [
+      "go-08"
+    ]
+  },
+  {
+    "id": "go-10",
+    "quizTarget": "Assign count=4 before printing. What prints?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "var count int starts at 0. bool starts false and string starts empty. This gives a defined initial state rather than uninitialized local data."
+      },
+      {
+        "paragraph": 1,
+        "fact": "Arrays and structs have recursively zero-valued elements or fields. Some reference-like types have nil zero values and require care before mutation."
+      },
+      {
+        "paragraph": 2,
+        "fact": "A zero-valued quantity may still violate a business rule; language initialization does not validate meaning."
+      },
+      {
+        "paragraph": 3,
+        "fact": "A later assignment changes that variable from its zero value to the assigned one."
+      }
+    ],
+    "reasoning": "Zero initialization supplies a starting value, not a permanent value.",
+    "source": "https://go.dev/ref/spec",
+    "prerequisites": [
+      "go-09"
+    ]
+  },
+  {
+    "id": "go-11",
+    "quizTarget": "Set denominator to 0. What prints?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "Go if conditions use bool expressions. Integers and strings are not automatically treated as true or false."
+      },
+      {
+        "paragraph": 1,
+        "fact": "&& skips its right operand when the left is false. || skips the right operand when the left is true."
+      },
+      {
+        "paragraph": 2,
+        "fact": "denominator !=0 comes first. When it is false, the division is not evaluated."
+      },
+      {
+        "paragraph": 3,
+        "fact": "Short-circuiting controls evaluation as well as the final truth value."
+      }
+    ],
+    "reasoning": "The false left operand prevents division by zero.",
+    "source": "https://go.dev/ref/spec",
+    "prerequisites": [
+      "go-10"
+    ]
+  },
+  {
+    "id": "go-12",
+    "quizTarget": "Change the text to \"A\". What prints?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "len(text) counts bytes, not necessarily Unicode characters. UTF-8 encodes many non-ASCII code points using multiple bytes."
+      },
+      {
+        "paragraph": 1,
+        "fact": "rune is an alias for int32. The conversion []rune(text) decodes UTF-8 into runes; len of that slice counts code points, not user-perceived grapheme clusters."
+      },
+      {
+        "paragraph": 2,
+        "fact": "byte is an alias for uint8. Indexing a String returns a byte; ranging over text decodes runes."
+      },
+      {
+        "paragraph": 3,
+        "fact": "The UTF-8 source literal \u00e9 occupies two bytes and one Unicode code point. ASCII A occupies one byte and one code point."
+      }
+    ],
+    "reasoning": "The units happen to agree for the ASCII sample; they need not agree for other text.",
+    "source": "https://go.dev/ref/spec",
+    "prerequisites": [
+      "go-11"
+    ]
+  },
+  {
+    "id": "go-13",
+    "quizTarget": "Change the format from %q to %s. What prints?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "fmt.Printf uses a format string. %d formats an integer in decimal; %q formats a quoted escaped representation for a String. %s prints String content without surrounding quotation marks."
+      },
+      {
+        "paragraph": 1,
+        "fact": "The escape \\n adds a newline. fmt.Println adds its own line ending and spaces between separate arguments."
+      },
+      {
+        "paragraph": 2,
+        "fact": "Displaying a value as text does not change the stored value\u2019s type."
+      },
+      {
+        "paragraph": 3,
+        "fact": "Use a suitable formatting verb instead of assuming every verb means the same thing. Go can report formatting mismatch text; that is not correct data output."
+      }
+    ],
+    "reasoning": "%s prints the String content rather than its quoted representation.",
+    "source": "https://pkg.go.dev/fmt",
+    "prerequisites": [
+      "go-12"
+    ]
+  },
+  {
+    "id": "go-14",
+    "quizTarget": "Replace the inner := with =. What prints?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "Inside a function, := is a short variable declaration. In the same block it needs at least one new non-blank name."
+      },
+      {
+        "paragraph": 1,
+        "fact": "A new score declared inside braces is distinct from an outer score. Updating that inner object does not update the outer one."
+      },
+      {
+        "paragraph": 2,
+        "fact": "= assigns an existing name instead of declaring a new one. Scope determines which existing variable is selected."
+      },
+      {
+        "paragraph": 3,
+        "fact": "Similar spelling is not proof of the same object. Read the block boundaries and declaration operator."
+      }
+    ],
+    "reasoning": "Without a new declaration the inner assignment uses the existing outer score.",
+    "source": "https://go.dev/ref/spec",
+    "prerequisites": [
+      "go-13"
+    ]
+  },
+  {
+    "id": "go-15",
+    "quizTarget": "Set choice to 2. What prints?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "An expression switch selects a matching case or default when none match."
+      },
+      {
+        "paragraph": 1,
+        "fact": "After the selected case body ends, the switch ends. Explicit fallthrough exists but is not the default behavior."
+      },
+      {
+        "paragraph": 2,
+        "fact": "A default clause can handle values not listed elsewhere."
+      },
+      {
+        "paragraph": 3,
+        "fact": "Selecting a case does not assign its case value back to the subject."
+      }
+    ],
+    "reasoning": "Only the selected case body runs in this switch.",
+    "source": "https://go.dev/ref/spec",
+    "prerequisites": [
+      "go-14"
+    ]
+  },
+  {
+    "id": "go-16",
+    "quizTarget": "Replace continue with break. What prints?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "for i:=0; i<4; i++ initializes once, tests before each body and updates after each completed body."
+      },
+      {
+        "paragraph": 1,
+        "fact": "continue proceeds to the next iteration; the update still runs before the next test."
+      },
+      {
+        "paragraph": 2,
+        "fact": "break stops this nearest loop instead of skipping only one pass."
+      },
+      {
+        "paragraph": 3,
+        "fact": "This example uses a small finite range. A loop\u2019s syntax does not by itself prove termination."
+      }
+    ],
+    "reasoning": "break exits before any later iteration.",
+    "source": "https://go.dev/ref/spec",
+    "prerequisites": [
+      "go-15"
+    ]
+  },
+  {
+    "id": "go-17",
+    "quizTarget": "Change only the copy assignment value from 9 to 7. What prints?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "[3]int is an array of exactly three ints. A different length is a different array type."
+      },
+      {
+        "paragraph": 1,
+        "fact": "Assigning one array variable to another copies its array value. A later element assignment to the copy does not mutate the original array."
+      },
+      {
+        "paragraph": 2,
+        "fact": "Index 0 selects the first element. A runtime out-of-range index panics; it does not grow the array."
+      },
+      {
+        "paragraph": 3,
+        "fact": "Do not transfer the copy rule to slices or pointers without examining their semantics."
+      }
+    ],
+    "reasoning": "The second independent array changes while the first remains unchanged.",
+    "source": "https://go.dev/ref/spec",
+    "prerequisites": [
+      "go-16"
+    ]
+  },
+  {
+    "id": "go-18",
+    "quizTarget": "Change view[0]=9 to view[1]=9. What does the unchanged print show?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "A slice carries a reference to underlying array storage plus length and capacity. Assigning a slice copies this descriptor, not all its elements."
+      },
+      {
+        "paragraph": 1,
+        "fact": "values[1:3] includes indices 1 and 2, excluding 3. Updating view[0] updates the underlying element at values[1]."
+      },
+      {
+        "paragraph": 2,
+        "fact": "len(view) gives the accessible length. Capacity is a separate concept used for reslicing and growth."
+      },
+      {
+        "paragraph": 3,
+        "fact": "Changing a shared element is visible through any overlapping slice or array view."
+      }
+    ],
+    "reasoning": "The slice starts at original index 1, so its second element is original index 2.",
+    "source": "https://go.dev/ref/spec",
+    "prerequisites": [
+      "go-17"
+    ]
+  },
+  {
+    "id": "go-19",
+    "quizTarget": "Create the initial slice with capacity 2 instead of 1. What prints after the same append/update?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "append adds values and returns a slice descriptor. Store that result because length or underlying storage may change."
+      },
+      {
+        "paragraph": 1,
+        "fact": "make([]int,1,1) creates a slice with length 1 and capacity 1. Appending one more value requires a new backing array in this case."
+      },
+      {
+        "paragraph": 2,
+        "fact": "An alias to the old full-capacity slice still refers to the old array after append allocates a new one."
+      },
+      {
+        "paragraph": 3,
+        "fact": "The exact chosen new capacity is an implementation detail. This example relies only on the documented need to grow beyond capacity."
+      }
+    ],
+    "reasoning": "The existing capacity now accommodates the extra element, so both slices share the updated first slot.",
+    "source": "https://go.dev/ref/spec",
+    "prerequisites": [
+      "go-18"
+    ]
+  },
+  {
+    "id": "go-20",
+    "quizTarget": "Replace the allocation and copy with target:=source. What prints after target[0]=9?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "copy(dst,src) copies up to the smaller length and returns the number copied. It does not automatically grow the destination."
+      },
+      {
+        "paragraph": 1,
+        "fact": "make([]int,len(source)) provides separate storage for the destination elements."
+      },
+      {
+        "paragraph": 2,
+        "fact": "target := source would share backing storage. Calling copy after separate allocation copies the elements instead."
+      },
+      {
+        "paragraph": 3,
+        "fact": "For int elements this separates the values. A slice of pointers or nested slices can still share referenced objects; this is not a universal deep copy."
+      }
+    ],
+    "reasoning": "The replacement copies the slice descriptor instead of creating independent element storage.",
+    "source": "https://go.dev/ref/spec",
+    "prerequisites": [
+      "go-19"
+    ]
+  },
+  {
+    "id": "go-21",
+    "quizTarget": "Change the alias update to 7. What prints?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "map[string]int maps String keys to int values. A map literal creates initialized map storage."
+      },
+      {
+        "paragraph": 1,
+        "fact": "Assigning a map variable does not clone its entries. Mutating through an alias is visible through the original."
+      },
+      {
+        "paragraph": 2,
+        "fact": "A map\u2019s nil zero value supports reading and len, but assignment of an entry requires an initialized map, such as one made with make or a literal."
+      },
+      {
+        "paragraph": 3,
+        "fact": "Do not depend on map iteration order for deterministic output. This example looks up a known key directly."
+      }
+    ],
+    "reasoning": "The write reaches the shared map entry.",
+    "source": "https://go.dev/ref/spec",
+    "prerequisites": [
+      "go-20"
+    ]
+  },
+  {
+    "id": "go-22",
+    "quizTarget": "Look up \"rest\" instead. What prints?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "Looking up an absent key in map[string]int returns 0. That alone cannot distinguish absence from a stored zero."
+      },
+      {
+        "paragraph": 1,
+        "fact": "value,ok := counts[key] returns the value and a Boolean indicating whether the key exists."
+      },
+      {
+        "paragraph": 2,
+        "fact": "A missing lookup does not create a map entry."
+      },
+      {
+        "paragraph": 3,
+        "fact": "Treating a missing score as a real zero can hide incomplete data; inspect ok when the distinction matters."
+      }
+    ],
+    "reasoning": "The value remains the int zero value but the presence Boolean changes.",
+    "source": "https://go.dev/ref/spec",
+    "prerequisites": [
+      "go-21"
+    ]
+  },
+  {
+    "id": "go-23",
+    "quizTarget": "Replace value+=1 with values[i]+=1. What is the final printed slice?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "for i,value := range values visits each slice element with its index and a copy of its element value."
+      },
+      {
+        "paragraph": 1,
+        "fact": "value += 1 adds one and stores the result in value. Assigning to this local value variable does not by itself update values[i]. Use the indexed assignment to mutate the slot."
+      },
+      {
+        "paragraph": 2,
+        "fact": "_ discards an unwanted range result. This example uses both results to make their roles visible."
+      },
+      {
+        "paragraph": 3,
+        "fact": "Range over maps has unspecified order; range over Strings decodes runes. This example ranges over a slice."
+      }
+    ],
+    "reasoning": "The indexed expression selects the actual element instead of the range value copy.",
+    "source": "https://go.dev/ref/spec",
+    "prerequisites": [
+      "go-22"
+    ]
+  },
+  {
+    "id": "go-24",
+    "quizTarget": "Call divide(8,0). What prints?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "The result list (int,bool) declares two returned values. The caller can receive both using a multiple assignment."
+      },
+      {
+        "paragraph": 1,
+        "fact": "divide returns a quotient and a Boolean success flag. The flag distinguishes a valid zero quotient from a rejected denominator."
+      },
+      {
+        "paragraph": 2,
+        "fact": "The zero returned on failure is a placeholder under this function contract, not a successful calculation."
+      },
+      {
+        "paragraph": 3,
+        "fact": "The denominator check runs before division so the failure path does not divide by zero."
+      }
+    ],
+    "reasoning": "The guard returns its failure pair without performing division.",
+    "source": "https://go.dev/ref/spec",
+    "prerequisites": [
+      "go-23"
+    ]
+  },
+  {
+    "id": "go-25",
+    "quizTarget": "Replace the call with total() and remove the now-unused values declaration. What prints?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "func total(values ...int) receives the provided ints as a slice inside the function."
+      },
+      {
+        "paragraph": 1,
+        "fact": "total(values...) supplies slice elements to the variadic parameter. The dots are part of call syntax, not a loop."
+      },
+      {
+        "paragraph": 2,
+        "fact": "Calling total() gives no elements. The loop body runs zero times, leaving the initialized sum at 0."
+      },
+      {
+        "paragraph": 3,
+        "fact": "Variadic calls change how many values are supplied, not the declared element type. Go rejects unused local variable declarations, so remove a local values declaration if its only use is removed."
+      }
+    ],
+    "reasoning": "The loop has no values to add.",
+    "source": "https://go.dev/ref/spec",
+    "prerequisites": [
+      "go-24"
+    ]
+  },
+  {
+    "id": "go-26",
+    "quizTarget": "Change the assignment before invocation to factor=5. What prints?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "func(value int) int { ... } can be assigned to a variable and called later."
+      },
+      {
+        "paragraph": 1,
+        "fact": "The literal refers to factor from its surrounding scope. Calling it reads that variable\u2019s current value rather than necessarily freezing the creation-time value."
+      },
+      {
+        "paragraph": 2,
+        "fact": "The function body runs at transform(3), after the assignment to factor."
+      },
+      {
+        "paragraph": 3,
+        "fact": "This single-threaded example is deterministic. Capturing a variable does not make concurrent reads and writes automatically safe."
+      }
+    ],
+    "reasoning": "The call multiplies 3 by the captured variable\u2019s new value.",
+    "source": "https://go.dev/ref/spec",
+    "prerequisites": [
+      "go-25"
+    ]
+  }
+]

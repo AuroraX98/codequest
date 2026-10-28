@@ -1,0 +1,316 @@
+[
+  {
+    "id": "javascript-43",
+    "quizTarget": "What does numericCopy([20, 4, 11]) return?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "sort() without a comparator compares string representations, so numbers can appear in an unexpected order. A numeric comparator (a, b) => a - b returns a negative number when a belongs before b, zero for equal order, and a positive number when a belongs after b. It must be consistent; returning only true/false is not the same contract."
+      },
+      {
+        "paragraph": 1,
+        "fact": "array.sort(comparator) rearranges that array in place and returns the same array reference. array.slice() with no arguments returns a shallow copy. Sorting the copy preserves the caller’s order; nested objects, if present, would still be shared. This exercise accepts finite numbers only, avoiding NaN and mixed-type ordering."
+      },
+      {
+        "paragraph": 2,
+        "fact": "numericCopy(values) returns a new ascending numeric array. The arrow function has two parameters and implicitly returns their difference. join(\",\") converts each displayed array into comma-separated text and does not reorder it.\n```javascript\nfunction numericCopy(values) {\n  return values.slice().sort((a, b) => a - b);\n}\nconst source = [12, 3, 2];\nconsole.log(source.slice().sort().join(\",\"));\nconsole.log(numericCopy(source).join(\",\"));\nconsole.log(source.join(\",\"));\n```\nOutput: 12,2,3; 2,3,12; 12,3,2."
+      },
+      {
+        "paragraph": 3,
+        "fact": "Implement numericCopy without modifying values, including empty input. Optional practice: change a-b to b-a and explain why the sign reversal produces descending order, without predicting a particular sort implementation’s comparison sequence."
+      }
+    ],
+    "reasoning": "The comparator uses numeric differences instead of default string order, and the copied array is rearranged.",
+    "source": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/sort",
+    "prerequisites": [
+      "javascript-05",
+      "javascript-10"
+    ]
+  },
+  {
+    "id": "javascript-44",
+    "quizTarget": "If Object.fromEntries receives [[\"x\", 2], [\"x\", 7]], what is the final x value?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "Object.entries(object) returns an array of [key,value] pairs for own enumerable string-keyed properties. Inherited properties and symbol keys are excluded. Here the input is a plain data object with finite numeric own values; no getters or hostile proxies are part of the contract."
+      },
+      {
+        "paragraph": 1,
+        "fact": "Object.fromEntries(pairs) takes an iterable of key/value pairs and returns a new ordinary object. Repeated keys keep the last supplied value. This builds an object; it does not modify the source or install a sanitization policy. The loop’s [key,value] syntax destructures each pair; pairs.push(pair) appends one pair and returns the array’s new length, which we ignore."
+      },
+      {
+        "paragraph": 2,
+        "fact": "doubleOwn returns doubled own values in a new object. Object.create(proto) creates an object with that prototype, letting the example distinguish inherited data from assigned own properties. JSON.stringify serializes this small data object for readable output.\n```javascript\nfunction doubleOwn(source) {\n  const pairs = [];\n  for (const [key, value] of Object.entries(source)) {\n    pairs.push([key, value * 2]);\n  }\n  return Object.fromEntries(pairs);\n}\nconst source = Object.create({inherited: 90});\nsource.read = 2;\nsource.write = 3;\nconst result = doubleOwn(source);\nconsole.log(JSON.stringify(result));\nconsole.log(source.read);\n```\nOutput: {\"read\":4,\"write\":6} then 2. The inherited value is absent and the source remains unchanged."
+      },
+      {
+        "paragraph": 3,
+        "fact": "Implement doubleOwn by transforming entries, not by iterating inherited names. Optional practice: call Object.fromEntries([[\"read\",1],[\"read\",5]]) and explain why the resulting own read value is 5."
+      }
+    ],
+    "reasoning": "Both pairs define the same own key; the later supplied value replaces the earlier one.",
+    "source": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/entries",
+    "prerequisites": [
+      "javascript-07",
+      "javascript-09"
+    ]
+  },
+  {
+    "id": "javascript-45",
+    "quizTarget": "For \"🌱🌱\", what are the UTF-16 unit count and code-point count?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "A JavaScript string’s length counts UTF-16 code units. Many characters use one unit, but a supplementary code point such as 🌱 uses a surrogate pair: two units. Neither this length nor code-point count necessarily equals the number of visible grapheme clusters."
+      },
+      {
+        "paragraph": 1,
+        "fact": "for...of over a string yields strings representing Unicode code points rather than splitting a valid surrogate pair. textCounts(text) counts those iterations and returns {units,points}. The shortened property points means points: points. This exercise uses well-formed Unicode strings; it does not repair isolated surrogates or normalize combining marks."
+      },
+      {
+        "paragraph": 2,
+        "fact": "```javascript\nfunction textCounts(text) {\n  let points = 0;\n  for (const point of text) {\n    points += 1;\n  }\n  return {units: text.length, points};\n}\nconsole.log(JSON.stringify(textCounts(\"A🌱\")));\nconsole.log(JSON.stringify(textCounts(\"e\\u0301\")));\n```\nOutput: {\"units\":3,\"points\":2} then {\"units\":2,\"points\":2}. A🌱 has two code points but three UTF-16 units. e followed by a combining acute mark can look like one letter while containing two code points. JSON.stringify only formats these result objects; it does not change text."
+      },
+      {
+        "paragraph": 3,
+        "fact": "Use the count that answers your actual question. Code-point iteration is not full grapheme segmentation. Optional practice: compare \"é\" and \"e\\u0301\" and explain why visually similar text can have different counts without changing either input."
+      }
+    ],
+    "reasoning": "Each supplementary code point uses two UTF-16 code units but one for...of iteration.",
+    "source": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String",
+    "prerequisites": [
+      "javascript-20"
+    ]
+  },
+  {
+    "id": "javascript-46",
+    "quizTarget": "After importing count and increment, call increment twice. What does reading count produce?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "This is a native Node module lesson, not an in-app browser exercise. Save the two files below in the same disposable folder and run node main.mjs with the installed Node toolchain. The .mjs extension selects ECMAScript module parsing in Node. Browser module loading needs its own URL, server and policy verification; this lesson does not claim that the app’s classic-script worker supports imports."
+      },
+      {
+        "paragraph": 1,
+        "fact": "Save counter.mjs:\n```javascript\nexport let count = 0;\nexport function increment() {\n  count += 1;\n  return count;\n}\n```\nexport exposes named bindings. count can be reassigned inside its defining module. increment() takes no arguments, adds one to that module state, and returns the updated number."
+      },
+      {
+        "paragraph": 2,
+        "fact": "Save main.mjs:\n```javascript\nimport { count, increment } from \"./counter.mjs\";\nconsole.log(count);\nconsole.log(increment());\nconsole.log(count);\n```\nThe relative string names the companion file, including its extension. The braces request named exports; they are not object destructuring of a snapshot. Output is 0,1,1 on separate lines: the imported count observes the exporter’s updated binding. Module code uses strict mode automatically."
+      },
+      {
+        "paragraph": 3,
+        "fact": "An importer cannot reassign count. Adding count = 9 to main.mjs throws TypeError at execution, even though counter.mjs declared the exported binding with let. Update the exporter through its explicit function instead. Optional local practice: call increment twice and predict both its returned value and the next read of count; verify with Node, not an untested browser workaround."
+      }
+    ],
+    "reasoning": "The imported binding remains connected to the exporter’s count, and both calls update that exported state.",
+    "source": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Modules",
+    "prerequisites": [
+      "javascript-16"
+    ]
+  },
+  {
+    "id": "javascript-47",
+    "quizTarget": "If a TimedTask’s title changes to \"Walk\" before describe(), what does super.describe() read?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "extends establishes an inheritance relationship. TimedTask instances can use Task behavior and add their own minutes. A derived constructor must call super(...) before accessing this; that call initializes the instance through the parent constructor."
+      },
+      {
+        "paragraph": 1,
+        "fact": "TimedTask.describe overrides the inherited method. super.describe() calls the parent implementation with the same instance as its receiver. It returns the title text; the override adds duration text. Calling this.describe() from this override instead would recurse into itself, not select the parent method."
+      },
+      {
+        "paragraph": 2,
+        "fact": "new TimedTask(title,minutes) receives a title string and finite nonnegative minutes and constructs an instance. describe() takes no explicit arguments and returns text without changing the task. instanceof tests the instance’s prototype relationship; it does not copy or convert it.\n```javascript\nclass Task {\n  constructor(title) { this.title = title; }\n  describe() { return \"Task: \" + this.title; }\n}\nclass TimedTask extends Task {\n  constructor(title, minutes) {\n    super(title);\n    this.minutes = minutes;\n  }\n  describe() {\n    return super.describe() + \" / \" + this.minutes + \" min\";\n  }\n}\nconst task = new TimedTask(\"Read\", 15);\nconsole.log(task.describe());\nconsole.log(task instanceof Task);\n```\nOutput: Task: Read / 15 min, then true."
+      },
+      {
+        "paragraph": 3,
+        "fact": "Keep Task unchanged and implement TimedTask. Optional practice: assign a different title after construction and predict why the parent method reads the current title from the same instance."
+      }
+    ],
+    "reasoning": "super selects the parent method, but the method still receives the existing task as this.",
+    "source": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes/extends",
+    "prerequisites": [
+      "javascript-15",
+      "javascript-30"
+    ]
+  },
+  {
+    "id": "javascript-48",
+    "quizTarget": "After a Session accepts 12, assigning 61 throws. What does reading minutes return afterward?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "A getter runs when a property is read; a setter runs when it is assigned. session.minutes uses property syntax, not session.minutes(). get minutes() returns a value; set minutes(value) receives the assigned value. A setter’s return value is not how the assigned value is read."
+      },
+      {
+        "paragraph": 1,
+        "fact": "The setter uses Number.isInteger(value), which returns a Boolean without converting strings, then enforces the inclusive 0..60 range. new RangeError(message) constructs an error and throw transfers control to the caller. Only after validation do we store _minutes, so a rejected assignment preserves the old state. The underscore is just a naming convention, not access control."
+      },
+      {
+        "paragraph": 2,
+        "fact": "new Session(minutes) initializes by assigning through the same setter, so invalid construction also fails. The getter reads the backing field; assigning this.minutes inside its own setter would recursively invoke that setter instead.\n```javascript\nclass Session {\n  constructor(minutes) { this.minutes = minutes; }\n  get minutes() { return this._minutes; }\n  set minutes(value) {\n    if (!Number.isInteger(value) || value < 0 || value > 60) {\n      throw new RangeError(\"minutes must be an integer from 0 to 60\");\n    }\n    this._minutes = value;\n  }\n}\nconst session = new Session(10);\nsession.minutes = 20;\nconsole.log(session.minutes);\ntry { session.minutes = -1; }\ncatch (error) { console.log(error instanceof RangeError); }\nconsole.log(session.minutes);\n```\nOutput: 20, true,20. The failed negative assignment does not replace the accepted value."
+      },
+      {
+        "paragraph": 3,
+        "fact": "Implement the class with one validation path used for initialization and later assignment. Optional practice: try the string \"5\" and explain why it is rejected rather than silently converted."
+      }
+    ],
+    "reasoning": "Validation throws before the backing-field assignment, leaving the earlier accepted value in place.",
+    "source": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/set",
+    "prerequisites": [
+      "javascript-15",
+      "javascript-47"
+    ]
+  },
+  {
+    "id": "javascript-49",
+    "quizTarget": "If a=Counter.zero() and b=Counter.zero(), then a.add(2), what does b.read() return?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "#value is a private field declared in the class body. Methods of this class access it as this.#value. It is not the same as a public property named \"#value\", and outside code cannot directly write first.#value. This is language-level encapsulation, not encryption or a promise that an object can safely hold secrets against all program code."
+      },
+      {
+        "paragraph": 1,
+        "fact": "static zero() is called on Counter, not on an instance. It takes no arguments and returns a fresh Counter initialized to 0. Each constructor call creates separate private state. add(amount) adds the supplied finite number and returns the updated value; read() returns the current value with no mutation."
+      },
+      {
+        "paragraph": 2,
+        "fact": "```javascript\nclass Counter {\n  #value;\n  constructor(initial) { this.#value = initial; }\n  add(amount) { this.#value += amount; return this.#value; }\n  read() { return this.#value; }\n  static zero() { return new Counter(0); }\n}\nconst first = Counter.zero();\nconst second = Counter.zero();\nconsole.log(first.add(3));\nconsole.log(second.read());\nconsole.log(typeof first.zero);\n```\nOutput: 3,0,undefined. Changing first does not change second. typeof first.zero is undefined because the static method is not an instance method. The constructor accepts an initial finite number; this focused exercise does not add input validation."
+      },
+      {
+        "paragraph": 3,
+        "fact": "Implement Counter with the declared private field and the class-bound zero factory. Optional practice: compare Counter.zero().read() with new Counter(7).read(). An external private-field access is rejected by the parser; do not paste invalid syntax into the main runnable solution. Bracket access with the string \"#value\" creates a separate public property, not access to the declared private name. With Counter defined above, this prints 0 9:\n```javascript\nconst c = Counter.zero();\nc[\"#value\"] = 9;\nconsole.log(c.read(), c[\"#value\"]);\n```"
+      }
+    ],
+    "reasoning": "The factory constructs a new Counter each time, so the private fields belong to distinct instances.",
+    "source": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes/Private_elements",
+    "prerequisites": [
+      "javascript-15",
+      "javascript-47",
+      "javascript-48"
+    ]
+  },
+  {
+    "id": "javascript-50",
+    "quizTarget": "Which operation can still succeed on the returned object?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "Object.defineProperty(object,name,descriptor) defines an own property and returns that same object. A data descriptor supplies value plus writable, enumerable and configurable flags. Here version is visible to ordinary own-key enumeration, but cannot be assigned a new value or deleted/reconfigured. Omitted flags default to false for a newly defined property."
+      },
+      {
+        "paragraph": 1,
+        "fact": "Object.freeze(object) returns that same object after preventing new own properties and making its own data properties non-writable and non-configurable. It does not recursively freeze a nested object. In this lesson theme still refers to a mutable inner object. A const binding alone would not apply these property restrictions."
+      },
+      {
+        "paragraph": 2,
+        "fact": "makeSettings takes no arguments and returns the outer frozen object. Object.getOwnPropertyDescriptor reads one own property’s descriptor, or undefined if missing; its writable flag reports the rule. The \"use strict\" directive makes assigning the read-only version throw TypeError instead of silently doing nothing.\n```javascript\n\"use strict\";\nfunction makeSettings() {\n  const settings = {theme: {dark: false}};\n  Object.defineProperty(settings, \"version\", {\n    value: 1, writable: false, enumerable: true, configurable: false\n  });\n  return Object.freeze(settings);\n}\nconst settings = makeSettings();\nconsole.log(Object.getOwnPropertyDescriptor(settings, \"version\").writable);\ntry { settings.version = 2; }\ncatch (error) { console.log(error instanceof TypeError); }\nsettings.theme.dark = true;\nconsole.log(settings.version, settings.theme.dark);\n```\nOutput: false; true; 1 true. The nested dark assignment still succeeds. Object.isFrozen(object) returns whether that object is frozen, without changing it. With settings above, this call prints true false:\n```javascript\nconsole.log(Object.isFrozen(settings), Object.isFrozen(settings.theme));\n```"
+      },
+      {
+        "paragraph": 3,
+        "fact": "Implement the outer frozen settings object while keeping the nested theme object unfrozen. Optional practice: explain why replacing settings.theme and editing settings.theme.dark are different operations."
+      }
+    ],
+    "reasoning": "Freezing the outer object protects its own property bindings, not the properties of the referenced nested theme.",
+    "source": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/freeze",
+    "prerequisites": [
+      "javascript-22",
+      "javascript-30",
+      "javascript-48"
+    ]
+  },
+  {
+    "id": "javascript-51",
+    "quizTarget": "For valid {\"label\":\"Map\"} input, does returning from try skip finally?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "A custom LoadError extends Error. super(message,{cause}) supplies the error message and retains the original thrown value in the cause property; {cause} is shorthand for {cause:cause}. Setting name makes the diagnostic category explicit. Constructing an error does not throw it until throw is used."
+      },
+      {
+        "paragraph": 1,
+        "fact": "readLabel(raw,events) parses JSON text, returns a string label if valid, or throws a LoadError wrapping a parse/shape failure. JSON.parse returns a decoded value or throws SyntaxError. data?.label reads label unless data is null or undefined, in which case it yields undefined. The explicit type guard rejects non-string labels with TypeError. finally appends \"finished\" to the supplied event array whether the try returned or threw; push returns the new length, which we ignore."
+      },
+      {
+        "paragraph": 2,
+        "fact": "```javascript\nclass LoadError extends Error {\n  constructor(message, cause) {\n    super(message, {cause});\n    this.name = \"LoadError\";\n  }\n}\nfunction readLabel(raw, events) {\n  try {\n    const data = JSON.parse(raw);\n    if (typeof data?.label !== \"string\") {\n      throw new TypeError(\"label must be text\");\n    }\n    return data.label;\n  } catch (cause) {\n    throw new LoadError(\"Cannot load label\", cause);\n  } finally {\n    events.push(\"finished\");\n  }\n}\nconst events = [];\ntry { readLabel('{\"label\":7}', events); }\ncatch (error) { console.log(error.name, error.cause instanceof TypeError); }\nconsole.log(events.join(\",\"));\n```\nOutput: LoadError true, then finished. The cause is the original TypeError object, not merely its text. This array event demonstrates finalization order; it does not acquire or close a real external resource."
+      },
+      {
+        "paragraph": 3,
+        "fact": "A return or throw inside finally can replace an earlier result or failure, so this finally only records completion. Optional practice: use valid {\"label\":\"Sky\"} input and explain why the returned string and the finished event both occur."
+      }
+    ],
+    "reasoning": "The finalization block runs before the return completes. Since it does not return or throw itself, the original result is preserved.",
+    "source": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error/cause",
+    "prerequisites": [
+      "javascript-19",
+      "javascript-47"
+    ]
+  },
+  {
+    "id": "javascript-68",
+    "quizTarget": "What happens after setActive(button,true) is called twice?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "This lesson requires a DOM document containing the following button. DOM APIs belong to the document host, not plain Node JavaScript. A DOM harness can verify attributes/classes but does not prove browser layout, assistive-technology announcements or real keyboard interaction.\n```html\n<button id=\"toggle\" class=\"control\" aria-pressed=\"false\">Focus</button>\n```"
+      },
+      {
+        "paragraph": 1,
+        "fact": "setAttribute(name,value) writes the named attribute and returns undefined. getAttribute(name) reads its string value or null if absent. String(active) converts the supplied Boolean to \"true\" or \"false\" for aria-pressed. ARIA state describes this button’s toggle state; it does not automatically install an event handler."
+      },
+      {
+        "paragraph": 2,
+        "fact": "button.classList is a token-list view of its class attribute. toggle(\"active\",active) uses the Boolean second argument to add or remove that one token and returns whether it is present afterward. Calling it twice with true leaves the token present; it is not an inversion each time. contains(token) returns membership without changing the list. Other tokens, such as control, remain untouched."
+      },
+      {
+        "paragraph": 3,
+        "fact": "setActive(button,active) receives an existing button and Boolean, updates its attribute/class, and returns the token’s final state. querySelector(\"#toggle\") returns the first matching element or null; this supplied markup guarantees a match.\n```javascript\nfunction setActive(button, active) {\n  button.setAttribute(\"aria-pressed\", String(active));\n  return button.classList.toggle(\"active\", active);\n}\nconst button = document.querySelector(\"#toggle\");\nconsole.log(setActive(button, true));\nconsole.log(button.getAttribute(\"aria-pressed\"));\nconsole.log(button.classList.contains(\"control\"), button.classList.contains(\"active\"));\nconsole.log(setActive(button, false));\n```\nOutput: true; true; true true; false. The second line is attribute text, even though it looks like the first line’s Boolean."
+      },
+      {
+        "paragraph": 4,
+        "fact": "Implement setActive without replacing the entire class attribute or changing button text. Optional practice: call it twice with true, then once with false, and explain why unrelated classes remain. Check for null when selecting from an uncertain page outside this fixed fixture."
+      }
+    ],
+    "reasoning": "The second argument forces the requested membership, so repeating the same desired state leaves it unchanged rather than inverting it.",
+    "source": "https://developer.mozilla.org/en-US/docs/Web/API/Element/classList",
+    "prerequisites": [
+      "javascript-11",
+      "javascript-12"
+    ]
+  },
+  {
+    "id": "javascript-69",
+    "quizTarget": "Why is returning 0 whenever the broken result is NaN not a correct fix?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "A minimal failing case keeps only the data needed to expose a bug. The intended total of [5] is 5, and the total of [] is 0. This broken function parses and runs, but returns the wrong value: it is a logic/bounds defect, not a syntax error.\n```javascript\nfunction brokenTotal(values) {\n  let total = 0;\n  for (let i = 0; i <= values.length; i += 1) {\n    total += values[i];\n  }\n  return total;\n}\nconsole.log(brokenTotal([5]));\nconsole.log(Number.isNaN(brokenTotal([])));\n```\nOutput: NaN then true. Number.isNaN(value) returns whether the value is the special numeric NaN, without converting strings."
+      },
+      {
+        "paragraph": 1,
+        "fact": "For a one-item array the only valid index is 0; length is 1. The <= test permits an extra iteration at index 1. Reading that missing entry gives undefined; adding it produces NaN. Trace the state before each update:\n```javascript\nconst values = [5];\nlet total = 0;\nfor (let i = 0; i <= values.length; i += 1) {\n  console.log(i, values[i]);\n  total += values[i];\n}\nconsole.log(total);\n```\nOutput: 0 5; 1 undefined; NaN. A debugger’s breakpoint/watch can help inspect the same state, but this scripted trace does not demonstrate an actual DevTools session."
+      },
+      {
+        "paragraph": 2,
+        "fact": "The loop must stop when i equals length. Replacing <= with < avoids the nonexistent entry. Do not merely replace NaN with 0 afterward: that would hide the defect and lose valid totals. totalValues receives a finite-number array and returns its sum without modifying it.\n```javascript\nfunction totalValues(values) {\n  let total = 0;\n  for (let i = 0; i < values.length; i += 1) {\n    total += values[i];\n  }\n  return total;\n}\nconsole.log(totalValues([5]));\nconsole.log(totalValues([]));\n```\nOutput: 5 then 0."
+      },
+      {
+        "paragraph": 3,
+        "fact": "A regression check saves the smallest failing input so a later change can expose the same bug again. Also check a longer input to avoid a one-case patch. Optional practice: explain why [0] still needs correct bounds even though its intended total is zero. Finite tests are evidence for their cases, not proof for every possible program input."
+      }
+    ],
+    "reasoning": "The bug is visiting an invalid index. Fixing the bound preserves valid sums instead of substituting an unrelated answer.",
+    "source": "https://developer.mozilla.org/en-US/docs/Learn_web_development/Core/Scripting/What_went_wrong",
+    "prerequisites": [
+      "javascript-03",
+      "javascript-06",
+      "javascript-04",
+      "javascript-05"
+    ]
+  }
+]

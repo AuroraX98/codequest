@@ -1,0 +1,94 @@
+[
+  {
+    "id": "react-08-array-copy-javascript",
+    "lessonId": "react-08",
+    "paragraph": 6,
+    "runtime": "javascript",
+    "code": "const order = [\"Ari\", \"Bea\"];\nconst reversed = [...order].reverse();\nconsole.log(order.join(\",\"));\nconsole.log(reversed.join(\",\"));",
+    "checks": [
+      {
+        "label": "Original array unchanged, copy reversed",
+        "expression": "order.join(\",\") === \"Ari,Bea\" && reversed.join(\",\") === \"Bea,Ari\" && order !== reversed"
+      }
+    ],
+    "expectedPass": true
+  },
+  {
+    "id": "react-08-copy-reorder",
+    "lessonId": "react-08",
+    "paragraph": null,
+    "code": "function CounterCard({person}) {\n  const [count, setCount] = React.useState(0);\n  return <li data-person={person.id}>\n    <span>{person.name}: {count}</span>\n    <button aria-label={\"Add for \" + person.name} onClick={() => setCount(c => c + 1)}>Add</button>\n  </li>;\n}\nfunction App() {\n  const [people, setPeople] = React.useState([{id:\"a\",name:\"Ari\"},{id:\"b\",name:\"Bea\"}]);\n  return <main>\n    <button onClick={() => setPeople(current => [...current].reverse())}>Reverse order</button>\n    <ul>{people.map((person, index) => <CounterCard key={person.id} person={person} />)}</ul>\n  </main>;\n}",
+    "checks": [
+      {
+        "label": "copy-reorder",
+        "expression": "(async()=>{const wait=async(test)=>{const end=Date.now()+1500;while(!test()){if(Date.now()>end)return false;await new Promise(r=>setTimeout(r,10));}return true;};const rows=[...document.querySelectorAll(\"li\")];rows[0].querySelector(\"button\").click();if(!await wait(()=>rows[0].querySelector(\"span\").textContent===\"Ari: 1\"))return false;document.querySelector(\"button\").click();return await wait(()=>document.querySelectorAll(\"li\")[1]===rows[0]&&rows[0].querySelector(\"span\").textContent===\"Ari: 1\");})()"
+      }
+    ],
+    "expectedPass": true
+  },
+  {
+    "id": "react-11-fallback-and-provider",
+    "lessonId": "react-11",
+    "paragraph": 3,
+    "code": "const LanguageContext = React.createContext(\"English\");\nfunction Greeting() {\n  const language = React.useContext(LanguageContext);\n  return <p>{language}</p>;\n}\nfunction App() {\n  return <main><Greeting /><LanguageContext.Provider value=\"Spanish\"><Greeting /></LanguageContext.Provider></main>;\n}",
+    "checks": [
+      {
+        "label": "fallback-and-provider",
+        "expression": "(async()=>{const wait=async(test)=>{const end=Date.now()+1500;while(!test()){if(Date.now()>end)return false;await new Promise(r=>setTimeout(r,10));}return true;};return [...document.querySelectorAll(\"p\")].map(p=>p.textContent).join(\"|\")===\"English|Spanish\";})()"
+      }
+    ],
+    "expectedPass": true
+  },
+  {
+    "id": "react-12-changed-initial-toggle",
+    "lessonId": "react-12",
+    "paragraph": 2,
+    "code": "function useToggle(initial) {\n  const [enabled, setEnabled] = React.useState(initial);\n  return [enabled, () => setEnabled(value => !value)];\n}\nfunction App() {\n  const [enabled, toggle] = useToggle(true);\n  return <button onClick={toggle}>{enabled ? \"On\" : \"Off\"}</button>;\n}",
+    "checks": [
+      {
+        "label": "changed-initial-toggle",
+        "expression": "(async()=>{const wait=async(test)=>{const end=Date.now()+1500;while(!test()){if(Date.now()>end)return false;await new Promise(r=>setTimeout(r,10));}return true;};const b=document.querySelector(\"button\");if(b.textContent!==\"On\")return false;b.click();return await wait(()=>b.textContent===\"Off\");})()"
+      }
+    ],
+    "expectedPass": true
+  },
+  {
+    "id": "react-13-complete-boundary-companion",
+    "lessonId": "react-13",
+    "paragraph": null,
+    "code": "class SmallBoundary extends React.Component {\n  constructor(props) { super(props); this.state = {failed:false}; }\n  static getDerivedStateFromError() { return {failed:true}; }\n  render() { return this.state.failed ? <p>Try again later</p> : this.props.children; }\n}\nfunction BrokenPanel() { throw new Error(\"Demo failure\"); }\nfunction App() {\n  return <SmallBoundary><BrokenPanel /></SmallBoundary>;\n}",
+    "checks": [
+      {
+        "label": "complete-boundary-companion",
+        "expression": "(async()=>{const wait=async(test)=>{const end=Date.now()+1500;while(!test()){if(Date.now()>end)return false;await new Promise(r=>setTimeout(r,10));}return true;};return await wait(()=>document.querySelector(\"p\")?.textContent===\"Try again later\");})()"
+      }
+    ],
+    "expectedPass": true
+  },
+  {
+    "id": "react-15-controlled-lazy-worked",
+    "lessonId": "react-15",
+    "paragraph": 3,
+    "code": "let finishGreeting;\nconst greetingModule = new Promise(resolve => {\n  finishGreeting = () => resolve({default: Greeting});\n});\nfunction Greeting() { return <p data-greeting>Hello, explorer</p>; }\nconst LazyGreeting = React.lazy(() => greetingModule);\nfunction App() {\n  return <main><button onClick={() => finishGreeting()}>Finish local load</button>\n    <React.Suspense fallback={<p role=\"status\">Preparing greeting</p>}>\n      <LazyGreeting />\n    </React.Suspense>\n  </main>;\n}",
+    "checks": [
+      {
+        "label": "controlled-lazy-worked",
+        "expression": "(async()=>{const wait=async(test)=>{const end=Date.now()+1500;while(!test()){if(Date.now()>end)return false;await new Promise(r=>setTimeout(r,10));}return true;};if(!await wait(()=>document.querySelector(\"[role=status]\")?.textContent===\"Preparing greeting\"))return false;if(document.querySelector(\"[data-greeting]\"))return false;document.querySelector(\"button\").click();return await wait(()=>document.querySelector(\"[data-greeting]\")?.textContent===\"Hello, explorer\"&&!document.querySelector(\"[role=status]\"));})()"
+      }
+    ],
+    "expectedPass": true
+  },
+  {
+    "id": "react-15-pre-resolved-lazy-changed",
+    "lessonId": "react-15",
+    "paragraph": 3,
+    "code": "let finishGreeting;\nconst greetingModule = new Promise(resolve => {\n  finishGreeting = () => resolve({default: Greeting});\n});\nfunction Greeting() { return <p data-greeting>Hello, explorer</p>; }\nconst LazyGreeting = React.lazy(() => greetingModule);\nfinishGreeting();\nfunction App() {\n  return <main><button onClick={() => finishGreeting()}>Finish local load</button>\n    <React.Suspense fallback={<p role=\"status\">Preparing greeting</p>}>\n      <LazyGreeting />\n    </React.Suspense>\n  </main>;\n}",
+    "checks": [
+      {
+        "label": "pre-resolved-lazy-changed",
+        "expression": "(async()=>{const wait=async(test)=>{const end=Date.now()+1500;while(!test()){if(Date.now()>end)return false;await new Promise(r=>setTimeout(r,10));}return true;};return await wait(()=>document.querySelector(\"[data-greeting]\")?.textContent===\"Hello, explorer\"&&!document.querySelector(\"[role=status]\"));})()"
+      }
+    ],
+    "expectedPass": true
+  }
+]

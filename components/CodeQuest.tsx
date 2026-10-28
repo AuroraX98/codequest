@@ -1,4 +1,5 @@
 "use client";
+import { projectChecks, projectProofPasses, hasTypeContracts } from "../lib/project-checks";
 import { useEffect, useEffectEvent, useMemo, useRef, useState } from "react";
 import {
   ArrowRight,
@@ -29,6 +30,9 @@ import {
 } from "lucide-react";
 import { defaultProfile } from "../lib/profile";
 import { deviceStatusLabel } from "../lib/device-status-label";
+import { courseLearningOrder } from "../lib/course-learning-order";
+import LocalCourseProject from "./LocalCourseProject";
+import { localProjectExamples } from "../lib/local-course-project";
 import { studyLabel } from "../lib/study-label";
 import { LearningClient, type DeviceStatus } from "../lib/learning-client";
 import AIConnectionSettings from "./AIConnectionSettings";
@@ -45,14 +49,18 @@ import { projectsForLesson, missingProjectReading } from "../lib/course-projects
 import SelectionClarifier from "./SelectionClarifier";
 import PracticeStudio from "./PracticeStudio";
 import PythonInputLesson from "./PythonInputLesson";
-import PythonTools from "./PythonTools";
+import CourseTools from "./CourseTools";
+import {compareCourseNames} from "../lib/course-order";
+import CourseDescription from "./CourseDescription";
+import CourseChooser from "./CourseChooser";
 import type { PythonTool } from "../lib/python-tools";
 import PythonConceptLab from "./PythonConceptLab";
-import LessonVisual from "./LessonVisual";
 
 import LessonContents from "./LessonContents";
 import LessonStepFlow from "./LessonStepFlow";
-import LessonNotes from "./LessonNotes";
+import {getUnitContents} from "../lib/unit-toc";
+import UnitTableOfContents from "./UnitTableOfContents";
+import Terminology from "./Terminology";
 import LessonCompletion from "./LessonCompletion";
 import ReadingMark from "./ReadingMark";
 import { useReadingProgress } from "../lib/reading-client";
@@ -111,6 +119,18 @@ function noteSource(lesson: Lesson, key: string): LessonNoteSource | null {
   };
 }
 const names: Record<string, string> = {
+  "csharp": "C#",
+  "cpp": "C++",
+  "java": "Java",
+  "c": "C",
+  "kotlin": "Kotlin",
+  "go": "Go",
+  "rust": "Rust",
+  "php": "PHP",
+  "ruby": "Ruby",
+  "r": "R",
+
+  ai: "AI",
   javascript: "JavaScript",
   python: "Python",
   html: "HTML",
@@ -123,6 +143,18 @@ const names: Record<string, string> = {
   "developer-toolkit": "Developer toolkit",
 };
 const symbols: Record<string, string> = {
+  "csharp": "C#",
+  "cpp": "C++",
+  "java": "Jv",
+  "c": "C",
+  "kotlin": "Kt",
+  "go": "Go",
+  "rust": "Rs",
+  "php": "PHP",
+  "ruby": "Rb",
+  "r": "R",
+
+  ai: "AI",
   javascript: "JS",
   python: "Py",
   html: "<>",
@@ -204,6 +236,7 @@ export default function CodeQuest({
   lessons: Lesson[];
   localMode?: boolean;
 }) {
+  const orderedUnits = useMemo(() => courseLearningOrder(units), [units]);
   const device = useMemo(() => new LearningClient(lessons, empty), [lessons]);
   const request = (action: Parameters<LearningClient["mutate"]>[0]) =>
     device.mutate(action) as Promise<ApiReply>;
@@ -221,6 +254,11 @@ export default function CodeQuest({
   const [state, setState] = useState<QuestState>(empty),
     [ready, setReady] = useState(false),
     [view, setView] = useState("quest"),
+    [terminologyReturn, setTerminologyReturn] = useState(false),
+    [tocOpen, setTocOpen] = useState(false),
+    [coursesOpen, setCoursesOpen] = useState(true),
+    [editorJump, setEditorJump] = useState(0),
+    [inputJump, setInputJump] = useState<{index:number;token:number}>(),
     [studioMode, setStudioMode] = useState<"course" | "practice">("course"),
     [phase, setPhase] = useState("learn"),
     [activeId, setActiveId] = useState("javascript-01"),
@@ -316,6 +354,7 @@ export default function CodeQuest({
     apiKeyFileSettings = useRef<APIKeyFileSettingsHandle>(null),
     mainContent = useRef<HTMLElement>(null),
     navigationReplace = useRef(true),
+    navigationPreferences = useRef<Promise<unknown>>(Promise.resolve()),
     navigationSequence = useRef(0),
     navigationPending = useRef(""),
     lastLocation = useRef(""),
@@ -352,6 +391,9 @@ export default function CodeQuest({
     setSelectedCourseProject(id);
     try { localStorage.setItem(`codequest-project-choice:${state.draftScope}:${activeId}`, id); } catch {}
   };
+  const isConcept = lesson?.learningMode === "concept";
+  useEffect(()=>{if(!editorJump || view !== "studio" || studioMode !== "course" || phase !== "build")return;const frame=requestAnimationFrame(()=>{const target=document.getElementById("course-project-editor");target?.scrollIntoView({block:"start"});target?.focus({preventScroll:true});});return()=>cancelAnimationFrame(frame);},[editorJump,view,studioMode,phase]);
+
   const syncLabel = deviceStatusLabel(deviceStatus, localMode);
   const availableCourseProjects = projectsForLesson(activeId);
   const selectedProject = availableCourseProjects.find(p => p.id === selectedCourseProject) ?? availableCourseProjects[0];
@@ -381,21 +423,21 @@ export default function CodeQuest({
   }, [tutorContext]);
   const visible = useMemo(
     () =>
-      units.filter(
+      orderedUnits.filter(
         (u) =>
           u.track === state.profile.track &&
           u.level === state.profile.level &&
           topicMatches(u.topic, u.project.title, search),
       ),
-    [units, state.profile.track, state.profile.level, search],
+    [orderedUnits, state.profile.track, state.profile.level, search],
   );
   const next =
-    units.find(
+    orderedUnits.find(
       (u) =>
         u.track === unit?.track &&
         u.level === unit?.level &&
         !state.progress.find((p) => p.unitId === u.id)?.completedAt,
-    ) ?? units.find((u) => u.track === unit?.track && u.level === unit?.level);
+    ) ?? orderedUnits.find((u) => u.track === unit?.track && u.level === unit?.level);
   const draftKey = (id: string) =>
     "codequest-draft-" + draftScope.current + "-" + id;
   const loadLesson = (
@@ -555,15 +597,16 @@ export default function CodeQuest({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [device]);
   function safeRoute(route: QuestRoute, account: QuestState): QuestRoute {
-    if (route.phase === "math")
-      return { ...route, phase: "build" };
+    const concept = lessons.find(l => l.id === route.activeId)?.learningMode === "concept";
+    if (route.view === "quest" && route.phase === "build") return {...route, view:"studio"};
+    if (route.phase === "math") return { ...route, view:"studio", phase: "build" };
     if (
       route.phase === "done" &&
       !account.progress.some(
         (p) => p.unitId === route.activeId && p.completedAt,
       )
     )
-      return { ...route, phase: "build" };
+      return { ...route, view: concept ? "quest" : "studio", phase: concept ? "practice" : "build" };
     return route;
   }
   const applyLocation = useEffectEvent(async () => {
@@ -662,7 +705,7 @@ export default function CodeQuest({
           ? "AI practice · Build studio"
           : "Build studio",
       path: "Skill path",
-      tools: "Python tools and concepts",
+      tools: "Tools and concepts",
       progress: "Your progress",
       settings: "Settings",
     };
@@ -774,11 +817,11 @@ export default function CodeQuest({
     setState(d);
     if (phase === "math") setPhase("build");
   };
-  const select = async (id: string, entry?: PythonTool) => {
+  const select = async (id: string, entry?: Pick<PythonTool, "paragraph" | "concept">, destination: "quest" | "path" = "quest") => {
     if (completionLock.current) return;
     const sequence = ++navigationSequence.current;
     navigationPending.current = routeHash({
-      view: "quest",
+      view: destination,
       studioMode,
       phase: "learn",
       activeId: id,
@@ -790,10 +833,18 @@ export default function CodeQuest({
       if (sequence !== navigationSequence.current) return;
       abort.current?.abort();
       const u = units.find((v) => v.id === id)!;
-      const d = await request({
-        action: "preferences",
-        settings: { activeUnit: id, track: u.track, level: u.level },
+      // Serialize remote navigation preferences so an older response cannot
+      // overwrite the newest selected course on storage-limited browsers.
+      const pending = navigationPreferences.current.catch(() => {}).then(() => {
+        if (sequence !== navigationSequence.current) return null;
+        return request({
+          action: "preferences",
+          settings: { activeUnit: id, track: u.track, level: u.level },
+        });
       });
+      navigationPreferences.current = pending;
+      const d = await pending;
+      if (!d) return;
       if (sequence !== navigationSequence.current) return;
       setState(d);
       setActiveId(id);
@@ -801,7 +852,7 @@ export default function CodeQuest({
       setParagraph(entry?.paragraph ?? 0);
       setConceptTarget(entry?.concept);
       if (entry?.concept) setNoteSection({lessonId:id,key:"concept:"+entry.concept});
-      setView("quest");
+      setView(destination);
       setPhase("learn");
     } catch (e) {
       if (sequence === navigationSequence.current)
@@ -810,6 +861,13 @@ export default function CodeQuest({
       if (sequence === navigationSequence.current)
         navigationPending.current = "";
     }
+  };
+  const changeCourse = async (track: string) => {
+    const target = orderedUnits.find(u => u.track === track && u.level === "beginner")
+      ?? orderedUnits.find(u => u.track === track);
+    if (!target) throw new Error("This course has no available lesson yet.");
+    setSearch("");
+    await select(target.id, undefined, "path");
   };
   const answer = async (kind: "quiz" | "math", n: number) => {
     try {
@@ -886,9 +944,7 @@ export default function CodeQuest({
     result.source === activeId + ":" + writeProject(code, projectFiles) &&
     !result.error &&
     lesson &&
-    ((result.checks.length === lesson.checks.length &&
-      result.checks.length > 0 &&
-      result.checks.every((c) => c.passed)) ||
+    (projectProofPasses(lesson, result.checks) ||
       (!lesson.checks.length &&
         lesson.runtime === "swift" &&
         !!result.manual &&
@@ -900,7 +956,7 @@ export default function CodeQuest({
     completionLock.current = true;
     setCompleting(true);
     try {
-      if (lesson.externalNotes && !manualReviewed)
+      if (lesson.externalNotes && !hasTypeContracts(lesson) && !manualReviewed)
         throw new Error(
           "Review your local project steps and tick the confirmation first.",
         );
@@ -1182,15 +1238,14 @@ export default function CodeQuest({
             <Settings size={21} />
           </button>
         </div>
-      </header>
-      <div className="shell">
-        <aside className="sidebar">
-          <p className="eyebrow">YOUR NEXT CHAPTER</p>
+        <div className="workspace-toolbar">
+          <button id="unit-toc-toggle" type="button" className="secondary unit-toc-toggle" disabled={!ready || !lesson} aria-expanded={tocOpen && (view === "quest" || (view === "studio" && studioMode === "course"))} aria-controls="unit-table-of-contents" onClick={()=>{if(view !== "quest" && !(view === "studio" && studioMode === "course")){setView("quest");setPhase("learn");setTocOpen(true);}else setTocOpen(value=>!value);}}>Table of Contents <Map size={17}/></button>
           <nav aria-label="Main navigation">
             {[
               { id: "quest", label: "Learn", icon: BookOpen },
               { id: "studio", label: "Projects", icon: Braces },
               { id: "path", label: "Courses", icon: Map },
+              { id: "terminology", label: "Terminology", icon: BookOpen },
               { id: "progress", label: "Progress", icon: Trophy },
             ].map((n) => (
               <button
@@ -1200,6 +1255,7 @@ export default function CodeQuest({
                 onClick={() => {
                   setView(n.id);
                   if (n.id === "studio") setPhase("build");
+                  if (n.id === "quest") setPhase("learn");
                 }}
               >
                 <n.icon size={20} />
@@ -1208,42 +1264,20 @@ export default function CodeQuest({
               </button>
             ))}
           </nav>
-          <div className="sidebar-progress">
-            <div>
-              <Target size={20} />
-              <b>Today’s small win</b>
-            </div>
-            <p>
-              {state.todayCompleted} / {state.profile.dailyGoal} project
-              {state.profile.dailyGoal > 1 ? "s" : ""} finished
-            </p>
-            <div className="meter">
-              <span
-                style={{
-                  width:
-                    Math.min(
-                      100,
-                      (state.todayCompleted / state.profile.dailyGoal) * 100,
-                    ) + "%",
-                }}
-              />
-            </div>
-            <small>
-              Start small. You can do more whenever you feel like it.
-            </small>
+          <div className="buddy-visibility">
+            {(state.profile.aiEnabled || state.profile.hintsEnabled) && <button type="button" className="secondary buddy-toggle-button" disabled={!ready || !lesson} aria-controls="coding-buddy-panel" aria-expanded={!tutorHidden && (view === "quest" || (view === "studio" && studioMode === "course"))} onClick={()=>{if(view !== "quest" && !(view === "studio" && studioMode === "course")){setView("quest");setPhase("learn");if(tutorHidden)toggleTutor();}else toggleTutor();}}>{tutorHidden || !(view === "quest" || (view === "studio" && studioMode === "course")) ? "Show coding buddy" : "Hide coding buddy"}<MessageCircle size={16}/></button>}
           </div>
-          <div className="sidebar-foot">
-            <GraduationCap size={25} />
-            <p>
-              Start wherever you are.
-              <br />
-              <strong>Every step counts.</strong>
-            </p>
-            <button onClick={() => setView("settings")} className="text-button">
-              Make it feel like you <ArrowRight size={14} />
-            </button>
-          </div>
-        </aside>
+        </div>
+      </header>
+      <div className={"shell" + (tocOpen && ready && lesson && (view === "quest" || (view === "studio" && studioMode === "course")) ? " toc-docked" : "")}>
+
+        {ready && lesson && (view === "quest" || (view === "studio" && studioMode === "course")) && (
+                      <UnitTableOfContents open={tocOpen} title={lesson.title} items={lesson.id === "python-01" ? pythonConcepts.map((c,i)=>({label:c.title,paragraphIndex:i})) : getUnitContents(lesson)} active={lesson.id === "python-01" ? pythonConcepts.findIndex(c=>c.id===conceptTarget) : paragraph} onClose={()=>{setTocOpen(false);document.getElementById("unit-toc-toggle")?.focus();}} onSelect={index=>{
+                        theoryFocusRequested.current = true; setView("quest"); setPhase("learn");
+                        if(lesson.id === "python-01") {const concept=pythonConcepts[index];setConceptTarget(concept.id);setNoteSection({lessonId:lesson.id,key:"concept:"+concept.id});}
+                        else {setParagraph(index);setNoteSection({lessonId:lesson.id,key:"text:"+index});if(lesson.id === "python-input")setInputJump({index,token:Date.now()});}
+                      }}/>
+        )}
         <main
           id="main-content"
           ref={mainContent}
@@ -1284,7 +1318,8 @@ export default function CodeQuest({
               </button>
             </div>
           )}
-          {ready && returnToProject && phase === "learn" && <div className="notice"><span>Your project draft is waiting.</span><button className="secondary" onClick={() => { chooseCourseProject(returnToProject); setReturnToProject(null); setPhase("build"); }}>Back to project</button></div>}
+          {ready && terminologyReturn && view === "quest" && <div className="notice"><span>Your terminology search is kept.</span><button type="button" className="secondary" onClick={()=>{setView("terminology");setTerminologyReturn(false);}}>Back to Terminology</button></div>}
+          {ready && returnToProject && phase === "learn" && <div className="notice"><span>Your project draft is waiting.</span><button className="secondary" onClick={() => { chooseCourseProject(returnToProject); setReturnToProject(null); setView("studio"); setPhase("build"); }}>Back to project</button></div>}
           {ready && view === "studio" && (
             <div
               className="button-row studio-mode"
@@ -1305,6 +1340,7 @@ export default function CodeQuest({
               >
                 AI practice
               </button>
+              {(!isConcept || (unit && lesson && localProjectExamples(unit,lesson).length > 0)) && <button type="button" className="secondary editor-jump-button" aria-controls="course-project-editor" onClick={()=>{setStudioMode("course");setPhase("build");setEditorJump(value=>value+1);}}>Editor <Braces size={17}/></button>}
             </div>
           )}
           {ready &&
@@ -1313,25 +1349,6 @@ export default function CodeQuest({
             lesson &&
             unit && (
               <>
-                {(state.profile.aiEnabled || state.profile.hintsEnabled) && (
-                  <div className="buddy-visibility">
-                    <button
-                      type="button"
-                      className="secondary"
-                      aria-controls="coding-buddy-panel"
-                      aria-expanded={!tutorHidden}
-                      onClick={toggleTutor}
-                    >
-                      {tutorHidden ? "Show coding buddy" : "Hide coding buddy"}
-                      <MessageCircle size={16} />
-                    </button>
-                    <span>
-                      {tutorHidden
-                        ? "More space for your lesson. Your chat and draft are kept."
-                        : "Hide the pane whenever you want a quieter workspace."}
-                    </span>
-                  </div>
-                )}
                 <div
                   className={"workspace" + (tutorHidden ? " buddy-hidden" : "")}
                 >
@@ -1352,41 +1369,33 @@ export default function CodeQuest({
                       onExplain={(text) => {
                         void ask(text);
                       }}
-                      onAddNote={(text, key) => {
-                        const source = key ? noteSource(lesson, key) : null;
-                        if (!source) return;
-                        setNoteSelection({
-                          context: noteContext,
-                          text,
-                          source,
-                          requestId: ++noteRequest.current,
-                        });
-                        requestAnimationFrame(() =>
-                          lessonArea.current
-                            ?.querySelector<HTMLElement>("[data-lesson-notes]")
-                            ?.scrollIntoView({
-                              block: "nearest",
-                              behavior: "smooth",
-                            }),
-                        );
-                      }}
                       onSettings={() => setView("settings")}
                     />
                     <div className="lesson-heading">
                       <div>
                         <p className="eyebrow">
-                          {names[unit.track] + " · " + unit.level}
+                          {(view === "studio" && studioMode === "course" ? "Current lesson · " : "") + names[unit.track] + " · " + unit.level}
                         </p>
                         <h1>{lesson.title}</h1>
+                        {view === "studio" && studioMode === "course" && (
+                          <p className="project-lesson-context">These projects are for this lesson. Choose a different lesson to see its projects.</p>
+                        )}
                       </div>
-                      <button
-                        className="course-change"
-                        onClick={() => setView("path")}
-                      >
-                        Lessons <Map size={17} />
-                      </button>
+
                     </div>
-                    <div
+                    {view === "quest" && (["python", "javascript", "html", "css", "typescript", "react", "sql", "swift"].includes(unit.track) || ["backend", "developer-toolkit", "ai"].includes(unit.track)) && !!unit.prerequisite_ids?.length && (
+                      <aside className="project-prerequisites" aria-label="Earlier ideas for this lesson">
+                        <p>Earlier ideas you can revisit:</p>
+                        <div className="project-study-links">
+                          {unit.prerequisite_ids.map(id => units.find(item => item.id === id)).filter((item): item is Unit => !!item).map(prior => (
+                            <button key={prior.id} className="secondary project-study-button" onClick={() => select(prior.id)}>
+                              {studyLabel(prior.topic)}
+                            </button>
+                          ))}
+                        </div>
+                      </aside>
+                    )}
+                    {view === "quest" && <div
                       className="phase-nav"
                       role="group"
                       aria-label="Lesson steps"
@@ -1394,8 +1403,6 @@ export default function CodeQuest({
                       {[
                         { id: "learn", name: "Learn", n: 1 },
                         { id: "practice", name: "Try it", n: 2 },
-                        { id: "build", name: "Build", n: 3 },
-
                       ].map((p) => (
                         <button
                           key={p.id}
@@ -1416,12 +1423,12 @@ export default function CodeQuest({
                           {p.name}
                         </button>
                       ))}
-                    </div>
+                    </div>}
                     {phase === "learn" && (
                       <div className="panel lesson-card">
                         <span className="small-tag">ONE IDEA AT A TIME</span>
-                        {lesson.runtime === "python" && <button className="text-button" onClick={()=>setView("tools")}>Browse Python tools and concepts</button>}
-                        {lesson.id === "python-input" && <PythonInputLesson lesson={lesson} resumeScope={state.draftScope} onContinue={()=>setPhase("practice")} onParagraphChange={setParagraph} renderReadingMark={index=><ReadingMark reading={reading} lessonId={lesson.id} sectionKey={"text:"+index} sectionTitle={getLessonHeadings(lesson.id)[index]} />} />}
+                        <button className="text-button" onClick={()=>setView("tools")}>Browse tools and concepts</button>
+                        {lesson.id === "python-input" && <PythonInputLesson lesson={lesson} jumpTo={inputJump} resumeScope={state.draftScope} onContinue={()=>setPhase("practice")} onParagraphChange={setParagraph} renderReadingMark={index=><ReadingMark reading={reading} lessonId={lesson.id} sectionKey={"text:"+index} sectionTitle={getLessonHeadings(lesson.id)[index]} />} />}
                         {lesson.id === "python-01" && (
                           <PythonConceptLab
                             key={state.draftScope + ":" + lesson.id}
@@ -1498,7 +1505,7 @@ export default function CodeQuest({
                               <LessonStepFlow
                                 key={lesson.id + ":" + paragraph}
                                 resumeKey={state.draftScope ? `codequest-microstep-${state.draftScope}:${lesson.id}:${paragraph}` : undefined}
-                                referenceVisual={<LessonVisual unitId={lesson.id} paragraph={paragraph} />}
+                                referenceVisual={{ unitId: lesson.id, paragraph }}
                                 title={getLessonHeadings(lesson.id)[paragraph]}
                                 text={
                                   lesson.explanation[
@@ -1561,17 +1568,6 @@ export default function CodeQuest({
                       </div>
                     )}
                     <div className="lesson-utilities">
-                      {currentNoteSource && (
-                        <LessonNotes
-                          scope={state.draftScope}
-                          {...currentNoteSource}
-                          selectedQuote={
-                            noteSelection?.context === noteContext
-                              ? noteSelection
-                              : undefined
-                          }
-                        />
-                      )}
                       <details className="progress-disclosure">
                         <summary>Lesson progress</summary>
                         <LessonCompletion
@@ -1603,11 +1599,11 @@ export default function CodeQuest({
                             {feedback}
                           </div>
                         )}
-                        {!!progress?.quizPassed && (
+                        {!!progress?.quizPassed && !isConcept && (
                           <button
                             className="primary"
                             onClick={() => {
-                              setPhase("build");
+                              setView("studio"); setPhase("build");
                               setFeedback("");
                             }}
                           >
@@ -1616,22 +1612,32 @@ export default function CodeQuest({
                         )}
                       </div>
                     )}
-                    {phase === "build" && selectedProject && (
+                    {phase === "practice" && isConcept && !!progress?.quizPassed && <div className="panel concept-finish">
+                      <p>This concept lesson uses reading and an understanding check—no code project is required.</p>
+                      {projectReadingMissing.length > 0 && <p>Mark each teaching section as read before recording completion. Opening it alone does not mark it.</p>}
+                      <button className="secondary project-study-button" onClick={() => setPhase("learn")}>Return to teaching</button>
+                      <button className="primary" disabled={completing || !reading.loaded || !reading.online || !!reading.error || projectReadingMissing.length > 0 || Object.values(reading.pending).some(Boolean)} onClick={async () => {
+                        if (completionLock.current) return; completionLock.current = true; setCompleting(true); const id = activeId;
+                        try { await reading.refresh(); const data = await request({action:"completeConcept", unitId:id}); setState(data); if (unitRef.current === id) setPhase("done"); }
+                        catch (e) { setError((e as Error).message); } finally { completionLock.current = false; setCompleting(false); }
+                      }}>{completing ? "Saving…" : "Finish this concept lesson"}</button>
+                      {!reading.online && <p>Reconnect to verify saved reading and record completion. You can still read offline.</p>}
+                    </div>}
+                    {phase === "build" && isConcept && <LocalCourseProject key={`${state.draftScope}:${lesson.id}`} unit={unit} lesson={lesson} scope={state.draftScope} onStudy={index=>{setView("quest");setPhase("learn");setParagraph(index);}} />}
+                    {phase === "build" && !isConcept && selectedProject && (
                       <>
                         <div className="panel project-brief"><h3>Choose a Python Basics project</h3>
                           <p>Use the same small set of skills in different situations.</p>
                           <div className="course-project-choices">{availableCourseProjects.map(project => <button key={project.id} className={selectedProject.id === project.id ? "primary" : "secondary"} aria-pressed={selectedProject.id === project.id} onClick={() => chooseCourseProject(project.id)}>{project.title}</button>)}</div>
                           <p>{selectedProject.description ?? (selectedProject.core ? "Create a short introduction from a name and an age." : "Change an age and let your program calculate next year’s age.")}</p>
                           <p><strong>What you will make:</strong> {selectedProject.outcome ?? (selectedProject.core ? "A printed pet introduction using named values." : "A numeric result that updates when the starting age changes.")}</p>
-                          <details><summary>Skills this project uses</summary><p>{(selectedProject.skills ?? ["Strings", "Number values", "Names", "Assignment", "print", ...(selectedProject.quantitative ? ["Adding one"] : [])]).join(" · ")}</p>
-                            <div className="editor-actions">{pythonConcepts.map(concept => <button className="text-button" key={concept.id} onClick={() => { setReturnToProject(selectedProject.id); setPhase("learn"); setConceptTarget(concept.id); }}>{studyLabel(concept.title)}</button>)}</div>
-                          </details>
+                          <section className="project-skills"><h4>Skills this project uses</h4><p>{(selectedProject.skills ?? ["Strings", "Number values", "Names", "Assignment", "print", ...(selectedProject.quantitative ? ["Adding one"] : [])]).join(" · ")}</p>
+                            <div className="project-study-links">{pythonConcepts.map(concept => <button className="secondary project-study-button" key={concept.id} onClick={() => { setReturnToProject(selectedProject.id); setView("quest"); setPhase("learn"); setConceptTarget(concept.id); }}>{studyLabel(concept.title)}</button>)}</div>
+                            <p className="muted">Finish requires saved reading marks for these skills and a passed Try it exercise. You can edit and run before finishing.</p>
+                          </section>
                         </div>
-                        {!reading.loaded || reading.error || projectReadingMissing.length ? <div className="panel project-prerequisites">
-                          <h3>Cover the building blocks first</h3><p>These projects use the six Python Basics ideas. Mark each one as read after you study it. Reading marks record your activity, not mastery.</p>
-                          <p>{reading.error || (!reading.loaded ? "Loading reading progress…" : `${projectReadingMissing.length} ideas still need a reading mark.`)}</p>
-                          <button className="primary" onClick={() => { setReturnToProject(selectedProject.id); setPhase("learn"); setConceptTarget((projectReadingMissing[0]?.replace("concept:", "") ?? "program") as ConceptId); }}>{studyLabel(pythonConcepts.find(c => c.id === projectReadingMissing[0]?.replace("concept:", ""))?.title ?? "A program")}</button>
-                        </div> : <CourseProjectStudio key={state.draftScope + selectedProject.id} project={selectedProject} lesson={lesson} scope={state.draftScope} initialCode={selectedProject.core ? progress?.code : undefined} onCompleteCore={async (source, checks) => {
+                        <div id="course-project-editor" tabIndex={-1}><CourseProjectStudio key={state.draftScope + selectedProject.id} project={selectedProject} lesson={lesson} finishBlockedReason={!reading.loaded ? "Reading progress is loading. You can edit and run while it loads." : reading.error ? "Reading progress could not be checked. You can keep editing; retry before finishing." : projectReadingMissing.length ? "Finish requires the reading marks listed in Skills this project uses. You can edit and run now." : undefined} scope={state.draftScope} initialCode={selectedProject.core ? progress?.code : undefined} onCompleteCore={async (source, checks) => {
+                          if (!reading.loaded || reading.error || projectReadingMissing.length) throw new Error("Save the six reading marks before finishing. Your draft is kept.");
                           if (!progress?.quizPassed) throw new Error("Finish the Try it exercise before finishing the course project. Your draft is saved here.");
                           if (completionLock.current) throw new Error("Project completion is already being saved.");
                           completionLock.current = true;
@@ -1641,10 +1647,11 @@ export default function CodeQuest({
                             setState(completed);
                           } finally { completionLock.current = false; }
                           if (unitRef.current === lesson.id) restoreProject(source);
-                        }} />}
+                        }} /></div>
+
                       </>
                     )}
-                    {phase === "build" && !selectedProject && (
+                    {phase === "build" && !isConcept && !selectedProject && (
                       <div className="build-area">
                         <div className="panel project-brief">
                           <div className="heading-row">
@@ -1653,6 +1660,7 @@ export default function CodeQuest({
                           </div>
                           <GlossaryScope key={lesson.id} text={[unit.project.task, ...lesson.steps].join(" ")} runtime={lesson.runtime} wordsLabel="Words in these instructions">
                           <p><GlossaryText text={unit.project.task} /></p>
+                          {hasTypeContracts(lesson) && <p className="type-contract-notice">These checks test your types as well as your results. Keep type checking enabled. Do not use comments that tell TypeScript to skip errors for this exercise.</p>}
                           <ol className="steps">
                             {lesson.steps.map((s, i) => (
                               <li key={i}>
@@ -1664,7 +1672,7 @@ export default function CodeQuest({
                           <details>
                             <summary>What finished looks like</summary>
                             <p>{unit.project.done_when}</p>
-                            {lesson.checks.map((c) => (
+                            {projectChecks(lesson).map((c) => (
                               <p key={c.label} className="check-line">
                                 <Check size={16} />
                                 {c.label}
@@ -1673,9 +1681,9 @@ export default function CodeQuest({
                           </details>
                           {lesson.externalNotes && (
                             <div className="external-note">
-                              <b>Part of this project runs on your computer</b>
+                              <b>{hasTypeContracts(lesson) ? "Optional type-error practice" : "Part of this project runs on your computer"}</b>
                               <p>{lesson.externalNotes}</p>
-                              <label className="checkbox">
+                              {!hasTypeContracts(lesson) && <label className="checkbox">
                                 <input
                                   type="checkbox"
                                   checked={manualReviewed}
@@ -1684,11 +1692,11 @@ export default function CodeQuest({
                                   }
                                 />
                                 I’ve also checked the steps in my local project.
-                              </label>
+                              </label>}
                             </div>
                           )}
                         </div>
-                        <div className="panel editor-panel">
+                        <div id="course-project-editor" tabIndex={-1} className="panel editor-panel">
                           <div className="editor-bar">
                             <span>
                               <Code2 size={17} />
@@ -2012,12 +2020,9 @@ export default function CodeQuest({
                         <div className="reward-icon">
                           <Trophy size={46} />
                         </div>
-                        <p className="eyebrow">YOU MADE IT WORK</p>
-                        <h2>One more skill is yours.</h2>
-                        <p>
-                          You finished {unit.project.title}. Your code and
-                          progress are saved.
-                        </p>
+                        <p className="eyebrow">{isConcept ? "LESSON COMPLETE" : "YOU MADE IT WORK"}</p>
+                        <h2>{isConcept ? "One more idea explored." : "One more skill is yours."}</h2>
+                        <p>{isConcept ? "Your reading marks and understanding check are saved. You can revisit the ideas any time." : <>You finished {unit.project.title}. Your code and progress are saved.</>}</p>
                         <div className="reward">
                           <Zap size={24} />
                           100 XP earned for this quest
@@ -2233,10 +2238,7 @@ export default function CodeQuest({
                                 Ask <ArrowRight size={15} />
                               </button>
                             </div>
-                            <small className="muted">
-                              Unlimited tutor requests · {state.tutorUsed} used
-                              today
-                            </small>
+
                           </form>
                         </>
                       )}
@@ -2251,7 +2253,8 @@ export default function CodeQuest({
                 </div>
               </>
             )}
-          {ready && view === "tools" && <PythonTools units={units} lessons={lessons} onOpen={item=>void select(item.lessonId,item)} onCourse={()=>{setView("path");void prefs({track:"python",level:"beginner"}).catch(e=>setError(e.message));}} />}
+          {ready && view === "terminology" && <Terminology scope={state.draftScope} lessons={lessons} languageNames={names} onStudy={link=>{setTerminologyReturn(true);void select(link.lessonId,{paragraph:link.paragraph,concept:link.concept});}} />}
+          {ready && view === "tools" && <CourseTools units={units} lessons={lessons} initialTrack={state.profile.track} onOpen={item=>void select(item.lessonId,item)} onCourse={track=>{void changeCourse(track).catch(e=>setError(e.message));}} />}
           {ready && view === "path" && (
             <>
               <div className="page-title">
@@ -2262,13 +2265,13 @@ export default function CodeQuest({
                   revisit any lesson.
                 </p>
               </div>
-              <div className="segmented" role="group" aria-label="Python learning path">
-                <button className="selected" aria-pressed="true">Guided course</button>
-                <button onClick={()=>setView("tools")}>Python tools and concepts</button>
-              </div>
+              <CourseChooser open={coursesOpen} onToggle={()=>setCoursesOpen(v=>!v)} onTools={()=>setView("tools")} track={state.profile.track} name={names[state.profile.track]}>
+
               <div className="track-grid">
-                {Object.entries(names).map(([id, name]) => {
-                  const count = units.filter((u) => u.track === id).length,
+                {Object.entries(names).sort((a,b)=>compareCourseNames(a[1],b[1])).map(([id, name]) => {
+                  const courseUnits = units.filter((u) => u.track === id),
+                    count = courseUnits.length,
+                    conceptOnly = courseUnits.every(u => lessons.find(l => l.id === u.id)?.learningMode === "concept"),
                     done = state.progress.filter(
                       (p) =>
                         p.completedAt &&
@@ -2283,22 +2286,22 @@ export default function CodeQuest({
                       key={id}
                       aria-pressed={state.profile.track === id}
                       onClick={() =>
-                        prefs({ track: id, level: "beginner" }).catch((e) =>
-                          setError(e.message),
-                        )
+                        changeCourse(id).catch((e) => setError(e.message))
                       }
                     >
                       <span className="track-icon">{symbols[id]}</span>
                       <b>{name}</b>
-                      <span className="muted">{count} topic projects</span>
+                      <CourseDescription track={id} />
+                      <span className="muted">{count} {conceptOnly ? "concept lessons" : "lessons"}</span>
                       <div className="meter">
                         <span style={{ width: (done / count) * 100 + "%" }} />
                       </div>
-                      <small>{done} projects completed</small>
+                      <small>{done} {"lessons"} completed</small>
                     </button>
                   );
                 })}
               </div>
+              </CourseChooser>
               <div className="path-toolbar">
                 <div
                   className="segmented"
@@ -2360,7 +2363,7 @@ export default function CodeQuest({
                         {done ? (
                           <Check size={23} />
                         ) : (
-                          units
+                          orderedUnits
                             .filter(
                               (item) =>
                                 item.track === u.track &&
@@ -2374,7 +2377,7 @@ export default function CodeQuest({
                           {names[u.track]} · {u.level}
                         </small>
                         <h3>{u.topic}</h3>
-                        <p>{u.project.title}</p>
+                        <p>{l?.learningMode === "concept" ? "Read · explore · check your understanding" : u.project.title}</p>
                         <span className="path-meta">
                           {l ? l.estimatedMinutes + " min" : "Content loading"}
 
@@ -2498,14 +2501,13 @@ export default function CodeQuest({
                 </div>
               </div>
               <div className="panel">
-                <h3>Your project shelf</h3>
+                <h3>Your saved learning</h3>
                 <p>
-                  Your saved code belongs here, including work you’re still
-                  figuring out.
+                  Your saved lessons and projects belong here, including work you’re still figuring out.
                 </p>
                 {state.progress.length === 0 ? (
                   <p className="muted">
-                    Change your first project and it will appear here.
+                    Start a lesson or save a project and it will appear here.
                   </p>
                 ) : (
                   state.progress.map((p) => {
@@ -2516,7 +2518,7 @@ export default function CodeQuest({
                         key={p.unitId}
                         onClick={() => select(p.unitId)}
                       >
-                        <Braces size={20} />
+                        {lessons.find(l => l.id === p.unitId)?.learningMode === "concept" ? <BookOpen size={20} /> : <Braces size={20} />}
                         <span>
                           <b>{u?.project.title ?? p.unitId}</b>
                           <small>
@@ -2756,7 +2758,7 @@ export default function CodeQuest({
           <footer>
             CodeQuest · Built around your pace.
             <span>
-              Original lessons and projects · Inspired by Mimo’s topic outline
+              Original lessons and projects · <a href="/third-party/README.txt" target="_blank" rel="noopener">Third-party software notices</a>
             </span>
           </footer>
         </main>

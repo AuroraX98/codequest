@@ -1,0 +1,13 @@
+# JavaScript69 bounded benchmark core — frozen
+
+Append all-thirty-five.json units/lessons35–69 to current949 lessons; target984/838terms. Preserve all current lesson/unit objects except two exact javascript14 paragraph deltas in existing-field-deltas.json. Original11 JS08/13/16/24/30 clarity repairs are already present in the fresh34 runtime snapshot and must not be overwritten.
+
+All new lessons remain runnable JavaScript except46, explicitly native-only ESM concept mode with complete visible counter.mjs/main.mjs companions. Its three native cases passed; browser Blob ESM remains unverified. Do not change CSP, worker imports or pretend a browser execution occurred.62 has browser-safe assertion practice plus separately executed native node:test pass/fail companions.58/59/68 have actual HTML companions and Node/JSDOM execution, not actual browser UI proof.
+
+Merge35 terms and normalized all-headings concept anchors; CourseTools uses the actual anchors. Extend scoped ordering to JavaScript using javascript-route-plan.json, preserving Python’s existing route and every other track’s slots. Same seed/order for list/numbering/Next and visible cross-level prerequisite Study links without locking/auto-completion. Numeric64/65/66/67 belong near their prerequisites, not at the advanced tail. No old lesson IDs or reading paragraph indices change.
+
+Runtime:213 exact-production-frame jobs under Node24/JSDOM,68 runnable projects/225 checks,117 visible blocks source-matched;7 native module/CommonJS/Lodash/node:test pipelines,1 native Response supplement,20 timer/abort repeats. runtime-evidence/README.md states the test-only Node Response error-realm adapter and retained initial failures. No application runtime/CSP change was used to make these pass.
+
+Semantic receipts cover all three partitions. Foundations final unit-only prerequisite reconciliation is separately recorded; executable/source lesson objects are unchanged from review. All142 explicitly taught callable records contain visible calls and purpose/input/result-or-effect/syntax explanations. Provenance statements describe independently constructed teaching and source topic/semantic role, not universal uniqueness or legal clearance. Required dependency notices remain.
+
+Benchmark comparison: ../curriculum-benchmark/javascript-matrix.json, MDN primary curriculum + named Harvard CS50 Web Week5 + ECMA2026/host references. No invented MIT match, university equivalence or exhaustive API claim. External HTTP/CORS/persistence, full DevTools interaction, and specialized framework/metaprogramming domains remain explicit limits. GitHub paused.

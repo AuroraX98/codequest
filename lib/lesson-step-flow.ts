@@ -5,6 +5,7 @@ import { lessonBlocks } from "./lesson-markup";
 
 export type LessonPractice = {
   kind: "practice";
+  preparation?: string[];
   code: string;
   language: string;
   question: string;
@@ -15,7 +16,7 @@ export type LessonPractice = {
   plainExplanation: string;
 };
 export type LessonStep =
-  | { kind: "explain"; text: string }
+  | { kind: "explain"; text: string; purpose?: "exercise-preparation" }
   | { kind: "example"; code: string; language: string }
   | { kind: "output"; code: string; language: string }
   | LessonPractice;
@@ -65,8 +66,17 @@ export function buildLessonSteps(text: string, runtime: string): LessonStep[] {
     const key = language.toLowerCase() + "\0" + code.trim();
     if (examples.has(key)) return;
     examples.add(key);
-    steps.push({ kind: "example", code, language });
     const practice = codePartPractice(code, language);
+    // Essential rules appear as ordinary short steps before the example and
+    // question. They must never require opening the anatomy disclosure.
+    for (const preparation of practice?.preparation ?? []) {
+      for (const thought of shortLessonThoughts(preparation)) {
+        const normalize = (value: string) => value.replace(/\s+/g, " ").trim();
+        if (!steps.some(step => step.kind === "explain" && normalize(step.text).includes(normalize(thought))))
+          steps.push({ kind: "explain", text: thought, purpose: "exercise-preparation" });
+      }
+    }
+    steps.push({ kind: "example", code, language });
     if (practice) steps.push(practice);
   };
   for (const block of lessonBlocks(text, runtime)) {
@@ -95,7 +105,7 @@ export function distinctLessonReference(text: string, reference: string, runtime
   const thoughts = new Set(original.filter(b => b.kind === "prose").flatMap(b => shortLessonThoughts(b.text)).map(normalized));
   const code = new Set(original.filter(b => b.kind === "code").map(b => b.language + "\0" + b.code.trim()));
   return lessonBlocks(reference, runtime).flatMap(block => {
-    if (block.kind === "code") return code.has(block.language + "\0" + block.code.trim()) ? [] : [`\`\`\`${block.language}\n${block.code.trimEnd()}\n\`\`\``];
+    if (block.kind === "code") return !block.code.trim() || code.has(block.language + "\0" + block.code.trim()) ? [] : [`\`\`\`${block.language}\n${block.code.trimEnd()}\n\`\`\``];
     return shortLessonThoughts(block.text).filter(thought => !thoughts.has(normalized(thought)));
   }).join("\n\n");
 }

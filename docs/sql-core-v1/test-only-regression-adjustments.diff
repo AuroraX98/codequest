@@ -1,0 +1,196 @@
+diff --git a/tests/concept-completion.mjs b/tests/concept-completion.mjs
+index 8fe2a0a..bd7daa2 100644
+--- a/tests/concept-completion.mjs
++++ b/tests/concept-completion.mjs
+@@ -12,7 +12,7 @@ const lessons=JSON.parse(await readFile('content/lessons.json','utf8'));
+ const catalog=JSON.parse(await readFile('content/catalog.json','utf8'));
+ const newTracks=['csharp','cpp','java','c','go','kotlin','rust','php','ruby','r'];
+ const newLessons=newTracks.flatMap(track=>{const units=catalog.units.filter(u=>u.track===track);assert.ok(units.length>=6,`${track}: at least six integrated foundation lessons`);return units.map(u=>{const l=lessons.find(l=>l.id===u.id);assert.ok(l,`${u.id}: catalog lesson exists`);assert.equal(l.learningMode,'concept',u.id);return l;});});
+-const nativeModule=lessons.find(l=>l.id==='javascript-46');assert.equal(nativeModule.learningMode,'concept');newLessons.push(nativeModule);
++const nativeModule=lessons.find(l=>l.id==='javascript-46');assert.equal(nativeModule.learningMode,'concept');newLessons.push(nativeModule);for(const id of ['sql-51','sql-52']){const local=lessons.find(l=>l.id===id);assert.equal(local.learningMode,'concept');newLessons.push(local);}
+ const htmlConcept=lessons.find(l=>l.id==='html-42');assert.equal(htmlConcept.learningMode,'concept');newLessons.push(htmlConcept);
+ const cssPrint=lessons.find(l=>l.id==='css-47');assert.equal(cssPrint.learningMode,'concept');newLessons.push(cssPrint);
+ newLessons.push(...lessons.filter(l=>['typescript-48','typescript-49'].includes(l.id)));
+@@ -110,7 +110,7 @@ try{
+  }
+  assert.equal((await post({action:'preferences',deviceScope:scope,settings:{track:'not-a-course'}})).status,400,'unknown track rejected');
+  assert.equal(JSON.parse(database.prepare('SELECT settings FROM profiles WHERE user_id=?').get('owner-b').settings).track,'javascript','profile writes isolated by account');
+- console.log('PASS integrated new-course coverage: '+newLessons.length+' lessons across10 tracks plus native JavaScript46, production canonical reading keys, wrong/correct quiz gates, idempotent completion, no fake code run, persisted catalog-derived preferences.');
++ console.log('PASS integrated new-course coverage: '+newLessons.length+' lessons across10 tracks plus native JavaScript46 and SQL51/52, production canonical reading keys, wrong/correct quiz gates, idempotent completion, no fake code run, persisted catalog-derived preferences.');
+  console.log('PASS server concept gates: account/origin, quiz, all saved canonical marks, atomic eligibility, idempotence, no fake last_run, coding-route separation.');
+ }finally{database.close()}
+ const temp=await mkdtemp('/tmp/codequest-concept-client-');
+diff --git a/tests/css-core.mjs b/tests/css-core.mjs
+index f3e6a7c..1d59497 100644
+--- a/tests/css-core.mjs
++++ b/tests/css-core.mjs
+@@ -1,11 +1,11 @@
+ import {historicalTypeScriptBaseline} from './python-authorized-baseline.mjs';
+ import assert from 'node:assert/strict';import fs from 'node:fs';import{createHash}from'node:crypto';import ts from'typescript';
+-const read=p=>JSON.parse(fs.readFileSync(p,'utf8')),D='docs/css-core-v1/';const ls=read('content/lessons.json'),cat=read('content/catalog.json'),terms=read('content/terminology.json'),newData=read(D+'all-forty.json'),deltas=read(D+'existing-field-deltas.json'),before=read(D+'integration-baseline-lessons.json'),beforecat=read(D+'integration-baseline-catalog.json');assert.equal(ls.length,1088);assert.equal(terms.length,942);assert.equal(deltas.length,20);
++const read=p=>JSON.parse(fs.readFileSync(p,'utf8')),D='docs/css-core-v1/';const ls=read('content/lessons.json'),cat=read('content/catalog.json'),terms=read('content/terminology.json'),newData=read(D+'all-forty.json'),deltas=read(D+'existing-field-deltas.json'),before=read(D+'integration-baseline-lessons.json'),beforecat=read(D+'integration-baseline-catalog.json');assert.ok(ls.length>=1088,'Retained global baseline has at least1088 lessons; current SQL gate checks exact total');assert.ok(terms.length>=942,'Retained global baseline has at least942 terms; current SQL gate checks exact total');assert.equal(deltas.length,20);
+ const expectedL=structuredClone(before),expectedU=structuredClone(beforecat.units);for(const d of deltas){let row=(d.kind==='lesson'?expectedL:expectedU).find(x=>x.id===d.id);for(const k of d.path.slice(0,-1))row=row[k];const k=d.path.at(-1);assert.deepEqual(row[k]??null,d.before);row[k]=d.after;}
+ assert.deepEqual(historicalTypeScriptBaseline(ls.slice(0,1014)),expectedL);assert.deepEqual(historicalTypeScriptBaseline(cat.units.slice(0,1014)),expectedU);assert.deepEqual(ls.slice(1014,1054),newData.lessons);assert.deepEqual(cat.units.slice(1014,1054),newData.units);assert.deepEqual(terms.slice(0,868),read(D+'integration-baseline-terminology.json'));
+ for(const[file,hash]of Object.entries(read(D+'protected-source-hashes.json')).filter(([file])=>file!=='public/runner/frame.html'))assert.equal(createHash('sha256').update(fs.readFileSync(file)).digest('hex'),hash,file);
+ const css=ls.filter(l=>l.runtime==='css');assert.equal(css.length,56);assert.equal(css.filter(l=>l.learningMode==='concept').length,1);const print=css.find(l=>l.id==='css-47');assert.equal(print.solution,'');assert.deepEqual(print.checks,[]);assert.equal(print.extraFiles.length,2);assert.ok(print.extraFiles.some(f=>f.name==='print.css'&&f.code.includes('@media print')));
+-let src=fs.readFileSync('lib/course-learning-order.ts','utf8');for(const[n,t]of[['route','python'],['javascriptRoute','javascript'],['htmlRoute','html'],['cssRoute','css'],['typescriptRoute','typescript'],['reactRoute','react']])src=src.replace(`import ${n} from "../content/${t}-route-plan.json";`,`const ${n}=${JSON.stringify(read('content/'+t+'-route-plan.json'))};`);const js=ts.transpileModule(src,{compilerOptions:{module:ts.ModuleKind.ESNext,target:ts.ScriptTarget.ES2022}}).outputText;const{courseLearningOrder}=await import('data:text/javascript;base64,'+Buffer.from(js).toString('base64'));const ordered=courseLearningOrder(cat.units);assert.deepEqual(ordered.filter(u=>u.track==='css').map(u=>u.id),read('content/css-route-plan.json').recommendedSeedOrder);for(let i=0;i<ordered.length;i++)assert.equal(ordered[i].track,cat.units[i].track);for(const u of ordered.filter(u=>u.track==='css'))for(const p of u.prerequisite_ids??[])if(p.startsWith('css-'))assert.ok(ordered.findIndex(x=>x.id===p)<ordered.findIndex(x=>x.id===u.id));
++let src=fs.readFileSync('lib/course-learning-order.ts','utf8');for(const[n,t]of[['route','python'],['javascriptRoute','javascript'],['htmlRoute','html'],['cssRoute','css'],['typescriptRoute','typescript'],['reactRoute','react'],['sqlRoute','sql']])src=src.replace(`import ${n} from "../content/${t}-route-plan.json";`,`const ${n}=${JSON.stringify(read('content/'+t+'-route-plan.json'))};`);const js=ts.transpileModule(src,{compilerOptions:{module:ts.ModuleKind.ESNext,target:ts.ScriptTarget.ES2022}}).outputText;const{courseLearningOrder}=await import('data:text/javascript;base64,'+Buffer.from(js).toString('base64'));const ordered=courseLearningOrder(cat.units);assert.deepEqual(ordered.filter(u=>u.track==='css').map(u=>u.id),read('content/css-route-plan.json').recommendedSeedOrder);for(let i=0;i<ordered.length;i++)assert.equal(ordered[i].track,cat.units[i].track);for(const u of ordered.filter(u=>u.track==='css'))for(const p of u.prerequisite_ids??[])if(p.startsWith('css-'))assert.ok(ordered.findIndex(x=>x.id===p)<ordered.findIndex(x=>x.id===u.id));
+ const maps=read(D+'all-headings.json');for(const l of newData.lessons){assert.equal(maps[l.id][0].index,0);for(const h of maps[l.id])assert.ok(!/^(Worked|Try |Practice|How the rule)/.test(h.title));}
+ for(const e of read(D+'all-contract-evidence.json')){const l=ls.find(x=>x.id===e.lessonId);assert.ok(e.purpose&&e.inputsOrValues&&e.resultOrEffect);assert.ok(typeof e.visibleExample==='number'?l.explanation[e.visibleExample].includes('```'):l.explanation.some(p=>p.includes(e.visibleExample)));}
+ const rt=read(D+'runtime-reconciliation.json');assert.equal(rt.status,'PASS');assert.equal(rt.runnableSolutions,55);assert.equal(rt.newWorkedChangedSupplementalCases,96);assert.equal(rt.mappedExactPayloads,151);assert.deepEqual(rt.viewportChecks,[390,599,600,601,1400]);console.log('PASS CSS56:40 exact additions,20 declared corrections,all other1014objects/868terms and runtime/UI protected;151 exact browser payloads;scoped route;print boundary.');
+diff --git a/tests/html-core.mjs b/tests/html-core.mjs
+index a8a6ccf..6fcbf51 100644
+--- a/tests/html-core.mjs
++++ b/tests/html-core.mjs
+@@ -3,13 +3,13 @@ const read=p=>JSON.parse(fs.readFileSync(p,'utf8')),root='docs/html-core-v1/';
+ const canonical=x=>Array.isArray(x)?x.map(canonical):x&&typeof x==='object'?Object.fromEntries(Object.keys(x).sort().map(k=>[k,canonical(x[k])])):x;
+ const hash=x=>createHash('sha256').update(JSON.stringify(canonical(x))).digest('hex');
+ const lessons=read('content/lessons.json'),units=read('content/catalog.json').units,terms=read('content/terminology.json'),base=read(root+'preservation-baseline.json'),frozen=read(root+'all-thirty.json'),deltas=read(root+'existing-field-deltas.json');
+-assert.equal(lessons.length,1088);assert.equal(terms.length,942);assert.equal(deltas.length,28);assert.equal(hash(historicalHTMLBaseline(lessons.slice(0,984))),base.lessons984);assert.equal(hash(historicalHTMLBaseline(units.slice(0,984))),base.units984);assert.deepEqual(terms.slice(0,838),base.terms838);assert.deepEqual(lessons.slice(984,1014),frozen.lessons);assert.deepEqual(units.slice(984,1014),frozen.units);
++assert.ok(lessons.length>=1088,'Retained global baseline has at least1088 lessons; current SQL gate checks exact total');assert.ok(terms.length>=942,'Retained global baseline has at least942 terms; current SQL gate checks exact total');assert.equal(deltas.length,28);assert.equal(hash(historicalHTMLBaseline(lessons.slice(0,984))),base.lessons984);assert.equal(hash(historicalHTMLBaseline(units.slice(0,984))),base.units984);assert.deepEqual(terms.slice(0,838),base.terms838);assert.deepEqual(lessons.slice(984,1014),frozen.lessons);assert.deepEqual(units.slice(984,1014),frozen.units);
+ for(const d of deltas)assert.deepEqual((d.kind==='lesson'?lessons:units).find(x=>x.id===d.id)[d.field],d.after,d.id+':'+d.field);
+ assert.deepEqual(read('content/course-descriptions.json'),base.descriptions);assert.deepEqual(read('content/python-route-plan.json'),base.pythonRoute);assert.deepEqual(read('content/javascript-route-plan.json'),base.javascriptRoute);
+ let src=fs.readFileSync('lib/course-learning-order.ts','utf8');for(const[name,file]of [['route','python'],['javascriptRoute','javascript'],['htmlRoute','html']])src=src.replace(`import ${name} from "../content/${file}-route-plan.json";`,`const ${name}=${JSON.stringify(read('content/'+file+'-route-plan.json'))};`);
+-src=src.replace('import cssRoute from \"../content/css-route-plan.json\";','const cssRoute='+JSON.stringify(read('content/css-route-plan.json'))+';');src=src.replace('import typescriptRoute from \"../content/typescript-route-plan.json\";','const typescriptRoute='+JSON.stringify(read('content/typescript-route-plan.json'))+';');src=src.replace('import reactRoute from "../content/react-route-plan.json";','const reactRoute='+JSON.stringify(read('content/react-route-plan.json'))+';');const js=ts.transpileModule(src,{compilerOptions:{module:ts.ModuleKind.ESNext,target:ts.ScriptTarget.ES2022}}).outputText;const{courseLearningOrder}=await import('data:text/javascript;base64,'+Buffer.from(js).toString('base64'));const ordered=courseLearningOrder(units);
++src=src.replace('import cssRoute from \"../content/css-route-plan.json\";','const cssRoute='+JSON.stringify(read('content/css-route-plan.json'))+';');src=src.replace('import typescriptRoute from \"../content/typescript-route-plan.json\";','const typescriptRoute='+JSON.stringify(read('content/typescript-route-plan.json'))+';');src=src.replace('import reactRoute from "../content/react-route-plan.json";','const reactRoute='+JSON.stringify(read('content/react-route-plan.json'))+';');src=src.replace('import sqlRoute from "../content/sql-route-plan.json";','const sqlRoute='+JSON.stringify(read('content/sql-route-plan.json'))+';');const js=ts.transpileModule(src,{compilerOptions:{module:ts.ModuleKind.ESNext,target:ts.ScriptTarget.ES2022}}).outputText;const{courseLearningOrder}=await import('data:text/javascript;base64,'+Buffer.from(js).toString('base64'));const ordered=courseLearningOrder(units);
+ for(const track of ['python','javascript','html']){const rows=ordered.filter(u=>u.track===track);assert.deepEqual(rows.map(u=>u.id),read('content/'+track+'-route-plan.json').recommendedSeedOrder);for(const[i,u]of rows.entries())for(const p of u.prerequisite_ids??[])if(rows.some(x=>x.id===p))assert.ok(rows.findIndex(x=>x.id===p)<i,u.id+' requires '+p);}
+-assert.deepEqual(ordered.filter(u=>!['python','javascript','html','css','typescript'].includes(u.track)),units.filter(u=>!['python','javascript','html','css','typescript'].includes(u.track)));for(let i=0;i<units.length;i++)assert.equal(ordered[i].track,units[i].track);
++assert.deepEqual(ordered.filter(u=>!['python','javascript','html','css','typescript','react','sql'].includes(u.track)),units.filter(u=>!['python','javascript','html','css','typescript','react','sql'].includes(u.track)));for(let i=0;i<units.length;i++)assert.equal(ordered[i].track,units[i].track);
+ const html=lessons.filter(l=>l.id.startsWith('html-'));assert.equal(html.length,46);const concept=html.find(l=>l.id==='html-42');assert.equal(concept.learningMode,'concept');assert.equal(concept.starter,'');assert.deepEqual(concept.checks,[]);assert.ok(concept.explanation.some(p=>p.includes('strips scripts')));
+ for(const e of read(root+'all-markup-evidence.json'))assert.ok(lessons.find(l=>l.id===e.lessonId).explanation[e.paragraph].includes(e.visibleExample),e.lessonId+':'+e.target);
+ for(const e of read(root+'all-function-evidence.json'))assert.ok(lessons.find(l=>l.id===e.lessonId).explanation[e.paragraph].includes(e.visibleExample),e.lessonId+':'+e.target);
+diff --git a/tests/javascript-core.mjs b/tests/javascript-core.mjs
+index f65d04f..72bd499 100644
+--- a/tests/javascript-core.mjs
++++ b/tests/javascript-core.mjs
+@@ -1,10 +1,10 @@
+ import assert from'node:assert/strict';import fs from'node:fs';import{createHash}from'node:crypto';import ts from'typescript';import{historicalJavaScriptBaseline,historicalHTMLBaseline}from'./python-authorized-baseline.mjs';
+ const read=p=>JSON.parse(fs.readFileSync(p,'utf8')),root='docs/javascript-core-v1/';const canonical=x=>Array.isArray(x)?x.map(canonical):x&&typeof x==='object'?Object.fromEntries(Object.keys(x).sort().map(k=>[k,canonical(x[k])])):x;const hash=x=>createHash('sha256').update(JSON.stringify(canonical(x))).digest('hex');
+-const lessons=read('content/lessons.json'),units=read('content/catalog.json').units,terms=read('content/terminology.json'),base=read(root+'preservation-baseline.json'),frozen=read(root+'all-thirty-five.json');assert.equal(lessons.length,1088);assert.equal(terms.length,942);assert.equal(hash(historicalJavaScriptBaseline(lessons.slice(0,949))),base.lessons949);assert.equal(hash(historicalHTMLBaseline(units.slice(0,949))),base.units949);assert.deepEqual(terms.slice(0,803),base.terms803);assert.deepEqual(read('content/python-route-plan.json'),base.pythonRoute);assert.deepEqual(read('content/course-descriptions.json'),base.descriptions);assert.deepEqual(lessons.slice(949,984),frozen.lessons);assert.deepEqual(units.slice(949,984),frozen.units);
++const lessons=read('content/lessons.json'),units=read('content/catalog.json').units,terms=read('content/terminology.json'),base=read(root+'preservation-baseline.json'),frozen=read(root+'all-thirty-five.json');assert.ok(lessons.length>=1088,'Minimum retained global baseline; SQL gate checks exact current total');assert.ok(terms.length>=942,'Minimum retained term baseline; SQL gate checks exact current total');assert.equal(hash(historicalJavaScriptBaseline(lessons.slice(0,949))),base.lessons949);assert.equal(hash(historicalHTMLBaseline(units.slice(0,949))),base.units949);assert.deepEqual(terms.slice(0,803),base.terms803);assert.deepEqual(read('content/python-route-plan.json'),base.pythonRoute);assert.deepEqual(read('content/course-descriptions.json'),base.descriptions);assert.deepEqual(lessons.slice(949,984),frozen.lessons);assert.deepEqual(units.slice(949,984),frozen.units);
+ for(const d of read(root+'existing-field-deltas.json'))assert.equal(lessons.find(l=>l.id===d.id).explanation[d.paragraph],d.after);
+-const pythonRoute=read('content/python-route-plan.json'),javascriptRoute=read('content/javascript-route-plan.json');let src=fs.readFileSync('lib/course-learning-order.ts','utf8').replace('import route from "../content/python-route-plan.json";','const route='+JSON.stringify(pythonRoute)+';').replace('import javascriptRoute from "../content/javascript-route-plan.json";','const javascriptRoute='+JSON.stringify(javascriptRoute)+';');src=src.replace('import htmlRoute from "../content/html-route-plan.json";','const htmlRoute='+JSON.stringify(read('content/html-route-plan.json'))+';');src=src.replace('import cssRoute from \"../content/css-route-plan.json\";','const cssRoute='+JSON.stringify(read('content/css-route-plan.json'))+';');src=src.replace('import typescriptRoute from \"../content/typescript-route-plan.json\";','const typescriptRoute='+JSON.stringify(read('content/typescript-route-plan.json'))+';');src=src.replace('import reactRoute from "../content/react-route-plan.json";','const reactRoute='+JSON.stringify(read('content/react-route-plan.json'))+';');const js=ts.transpileModule(src,{compilerOptions:{module:ts.ModuleKind.ESNext,target:ts.ScriptTarget.ES2022}}).outputText;const{courseLearningOrder}=await import('data:text/javascript;base64,'+Buffer.from(js).toString('base64'));const ordered=courseLearningOrder(units);
++const pythonRoute=read('content/python-route-plan.json'),javascriptRoute=read('content/javascript-route-plan.json');let src=fs.readFileSync('lib/course-learning-order.ts','utf8').replace('import route from "../content/python-route-plan.json";','const route='+JSON.stringify(pythonRoute)+';').replace('import javascriptRoute from "../content/javascript-route-plan.json";','const javascriptRoute='+JSON.stringify(javascriptRoute)+';');src=src.replace('import htmlRoute from "../content/html-route-plan.json";','const htmlRoute='+JSON.stringify(read('content/html-route-plan.json'))+';');src=src.replace('import cssRoute from \"../content/css-route-plan.json\";','const cssRoute='+JSON.stringify(read('content/css-route-plan.json'))+';');src=src.replace('import typescriptRoute from \"../content/typescript-route-plan.json\";','const typescriptRoute='+JSON.stringify(read('content/typescript-route-plan.json'))+';');src=src.replace('import reactRoute from "../content/react-route-plan.json";','const reactRoute='+JSON.stringify(read('content/react-route-plan.json'))+';');src=src.replace('import sqlRoute from "../content/sql-route-plan.json";','const sqlRoute='+JSON.stringify(read('content/sql-route-plan.json'))+';');const js=ts.transpileModule(src,{compilerOptions:{module:ts.ModuleKind.ESNext,target:ts.ScriptTarget.ES2022}}).outputText;const{courseLearningOrder}=await import('data:text/javascript;base64,'+Buffer.from(js).toString('base64'));const ordered=courseLearningOrder(units);
+ for(const[track,route]of [['python',pythonRoute],['javascript',javascriptRoute]]){const rows=ordered.filter(u=>u.track===track);assert.deepEqual(rows.map(u=>u.id),route.recommendedSeedOrder);for(const[i,u]of rows.entries())for(const p of u.prerequisite_ids??[])if(rows.some(x=>x.id===p))assert.ok(rows.findIndex(x=>x.id===p)<i,u.id+' requires '+p);}
+-assert.deepEqual(ordered.filter(u=>!['python','javascript','html','css','typescript'].includes(u.track)),units.filter(u=>!['python','javascript','html','css','typescript'].includes(u.track)));for(let i=0;i<units.length;i++)assert.equal(ordered[i].track,units[i].track);
++assert.deepEqual(ordered.filter(u=>!['python','javascript','html','css','typescript','react','sql'].includes(u.track)),units.filter(u=>!['python','javascript','html','css','typescript','react','sql'].includes(u.track)));for(let i=0;i<units.length;i++)assert.equal(ordered[i].track,units[i].track);
+ const moduleLesson=lessons.find(l=>l.id==='javascript-46');assert.equal(moduleLesson.learningMode,'concept');assert.equal(moduleLesson.starter,'');assert.deepEqual(moduleLesson.checks,[]);assert.ok(moduleLesson.explanation.some(p=>p.includes('node main.mjs')));
+ const runtime=read(root+'runtime-evidence/summary.json');assert.equal(runtime.status,'PASS');assert.equal(runtime.frameValidations,213);assert.equal(runtime.projectChecks,225);assert.equal(runtime.runnableProjects,68);assert.equal(runtime.nativePrimaryPipelines,7);assert.equal(runtime.visibleJavaScriptBlocks,117);
+ console.log('PASS JavaScript69/984lessons/838terms: exact35 additions+2 permitted original paragraphs, all other949 objects preserved; Python92 unchanged, scoped prerequisite order/slots, native46 no fake browser checks,213 frame validations/7 native pipelines documented.');
+diff --git a/tests/python-authorized-baseline.mjs b/tests/python-authorized-baseline.mjs
+index 7c3c8af..70ad507 100644
+--- a/tests/python-authorized-baseline.mjs
++++ b/tests/python-authorized-baseline.mjs
+@@ -1,7 +1,14 @@
+ import fs from 'node:fs';
++const sqlCoreDeltas=JSON.parse(fs.readFileSync('docs/sql-core-v1/existing-field-deltas.json','utf8'));
++export function historicalSQLCoreBaseline(value){
++ if(!Array.isArray(value))return value;const rows=structuredClone(value);
++ for(const d of [...sqlCoreDeltas].reverse()){const row=rows.find(x=>x?.id===d.id&&(d.kind==='lesson'?Array.isArray(x.explanation):'track' in x));if(!row)continue;const path=d.field.split('.');let cur=row;for(const k of path.slice(0,-1))cur=cur[k];const k=path.at(-1);if(JSON.stringify(cur[k])===JSON.stringify(d.after)){if(d.before===null&&d.kind==='unit'&&k==='prerequisite_ids')delete cur[k];else cur[k]=structuredClone(d.before);}}
++ return rows;
++}
++
+ const reactCoreDeltas=JSON.parse(fs.readFileSync('docs/react-core-v1/existing-field-deltas.json','utf8'));
+ export function historicalReactCoreBaseline(value){
+- if(!Array.isArray(value))return value;const rows=structuredClone(value);
++ if(!Array.isArray(value))return value;const rows=historicalSQLCoreBaseline(value);
+  for(const d of [...reactCoreDeltas].reverse()){const row=rows.find(x=>x?.id===d.id&&(d.kind==='lesson'?Array.isArray(x.explanation):'track' in x));if(!row)continue;let cur=row;for(const k of d.path.slice(0,-1))cur=cur[k];const k=d.path.at(-1);if(JSON.stringify(cur[k])===JSON.stringify(d.after)){if(d.before===null&&d.kind==='unit'&&k==='prerequisite_ids')delete cur[k];else cur[k]=structuredClone(d.before);}}
+  return rows;
+ }
+diff --git a/tests/python-core.mjs b/tests/python-core.mjs
+index d2961c7..086025d 100644
+--- a/tests/python-core.mjs
++++ b/tests/python-core.mjs
+@@ -7,7 +7,7 @@ const read=async p=>JSON.parse(await fs.readFile(p,'utf8'));
+ const lessons=await read('content/lessons.json'),catalog=await read('content/catalog.json'),terms=await read('content/terminology.json'),frozen=await read('docs/python-core-v1/all-twenty-two.json'),baseline=await read('docs/python-core-v1/preservation-baseline.json'),deltas=await read('docs/python-core-v1/existing-field-deltas.json');
+ const canonical=x=>Array.isArray(x)?x.map(canonical):x&&typeof x==='object'?Object.fromEntries(Object.keys(x).sort().map(k=>[k,canonical(x[k])])):x;
+ const hash=x=>createHash('sha256').update(JSON.stringify(canonical(x))).digest('hex');
+-assert.equal(lessons.length,1088);assert.equal(terms.length,942);assert.equal(lessons.filter(l=>l.id.startsWith('python-')).length,92);
++assert.ok(lessons.length>=1088,'Minimum retained global baseline; SQL gate checks exact current total');assert.ok(terms.length>=942,'Minimum retained term baseline; SQL gate checks exact current total');assert.equal(lessons.filter(l=>l.id.startsWith('python-')).length,92);
+ assert.equal(hash(historicalPythonBaseline(lessons.slice(0,906))),baseline.lessons906);
+ assert.equal(hash(historicalPythonBaseline(catalog.units.slice(0,906))),baseline.units906);
+ assert.deepEqual(lessons.slice(906,928),frozen.lessons);assert.deepEqual(catalog.units.slice(906,928),frozen.units);
+@@ -21,10 +21,10 @@ const plan=await read('content/python-route-plan.json');
+ const source=(await fs.readFile('lib/course-learning-order.ts','utf8')).replace('import route from "../content/python-route-plan.json";','const route='+JSON.stringify(plan)+';');
+ const jsRoute=await read('content/javascript-route-plan.json');
+ const htmlRoute=await read('content/html-route-plan.json');
+-const withHTML=source.replace('import reactRoute from "../content/react-route-plan.json";','const reactRoute='+JSON.stringify(await read('content/react-route-plan.json'))+';').replace('import cssRoute from \"../content/css-route-plan.json\";','const cssRoute='+JSON.stringify(await read('content/css-route-plan.json'))+';').replace('import typescriptRoute from \"../content/typescript-route-plan.json\";','const typescriptRoute='+JSON.stringify(await read('content/typescript-route-plan.json'))+';').replace('import htmlRoute from "../content/html-route-plan.json";','const htmlRoute='+JSON.stringify(htmlRoute)+';');
++const withHTML=source.replace('import sqlRoute from "../content/sql-route-plan.json";','const sqlRoute='+JSON.stringify(await read('content/sql-route-plan.json'))+';').replace('import reactRoute from "../content/react-route-plan.json";','const reactRoute='+JSON.stringify(await read('content/react-route-plan.json'))+';').replace('import cssRoute from \"../content/css-route-plan.json\";','const cssRoute='+JSON.stringify(await read('content/css-route-plan.json'))+';').replace('import typescriptRoute from \"../content/typescript-route-plan.json\";','const typescriptRoute='+JSON.stringify(await read('content/typescript-route-plan.json'))+';').replace('import htmlRoute from "../content/html-route-plan.json";','const htmlRoute='+JSON.stringify(htmlRoute)+';');
+ const js=ts.transpileModule(withHTML.replace('import javascriptRoute from \"../content/javascript-route-plan.json\";','const javascriptRoute='+JSON.stringify(jsRoute)+';'),{compilerOptions:{module:ts.ModuleKind.ESNext,target:ts.ScriptTarget.ES2022}}).outputText;
+ const {courseLearningOrder}=await import('data:text/javascript;base64,'+Buffer.from(js).toString('base64'));
+-const ordered=courseLearningOrder(catalog.units);assert.deepEqual(ordered.filter(u=>!['python','javascript','html','css','typescript'].includes(u.track)),catalog.units.filter(u=>!['python','javascript','html','css','typescript'].includes(u.track)));
++const ordered=courseLearningOrder(catalog.units);assert.deepEqual(ordered.filter(u=>!['python','javascript','html','css','typescript','react','sql'].includes(u.track)),catalog.units.filter(u=>!['python','javascript','html','css','typescript','react','sql'].includes(u.track)));
+ const python=ordered.filter(u=>u.track==='python');assert.deepEqual(python.map(u=>u.id),plan.recommendedSeedOrder);
+ for(const [i,u]of python.entries())for(const id of u.prerequisite_ids??[])assert.ok(python.findIndex(p=>p.id===id)<i,u.id+' prerequisite '+id);
+ assert.equal(new Set(python.map(u=>u.id)).size,92);
+diff --git a/tests/react-core.mjs b/tests/react-core.mjs
+index 6277a17..48048ae 100644
+--- a/tests/react-core.mjs
++++ b/tests/react-core.mjs
+@@ -1,11 +1,12 @@
++import {historicalSQLCoreBaseline} from './python-authorized-baseline.mjs';
+ import assert from 'node:assert/strict';import fs from 'node:fs';import ts from 'typescript';import vm from 'node:vm';import crypto from 'node:crypto';
+-const read=p=>JSON.parse(fs.readFileSync(p,'utf8')),D='docs/react-core-v1/',ls=read('content/lessons.json'),cat=read('content/catalog.json'),terms=read('content/terminology.json'),before=read(D+'integration-baseline-lessons.json'),beforeCat=read(D+'integration-baseline-catalog.json'),newData=read(D+'all-twenty-two.json');
++const read=p=>JSON.parse(fs.readFileSync(p,'utf8')),D='docs/react-core-v1/',ls=historicalSQLCoreBaseline(read('content/lessons.json').slice(0,1110)),cat={...read('content/catalog.json'),units:historicalSQLCoreBaseline(read('content/catalog.json').units.slice(0,1110))},terms=read('content/terminology.json').slice(0,964),before=read(D+'integration-baseline-lessons.json'),beforeCat=read(D+'integration-baseline-catalog.json'),newData=read(D+'all-twenty-two.json');
+ for(const d of read(D+'existing-field-deltas.json')){let row=(d.kind==='lesson'?before:beforeCat.units).find(x=>x.id===d.id);for(const k of d.path.slice(0,-1))row=row[k];const k=d.path.at(-1);assert.deepEqual(row[k]??null,d.before);row[k]=d.after;}
+ assert.equal(ls.length,1110);assert.equal(cat.units.length,1110);assert.equal(terms.length,964);assert.deepEqual(ls.slice(0,1088),before);assert.deepEqual(cat.units.slice(0,1088),beforeCat.units);assert.deepEqual(ls.slice(1088),newData.lessons);assert.deepEqual(cat.units.slice(1088),newData.units);assert.deepEqual(terms.slice(0,942),read(D+'integration-baseline-terminology.json'));assert.deepEqual(terms.slice(942),read(D+'all-terminology.json'));
+ for(const [name,sha]of Object.entries(read(D+'freeze-manifest.json').files))assert.equal(crypto.createHash('sha256').update(fs.readFileSync(D+name)).digest('hex'),sha,name);
+ for(const e of read(D+'all-function-evidence.json'))assert.ok(ls.find(l=>l.id===e.lessonId).explanation[e.paragraph].includes(e.visibleCall),e.target);
+ const mod={exports:{}};vm.runInNewContext(ts.transpileModule(fs.readFileSync('lib/course-learning-order.ts','utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,esModuleInterop:true,target:ts.ScriptTarget.ES2022}}).outputText,{module:mod,exports:mod.exports,require:p=>read(p.replace('../',''))});const order=mod.exports.courseLearningOrder(cat.units);assert.deepEqual(order.filter(u=>u.track==='react').map(u=>u.id),read('content/react-route-plan.json').recommendedSeedOrder);assert.deepEqual(order.filter(u=>u.track!=='react').map(u=>u.id),mod.exports.courseLearningOrder(cat.units.filter(u=>u.track!=='react')).map(u=>u.id));const ix=new Map(order.map((u,i)=>[u.id,i]));for(const u of order.filter(u=>u.track==='react'))for(const p of u.prerequisite_ids??[]){assert.ok(ix.has(p),p);if(p.startsWith('react-'))assert.ok(ix.get(p)<ix.get(u.id),u.id+' after '+p);}
+-assert.match(fs.readFileSync('components/CodeQuest.tsx','utf8'),/"typescript", "react"\]\.includes\(unit.track\)/);assert.equal(fs.readFileSync('public/runner/frame.html','utf8'),fs.readFileSync('docs/react-runner-scope-v1/staged-frame.html','utf8'),'no runner/CSP change');
++assert.match(fs.readFileSync('components/CodeQuest.tsx','utf8'),/"typescript", "react", "sql"\]\.includes\(unit.track\)/);assert.equal(fs.readFileSync('public/runner/frame.html','utf8'),fs.readFileSync('docs/react-runner-scope-v1/staged-frame.html','utf8'),'no runner/CSP change');
+ const results=read(D+'runtime-evidence/combined-browser153.json');assert.equal(results.count,153);for(const r of results.results){assert.equal(r.passed,true,r.id);assert.ok(!r.result.error,r.id);assert.ok(r.result.checks.length,r.id);if(!r.expected)assert.ok(r.result.checks.some(c=>!c.passed),r.id);}
+ assert.equal(read(D+'runtime-evidence/visible-source-match.json').length,75);assert.equal(read(D+'runtime-evidence/final-source-reconciliation.json').length,153);assert.equal(read(D+'runtime-evidence/micro-step-validation.json').allPass,true);
+ for(const id of ['react-02','react-27'])assert.ok(ls.find(l=>l.id===id).explanation.some(p=>p.includes('does not enable native form submission')));
+diff --git a/tests/terminology.mjs b/tests/terminology.mjs
+index a564079..5de386f 100644
+--- a/tests/terminology.mjs
++++ b/tests/terminology.mjs
+@@ -6,7 +6,7 @@ import {createRoot} from 'react-dom/client';
+ import {JSDOM} from 'jsdom';
+ const read=p=>fs.readFile(new URL('../'+p,import.meta.url),'utf8');
+ const terms=JSON.parse(await read('content/terminology.json')),lessons=JSON.parse(await read('content/lessons.json')),units=JSON.parse(await read('content/catalog.json')).units;
+-assert.equal(terms.length,942);assert.equal(new Set(terms.map(t=>t.id)).size,terms.length);
++assert.ok(terms.length>=942,'Minimum retained term baseline; SQL gate checks exact current total');assert.equal(new Set(terms.map(t=>t.id)).size,terms.length);
+ for(const t of terms){assert.ok(t.name&&t.meaning&&t.category);assert.ok(['term','acronym','slang'].includes(t.kind));if(t.kind==='slang')assert.ok(t.context);for(const l of t.links??[]){assert.ok(lessons.find(x=>x.id===l.lessonId)?.explanation[l.paragraph]);assert.notEqual(l.lessonId,'python-01');}}
+ const dir=new URL('../.sites-runtime/terminology-test/',import.meta.url);await fs.mkdir(dir,{recursive:true});
+ for(const [file,name]of [['lib/course-order.ts','course-order'],['lib/terminology.ts','terminology'],['lib/study-label.ts','study-label'],['lib/navigation.ts','navigation'],['components/Terminology.tsx','Terminology']]){
+diff --git a/tests/typescript-core.mjs b/tests/typescript-core.mjs
+index 0c31680..4781f17 100644
+--- a/tests/typescript-core.mjs
++++ b/tests/typescript-core.mjs
+@@ -8,6 +8,6 @@ const module={exports:{}};vm.runInNewContext(ts.transpileModule(fs.readFileSync(
+ for(const l of types.filter(l=>l.learningMode!=='concept')){const proof=projectChecks(l).map(c=>({label:c.label,passed:true}));assert.equal(projectProofPasses(l,proof),true,l.id);assert.equal(projectProofPasses(l,proof.slice(1)),false);assert.equal(projectProofPasses(l,proof.map((c,i)=>i?c:{...c,passed:false})),false);assert.equal(projectProofPasses(l,proof.map((c,i)=>i?c:{...c,label:'Wrong'})),false);assert.equal(projectProofPasses(l,l.checks.map(c=>({label:c.label,passed:true}))),false,l.id+' runtime alone insufficient');}
+ for(const l of types.filter(l=>l.learningMode==='concept'))assert.equal(hasTypeContracts(l),false);
+ for(const l of ls.filter(l=>l.runtime!=='typescript'))assert.deepEqual(projectChecks(l),l.checks);
+-let src=fs.readFileSync('lib/course-learning-order.ts','utf8');for(const[n,t]of[['route','python'],['javascriptRoute','javascript'],['htmlRoute','html'],['cssRoute','css'],['typescriptRoute','typescript'],['reactRoute','react']])src=src.replace(`import ${n} from "../content/${t}-route-plan.json";`,`const ${n}=${JSON.stringify(read('content/'+t+'-route-plan.json'))};`);const code=ts.transpileModule(src,{compilerOptions:{module:ts.ModuleKind.ESNext}}).outputText;const{courseLearningOrder}=await import('data:text/javascript;base64,'+Buffer.from(code).toString('base64'));const sorted=courseLearningOrder(cat.units);assert.deepEqual(sorted.filter(u=>u.track==='typescript').map(u=>u.id),read('content/typescript-route-plan.json').recommendedSeedOrder);for(let i=0;i<sorted.length;i++)assert.equal(sorted[i].track,cat.units[i].track);
++let src=fs.readFileSync('lib/course-learning-order.ts','utf8');for(const[n,t]of[['route','python'],['javascriptRoute','javascript'],['htmlRoute','html'],['cssRoute','css'],['typescriptRoute','typescript'],['reactRoute','react'],['sqlRoute','sql']])src=src.replace(`import ${n} from "../content/${t}-route-plan.json";`,`const ${n}=${JSON.stringify(read('content/'+t+'-route-plan.json'))};`);const code=ts.transpileModule(src,{compilerOptions:{module:ts.ModuleKind.ESNext}}).outputText;const{courseLearningOrder}=await import('data:text/javascript;base64,'+Buffer.from(code).toString('base64'));const sorted=courseLearningOrder(cat.units);assert.deepEqual(sorted.filter(u=>u.track==='typescript').map(u=>u.id),read('content/typescript-route-plan.json').recommendedSeedOrder);for(let i=0;i<sorted.length;i++)assert.equal(sorted[i].track,cat.units[i].track);
+ assert.equal(read(D+'runtime-reconciliation.json').allPassed,true);assert.equal(read(D+'runtime-reconciliation.json').count,141);
+ console.log('PASS TypeScript49: exact34 additions/41 declared fields; 49 callable anchors; combined compiler/runtime completion proofs; finite49 route, original1054 preservation.');
+diff --git a/tests/unit-toc-data.mjs b/tests/unit-toc-data.mjs
+index f7ccae2..8149e49 100644
+--- a/tests/unit-toc-data.mjs
++++ b/tests/unit-toc-data.mjs
+@@ -4,7 +4,7 @@ import {readFile,writeFile,mkdir,rm} from 'node:fs/promises';
+ import ts from 'typescript';
+ import {createHash} from 'node:crypto';
+ const read=p=>readFile(new URL('../'+p,import.meta.url),'utf8');
+-const lessons=JSON.parse(await read('content/lessons.json'));assert.equal(lessons.length,1110);
++const lessons=JSON.parse(await read('content/lessons.json'));assert.equal(lessons.length,JSON.parse(await read('content/catalog.json')).units.length);
+ const canonical=x=>Array.isArray(x)?x.map(canonical):x&&typeof x==='object'?Object.fromEntries(Object.keys(x).sort().map(k=>[k,canonical(x[k])])):x;
+ assert.equal(createHash('sha256').update(JSON.stringify(canonical(historicalPythonBaseline(lessons.slice(0,233))))).digest('hex'),'e8c167ac832a5528fef753b42e02df27a180c82257aefab41764466b50bed1a8');
+ const dir=new URL('../.sites-runtime/toc-data-test/',import.meta.url);await mkdir(dir,{recursive:true});
+@@ -13,11 +13,11 @@ try{
+  const out=ts.transpileModule(await read('lib/'+file+'.ts'),{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.ESNext}}).outputText.replace(/(['"])\.\/(additional-unit-contents|lesson-headings)\1/g,'"./$2.mjs"');await writeFile(new URL(file+'.mjs',dir),out);
+  }
+  const {getUnitContents}=await import(new URL('unit-toc.mjs',dir));const {getLessonHeadings}=await import(new URL('lesson-headings.mjs',dir));const {additionalUnitContents}=await import(new URL('additional-unit-contents.mjs',dir));
+- assert.equal(Object.keys(additionalUnitContents).length,994);
++ assert.equal(Object.keys(additionalUnitContents).length,1022);
+  for(const l of lessons){const entries=getUnitContents(l);assert.ok(entries.length,l.id);assert.equal(entries[0].paragraphIndex,0);assert.equal(getLessonHeadings(l.id).length,l.explanation.length,l.id);
+  for(const [i,e]of entries.entries()){assert.ok(e.label&&e.paragraphIndex>=0&&e.paragraphIndex<l.explanation.length);assert.ok(i===0||e.paragraphIndex>entries[i-1].paragraphIndex);if(i)assert.ok(l.explanation[e.paragraphIndex].replace(/```[\s\S]*?```/g,'').trim(),l.id+': code stays grouped');}
+  if(additionalUnitContents[l.id])assert.equal(new Set(entries.map(e=>e.label)).size,entries.length);
+  }
+  assert.deepEqual(getLessonHeadings('unknown'),[]);
+ }finally{await rm(dir,{recursive:true,force:true});}
+-console.log('All844 current-unit maps valid;728 curated grouped maps,stable paragraph indices,no standalone code-only anchors;allprior233 lesson objects unchanged.');
++console.log('All1138 current-unit maps valid;1022 curated grouped maps, stable paragraph indices, no standalone code-only anchors; all prior233 lesson objects unchanged.');

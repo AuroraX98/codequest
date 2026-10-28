@@ -1,0 +1,473 @@
+[
+  {
+    "id": "cpp-25",
+    "quizTarget": "If both add(2) calls become add(1), what prints?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "An invariant is a rule every usable object must maintain. This Counter permits values from 0 through 3. Private data prevents outside code from bypassing its checked operations."
+      },
+      {
+        "paragraph": 1,
+        "fact": "class members are private until public: changes access. add returns false without changing value when a request would exceed 3. value += amount adds amount to the current value and stores the result. A trailing const on get() promises not to change this object through that member function."
+      },
+      {
+        "paragraph": 2,
+        "fact": "std::boolalpha prints Boolean results as true or false. The two calls request 2, then 2 more; the second is rejected, so get() returns 2."
+      }
+    ],
+    "reasoning": "Both requests fit the invariant: 0\u21921\u21922. A rejection would leave the old value unchanged.",
+    "source": "https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#c2-use-class-if-the-class-has-an-invariant-use-struct-if-the-data-members-can-vary-independently",
+    "prerequisites": [
+      "cpp-24"
+    ]
+  },
+  {
+    "id": "cpp-26",
+    "quizTarget": "Change Session s{12} to Session s{7}. What does duration return?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "A constructor has the class name and no return type. It runs when an object is created. The : minutes{n} member initializer initializes minutes before the constructor body."
+      },
+      {
+        "paragraph": 1,
+        "fact": "explicit prevents this one-argument constructor being used as an implicit conversion. Session s{12} deliberately constructs a Session. int minutes has no separate default initialization here: the initializer supplies it."
+      },
+      {
+        "paragraph": 2,
+        "fact": "Members initialize in their declaration order, not the order you type in the initializer list. Use initializers for members, especially const or reference members that cannot be assigned later."
+      }
+    ],
+    "reasoning": "The constructor parameter n receives 7 and directly initializes minutes with that value.",
+    "source": "https://learn.microsoft.com/en-us/cpp/cpp/constructors-cpp?view=msvc-170",
+    "prerequisites": [
+      "cpp-25"
+    ]
+  },
+  {
+    "id": "cpp-27",
+    "quizTarget": "Insert return 0 inside the nested scope after work. What prints?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "RAII means Resource Acquisition Is Initialization: an owning object acquires a resource during construction and releases it during destruction. A destructor is named ~ClassName and takes no arguments."
+      },
+      {
+        "paragraph": 1,
+        "fact": "This Trace is a lifecycle illustration, not an actual file owner. Its constructor/destructor print when a nested scope begins and ends. Real standard-library owners use this lifetime mechanism to release memory or close handles."
+      },
+      {
+        "paragraph": 2,
+        "fact": "Use standard containers and smart pointers instead of hand-writing ownership code. Automatic objects are destroyed in reverse construction order on normal scope exit. Cleanup destructors should not allow failures to escape."
+      }
+    ],
+    "reasoning": "Returning still exits the scope and destroys marker. The after statement is not reached. This is normal return, not abrupt process termination.",
+    "source": "https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#r1-manage-resources-automatically-using-resource-handles-and-raii-resource-acquisition-is-initialization",
+    "prerequisites": [
+      "cpp-26"
+    ]
+  },
+  {
+    "id": "cpp-28",
+    "quizTarget": "Replace auto b = a with auto& b = a. What prints?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "Copying a std::vector creates an independent vector with copies of its elements. auto b = a declares a new value; it is not a reference alias."
+      },
+      {
+        "paragraph": 1,
+        "fact": "auto& b = a would make b another name for a. The ampersand changes ownership and mutation consequences. Here both indices are valid because each vector contains two elements."
+      }
+    ],
+    "reasoning": "b now aliases a, so assigning b[0] changes the same element observed through a[0].",
+    "source": "https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#c61-a-copy-operation-should-copy",
+    "prerequisites": [
+      "cpp-27"
+    ]
+  },
+  {
+    "id": "cpp-29",
+    "quizTarget": "If b is copied from a instead, why does the final output still read 2 7?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "std::move from <utility> does not itself move bytes or empty an object. It casts an expression so a receiving operation may use move semantics. Standard containers can transfer owned storage efficiently."
+      },
+      {
+        "paragraph": 1,
+        "fact": "After moving this vector into b, b has the original values. The source vector remains valid but its value is unspecified; do not predict its size. Calling clear then push_back gives a a known new value."
+      },
+      {
+        "paragraph": 2,
+        "fact": "Moving is not reference aliasing. Reusing a after resetting it does not change b. Small scalar moves can just copy; std::move is not a universal speed switch."
+      }
+    ],
+    "reasoning": "The final operations deliberately overwrite a\u2019s contents, so the output does not reveal the different transfer/copy work.",
+    "source": "https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#c64-a-move-operation-should-move-and-leave-its-source-in-a-valid-state",
+    "prerequisites": [
+      "cpp-28"
+    ]
+  },
+  {
+    "id": "cpp-30",
+    "quizTarget": "Make b a Notebook& alias. How do the reported sizes change?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "The rule of zero: when standard owning members already manage resources, avoid defining custom destructors, copy operations or move operations just to repeat that work."
+      },
+      {
+        "paragraph": 1,
+        "fact": "Notebook contains a std::string and std::vector. Their generated memberwise copy gives an independent name and vector. A struct makes members public by default; braces supply members in declaration order."
+      },
+      {
+        "paragraph": 2,
+        "fact": "Rule of zero is a design preference, not a ban on destructors. A class directly managing a special handle needs deliberate ownership design. Merely adding a destructor can also affect automatic move generation."
+      }
+    ],
+    "reasoning": "An alias does not copy the member vector. push_back then changes the single original Notebook.",
+    "source": "https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#c20-if-you-can-avoid-defining-default-operations-do",
+    "prerequisites": [
+      "cpp-29"
+    ]
+  },
+  {
+    "id": "cpp-31",
+    "quizTarget": "Replace std::move(p) with p when initializing q. What happens?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "std::unique_ptr<T> from <memory> owns one object and destroys it automatically. std::make_unique<int>(7) constructs a heap-allocated int and returns its owner. Prefer this to raw owning new/delete."
+      },
+      {
+        "paragraph": 1,
+        "fact": "unique_ptr cannot be copied. Moving it transfers ownership and specifically leaves the source pointer empty. Test a pointer before dereferencing it; *q accesses its owned int."
+      },
+      {
+        "paragraph": 2,
+        "fact": "In a condition a nonempty smart pointer is true. The comparison p == nullptr checks whether p is empty; this check does not access a missing object."
+      }
+    ],
+    "reasoning": "Copy construction is deleted. Shared ownership requires a different, deliberate type, not a copied unique_ptr.",
+    "source": "https://learn.microsoft.com/en-us/cpp/cpp/smart-pointers-modern-cpp?view=msvc-170",
+    "prerequisites": [
+      "cpp-30"
+    ]
+  },
+  {
+    "id": "cpp-32",
+    "quizTarget": "Omit second.reset(). What does expired() report?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "Copies of std::shared_ptr participate in shared ownership. The object remains alive while at least one owning shared_ptr remains. std::make_shared constructs the object and shared ownership state."
+      },
+      {
+        "paragraph": 1,
+        "fact": "std::weak_ptr does not own the object. lock() returns a temporary shared_ptr if the object is still alive, or an empty one otherwise. reset() releases one owner, not all owners. In if (auto live = observer.lock()), the condition declares live, tests whether it is nonempty, and limits its lifetime to that if statement. expired() reports whether no owning shared_ptr remains."
+      },
+      {
+        "paragraph": 2,
+        "fact": "If objects own one another through shared_ptr, the cycle can prevent destruction. A weak back-reference can break the cycle. Prefer unique ownership when sharing is unnecessary."
+      }
+    ],
+    "reasoning": "The weak observer does not own the int, but second does. The temporary live owner is scoped to the if statement.",
+    "source": "https://learn.microsoft.com/en-us/cpp/cpp/smart-pointers-modern-cpp?view=msvc-170",
+    "prerequisites": [
+      "cpp-31"
+    ]
+  },
+  {
+    "id": "cpp-33",
+    "quizTarget": "If Square::score returns 6, what does show print through Shape&?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "A virtual member can select an override based on the actual object type. = 0 makes score() pure virtual: Shape is abstract and cannot be instantiated directly."
+      },
+      {
+        "paragraph": 1,
+        "fact": "struct Square : Shape publicly derives from Shape. override asks the compiler to verify that the signature really overrides a virtual function. Passing const Shape& preserves the actual Square object. Shape itself is abstract, so creating a Shape value is ill-formed. With a concrete base type, copying a derived object into a base value can instead slice away the derived part."
+      },
+      {
+        "paragraph": 2,
+        "fact": "virtual ~Shape() = default declares a virtual destructor with compiler-provided behavior. Its importance when deleting through a base owner is the next lesson. score() const can be called through a const base reference."
+      }
+    ],
+    "reasoning": "An abstract base reference can refer to a concrete derived object. The virtual call selects that object\u2019s override.",
+    "source": "https://learn.microsoft.com/en-us/cpp/cpp/virtual-functions?view=msvc-170",
+    "prerequisites": [
+      "cpp-32"
+    ]
+  },
+  {
+    "id": "cpp-34",
+    "quizTarget": "Call owner.reset() twice. How many times does derived print?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "A unique_ptr<Base> may own a Derived object. For ordinary deletion through Base*, Base needs a virtual destructor so derived cleanup happens too. Removing it here would be undefined behavior; we do not run that variant."
+      },
+      {
+        "paragraph": 1,
+        "fact": "reset() destroys the currently owned object and empties the pointer. Derived destruction runs before Base destruction. Logging is only a visible demonstration of cleanup order."
+      },
+      {
+        "paragraph": 2,
+        "fact": "Resetting an already-empty unique_ptr does nothing. This can be tested without invoking undefined behavior."
+      }
+    ],
+    "reasoning": "The first reset destroys the derived object through the virtual destructor. The empty second reset owns nothing to destroy.",
+    "source": "https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#c35-a-base-class-destructor-should-be-either-public-and-virtual-or-protected-and-non-virtual",
+    "prerequisites": [
+      "cpp-33"
+    ]
+  },
+  {
+    "id": "cpp-35",
+    "quizTarget": "Replace larger(2, 5) with larger(2, 5.0). What happens?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "template<typename T> introduces a type parameter named T. The compiler instantiates a concrete function for a chosen type. This is compile-time generic code, not a runtime dynamically typed function."
+      },
+      {
+        "paragraph": 1,
+        "fact": "larger(2, 5) deduces T as int. Both parameters use the same T. Passing one int and one double does not silently choose a common type for this signature; deduction conflicts unless the caller supplies a suitable explicit type."
+      },
+      {
+        "paragraph": 2,
+        "fact": "This version returns by value, not a borrowed reference. These numeric examples copy values; other types may use move operations when returning a parameter. The comparison and value construction operations must be valid for the chosen type. Later a concept will state a constraint explicitly."
+      }
+    ],
+    "reasoning": "The same T would need to be int and double. An explicit larger<double>(2,5.0) could request conversion, but is not the changed call.",
+    "source": "https://learn.microsoft.com/en-us/cpp/cpp/templates-cpp?view=msvc-170",
+    "prerequisites": [
+      "cpp-34"
+    ]
+  },
+  {
+    "id": "cpp-36",
+    "quizTarget": "Change ratio to Box<int> but keep {1.5}. What happens?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "template<typename T> can parameterize a class. Box<int> and Box<double> are distinct types. Each stores a T and exposes a copy through get()."
+      },
+      {
+        "paragraph": 1,
+        "fact": "Box(T value) : item{value} initializes the member using the constructor input. explicit keeps construction deliberate. We spell the template argument at the call site rather than introducing class-template deduction here."
+      }
+    ],
+    "reasoning": "The explicit type selects an int constructor parameter; brace initialization rejects this double-to-int narrowing.",
+    "source": "https://learn.microsoft.com/en-us/cpp/cpp/templates-cpp?view=msvc-170",
+    "prerequisites": [
+      "cpp-35"
+    ]
+  },
+  {
+    "id": "cpp-37",
+    "quizTarget": "Change twice(3) to twice(2.5). What occurs?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "A concept is a compile-time constraint. <concepts> supplies std::integral, which accepts integral types such as int but not double. template<std::integral T> constrains the type parameter."
+      },
+      {
+        "paragraph": 1,
+        "fact": "Constraints improve which calls are permitted; they do not prove all runtime inputs safe. This doubling example uses small values whose result fits int. Unchecked signed overflow is not allowed."
+      },
+      {
+        "paragraph": 2,
+        "fact": "Calling twice with 2.5 fails constraint checking instead of quietly truncating it. There is no successful runtime result for that changed program."
+      }
+    ],
+    "reasoning": "Deduction selects double, which does not satisfy std::integral. Constraints are checked before execution.",
+    "source": "https://github.com/cplusplus/draft/blob/n4950/source/concepts.tex",
+    "prerequisites": [
+      "cpp-36"
+    ]
+  },
+  {
+    "id": "cpp-38",
+    "quizTarget": "Change the capture to [&offset]. What prints in this same scope?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "A lambda is an unnamed function object. [offset](int value) { return value + offset; } takes an int and captures a copy of offset at creation. auto holds the lambda\u2019s generated type."
+      },
+      {
+        "paragraph": 1,
+        "fact": "[&offset] captures a reference instead. It observes later changes but must not outlive offset. Do not return or store a reference-capturing lambda past the referenced object\u2019s lifetime."
+      },
+      {
+        "paragraph": 2,
+        "fact": "The parameter value arrives on each call; the capture supplies surrounding context. Changing offset after value capture does not change the stored copy."
+      }
+    ],
+    "reasoning": "The reference capture sees the current offset of 5 when add(3) runs; both objects are still alive.",
+    "source": "https://learn.microsoft.com/en-us/cpp/cpp/lambda-expressions-in-cpp?view=msvc-170",
+    "prerequisites": [
+      "cpp-37"
+    ]
+  },
+  {
+    "id": "cpp-39",
+    "quizTarget": "Replace the second lambda assignment with operation = nullptr. What prints?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "std::function<int(int)> from <functional> stores a copyable callable taking an int and returning an int. It can hold different compatible lambda types behind one declared type. The empty [] capture list means this lambda uses no surrounding local variables."
+      },
+      {
+        "paragraph": 1,
+        "fact": "auto is simpler when the concrete callable type need not change. std::function adds flexibility with possible overhead. Calling an empty std::function throws; check it in a condition before calling."
+      },
+      {
+        "paragraph": 2,
+        "fact": "Assigning a new compatible lambda replaces the old target. Captures still obey their own lifetime rules; the wrapper does not make borrowed references safe."
+      }
+    ],
+    "reasoning": "The first call already printed 4. Clearing the wrapper makes the following Boolean check false, so there is no empty call.",
+    "source": "https://learn.microsoft.com/en-us/cpp/standard-library/function-class?view=msvc-170",
+    "prerequisites": [
+      "cpp-38"
+    ]
+  },
+  {
+    "id": "cpp-40",
+    "quizTarget": "Replace the two values with an empty vector. What prints?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "begin() identifies the first element; end() identifies one past the last. The notation [begin, end) includes begin but excludes end. Never dereference end."
+      },
+      {
+        "paragraph": 1,
+        "fact": "An iterator supports operations appropriate to its category. Here ++it moves to the next vector element and *it accesses the current element. Compare to end before dereferencing."
+      },
+      {
+        "paragraph": 2,
+        "fact": "For an empty vector, begin() equals end(), so this loop executes zero times. No special dereference is needed to discover emptiness."
+      }
+    ],
+    "reasoning": "begin equals end before the first iteration, and total was initialized to zero.",
+    "source": "https://learn.microsoft.com/en-us/cpp/standard-library/algorithms?view=msvc-170",
+    "prerequisites": [
+      "cpp-39"
+    ]
+  },
+  {
+    "id": "cpp-41",
+    "quizTarget": "Search for 9 instead of 4. Which branch runs?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "std::find from <algorithm> searches [first,last) for the first equal value. It returns an iterator to that element, or last if there is no match."
+      },
+      {
+        "paragraph": 1,
+        "fact": "The result is not a Boolean and is not automatically safe to dereference. Comparing it to values.end() distinguishes a match from absence. The vector remains unchanged."
+      }
+    ],
+    "reasoning": "No element equals 9, so find returns the end iterator and the guard prevents dereferencing it.",
+    "source": "https://learn.microsoft.com/en-us/cpp/standard-library/algorithm-functions?view=msvc-170#find",
+    "prerequisites": [
+      "cpp-40"
+    ]
+  },
+  {
+    "id": "cpp-42",
+    "quizTarget": "Replace a > b with a < b. What sequence prints?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "std::sort rearranges a random-access range such as vector iterators. A comparison callable answers whether the first value should come before the second."
+      },
+      {
+        "paragraph": 1,
+        "fact": "a > b requests descending numeric order; a < b requests ascending order. A valid comparator must provide a strict weak ordering: never put a before itself, and keep ordering/equivalence consistent. Do not use <= or >= as a sort comparator."
+      },
+      {
+        "paragraph": 2,
+        "fact": "An invalid comparator violates the algorithm\u2019s requirements; its result is not a harmless alternative ordering. We test < versus >, not an invalid comparator."
+      }
+    ],
+    "reasoning": "The comparator now places smaller numbers before larger ones; sort mutates the vector into ascending order.",
+    "source": "https://learn.microsoft.com/en-us/cpp/standard-library/algorithm-functions?view=msvc-170#sort",
+    "prerequisites": [
+      "cpp-41"
+    ]
+  },
+  {
+    "id": "cpp-43",
+    "quizTarget": "Start accumulation at 10 rather than 0. What prints?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "std::transform applies a callable to each input and writes one result per element. The output vector is constructed with values.size() elements; merely reserving capacity would not create writable elements."
+      },
+      {
+        "paragraph": 1,
+        "fact": "std::accumulate from <numeric> combines elements, starting with an initial accumulator. The initial value also determines its type. Here 0 is int and the small sum fits int."
+      },
+      {
+        "paragraph": 2,
+        "fact": "The transform writes into doubled, leaving values unchanged. Accumulation computes one result rather than modifying the vector."
+      }
+    ],
+    "reasoning": "The doubled values are 2,4,6. The initial accumulator participates in the sum: 10+2+4+6=22.",
+    "source": "https://learn.microsoft.com/en-us/cpp/standard-library/numeric-functions?view=msvc-170#accumulate",
+    "prerequisites": [
+      "cpp-42"
+    ]
+  },
+  {
+    "id": "cpp-44",
+    "quizTarget": "Change the filter from x > 1 to x > 2. What is traversed?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "A range view describes iteration rather than eagerly creating a new vector. std::views::filter keeps values satisfying a predicate; std::views::transform computes a value from each kept element. | composes these adaptors."
+      },
+      {
+        "paragraph": 1,
+        "fact": "The for loop traverses the pipeline: filter values greater than 1, then multiply each by 10. The underlying vector remains 1,2,3. This example does not modify it while a view is being traversed."
+      },
+      {
+        "paragraph": 2,
+        "fact": "This view refers to the named vector, which outlives traversal. Do not return this view from a function if its local vector would be destroyed. Avoid assuming views are cached result collections."
+      }
+    ],
+    "reasoning": "Only source value 3 passes the new predicate; the transform then yields 30.",
+    "source": "https://learn.microsoft.com/en-us/cpp/standard-library/ranges?view=msvc-170",
+    "prerequisites": [
+      "cpp-43"
+    ]
+  },
+  {
+    "id": "cpp-45",
+    "quizTarget": "Use a vector containing only 2, then erase it. What prints?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "A vector operation can invalidate iterators, references and pointers into its elements. Reallocation during growth invalidates all of them. erase invalidates positions at and after the erased element."
+      },
+      {
+        "paragraph": 1,
+        "fact": "vector::erase returns a fresh iterator to the element following the erased one, or end if there is none. Replace the old iterator with that result and check end before dereferencing."
+      },
+      {
+        "paragraph": 2,
+        "fact": "Using an invalidated iterator is not a reliable way to see an old value; it can be undefined behavior. This example only reads the newly returned valid position."
+      }
+    ],
+    "reasoning": "After erasing the sole element the vector is empty. The returned iterator equals end, so the guard selects the end branch.",
+    "source": "https://learn.microsoft.com/en-us/cpp/standard-library/vector-class?view=msvc-170#erase",
+    "prerequisites": [
+      "cpp-44"
+    ]
+  }
+]

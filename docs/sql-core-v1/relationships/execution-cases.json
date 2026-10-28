@@ -1,0 +1,717 @@
+[
+  {
+    "lessonId": "sql-35",
+    "id": "sql-35-worked",
+    "paragraph": 2,
+    "code": "CREATE TABLE reminders(id INTEGER PRIMARY KEY, title TEXT NOT NULL, status TEXT DEFAULT 'open');\nINSERT INTO reminders(id,title) VALUES(1,'Read');\nINSERT INTO reminders VALUES(2,'Walk',NULL);\nSELECT id,title,status\nFROM reminders\nORDER BY id;",
+    "checks": [
+      {
+        "label": "Exact row count",
+        "expression": "SELECT COUNT(*) = 2 FROM reminders;"
+      },
+      {
+        "label": "Omitted status",
+        "expression": "SELECT COUNT(*) = 1 FROM reminders WHERE id=1 AND title='Read' AND status='open';"
+      },
+      {
+        "label": "Explicit null",
+        "expression": "SELECT COUNT(*) = 1 FROM reminders WHERE id=2 AND title='Walk' AND status IS NULL;"
+      }
+    ],
+    "expectedResults": [
+      {
+        "columns": [
+          "id",
+          "title",
+          "status"
+        ],
+        "values": [
+          [
+            1,
+            "Read",
+            "open"
+          ],
+          [
+            2,
+            "Walk",
+            null
+          ]
+        ]
+      }
+    ],
+    "outcome": "success"
+  },
+  {
+    "lessonId": "sql-35",
+    "id": "sql-35-changed",
+    "paragraph": 3,
+    "code": "CREATE TABLE reminders(id INTEGER PRIMARY KEY, title TEXT NOT NULL, status TEXT DEFAULT 'open');\nINSERT INTO reminders(id,title) VALUES(1,'Read');\nINSERT INTO reminders VALUES(2,'Walk','done');\nSELECT id,title,status\nFROM reminders\nORDER BY id;",
+    "checks": [
+      {
+        "label": "Exact row count",
+        "expression": "SELECT COUNT(*) = 2 FROM reminders;"
+      },
+      {
+        "label": "Provided status",
+        "expression": "SELECT COUNT(*) = 1 FROM reminders WHERE id=2 AND status='done';"
+      }
+    ],
+    "expectedResults": [
+      {
+        "columns": [
+          "id",
+          "title",
+          "status"
+        ],
+        "values": [
+          [
+            1,
+            "Read",
+            "open"
+          ],
+          [
+            2,
+            "Walk",
+            "done"
+          ]
+        ]
+      }
+    ],
+    "outcome": "success"
+  },
+  {
+    "lessonId": "sql-35",
+    "id": "sql-35-not-null",
+    "paragraph": 5,
+    "setup": "CREATE TABLE strict_note(title TEXT NOT NULL DEFAULT 'New');",
+    "code": "INSERT INTO strict_note VALUES(NULL);",
+    "outcome": "expected-error",
+    "errorContains": "NOT NULL constraint failed: strict_note.title",
+    "postChecks": [
+      {
+        "label": "No row inserted",
+        "expression": "SELECT COUNT(*)=0 FROM strict_note;"
+      }
+    ],
+    "supplemental": true,
+    "gradingScope": "Author-validated rejection fixture; not current learner SELECT-check capability."
+  },
+  {
+    "lessonId": "sql-36",
+    "id": "sql-36-worked",
+    "paragraph": 2,
+    "code": "CREATE TABLE bookings(id INTEGER PRIMARY KEY, seats INTEGER CHECK(seats BETWEEN 1 AND 4));\nINSERT INTO bookings VALUES(1,3);\nSELECT id,seats\nFROM bookings\nORDER BY id;",
+    "checks": [
+      {
+        "label": "Exact row count",
+        "expression": "SELECT COUNT(*) = 1 FROM bookings;"
+      },
+      {
+        "label": "Accepted 3",
+        "expression": "SELECT COUNT(*) = 1 FROM bookings WHERE id=1 AND seats=3;"
+      }
+    ],
+    "expectedResults": [
+      {
+        "columns": [
+          "id",
+          "seats"
+        ],
+        "values": [
+          [
+            1,
+            3
+          ]
+        ]
+      }
+    ],
+    "outcome": "success"
+  },
+  {
+    "lessonId": "sql-36",
+    "id": "sql-36-changed",
+    "paragraph": 3,
+    "code": "CREATE TABLE bookings(id INTEGER PRIMARY KEY, seats INTEGER CHECK(seats BETWEEN 1 AND 4));\nINSERT INTO bookings VALUES(1,NULL);\nSELECT id,seats\nFROM bookings\nORDER BY id;",
+    "checks": [
+      {
+        "label": "Exact row count",
+        "expression": "SELECT COUNT(*) = 1 FROM bookings;"
+      },
+      {
+        "label": "Accepted missing",
+        "expression": "SELECT COUNT(*) = 1 FROM bookings WHERE id=1 AND seats IS NULL;"
+      }
+    ],
+    "expectedResults": [
+      {
+        "columns": [
+          "id",
+          "seats"
+        ],
+        "values": [
+          [
+            1,
+            null
+          ]
+        ]
+      }
+    ],
+    "outcome": "success"
+  },
+  {
+    "lessonId": "sql-36",
+    "id": "sql-36-outside-range",
+    "paragraph": 5,
+    "setup": "CREATE TABLE bookings(id INTEGER PRIMARY KEY, seats INTEGER CHECK(seats BETWEEN 1 AND 4));",
+    "code": "INSERT INTO bookings VALUES(1,5);",
+    "outcome": "expected-error",
+    "errorContains": "CHECK constraint failed: seats BETWEEN 1 AND 4",
+    "postChecks": [
+      {
+        "label": "No insertion",
+        "expression": "SELECT COUNT(*)=0 FROM bookings;"
+      }
+    ],
+    "supplemental": true,
+    "gradingScope": "Author-validated rejection fixture; not current learner SELECT-check capability."
+  },
+  {
+    "lessonId": "sql-36",
+    "id": "sql-36-required",
+    "paragraph": 5,
+    "setup": "CREATE TABLE bookings(id INTEGER PRIMARY KEY, seats INTEGER NOT NULL CHECK(seats BETWEEN 1 AND 4));",
+    "code": "INSERT INTO bookings VALUES(1,NULL);",
+    "outcome": "expected-error",
+    "errorContains": "NOT NULL constraint failed: bookings.seats",
+    "postChecks": [
+      {
+        "label": "No insertion",
+        "expression": "SELECT COUNT(*)=0 FROM bookings;"
+      }
+    ],
+    "supplemental": true,
+    "gradingScope": "Author-validated rejection fixture; not current learner SELECT-check capability."
+  },
+  {
+    "lessonId": "sql-37",
+    "id": "sql-37-worked",
+    "paragraph": 2,
+    "code": "CREATE TABLE slots(person TEXT NOT NULL, day TEXT NOT NULL, PRIMARY KEY(person,day));\nINSERT INTO slots VALUES('Mira','Mon'),('Mira','Tue'),('Oren','Mon');\nSELECT person,day\nFROM slots\nORDER BY person,day;",
+    "checks": [
+      {
+        "label": "Three pairs",
+        "expression": "SELECT COUNT(*)=3 FROM slots;"
+      }
+    ],
+    "expectedResults": [
+      {
+        "columns": [
+          "person",
+          "day"
+        ],
+        "values": [
+          [
+            "Mira",
+            "Mon"
+          ],
+          [
+            "Mira",
+            "Tue"
+          ],
+          [
+            "Oren",
+            "Mon"
+          ]
+        ]
+      }
+    ],
+    "outcome": "success"
+  },
+  {
+    "lessonId": "sql-37",
+    "id": "sql-37-changed",
+    "paragraph": 3,
+    "code": "CREATE TABLE nullable_pair(person TEXT, day TEXT, UNIQUE(person,day));\nINSERT INTO nullable_pair VALUES('Mira',NULL),('Mira',NULL);\nSELECT person,day\nFROM nullable_pair\nORDER BY rowid;",
+    "checks": [
+      {
+        "label": "Both nullable rows",
+        "expression": "SELECT COUNT(*)=2 FROM nullable_pair WHERE person='Mira' AND day IS NULL;"
+      }
+    ],
+    "expectedResults": [
+      {
+        "columns": [
+          "person",
+          "day"
+        ],
+        "values": [
+          [
+            "Mira",
+            null
+          ],
+          [
+            "Mira",
+            null
+          ]
+        ]
+      }
+    ],
+    "outcome": "success"
+  },
+  {
+    "lessonId": "sql-37",
+    "id": "sql-37-duplicate-pair",
+    "paragraph": 5,
+    "setup": "CREATE TABLE slots(person TEXT NOT NULL, day TEXT NOT NULL, PRIMARY KEY(person,day));\nINSERT INTO slots VALUES('Mira','Mon');",
+    "code": "INSERT INTO slots VALUES('Mira','Mon');",
+    "outcome": "expected-error",
+    "errorContains": "UNIQUE constraint failed: slots.person, slots.day",
+    "postChecks": [
+      {
+        "label": "First row preserved",
+        "expression": "SELECT COUNT(*)=1 FROM slots;"
+      }
+    ],
+    "supplemental": true,
+    "gradingScope": "Author-validated rejection fixture; not current learner SELECT-check capability."
+  },
+  {
+    "lessonId": "sql-38",
+    "id": "sql-38-worked",
+    "paragraph": 2,
+    "code": "PRAGMA foreign_keys=ON;\nCREATE TABLE people(id INTEGER PRIMARY KEY,name TEXT NOT NULL);\nCREATE TABLE clubs(id INTEGER PRIMARY KEY,title TEXT NOT NULL);\nINSERT INTO people VALUES(1,'Mira'),(2,'Oren');\nINSERT INTO clubs VALUES(10,'Art'),(20,'Music');\nCREATE TABLE membership(person_id INTEGER NOT NULL REFERENCES people(id), club_id INTEGER NOT NULL REFERENCES clubs(id), PRIMARY KEY(person_id,club_id));\nINSERT INTO membership VALUES(1,10),(1,20),(2,10);\nSELECT p.name,c.title\nFROM membership AS m\nJOIN people AS p ON p.id=m.person_id\nJOIN clubs AS c ON c.id=m.club_id\nORDER BY p.name,c.title;",
+    "checks": [
+      {
+        "label": "Three links",
+        "expression": "SELECT COUNT(*)=3 FROM membership;"
+      }
+    ],
+    "expectedResults": [
+      {
+        "columns": [
+          "name",
+          "title"
+        ],
+        "values": [
+          [
+            "Mira",
+            "Art"
+          ],
+          [
+            "Mira",
+            "Music"
+          ],
+          [
+            "Oren",
+            "Art"
+          ]
+        ]
+      }
+    ],
+    "outcome": "success"
+  },
+  {
+    "lessonId": "sql-38",
+    "id": "sql-38-changed",
+    "paragraph": 3,
+    "code": "PRAGMA foreign_keys=ON;\nCREATE TABLE people(id INTEGER PRIMARY KEY,name TEXT NOT NULL);\nCREATE TABLE clubs(id INTEGER PRIMARY KEY,title TEXT NOT NULL);\nINSERT INTO people VALUES(1,'Mira'),(2,'Oren');\nINSERT INTO clubs VALUES(10,'Art'),(20,'Music');\nCREATE TABLE membership(person_id INTEGER NOT NULL REFERENCES people(id), club_id INTEGER NOT NULL REFERENCES clubs(id), PRIMARY KEY(person_id,club_id));\nINSERT INTO membership VALUES(1,10),(1,20),(2,10),(2,20);\nSELECT p.name,c.title\nFROM membership AS m\nJOIN people AS p ON p.id=m.person_id\nJOIN clubs AS c ON c.id=m.club_id\nORDER BY p.name,c.title;",
+    "checks": [
+      {
+        "label": "Four links",
+        "expression": "SELECT COUNT(*)=4 FROM membership;"
+      }
+    ],
+    "expectedResults": [
+      {
+        "columns": [
+          "name",
+          "title"
+        ],
+        "values": [
+          [
+            "Mira",
+            "Art"
+          ],
+          [
+            "Mira",
+            "Music"
+          ],
+          [
+            "Oren",
+            "Art"
+          ],
+          [
+            "Oren",
+            "Music"
+          ]
+        ]
+      }
+    ],
+    "outcome": "success"
+  },
+  {
+    "lessonId": "sql-38",
+    "id": "sql-38-missing-parent",
+    "paragraph": 5,
+    "setup": "PRAGMA foreign_keys=ON;\nCREATE TABLE people(id INTEGER PRIMARY KEY,name TEXT NOT NULL);\nCREATE TABLE clubs(id INTEGER PRIMARY KEY,title TEXT NOT NULL);\nINSERT INTO people VALUES(1,'Mira'),(2,'Oren');\nINSERT INTO clubs VALUES(10,'Art'),(20,'Music');\nCREATE TABLE membership(person_id INTEGER NOT NULL REFERENCES people(id), club_id INTEGER NOT NULL REFERENCES clubs(id), PRIMARY KEY(person_id,club_id));",
+    "code": "INSERT INTO membership VALUES(1,99);",
+    "outcome": "expected-error",
+    "errorContains": "FOREIGN KEY constraint failed",
+    "postChecks": [
+      {
+        "label": "No orphan",
+        "expression": "SELECT COUNT(*)=0 FROM membership;"
+      }
+    ],
+    "supplemental": true,
+    "gradingScope": "Author-validated rejection fixture; not current learner SELECT-check capability."
+  },
+  {
+    "lessonId": "sql-39",
+    "id": "sql-39-worked",
+    "paragraph": 2,
+    "code": "CREATE TABLE candidates(id INTEGER);\nCREATE TABLE blocked(id INTEGER);\nINSERT INTO candidates VALUES(1),(2),(NULL);\nINSERT INTO blocked VALUES(2),(NULL);\nSELECT c.id\nFROM candidates AS c\nWHERE NOT EXISTS (SELECT 1 FROM blocked AS b WHERE b.id=c.id)\nORDER BY c.id;",
+    "checks": [
+      {
+        "label": "Unmatched count",
+        "expression": "SELECT COUNT(*)=2 FROM candidates AS c WHERE NOT EXISTS(SELECT 1 FROM blocked AS b WHERE b.id=c.id);"
+      }
+    ],
+    "expectedResults": [
+      {
+        "columns": [
+          "id"
+        ],
+        "values": [
+          [
+            null
+          ],
+          [
+            1
+          ]
+        ]
+      }
+    ],
+    "outcome": "success"
+  },
+  {
+    "lessonId": "sql-39",
+    "id": "sql-39-changed",
+    "paragraph": 3,
+    "code": "CREATE TABLE candidates(id INTEGER);\nCREATE TABLE blocked(id INTEGER);\nINSERT INTO candidates VALUES(1),(2),(NULL);\nINSERT INTO blocked VALUES(2),(NULL);\nSELECT id\nFROM candidates\nWHERE id NOT IN (SELECT id FROM blocked)\nORDER BY id;",
+    "checks": [
+      {
+        "label": "NOT IN empty",
+        "expression": "SELECT COUNT(*)=0 FROM candidates WHERE id NOT IN(SELECT id FROM blocked);"
+      }
+    ],
+    "expectedResults": [],
+    "outcome": "success"
+  },
+  {
+    "lessonId": "sql-40",
+    "id": "sql-40-worked",
+    "paragraph": 2,
+    "code": "CREATE TABLE staff(id INTEGER PRIMARY KEY,name TEXT NOT NULL,manager_id INTEGER);\nINSERT INTO staff VALUES(1,'Ari',NULL),(2,'Bo',1),(3,'Cy',1),(4,'Dee',2);\nSELECT child.name AS worker,parent.name AS manager\nFROM staff AS child\nLEFT JOIN staff AS parent ON parent.id=child.manager_id\nORDER BY child.id;",
+    "checks": [
+      {
+        "label": "All children",
+        "expression": "SELECT COUNT(*)=4 FROM staff AS child LEFT JOIN staff AS parent ON parent.id=child.manager_id;"
+      }
+    ],
+    "expectedResults": [
+      {
+        "columns": [
+          "worker",
+          "manager"
+        ],
+        "values": [
+          [
+            "Ari",
+            null
+          ],
+          [
+            "Bo",
+            "Ari"
+          ],
+          [
+            "Cy",
+            "Ari"
+          ],
+          [
+            "Dee",
+            "Bo"
+          ]
+        ]
+      }
+    ],
+    "outcome": "success"
+  },
+  {
+    "lessonId": "sql-40",
+    "id": "sql-40-changed",
+    "paragraph": 3,
+    "code": "CREATE TABLE staff(id INTEGER PRIMARY KEY,name TEXT NOT NULL,manager_id INTEGER);\nINSERT INTO staff VALUES(1,'Ari',NULL),(2,'Bo',1),(3,'Cy',1),(4,'Dee',2);\nSELECT child.name AS worker,parent.name AS manager\nFROM staff AS child\nJOIN staff AS parent ON parent.id=child.manager_id\nORDER BY child.id;",
+    "checks": [
+      {
+        "label": "Matched only",
+        "expression": "SELECT COUNT(*)=3 FROM staff AS child JOIN staff AS parent ON parent.id=child.manager_id;"
+      }
+    ],
+    "expectedResults": [
+      {
+        "columns": [
+          "worker",
+          "manager"
+        ],
+        "values": [
+          [
+            "Bo",
+            "Ari"
+          ],
+          [
+            "Cy",
+            "Ari"
+          ],
+          [
+            "Dee",
+            "Bo"
+          ]
+        ]
+      }
+    ],
+    "outcome": "success"
+  },
+  {
+    "lessonId": "sql-41",
+    "id": "sql-41-worked",
+    "paragraph": 2,
+    "code": "CREATE TABLE projects(id INTEGER PRIMARY KEY,title TEXT);\nCREATE TABLE tasks(id INTEGER PRIMARY KEY,project_id INTEGER,done INTEGER);\nINSERT INTO projects VALUES(1,'Map'),(2,'Song'),(3,'Garden');\nINSERT INTO tasks VALUES(10,1,1),(11,1,0),(12,2,1);\nSELECT p.id AS project_id,t.id AS task_id\nFROM projects AS p\nLEFT JOIN tasks AS t ON t.project_id=p.id AND t.done=0\nORDER BY p.id,t.id;",
+    "checks": [
+      {
+        "label": "Retained projects",
+        "expression": "SELECT COUNT(*)=3 FROM projects p LEFT JOIN tasks t ON t.project_id=p.id AND t.done=0;"
+      }
+    ],
+    "expectedResults": [
+      {
+        "columns": [
+          "project_id",
+          "task_id"
+        ],
+        "values": [
+          [
+            1,
+            11
+          ],
+          [
+            2,
+            null
+          ],
+          [
+            3,
+            null
+          ]
+        ]
+      }
+    ],
+    "outcome": "success"
+  },
+  {
+    "lessonId": "sql-41",
+    "id": "sql-41-changed",
+    "paragraph": 3,
+    "code": "CREATE TABLE projects(id INTEGER PRIMARY KEY,title TEXT);\nCREATE TABLE tasks(id INTEGER PRIMARY KEY,project_id INTEGER,done INTEGER);\nINSERT INTO projects VALUES(1,'Map'),(2,'Song'),(3,'Garden');\nINSERT INTO tasks VALUES(10,1,1),(11,1,0),(12,2,1);\nSELECT p.id AS project_id,t.id AS task_id\nFROM projects AS p\nLEFT JOIN tasks AS t ON t.project_id=p.id\nWHERE t.done=0\nORDER BY p.id,t.id;",
+    "checks": [
+      {
+        "label": "Only open match",
+        "expression": "SELECT COUNT(*)=1 FROM projects p LEFT JOIN tasks t ON t.project_id=p.id WHERE t.done=0;"
+      }
+    ],
+    "expectedResults": [
+      {
+        "columns": [
+          "project_id",
+          "task_id"
+        ],
+        "values": [
+          [
+            1,
+            11
+          ]
+        ]
+      }
+    ],
+    "outcome": "success"
+  },
+  {
+    "lessonId": "sql-42",
+    "id": "sql-42-worked",
+    "paragraph": 2,
+    "code": "CREATE TABLE notes(id INTEGER PRIMARY KEY,score INTEGER);\nINSERT INTO notes VALUES(1,10),(2,10),(3,8),(4,8),(5,5);\nSELECT id,score\nFROM notes\nORDER BY score DESC,id ASC\nLIMIT 2\nOFFSET 2;",
+    "checks": [
+      {
+        "label": "Second pair count",
+        "expression": "SELECT COUNT(*)=2 FROM (SELECT id FROM notes ORDER BY score DESC,id LIMIT 2 OFFSET 2);"
+      },
+      {
+        "label": "Second pair sum",
+        "expression": "SELECT SUM(id)=7 FROM (SELECT id FROM notes ORDER BY score DESC,id LIMIT 2 OFFSET 2);"
+      }
+    ],
+    "expectedResults": [
+      {
+        "columns": [
+          "id",
+          "score"
+        ],
+        "values": [
+          [
+            3,
+            8
+          ],
+          [
+            4,
+            8
+          ]
+        ]
+      }
+    ],
+    "outcome": "success"
+  },
+  {
+    "lessonId": "sql-42",
+    "id": "sql-42-changed",
+    "paragraph": 3,
+    "code": "CREATE TABLE notes(id INTEGER PRIMARY KEY,score INTEGER);\nINSERT INTO notes VALUES(1,10),(2,10),(3,8),(4,8),(5,5);\nSELECT id,score\nFROM notes\nORDER BY score DESC,id ASC\nLIMIT 2\nOFFSET 4;",
+    "checks": [
+      {
+        "label": "Last row",
+        "expression": "SELECT COUNT(*)=1 AND SUM(id)=5 FROM (SELECT id FROM notes ORDER BY score DESC,id LIMIT 2 OFFSET 4);"
+      }
+    ],
+    "expectedResults": [
+      {
+        "columns": [
+          "id",
+          "score"
+        ],
+        "values": [
+          [
+            5,
+            5
+          ]
+        ]
+      }
+    ],
+    "outcome": "success"
+  },
+  {
+    "lessonId": "sql-43",
+    "id": "sql-43-worked",
+    "paragraph": 2,
+    "code": "CREATE TABLE results(id INTEGER PRIMARY KEY,name TEXT,score INTEGER);\nINSERT INTO results VALUES(1,'Mira',9),(2,'Oren',9),(3,'Paz',7),(4,'Rin',5);\nSELECT id,name,score,ROW_NUMBER() OVER (ORDER BY score DESC,id) AS position,DENSE_RANK() OVER (ORDER BY score DESC) AS level\nFROM results\nORDER BY score DESC,id;",
+    "checks": [
+      {
+        "label": "Dense tie",
+        "expression": "SELECT COUNT(*)=2 FROM (SELECT DENSE_RANK() OVER (ORDER BY score DESC) AS r FROM results) WHERE r=1;"
+      }
+    ],
+    "expectedResults": [
+      {
+        "columns": [
+          "id",
+          "name",
+          "score",
+          "position",
+          "level"
+        ],
+        "values": [
+          [
+            1,
+            "Mira",
+            9,
+            1,
+            1
+          ],
+          [
+            2,
+            "Oren",
+            9,
+            2,
+            1
+          ],
+          [
+            3,
+            "Paz",
+            7,
+            3,
+            2
+          ],
+          [
+            4,
+            "Rin",
+            5,
+            4,
+            3
+          ]
+        ]
+      }
+    ],
+    "outcome": "success"
+  },
+  {
+    "lessonId": "sql-43",
+    "id": "sql-43-changed",
+    "paragraph": 3,
+    "code": "CREATE TABLE results(id INTEGER PRIMARY KEY,name TEXT,score INTEGER);\nINSERT INTO results VALUES(1,'Mira',9),(2,'Oren',9),(3,'Paz',7),(4,'Rin',5);\nSELECT id,name,score,ROW_NUMBER() OVER (ORDER BY score DESC,id) AS position,DENSE_RANK() OVER (ORDER BY score DESC,id) AS level\nFROM results\nORDER BY score DESC,id;",
+    "checks": [
+      {
+        "label": "All different",
+        "expression": "SELECT COUNT(DISTINCT r)=4 FROM (SELECT DENSE_RANK() OVER (ORDER BY score DESC,id) AS r FROM results);"
+      }
+    ],
+    "expectedResults": [
+      {
+        "columns": [
+          "id",
+          "name",
+          "score",
+          "position",
+          "level"
+        ],
+        "values": [
+          [
+            1,
+            "Mira",
+            9,
+            1,
+            1
+          ],
+          [
+            2,
+            "Oren",
+            9,
+            2,
+            2
+          ],
+          [
+            3,
+            "Paz",
+            7,
+            3,
+            3
+          ],
+          [
+            4,
+            "Rin",
+            5,
+            4,
+            4
+          ]
+        ]
+      }
+    ],
+    "outcome": "success"
+  }
+]

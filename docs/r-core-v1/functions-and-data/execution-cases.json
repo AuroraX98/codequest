@@ -1,0 +1,325 @@
+[
+  {
+    "id": "r-27-worked",
+    "lessonId": "r-27",
+    "code": "choose <- function(x, use) {\n  if (use) x else 7\n}\ncat(choose(stop(\"evaluated\"), FALSE), \"\\n\")",
+    "stdin": "",
+    "expected": "7",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "r-27",
+    "id": "r-27-changed",
+    "code": "choose <- function(x, use) {\n  force(x)\n  if (use) x else 7\n}\ncat(choose(stop(\"evaluated\"), FALSE), \"\\n\")",
+    "stdin": "",
+    "expected": "",
+    "outcome": "runtime-failure",
+    "errorContains": "evaluated"
+  },
+  {
+    "id": "r-28-worked",
+    "lessonId": "r-28",
+    "code": "total <- function(..., remove = FALSE) {\n  sum(..., na.rm = remove)\n}\ncat(total(1, NA, remove = TRUE), \"\\n\")",
+    "stdin": "",
+    "expected": "1",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "r-28",
+    "id": "r-28-changed",
+    "code": "total <- function(..., remove = FALSE) {\n  sum(..., na.rm = remove)\n}\ncat(total(1, NA, rem = 1), \"\\n\")",
+    "stdin": "",
+    "expected": "NA",
+    "outcome": "success"
+  },
+  {
+    "id": "r-29-worked",
+    "lessonId": "r-29",
+    "code": "make_adder <- function(amount) {\n  force(amount)\n  function(x) x + amount\n}\nbase <- 2\nadd <- make_adder(base)\nbase <- 9\ncat(add(3), \"\\n\")",
+    "stdin": "",
+    "expected": "5",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "r-29",
+    "id": "r-29-changed",
+    "code": "make_adder <- function(amount) {\n  function(x) x + amount\n}\nbase <- 2\nadd <- make_adder(base)\nbase <- 9\ncat(add(3), \"\\n\")",
+    "stdin": "",
+    "expected": "12",
+    "outcome": "success"
+  },
+  {
+    "id": "r-30-worked",
+    "lessonId": "r-30",
+    "code": "state <- new.env(parent = emptyenv())\nstate$count <- 1\nalias <- state\nalias$count <- 4\ncat(state$count, \"\\n\")",
+    "stdin": "",
+    "expected": "4",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "r-30",
+    "id": "r-30-changed",
+    "code": "state <- list()\nstate$count <- 1\nalias <- state\nalias$count <- 4\ncat(state$count, \"\\n\")",
+    "stdin": "",
+    "expected": "1",
+    "outcome": "success"
+  },
+  {
+    "id": "r-31-worked",
+    "lessonId": "r-31",
+    "code": "values <- c(10, 20)\nattr(values, \"unit\") <- \"minutes\"\ncat(attr(values, \"unit\"), \"\\n\")\ncat(typeof(values), \"\\n\")",
+    "stdin": "",
+    "expected": "minutes\ndouble",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "r-31",
+    "id": "r-31-changed",
+    "code": "values <- c(10, 20)\nattr(values, \"unit\") <- \"hours\"\ncat(attr(values, \"unit\"), \"\\n\")\ncat(typeof(values), \"\\n\")",
+    "stdin": "",
+    "expected": "hours\ndouble",
+    "outcome": "success"
+  },
+  {
+    "id": "r-32-worked",
+    "lessonId": "r-32",
+    "code": "describe <- function(x) UseMethod(\"describe\")\ndescribe.minutes <- function(x) \"timed\"\ndescribe.default <- function(x) \"ordinary\"\nx <- structure(5, class = \"minutes\")\ncat(describe(x), \"\\n\")",
+    "stdin": "",
+    "expected": "timed",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "r-32",
+    "id": "r-32-changed",
+    "code": "describe <- function(x) UseMethod(\"describe\")\ndescribe.minutes <- function(x) \"timed\"\ndescribe.default <- function(x) \"ordinary\"\nx <- structure(5, class = \"other\")\ncat(describe(x), \"\\n\")",
+    "stdin": "",
+    "expected": "ordinary",
+    "outcome": "success"
+  },
+  {
+    "id": "r-33-worked",
+    "lessonId": "r-33",
+    "code": "methods::setClass(\"StudyEntry\", slots = c(minutes = \"numeric\"))\nentry <- methods::new(\"StudyEntry\", minutes = 5)\ncat(entry@minutes, \"\\n\")",
+    "stdin": "",
+    "expected": "5",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "r-33",
+    "id": "r-33-changed",
+    "code": "methods::setClass(\"StudyEntry\", slots = c(minutes = \"numeric\"))\nentry <- methods::new(\"StudyEntry\", minutes = \"five\")\ncat(entry@minutes, \"\\n\")",
+    "stdin": "",
+    "expected": "",
+    "outcome": "runtime-failure",
+    "errorContains": "invalid object for slot"
+  },
+  {
+    "id": "r-34-worked",
+    "lessonId": "r-34",
+    "code": "read_minutes <- function(x) {\n  if (x < 1) stop(\"positive minutes required\")\n  x\n}\nresult <- tryCatch(read_minutes(0), error = function(e) -1)\ncat(result, \"\\n\")",
+    "stdin": "",
+    "expected": "-1",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "r-34",
+    "id": "r-34-changed",
+    "code": "read_minutes <- function(x) {\n  if (x < 1) stop(\"positive minutes required\")\n  x\n}\nresult <- tryCatch(read_minutes(3), error = function(e) -1)\ncat(result, \"\\n\")",
+    "stdin": "",
+    "expected": "3",
+    "outcome": "success"
+  },
+  {
+    "id": "r-35-worked",
+    "lessonId": "r-35",
+    "code": "result <- withCallingHandlers({\n  warning(\"check input\")\n  4\n}, warning = function(w) {\n  cat(\"noticed\\n\")\n  invokeRestart(\"muffleWarning\")\n})\ncat(result, \"\\n\")",
+    "stdin": "",
+    "expected": "noticed\n4",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "r-35",
+    "id": "r-35-changed",
+    "code": "result <- tryCatch({\n  warning(\"check input\")\n  4\n}, warning = function(w) {\n  cat(\"noticed\\n\")\n  9\n})\ncat(result, \"\\n\")",
+    "stdin": "",
+    "expected": "noticed\n9",
+    "outcome": "success"
+  },
+  {
+    "id": "r-36-worked",
+    "lessonId": "r-36",
+    "code": "state <- new.env(parent = emptyenv())\nstate$active <- FALSE\nwork <- function(fail = FALSE) {\n  state$active <- TRUE\n  on.exit(state$active <- FALSE, add = TRUE)\n  if (fail) stop(\"failed\")\n  5\n}\nresult <- tryCatch(work(), error = function(e) -1)\ncat(result, state$active, \"\\n\")",
+    "stdin": "",
+    "expected": "5 FALSE",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "r-36",
+    "id": "r-36-changed",
+    "code": "state <- new.env(parent = emptyenv())\nstate$active <- FALSE\nwork <- function(fail = FALSE) {\n  state$active <- TRUE\n  on.exit(state$active <- FALSE, add = TRUE)\n  if (fail) stop(\"failed\")\n  5\n}\nresult <- tryCatch(work(TRUE), error = function(e) -1)\ncat(result, state$active, \"\\n\")",
+    "stdin": "",
+    "expected": "-1 FALSE",
+    "outcome": "success"
+  },
+  {
+    "id": "r-37-worked",
+    "lessonId": "r-37",
+    "code": "values <- list(c(1, 2), c(4, 5))\nresult <- vapply(values, sum, numeric(1))\ncat(result, \"\\n\")",
+    "stdin": "",
+    "expected": "3 9",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "r-37",
+    "id": "r-37-changed",
+    "code": "values <- list(c(1, 2), c(4, 5))\nresult <- vapply(values, function(x) x, numeric(1))\ncat(result, \"\\n\")",
+    "stdin": "",
+    "expected": "",
+    "outcome": "runtime-failure",
+    "errorContains": "values must be length 1"
+  },
+  {
+    "id": "r-38-worked",
+    "lessonId": "r-38",
+    "code": "m <- matrix(1:6, nrow = 2)\ncat(apply(m, 1, sum), \"\\n\")",
+    "stdin": "",
+    "expected": "9 12",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "r-38",
+    "id": "r-38-changed",
+    "code": "m <- matrix(1:6, nrow = 2)\ncat(apply(m, 2, sum), \"\\n\")",
+    "stdin": "",
+    "expected": "3 7 11",
+    "outcome": "success"
+  },
+  {
+    "id": "r-39-worked",
+    "lessonId": "r-39",
+    "code": "values <- c(2, NA, 6)\ngroups <- c(\"a\", \"a\", \"b\")\nparts <- split(values, groups)\nresult <- vapply(parts, function(x) mean(x, na.rm = TRUE), numeric(1))\ncat(result, \"\\n\")",
+    "stdin": "",
+    "expected": "2 6",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "r-39",
+    "id": "r-39-changed",
+    "code": "values <- c(2, NA, 6)\ngroups <- c(\"a\", \"a\", \"b\")\nparts <- split(values, groups)\nresult <- vapply(parts, function(x) mean(x, na.rm = FALSE), numeric(1))\ncat(result, \"\\n\")",
+    "stdin": "",
+    "expected": "NA 6",
+    "outcome": "success"
+  },
+  {
+    "id": "r-40-worked",
+    "lessonId": "r-40",
+    "code": "keys <- c(\"b\", \"a\", \"a\")\nscores <- c(1, 3, 2)\ni <- order(keys, scores)\ncat(scores[i], \"\\n\")\ncat(duplicated(keys), \"\\n\")",
+    "stdin": "",
+    "expected": "2 3 1\nFALSE FALSE TRUE",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "r-40",
+    "id": "r-40-changed",
+    "code": "keys <- c(\"b\", \"a\", \"a\")\nscores <- c(1, 3, 2)\ni <- order(keys)\ncat(scores[i], \"\\n\")\ncat(duplicated(keys), \"\\n\")",
+    "stdin": "",
+    "expected": "3 2 1\nFALSE FALSE TRUE",
+    "outcome": "success"
+  },
+  {
+    "id": "r-41-worked",
+    "lessonId": "r-41",
+    "code": "left <- data.frame(id = c(1, 1), minutes = c(10, 20))\nright <- data.frame(id = c(1, 1), label = c(\"a\", \"b\"))\njoined <- merge(left, right, by = \"id\")\ncat(nrow(joined), \"\\n\")",
+    "stdin": "",
+    "expected": "4",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "r-41",
+    "id": "r-41-changed",
+    "code": "left <- data.frame(id = c(1, 1), minutes = c(10, 20))\nright <- data.frame(id = 1, label = \"a\")\njoined <- merge(left, right, by = \"id\")\ncat(nrow(joined), \"\\n\")",
+    "stdin": "",
+    "expected": "2",
+    "outcome": "success"
+  },
+  {
+    "id": "r-42-worked",
+    "lessonId": "r-42",
+    "code": "wide <- data.frame(id = c(\"a\", \"b\"), day1 = c(10, 20), day2 = c(15, 25))\nlong <- reshape(wide, varying = c(\"day1\", \"day2\"), v.names = \"minutes\",\n                timevar = \"day\", times = c(1, 2), idvar = \"id\", direction = \"long\")\ncat(nrow(long), \"\\n\")\ncat(sum(long$minutes), \"\\n\")",
+    "stdin": "",
+    "expected": "4\n70",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "r-42",
+    "id": "r-42-changed",
+    "code": "wide <- data.frame(id = c(\"a\", \"b\"), day1 = c(10, 20), day2 = c(15, 25))\nlong <- reshape(wide, varying = c(\"day1\", \"day2\"), v.names = \"minutes\",\n                timevar = \"day\", times = c(10, 20), idvar = \"id\", direction = \"long\")\ncat(nrow(long), \"\\n\")\ncat(sum(long$minutes), \"\\n\")",
+    "stdin": "",
+    "expected": "4\n70",
+    "outcome": "success"
+  },
+  {
+    "id": "r-43-worked",
+    "lessonId": "r-43",
+    "code": "result <- c(1, NA, 3) |> sum(na.rm = TRUE)\ncat(result, \"\\n\")",
+    "stdin": "",
+    "expected": "4",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "r-43",
+    "id": "r-43-changed",
+    "code": "result <- c(1, NA, 3) |> sum(na.rm = FALSE)\ncat(result, \"\\n\")",
+    "stdin": "",
+    "expected": "NA",
+    "outcome": "success"
+  },
+  {
+    "id": "r-44-worked",
+    "lessonId": "r-44",
+    "code": "text <- c(\"a.b\", \"axb\")\ncat(grepl(\".\", text, fixed = TRUE), \"\\n\")\ncat(gsub(\".\", \"-\", text, fixed = TRUE), \"\\n\")",
+    "stdin": "",
+    "expected": "TRUE FALSE\na-b axb",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "r-44",
+    "id": "r-44-changed",
+    "code": "text <- c(\"a.b\", \"axb\")\ncat(grepl(\".\", text), \"\\n\")\ncat(gsub(\".\", \"-\", text), \"\\n\")",
+    "stdin": "",
+    "expected": "TRUE TRUE\n--- ---",
+    "outcome": "success"
+  },
+  {
+    "id": "r-45-worked",
+    "lessonId": "r-45",
+    "code": "date <- as.Date(\"2025-01-01\")\ncat(format(date + 1, \"%Y-%m-%d\"), \"\\n\")\ninstant <- as.POSIXct(\"2025-01-01 00:30:00\", tz = \"UTC\")\ncat(format(instant + 3600, tz = \"UTC\", format = \"%H:%M\"), \"\\n\")",
+    "stdin": "",
+    "expected": "2025-01-02\n01:30",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "r-45",
+    "id": "r-45-changed",
+    "code": "date <- as.Date(\"2025-01-01\")\ncat(format(date + 1, \"%Y-%m-%d\"), \"\\n\")\ninstant <- as.POSIXct(\"2025-01-01 00:30:00\", tz = \"UTC\")\ncat(format(instant + 1, tz = \"UTC\", format = \"%H:%M\"), \"\\n\")",
+    "stdin": "",
+    "expected": "2025-01-02\n00:30",
+    "outcome": "success"
+  },
+  {
+    "id": "r-46-worked",
+    "lessonId": "r-46",
+    "code": "median <- function(x) -1\ncat(median(c(1, 9, 5)), \"\\n\")\ncat(stats::median(c(1, 9, 5)), \"\\n\")",
+    "stdin": "",
+    "expected": "-1\n5",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "r-46",
+    "id": "r-46-changed",
+    "code": "median <- function(x) -1\ncat(median(c(1, 9, 5)), \"\\n\")\ncat(median(c(1, 9, 5)), \"\\n\")",
+    "stdin": "",
+    "expected": "-1\n-1",
+    "outcome": "success"
+  }
+]

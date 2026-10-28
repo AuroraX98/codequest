@@ -25,6 +25,8 @@ for (const [code,lang,answer] of cases) {
  assert.equal(q.options.filter(x=>x===answer).length,1);
  assert.doesNotMatch(q.question,/Choose the|function name|opening parenthesis/);
  assert.ok(q.explanation.length>35);
+ assert.ok(q.preparation.length>0,code+": essential rule is explicit");
+ assert.ok(q.preparation.every(text=>typeof text === "string" && text.length>20));
 }
 for(const [code,lang] of [['unknown(state)','python'],['print("Hi")','output'],['x = 9007199254740992\nx = x + 1','python'],['if condition:\n  print("Hi")','python'],['SELECT * FROM unknown','sql']]) assert.equal(practice(code,lang),null);
 const python = code=>execFileSync('python',['-c',code],{encoding:'utf8'}).trim();

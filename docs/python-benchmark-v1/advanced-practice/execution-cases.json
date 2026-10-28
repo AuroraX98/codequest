@@ -1,0 +1,123 @@
+[
+  {
+    "lessonId": "python-85",
+    "id": "python-85-worked",
+    "paragraph": 2,
+    "code": "def route_errors(errors, handled):\n    if not errors:\n        return\n    try:\n        raise ExceptionGroup(\"batch\", errors)\n    except* ValueError as group:\n        for error in group.exceptions:\n            handled.append(str(error))\ndef observe(errors):\n    handled = []\n    remaining = []\n    try:\n        route_errors(errors, handled)\n    except ExceptionGroup as group:\n        remaining = [type(error).__name__ for error in group.exceptions]\n    return handled, remaining\nprint(observe([ValueError(\"bad minutes\"), TypeError(\"wrong shape\")]))\n",
+    "expected": "(['bad minutes'], ['TypeError'])",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "python-85",
+    "id": "python-85-changed",
+    "paragraph": 2,
+    "code": "def route_errors(errors, handled):\n    if not errors:\n        return\n    try:\n        raise ExceptionGroup(\"batch\", errors)\n    except* ValueError as group:\n        for error in group.exceptions:\n            handled.append(str(error))\ndef observe(errors):\n    handled = []\n    remaining = []\n    try:\n        route_errors(errors, handled)\n    except ExceptionGroup as group:\n        remaining = [type(error).__name__ for error in group.exceptions]\n    return handled, remaining\nprint(observe([ValueError(\"first\"), ValueError(\"second\")]))\n",
+    "expected": "(['first', 'second'], [])",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "python-86",
+    "id": "python-86-worked",
+    "paragraph": 2,
+    "code": "import asyncio\n\nasync def run_pair(label=\"handled\"):\n    events = []\n    ready = asyncio.Event()\n    blocked = asyncio.Event()\n    async def waiting():\n        try:\n            ready.set()\n            await blocked.wait()\n        finally:\n            events.append(\"cleanup\")\n    async def failing():\n        await ready.wait()\n        raise ValueError(\"worker failed\")\n    try:\n        async with asyncio.TaskGroup() as group:\n            group.create_task(waiting())\n            group.create_task(failing())\n    except* ValueError:\n        events.append(label)\n    events.append(\"done\")\n    return events\nprint(asyncio.run(run_pair()))\n",
+    "expected": "['cleanup', 'handled', 'done']",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "python-86",
+    "id": "python-86-changed",
+    "paragraph": 2,
+    "code": "import asyncio\n\nasync def run_pair(label=\"handled\"):\n    events = []\n    ready = asyncio.Event()\n    blocked = asyncio.Event()\n    async def waiting():\n        try:\n            ready.set()\n            await blocked.wait()\n        finally:\n            events.append(\"cleanup\")\n    async def failing():\n        await ready.wait()\n        raise ValueError(\"worker failed\")\n    try:\n        async with asyncio.TaskGroup() as group:\n            group.create_task(waiting())\n            group.create_task(failing())\n    except* TypeError:\n        events.append(label)\n    events.append(\"done\")\n    return events\ntry:\n    asyncio.run(run_pair())\nexcept ExceptionGroup:\n    print(\"unhandled ValueError\")\n",
+    "expected": "unhandled ValueError",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "python-87",
+    "id": "python-87-worked",
+    "paragraph": 2,
+    "code": "from unittest.mock import Mock\n\ndef load_topic(fetch, key):\n    try:\n        topic = fetch(key)\n    except KeyError:\n        return \"Missing\"\n    return \"Topic: \" + topic\nfake = Mock(return_value=\"Stars\")\nprint(load_topic(fake, \"topic-7\"))\nfake.assert_called_once_with(\"topic-7\")\nprint(\"call verified\")\n",
+    "expected": "Topic: Stars\ncall verified",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "python-87",
+    "id": "python-87-changed",
+    "paragraph": 2,
+    "code": "from unittest.mock import Mock\n\ndef load_topic(fetch, key):\n    try:\n        topic = fetch(key)\n    except KeyError:\n        return \"Missing\"\n    return \"Topic: \" + topic\nfake = Mock(return_value=\"Stars\")\nprint(load_topic(fake, \"topic-7\"))\nfake.assert_called_once_with(\"wrong-key\")\nprint(\"call verified\")\n",
+    "expected": "",
+    "outcome": "runtime-failure",
+    "errorContains": "expected call not found"
+  },
+  {
+    "lessonId": "python-87",
+    "id": "python-87-failure-worked",
+    "paragraph": 3,
+    "code": "from unittest.mock import Mock\n\ndef load_topic(fetch, key):\n    try:\n        topic = fetch(key)\n    except KeyError:\n        return \"Missing\"\n    return \"Topic: \" + topic\nfake = Mock(side_effect=KeyError(\"absent\"))\nprint(load_topic(fake, \"topic-7\"))\nfake.assert_called_once_with(\"topic-7\")\n",
+    "expected": "Missing",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "python-88",
+    "id": "python-88-worked",
+    "paragraph": 2,
+    "code": "import logging\nfrom io import StringIO\n\ndef capture_status(ok, token, level=logging.INFO):\n    stream = StringIO()\n    logger = logging.Logger(\"lesson-local\", level=level)\n    logger.propagate = False\n    handler = logging.StreamHandler(stream)\n    handler.setFormatter(logging.Formatter(\"%(levelname)s:%(message)s\"))\n    logger.addHandler(handler)\n    try:\n        logger.debug(\"diagnostic\")\n        logger.info(\"status=%s\", \"ok\" if ok else \"failed\")\n        return stream.getvalue()\n    finally:\n        logger.removeHandler(handler)\n        handler.close()\nprint(capture_status(True, \"synthetic-secret\"), end=\"\")\n",
+    "expected": "INFO:status=ok",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "python-88",
+    "id": "python-88-changed",
+    "paragraph": 2,
+    "code": "import logging\nfrom io import StringIO\n\ndef capture_status(ok, token, level=logging.INFO):\n    stream = StringIO()\n    logger = logging.Logger(\"lesson-local\", level=level)\n    logger.propagate = False\n    handler = logging.StreamHandler(stream)\n    handler.setFormatter(logging.Formatter(\"%(levelname)s:%(message)s\"))\n    logger.addHandler(handler)\n    try:\n        logger.debug(\"diagnostic\")\n        logger.info(\"status=%s\", \"ok\" if ok else \"failed\")\n        return stream.getvalue()\n    finally:\n        logger.removeHandler(handler)\n        handler.close()\nprint(capture_status(False, \"synthetic-secret\", logging.DEBUG), end=\"\")\n",
+    "expected": "DEBUG:diagnostic\nINFO:status=failed",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "python-89",
+    "id": "python-89-worked",
+    "paragraph": 1,
+    "code": "def first_title(groups: dict[str, list[str]], key: str) -> str | None:\n    titles = groups.get(key, [])\n    return titles[0] if titles else None\n\ndef identity_count(value: int) -> int:\n    return value\nprint(first_title({\"today\": [\"Read\", \"Draw\"]}, \"today\"))\nprint(first_title({\"today\": []}, \"today\"))\nprint(identity_count(\"text\"))\n",
+    "expected": "Read\nNone\ntext",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "python-89",
+    "id": "python-89-changed",
+    "paragraph": 1,
+    "code": "def first_title(groups: dict[str, list[str]], key: str) -> str | None:\n    titles = groups.get(key, [])\n    return titles[0] if titles else None\n\ndef identity_count(value: int) -> int:\n    return value\nprint(first_title({\"later\": [\"Explore\"]}, \"today\"))\nprint(identity_count(8))\n",
+    "expected": "None\n8",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "python-90",
+    "id": "python-90-worked",
+    "paragraph": 2,
+    "code": "import timeit\n\ndef measure(operation, repeats=2, number=3):\n    if repeats < 1 or number < 1:\n        raise ValueError(\"positive repetition counts required\")\n    timer = timeit.Timer(operation)\n    return timer.repeat(repeat=repeats, number=number)\nvalues = [1, 2, 3]\ndef operation():\n    return sum(values)\nsamples = measure(operation, repeats=2, number=3)\nprint(len(samples), all(value >= 0 for value in samples))\n",
+    "expected": "2 True",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "python-90",
+    "id": "python-90-changed",
+    "paragraph": 2,
+    "code": "import timeit\n\ndef measure(operation, repeats=2, number=3):\n    if repeats < 1 or number < 1:\n        raise ValueError(\"positive repetition counts required\")\n    timer = timeit.Timer(operation)\n    return timer.repeat(repeat=repeats, number=number)\nvalues = [1, 2, 3]\ndef operation():\n    return sum(values)\nsamples = measure(operation, repeats=3, number=2)\nprint(len(samples), all(value >= 0 for value in samples))\n",
+    "expected": "3 True",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "python-91",
+    "id": "python-91-worked",
+    "paragraph": 2,
+    "code": "import cProfile\nimport pstats\n\ndef square(value):\n    return value * value\n\ndef workload(count):\n    total = 0\n    for value in range(count):\n        total += square(value)\n    return total\n\ndef profile_work(count):\n    profiler = cProfile.Profile()\n    result = profiler.runcall(workload, count)\n    stats = pstats.Stats(profiler)\n    calls = 0\n    for key, entry in stats.stats.items():\n        if key[2] == \"square\":\n            calls += entry[1]\n    return result, calls\nprint(profile_work(3))\n",
+    "expected": "(5, 3)",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "python-91",
+    "id": "python-91-changed",
+    "paragraph": 2,
+    "code": "import cProfile\nimport pstats\n\ndef square(value):\n    return value * value\n\ndef workload(count):\n    total = 0\n    for value in range(count):\n        total += square(value)\n    return total\n\ndef profile_work(count):\n    profiler = cProfile.Profile()\n    result = profiler.runcall(workload, count)\n    stats = pstats.Stats(profiler)\n    calls = 0\n    for key, entry in stats.stats.items():\n        if key[2] == \"square\":\n            calls += entry[1]\n    return result, calls\nprint(profile_work(4))\n",
+    "expected": "(14, 4)",
+    "outcome": "success"
+  }
+]

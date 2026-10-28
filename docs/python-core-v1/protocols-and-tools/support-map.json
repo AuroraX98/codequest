@@ -1,0 +1,176 @@
+[
+  {
+    "id": "python-63",
+    "quizTarget": "If the first countdown starts at 2, what remains for list(stream) after one next call?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "A generator function contains yield. Calling countdown(start) returns a generator without running its body yet. Each next resumes until a yield supplies one value; local variables and the suspended position are retained. Returning or reaching the end finishes iteration rather than yielding another item."
+      },
+      {
+        "paragraph": 1,
+        "fact": "Purpose: countdown supplies integers from start down to 1 without building a full list. Input: a nonnegative integer. Result: a single-use generator; its effect is to advance only when consumed. Start zero yields nothing. The subtraction after yield happens when the generator resumes, not before the yielded value is received."
+      },
+      {
+        "paragraph": 2,
+        "fact": "next(stream) requests one value and raises StopIteration if exhausted; next(stream, \"done\") instead returns the supplied default on exhaustion. list(stream) consumes all remaining values into a new list, so use it only for bounded streams. It does not restart a partly consumed generator."
+      },
+      {
+        "paragraph": 3,
+        "fact": "Calling countdown again creates independent state. This practice does not require send, throw or yield from. Keep yield inside the loop; returning the first value would finish rather than suspend. The worked example calls the generator, advances it and then consumes its remainder."
+      }
+    ],
+    "reasoning": "next consumed 2 and suspended after yield; list resumes and collects only the remaining 1.",
+    "source": "https://docs.python.org/3.12/tutorial/classes.html",
+    "prerequisites": [
+      "python-15",
+      "python-46"
+    ]
+  },
+  {
+    "id": "python-64",
+    "quizTarget": "If the first list(counter) becomes list(Countdown(2)), what does the final list(counter) return?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "An iterable supplies an iterator through __iter__. An iterator supplies successive values through __next__, raises StopIteration when exhausted, and returns itself from __iter__. This Countdown is both iterable and a single-use iterator, not a reusable collection."
+      },
+      {
+        "paragraph": 1,
+        "fact": "Countdown(start) invokes __init__ to store the nonnegative integer start; construction consumes nothing and __init__ returns None implicitly. iter(counter) invokes __iter__, returning the same object without resetting its remaining state."
+      },
+      {
+        "paragraph": 2,
+        "fact": "next(counter) invokes __next__ without extra input. It returns one positive integer and decrements remaining, or raises StopIteration when exhausted. Returning None is not a stop signal: None could be an actual data value."
+      },
+      {
+        "paragraph": 3,
+        "fact": "list(counter) repeatedly requests values until StopIteration and returns a new list. Once exhausted, later list(counter) is empty. A new Countdown(start) has independent state. Do not reset progress in __iter__, which could restart a partly consumed iterator."
+      }
+    ],
+    "reasoning": "The original yielded 2 once. Consuming a newly constructed Countdown does not advance the original.",
+    "source": "https://docs.python.org/3.12/tutorial/classes.html",
+    "prerequisites": [
+      "python-11",
+      "python-63"
+    ]
+  },
+  {
+    "id": "python-65",
+    "quizTarget": "If \"bad\" changes to \"0\", what message and cause class are printed?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "MinuteError inherits from ValueError so callers can identify this domain failure while retaining its broader category. pass is an empty class body; inherited exception construction accepts a message. raise MinuteError(message) creates and raises that failure."
+      },
+      {
+        "paragraph": 1,
+        "fact": "Purpose: parse_minutes(text) accepts integer text and returns an integer in 1..60. int(text) converts a string to an integer or raises ValueError for invalid integer text. Catch only that conversion failure; validate the range separately. Neither failure path supplies a silent default."
+      },
+      {
+        "paragraph": 2,
+        "fact": "raise MinuteError(\"whole minutes required\") from error attaches the original conversion failure as __cause__. The separate range error has no explicit cause. Chaining preserves diagnostic context but does not make the operation successful or justify exposing sensitive details in logs."
+      },
+      {
+        "paragraph": 3,
+        "fact": "str(error) returns the exception message; type(error.__cause__).__name__ gives the cause class name in this example. The worked code calls parse_minutes successfully and then catches a chained failure. Supplied __failure_details is test infrastructure for observing the result, not an alternate parser."
+      }
+    ],
+    "reasoning": "int accepts 0, so conversion succeeds. The separate range check raises its own MinuteError without an explicit cause.",
+    "source": "https://docs.python.org/3.12/tutorial/errors.html",
+    "prerequisites": [
+      "python-14",
+      "python-60"
+    ]
+  },
+  {
+    "id": "python-66",
+    "quizTarget": "If the second call uses append=False, what remains?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "Mode \"w\" creates a text file or truncates existing contents immediately. Mode \"a\" creates it if missing or writes at its end. In this browser practice those effects occur only in its isolated virtual filesystem, not arbitrary host files or a durable download."
+      },
+      {
+        "paragraph": 1,
+        "fact": "Purpose: save_note(path, text, append=False) writes supplied text using UTF-8. Inputs are a disposable path, string and Boolean append flag. handle.write(text) returns characters accepted, not encoded byte count; it adds no newline unless the string contains one. with closes the handle even on return or error. A returned count is not a promise of atomic replacement or crash durability."
+      },
+      {
+        "paragraph": 2,
+        "fact": "open(path, mode, encoding=\"utf-8\") returns a text file object or raises an error. In read mode, handle.read() returns complete remaining text without altering it. repr(text) creates a printable representation that exposes newline escapes. The worked calls write, append and read the disposable note."
+      },
+      {
+        "paragraph": 3,
+        "fact": "This function does not authorize arbitrary paths or suppress I/O failures. Replacement can destroy earlier content, so use only supplied disposable paths. The supplied __read_note helper reads test fixtures; do not replace it. App execution does not demonstrate a native permission policy."
+      }
+    ],
+    "reasoning": "The second call opens mode w, truncating earlier text before writing Moon and its newline.",
+    "source": "https://docs.python.org/3.12/tutorial/inputoutput.html",
+    "prerequisites": [
+      "python-30",
+      "python-57"
+    ]
+  },
+  {
+    "id": "python-67",
+    "quizTarget": "If the first supplied list is [\"--minutes\", \"61\"], does the parser return its default 10?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "Purpose: parse_minutes(arguments) accepts an explicit list of argument strings and returns a validated integer. In the browser this list models command-line tokens; no OS terminal or subprocess is started. Argument parsing is not evaluation of a shell command."
+      },
+      {
+        "paragraph": 1,
+        "fact": "ArgumentParser(prog=\"study\", add_help=False, allow_abbrev=False) constructs a parser with a stable displayed name, no automatic help option for this tiny exercise, and no shortened aliases. add_argument(\"--minutes\",type=int,default=10,choices=range(1,61)) registers an integer option allowed 1..60, using 10 only if omitted. Its returned Action object is not needed here."
+      },
+      {
+        "paragraph": 2,
+        "fact": "parser.parse_args(arguments) returns a Namespace whose minutes attribute holds the result. Invalid integer text, disallowed values or unknown options print a diagnostic and raise SystemExit code 2 by default; they do not silently return a valid default. Catching SystemExit does not remove the already printed diagnostic: the browser output shows usage/error text before any later printed results. The supplied __rejects_arguments helper catches that exit to test rejection without ending the exercise."
+      },
+      {
+        "paragraph": 3,
+        "fact": "In a local study.py, import sys and call parse_minutes(sys.argv[1:]) inside if __name__ == \"__main__\":. The slice omits the script name. Run python study.py --minutes 4 in an actual terminal. Native command execution is separately verified; worked browser calls use supplied lists. Parsing does not authorize filesystem or network actions."
+      }
+    ],
+    "reasoning": "61 converts to an integer but fails the separate allowed-value check. Defaults apply to omission, not to an explicitly invalid option.",
+    "source": "https://docs.python.org/3.12/library/argparse.html",
+    "prerequisites": [
+      "python-59",
+      "python-14"
+    ]
+  },
+  {
+    "id": "python-68",
+    "quizTarget": "If test_total becomes check_total, why is the result (0, True)?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "unittest.TestCase is the base class for tests. Methods starting with test_ are selected by the loader. self.assertEqual(actual,expected) checks equality and records failure if unequal. In the worked call, AdditionTest.test_total runs through the loader, checks 2 + 3 against 5 and returns None implicitly."
+      },
+      {
+        "paragraph": 1,
+        "fact": "Purpose: run_case(case_class) executes a supplied TestCase subclass and returns the executed count plus success. unittest.TestLoader() constructs a loader; loadTestsFromTestCase(case_class) returns a suite of that class\u2019s test methods. This browser exercise loads a supplied class, not host files."
+      },
+      {
+        "paragraph": 2,
+        "fact": "io.StringIO() creates an in-memory text buffer. TextTestRunner(stream=output,verbosity=0) constructs a runner writing there; runner.run(suite) executes tests and returns a result. result.testsRun is the executed count and result.wasSuccessful() returns a Boolean. Zero tests can report success, so check the count. Make a fresh suite on every call rather than reuse a consumed suite."
+      },
+      {
+        "paragraph": 3,
+        "fact": "For a local discovery exercise save the following as test_sample.py:\n```python\nimport unittest\n\nclass AdditionTest(unittest.TestCase):\n    def test_total(self):\n        self.assertEqual(2 + 3, 5)\n```\nFrom its disposable directory run python -m unittest discover -s . -p \"test_*.py\" -v. -m runs the unittest module, -s selects a start directory, -p selects filenames and -v displays test names. Discovery imports matching files, which must be importable. Only discover trusted code. A filename outside the pattern yields zero discovered tests, not evidence its assertion passed. In the verified native Python 3.12.14 command, this reports NO TESTS RAN and exit status 5. That command-level behavior differs from an in-memory empty suite whose result.wasSuccessful() is True; inspect both counts and the actual invocation outcome."
+      },
+      {
+        "paragraph": 4,
+        "fact": "The app runs a suite in Pyodide\u2019s isolated runtime; it neither scans host files nor proves a native installation. Native discovery has separate execution evidence. Failures and unexpected errors make wasSuccessful false. Supplied __PassingCase, __FailingCase, __EmptyCase and __TwoCases are test infrastructure, not classes to change."
+      }
+    ],
+    "reasoning": "The default loader selects test_ methods; no selected tests means no recorded failures, but the zero count exposes the absence of execution.",
+    "source": "https://docs.python.org/3.12/library/unittest.html",
+    "prerequisites": [
+      "python-17",
+      "python-59",
+      "python-60",
+      "python-65"
+    ]
+  }
+]

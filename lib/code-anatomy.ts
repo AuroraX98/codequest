@@ -251,6 +251,7 @@ function parserMeaning(node: SyntaxNode, source: string, originalLanguage: strin
   if (/RegExp/.test(name)) return meaning("Pattern", "A regular-expression pattern used to match text.", "blue");
   if (/String|AttributeValue/.test(name)) return meaning(name === "AttributeValue" ? "Value" : "Text", name === "AttributeValue" ? "The value supplied for this HTML attribute." : "A string: text enclosed in quotation marks. Punctuation inside belongs to the text.", "blue");
   if (name === "Text" || name === "JSXText") return meaning("Text", "Text content rendered inside the surrounding element.", "blue");
+  if (/Number/.test(name) && ["javascript", "typescript", "react"].includes(language) && /^(?:0[xX][0-9a-fA-F_]+|0[bB][01_]+|0[oO][0-7_]+|[0-9][0-9_]*)n$/.test(text)) return meaning("BigInt", "An integer literal of type bigint, distinct from the Number type. The n suffix marks BigInt; ordinary arithmetic cannot mix it directly with Number values.", "blue");
   if (/Number/.test(name)) return meaning(language === "css" ? "Value" : "Number", language === "css" ? "A numeric CSS value, including its unit when present." : "A numeric value, not quoted text.", "blue");
   if (/Boolean|Null/.test(name) || ["true", "false", "True", "False", "null", "None"].includes(text)) return meaning(/true|false/i.test(text) ? "Boolean" : "Empty value", /true|false/i.test(text) ? "A true-or-false value." : "Represents an absent or empty value.", "blue");
   if (name === "DoctypeDecl") return meaning("Document type", "Declares the HTML document type so the browser uses standards mode.", "purple");
@@ -315,6 +316,8 @@ function fallbackTokens(source: string, language: string, base = 0): AnatomyToke
   const shell = language === "bash";
   const pattern = shell
     ? /\s+|#[^\r\n]*|\$\([^)]*\)|"(?:\\[\s\S]|[^"\\])*"|'[^']*'|\$\{[^}]*\}|\$[A-Za-z_][\w]*|&&|\|\||>>|<<|[|;<>]|[^\s|;<>"']+/g
+    : language === "rust"
+    ? /\s+|\/\/[^\r\n]*|\/\*[\s\S]*?\*\/|#[^\r\n]*|"(?:\\[\s\S]|[^"\\])*"|'(?:\\(?:u\{[0-9a-fA-F]+\}|x[0-9a-fA-F]{2}|[^\r\n])|[^'\\\r\n])'|'[A-Za-z_][A-Za-z0-9_]*|(?:\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)|[A-Za-z_$][\w$]*|===|!==|==|!=|<=|>=|=>|->|\?\?|\?\.|\+\+|--|\+=|-=|\*\*|&&|\|\||\.\.\.|[^\s]/gu
     : /\s+|\/\/[^\r\n]*|\/\*[\s\S]*?\*\/|#[^\r\n]*|"""[\s\S]*?"""|"(?:\\[\s\S]|[^"\\])*"|'(?:\\[\s\S]|[^'\\])*'|`(?:\\[\s\S]|[^`\\])*`|(?:\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)|[A-Za-z_$][\w$]*|===|!==|==|!=|<=|>=|=>|->|\?\?|\?\.|\+\+|--|\+=|-=|\*\*|&&|\|\||\.\.\.|[^\s]/g;
   let commandNext = true;
   for (const match of source.matchAll(pattern)) {
@@ -322,7 +325,7 @@ function fallbackTokens(source: string, language: string, base = 0): AnatomyToke
     let detail: Meaning;
     const previous = result.filter(t => t.label).at(-1)?.text ?? "";
     if (/^\s+$/.test(text)) { detail = blank; if (shell && /\n/.test(text)) commandNext = true; }
-    else if ((language === "swift" && /^(?:\/\/|\/\*)/.test(text)) || ((shell || language === "toml") && text.startsWith("#"))) detail = meaning("Comment", "A note for the reader, not an instruction to run.");
+    else if ((language === "swift" && /^(?:\/\/|\/\*)/.test(text)) || ((shell || language === "toml" || language === "r") && text.startsWith("#"))) detail = meaning("Comment", "A note for the reader, not an instruction to run.");
     else if (shell) {
       if (["|", "&&", "||", ";"].includes(text)) { detail = meaning(text === "|" ? "Pipe" : "Control", text === "|" ? "Sends the first command's output into the next command." : "Controls when the next command runs.", "purple"); commandNext = true; }
       else if (/^[<>]/.test(text)) detail = meaning("Redirect", "Redirects command input or output to the following target.", "purple");
@@ -332,6 +335,26 @@ function fallbackTokens(source: string, language: string, base = 0): AnatomyToke
       else if (/^\$/.test(text)) detail = meaning("Variable", "Expands a shell variable into its value.", "green");
       else if (/^['"]/.test(text)) detail = meaning("Text", text.startsWith('"') ? "A quoted shell argument. Dollar-sign expressions may still expand inside double quotes." : "A quoted literal shell argument; single quotes keep its characters literal.", "blue");
       else detail = meaning(text.startsWith("-") ? "Option" : "Argument", text.startsWith("-") ? "An option that changes how the command runs." : "An argument passed to the command, such as a subcommand, filename, or value.", "blue");
+    } else if (language === "r" && text.startsWith("`")) {
+      detail = meaning("Name", "Backticks quote an R name, such as a column name containing spaces. They do not create a character string.", "green");
+    } else if (language === "r" && /^['"]/.test(text)) {
+      detail = meaning("Text", "An R character string: both single and double quotation marks delimit text. Dollar signs and #{...} do not interpolate values here.", "blue");
+    } else if (language === "ruby" && text.startsWith('"') && /(?:^|[^\\])(?:\\\\)*#\{/.test(text)) {
+      detail = meaning("Text template", "A Ruby double-quoted string with interpolation: expressions inside #{...} supply values within the text.", "blue");
+    } else if (language === "rust" && text.startsWith("'")) {
+      detail = text.endsWith("'") && text.length > 2
+        ? meaning("Character", "A Rust char literal: one Unicode scalar value, not a String or a UTF-16 code unit.", "blue")
+        : meaning("Lifetime / label", "Rust apostrophe notation names a lifetime, such as 'a or 'static. In loop-label syntax it names a loop; it is not a quoted character or string.", "purple");
+    } else if (language === "go" && text.startsWith("'")) {
+      detail = meaning("Rune", "A Go rune constant: a Unicode code point, with default type rune (an alias for int32). It is not a string or necessarily one UTF-8 byte.", "blue");
+    } else if (language === "kotlin" && text.startsWith("'")) {
+      detail = meaning("Character", "A Kotlin Char literal: one UTF-16 code unit, not a String. Some Unicode characters need two code units.", "blue");
+    } else if (language === "java" && text.startsWith("'")) {
+      detail = meaning("Character", "A Java char literal: one UTF-16 code unit, not a String. Some Unicode characters need two code units.", "blue");
+    } else if (language === "c" && text.startsWith("'")) {
+      detail = meaning("Character", "An ordinary C character constant, such as 'A' or an escaped newline. Its type is int, not char; it is not a string.", "blue");
+    } else if (language === "cpp" && text.startsWith("'")) {
+      detail = meaning("Character", "An ordinary single-character C++ literal, such as 'A' or an escaped newline, has type char; it is not a string.", "blue");
     } else if (/^['"`]/.test(text)) {
       const isKey = language === "json" && /^\s*:/.test(after);
       detail = meaning(isKey ? "Key" : /\\\(|\$\{/.test(text) ? "Text template" : "Text", isKey ? "Names a property in this JSON object." : /\\\(|\$\{/.test(text) ? "Quoted text containing expressions whose values are inserted into the text." : "A string: quoted text. Punctuation inside is part of that text.", isKey ? "green" : "blue");

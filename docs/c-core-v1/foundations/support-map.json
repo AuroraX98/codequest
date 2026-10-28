@@ -1,0 +1,488 @@
+[
+  {
+    "id": "c-07",
+    "quizTarget": "You edit the message but run the old executable without rebuilding. Which outcome is possible?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "A C compiler translates source and a linker combines compiled parts into an executable. These examples use an implementation that provides the standard library."
+      },
+      {
+        "paragraph": 1,
+        "fact": "int main(void) is the entry function here. void in its parameter list means no arguments; returning zero reports successful termination to the host."
+      },
+      {
+        "paragraph": 2,
+        "fact": "Editing main.c does not alter an already-built executable. Recompile before expecting a changed source value to appear."
+      },
+      {
+        "paragraph": 3,
+        "fact": "This course uses portable C17 core rules. C23 is newer, but the installed GCC 14.2 describes its C23 support as incomplete. No browser C runner is provided."
+      }
+    ],
+    "reasoning": "The executable contains the previous compilation, separate from the edited source.",
+    "source": "https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf",
+    "prerequisites": [
+      "c-06"
+    ]
+  },
+  {
+    "id": "c-08",
+    "quizTarget": "Which change safely prints the long variable long count = 3L?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "int represents whole numbers; double represents approximate fractional values. C specifies minimum ranges rather than requiring every machine to use the same int width."
+      },
+      {
+        "paragraph": 1,
+        "fact": "INT_MAX in limits.h is the largest int on this implementation. Never assume an int is always exactly 32 bits."
+      },
+      {
+        "paragraph": 2,
+        "fact": "printf uses a format string. %d expects int; %ld expects long; %f expects double for printf. Mismatched argument types can cause undefined behavior, so match them deliberately."
+      },
+      {
+        "paragraph": 3,
+        "fact": "The small values here fit all conforming int implementations. A long literal can use L, but long also has a finite implementation-dependent range."
+      }
+    ],
+    "reasoning": "The variadic printf contract requires the matching type for each format conversion.",
+    "source": "https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf",
+    "prerequisites": [
+      "c-07"
+    ]
+  },
+  {
+    "id": "c-09",
+    "quizTarget": "Change only 5 / 2 to 5.0 / 2. What prints?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "5 / 2 uses integer operands and produces 2. With positive operands the fractional part is discarded; integer division generally truncates toward zero."
+      },
+      {
+        "paragraph": 1,
+        "fact": "5.0 / 2 uses a double operand and produces 2.5. Assigning 5 / 2 into double only converts the already-computed 2 into 2.0."
+      },
+      {
+        "paragraph": 2,
+        "fact": "%.1f prints a double with one digit after the decimal point. Formatting does not change the earlier arithmetic."
+      },
+      {
+        "paragraph": 3,
+        "fact": "Do not divide by zero. Signed minimum divided by -1 can also be unrepresentable. This example uses only safe positive operands."
+      }
+    ],
+    "reasoning": "The operand conversion occurs before division rather than after truncation.",
+    "source": "https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf",
+    "prerequisites": [
+      "c-08"
+    ]
+  },
+  {
+    "id": "c-10",
+    "quizTarget": "Set a to INT_MAX while keeping b=3. What should this guarded program do?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "A signed integer operation whose result is not representable has undefined behavior. Do not run INT_MAX +1 and treat an observed number as a portable result."
+      },
+      {
+        "paragraph": 1,
+        "fact": "For nonnegative a and b, a <= INT_MAX - b is a safe check before computing a+b. The stated nonnegative precondition matters."
+      },
+      {
+        "paragraph": 2,
+        "fact": "Unsigned arithmetic is reduced modulo one more than the maximum value. That defined wrap still may be a bug for sizes or counts."
+      },
+      {
+        "paragraph": 3,
+        "fact": "This program prints rejected when the guard fails. It never evaluates the overflowing addition in that branch."
+      }
+    ],
+    "reasoning": "The precondition fails, and only the rejection branch runs.",
+    "source": "https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf",
+    "prerequisites": [
+      "c-09"
+    ]
+  },
+  {
+    "id": "c-11",
+    "quizTarget": "Set denominator=0. What happens with the same guard?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "A zero scalar value is false in a condition; a nonzero value is true. Logical operators produce int 0 or 1."
+      },
+      {
+        "paragraph": 1,
+        "fact": "&& evaluates its right operand only if its left operand is true. || skips the right operand when the left is true."
+      },
+      {
+        "paragraph": 2,
+        "fact": "denominator !=0 must come before the division in this expression. A false left side prevents division by zero."
+      },
+      {
+        "paragraph": 3,
+        "fact": "& and | operate on integer bits and do not provide the same short-circuit guard as && and ||."
+      }
+    ],
+    "reasoning": "The false left operand of && skips its right operand.",
+    "source": "https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf",
+    "prerequisites": [
+      "c-10"
+    ]
+  },
+  {
+    "id": "c-12",
+    "quizTarget": "Remove the flags |=2u statement. What does the flag test print?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "An unsigned value can store flags in separate bit positions. 1u and 2u select different low bits."
+      },
+      {
+        "paragraph": 1,
+        "fact": "flags | mask sets the bits in mask. flags & mask keeps only shared bits. Comparing that result with 0 asks whether a flag is present."
+      },
+      {
+        "paragraph": 2,
+        "fact": "Unsigned bit operations avoid signed representation assumptions. Shifts still need a count smaller than the promoted type width; this example needs no shifts."
+      },
+      {
+        "paragraph": 3,
+        "fact": "The |= operator updates flags with the bitwise OR result, preserving bits already set."
+      }
+    ],
+    "reasoning": "The second bit is absent until it is set.",
+    "source": "https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf",
+    "prerequisites": [
+      "c-11"
+    ]
+  },
+  {
+    "id": "c-13",
+    "quizTarget": "Replace the inner int score=7 with score=7. What prints?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "A variable declared inside braces is available within that block, not automatically outside it."
+      },
+      {
+        "paragraph": 1,
+        "fact": "A new int score in an inner block is a different object. Updating it does not change the outer score."
+      },
+      {
+        "paragraph": 2,
+        "fact": "An ordinary automatic local variable without an initializer does not provide a reliable initial value. Initialize it before use."
+      },
+      {
+        "paragraph": 3,
+        "fact": "Keeping distinct names can make accidental shadowing easier to avoid. The example intentionally shows the difference between two objects."
+      }
+    ],
+    "reasoning": "Without a declaration, the assignment uses the existing visible variable.",
+    "source": "https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf",
+    "prerequisites": [
+      "c-12"
+    ]
+  },
+  {
+    "id": "c-14",
+    "quizTarget": "Change choice to 2 while keeping both breaks. What prints?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "switch evaluates its controlling integer expression and starts at a matching case label or default."
+      },
+      {
+        "paragraph": 1,
+        "fact": "After a matching case, statements continue into following labels unless control leaves. break exits this switch."
+      },
+      {
+        "paragraph": 2,
+        "fact": "default supplies an optional path when no case value matches."
+      },
+      {
+        "paragraph": 3,
+        "fact": "Removing break changes control flow, not just formatting. Use it only when falling through is a deliberate requirement."
+      }
+    ],
+    "reasoning": "The matching case 2 runs and break exits the switch.",
+    "source": "https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf",
+    "prerequisites": [
+      "c-13"
+    ]
+  },
+  {
+    "id": "c-15",
+    "quizTarget": "Replace continue with break. What prints?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "for (int i=0; i<4; i++) initializes once, tests before each body and updates after a completed body. i++ adds one."
+      },
+      {
+        "paragraph": 1,
+        "fact": "continue starts the next iteration; in this for loop, the update still happens before the next condition test."
+      },
+      {
+        "paragraph": 2,
+        "fact": "break leaves the loop immediately instead of moving to its next iteration."
+      },
+      {
+        "paragraph": 3,
+        "fact": "The small counter and fixed limit make every increment representable. A syntactic loop alone does not guarantee termination."
+      }
+    ],
+    "reasoning": "break ends the loop instead of merely skipping one body.",
+    "source": "https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf",
+    "prerequisites": [
+      "c-14"
+    ]
+  },
+  {
+    "id": "c-16",
+    "quizTarget": "Change only the assignment index from 1 to 2. What does the unchanged print of values[1] show?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "int values[3]={2,4,6} creates three int elements. This object does not grow when another element is needed."
+      },
+      {
+        "paragraph": 1,
+        "fact": "values[0] is the first element and values[2] the third. Valid indices here are 0,1,2."
+      },
+      {
+        "paragraph": 2,
+        "fact": "Accessing values[3] would be outside the array and is not a valid way to append. Do not execute out-of-bounds examples to guess their behavior."
+      },
+      {
+        "paragraph": 3,
+        "fact": "Assigning through a valid index changes that element without changing the number of elements."
+      }
+    ],
+    "reasoning": "The new assignment updates the third element, leaving the second as 4.",
+    "source": "https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf",
+    "prerequisites": [
+      "c-15"
+    ]
+  },
+  {
+    "id": "c-17",
+    "quizTarget": "Add 8 as a fourth initializer without writing an explicit array bound. What does count become?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "sizeof gives an object or type size in bytes. A C byte is the size of char and is not promised universally to contain exactly 8 bits."
+      },
+      {
+        "paragraph": 1,
+        "fact": "With int values[] = {...}, omitting the bound asks the compiler to count the initializer elements. For this actual array object, sizeof values / sizeof values[0] divides total storage by one element size."
+      },
+      {
+        "paragraph": 2,
+        "fact": "sizeof has type size_t, an unsigned size type. printf %zu matches it."
+      },
+      {
+        "paragraph": 3,
+        "fact": "Array parameters are adjusted to pointers. A pointer size does not tell you the caller\u2019s array length; pass a separate length."
+      }
+    ],
+    "reasoning": "The compiler infers the array bound from all four initializers.",
+    "source": "https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf",
+    "prerequisites": [
+      "c-16"
+    ]
+  },
+  {
+    "id": "c-18",
+    "quizTarget": "Replace the constant 'A' with 'B'. What changes?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "An ordinary single-quoted character constant such as 'A' has type int in C. A double-quoted literal is an array of char ending in a zero character."
+      },
+      {
+        "paragraph": 1,
+        "fact": "char need not be signed on every implementation. Its value is not automatically a whole Unicode character in a multibyte encoding."
+      },
+      {
+        "paragraph": 2,
+        "fact": "printf %c receives an int and writes the corresponding character after conversion. Do not assume alphabetic letters have particular numeric codes."
+      },
+      {
+        "paragraph": 3,
+        "fact": "The example changes a character constant rather than depending on ASCII arithmetic."
+      }
+    ],
+    "reasoning": "The %c conversion outputs the selected character value.",
+    "source": "https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf",
+    "prerequisites": [
+      "c-17"
+    ]
+  },
+  {
+    "id": "c-19",
+    "quizTarget": "Change the initializer to \"hi\". What prints?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "A C string is a sequence of char ending at the first '\\0'. The terminator is a zero value, different from the printable digit'0'."
+      },
+      {
+        "paragraph": 1,
+        "fact": "char text[]=\"cat\" allocates four chars: c,a,t,and the terminator. strlen counts the three before the terminator."
+      },
+      {
+        "paragraph": 2,
+        "fact": "strlen requires a valid terminated string; it does not receive a buffer size and cannot make an unterminated buffer safe."
+      },
+      {
+        "paragraph": 3,
+        "fact": "The array initialized here is writable. Do not attempt to modify the storage of a string literal through a pointer."
+      }
+    ],
+    "reasoning": "strlen excludes the terminator, whereas sizeof this array includes it.",
+    "source": "https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf",
+    "prerequisites": [
+      "c-18"
+    ]
+  },
+  {
+    "id": "c-20",
+    "quizTarget": "Increase the destination to char text[6]. What prints?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "snprintf receives a destination, its capacity and a format. With positive capacity it writes at most capacity-1 text chars and a terminator, unless an encoding error occurs."
+      },
+      {
+        "paragraph": 1,
+        "fact": "On success the returned int is the number of chars that would have been written without truncation, excluding the terminator."
+      },
+      {
+        "paragraph": 2,
+        "fact": "A negative result means an encoding error. An explicit conversion written (size_t)needed converts needed to the size type. Check it is nonnegative before such a conversion when comparing with a capacity."
+      },
+      {
+        "paragraph": 3,
+        "fact": "A result at least the capacity means text was cut off. Do not silently treat the shortened text as the full message."
+      }
+    ],
+    "reasoning": "Capacity 6 accommodates five content chars and one terminator; the required text length remains 5.",
+    "source": "https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf",
+    "prerequisites": [
+      "c-19"
+    ]
+  },
+  {
+    "id": "c-21",
+    "quizTarget": "Change input text to \"12x\". What happens with this strict validation?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "const char *text points to text that this code will not modify through that pointer. strtol converts the initial number into long and stores a pointer to the first unconverted character through an end-pointer argument. char *end declares such a pointer; &end passes its address so strtol can update it."
+      },
+      {
+        "paragraph": 1,
+        "fact": "end==text means no digits were converted. *end reads the character at that position; requiring it to be '\\0' rejects trailing nonnumeric text in this strict policy."
+      },
+      {
+        "paragraph": 2,
+        "fact": "Set errno=0 before calling strtol. ERANGE reports an out-of-range conversion. errno belongs to errno.h; do not infer failure from a legitimate numeric zero result alone."
+      },
+      {
+        "paragraph": 3,
+        "fact": "Base 10 requests decimal. A cast to int would still need a separate int-range check; this program keeps the long result."
+      }
+    ],
+    "reasoning": "The conversion stops at x, and the complete-input check rejects it.",
+    "source": "https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf",
+    "prerequisites": [
+      "c-20"
+    ]
+  },
+  {
+    "id": "c-22",
+    "quizTarget": "Change the call argument from 3 to 4. What prints?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "int twice(int value); is a prototype: it states the return and parameter types before the definition appears."
+      },
+      {
+        "paragraph": 1,
+        "fact": "The later function definition supplies a body with the same compatible types. A declaration alone does not create executable behavior."
+      },
+      {
+        "paragraph": 2,
+        "fact": "In C17, f(void) explicitly means no parameters; f() is not the same complete prototype. This course uses explicit parameter lists."
+      },
+      {
+        "paragraph": 3,
+        "fact": "Each call supplies a value for the parameter. A return statement sends the computed result back to the caller."
+      }
+    ],
+    "reasoning": "The same function body runs with the changed argument.",
+    "source": "https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf",
+    "prerequisites": [
+      "c-21"
+    ]
+  },
+  {
+    "id": "c-23",
+    "quizTarget": "Replace *p=9 with *p=5, leaving the print unchanged. What prints?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "&score produces a pointer to score. int *p declares a pointer to int; it does not create a second score object."
+      },
+      {
+        "paragraph": 1,
+        "fact": "*p designates the int object that p points to. Assigning *p=9 changes that object."
+      },
+      {
+        "paragraph": 2,
+        "fact": "Dereferencing requires a pointer to a live suitably typed object. Do not dereference an uninitialized or null pointer."
+      },
+      {
+        "paragraph": 3,
+        "fact": "Reading score after writing through p observes the same changed object."
+      }
+    ],
+    "reasoning": "The pointer designates the original object, so the mutation is visible through its name.",
+    "source": "https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf",
+    "prerequisites": [
+      "c-22"
+    ]
+  },
+  {
+    "id": "c-24",
+    "quizTarget": "Replace the function body with int other=7; p=&other; *p=9;. What does the caller print?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "A function receives copies of argument values. Assigning its int parameter changes that local copy, not the caller\u2019s int."
+      },
+      {
+        "paragraph": 1,
+        "fact": "Passing &score copies an address value. Assigning through that pointer changes the caller\u2019s object, but reassigning the local pointer would not rebind the caller\u2019s variable."
+      },
+      {
+        "paragraph": 2,
+        "fact": "void set(int *p) returns no value; it is called for its side effect. The caller must supply a valid pointer under this function\u2019s contract."
+      },
+      {
+        "paragraph": 3,
+        "fact": "C still passes a pointer value by value. Shared access to the pointed-to object explains the mutation."
+      }
+    ],
+    "reasoning": "Reassigning the copied pointer changes only its local target; score is not mutated in this version.",
+    "source": "https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf",
+    "prerequisites": [
+      "c-23"
+    ]
+  }
+]

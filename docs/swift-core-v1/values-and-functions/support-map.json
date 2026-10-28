@@ -1,0 +1,407 @@
+[
+  {
+    "id": "swift-35",
+    "quizTarget": "Starting with x = 9, what remains in x after shift(&x, by: -4)?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "An ordinary Int parameter gives a function a value to read. An inout parameter lets the function change the caller’s variable. The variable is exclusively accessed for the call: the same storage must not be supplied twice to overlapping inout arguments. Think about the effect after the call, not an exposed pointer or a promise about how copying is implemented."
+      },
+      {
+        "paragraph": 1,
+        "fact": "inout goes before the parameter type. In shift(&position, by: 3), & marks the variable whose value may change; by labels the ordinary amount input. value += amount adds and stores the result. No return arrow here means no useful returned value (Void); inspect position afterward. Supply a var, not a let constant or a temporary expression. These small examples keep Int arithmetic within range."
+      },
+      {
+        "paragraph": 2,
+        "fact": "Follow this complete example.\n```swift\nfunc shift(_ value: inout Int, by amount: Int) {\n    value += amount\n}\nvar position = 4\nshift(&position, by: 3)\nprint(position)\n```\nOutput:\n```text\n7\n```"
+      },
+      {
+        "paragraph": 3,
+        "fact": "Change the input or declaration and trace the result.\n```swift\nfunc shift(_ value: inout Int, by amount: Int) {\n    value += amount\n}\nvar position = -2\nshift(&position, by: 5)\nprint(position)\n```\nOutput:\n```text\n3\n```"
+      },
+      {
+        "paragraph": 4,
+        "fact": "Implement shift(_:by:) to add a small Int amount to the caller’s Int. Negative and zero amounts must work. Do not replace it with a function that only returns a new number. Optional local practice: choose one more input, predict the outcome, then run it. The checks observe the stated values and effects; they do not require one exact implementation spelling."
+      },
+      {
+        "paragraph": 5,
+        "fact": "moveOne subtracts one from its first variable and adds one to its second. -= subtracts and stores. Passing count to both parameters conflicts with exclusive access; two different variables would be valid. This complete local compiler example is intentionally rejected. It is not a runtime exercise; do not repair it with unsafe access.\n```swift\nfunc moveOne(_ source: inout Int, to destination: inout Int) {\n    source -= 1\n    destination += 1\n}\nfunc demonstrateConflict() {\n    var count = 5\n    moveOne(&count, to: &count)\n}\ndemonstrateConflict()\n```"
+      },
+      {
+        "paragraph": 6,
+        "fact": "Use two separate variables instead. moveOne changes both caller values and returns Void. The surrounding no-input demonstration function merely gives the variables a local scope; its call runs the example.\n```swift\nfunc moveOne(_ source: inout Int, to destination: inout Int) {\n    source -= 1\n    destination += 1\n}\nfunc demonstrateSeparateValues() {\n    var source = 5\n    var destination = 1\n    moveOne(&source, to: &destination)\n    print(source)\n    print(destination)\n}\ndemonstrateSeparateValues()\n```\nThis prints 4 then 2. These two accesses do not overlap."
+      }
+    ],
+    "reasoning": "The call changes x itself by adding -4; no returned value needs to be assigned.",
+    "source": "https://docs.swift.org/swift-book/documentation/the-swift-programming-language/functions/",
+    "prerequisites": [
+      "swift-06",
+      "swift-02"
+    ]
+  },
+  {
+    "id": "swift-36",
+    "quizTarget": "A counter starts at 7. After a() returns 8, you assign let b = a and call b(). What does it return?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "A function value can be stored, passed to another function, or returned. A closure is a block of code used as a function value. It can remember variables from the place where it was created; this is capture. Each call to the factory below creates its own current variable. Assigning an existing closure to another name shares that closure’s captured state; it is not another factory call."
+      },
+      {
+        "paragraph": 1,
+        "fact": "(Int) -> Int means one Int input and one Int result. () -> Int takes no inputs. apply calls the supplied operation and returns its result. In { value in return value * 2 }, value names the input and in starts the body. makeCounter(start:) returns a closure, not an Int; counter() then calls it, increments its captured current, and returns the new Int. A let binding can hold a closure that changes captured state; the binding itself is not reassigned."
+      },
+      {
+        "paragraph": 2,
+        "fact": "Follow this complete example.\n```swift\nfunc apply(_ operation: (Int) -> Int, to value: Int) -> Int {\n    return operation(value)\n}\nfunc makeCounter(start: Int) -> () -> Int {\n    var current = start\n    return {\n        current += 1\n        return current\n    }\n}\nlet twice: (Int) -> Int = { value in return value * 2 }\nprint(apply(twice, to: 6))\nlet counter = makeCounter(start: 2)\nlet alias = counter\nlet other = makeCounter(start: 2)\nprint(counter())\nprint(alias())\nprint(other())\n```\nOutput:\n```text\n12\n3\n4\n3\n```"
+      },
+      {
+        "paragraph": 3,
+        "fact": "Change the input or declaration and trace the result.\n```swift\nfunc apply(_ operation: (Int) -> Int, to value: Int) -> Int {\n    return operation(value)\n}\nfunc makeCounter(start: Int) -> () -> Int {\n    var current = start\n    return {\n        current += 1\n        return current\n    }\n}\nlet twice: (Int) -> Int = { value in return value + 5 }\nprint(apply(twice, to: 1))\nlet counter = makeCounter(start: 10)\nlet alias = counter\nlet other = makeCounter(start: 10)\nprint(counter())\nprint(alias())\nprint(other())\n```\nOutput:\n```text\n6\n11\n12\n11\n```"
+      },
+      {
+        "paragraph": 4,
+        "fact": "Define apply(_:to:) and makeCounter(start:) with the shown signatures. apply must use its supplied operation. Each newly created counter increases by one per call, independently of other factory calls. Optional local practice: choose one more input, predict the outcome, then run it. The checks observe the stated values and effects; they do not require one exact implementation spelling."
+      }
+    ],
+    "reasoning": "b refers to the already-created closure and its current value. Only another factory call creates independent captured state.",
+    "source": "https://docs.swift.org/swift-book/documentation/the-swift-programming-language/functions/",
+    "prerequisites": [
+      "swift-06",
+      "swift-15"
+    ]
+  },
+  {
+    "id": "swift-37",
+    "quizTarget": "With [label] capturing \"open\", label later becomes \"closed\". What does the stored callback return?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "A closure escapes when it can outlive the call that receives it. Storing this nonoptional function parameter for later use needs @escaping. That annotation allows a longer lifetime; it does not run the callback in the background. Here store only saves the closure, and read calls it later, synchronously."
+      },
+      {
+        "paragraph": 1,
+        "fact": "(() -> String)? is an optional no-input function returning text. DeferredNote() creates a value with action initially nil. mutating permits store to change this struct; self.action names the stored property, while action alone names the parameter. read uses if let to unwrap the saved function, then saved() invokes it. [label] is a capture list: it saves the current String value when the closure is created. Without that list, this example captures the variable and sees its later value. The earlier ARC lesson covers class-reference cycles; this value example is not a new memory-management guarantee."
+      },
+      {
+        "paragraph": 2,
+        "fact": "Follow this complete example.\n```swift\nstruct DeferredNote {\n    var action: (() -> String)? = nil\n    mutating func store(_ action: @escaping () -> String) {\n        self.action = action\n    }\n    func read() -> String {\n        if let saved = action {\n            return saved()\n        }\n        return \"empty\"\n    }\n}\nvar note = DeferredNote()\nvar label = \"draft\"\nnote.store { [label] in return label }\nlabel = \"revised\"\nprint(note.read())\n```\nOutput:\n```text\ndraft\n```"
+      },
+      {
+        "paragraph": 3,
+        "fact": "Change the input or declaration and trace the result.\n```swift\nstruct DeferredNote {\n    var action: (() -> String)? = nil\n    mutating func store(_ action: @escaping () -> String) {\n        self.action = action\n    }\n    func read() -> String {\n        if let saved = action {\n            return saved()\n        }\n        return \"empty\"\n    }\n}\nvar note = DeferredNote()\nvar label = \"first\"\nnote.store { return label }\nlabel = \"second\"\nprint(note.read())\n```\nOutput:\n```text\nsecond\n```"
+      },
+      {
+        "paragraph": 4,
+        "fact": "Complete DeferredNote.store(_:) and read(). A new note reads \"empty\"; storing replaces the previous callback; read returns the current callback’s result. Keep @escaping where the closure parameter is stored. Optional local practice: choose one more input, predict the outcome, then run it. The checks observe the stated values and effects; they do not require one exact implementation spelling."
+      },
+      {
+        "paragraph": 5,
+        "fact": "Removing @escaping contradicts storing the parameter in a property for later use. The complete example otherwise has the same valid declarations. This complete local compiler example is intentionally rejected. It is not a runtime exercise; do not repair it with unsafe access.\n```swift\nstruct DeferredNote {\n    var action: (() -> String)? = nil\n    mutating func store(_ action: () -> String) {\n        self.action = action\n    }\n    func read() -> String {\n        if let saved = action {\n            return saved()\n        }\n        return \"empty\"\n    }\n}\nvar note = DeferredNote()\nvar label = \"draft\"\nnote.store { [label] in return label }\nlabel = \"revised\"\nprint(note.read())\n```"
+      }
+    ],
+    "reasoning": "The capture list saves the String value at closure creation. Storing and calling are separate actions.",
+    "source": "https://docs.swift.org/swift-book/documentation/the-swift-programming-language/closures/",
+    "prerequisites": [
+      "swift-36",
+      "swift-20"
+    ]
+  },
+  {
+    "id": "swift-38",
+    "quizTarget": "A copy begins with steps = 10. You advance only the original by 2. What are original and copy now?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "A struct is a value type. Copying this StepMeter gives another value with its own Int field. Changing the copy does not change the original. mutating marks a method that may change the struct’s stored state. A let struct cannot call this mutating method, even when its stored property is declared var."
+      },
+      {
+        "paragraph": 1,
+        "fact": "StepMeter(steps: 3) is the memberwise initializer Swift supplies for this simple struct. It returns a StepMeter whose steps is 3. second.advance(by: 4) adds four to second.steps and returns Void. The dot selects a property or method on that value. This example contains only an Int. A struct containing a class reference would copy that reference, not recursively duplicate the referenced object."
+      },
+      {
+        "paragraph": 2,
+        "fact": "Follow this complete example.\n```swift\nstruct StepMeter {\n    var steps: Int\n    mutating func advance(by amount: Int) {\n        steps += amount\n    }\n}\nvar first = StepMeter(steps: 3)\nvar second = first\nsecond.advance(by: 4)\nprint(first.steps)\nprint(second.steps)\n```\nOutput:\n```text\n3\n7\n```"
+      },
+      {
+        "paragraph": 3,
+        "fact": "Change the input or declaration and trace the result.\n```swift\nstruct StepMeter {\n    var steps: Int\n    mutating func advance(by amount: Int) {\n        steps += amount\n    }\n}\nvar first = StepMeter(steps: 3)\nvar second = first\nfirst.advance(by: 2)\nsecond.advance(by: 6)\nprint(first.steps)\nprint(second.steps)\n```\nOutput:\n```text\n5\n9\n```"
+      },
+      {
+        "paragraph": 4,
+        "fact": "Define StepMeter with an Int steps property and advance(by:) that adds an Int amount. Copies must remain independent. Inputs in this exercise are small enough not to overflow. Optional local practice: choose one more input, predict the outcome, then run it. The checks observe the stated values and effects; they do not require one exact implementation spelling."
+      },
+      {
+        "paragraph": 5,
+        "fact": "The copy is now a let constant. Calling advance would change that constant, so the compiler rejects it. This complete local compiler example is intentionally rejected. It is not a runtime exercise; do not repair it with unsafe access.\n```swift\nstruct StepMeter {\n    var steps: Int\n    mutating func advance(by amount: Int) {\n        steps += amount\n    }\n}\nvar first = StepMeter(steps: 3)\nlet second = first\nsecond.advance(by: 4)\nprint(first.steps)\nprint(second.steps)\n```"
+      }
+    ],
+    "reasoning": "These two struct values contain independent Int fields. Mutating the original does not update the copy.",
+    "source": "https://docs.swift.org/swift-book/documentation/the-swift-programming-language/methods/",
+    "prerequisites": [
+      "swift-06",
+      "swift-05"
+    ]
+  },
+  {
+    "id": "swift-39",
+    "quizTarget": "What should Percentage(100) produce?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "A failable initializer can refuse to create a value. init? makes the result optional: either a fully initialized value or nil. This Percentage accepts whole numbers from 0 through 100, including both ends. Validation happens before a usable value exists, rather than allowing invalid state and fixing it later."
+      },
+      {
+        "paragraph": 1,
+        "fact": "Percentage(75) invokes init? with an unlabeled Int and produces Percentage?. guard requires both comparisons to hold; && means both must be true. return nil fails initialization. self.value = value stores the accepted input in the new value’s constant property. if let unwraps the optional before reading .value. Comparing the optional to nil only tests absence; it does not require defining value equality."
+      },
+      {
+        "paragraph": 2,
+        "fact": "Follow this complete example.\n```swift\nstruct Percentage {\n    let value: Int\n    init?(_ value: Int) {\n        guard value >= 0 && value <= 100 else {\n            return nil\n        }\n        self.value = value\n    }\n}\nif let accepted = Percentage(75) {\n    print(accepted.value)\n}\nprint(Percentage(101) == nil)\n```\nOutput:\n```text\n75\ntrue\n```"
+      },
+      {
+        "paragraph": 3,
+        "fact": "Change the input or declaration and trace the result.\n```swift\nstruct Percentage {\n    let value: Int\n    init?(_ value: Int) {\n        guard value >= 0 && value <= 100 else {\n            return nil\n        }\n        self.value = value\n    }\n}\nif let accepted = Percentage(0) {\n    print(accepted.value)\n}\nprint(Percentage(-1) == nil)\n```\nOutput:\n```text\n0\ntrue\n```"
+      },
+      {
+        "paragraph": 4,
+        "fact": "Implement Percentage.init?(_:) with inclusive bounds 0...100. Store accepted input exactly in let value. Invalid inputs must return nil rather than clamp or substitute a different percentage. Optional local practice: choose one more input, predict the outcome, then run it. The checks observe the stated values and effects; they do not require one exact implementation spelling."
+      }
+    ],
+    "reasoning": "The upper boundary is inclusive. Failing values are outside the range, not equal to its ends.",
+    "source": "https://docs.swift.org/swift-book/documentation/the-swift-programming-language/initialization/",
+    "prerequisites": [
+      "swift-38",
+      "swift-27",
+      "swift-19"
+    ]
+  },
+  {
+    "id": "swift-40",
+    "quizTarget": "After duration.minutes = 0.5, what is duration.seconds?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "A computed property calculates its value instead of keeping a second independent stored value. A getter reads from existing state. A setter translates a new property value back into stored state. Here seconds is stored; minutes is another way to read or write that same duration."
+      },
+      {
+        "paragraph": 1,
+        "fact": "get returns seconds divided by 60. Assigning duration.minutes = 2.5 invokes set; newValue is Swift’s default name for the assigned Double. The setter multiplies it by 60 and updates seconds. Reading duration.minutes invokes the getter without call parentheses. Duration(seconds:) constructs the initial stored state; the computed property is not an initializer argument. These examples use finite nonnegative values."
+      },
+      {
+        "paragraph": 2,
+        "fact": "Follow this complete example.\n```swift\nstruct Duration {\n    var seconds: Double\n    var minutes: Double {\n        get { return seconds / 60 }\n        set { seconds = newValue * 60 }\n    }\n}\nvar duration = Duration(seconds: 90)\nprint(duration.minutes)\nduration.minutes = 2.5\nprint(duration.seconds)\n```\nOutput:\n```text\n1.5\n150.0\n```"
+      },
+      {
+        "paragraph": 3,
+        "fact": "Change the input or declaration and trace the result.\n```swift\nstruct Duration {\n    var seconds: Double\n    var minutes: Double {\n        get { return seconds / 60 }\n        set { seconds = newValue * 60 }\n    }\n}\nvar duration = Duration(seconds: 30)\nprint(duration.minutes)\nduration.minutes = 0.25\nprint(duration.seconds)\n```\nOutput:\n```text\n0.5\n15.0\n```"
+      },
+      {
+        "paragraph": 4,
+        "fact": "Define Duration.seconds and the read/write computed minutes property. A minutes assignment must update seconds; later changes to seconds must affect the next minutes read. Optional local practice: choose one more input, predict the outcome, then run it. The checks observe the stated values and effects; they do not require one exact implementation spelling."
+      }
+    ],
+    "reasoning": "The setter receives 0.5 as newValue and multiplies by 60; both properties describe the same stored duration.",
+    "source": "https://docs.swift.org/swift-book/documentation/the-swift-programming-language/properties/",
+    "prerequisites": [
+      "swift-17",
+      "swift-38"
+    ]
+  },
+  {
+    "id": "swift-41",
+    "quizTarget": "If first.text changes, must second.text change too?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "static makes a member belong to the type rather than one instance. Label.prefix is a shared constant, and Label.decorate is a type function. Each Label still has its own text. A type-wide constant does not mean that all instance properties share one value. We avoid mutable global state in this example."
+      },
+      {
+        "paragraph": 1,
+        "fact": "Label(text:) constructs an instance. Label.decorate(first.text) takes a String and returns a new String with the prefix before it; it does not edit the instance. + joins the two strings. A static function has no particular instance’s text unless one is passed in. Access these static members through Label, not through first."
+      },
+      {
+        "paragraph": 2,
+        "fact": "Follow this complete example.\n```swift\nstruct Label {\n    static let prefix = \"item:\"\n    var text: String\n    static func decorate(_ text: String) -> String {\n        return prefix + text\n    }\n}\nvar first = Label(text: \"map\")\nlet second = Label(text: \"lamp\")\nfirst.text = \"book\"\nprint(Label.prefix)\nprint(Label.decorate(first.text))\nprint(Label.decorate(second.text))\n```\nOutput:\n```text\nitem:\nitem:book\nitem:lamp\n```"
+      },
+      {
+        "paragraph": 3,
+        "fact": "Change the input or declaration and trace the result.\n```swift\nstruct Label {\n    static let prefix = \"item:\"\n    var text: String\n    static func decorate(_ text: String) -> String {\n        return prefix + text\n    }\n}\nvar first = Label(text: \"map\")\nlet second = Label(text: \"key\")\nfirst.text = \"cup\"\nprint(Label.prefix)\nprint(Label.decorate(first.text))\nprint(Label.decorate(second.text))\n```\nOutput:\n```text\nitem:\nitem:cup\nitem:key\n```"
+      },
+      {
+        "paragraph": 4,
+        "fact": "Define Label with static let prefix = \"item:\", an instance text property, and static decorate(_:) that prefixes its input. Preserve the input text, including the empty string. Optional local practice: choose one more input, predict the outcome, then run it. The checks observe the stated values and effects; they do not require one exact implementation spelling."
+      }
+    ],
+    "reasoning": "static applies to the declared members, not to every property of the type. decorate returns text without changing either instance.",
+    "source": "https://docs.swift.org/swift-book/documentation/the-swift-programming-language/properties/",
+    "prerequisites": [
+      "swift-38"
+    ]
+  },
+  {
+    "id": "swift-42",
+    "quizTarget": "A Notice-typed variable holds an UrgentNotice object. Which message() implementation is selected?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "A subclass starts from a superclass and can replace a method’s behavior. override marks that intentional replacement. When an instance method is called through a superclass-typed variable, the actual object still selects its overridden method. This is dynamic dispatch; the declared variable type does not turn the object into a different object."
+      },
+      {
+        "paragraph": 1,
+        "fact": "class UrgentNotice: Notice declares the superclass. message() takes no arguments and returns a String. override requires a matching inherited method. super.message() calls the superclass implementation from inside the override, then + joins extra text. Notice() and UrgentNotice() use inherited or default no-argument initialization because these classes require no stored inputs."
+      },
+      {
+        "paragraph": 2,
+        "fact": "Follow this complete example.\n```swift\nclass Notice {\n    func message() -> String {\n        return \"Ready\"\n    }\n}\nclass UrgentNotice: Notice {\n    override func message() -> String {\n        return super.message() + \" now\"\n    }\n}\nlet basic = Notice()\nlet selected: Notice = UrgentNotice()\nprint(basic.message())\nprint(selected.message())\n```\nOutput:\n```text\nReady\nReady now\n```"
+      },
+      {
+        "paragraph": 3,
+        "fact": "Change the input or declaration and trace the result.\n```swift\nclass Notice {\n    func message() -> String {\n        return \"Ready\"\n    }\n}\nclass UrgentNotice: Notice {\n    override func message() -> String {\n        return super.message() + \" now\"\n    }\n}\nlet basic = Notice()\nlet selected: Notice = Notice()\nprint(basic.message())\nprint(selected.message())\n```\nOutput:\n```text\nReady\nReady\n```"
+      },
+      {
+        "paragraph": 4,
+        "fact": "Define Notice.message() returning \"Ready\" and UrgentNotice.message() returning \"Ready now\". Calls through a Notice-typed reference must use the appropriate object’s behavior. Optional local practice: choose one more input, predict the outcome, then run it. The checks observe the stated values and effects; they do not require one exact implementation spelling."
+      },
+      {
+        "paragraph": 5,
+        "fact": "Removing override is not a new overload here: this declaration matches the inherited method. The compiler requires the override marker. This complete local compiler example is intentionally rejected. It is not a runtime exercise; do not repair it with unsafe access.\n```swift\nclass Notice {\n    func message() -> String {\n        return \"Ready\"\n    }\n}\nclass UrgentNotice: Notice {\n    func message() -> String {\n        return super.message() + \" now\"\n    }\n}\nlet basic = Notice()\nlet selected: Notice = UrgentNotice()\nprint(basic.message())\nprint(selected.message())\n```"
+      }
+    ],
+    "reasoning": "The variable can hold the subclass object, whose override is selected dynamically. super is only the explicit route used inside that override.",
+    "source": "https://docs.swift.org/swift-book/documentation/the-swift-programming-language/inheritance/",
+    "prerequisites": [
+      "swift-07",
+      "swift-19"
+    ]
+  },
+  {
+    "id": "swift-43",
+    "quizTarget": "Does a successful as? BookEntry cast duplicate the object?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "is asks whether an object has a particular type or one of its subclasses, returning Bool. as? attempts a safe downcast and returns an optional reference. A successful cast gives access to subclass members; a failed cast produces nil rather than a crash. Neither operation creates a replacement object."
+      },
+      {
+        "paragraph": 1,
+        "fact": "entry as? BookEntry returns BookEntry?. if let binds book only on success, so book.pages is safe there. BookEntry(pages:) initializes its stored Int. String(book.pages) converts that integer to decimal text, and + joins it to the label. This is different from a forced as! cast, which this lesson does not use. Entry() creates a plain base-class instance with no input fields. An Entry reference can hold either kind of object."
+      },
+      {
+        "paragraph": 2,
+        "fact": "Follow this complete example.\n```swift\nclass Entry {}\nclass BookEntry: Entry {\n    let pages: Int\n    init(pages: Int) {\n        self.pages = pages\n    }\n}\nfunc describe(_ entry: Entry) -> String {\n    if let book = entry as? BookEntry {\n        return \"pages=\" + String(book.pages)\n    }\n    return \"other\"\n}\nlet entry: Entry = BookEntry(pages: 80)\nprint(entry is BookEntry)\nprint(describe(entry))\nprint(describe(Entry()))\n```\nOutput:\n```text\ntrue\npages=80\nother\n```"
+      },
+      {
+        "paragraph": 3,
+        "fact": "Change the input or declaration and trace the result.\n```swift\nclass Entry {}\nclass BookEntry: Entry {\n    let pages: Int\n    init(pages: Int) {\n        self.pages = pages\n    }\n}\nfunc describe(_ entry: Entry) -> String {\n    if let book = entry as? BookEntry {\n        return \"pages=\" + String(book.pages)\n    }\n    return \"other\"\n}\nlet entry: Entry = Entry()\nprint(entry is BookEntry)\nprint(describe(entry))\nprint(describe(Entry()))\n```\nOutput:\n```text\nfalse\nother\nother\n```"
+      },
+      {
+        "paragraph": 4,
+        "fact": "Keep the two class declarations and implement describe(_:) so BookEntry values produce \"pages=\" followed by their page count; other Entry objects produce \"other\". Use a safe check rather than a forced cast. Optional local practice: choose one more input, predict the outcome, then run it. The checks observe the stated values and effects; they do not require one exact implementation spelling."
+      }
+    ],
+    "reasoning": "The cast checks the existing object’s type. Success changes what members the reference can access, not the object’s identity.",
+    "source": "https://docs.swift.org/swift-book/documentation/the-swift-programming-language/typecasting/",
+    "prerequisites": [
+      "swift-42",
+      "swift-26"
+    ]
+  },
+  {
+    "id": "swift-44",
+    "quizTarget": "What does Priority(rawValue: 7) return?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "A raw value is a fixed value attached to each enum case. Here each Priority case has one distinct Int code. This differs from an associated value: an associated value can carry different data each time a case is constructed. Raw values let you convert a known case to a code and attempt the reverse conversion safely."
+      },
+      {
+        "paragraph": 1,
+        "fact": "Priority.high.rawValue reads 8. Priority(rawValue: raw) uses a synthesized failable initializer and returns Priority?; not every Int is a valid code. guard let unwraps a recognized case or returns \"unknown\". switch handles all three cases, so no fallback case is needed for an already valid Priority. The leading dot uses the known enum type."
+      },
+      {
+        "paragraph": 2,
+        "fact": "Follow this complete example.\n```swift\nenum Priority: Int {\n    case low = 1\n    case normal = 4\n    case high = 8\n}\nfunc priorityText(_ raw: Int) -> String {\n    guard let value = Priority(rawValue: raw) else {\n        return \"unknown\"\n    }\n    switch value {\n    case .low: return \"low\"\n    case .normal: return \"normal\"\n    case .high: return \"high\"\n    }\n}\nprint(Priority.high.rawValue)\nprint(priorityText(4))\nprint(priorityText(5))\n```\nOutput:\n```text\n8\nnormal\nunknown\n```"
+      },
+      {
+        "paragraph": 3,
+        "fact": "Change the input or declaration and trace the result.\n```swift\nenum Priority: Int {\n    case low = 1\n    case normal = 4\n    case high = 8\n}\nfunc priorityText(_ raw: Int) -> String {\n    guard let value = Priority(rawValue: raw) else {\n        return \"unknown\"\n    }\n    switch value {\n    case .low: return \"low\"\n    case .normal: return \"normal\"\n    case .high: return \"high\"\n    }\n}\nprint(Priority.high.rawValue)\nprint(priorityText(8))\nprint(priorityText(0))\n```\nOutput:\n```text\n8\nhigh\nunknown\n```"
+      },
+      {
+        "paragraph": 4,
+        "fact": "Define Priority with low=1, normal=4 and high=8. Implement priorityText(_:) to return each case name or \"unknown\" for any unrecognized Int; do not silently round to a nearby case. Optional local practice: choose one more input, predict the outcome, then run it. The checks observe the stated values and effects; they do not require one exact implementation spelling."
+      }
+    ],
+    "reasoning": "Only the three declared raw codes are recognized. A raw-value initializer does not invent a new case.",
+    "source": "https://docs.swift.org/swift-book/documentation/the-swift-programming-language/enumerations/",
+    "prerequisites": [
+      "swift-13",
+      "swift-26"
+    ]
+  },
+  {
+    "id": "swift-45",
+    "quizTarget": "Two keys have the same shelf number but different room strings. How many entries should their Set contain?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "Equatable provides meaningful == comparisons. Hashable also supplies hashing for sets and dictionary keys and includes the equality requirement. Swift can synthesize both for this struct because its stored String and Int fields already support them. Equality compares all stored fields; a different field makes a different key."
+      },
+      {
+        "paragraph": 1,
+        "fact": "ShelfKey(room:shelf:) constructs the value. Set<ShelfKey> stores distinct keys; equal a and same occupy one entry. keys.contains(same) asks membership and returns Bool. Equal values must have matching hashes, but matching hashes do not prove equality: collisions are allowed. Do not print or assert a particular hash number; hashing is intentionally not a stable saved identifier. These keys have constant stored fields and no shared mutable references."
+      },
+      {
+        "paragraph": 2,
+        "fact": "Follow this complete example.\n```swift\nstruct ShelfKey: Hashable {\n    let room: String\n    let shelf: Int\n}\nlet a = ShelfKey(room: \"east\", shelf: 2)\nlet same = ShelfKey(room: \"east\", shelf: 2)\nlet different = ShelfKey(room: \"east\", shelf: 3)\nlet keys: Set<ShelfKey> = [a, same, different]\nprint(a == same)\nprint(a == different)\nprint(keys.count)\nprint(keys.contains(same))\n```\nOutput:\n```text\ntrue\nfalse\n2\ntrue\n```"
+      },
+      {
+        "paragraph": 3,
+        "fact": "Change the input or declaration and trace the result.\n```swift\nstruct ShelfKey: Hashable {\n    let room: String\n    let shelf: Int\n}\nlet a = ShelfKey(room: \"east\", shelf: 2)\nlet same = ShelfKey(room: \"east\", shelf: 2)\nlet different = ShelfKey(room: \"west\", shelf: 2)\nlet keys: Set<ShelfKey> = [a, same, different]\nprint(a == same)\nprint(a == different)\nprint(keys.count)\nprint(keys.contains(same))\n```\nOutput:\n```text\ntrue\nfalse\n2\ntrue\n```"
+      },
+      {
+        "paragraph": 4,
+        "fact": "For the exercise, keep the shown ShelfKey definition and implement uniqueShelfCount(_:) for an array of keys. Set(keys) constructs a set from that array; .count returns its number of distinct entries. The original array is not edited. Here is a complete application:\n```swift\nstruct ShelfKey: Hashable {\n    let room: String\n    let shelf: Int\n}\nfunc uniqueShelfCount(_ keys: [ShelfKey]) -> Int {\n    return Set(keys).count\n}\nlet key = ShelfKey(room: \"west\", shelf: 7)\nprint(uniqueShelfCount([key, key]))\n```\nThe final line prints 1. Optional local practice: predict the count for an empty array and for a third room with the same shelf number."
+      }
+    ],
+    "reasoning": "Both stored fields participate in synthesized equality. A hash collision would not make unequal keys equal.",
+    "source": "https://docs.swift.org/swift-book/documentation/the-swift-programming-language/protocols/",
+    "prerequisites": [
+      "swift-38",
+      "swift-14",
+      "swift-08"
+    ]
+  },
+  {
+    "id": "swift-46",
+    "quizTarget": "If SpecialCard supplies caption(), what does show receive from a SpecialCard named \"fir\"?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "A protocol declares a capability that conforming types promise to provide. A protocol extension can supply a default implementation of a declared requirement. A conforming type may use that default or supply its own implementation. Declare caption() in the protocol itself so calls through the protocol use the conformer’s implementation when it has one."
+      },
+      {
+        "paragraph": 1,
+        "fact": "var name: String { get } requires readable text; a let property can satisfy it. extension NamedCard adds the default method body. PlainCard uses that body; SpecialCard implements the requirement itself without an override keyword. any NamedCard can hold a conforming value without naming its concrete type. show takes that protocol value and returns card.caption(). This lesson is about declared requirements, not methods added only in extensions, which have different dispatch rules."
+      },
+      {
+        "paragraph": 2,
+        "fact": "Follow this complete example.\n```swift\nprotocol NamedCard {\n    var name: String { get }\n    func caption() -> String\n}\nextension NamedCard {\n    func caption() -> String {\n        return \"Card: \" + name\n    }\n}\nstruct PlainCard: NamedCard {\n    let name: String\n}\nstruct SpecialCard: NamedCard {\n    let name: String\n    func caption() -> String {\n        return \"Special: \" + name\n    }\n}\nfunc show(_ card: any NamedCard) -> String {\n    return card.caption()\n}\nprint(show(PlainCard(name: \"oak\")))\nprint(show(SpecialCard(name: \"ash\")))\n```\nOutput:\n```text\nCard: oak\nSpecial: ash\n```"
+      },
+      {
+        "paragraph": 3,
+        "fact": "Change the input or declaration and trace the result.\n```swift\nprotocol NamedCard {\n    var name: String { get }\n    func caption() -> String\n}\nextension NamedCard {\n    func caption() -> String {\n        return \"Card: \" + name\n    }\n}\nstruct PlainCard: NamedCard {\n    let name: String\n}\nstruct SpecialCard: NamedCard {\n    let name: String\n    func caption() -> String {\n        return \"Featured: \" + name\n    }\n}\nfunc show(_ card: any NamedCard) -> String {\n    return card.caption()\n}\nprint(show(PlainCard(name: \"oak\")))\nprint(show(SpecialCard(name: \"elm\")))\n```\nOutput:\n```text\nCard: oak\nFeatured: elm\n```"
+      },
+      {
+        "paragraph": 4,
+        "fact": "Keep NamedCard.caption() as a declared requirement. PlainCard must use the \"Card: \" default; SpecialCard must return \"Special: \" plus its own name. show(_:) must call the requirement on its supplied conforming value. Optional local practice: choose one more input, predict the outcome, then run it. The checks observe the stated values and effects; they do not require one exact implementation spelling. A supplied check also creates a third conforming test card with its own caption. That small test helper verifies that show calls the requirement rather than guessing from the two familiar type names."
+      }
+    ],
+    "reasoning": "caption is a protocol requirement, so the conforming type’s implementation is used; the default fills the gap only when appropriate.",
+    "source": "https://docs.swift.org/swift-book/documentation/the-swift-programming-language/protocols/",
+    "prerequisites": [
+      "swift-08",
+      "swift-17"
+    ]
+  }
+]

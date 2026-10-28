@@ -76,6 +76,7 @@
               (l.extraFiles || []).some((f) => /\.html$/.test(f.name)))
           ) {
             let output = [];
+            let evaluateReactCheck = null;
             const original = console.log;
             console.log = (...x) => output.push(x.map(String).join(" "));
             if (l.runtime === "react") {
@@ -95,9 +96,9 @@
                 presets: ["react"],
                 filename: "App.jsx",
               }).code;
-              new Function(
+              evaluateReactCheck = new Function(
                 compiled +
-                  '\nReactDOM.createRoot(document.getElementById("root")).render(React.createElement(App));',
+                  '\nReactDOM.createRoot(document.getElementById("root")).render(React.createElement(App));\nreturn (__courseExpression) => eval(__courseExpression);',
               )();
             } else if (l.runtime === "javascript") {
               root.innerHTML = (l.extraFiles || []).find((f) =>
@@ -135,9 +136,9 @@
               try {
                 checks.push({
                   label: c.label,
-                  passed: !!(await new Function(
-                    "return (" + c.expression + ")",
-                  )()),
+                  passed: !!(await (l.runtime === "react"
+                    ? evaluateReactCheck("(" + c.expression + ")")
+                    : new Function("return (" + c.expression + ")")())),
                 });
               } catch {
                 checks.push({ label: c.label, passed: false });
@@ -149,11 +150,32 @@
           }
           let source;
           if (l.runtime === "python")
-            source = `importScripts('https://cdn.jsdelivr.net/pyodide/v0.27.7/full/pyodide.js');onmessage=async(e)=>{try{let output=[];const p=await loadPyodide({indexURL:'https://cdn.jsdelivr.net/pyodide/v0.27.7/full/',stdout:s=>output.push(s),stderr:s=>output.push(s)});for(const f of e.data.files||[]){if(/^[A-Za-z0-9_.-]+$/.test(f.name))p.FS.writeFile('/home/pyodide/'+f.name,f.code);}await p.loadPackagesFromImports(e.data.code);p.runPython(e.data.code);p.globals.set('__output',p.toPy(output));let checks=e.data.checks.map(c=>{try{return {label:c.label,passed:!!p.runPython(c.expression)}}catch{return {label:c.label,passed:false}}});postMessage({output,checks});}catch(e){postMessage({output:[],checks:[],error:String(e.message||e)})}};`;
+            source = "importScripts('https://cdn.jsdelivr.net/pyodide/v0.27.7/full/pyodide.js');\nonmessage=async(e)=>{\n  let output=[];\n  const capabilityError=(error)=>{\n    const message=String(error.message||error);\n    if(message.startsWith(\"This browser cannot run this Python async operation\"))return error;\n    return /stack switch|JSPI|WebAssembly[.](?:Suspending|promising)|suspending function/i.test(message)\n      ? new Error(\"This browser cannot run this Python async operation with the bundled interpreter. Use a browser with WebAssembly promise integration (JSPI), or run this example locally in Python. Your code is unchanged. Details: \"+message)\n      : error;\n  };\n  try{\n    const p=await loadPyodide({indexURL:'https://cdn.jsdelivr.net/pyodide/v0.27.7/full/',stdout:s=>output.push(s),stderr:s=>output.push(s)});\n    for(const f of e.data.files||[]){if(/^[A-Za-z0-9_.-]+$/.test(f.name))p.FS.writeFile('/home/pyodide/'+f.name,f.code);}\n    await p.loadPackagesFromImports(e.data.code);\n    const value=await p.runPythonAsync(e.data.code);\n    if(value&&typeof value.destroy==='function')value.destroy();\n    const captured=p.toPy(output);\n    try{p.globals.set('__output',captured);}finally{captured.destroy();}\n    const checks=[];\n    for(const c of e.data.checks){\n      try{checks.push({label:c.label,passed:!!(await p.runPythonAsync(c.expression))});}\n      catch(error){const reported=capabilityError(error);if(reported!==error)throw reported;checks.push({label:c.label,passed:false});}\n    }\n    postMessage({output,checks});\n  }catch(error){postMessage({output,checks:[],error:String(capabilityError(error).message||error)});}\n};";
           else if (l.runtime === "sql")
             source = `importScripts('https://cdn.jsdelivr.net/npm/sql.js@1.13.0/dist/sql-wasm.js');onmessage=async(e)=>{try{const SQL=await initSqlJs({locateFile:f=>'https://cdn.jsdelivr.net/npm/sql.js@1.13.0/dist/'+f});const db=new SQL.Database();if(e.data.setup)db.run(e.data.setup);let result=db.exec(e.data.code);if(!result.length){try{result=db.exec("SELECT * FROM answer")}catch{}}const output=result.map(t=>t.columns.join(' | ')+'\\n'+t.values.map(r=>r.map(v=>v===null?'NULL':v).join(' | ')).join('\\n'));let checks=e.data.checks.map(c=>{try{return {label:c.label,passed:db.exec(c.expression)[0]?.values[0]?.[0]===1}}catch{return {label:c.label,passed:false}}});db.close();postMessage({output,checks});}catch(e){postMessage({output:[],checks:[],error:String(e.message||e)})}};`;
           else
-            source = `${l.runtime === "typescript" ? "importScripts('https://cdn.jsdelivr.net/npm/typescript@5.9.3/lib/typescript.js');" : ""}onmessage=async(e)=>{let output=[];try{let code=e.data.code;${l.runtime === "typescript" ? `const libs={};for(const name of ['lib.es5.d.ts','lib.es2015.core.d.ts','lib.es2015.collection.d.ts','lib.es2015.iterable.d.ts','lib.es2015.symbol.d.ts','lib.es2015.symbol.wellknown.d.ts','lib.es2015.promise.d.ts','lib.es2015.proxy.d.ts','lib.es2015.reflect.d.ts','lib.es2015.generator.d.ts','lib.dom.d.ts','lib.decorators.d.ts','lib.decorators.legacy.d.ts'])libs[name]=await (await fetch('https://cdn.jsdelivr.net/npm/typescript@5.9.3/lib/'+name)).text();const options={target:ts.ScriptTarget.ES2015,strict:true,noEmitOnError:true,lib:Object.keys(libs)};const host={getSourceFile:(n,l)=>n==='main.ts'?ts.createSourceFile(n,code,l):libs[n.replace(/^.*\\//,'')]?ts.createSourceFile(n,libs[n.replace(/^.*\\//,'')],l):undefined,getDefaultLibFileName:()=> 'lib.es5.d.ts',writeFile:()=>{},getCurrentDirectory:()=>'',getDirectories:()=>[],fileExists:n=>n==='main.ts'||!!libs[n],readFile:n=>n==='main.ts'?code:libs[n],getCanonicalFileName:n=>n,useCaseSensitiveFileNames:()=>true,getNewLine:()=> '\\n'};const program=ts.createProgram(['main.ts'],options,host);const errors=ts.getPreEmitDiagnostics(program).filter(d=>d.category===ts.DiagnosticCategory.Error);if(errors.length)throw new Error(errors.map(d=>'TypeScript: '+ts.flattenDiagnosticMessageText(d.messageText,' ')).join('\\n'));code=ts.transpileModule(code,{compilerOptions:options}).outputText;` : ""}const fakeConsole={log:(...v)=>output.push(v.map(x=>typeof x==='object'?JSON.stringify(x):String(x)).join(' ')),error:(...v)=>output.push(v.map(String).join(' ')),warn:(...v)=>output.push(v.map(String).join(' '))};const body=code+'\\nconst __results=[];for(const c of __checks){try{__results.push({label:c.label,passed:!!(await eval(c.expression))})}catch{__results.push({label:c.label,passed:false})}}return __results;';const AsyncFunction=Object.getPrototypeOf(async function(){}).constructor;const checks=await new AsyncFunction('console','__output','__checks',body)(fakeConsole,output,e.data.checks);postMessage({output,checks});}catch(e){postMessage({output,checks:[],error:String(e.message||e)})}};`;
+            source = `${l.runtime === "typescript" ? "importScripts('https://cdn.jsdelivr.net/npm/typescript@5.9.3/lib/typescript.js');" : ""}onmessage=async(e)=>{let output=[],typeChecks=[];try{let code=e.data.code;${l.runtime === "typescript" ? `const libs={};for(const name of ['lib.es5.d.ts','lib.es2015.core.d.ts','lib.es2015.collection.d.ts','lib.es2015.iterable.d.ts','lib.es2015.symbol.d.ts','lib.es2015.symbol.wellknown.d.ts','lib.es2015.promise.d.ts','lib.es2015.proxy.d.ts','lib.es2015.reflect.d.ts','lib.es2015.generator.d.ts','lib.dom.d.ts','lib.decorators.d.ts','lib.decorators.legacy.d.ts'])libs[name]=await (await fetch('https://cdn.jsdelivr.net/npm/typescript@5.9.3/lib/'+name)).text();/** Staged only. Compiler diagnostics are evidence; assertion sources are never emitted. */
+function createContractCompiler(ts,libs){
+ const options={target:ts.ScriptTarget.ES2015,strict:true,noEmitOnError:true,lib:Object.keys(libs)};
+ const cached=new Map();
+ function compile(source,assertion){
+  const sources={'main.ts':source};if(assertion!==undefined)sources['__course_assertion.ts']='{\\n'+assertion+'\\n}';
+  const host={getSourceFile:(n,l)=>{if(sources[n]!==undefined)return ts.createSourceFile(n,sources[n],l,true);const key=n.replace(/^.*\\//,'');if(!libs[key])return undefined;if(!cached.has(key))cached.set(key,ts.createSourceFile(n,libs[key],l,true));return cached.get(key)},getDefaultLibFileName:()=> 'lib.es5.d.ts',writeFile:()=>{},getCurrentDirectory:()=>'',getDirectories:()=>[],fileExists:n=>sources[n]!==undefined||!!libs[n.replace(/^.*\\//,'')],readFile:n=>sources[n]??libs[n.replace(/^.*\\//,'')],getCanonicalFileName:n=>n,useCaseSensitiveFileNames:()=>true,getNewLine:()=> '\\n'};
+  return ts.getPreEmitDiagnostics(ts.createProgram(Object.keys(sources),options,host)).filter(d=>d.category===ts.DiagnosticCategory.Error).map(d=>({code:d.code,file:d.file?.fileName,start:d.start??-1,length:d.length??0,message:ts.flattenDiagnosticMessageText(d.messageText,' ')}));
+ }
+ function check(source,assertions=[],variants=[]){
+  const file=ts.createSourceFile('main.ts',source,options.target,true);const baseline=compile(source);if(baseline.length)return{ok:false,stage:'learner-compile',errors:baseline,checks:[]};
+  // A project claiming compiler-checked contracts cannot turn off those diagnostics.
+  if((assertions.length||variants.length)&&(file.checkJsDirective?.enabled===false||file.commentDirectives?.length))return{ok:false,stage:'suppression-policy',errors:[{message:'This exercise verifies compiler contracts. Remove diagnostic-suppression directives; failing examples belong in the separate study fixtures.'}],checks:[]};
+  const checks=[];
+  for(const a of assertions){const errors=compile(source,a.code);const pass=a.expect==='reject'?errors.length>0&&errors.every(e=>e.file==='__course_assertion.ts'&&a.diagnosticCodes?.includes(e.code)&&e.start>=2&&e.start+e.length<=a.code.length+2):errors.length===0;checks.push({label:a.label,passed:pass,expect:a.expect,errors});}
+  for(const v of variants){let changed=false;const transformed=ts.transform(file,[context=>node=>{const visit=n=>{if(ts.isTypeAliasDeclaration(n)&&n.name.text===v.alias){changed=true;const parsed=ts.createSourceFile('variant.ts','type __Variant = '+v.appendType+';',options.target,true);const extra=ts.getSynthesizedDeepClone(parsed.statements[0].type);function reset(n){ts.setTextRange(n,{pos:-1,end:-1});ts.forEachChild(n,reset)}reset(extra);return ts.factory.updateTypeAliasDeclaration(n,n.modifiers,n.name,n.typeParameters,ts.factory.createUnionTypeNode([n.type,extra]));}return ts.visitEachChild(n,visit,context)};return ts.visitNode(node,visit)}]);const mutated=ts.createPrinter().printFile(transformed.transformed[0]);transformed.dispose();const mfile=ts.createSourceFile('main.ts',mutated,options.target,true);let target=mfile.statements.find(n=>ts.isFunctionDeclaration(n)&&n.name?.text===v.functionName);if(!target){for(const statement of mfile.statements){if(ts.isVariableStatement(statement)){const declaration=statement.declarationList.declarations.find(n=>ts.isIdentifier(n.name)&&n.name.text===v.functionName);if(declaration?.initializer&&(ts.isArrowFunction(declaration.initializer)||ts.isFunctionExpression(declaration.initializer)))target=declaration;}}}const errors=changed?compile(mutated):[];const pass=mfile.parseDiagnostics.length===0&&!!target&&errors.length>0&&errors.every(e=>e.file==='main.ts'&&v.diagnosticCodes.includes(e.code)&&e.start>=target.pos&&e.start+e.length<=target.end);checks.push({label:v.label,passed:pass,expect:'reject extended variant',errors,mutated});}
+  return{ok:checks.every(c=>c.passed),stage:'contracts',errors:[],checks};
+ }
+ return{options,compile,check,transpileLearnerOnly:source=>ts.transpileModule(source,{compilerOptions:options}).outputText};
+}
+
+const engine=createContractCompiler(ts,libs);const assessment=engine.check(code,e.data.typeAssertions||[],e.data.typeVariants||[]);typeChecks=assessment.checks.map(c=>({label:c.label,passed:c.passed}));if(!assessment.ok){postMessage({output,checks:typeChecks,error:assessment.errors.map(e=>e.message).join("\\n")||"A compiler contract was not met."});return;}code=engine.transpileLearnerOnly(code);` : ""}const fakeConsole={log:(...v)=>output.push(v.map(x=>typeof x==='object'?JSON.stringify(x):String(x)).join(' ')),error:(...v)=>output.push(v.map(String).join(' ')),warn:(...v)=>output.push(v.map(String).join(' '))};const body=code+'\\nconst __results=[];for(const c of __checks){try{__results.push({label:c.label,passed:!!(await eval(c.expression))})}catch{__results.push({label:c.label,passed:false})}}return __results;';const AsyncFunction=Object.getPrototypeOf(async function(){}).constructor;const checks=await new AsyncFunction('console','__output','__checks',body)(fakeConsole,output,e.data.checks);postMessage({output,checks:[...typeChecks,...checks]});}catch(e){postMessage({output,checks:[],error:String(e.message||e)})}};`;
           const bridge = `let __assets={},__loaded=false,__pending=[];self.importScripts=(...urls)=>{if(!__loaded){__pending.push(urls);return;}for(const url of urls){const asset=__assets[String(url)];if(!asset)throw new Error("The coding tool is not in your downloaded pack: "+url);(0,eval)(new TextDecoder().decode(asset.bytes));}};self.fetch=async(input)=>{const url=typeof input==='string'?input:input.url||String(input);const asset=__assets[url];if(!asset)throw new Error("This downloaded runner cannot access the network: "+url);return new Response(asset.bytes.slice(0),{headers:{'Content-Type':asset.type}});};`;
           source =
             bridge +
@@ -179,6 +201,8 @@
             assets: vendorAssets,
             files: l.extraFiles || [],
             checks: l.checks,
+            typeAssertions:l.typeAssertions||[],
+            typeVariants:l.typeVariants||[],
             setup: (l.extraFiles || [])
               .filter((f) => f.name === "setup.sql")
               .map((f) => f.code)

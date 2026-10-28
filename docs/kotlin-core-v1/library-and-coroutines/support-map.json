@@ -1,0 +1,382 @@
+[
+  {
+    "id": "kotlin-45",
+    "quizTarget": "If the predicate keeps odd values instead, what is the result?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "filter on a List keeps elements satisfying its Boolean predicate. map creates the transformed result values. These collection operations evaluate eagerly and do not mutate the original list. Here n names each lambda argument explicitly."
+      },
+      {
+        "paragraph": 1,
+        "fact": "Keeping even values from 1, 2, 3, 4 leaves 2 and 4. Mapping each to ten times itself produces 20 and 40. The returned List exposes a read-only interface; read-only is not a universal guarantee of deep immutability."
+      }
+    ],
+    "reasoning": "The changed filter sends 1 and 3 into the unchanged multiplication stage.",
+    "source": "https://kotlinlang.org/docs/collection-transformations.html",
+    "prerequisites": [
+      "kotlin-44"
+    ]
+  },
+  {
+    "id": "kotlin-46",
+    "quizTarget": "If the second toList call is removed, what is the final calls count?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "asSequence creates a lazy processing view over the list. map runs as a terminal operation such as toList requests elements. It can avoid intermediate lists, but overhead means it is not automatically faster for small workloads."
+      },
+      {
+        "paragraph": 1,
+        "fact": "This list-backed sequence can be traversed repeatedly; each traversal applies the mapping again. Not all sequences are reusable: some are constrained to one traversal. The counter below is a deliberate local illustration of repeated work, not a recommendation to depend on side effects in transformations."
+      }
+    ],
+    "reasoning": "Only one traversal maps the two source elements; sequence construction does not increment the counter.",
+    "source": "https://kotlinlang.org/docs/sequences.html",
+    "prerequisites": [
+      "kotlin-45"
+    ]
+  },
+  {
+    "id": "kotlin-47",
+    "quizTarget": "If the initial accumulator changes from 10 to 0, what prints?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "fold starts with the supplied initial value. Its two-parameter lambda receives the current accumulator and the next element, then returns the next accumulator. The source list is unchanged."
+      },
+      {
+        "paragraph": 1,
+        "fact": "Starting at 10 and adding 2, 3 and 4 produces 19. For an empty list, fold returns its initial value without calling the lambda. This differs from operations that need a first element to seed their calculation."
+      }
+    ],
+    "reasoning": "The same three additions now start at zero: 0+2+3+4=9.",
+    "source": "https://kotlinlang.org/docs/collection-aggregate.html",
+    "prerequisites": [
+      "kotlin-46"
+    ]
+  },
+  {
+    "id": "kotlin-48",
+    "quizTarget": "If the complete comparator is reversed, what prints?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "compareBy<String> { it.length } creates a Comparator ordered by string length; the explicit type argument says the elements are Strings. thenBy { it } compares the full String only when lengths tie. it is the implicit single lambda parameter."
+      },
+      {
+        "paragraph": 1,
+        "fact": "sortedWith returns a sorted list without changing the source. reversed on the complete comparator reverses both length ordering and the tie-break ordering, not merely one selected key."
+      }
+    ],
+    "reasoning": "Reversal flips both the primary length ordering and the lexical tie break.",
+    "source": "https://kotlinlang.org/docs/collection-ordering.html",
+    "prerequisites": [
+      "kotlin-47"
+    ]
+  },
+  {
+    "id": "kotlin-49",
+    "quizTarget": "If the destructured variables are renamed to duration and topic in that order, what prints using those names in the same order?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "val (label, minutes) = session calls component1 and component2 in order. Data classes generate these functions according to constructor-property order. Variable names in the destructuring declaration do not select fields by matching their names."
+      },
+      {
+        "paragraph": 1,
+        "fact": "An underscore skips a component you do not need. Destructuring is a concise way to bind values, not a deep copy of an object graph. Here String and Int values make the resulting bindings easy to trace."
+      }
+    ],
+    "reasoning": "The first variable still receives component1, the topic String; the second still receives component2, the duration Int.",
+    "source": "https://kotlinlang.org/docs/destructuring-declarations.html",
+    "prerequisites": [
+      "kotlin-48"
+    ]
+  },
+  {
+    "id": "kotlin-50",
+    "quizTarget": "If appendText is replaced by writeText on the second operation, what remains?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "java.io.File is a JVM API; the writeText/readText extensions belong to Kotlin\u2019s JVM library. This is not a promise of identical APIs on Android, Native or JS. Run the example only in a disposable working directory: it creates or replaces notes.txt."
+      },
+      {
+        "paragraph": 1,
+        "fact": "Charsets.UTF_8 maps the text to bytes explicitly. writeText overwrites the file by default; appendText adds text at the end. The extensions manage their streams, but I/O failures can still throw exceptions. Reading the whole file is suitable only when its size is bounded."
+      }
+    ],
+    "reasoning": "The second writeText replaces existing contents instead of appending.",
+    "source": "https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.io/write-text.html",
+    "prerequisites": [
+      "kotlin-49"
+    ]
+  },
+  {
+    "id": "kotlin-51",
+    "quizTarget": "If both inputs change to \"12\", what prints?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "Regex(\"[0-9]+\") describes one or more ASCII digits. The bracket expression selects one digit; + requires at least one repetition. This deliberately excludes signs and whitespace, and does not prove that the numeric value fits Int."
+      },
+      {
+        "paragraph": 1,
+        "fact": "matches requires the whole input to match. containsMatchIn asks whether any matching substring exists. For x12, the digit substring exists even though the complete input is not all digits."
+      }
+    ],
+    "reasoning": "The entire string and a substring both satisfy the digit pattern.",
+    "source": "https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.text/-regex/",
+    "prerequisites": [
+      "kotlin-50"
+    ]
+  },
+  {
+    "id": "kotlin-52",
+    "quizTarget": "If the instant becomes 12:30 UTC on the same day, what dates print?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "The JVM java.time.Instant represents a point on the time line. ZoneId supplies rules for presenting that instant as local calendar time. Converting with atZone preserves the instant, not necessarily its displayed date."
+      },
+      {
+        "paragraph": 1,
+        "fact": "At 00:30 UTC on January 1, New York is still on December 31. toLocalDate extracts the date from each zoned representation. This example uses JVM java.time rather than claiming a multiplatform date API or reading the current clock."
+      }
+    ],
+    "reasoning": "By 12:30 UTC, New York has also reached January 1.",
+    "source": "https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/time/Instant.html",
+    "prerequisites": [
+      "kotlin-51"
+    ]
+  },
+  {
+    "id": "kotlin-53",
+    "quizTarget": "If label in Labels.kt becomes private, can Main.kt still call it?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "The helper below belongs to package study, so import study.label makes its function available by its short name. A package declaration\u2014not a folder name alone\u2014determines the qualified name. Imports do not fetch code."
+      },
+      {
+        "paragraph": 1,
+        "fact": "Save the helper in Labels.kt and compile it together with Main.kt. A public top-level function can be imported here. If it becomes private, another file cannot call it, even in the same package. internal instead means visibility within a compilation module, not package privacy.\n```kotlin\npackage study\nfun label(): String = \"review\"\n```"
+      }
+    ],
+    "reasoning": "A separate file cannot access the private top-level declaration through an import.",
+    "source": "https://kotlinlang.org/docs/visibility-modifiers.html",
+    "prerequisites": [
+      "kotlin-52"
+    ]
+  },
+  {
+    "id": "kotlin-54",
+    "quizTarget": "What happens if Scale.kt and any compiled equivalent are omitted from this clean build?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "The helper in Scale.kt below is an explicit source dependency. Compile both files with kotlinc Main.kt Scale.kt -language-version 2.4 -jvm-target 21 -include-runtime -d app.jar, then run java -jar app.jar. Omitting the helper from a clean build leaves an unresolved symbol."
+      },
+      {
+        "paragraph": 1,
+        "fact": "A real build file should record the Kotlin plugin/compiler version, repositories, target JVM and external library versions. The coroutine examples later use kotlinx-coroutines-core-jvm 1.8.0, a separately versioned library\u2014not Kotlin stdlib and not version 2.4.21. Its jar must be present at both compilation and runtime; -include-runtime bundles Kotlin runtime, not arbitrary dependencies.\n```kotlin\n/* Scale.kt */\nfun doubleIt(value: Int): Int = value * 2\n```"
+      }
+    ],
+    "reasoning": "The compiler needs an actual declaration from supplied sources or classpath artifacts.",
+    "source": "https://kotlinlang.org/docs/command-line.html",
+    "prerequisites": [
+      "kotlin-53"
+    ]
+  },
+  {
+    "id": "kotlin-55",
+    "quizTarget": "If the expected upper-bound result changes from 10 to 11, what happens?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "check tests a Boolean and throws IllegalStateException on failure. Unlike JVM assertions that may depend on -ea, this standard-library check is active in an ordinary run. The trailing lambda supplies a failure message only when needed."
+      },
+      {
+        "paragraph": 1,
+        "fact": "coerceIn(0, 10) clamps a value into the inclusive range. The tests cover below, inside and above the range. The final success message appears only if every check passes; no external test framework is required for this small unit-style example."
+      }
+    ],
+    "reasoning": "The actual clamped value is ten, so the explicit false condition throws.",
+    "source": "https://kotlinlang.org/docs/exceptions.html",
+    "prerequisites": [
+      "kotlin-54"
+    ]
+  },
+  {
+    "id": "kotlin-56",
+    "quizTarget": "If the input is \"12\", which output appears?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "toInt throws NumberFormatException when text is not a valid Int representation. Catch only the failure you intend to handle. A stack trace identifies an exception type and call frames; line numbers change as source changes."
+      },
+      {
+        "paragraph": 1,
+        "fact": "This example reports a stable setting name rather than dumping arbitrary text. A successful parse skips the catch. If an error cannot be handled here, propagate it instead of silently substituting a misleading success value."
+      }
+    ],
+    "reasoning": "The valid conversion returns twelve and does not enter the exception handler.",
+    "source": "https://kotlinlang.org/docs/exceptions.html",
+    "prerequisites": [
+      "kotlin-55"
+    ]
+  },
+  {
+    "id": "kotlin-57",
+    "quizTarget": "If answer() is called directly from this ordinary main without runBlocking, what happens?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "suspend is a Kotlin language modifier allowing a function to call suspending operations. It does not automatically start a thread, choose a dispatcher or make a blocking call nonblocking. This answer function returns immediately but must still be called from a suspending context."
+      },
+      {
+        "paragraph": 1,
+        "fact": "runBlocking from the separate kotlinx.coroutines 1.8.0 dependency creates a coroutine scope and blocks the calling thread until it finishes. Here it bridges a tiny command-line main; it is not a recommendation to block a UI or call runBlocking inside existing suspending code. Its braces supply a suspending lambda with a scope receiver. On this Unix-like JVM setup, set COROUTINES to the actual path of kotlinx-coroutines-core-jvm.jar version 1.8.0, then compile kotlinc Main.kt -jvm-target 21 -include-runtime -cp \"$COROUTINES\" -d app.jar and run java -cp \"app.jar:$COROUTINES\" MainKt. The classpath separator here is a colon; this command does not download anything."
+      }
+    ],
+    "reasoning": "A suspend declaration constrains its call context even when this particular body does not actually pause.",
+    "source": "https://kotlinlang.org/docs/coroutines-basics.html",
+    "prerequisites": [
+      "kotlin-56"
+    ]
+  },
+  {
+    "id": "kotlin-58",
+    "quizTarget": "If the child assigns \"finished\", what does the print after coroutineScope report?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "coroutineScope is a suspending function that does not finish until its child coroutines finish. launch starts a child and returns a Job rather than a value result. In these builders the implicit scope receiver lets you write launch without an explicit this."
+      },
+      {
+        "paragraph": 1,
+        "fact": "The child writes result, and the print occurs after coroutineScope returns. With the inherited runBlocking context this child is not an uncoordinated worker thread. The example makes no claim about arbitrary launch order. A normal scope also propagates child failure; it is not an unmanaged global job."
+      }
+    ],
+    "reasoning": "The scope does not return before its child completes, so the subsequent print observes the assignment.",
+    "source": "https://kotlinlang.org/docs/coroutines-basics.html",
+    "prerequisites": [
+      "kotlin-57"
+    ]
+  },
+  {
+    "id": "kotlin-59",
+    "quizTarget": "If the right async result is 10, what is the total?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "async starts a child coroutine and returns Deferred<T>. await suspends until that result is ready, then returns it or propagates its failure. async is a scope extension, not a keyword and not part of the Kotlin standard library."
+      },
+      {
+        "paragraph": 1,
+        "fact": "Both results are created inside coroutineScope and awaited before addition. The order in which workers happen to execute is irrelevant to this output. The simple arithmetic proves result composition, not a performance gain or parallel execution guarantee."
+      }
+    ],
+    "reasoning": "await retrieves six and ten; the final expression adds those results.",
+    "source": "https://kotlinlang.org/docs/composing-suspending-functions.html",
+    "prerequisites": [
+      "kotlin-58"
+    ]
+  },
+  {
+    "id": "kotlin-60",
+    "quizTarget": "If the finally message changes to \"released\", which order is guaranteed?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "A Job cancellation is a request, not a forced thread kill. Suspending library functions check cancellation; CPU loops must also cooperate, for example with ensureActive. Do not swallow CancellationException as an ordinary successful result."
+      },
+      {
+        "paragraph": 1,
+        "fact": "CompletableDeferred<Unit> is a one-shot completion signal: complete(Unit) releases await without carrying useful data. The child then waits in awaitCancellation, which suspends until cancelled and never returns normally. cancelAndJoin requests cancellation and waits for cleanup. finally runs during this exit; it must not start suspending cleanup without an appropriate explicit policy."
+      }
+    ],
+    "reasoning": "cancelAndJoin waits for the child to finish its finally block before main prints done.",
+    "source": "https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/cancel-and-join.html",
+    "prerequisites": [
+      "kotlin-59"
+    ]
+  },
+  {
+    "id": "kotlin-61",
+    "quizTarget": "If the second collect is removed, what is the final starts count?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "flow creates a cold asynchronous stream builder from the separate coroutine library. The body runs when collect requests values, not when the flow variable is declared. emit sends a value to the collector; collect is a suspending terminal operation."
+      },
+      {
+        "paragraph": 1,
+        "fact": "This flow increments a local starts counter each time its body begins. Two sequential collections therefore start it twice. The example has no competing threads and does not describe hot shared flows or caching behavior."
+      }
+    ],
+    "reasoning": "One terminal collection runs the cold builder once; declaration alone does not run it.",
+    "source": "https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.flow/flow.html",
+    "prerequisites": [
+      "kotlin-60"
+    ]
+  },
+  {
+    "id": "kotlin-62",
+    "quizTarget": "If each worker repeats 25 increments, what prints?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "count++ reads and writes a mutable Int; multiple workers need coordination. Mutex.withLock holds the same coroutine mutex around that entire update and releases it on exit. Waiting for this mutex suspends a coroutine rather than using a JVM monitor wait; a mutex is not reentrant."
+      },
+      {
+        "paragraph": 1,
+        "fact": "Dispatchers.Default permits work on a shared pool of worker threads. coroutineScope waits for both launched children before the final print. repeat(2) runs its lambda twice, creating two workers; each performs 100 protected increments. No timing measurement or unprotected counter variant is used."
+      }
+    ],
+    "reasoning": "Both workers contribute twenty-five protected updates and finish before the final observation.",
+    "source": "https://kotlinlang.org/docs/shared-mutable-state-and-concurrency.html",
+    "prerequisites": [
+      "kotlin-61"
+    ]
+  },
+  {
+    "id": "kotlin-63",
+    "quizTarget": "If the property is set to \"read\" before retrieval, what prints?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "A Java method without sufficiently specific nullability information can appear as a platform type, often displayed as String! in tooling. The exclamation form is not Kotlin source syntax. Assigning such a result to a non-null Kotlin type can fail at runtime if Java returns null."
+      },
+      {
+        "paragraph": 1,
+        "fact": "System.getProperty can return null when a property is absent. This isolated JVM fixture first clears its uniquely named property, then assigns the result to String?. The safe call plus Elvis operator handles absence without !!. These changes affect only this short-lived process, not an operating-system environment variable."
+      }
+    ],
+    "reasoning": "The nullable variable now holds read, so the safe call returns its length rather than the fallback.",
+    "source": "https://kotlinlang.org/docs/java-interop.html#null-safety-and-platform-types",
+    "prerequisites": [
+      "kotlin-62"
+    ]
+  },
+  {
+    "id": "kotlin-64",
+    "quizTarget": "If the first input changes from \"15\" to \"70\", what is collected and totaled?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "flowOf emits its supplied values in order when collected; this fixed source contains four text inputs. mapNotNull applies toIntOrNull and drops null conversion results; filter retains only minutes in the inclusive range 1 through 60. This explicitly chooses to omit invalid items rather than pretending they were valid zero-minute sessions."
+      },
+      {
+        "paragraph": 1,
+        "fact": "take(2) permits at most two accepted values to reach toList. toList is the suspending terminal collection; sum totals the resulting small list, safely bounded here by 120. This is an in-memory teaching pipeline, not persistent storage or a production error-reporting policy. In a real app, decide how rejected inputs should be reported to the user."
+      }
+    ],
+    "reasoning": "Seventy parses but fails the range filter; oops fails parsing and zero fails the range, leaving only twenty.",
+    "source": "https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.flow/",
+    "prerequisites": [
+      "kotlin-63"
+    ]
+  }
+]

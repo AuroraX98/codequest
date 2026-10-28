@@ -1,0 +1,274 @@
+[
+  {
+    "id": "react-01",
+    "field": "checks",
+    "before": [
+      {
+        "label": "Profile details render",
+        "expression": "document.querySelector(\"h2\")?.textContent === \"Mina\" && document.querySelector(\"section p\")?.textContent === \"Learning Swift\""
+      },
+      {
+        "label": "Two clicks increment only the counter",
+        "expression": "(async () => { const button = document.querySelector(\"button\"); if (!button) return false; button.click(); await new Promise(r => setTimeout(r, 20)); button.click(); await new Promise(r => setTimeout(r, 20)); return document.querySelector(\"main\")?.textContent.includes(\"Practice taps: 2\") && document.querySelector(\"h2\")?.textContent === \"Mina\"; })()"
+      },
+      {
+        "label": "Button is labeled",
+        "expression": "document.querySelector(\"button\")?.textContent === \"Practice\""
+      }
+    ],
+    "after": [
+      {
+        "label": "Profile details render",
+        "expression": "document.querySelector(\"h2\")?.textContent === \"Mina\" && document.querySelector(\"section p\")?.textContent === \"Learning Swift\""
+      },
+      {
+        "label": "Two committed clicks increment only the counter",
+        "expression": "(async()=>{const until=async test=>{const end=Date.now()+1500;while(!test()){if(Date.now()>end)return false;await new Promise(r=>setTimeout(r,10));}return true;};const click=text=>{const b=[...document.querySelectorAll('button')].find(b=>b.textContent===text||b.getAttribute('aria-label')===text);if(!b)throw new Error('Missing button: '+text);ReactDOM.flushSync(()=>b.click());};const type=(input,value)=>ReactDOM.flushSync(()=>{Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(input,value);input.dispatchEvent(new Event('input',{bubbles:true}));});click('Practice');click('Practice');return document.querySelector('main')?.textContent.includes('Practice taps: 2')&&document.querySelector('h2')?.textContent==='Mina';})()"
+      },
+      {
+        "label": "Button is labeled",
+        "expression": "document.querySelector(\"button\")?.textContent === \"Practice\""
+      }
+    ]
+  },
+  {
+    "id": "react-02",
+    "field": "checks",
+    "before": [
+      {
+        "label": "Field has a visible label",
+        "expression": "document.querySelector(\"label\")?.textContent.includes(\"Activity\")"
+      },
+      {
+        "label": "Submission button exists",
+        "expression": "document.querySelector(\"button[type=submit]\") !== null"
+      },
+      {
+        "label": "Status is available",
+        "expression": "document.querySelector(\"[role=status]\") !== null"
+      },
+      {
+        "label": "Empty and valid submissions behave correctly",
+        "expression": "(async () => { const form = document.querySelector(\"form\"), input = document.querySelector(\"input\"); if (!form || !input) return false; form.dispatchEvent(new Event(\"submit\", {bubbles:true,cancelable:true})); await new Promise(r => setTimeout(r, 20)); if (document.querySelectorAll(\"li\").length !== 0 || document.querySelector(\"[role=status]\")?.textContent !== \"Enter an activity first.\") return false; Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,\"value\").set.call(input,\"  Read  \"); input.dispatchEvent(new Event(\"input\",{bubbles:true})); await new Promise(r => setTimeout(r,20)); form.dispatchEvent(new Event(\"submit\",{bubbles:true,cancelable:true})); await new Promise(r=>setTimeout(r,20)); return document.querySelectorAll(\"li\").length === 1 && document.querySelector(\"li\")?.textContent === \"Read\" && input.value === \"\" && document.querySelector(\"[role=status]\")?.textContent === \"Activity added.\"; })()"
+      }
+    ],
+    "after": [
+      {
+        "label": "Field has an associated visible Activity label",
+        "expression": "(()=>{const input=document.querySelector('input');return !!input&&[...input.labels].some(label=>label.textContent.includes('Activity'));})()"
+      },
+      {
+        "label": "Submission button exists",
+        "expression": "document.querySelector(\"button[type=submit]\") !== null"
+      },
+      {
+        "label": "Status is available",
+        "expression": "document.querySelector(\"[role=status]\") !== null"
+      },
+      {
+        "label": "Empty, whitespace and two distinct submissions behave correctly",
+        "expression": "(async()=>{const until=async test=>{const end=Date.now()+1500;while(!test()){if(Date.now()>end)return false;await new Promise(r=>setTimeout(r,10));}return true;};const click=text=>{const b=[...document.querySelectorAll('button')].find(b=>b.textContent===text||b.getAttribute('aria-label')===text);if(!b)throw new Error('Missing button: '+text);ReactDOM.flushSync(()=>b.click());};const type=(input,value)=>ReactDOM.flushSync(()=>{Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(input,value);input.dispatchEvent(new Event('input',{bubbles:true}));});const form=document.querySelector('form'),input=document.querySelector('input');if(!form||!input)return false;const submit=()=>{const e=new Event('submit',{bubbles:true,cancelable:true});ReactDOM.flushSync(()=>form.dispatchEvent(e));return e.defaultPrevented;};for(const value of ['', '   ']){type(input,value);if(!submit()||document.querySelectorAll('li').length!==0||document.querySelector('[role=status]')?.textContent!=='Enter an activity first.')return false;}for(const value of ['  Read  ',' Draw ']){type(input,value);if(!submit())return false;}return [...document.querySelectorAll('li')].map(e=>e.textContent).join('|')==='Read|Draw'&&input.value===''&&document.querySelector('[role=status]')?.textContent==='Activity added.';})()"
+      }
+    ]
+  },
+  {
+    "id": "react-04",
+    "field": "checks",
+    "before": [
+      {
+        "label": "Menu button has an accessible name",
+        "expression": "document.querySelector(\"nav > button\")?.textContent === \"Activities\""
+      },
+      {
+        "label": "Expansion state is exposed",
+        "expression": "document.querySelector(\"nav > button\")?.getAttribute(\"aria-expanded\") === \"false\""
+      },
+      {
+        "label": "Control relationship is named",
+        "expression": "document.querySelector(\"nav > button\")?.getAttribute(\"aria-controls\") === \"activity-menu\""
+      },
+      {
+        "label": "Opening focuses the first action; Escape closes and returns focus",
+        "expression": "(async () => { const trigger = document.querySelector(\"nav > button\"); if (!trigger) return false; trigger.click(); await new Promise(r=>setTimeout(r,30)); const first = document.querySelector(\"#activity-menu button\"); if (!first || document.activeElement !== first || trigger.getAttribute(\"aria-expanded\") !== \"true\") return false; first.dispatchEvent(new KeyboardEvent(\"keydown\",{key:\"Escape\",bubbles:true})); await new Promise(r=>setTimeout(r,30)); return !document.querySelector(\"#activity-menu\") && document.activeElement === trigger && trigger.getAttribute(\"aria-expanded\") === \"false\"; })()"
+      }
+    ],
+    "after": [
+      {
+        "label": "Menu button has an accessible name",
+        "expression": "document.querySelector(\"nav > button\")?.textContent === \"Activities\""
+      },
+      {
+        "label": "Expansion state is exposed",
+        "expression": "document.querySelector(\"nav > button\")?.getAttribute(\"aria-expanded\") === \"false\""
+      },
+      {
+        "label": "Control relationship is named",
+        "expression": "document.querySelector(\"nav > button\")?.getAttribute(\"aria-controls\") === \"activity-menu\""
+      },
+      {
+        "label": "Disclosure focus and synthetic Escape restore the trigger",
+        "expression": "(async()=>{const until=async test=>{const end=Date.now()+1500;while(!test()){if(Date.now()>end)return false;await new Promise(r=>setTimeout(r,10));}return true;};const click=text=>{const b=[...document.querySelectorAll('button')].find(b=>b.textContent===text||b.getAttribute('aria-label')===text);if(!b)throw new Error('Missing button: '+text);ReactDOM.flushSync(()=>b.click());};const type=(input,value)=>ReactDOM.flushSync(()=>{Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(input,value);input.dispatchEvent(new Event('input',{bubbles:true}));});const trigger=document.querySelector('nav > button');if(!trigger)return false;ReactDOM.flushSync(()=>trigger.click());if(!await until(()=>document.querySelector('#activity-menu button')===document.activeElement&&trigger.getAttribute('aria-expanded')==='true'))return false;const first=document.querySelector('#activity-menu button');ReactDOM.flushSync(()=>first.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true})));return await until(()=>!document.querySelector('#activity-menu')&&document.activeElement===trigger&&trigger.getAttribute('aria-expanded')==='false');})()"
+      }
+    ]
+  },
+  {
+    "id": "react-05",
+    "field": "checks",
+    "before": [
+      {
+        "label": "The fixed list has the correct matching results",
+        "expression": "document.querySelector(\"main\")?.textContent.includes(\"Matches: 11\") && document.querySelectorAll(\"li\").length === 10 && document.querySelector(\"li\")?.textContent === \"Book 99\""
+      },
+      {
+        "label": "Repeated render preserves results and avoids another memoized scan",
+        "expression": "(async () => { const button = document.querySelector(\"button\"); if(!button) return false; button.click(); await new Promise(r=>setTimeout(r,40)); const text = document.querySelector(\"main\")?.textContent || \"\"; return text.includes(\"Baseline total comparisons: 2000\") && text.includes(\"Memoized total comparisons: 1000\") && text.includes(\"Same results: yes\") && text.includes(\"Matches: 11\"); })()"
+      }
+    ],
+    "after": [
+      {
+        "label": "The fixed list has the correct matching results",
+        "expression": "document.querySelector(\"main\")?.textContent.includes(\"Matches: 11\") && document.querySelectorAll(\"li\").length === 10 && document.querySelector(\"li\")?.textContent === \"Book 99\""
+      },
+      {
+        "label": "Repeat reuses the memo and a changed query refreshes it",
+        "expression": "(async()=>{const until=async test=>{const end=Date.now()+1500;while(!test()){if(Date.now()>end)return false;await new Promise(r=>setTimeout(r,10));}return true;};const click=text=>{const b=[...document.querySelectorAll('button')].find(b=>b.textContent===text||b.getAttribute('aria-label')===text);if(!b)throw new Error('Missing button: '+text);ReactDOM.flushSync(()=>b.click());};const type=(input,value)=>ReactDOM.flushSync(()=>{Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(input,value);input.dispatchEvent(new Event('input',{bubbles:true}));});const text=()=>document.querySelector('main')?.textContent||'';if(!await until(()=>text().includes('Baseline total comparisons: 1000')&&text().includes('Memoized total comparisons: 1000')))return false;click('Repeat same search');if(!await until(()=>text().includes('Baseline total comparisons: 2000')&&text().includes('Memoized total comparisons: 1000')&&text().includes('Same results: yes')))return false;const input=document.querySelector('input');if(!input)return false;type(input,'Book 123');if(!await until(()=>text().includes('Baseline total comparisons: 3000')&&text().includes('Memoized total comparisons: 2000')&&text().includes('Same results: yes')&&text().includes('Matches: 1')))return false;return document.querySelectorAll('li').length===1&&document.querySelector('li').textContent==='Book 123';})()"
+      }
+    ]
+  },
+  {
+    "id": "react-08",
+    "field": "checks",
+    "before": [
+      {
+        "label": "Reordering preserves item state",
+        "expression": "(async () => { const click = label => [...document.querySelectorAll(\"button\")].find(b => b.getAttribute(\"aria-label\") === label || b.textContent === label)?.click(); click(\"Add for Ari\"); await new Promise(r=>setTimeout(r,20)); click(\"Add for Ari\"); await new Promise(r=>setTimeout(r,20)); click(\"Reverse order\"); await new Promise(r=>setTimeout(r,20)); const rows = [...document.querySelectorAll(\"li\")]; return rows[0]?.dataset.person === \"b\" && rows[0].textContent.includes(\"Bea: 0\") && rows[1]?.textContent.includes(\"Ari: 2\"); })()"
+      }
+    ],
+    "after": [
+      {
+        "label": "Reordering preserves the record’s local state",
+        "expression": "(async()=>{const until=async test=>{const end=Date.now()+1500;while(!test()){if(Date.now()>end)return false;await new Promise(r=>setTimeout(r,10));}return true;};const click=text=>{const b=[...document.querySelectorAll('button')].find(b=>b.textContent===text||b.getAttribute('aria-label')===text);if(!b)throw new Error('Missing button: '+text);ReactDOM.flushSync(()=>b.click());};const type=(input,value)=>ReactDOM.flushSync(()=>{Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(input,value);input.dispatchEvent(new Event('input',{bubbles:true}));});click('Add for Ari');click('Add for Ari');click('Reverse order');const rows=[...document.querySelectorAll('li')];return rows[0]?.dataset.person==='b'&&rows[0].textContent.includes('Bea: 0')&&rows[1]?.dataset.person==='a'&&rows[1].textContent.includes('Ari: 2');})()"
+      }
+    ]
+  },
+  {
+    "id": "react-09",
+    "field": "checks",
+    "before": [
+      {
+        "label": "Switch and unmount remove old listeners",
+        "expression": "(async () => {\n const originalAdd = window.addEventListener, originalRemove = window.removeEventListener;\n const active = new Map();\n window.addEventListener = function(type, fn, options) { if (type.startsWith(\"practice-\")) { if (!active.has(type)) active.set(type,new Set()); active.get(type).add(fn); } return originalAdd.call(this,type,fn,options); };\n window.removeEventListener = function(type, fn, options) { active.get(type)?.delete(fn); return originalRemove.call(this,type,fn,options); };\n const pause = () => new Promise(r=>setTimeout(r,25));\n const click = text => [...document.querySelectorAll(\"button\")].find(b=>b.textContent === text)?.click();\n try {\n click(\"Show listener\"); await pause();\n window.dispatchEvent(new Event(\"practice-alpha\")); await pause();\n if (document.querySelector(\"[role=status]\")?.textContent !== \"Received: 1\") return false;\n click(\"Switch channel\"); await pause();\n window.dispatchEvent(new Event(\"practice-alpha\")); await pause();\n if (document.querySelector(\"[role=status]\")?.textContent !== \"Received: 1\") return false;\n window.dispatchEvent(new Event(\"practice-beta\")); await pause();\n if (document.querySelector(\"[role=status]\")?.textContent !== \"Received: 2\") return false;\n click(\"Hide listener\"); await pause();\n return !document.querySelector(\"[role=status]\") && [...active.values()].every(set=>set.size===0);\n } finally { for (const [type,listeners] of active) for (const fn of listeners) originalRemove.call(window,type,fn); window.addEventListener=originalAdd; window.removeEventListener=originalRemove; }\n})()"
+      }
+    ],
+    "after": [
+      {
+        "label": "Switch, unmount and remount maintain exactly one current listener",
+        "expression": "(async()=>{const until=async test=>{const end=Date.now()+1500;while(!test()){if(Date.now()>end)return false;await new Promise(r=>setTimeout(r,10));}return true;};const click=text=>{const b=[...document.querySelectorAll('button')].find(b=>b.textContent===text||b.getAttribute('aria-label')===text);if(!b)throw new Error('Missing button: '+text);ReactDOM.flushSync(()=>b.click());};const type=(input,value)=>ReactDOM.flushSync(()=>{Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(input,value);input.dispatchEvent(new Event('input',{bubbles:true}));});const originalAdd=window.addEventListener,originalRemove=window.removeEventListener;const active=new Map();const size=t=>active.get(t)?.size||0;window.addEventListener=function(type,fn,options){if(type.startsWith('practice-')){if(!active.has(type))active.set(type,new Set());active.get(type).add(fn);}return originalAdd.call(this,type,fn,options);};window.removeEventListener=function(type,fn,options){active.get(type)?.delete(fn);return originalRemove.call(this,type,fn,options);};const send=t=>ReactDOM.flushSync(()=>window.dispatchEvent(new Event(t)));const status=()=>document.querySelector('[role=status]')?.textContent;try{click('Show listener');if(!await until(()=>size('practice-alpha')===1))return false;send('practice-alpha');if(status()!=='Received: 1')return false;click('Switch channel');if(!await until(()=>size('practice-alpha')===0&&size('practice-beta')===1))return false;send('practice-alpha');if(status()!=='Received: 1')return false;send('practice-beta');if(status()!=='Received: 2')return false;click('Hide listener');if(!await until(()=>!document.querySelector('[role=status]')&&[...active.values()].every(s=>s.size===0)))return false;click('Show listener');if(!await until(()=>size('practice-beta')===1&&status()==='Received: 0'))return false;send('practice-alpha');if(status()!=='Received: 0')return false;send('practice-beta');if(status()!=='Received: 1')return false;click('Hide listener');return await until(()=>!document.querySelector('[role=status]')&&[...active.values()].every(s=>s.size===0));}finally{for(const [type,listeners]of active)for(const fn of listeners)originalRemove.call(window,type,fn);window.addEventListener=originalAdd;window.removeEventListener=originalRemove;}})()"
+      }
+    ]
+  },
+  {
+    "id": "react-10",
+    "field": "checks",
+    "before": [
+      {
+        "label": "Sibling controls and summary remain synchronized",
+        "expression": "(async () => { const buttons=[...document.querySelectorAll(\"button\")]; const read=buttons.find(b=>b.textContent === \"Read\"), draw=buttons.find(b=>b.textContent === \"Draw\"); if (!read || !draw) return false; const pause=()=>new Promise(r=>setTimeout(r,20)); draw.click(); await pause(); if (draw.getAttribute(\"aria-pressed\") !== \"true\" || read.getAttribute(\"aria-pressed\") !== \"false\" || document.querySelector(\"[role=status]\")?.textContent !== \"Selected: Draw\") return false; read.click(); await pause(); read.click(); await pause(); return read.getAttribute(\"aria-pressed\") === \"true\" && draw.getAttribute(\"aria-pressed\") === \"false\" && document.querySelector(\"[role=status]\")?.textContent === \"Selected: Read\"; })()"
+      }
+    ],
+    "after": [
+      {
+        "label": "Sibling controls and summary stay synchronized",
+        "expression": "(async()=>{const until=async test=>{const end=Date.now()+1500;while(!test()){if(Date.now()>end)return false;await new Promise(r=>setTimeout(r,10));}return true;};const click=text=>{const b=[...document.querySelectorAll('button')].find(b=>b.textContent===text||b.getAttribute('aria-label')===text);if(!b)throw new Error('Missing button: '+text);ReactDOM.flushSync(()=>b.click());};const type=(input,value)=>ReactDOM.flushSync(()=>{Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(input,value);input.dispatchEvent(new Event('input',{bubbles:true}));});const read=[...document.querySelectorAll('button')].find(b=>b.textContent==='Read'),draw=[...document.querySelectorAll('button')].find(b=>b.textContent==='Draw');if(!read||!draw)return false;click('Draw');if(draw.getAttribute('aria-pressed')!=='true'||read.getAttribute('aria-pressed')!=='false'||document.querySelector('[role=status]')?.textContent!=='Selected: Draw')return false;click('Read');click('Read');return read.getAttribute('aria-pressed')==='true'&&draw.getAttribute('aria-pressed')==='false'&&document.querySelector('[role=status]')?.textContent==='Selected: Read';})()"
+      }
+    ]
+  },
+  {
+    "id": "react-11",
+    "field": "checks",
+    "before": [
+      {
+        "label": "Nearest provider and default behave correctly",
+        "expression": "(async () => { const read=id=>document.querySelector('[data-badge=\"'+id+'\"]')?.textContent; if(read(\"main\")!==\"mint\"||read(\"nested\")!==\"gold\"||read(\"outside\")!==\"plain\")return false; document.querySelector(\"button\").click();await new Promise(r=>setTimeout(r,20));return read(\"main\")===\"night\"&&read(\"nested\")===\"gold\"&&read(\"outside\")===\"plain\"; })()"
+      }
+    ],
+    "after": [
+      {
+        "label": "Nearest provider and default follow the intended scope",
+        "expression": "(async()=>{const until=async test=>{const end=Date.now()+1500;while(!test()){if(Date.now()>end)return false;await new Promise(r=>setTimeout(r,10));}return true;};const click=text=>{const b=[...document.querySelectorAll('button')].find(b=>b.textContent===text||b.getAttribute('aria-label')===text);if(!b)throw new Error('Missing button: '+text);ReactDOM.flushSync(()=>b.click());};const type=(input,value)=>ReactDOM.flushSync(()=>{Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(input,value);input.dispatchEvent(new Event('input',{bubbles:true}));});const read=id=>document.querySelector('[data-badge=\"'+id+'\"]')?.textContent;if(read('main')!=='mint'||read('nested')!=='gold'||read('outside')!=='plain')return false;click('Change theme');return read('main')==='night'&&read('nested')==='gold'&&read('outside')==='plain';})()"
+      }
+    ]
+  },
+  {
+    "id": "react-12",
+    "field": "checks",
+    "before": [
+      {
+        "label": "Hook calls retain independent state",
+        "expression": "(async()=>{const click=text=>[...document.querySelectorAll(\"button\")].find(b=>b.textContent===text)?.click();const read=name=>document.querySelector('[data-counter=\"'+name+'\"] p')?.textContent;click(\"Add A\");await new Promise(r=>setTimeout(r,20));click(\"Add A\");await new Promise(r=>setTimeout(r,20));if(read(\"A\")!==\"A: 4\"||read(\"B\")!==\"B: 2\")return false;click(\"Add B\");await new Promise(r=>setTimeout(r,20));click(\"Reset A\");await new Promise(r=>setTimeout(r,20));return read(\"A\")===\"A: 2\"&&read(\"B\")===\"B: 3\";})()"
+      }
+    ],
+    "after": [
+      {
+        "label": "Independent hook instances increment and reset separately",
+        "expression": "(async()=>{const until=async test=>{const end=Date.now()+1500;while(!test()){if(Date.now()>end)return false;await new Promise(r=>setTimeout(r,10));}return true;};const click=text=>{const b=[...document.querySelectorAll('button')].find(b=>b.textContent===text||b.getAttribute('aria-label')===text);if(!b)throw new Error('Missing button: '+text);ReactDOM.flushSync(()=>b.click());};const type=(input,value)=>ReactDOM.flushSync(()=>{Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(input,value);input.dispatchEvent(new Event('input',{bubbles:true}));});const read=name=>document.querySelector('[data-counter=\"'+name+'\"] p')?.textContent;click('Add A');click('Add A');if(read('A')!=='A: 4'||read('B')!=='B: 2')return false;click('Add B');click('Reset A');return read('A')==='A: 2'&&read('B')==='B: 3';})()"
+      }
+    ]
+  },
+  {
+    "id": "react-13",
+    "field": "checks",
+    "before": [
+      {
+        "label": "Failure fallback and explicit reset work",
+        "expression": "(async()=>{const click=t=>[...document.querySelectorAll(\"button\")].find(b=>b.textContent===t)?.click();click(\"Break panel\");await new Promise(r=>setTimeout(r,40));if(document.querySelector('[role=\"alert\"]')?.textContent!==\"Panel unavailable\"||document.querySelector(\"h1\")?.textContent!==\"Dashboard\")return false;click(\"Reset panel\");await new Promise(r=>setTimeout(r,40));return !document.querySelector('[role=\"alert\"]')&&document.body.textContent.includes(\"Panel ready\");})()"
+      }
+    ],
+    "after": [
+      {
+        "label": "Fallback leaves reset interactive and permits another failure/recovery",
+        "expression": "(async()=>{const until=async test=>{const end=Date.now()+1500;while(!test()){if(Date.now()>end)return false;await new Promise(r=>setTimeout(r,10));}return true;};const click=text=>{const b=[...document.querySelectorAll('button')].find(b=>b.textContent===text||b.getAttribute('aria-label')===text);if(!b)throw new Error('Missing button: '+text);ReactDOM.flushSync(()=>b.click());};const type=(input,value)=>ReactDOM.flushSync(()=>{Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(input,value);input.dispatchEvent(new Event('input',{bubbles:true}));});for(let i=0;i<2;i++){click('Break panel');if(document.querySelector('[role=alert]')?.textContent!=='Panel unavailable'||document.querySelector('h1')?.textContent!=='Dashboard')return false;click('Reset panel');if(document.querySelector('[role=alert]')||!document.body.textContent.includes('Panel ready'))return false;}return true;})()"
+      }
+    ]
+  },
+  {
+    "id": "react-14",
+    "field": "checks",
+    "before": [
+      {
+        "label": "Results settle to the latest selection",
+        "expression": "(async()=>{const click=t=>[...document.querySelectorAll(\"button\")].find(b=>b.textContent===t)?.click();const wait=()=>new Promise(r=>setTimeout(r,30));click(\"Show a\");await wait();if([...document.querySelectorAll(\"li\")].map(x=>x.textContent).join(\",\")!==\"apple,apricot\")return false;click(\"Show b\");click(\"Show all\");await wait();return document.querySelector(\"[data-selected]\")?.dataset.selected===\"all\"&&[...document.querySelectorAll(\"li\")].map(x=>x.textContent).join(\",\")===\"apple,apricot,berry\"&&document.querySelector('[role=\"status\"]')?.textContent===\"Ready\";})()"
+      }
+    ],
+    "after": [
+      {
+        "label": "Results settle to the latest selection",
+        "expression": "(async()=>{const until=async test=>{const end=Date.now()+1500;while(!test()){if(Date.now()>end)return false;await new Promise(r=>setTimeout(r,10));}return true;};const click=text=>{const b=[...document.querySelectorAll('button')].find(b=>b.textContent===text||b.getAttribute('aria-label')===text);if(!b)throw new Error('Missing button: '+text);ReactDOM.flushSync(()=>b.click());};const type=(input,value)=>ReactDOM.flushSync(()=>{Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(input,value);input.dispatchEvent(new Event('input',{bubbles:true}));});const results=()=>[...document.querySelectorAll('li')].map(e=>e.textContent).join(',');click('Show a');if(!await until(()=>results()==='apple,apricot'&&document.querySelector('[role=status]')?.textContent==='Ready'))return false;click('Show b');click('Show all');return await until(()=>document.querySelector('[data-selected]')?.dataset.selected==='all'&&results()==='apple,apricot,berry'&&document.querySelector('[role=status]')?.textContent==='Ready');})()"
+      }
+    ]
+  },
+  {
+    "id": "react-15",
+    "field": "checks",
+    "before": [
+      {
+        "label": "The pending report shows its fallback before completion",
+        "expression": "(async()=>{const wait=()=>new Promise(r=>setTimeout(r,40));if(loaderCalls!==0)return false;[...document.querySelectorAll(\"button\")].find(b=>b.textContent===\"Toggle report\").click();await wait();return loaderCalls===1&&document.querySelector(\"[role=status]\")?.textContent===\"Loading report\"&&!document.querySelector(\"[data-report]\");})()"
+      },
+      {
+        "label": "Resolving reveals the report and re-showing reuses the loader",
+        "expression": "(async()=>{const wait=()=>new Promise(r=>setTimeout(r,40));const click=t=>[...document.querySelectorAll(\"button\")].find(b=>b.textContent===t).click();click(\"Finish simulated load\");await wait();if(document.querySelector(\"[data-report]\")?.textContent!==\"Report ready\"||document.querySelector(\"[role=status]\"))return false;click(\"Toggle report\");await wait();if(document.querySelector(\"[data-report]\"))return false;click(\"Toggle report\");await wait();return loaderCalls===1&&document.querySelector(\"[data-report]\")?.textContent===\"Report ready\"&&!document.querySelector(\"[role=status]\");})()"
+      }
+    ],
+    "after": [
+      {
+        "label": "Pending controlled load displays fallback before resolution",
+        "expression": "(async()=>{const until=async test=>{const end=Date.now()+1500;while(!test()){if(Date.now()>end)return false;await new Promise(r=>setTimeout(r,10));}return true;};const click=text=>{const b=[...document.querySelectorAll('button')].find(b=>b.textContent===text||b.getAttribute('aria-label')===text);if(!b)throw new Error('Missing button: '+text);ReactDOM.flushSync(()=>b.click());};const type=(input,value)=>ReactDOM.flushSync(()=>{Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(input,value);input.dispatchEvent(new Event('input',{bubbles:true}));});if(loaderCalls!==0)return false;click('Toggle report');return await until(()=>loaderCalls===1&&document.querySelector('[role=status]')?.textContent==='Loading report'&&!document.querySelector('[data-report]'));})()"
+      },
+      {
+        "label": "Resolution reveals the report and a remount reuses the loader",
+        "expression": "(async()=>{const until=async test=>{const end=Date.now()+1500;while(!test()){if(Date.now()>end)return false;await new Promise(r=>setTimeout(r,10));}return true;};const click=text=>{const b=[...document.querySelectorAll('button')].find(b=>b.textContent===text||b.getAttribute('aria-label')===text);if(!b)throw new Error('Missing button: '+text);ReactDOM.flushSync(()=>b.click());};const type=(input,value)=>ReactDOM.flushSync(()=>{Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(input,value);input.dispatchEvent(new Event('input',{bubbles:true}));});click('Finish simulated load');if(!await until(()=>document.querySelector('[data-report]')?.textContent==='Report ready'&&!document.querySelector('[role=status]')))return false;click('Toggle report');if(document.querySelector('[data-report]'))return false;click('Toggle report');return await until(()=>loaderCalls===1&&document.querySelector('[data-report]')?.textContent==='Report ready'&&!document.querySelector('[role=status]'));})()"
+      }
+    ]
+  }
+]

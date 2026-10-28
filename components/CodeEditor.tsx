@@ -22,7 +22,6 @@ import {
 } from "@codemirror/language";
 import { tags } from "@lezer/highlight";
 import { codeLanguage } from "../lib/code-language";
-import type { Runtime } from "../lib/types";
 const charcoalHighlight = HighlightStyle.define([
   { tag: [tags.keyword, tags.bool, tags.operator], color: "#c6a1ff" },
   { tag: [tags.string, tags.regexp], color: "#9ed8ae" },
@@ -41,7 +40,7 @@ export default function CodeEditor({
 }: {
   code: string;
   onChange: (s: string) => void;
-  runtime: Runtime;
+  runtime: string;
   unitId: string;
 }) {
   const mount = useRef<HTMLDivElement>(null);

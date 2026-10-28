@@ -1,0 +1,344 @@
+[
+  {
+    "id": "ruby-27",
+    "quizTarget": "Replace second = Counter.new(8) with second = first. What prints?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "class defines a class; Counter.new(2) allocates an instance and calls its initialize method with 2. initialize sets up that instance rather than returning the new object itself."
+      },
+      {
+        "paragraph": 1,
+        "fact": "@value is an instance variable belonging to the current receiver. value += 1 means add one and store the result; here @value += 1 updates that receiver. A method returns its last expression, so advance returns the updated number."
+      }
+    ],
+    "reasoning": "Both names now refer to one Counter. The first call stores 3, and the second continues from that same state to 4.",
+    "source": "https://docs.ruby-lang.org/en/4.0/syntax/modules_and_classes_rdoc.html",
+    "prerequisites": [
+      "ruby-26"
+    ]
+  },
+  {
+    "id": "ruby-28",
+    "quizTarget": "Replace goal.add_step with goal.steps = 9. What happens?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "attr_reader :steps creates a public steps method that reads @steps. It does not create a steps= writer. attr_accessor would create both methods."
+      },
+      {
+        "paragraph": 1,
+        "fact": "Keep mutation behind a method such as add_step when callers should perform an operation instead of assigning arbitrary state. A reader returning a mutable object would still expose that object; it is not a deep read-only guarantee."
+      }
+    ],
+    "reasoning": "Only the reader was generated. Assignment syntax calls steps=, which this class does not provide.",
+    "source": "https://docs.ruby-lang.org/en/4.0/Module.html",
+    "prerequisites": [
+      "ruby-27"
+    ]
+  },
+  {
+    "id": "ruby-29",
+    "quizTarget": "Replace puts badge.label with puts badge.decorate. What happens?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "Methods are normally public. private changes the default visibility of subsequent instance method definitions. decorate is an internal helper; label can call it without an explicit receiver."
+      },
+      {
+        "paragraph": 1,
+        "fact": "An outside caller cannot use badge.decorate as a public method call. Visibility organizes an API, not a security sandbox: reflective operations can bypass some visibility restrictions. Ruby also has protected methods for restricted receiver calls within the class family; they are not public either."
+      }
+    ],
+    "reasoning": "The outside explicit receiver call crosses the public boundary; decorate was declared private.",
+    "source": "https://docs.ruby-lang.org/en/4.0/syntax/modules_and_classes_rdoc.html",
+    "prerequisites": [
+      "ruby-28"
+    ]
+  },
+  {
+    "id": "ruby-30",
+    "quizTarget": "Replace first.note in the last line with second.note. What happens after study?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "def first.note defines a singleton method on first, not an instance method for every Guide. Other Guide objects do not acquire it."
+      },
+      {
+        "paragraph": 1,
+        "fact": "Inside class Guide, self is the class object. def self.kind defines a method called as Guide.kind, often called a class method. It is not called on Guide.new."
+      }
+    ],
+    "reasoning": "The singleton method belongs to first alone, so second has no note method.",
+    "source": "https://docs.ruby-lang.org/en/4.0/syntax/modules_and_classes_rdoc.html",
+    "prerequisites": [
+      "ruby-29"
+    ]
+  },
+  {
+    "id": "ruby-31",
+    "quizTarget": "Change super(name) to super(). What happens?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "class Detail < Base establishes inheritance. Detail defines its own label method, so that implementation is selected for a Detail receiver."
+      },
+      {
+        "paragraph": 1,
+        "fact": "super(name) calls the next implementation with that argument. Bare super forwards the current arguments; super() forwards none. This distinction matters when the parent requires an argument."
+      }
+    ],
+    "reasoning": "super() deliberately supplies zero arguments, but Base#label requires name.",
+    "source": "https://docs.ruby-lang.org/en/4.0/syntax/modules_and_classes_rdoc.html",
+    "prerequisites": [
+      "ruby-30"
+    ]
+  },
+  {
+    "id": "ruby-32",
+    "quizTarget": "Replace include Named with extend Named but leave page.label unchanged. What happens?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "A module groups reusable methods without itself being instantiated like a class. include Named makes Named instance methods available to Page instances."
+      },
+      {
+        "paragraph": 1,
+        "fact": "extend Named adds the module methods to the receiver as singleton methods. Writing extend Named inside the Page class body affects the Page class object, not Page.new. Neither operation copies method source into each instance."
+      }
+    ],
+    "reasoning": "extend in the class body supplies Page.label, whereas the unchanged call targets an instance.",
+    "source": "https://docs.ruby-lang.org/en/4.0/syntax/modules_and_classes_rdoc.html",
+    "prerequisites": [
+      "ruby-31"
+    ]
+  },
+  {
+    "id": "ruby-33",
+    "quizTarget": "Replace prepend Frame with include Frame. What prints?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "prepend Frame places the module before Page in method lookup. Frame#label is found first, and super continues to Page#label."
+      },
+      {
+        "paragraph": 1,
+        "fact": "include places the module after the class in lookup. If the class itself defines the same method, that method wins unless it explicitly continues with super. Lookup order is about receivers and ancestors, not textual execution of every matching method."
+      }
+    ],
+    "reasoning": "Page#label is found before the included module and never calls super, so the wrapper is not entered.",
+    "source": "https://docs.ruby-lang.org/en/4.0/syntax/modules_and_classes_rdoc.html",
+    "prerequisites": [
+      "ruby-32"
+    ]
+  },
+  {
+    "id": "ruby-34",
+    "quizTarget": "Move Notes to a separate module Atlas::Notes body, leaving TITLE unqualified inside title. What happens?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "Atlas::Notes means the Notes constant inside Atlas. Constants begin with uppercase letters. A constant can refer to a mutable object; the name alone does not freeze that object."
+      },
+      {
+        "paragraph": 1,
+        "fact": "A nested module Notes body inside module Atlas has Atlas in its lexical nesting, so unqualified TITLE can resolve there. Opening module Atlas::Notes directly does not create the same lexical nesting. Use Atlas::TITLE explicitly when that is the intended dependency."
+      }
+    ],
+    "reasoning": "The qualified module declaration names the same namespace but does not put Atlas into the body\u2019s lexical nesting.",
+    "source": "https://docs.ruby-lang.org/en/4.0/syntax/modules_and_classes_rdoc.html",
+    "prerequisites": [
+      "ruby-33"
+    ]
+  },
+  {
+    "id": "ruby-35",
+    "quizTarget": "Replace show(Bookmark.new) with show(Object.new). What happens after card?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "show asks its argument for label. The two classes need no shared custom parent or declared interface for this call to work: this is duck typing."
+      },
+      {
+        "paragraph": 1,
+        "fact": "Having a method name is not enough to guarantee its argument rules, return meaning or side effects. The caller and implementations still need a clear behavior contract and tests. Missing methods are reported when the call executes."
+      }
+    ],
+    "reasoning": "A plain Object does not implement the label operation that show requires.",
+    "source": "https://docs.ruby-lang.org/en/4.0/syntax/modules_and_classes_rdoc.html",
+    "prerequisites": [
+      "ruby-34"
+    ]
+  },
+  {
+    "id": "ruby-36",
+    "quizTarget": "Change lookup.fetch(1.0, \"missing\") to lookup.fetch(1, \"missing\"). What changes?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "== asks the class\u2019s value-comparison rule; Array compares elements. equal? tests whether two references identify the very same object. Separate arrays can be value-equal without being identical."
+      },
+      {
+        "paragraph": 1,
+        "fact": "Hash uses hash and eql? together to identify keys. Integer 1 and Float 1.0 compare equal with == but not with eql?, so they are distinct hash keys. A custom key type that overrides eql? must provide a consistent hash result for equal keys; do not mutate key identity fields while stored."
+      }
+    ],
+    "reasoning": "The Integer query now matches the stored Integer key under hash/eql?, without changing the earlier comparisons.",
+    "source": "https://docs.ruby-lang.org/en/4.0/Hash.html",
+    "prerequisites": [
+      "ruby-35"
+    ]
+  },
+  {
+    "id": "ruby-37",
+    "quizTarget": "Replace copy[0] << 2 with copy << [2]. What happens?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "dup creates a new outer object here, but the nested array is still shared. inspect produces a readable representation, so the printed nested values reveal that sharing."
+      },
+      {
+        "paragraph": 1,
+        "fact": "freeze prevents mutation of the receiver itself; it does not recursively freeze referenced objects. frozen? reports that receiver\u2019s status. clone normally preserves frozen status and singleton methods, unlike dup; neither promises a deep copy."
+      }
+    ],
+    "reasoning": "The original operation changes the unfrozen nested array. The replacement tries to append to the frozen outer copy.",
+    "source": "https://docs.ruby-lang.org/en/4.0/Object.html",
+    "prerequisites": [
+      "ruby-36"
+    ]
+  },
+  {
+    "id": "ruby-38",
+    "quizTarget": "Replace draft.title = \"atlas\" with published.title = \"atlas\". What happens?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "Struct.new(:title) creates a class with a title reader and writer. Data.define(:title) creates a value-like class with a reader but no member writer. Assigning these classes to constants gives them useful names."
+      },
+      {
+        "paragraph": 1,
+        "fact": "Data instances are immutable containers, but mutable members are not automatically frozen. A Data member holding an array can still expose changes to that array. Choose immutable members or explicit copying/freezing when the whole value must stay stable."
+      }
+    ],
+    "reasoning": "Data provides title but not title=. The ordinary Struct writer and Data reader are deliberately different APIs.",
+    "source": "https://docs.ruby-lang.org/en/4.0/Data.html",
+    "prerequisites": [
+      "ruby-37"
+    ]
+  },
+  {
+    "id": "ruby-39",
+    "quizTarget": "Change count: 2 to count: 0. What prints?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "case/in patterns inspect structure. This hash pattern requires kind: :note and an Integer count. Integer => n both checks that value and binds it to n. Extra hash keys are allowed by this pattern."
+      },
+      {
+        "paragraph": 1,
+        "fact": "The if n > 0 guard is checked after the pattern matches. A false guard means this branch is not selected; the explicit else handles unmatched cases. This is different from treating every non-nil count as acceptable."
+      }
+    ],
+    "reasoning": "Zero still matches Integer, but the positive-count guard fails and control reaches else.",
+    "source": "https://docs.ruby-lang.org/en/4.0/syntax/pattern_matching_rdoc.html",
+    "prerequisites": [
+      "ruby-38"
+    ]
+  },
+  {
+    "id": "ruby-40",
+    "quizTarget": "Replace the array with [10, 40]. What prints?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "Multiple assignment distributes array elements across names. With first, *middle, last, the outer names take the ends and the starred name gathers the remaining elements into an array."
+      },
+      {
+        "paragraph": 1,
+        "fact": "If no elements remain for the starred name it gets an empty array. Unfilled ordinary positions receive nil. A name such as _ignored signals an unused value by convention; unlike an exact shape pattern, this assignment does not reject a shorter array."
+      }
+    ],
+    "reasoning": "The two end positions consume both values, leaving an empty array for middle.",
+    "source": "https://docs.ruby-lang.org/en/4.0/syntax/assignment_rdoc.html",
+    "prerequisites": [
+      "ruby-39"
+    ]
+  },
+  {
+    "id": "ruby-41",
+    "quizTarget": "Remove the second require_relative line. What output changes?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "require_relative resolves a path relative to the file containing the call, not the process working directory. It loads a feature once and does not re-execute it for the repeated same feature request. This is code execution, so never derive the path directly from untrusted input."
+      },
+      {
+        "paragraph": 1,
+        "fact": "Save this as helper.rb beside main.rb:\n```ruby\nputs \"loaded\"\nmodule StudyHelper\n  def self.label\n    \"ready\"\n  end\nend\n```\nThe main example requires it twice. load, in contrast, executes a file again on each call; it also has different path-handling rules, so it is not a drop-in caching switch."
+      }
+    ],
+    "reasoning": "The repeated require_relative already skipped the loaded feature; removing that skipped request does not change execution.",
+    "source": "https://docs.ruby-lang.org/en/4.0/Kernel.html",
+    "prerequisites": [
+      "ruby-40"
+    ]
+  },
+  {
+    "id": "ruby-42",
+    "quizTarget": "Replace public_send(:title) with public_send(:secret). What follows true?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "respond_to?(:title) checks whether an object advertises that operation, normally excluding private methods. It is not proof of correct arguments, results, safety or authorization."
+      },
+      {
+        "paragraph": 1,
+        "fact": "public_send invokes only a public method; send can bypass visibility, so it is not interchangeable. When a method name comes from outside the program, validate it against a fixed allowlist as well: even public methods may be inappropriate for the requested action. Here the symbol is a fixed trusted literal."
+      }
+    ],
+    "reasoning": "public_send respects the private visibility of secret rather than treating every symbol as callable.",
+    "source": "https://docs.ruby-lang.org/en/4.0/Object.html",
+    "prerequisites": [
+      "ruby-41"
+    ]
+  },
+  {
+    "id": "ruby-43",
+    "quizTarget": "Replace define_method(:scale) do |value| with def scale(value), leaving its body and end in place. What happens?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "define_method(:scale) installs an instance method using the supplied block. Its parameter value becomes the method argument, and the block can capture surrounding local bindings such as factor."
+      },
+      {
+        "paragraph": 1,
+        "fact": "A normal def body does not capture the surrounding local variables in this way. define_method is useful for a small explicit family of behaviors; it does not require eval or executing strings from users. Repeated definitions of the same method name replace earlier definitions rather than creating argument-count overloads."
+      }
+    ],
+    "reasoning": "An ordinary def body does not capture the surrounding class-body local factor. The name is unresolved when scale executes.",
+    "source": "https://docs.ruby-lang.org/en/4.0/Module.html",
+    "prerequisites": [
+      "ruby-42"
+    ]
+  },
+  {
+    "id": "ruby-44",
+    "quizTarget": "Move using Highlight above def earlier, leaving the rest unchanged. What prints?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "refine Label defines a scoped variation of Label methods inside a module. using Highlight activates it for subsequent code in the current lexical scope; here that scope is the remainder of this source file. using cannot be called inside a method body."
+      },
+      {
+        "paragraph": 1,
+        "fact": "A method defined before activation does not inherit the caller\u2019s refinements just because it is called afterward. earlier was defined without Highlight active. Refinements avoid a global class rewrite, but their lexical lookup must still be understood when code crosses files or method definitions."
+      }
+    ],
+    "reasoning": "Both the direct call and the earlier method body are now defined in the activated lexical scope. Calling time alone was not the rule.",
+    "source": "https://docs.ruby-lang.org/en/4.0/syntax/refinements_rdoc.html",
+    "prerequisites": [
+      "ruby-43"
+    ]
+  }
+]

@@ -14,6 +14,7 @@ const views = new Set([
   "progress",
   "settings",
   "tools",
+  "terminology",
 ]);
 const steps = new Set(["learn", "practice", "build", "done"]);
 export function normalizeRoute(
@@ -27,10 +28,11 @@ export function normalizeRoute(
     ? input.activeId!
     : fallbackId;
   const lesson = lessons.find((l) => l.id === activeId);
+  const projectRoute = (!input.view || input.view === "quest") && (input.phase === "build" || input.phase === "math");
   return {
-    view: views.has(input.view ?? "") ? input.view! : "quest",
+    view: projectRoute ? "studio" : views.has(input.view ?? "") ? input.view! : "quest",
     studioMode: input.studioMode === "practice" ? "practice" : "course",
-    phase: input.phase === "math" ? "build" : steps.has(input.phase ?? "") ? input.phase! : "learn",
+    phase: input.view === "studio" && input.studioMode !== "practice" ? "build" : input.phase === "math" ? "build" : steps.has(input.phase ?? "") ? input.phase! : "learn",
     activeId,
     ...(activeId === "python-01" &&
     ["program", "values", "strings", "names", "assignment", "output"].includes(

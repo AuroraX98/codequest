@@ -31,21 +31,6 @@ export default function LessonContents({
           <span className="lab-eyebrow">
             Idea {index + 1} of {headings.length}
           </span>
-          <details className="reader-index" key={lessonId + ":" + index}>
-            <summary>All ideas</summary>
-            <nav aria-label="Choose a lesson idea">
-              {headings.map((heading, i) => (
-                <button
-                  type="button"
-                  key={i}
-                  aria-current={index === i ? "step" : undefined}
-                  onClick={() => onSelect(i)}
-                >
-                  {i + 1}. {heading}
-                </button>
-              ))}
-            </nav>
-          </details>
         </div>
         <h3 id={`${id}-current`}>{headings[index]}</h3>
         <div

@@ -1,0 +1,3382 @@
+{
+  "scope": "Each case uses a separate Node process, fresh JS realm/SQL.js module/VFS; actual bundled SQLite3.49.1, not browser UI",
+  "sourceHashes": {
+    "lessons.json": "ab40e991e6c4e506d363c852d61312bd0baa74376a5953c055a772eb2d6b3371",
+    "execution-cases.json": "4c133f45d85922b0923b1bba00cd04190667f7827b1030cbef4ecc5334d94964"
+  },
+  "jobs": [
+    {
+      "id": "sql-25-solution",
+      "lessonId": "sql-25",
+      "kind": "solution",
+      "code": "CREATE VIEW labels AS SELECT id,owner || ': ' || (quantity + 1) AS label FROM parcels;SELECT * FROM labels ORDER BY id;",
+      "setup": "CREATE TABLE parcels(id INTEGER PRIMARY KEY,owner TEXT,quantity INTEGER);INSERT INTO parcels VALUES(1,'Rin''s kit',2),(2,'Sol',4);",
+      "checks": [
+        {
+          "label": "Both calculated labels remain",
+          "expression": "SELECT count(*)=2 AND sum((id=1 AND label='Rin''s kit: 3') OR (id=2 AND label='Sol: 5'))=2 FROM labels"
+        },
+        {
+          "label": "Source quantities are unchanged",
+          "expression": "SELECT count(*)=2 AND sum(quantity)=6 FROM parcels"
+        },
+        {
+          "label": "Exact source values preserved",
+          "expression": "SELECT count(*)=2 AND sum((id=1 AND owner='Rin''s kit' AND quantity=2)OR(id=2 AND owner='Sol' AND quantity=4))=2 FROM parcels"
+        }
+      ],
+      "outcome": "success",
+      "expectedPass": true
+    },
+    {
+      "id": "sql-25-starter",
+      "lessonId": "sql-25",
+      "kind": "starter",
+      "code": "CREATE VIEW labels AS SELECT id,owner AS label FROM parcels;",
+      "setup": "CREATE TABLE parcels(id INTEGER PRIMARY KEY,owner TEXT,quantity INTEGER);INSERT INTO parcels VALUES(1,'Rin''s kit',2),(2,'Sol',4);",
+      "checks": [
+        {
+          "label": "Both calculated labels remain",
+          "expression": "SELECT count(*)=2 AND sum((id=1 AND label='Rin''s kit: 3') OR (id=2 AND label='Sol: 5'))=2 FROM labels"
+        },
+        {
+          "label": "Source quantities are unchanged",
+          "expression": "SELECT count(*)=2 AND sum(quantity)=6 FROM parcels"
+        },
+        {
+          "label": "Exact source values preserved",
+          "expression": "SELECT count(*)=2 AND sum((id=1 AND owner='Rin''s kit' AND quantity=2)OR(id=2 AND owner='Sol' AND quantity=4))=2 FROM parcels"
+        }
+      ],
+      "outcome": "success",
+      "expectedPass": false
+    },
+    {
+      "id": "sql-26-solution",
+      "lessonId": "sql-26",
+      "kind": "solution",
+      "code": "CREATE VIEW unfinished AS SELECT id FROM jobs WHERE state <> 'done' OR state IS NULL;SELECT * FROM unfinished ORDER BY id;",
+      "setup": "CREATE TABLE jobs(id INTEGER PRIMARY KEY,state TEXT);INSERT INTO jobs VALUES(1,'done'),(2,'waiting'),(3,NULL);",
+      "checks": [
+        {
+          "label": "Both unfinished IDs",
+          "expression": "SELECT count(*)=2 AND sum(id IN(2,3))=2 FROM unfinished"
+        },
+        {
+          "label": "Source missing value remains",
+          "expression": "SELECT count(*)=3 AND sum(state IS NULL)=1 FROM jobs"
+        },
+        {
+          "label": "Exact source values preserved",
+          "expression": "SELECT count(*)=3 AND sum((id=1 AND state='done')OR(id=2 AND state='waiting')OR(id=3 AND state IS NULL))=3 FROM jobs"
+        }
+      ],
+      "outcome": "success",
+      "expectedPass": true
+    },
+    {
+      "id": "sql-26-starter",
+      "lessonId": "sql-26",
+      "kind": "starter",
+      "code": "CREATE VIEW unfinished AS SELECT id FROM jobs WHERE state <> 'done';",
+      "setup": "CREATE TABLE jobs(id INTEGER PRIMARY KEY,state TEXT);INSERT INTO jobs VALUES(1,'done'),(2,'waiting'),(3,NULL);",
+      "checks": [
+        {
+          "label": "Both unfinished IDs",
+          "expression": "SELECT count(*)=2 AND sum(id IN(2,3))=2 FROM unfinished"
+        },
+        {
+          "label": "Source missing value remains",
+          "expression": "SELECT count(*)=3 AND sum(state IS NULL)=1 FROM jobs"
+        },
+        {
+          "label": "Exact source values preserved",
+          "expression": "SELECT count(*)=3 AND sum((id=1 AND state='done')OR(id=2 AND state='waiting')OR(id=3 AND state IS NULL))=3 FROM jobs"
+        }
+      ],
+      "outcome": "success",
+      "expectedPass": false
+    },
+    {
+      "id": "sql-27-solution",
+      "lessonId": "sql-27",
+      "kind": "solution",
+      "code": "CREATE VIEW selected AS SELECT id FROM entries WHERE score BETWEEN 4 AND 8;SELECT * FROM selected ORDER BY id;",
+      "setup": "CREATE TABLE entries(id INTEGER PRIMARY KEY,score INTEGER);INSERT INTO entries VALUES(1,3),(2,4),(3,8),(4,9);",
+      "checks": [
+        {
+          "label": "Both boundaries included",
+          "expression": "SELECT count(*)=2 AND sum(id IN(2,3))=2 FROM selected"
+        },
+        {
+          "label": "Sources preserved",
+          "expression": "SELECT count(*)=4 AND sum(score)=24 FROM entries"
+        },
+        {
+          "label": "Exact source values preserved",
+          "expression": "SELECT count(*)=4 AND sum((id=1 AND score=3)OR(id=2 AND score=4)OR(id=3 AND score=8)OR(id=4 AND score=9))=4 FROM entries"
+        }
+      ],
+      "outcome": "success",
+      "expectedPass": true
+    },
+    {
+      "id": "sql-27-starter",
+      "lessonId": "sql-27",
+      "kind": "starter",
+      "code": "CREATE VIEW selected AS SELECT id FROM entries WHERE score>4 AND score<8;",
+      "setup": "CREATE TABLE entries(id INTEGER PRIMARY KEY,score INTEGER);INSERT INTO entries VALUES(1,3),(2,4),(3,8),(4,9);",
+      "checks": [
+        {
+          "label": "Both boundaries included",
+          "expression": "SELECT count(*)=2 AND sum(id IN(2,3))=2 FROM selected"
+        },
+        {
+          "label": "Sources preserved",
+          "expression": "SELECT count(*)=4 AND sum(score)=24 FROM entries"
+        },
+        {
+          "label": "Exact source values preserved",
+          "expression": "SELECT count(*)=4 AND sum((id=1 AND score=3)OR(id=2 AND score=4)OR(id=3 AND score=8)OR(id=4 AND score=9))=4 FROM entries"
+        }
+      ],
+      "outcome": "success",
+      "expectedPass": false
+    },
+    {
+      "id": "sql-28-solution",
+      "lessonId": "sql-28",
+      "kind": "solution",
+      "code": "CREATE VIEW chosen AS SELECT id FROM tags WHERE colour IN('green','violet');SELECT * FROM chosen ORDER BY id;",
+      "setup": "CREATE TABLE tags(id INTEGER PRIMARY KEY,colour TEXT);INSERT INTO tags VALUES(1,'green'),(2,'orange'),(3,'violet'),(4,'green');",
+      "checks": [
+        {
+          "label": "Exactly three source identities",
+          "expression": "SELECT count(*)=3 AND sum(id IN(1,3,4))=3 FROM chosen"
+        },
+        {
+          "label": "All tags unchanged",
+          "expression": "SELECT count(*)=4 AND sum(colour='green')=2 FROM tags"
+        },
+        {
+          "label": "Exact source values preserved",
+          "expression": "SELECT count(*)=4 AND sum((id IN(1,4) AND colour='green')OR(id=2 AND colour='orange')OR(id=3 AND colour='violet'))=4 FROM tags"
+        }
+      ],
+      "outcome": "success",
+      "expectedPass": true
+    },
+    {
+      "id": "sql-28-starter",
+      "lessonId": "sql-28",
+      "kind": "starter",
+      "code": "CREATE VIEW chosen AS SELECT id FROM tags WHERE colour='green';",
+      "setup": "CREATE TABLE tags(id INTEGER PRIMARY KEY,colour TEXT);INSERT INTO tags VALUES(1,'green'),(2,'orange'),(3,'violet'),(4,'green');",
+      "checks": [
+        {
+          "label": "Exactly three source identities",
+          "expression": "SELECT count(*)=3 AND sum(id IN(1,3,4))=3 FROM chosen"
+        },
+        {
+          "label": "All tags unchanged",
+          "expression": "SELECT count(*)=4 AND sum(colour='green')=2 FROM tags"
+        },
+        {
+          "label": "Exact source values preserved",
+          "expression": "SELECT count(*)=4 AND sum((id IN(1,4) AND colour='green')OR(id=2 AND colour='orange')OR(id=3 AND colour='violet'))=4 FROM tags"
+        }
+      ],
+      "outcome": "success",
+      "expectedPass": false
+    },
+    {
+      "id": "sql-29-solution",
+      "lessonId": "sql-29",
+      "kind": "solution",
+      "code": "CREATE VIEW matches AS SELECT id FROM labels WHERE label LIKE 'box!_%' ESCAPE '!';SELECT * FROM matches ORDER BY id;",
+      "setup": "CREATE TABLE labels(id INTEGER PRIMARY KEY,label TEXT);INSERT INTO labels VALUES(1,'box_a'),(2,'boxXa'),(3,'box_'),(4,'crate');",
+      "checks": [
+        {
+          "label": "Literal underscore and empty tail",
+          "expression": "SELECT count(*)=2 AND sum(id IN(1,3))=2 FROM matches"
+        },
+        {
+          "label": "Source labels preserved",
+          "expression": "SELECT count(*)=4 FROM labels"
+        },
+        {
+          "label": "Exact source values preserved",
+          "expression": "SELECT count(*)=4 AND sum((id=1 AND label='box_a')OR(id=2 AND label='boxXa')OR(id=3 AND label='box_')OR(id=4 AND label='crate'))=4 FROM labels"
+        }
+      ],
+      "outcome": "success",
+      "expectedPass": true
+    },
+    {
+      "id": "sql-29-starter",
+      "lessonId": "sql-29",
+      "kind": "starter",
+      "code": "CREATE VIEW matches AS SELECT id FROM labels WHERE label LIKE 'box_%';",
+      "setup": "CREATE TABLE labels(id INTEGER PRIMARY KEY,label TEXT);INSERT INTO labels VALUES(1,'box_a'),(2,'boxXa'),(3,'box_'),(4,'crate');",
+      "checks": [
+        {
+          "label": "Literal underscore and empty tail",
+          "expression": "SELECT count(*)=2 AND sum(id IN(1,3))=2 FROM matches"
+        },
+        {
+          "label": "Source labels preserved",
+          "expression": "SELECT count(*)=4 FROM labels"
+        },
+        {
+          "label": "Exact source values preserved",
+          "expression": "SELECT count(*)=4 AND sum((id=1 AND label='box_a')OR(id=2 AND label='boxXa')OR(id=3 AND label='box_')OR(id=4 AND label='crate'))=4 FROM labels"
+        }
+      ],
+      "outcome": "success",
+      "expectedPass": false
+    },
+    {
+      "id": "sql-30-solution",
+      "lessonId": "sql-30",
+      "kind": "solution",
+      "code": "CREATE VIEW bands AS SELECT id,CASE WHEN score IS NULL THEN 'unknown' WHEN score>=20 THEN 'high' WHEN score>=10 THEN 'middle' ELSE 'low' END AS band FROM scores;SELECT * FROM bands ORDER BY id;",
+      "setup": "CREATE TABLE scores(id INTEGER PRIMARY KEY,score INTEGER);INSERT INTO scores VALUES(1,20),(2,10),(3,9),(4,NULL);",
+      "checks": [
+        {
+          "label": "All four labels match boundaries",
+          "expression": "SELECT count(*)=4 AND sum((id=1 AND band='high')OR(id=2 AND band='middle')OR(id=3 AND band='low')OR(id=4 AND band='unknown'))=4 FROM bands"
+        },
+        {
+          "label": "Source score unchanged",
+          "expression": "SELECT count(*)=4 AND sum(score)=39 AND sum(score IS NULL)=1 FROM scores"
+        },
+        {
+          "label": "Exact source values preserved",
+          "expression": "SELECT count(*)=4 AND sum((id=1 AND score=20)OR(id=2 AND score=10)OR(id=3 AND score=9)OR(id=4 AND score IS NULL))=4 FROM scores"
+        }
+      ],
+      "outcome": "success",
+      "expectedPass": true
+    },
+    {
+      "id": "sql-30-starter",
+      "lessonId": "sql-30",
+      "kind": "starter",
+      "code": "CREATE VIEW bands AS SELECT id,CASE WHEN score>=10 THEN 'middle' ELSE 'low' END AS band FROM scores;",
+      "setup": "CREATE TABLE scores(id INTEGER PRIMARY KEY,score INTEGER);INSERT INTO scores VALUES(1,20),(2,10),(3,9),(4,NULL);",
+      "checks": [
+        {
+          "label": "All four labels match boundaries",
+          "expression": "SELECT count(*)=4 AND sum((id=1 AND band='high')OR(id=2 AND band='middle')OR(id=3 AND band='low')OR(id=4 AND band='unknown'))=4 FROM bands"
+        },
+        {
+          "label": "Source score unchanged",
+          "expression": "SELECT count(*)=4 AND sum(score)=39 AND sum(score IS NULL)=1 FROM scores"
+        },
+        {
+          "label": "Exact source values preserved",
+          "expression": "SELECT count(*)=4 AND sum((id=1 AND score=20)OR(id=2 AND score=10)OR(id=3 AND score=9)OR(id=4 AND score IS NULL))=4 FROM scores"
+        }
+      ],
+      "outcome": "success",
+      "expectedPass": false
+    },
+    {
+      "id": "sql-31-solution",
+      "lessonId": "sql-31",
+      "kind": "solution",
+      "code": "CREATE VIEW prefixes AS SELECT id,substr(name,1,3) AS prefix,length(name) AS size FROM names;SELECT * FROM prefixes ORDER BY id;",
+      "setup": "CREATE TABLE names(id INTEGER PRIMARY KEY,name TEXT);INSERT INTO names VALUES(1,'Lantern'),(2,'Go'),(3,''),(4,NULL);",
+      "checks": [
+        {
+          "label": "Long and short names",
+          "expression": "SELECT count(*)=2 FROM prefixes WHERE (id=1 AND prefix='Lan' AND size=7)OR(id=2 AND prefix='Go' AND size=2)"
+        },
+        {
+          "label": "Empty and missing remain distinct",
+          "expression": "SELECT count(*)=2 FROM prefixes WHERE (id=3 AND prefix='' AND size=0)OR(id=4 AND prefix IS NULL AND size IS NULL)"
+        },
+        {
+          "label": "Every source retained",
+          "expression": "SELECT (SELECT count(*) FROM prefixes)=4 AND (SELECT count(*) FROM names)=4"
+        },
+        {
+          "label": "Exact source values preserved",
+          "expression": "SELECT count(*)=4 AND sum((id=1 AND name='Lantern')OR(id=2 AND name='Go')OR(id=3 AND name='')OR(id=4 AND name IS NULL))=4 FROM names"
+        }
+      ],
+      "outcome": "success",
+      "expectedPass": true
+    },
+    {
+      "id": "sql-31-starter",
+      "lessonId": "sql-31",
+      "kind": "starter",
+      "code": "CREATE VIEW prefixes AS SELECT id,name AS prefix,0 AS size FROM names;",
+      "setup": "CREATE TABLE names(id INTEGER PRIMARY KEY,name TEXT);INSERT INTO names VALUES(1,'Lantern'),(2,'Go'),(3,''),(4,NULL);",
+      "checks": [
+        {
+          "label": "Long and short names",
+          "expression": "SELECT count(*)=2 FROM prefixes WHERE (id=1 AND prefix='Lan' AND size=7)OR(id=2 AND prefix='Go' AND size=2)"
+        },
+        {
+          "label": "Empty and missing remain distinct",
+          "expression": "SELECT count(*)=2 FROM prefixes WHERE (id=3 AND prefix='' AND size=0)OR(id=4 AND prefix IS NULL AND size IS NULL)"
+        },
+        {
+          "label": "Every source retained",
+          "expression": "SELECT (SELECT count(*) FROM prefixes)=4 AND (SELECT count(*) FROM names)=4"
+        },
+        {
+          "label": "Exact source values preserved",
+          "expression": "SELECT count(*)=4 AND sum((id=1 AND name='Lantern')OR(id=2 AND name='Go')OR(id=3 AND name='')OR(id=4 AND name IS NULL))=4 FROM names"
+        }
+      ],
+      "outcome": "success",
+      "expectedPass": false
+    },
+    {
+      "id": "sql-32-solution",
+      "lessonId": "sql-32",
+      "kind": "solution",
+      "code": "CREATE VIEW shares AS SELECT id,CAST(total AS REAL)/people AS average FROM supplies;SELECT * FROM shares ORDER BY id;",
+      "setup": "CREATE TABLE supplies(id INTEGER PRIMARY KEY,total INTEGER,people INTEGER);INSERT INTO supplies VALUES(1,7,2),(2,6,3),(3,5,0);",
+      "checks": [
+        {
+          "label": "Real and whole averages",
+          "expression": "SELECT count(*)=2 FROM shares WHERE(id=1 AND average=3.5)OR(id=2 AND average=2.0)"
+        },
+        {
+          "label": "Zero divisor is missing",
+          "expression": "SELECT count(*)=1 FROM shares WHERE id=3 AND average IS NULL"
+        },
+        {
+          "label": "Source rows preserved",
+          "expression": "SELECT (SELECT count(*) FROM shares)=3 AND (SELECT sum(total) FROM supplies)=18"
+        },
+        {
+          "label": "Exact source values preserved",
+          "expression": "SELECT count(*)=3 AND sum((id=1 AND total=7 AND people=2)OR(id=2 AND total=6 AND people=3)OR(id=3 AND total=5 AND people=0))=3 FROM supplies"
+        }
+      ],
+      "outcome": "success",
+      "expectedPass": true
+    },
+    {
+      "id": "sql-32-starter",
+      "lessonId": "sql-32",
+      "kind": "starter",
+      "code": "CREATE VIEW shares AS SELECT id,total/people AS average FROM supplies;",
+      "setup": "CREATE TABLE supplies(id INTEGER PRIMARY KEY,total INTEGER,people INTEGER);INSERT INTO supplies VALUES(1,7,2),(2,6,3),(3,5,0);",
+      "checks": [
+        {
+          "label": "Real and whole averages",
+          "expression": "SELECT count(*)=2 FROM shares WHERE(id=1 AND average=3.5)OR(id=2 AND average=2.0)"
+        },
+        {
+          "label": "Zero divisor is missing",
+          "expression": "SELECT count(*)=1 FROM shares WHERE id=3 AND average IS NULL"
+        },
+        {
+          "label": "Source rows preserved",
+          "expression": "SELECT (SELECT count(*) FROM shares)=3 AND (SELECT sum(total) FROM supplies)=18"
+        },
+        {
+          "label": "Exact source values preserved",
+          "expression": "SELECT count(*)=3 AND sum((id=1 AND total=7 AND people=2)OR(id=2 AND total=6 AND people=3)OR(id=3 AND total=5 AND people=0))=3 FROM supplies"
+        }
+      ],
+      "outcome": "success",
+      "expectedPass": false
+    },
+    {
+      "id": "sql-33-solution",
+      "lessonId": "sql-33",
+      "kind": "solution",
+      "code": "CREATE TABLE readings(id INTEGER PRIMARY KEY,value INTEGER);INSERT INTO readings VALUES(1,'17'),(2,'unknown');CREATE VIEW observed AS SELECT id,typeof(value) AS kind FROM readings;SELECT * FROM observed ORDER BY id;",
+      "setup": "",
+      "checks": [
+        {
+          "label": "Actual stored types",
+          "expression": "SELECT count(*)=2 AND sum((id=1 AND kind='integer')OR(id=2 AND kind='text'))=2 FROM observed"
+        },
+        {
+          "label": "Actual values retained",
+          "expression": "SELECT count(*)=2 AND sum((id=1 AND value=17)OR(id=2 AND value='unknown'))=2 FROM readings"
+        }
+      ],
+      "outcome": "success",
+      "expectedPass": true
+    },
+    {
+      "id": "sql-33-starter",
+      "lessonId": "sql-33",
+      "kind": "starter",
+      "code": "CREATE TABLE readings(id INTEGER PRIMARY KEY,value TEXT);INSERT INTO readings VALUES(1,'17'),(2,'unknown');CREATE VIEW observed AS SELECT id,typeof(value) AS kind FROM readings;",
+      "setup": "",
+      "checks": [
+        {
+          "label": "Actual stored types",
+          "expression": "SELECT count(*)=2 AND sum((id=1 AND kind='integer')OR(id=2 AND kind='text'))=2 FROM observed"
+        },
+        {
+          "label": "Actual values retained",
+          "expression": "SELECT count(*)=2 AND sum((id=1 AND value=17)OR(id=2 AND value='unknown'))=2 FROM readings"
+        }
+      ],
+      "outcome": "success",
+      "expectedPass": false
+    },
+    {
+      "id": "sql-34-solution",
+      "lessonId": "sql-34",
+      "kind": "solution",
+      "code": "CREATE TABLE readings(id INTEGER PRIMARY KEY,value INTEGER NOT NULL) STRICT;INSERT INTO readings VALUES(1,'14'),(2,9);SELECT * FROM readings ORDER BY id;",
+      "setup": "",
+      "checks": [
+        {
+          "label": "Strict-table metadata",
+          "expression": "SELECT count(*)=1 FROM pragma_table_list WHERE name='readings' AND schema='main' AND strict=1"
+        },
+        {
+          "label": "Accepted converted values",
+          "expression": "SELECT count(*)=2 AND sum((id=1 AND value=14)OR(id=2 AND value=9))=2 AND sum(typeof(value)='integer')=2 FROM readings"
+        },
+        {
+          "label": "Missing values disallowed by schema",
+          "expression": "SELECT count(*)=1 FROM pragma_table_info('readings') WHERE name='value' AND \"notnull\"=1"
+        }
+      ],
+      "outcome": "success",
+      "expectedPass": true
+    },
+    {
+      "id": "sql-34-starter",
+      "lessonId": "sql-34",
+      "kind": "starter",
+      "code": "CREATE TABLE readings(id INTEGER PRIMARY KEY,value INTEGER NOT NULL);INSERT INTO readings VALUES(1,'14'),(2,9);",
+      "setup": "",
+      "checks": [
+        {
+          "label": "Strict-table metadata",
+          "expression": "SELECT count(*)=1 FROM pragma_table_list WHERE name='readings' AND schema='main' AND strict=1"
+        },
+        {
+          "label": "Accepted converted values",
+          "expression": "SELECT count(*)=2 AND sum((id=1 AND value=14)OR(id=2 AND value=9))=2 AND sum(typeof(value)='integer')=2 FROM readings"
+        },
+        {
+          "label": "Missing values disallowed by schema",
+          "expression": "SELECT count(*)=1 FROM pragma_table_info('readings') WHERE name='value' AND \"notnull\"=1"
+        }
+      ],
+      "outcome": "success",
+      "expectedPass": false
+    },
+    {
+      "lessonId": "sql-25",
+      "id": "sql-25-worked",
+      "paragraph": 2,
+      "code": "CREATE TEMP VIEW shown AS SELECT 'Lena''s notes' AS title, 3 + 2 AS copies;\nSELECT title,copies FROM shown;",
+      "checks": [
+        {
+          "label": "Worked result",
+          "expression": "SELECT title='Lena''s notes' AND copies=5 FROM shown"
+        }
+      ],
+      "expectedResults": [
+        {
+          "columns": [
+            "title",
+            "copies"
+          ],
+          "values": [
+            [
+              "Lena's notes",
+              5
+            ]
+          ]
+        }
+      ],
+      "outcome": "success",
+      "kind": "example",
+      "expectedPass": true
+    },
+    {
+      "lessonId": "sql-25",
+      "id": "sql-25-changed",
+      "paragraph": 3,
+      "code": "CREATE TEMP VIEW shown AS SELECT 'Milo''s map' AS title, 4 + 2 AS copies;\nSELECT title,copies FROM shown;",
+      "checks": [
+        {
+          "label": "Changed result",
+          "expression": "SELECT title='Milo''s map' AND copies=6 FROM shown"
+        }
+      ],
+      "expectedResults": [
+        {
+          "columns": [
+            "title",
+            "copies"
+          ],
+          "values": [
+            [
+              "Milo's map",
+              6
+            ]
+          ]
+        }
+      ],
+      "outcome": "success",
+      "kind": "example",
+      "expectedPass": true
+    },
+    {
+      "lessonId": "sql-26",
+      "id": "sql-26-worked",
+      "paragraph": 2,
+      "code": "CREATE TEMP VIEW shown AS SELECT NULL = 3 AS comparison,NULL IS NULL AS missing,1 OR NULL AS either,0 AND NULL AS both;SELECT * FROM shown;",
+      "checks": [
+        {
+          "label": "Worked result",
+          "expression": "SELECT comparison IS NULL AND missing=1 AND either=1 AND both=0 FROM shown"
+        }
+      ],
+      "expectedResults": [
+        {
+          "columns": [
+            "comparison",
+            "missing",
+            "either",
+            "both"
+          ],
+          "values": [
+            [
+              null,
+              1,
+              1,
+              0
+            ]
+          ]
+        }
+      ],
+      "outcome": "success",
+      "kind": "example",
+      "expectedPass": true
+    },
+    {
+      "lessonId": "sql-26",
+      "id": "sql-26-changed",
+      "paragraph": 3,
+      "code": "CREATE TEMP VIEW shown AS SELECT NOT NULL AS negated,0 OR NULL AS either,1 AND NULL AS both;SELECT * FROM shown;",
+      "checks": [
+        {
+          "label": "Changed result",
+          "expression": "SELECT negated IS NULL AND either IS NULL AND both IS NULL FROM shown"
+        }
+      ],
+      "expectedResults": [
+        {
+          "columns": [
+            "negated",
+            "either",
+            "both"
+          ],
+          "values": [
+            [
+              null,
+              null,
+              null
+            ]
+          ]
+        }
+      ],
+      "outcome": "success",
+      "kind": "example",
+      "expectedPass": true
+    },
+    {
+      "lessonId": "sql-27",
+      "id": "sql-27-worked",
+      "paragraph": 2,
+      "code": "CREATE TEMP VIEW shown AS WITH visits(minutes) AS(VALUES(4),(5),(9),(10)) SELECT minutes FROM visits WHERE minutes BETWEEN 5 AND 9;SELECT * FROM shown ORDER BY minutes;",
+      "checks": [
+        {
+          "label": "Worked result",
+          "expression": "SELECT count(*)=2 AND sum(minutes)=14 FROM shown"
+        }
+      ],
+      "expectedResults": [
+        {
+          "columns": [
+            "minutes"
+          ],
+          "values": [
+            [
+              5
+            ],
+            [
+              9
+            ]
+          ]
+        }
+      ],
+      "outcome": "success",
+      "kind": "example",
+      "expectedPass": true
+    },
+    {
+      "lessonId": "sql-27",
+      "id": "sql-27-changed",
+      "paragraph": 3,
+      "code": "CREATE TEMP VIEW shown AS WITH visits(minutes) AS(VALUES(4),(5),(9),(10)) SELECT minutes FROM visits WHERE minutes NOT BETWEEN 5 AND 9;SELECT * FROM shown ORDER BY minutes;",
+      "checks": [
+        {
+          "label": "Changed result",
+          "expression": "SELECT count(*)=2 AND sum(minutes)=14 AND min(minutes)=4 FROM shown"
+        }
+      ],
+      "expectedResults": [
+        {
+          "columns": [
+            "minutes"
+          ],
+          "values": [
+            [
+              4
+            ],
+            [
+              10
+            ]
+          ]
+        }
+      ],
+      "outcome": "success",
+      "kind": "example",
+      "expectedPass": true
+    },
+    {
+      "lessonId": "sql-28",
+      "id": "sql-28-worked",
+      "paragraph": 2,
+      "code": "CREATE TEMP VIEW shown AS WITH tiles(colour) AS(VALUES('blue'),('red'),('gold')) SELECT colour FROM tiles WHERE colour IN('blue','gold');SELECT * FROM shown ORDER BY colour;",
+      "checks": [
+        {
+          "label": "Worked result",
+          "expression": "SELECT count(*)=2 AND sum(colour IN('blue','gold'))=2 FROM shown"
+        }
+      ],
+      "expectedResults": [
+        {
+          "columns": [
+            "colour"
+          ],
+          "values": [
+            [
+              "blue"
+            ],
+            [
+              "gold"
+            ]
+          ]
+        }
+      ],
+      "outcome": "success",
+      "kind": "example",
+      "expectedPass": true
+    },
+    {
+      "lessonId": "sql-28",
+      "id": "sql-28-changed",
+      "paragraph": 3,
+      "code": "CREATE TEMP VIEW shown AS WITH tiles(colour) AS(VALUES('blue'),('red'),('gold')) SELECT colour FROM tiles WHERE colour IN('blue','blue');SELECT * FROM shown;",
+      "checks": [
+        {
+          "label": "Changed result",
+          "expression": "SELECT count(*)=1 AND min(colour)='blue' FROM shown"
+        }
+      ],
+      "expectedResults": [
+        {
+          "columns": [
+            "colour"
+          ],
+          "values": [
+            [
+              "blue"
+            ]
+          ]
+        }
+      ],
+      "outcome": "success",
+      "kind": "example",
+      "expectedPass": true
+    },
+    {
+      "lessonId": "sql-29",
+      "id": "sql-29-worked",
+      "paragraph": 2,
+      "code": "CREATE TEMP VIEW shown AS SELECT 'box_a' LIKE 'box!_%' ESCAPE '!' AS literal_match,'boxXa' LIKE 'box!_%' ESCAPE '!' AS not_literal;SELECT * FROM shown;",
+      "checks": [
+        {
+          "label": "Worked result",
+          "expression": "SELECT literal_match=1 AND not_literal=0 FROM shown"
+        }
+      ],
+      "expectedResults": [
+        {
+          "columns": [
+            "literal_match",
+            "not_literal"
+          ],
+          "values": [
+            [
+              1,
+              0
+            ]
+          ]
+        }
+      ],
+      "outcome": "success",
+      "kind": "example",
+      "expectedPass": true
+    },
+    {
+      "lessonId": "sql-29",
+      "id": "sql-29-changed",
+      "paragraph": 3,
+      "code": "CREATE TEMP VIEW shown AS SELECT 'box_' LIKE 'box!_%' ESCAPE '!' AS empty_tail,'a' LIKE 'A' AS ascii_fold,'æ' LIKE 'Æ' AS unicode_fold;SELECT * FROM shown;",
+      "checks": [
+        {
+          "label": "Changed result",
+          "expression": "SELECT empty_tail=1 AND ascii_fold=1 AND unicode_fold=0 FROM shown"
+        }
+      ],
+      "expectedResults": [
+        {
+          "columns": [
+            "empty_tail",
+            "ascii_fold",
+            "unicode_fold"
+          ],
+          "values": [
+            [
+              1,
+              1,
+              0
+            ]
+          ]
+        }
+      ],
+      "outcome": "success",
+      "kind": "example",
+      "expectedPass": true
+    },
+    {
+      "lessonId": "sql-30",
+      "id": "sql-30-worked",
+      "paragraph": 2,
+      "code": "CREATE TEMP VIEW shown AS WITH scores(score) AS(VALUES(22),(12),(4),(NULL)) SELECT score,CASE WHEN score IS NULL THEN 'unknown' WHEN score>=20 THEN 'high' WHEN score>=10 THEN 'middle' ELSE 'low' END AS band FROM scores;SELECT * FROM shown ORDER BY score;",
+      "checks": [
+        {
+          "label": "Worked result",
+          "expression": "SELECT count(*)=4 AND sum(band IN('unknown','high','middle','low'))=4 FROM shown"
+        }
+      ],
+      "expectedResults": [
+        {
+          "columns": [
+            "score",
+            "band"
+          ],
+          "values": [
+            [
+              null,
+              "unknown"
+            ],
+            [
+              4,
+              "low"
+            ],
+            [
+              12,
+              "middle"
+            ],
+            [
+              22,
+              "high"
+            ]
+          ]
+        }
+      ],
+      "outcome": "success",
+      "kind": "example",
+      "expectedPass": true
+    },
+    {
+      "lessonId": "sql-30",
+      "id": "sql-30-changed",
+      "paragraph": 3,
+      "code": "CREATE TEMP VIEW shown AS SELECT CASE WHEN 22>=10 THEN 'middle' WHEN 22>=20 THEN 'high' ELSE 'low' END AS band;SELECT * FROM shown;",
+      "checks": [
+        {
+          "label": "Changed result",
+          "expression": "SELECT band='middle' FROM shown"
+        }
+      ],
+      "expectedResults": [
+        {
+          "columns": [
+            "band"
+          ],
+          "values": [
+            [
+              "middle"
+            ]
+          ]
+        }
+      ],
+      "outcome": "success",
+      "kind": "example",
+      "expectedPass": true
+    },
+    {
+      "lessonId": "sql-31",
+      "id": "sql-31-worked",
+      "paragraph": 2,
+      "code": "CREATE TEMP VIEW shown AS SELECT length('Lantern') AS size,substr('Lantern',2,3) AS piece;SELECT * FROM shown;",
+      "checks": [
+        {
+          "label": "Worked result",
+          "expression": "SELECT size=7 AND piece='ant' FROM shown"
+        }
+      ],
+      "expectedResults": [
+        {
+          "columns": [
+            "size",
+            "piece"
+          ],
+          "values": [
+            [
+              7,
+              "ant"
+            ]
+          ]
+        }
+      ],
+      "outcome": "success",
+      "kind": "example",
+      "expectedPass": true
+    },
+    {
+      "lessonId": "sql-31",
+      "id": "sql-31-changed",
+      "paragraph": 3,
+      "code": "CREATE TEMP VIEW shown AS SELECT length('') AS empty_size,substr('Map',5,2) AS beyond,substr(NULL,1,2) AS missing;SELECT * FROM shown;",
+      "checks": [
+        {
+          "label": "Changed result",
+          "expression": "SELECT empty_size=0 AND beyond='' AND missing IS NULL FROM shown"
+        }
+      ],
+      "expectedResults": [
+        {
+          "columns": [
+            "empty_size",
+            "beyond",
+            "missing"
+          ],
+          "values": [
+            [
+              0,
+              "",
+              null
+            ]
+          ]
+        }
+      ],
+      "outcome": "success",
+      "kind": "example",
+      "expectedPass": true
+    },
+    {
+      "lessonId": "sql-32",
+      "id": "sql-32-worked",
+      "paragraph": 2,
+      "code": "CREATE TEMP VIEW shown AS SELECT 7/2 AS whole,CAST(7 AS REAL)/2 AS fraction,-7/2 AS negative;SELECT * FROM shown;",
+      "checks": [
+        {
+          "label": "Worked result",
+          "expression": "SELECT whole=3 AND fraction=3.5 AND negative=-3 FROM shown"
+        }
+      ],
+      "expectedResults": [
+        {
+          "columns": [
+            "whole",
+            "fraction",
+            "negative"
+          ],
+          "values": [
+            [
+              3,
+              3.5,
+              -3
+            ]
+          ]
+        }
+      ],
+      "outcome": "success",
+      "kind": "example",
+      "expectedPass": true
+    },
+    {
+      "lessonId": "sql-32",
+      "id": "sql-32-changed",
+      "paragraph": 3,
+      "code": "CREATE TEMP VIEW shown AS SELECT 5/2 AS whole,5/2.0 AS fraction,5/0 AS missing;SELECT * FROM shown;",
+      "checks": [
+        {
+          "label": "Changed result",
+          "expression": "SELECT whole=2 AND fraction=2.5 AND missing IS NULL FROM shown"
+        }
+      ],
+      "expectedResults": [
+        {
+          "columns": [
+            "whole",
+            "fraction",
+            "missing"
+          ],
+          "values": [
+            [
+              2,
+              2.5,
+              null
+            ]
+          ]
+        }
+      ],
+      "outcome": "success",
+      "kind": "example",
+      "expectedPass": true
+    },
+    {
+      "lessonId": "sql-33",
+      "id": "sql-33-worked",
+      "paragraph": 2,
+      "code": "CREATE TABLE readings(id INTEGER PRIMARY KEY,value INTEGER);INSERT INTO readings VALUES(1,'12'),(2,'twelve');CREATE TEMP VIEW shown AS SELECT id,value,typeof(value) AS kind FROM readings;SELECT * FROM shown ORDER BY id;",
+      "checks": [
+        {
+          "label": "Worked result",
+          "expression": "SELECT count(*)=2 AND sum((id=1 AND kind='integer' AND value=12)OR(id=2 AND kind='text' AND value='twelve'))=2 FROM shown"
+        }
+      ],
+      "expectedResults": [
+        {
+          "columns": [
+            "id",
+            "value",
+            "kind"
+          ],
+          "values": [
+            [
+              1,
+              12,
+              "integer"
+            ],
+            [
+              2,
+              "twelve",
+              "text"
+            ]
+          ]
+        }
+      ],
+      "outcome": "success",
+      "kind": "example",
+      "expectedPass": true
+    },
+    {
+      "lessonId": "sql-33",
+      "id": "sql-33-changed",
+      "paragraph": 3,
+      "code": "CREATE TABLE readings(id INTEGER PRIMARY KEY,value TEXT);INSERT INTO readings VALUES(1,12),(2,NULL);CREATE TEMP VIEW shown AS SELECT id,value,typeof(value) AS kind FROM readings;SELECT * FROM shown ORDER BY id;",
+      "checks": [
+        {
+          "label": "Changed result",
+          "expression": "SELECT count(*)=2 AND sum((id=1 AND kind='text' AND value='12')OR(id=2 AND kind='null' AND value IS NULL))=2 FROM shown"
+        }
+      ],
+      "expectedResults": [
+        {
+          "columns": [
+            "id",
+            "value",
+            "kind"
+          ],
+          "values": [
+            [
+              1,
+              "12",
+              "text"
+            ],
+            [
+              2,
+              null,
+              "null"
+            ]
+          ]
+        }
+      ],
+      "outcome": "success",
+      "kind": "example",
+      "expectedPass": true
+    },
+    {
+      "lessonId": "sql-34",
+      "id": "sql-34-worked",
+      "paragraph": 2,
+      "code": "CREATE TABLE readings(id INTEGER PRIMARY KEY,value INTEGER) STRICT;INSERT INTO readings VALUES(1,'12');CREATE TEMP VIEW shown AS SELECT value,typeof(value) AS kind FROM readings;SELECT * FROM shown;",
+      "checks": [
+        {
+          "label": "Worked result",
+          "expression": "SELECT value=12 AND kind='integer' FROM shown"
+        }
+      ],
+      "expectedResults": [
+        {
+          "columns": [
+            "value",
+            "kind"
+          ],
+          "values": [
+            [
+              12,
+              "integer"
+            ]
+          ]
+        }
+      ],
+      "outcome": "success",
+      "kind": "example",
+      "expectedPass": true
+    },
+    {
+      "lessonId": "sql-34",
+      "id": "sql-34-changed",
+      "paragraph": 3,
+      "code": "CREATE TABLE readings(id INTEGER PRIMARY KEY,value INTEGER) STRICT;INSERT INTO readings VALUES(1,'06');CREATE TEMP VIEW shown AS SELECT value,typeof(value) AS kind FROM readings;SELECT * FROM shown;",
+      "checks": [
+        {
+          "label": "Changed result",
+          "expression": "SELECT value=6 AND kind='integer' FROM shown"
+        }
+      ],
+      "expectedResults": [
+        {
+          "columns": [
+            "value",
+            "kind"
+          ],
+          "values": [
+            [
+              6,
+              "integer"
+            ]
+          ]
+        }
+      ],
+      "outcome": "success",
+      "kind": "example",
+      "expectedPass": true
+    },
+    {
+      "id": "sql-34-incompatible-text",
+      "paragraph": 5,
+      "setup": "CREATE TABLE sample(value INTEGER) STRICT;INSERT INTO sample VALUES(4);",
+      "code": "INSERT INTO sample VALUES('cloudy');",
+      "outcome": "expected-error",
+      "errorContains": "cannot store TEXT value in INTEGER column sample.value",
+      "postChecks": [
+        {
+          "label": "Earlier row remains",
+          "expression": "SELECT count(*)=1 AND min(value)=4 FROM sample"
+        }
+      ],
+      "supplemental": true,
+      "gradingScope": "Author-validated rejection fixture; not current learner SELECT-check capability.",
+      "kind": "example",
+      "expectedPass": true
+    }
+  ],
+  "results": [
+    {
+      "id": "sql-25-solution",
+      "output": [
+        {
+          "columns": [
+            "id",
+            "label"
+          ],
+          "values": [
+            [
+              1,
+              "Rin's kit: 3"
+            ],
+            [
+              2,
+              "Sol: 5"
+            ]
+          ]
+        }
+      ],
+      "error": null,
+      "checks": [
+        {
+          "label": "Both calculated labels remain",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "count(*)=2 AND sum((id=1 AND label='Rin''s kit: 3') OR (id=2 AND label='Sol: 5'))=2"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Source quantities are unchanged",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "count(*)=2 AND sum(quantity)=6"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Exact source values preserved",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "count(*)=2 AND sum((id=1 AND owner='Rin''s kit' AND quantity=2)OR(id=2 AND owner='Sol' AND quantity=4))=2"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": true,
+      "expectedPass": true,
+      "validated": true,
+      "sourceHash": "64cd301c1bc7b5a930c64e8118b9b05c89219f197112cdc19bf99c685be9b760"
+    },
+    {
+      "id": "sql-25-starter",
+      "output": [],
+      "error": null,
+      "checks": [
+        {
+          "label": "Both calculated labels remain",
+          "passed": false,
+          "actual": [
+            {
+              "columns": [
+                "count(*)=2 AND sum((id=1 AND label='Rin''s kit: 3') OR (id=2 AND label='Sol: 5'))=2"
+              ],
+              "values": [
+                [
+                  0
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Source quantities are unchanged",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "count(*)=2 AND sum(quantity)=6"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Exact source values preserved",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "count(*)=2 AND sum((id=1 AND owner='Rin''s kit' AND quantity=2)OR(id=2 AND owner='Sol' AND quantity=4))=2"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": false,
+      "expectedPass": false,
+      "validated": true,
+      "sourceHash": "e5ade4dd4b67843fa0330b39cbee629f71b043dfb6dcc59b05c691a5cbe7e88f"
+    },
+    {
+      "id": "sql-26-solution",
+      "output": [
+        {
+          "columns": [
+            "id"
+          ],
+          "values": [
+            [
+              2
+            ],
+            [
+              3
+            ]
+          ]
+        }
+      ],
+      "error": null,
+      "checks": [
+        {
+          "label": "Both unfinished IDs",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "count(*)=2 AND sum(id IN(2,3))=2"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Source missing value remains",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "count(*)=3 AND sum(state IS NULL)=1"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Exact source values preserved",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "count(*)=3 AND sum((id=1 AND state='done')OR(id=2 AND state='waiting')OR(id=3 AND state IS NULL))=3"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": true,
+      "expectedPass": true,
+      "validated": true,
+      "sourceHash": "5050c7410d739082a2c174953f101bc20766cda5dc003ab4179d3e0c6d33638c"
+    },
+    {
+      "id": "sql-26-starter",
+      "output": [],
+      "error": null,
+      "checks": [
+        {
+          "label": "Both unfinished IDs",
+          "passed": false,
+          "actual": [
+            {
+              "columns": [
+                "count(*)=2 AND sum(id IN(2,3))=2"
+              ],
+              "values": [
+                [
+                  0
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Source missing value remains",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "count(*)=3 AND sum(state IS NULL)=1"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Exact source values preserved",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "count(*)=3 AND sum((id=1 AND state='done')OR(id=2 AND state='waiting')OR(id=3 AND state IS NULL))=3"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": false,
+      "expectedPass": false,
+      "validated": true,
+      "sourceHash": "502432523ca5a1608b7d3de03a4e2b127c973cea8448961a6e5c72b17781f198"
+    },
+    {
+      "id": "sql-27-solution",
+      "output": [
+        {
+          "columns": [
+            "id"
+          ],
+          "values": [
+            [
+              2
+            ],
+            [
+              3
+            ]
+          ]
+        }
+      ],
+      "error": null,
+      "checks": [
+        {
+          "label": "Both boundaries included",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "count(*)=2 AND sum(id IN(2,3))=2"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Sources preserved",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "count(*)=4 AND sum(score)=24"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Exact source values preserved",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "count(*)=4 AND sum((id=1 AND score=3)OR(id=2 AND score=4)OR(id=3 AND score=8)OR(id=4 AND score=9))=4"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": true,
+      "expectedPass": true,
+      "validated": true,
+      "sourceHash": "e0061c3eaa35acf03252d44e7ba1927b595a56595594036aa92821c1124a9b20"
+    },
+    {
+      "id": "sql-27-starter",
+      "output": [],
+      "error": null,
+      "checks": [
+        {
+          "label": "Both boundaries included",
+          "passed": false,
+          "actual": [
+            {
+              "columns": [
+                "count(*)=2 AND sum(id IN(2,3))=2"
+              ],
+              "values": [
+                [
+                  0
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Sources preserved",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "count(*)=4 AND sum(score)=24"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Exact source values preserved",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "count(*)=4 AND sum((id=1 AND score=3)OR(id=2 AND score=4)OR(id=3 AND score=8)OR(id=4 AND score=9))=4"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": false,
+      "expectedPass": false,
+      "validated": true,
+      "sourceHash": "f3cb22dc6e23b97d199a8c7d8c486ccee2c0e7f1c78d9836f8168cc5868d4339"
+    },
+    {
+      "id": "sql-28-solution",
+      "output": [
+        {
+          "columns": [
+            "id"
+          ],
+          "values": [
+            [
+              1
+            ],
+            [
+              3
+            ],
+            [
+              4
+            ]
+          ]
+        }
+      ],
+      "error": null,
+      "checks": [
+        {
+          "label": "Exactly three source identities",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "count(*)=3 AND sum(id IN(1,3,4))=3"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "All tags unchanged",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "count(*)=4 AND sum(colour='green')=2"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Exact source values preserved",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "count(*)=4 AND sum((id IN(1,4) AND colour='green')OR(id=2 AND colour='orange')OR(id=3 AND colour='violet'))=4"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": true,
+      "expectedPass": true,
+      "validated": true,
+      "sourceHash": "d4a5ff77e1f04a82a681a28a78c068283429c5b76a3a829c1e7bcd50c3aea2c7"
+    },
+    {
+      "id": "sql-28-starter",
+      "output": [],
+      "error": null,
+      "checks": [
+        {
+          "label": "Exactly three source identities",
+          "passed": false,
+          "actual": [
+            {
+              "columns": [
+                "count(*)=3 AND sum(id IN(1,3,4))=3"
+              ],
+              "values": [
+                [
+                  0
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "All tags unchanged",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "count(*)=4 AND sum(colour='green')=2"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Exact source values preserved",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "count(*)=4 AND sum((id IN(1,4) AND colour='green')OR(id=2 AND colour='orange')OR(id=3 AND colour='violet'))=4"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": false,
+      "expectedPass": false,
+      "validated": true,
+      "sourceHash": "ec07a3bf44a62b49474b774ddeb3a6efaec326e71bf2e5e31f6ae12d5b148fce"
+    },
+    {
+      "id": "sql-29-solution",
+      "output": [
+        {
+          "columns": [
+            "id"
+          ],
+          "values": [
+            [
+              1
+            ],
+            [
+              3
+            ]
+          ]
+        }
+      ],
+      "error": null,
+      "checks": [
+        {
+          "label": "Literal underscore and empty tail",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "count(*)=2 AND sum(id IN(1,3))=2"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Source labels preserved",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "count(*)=4"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Exact source values preserved",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "count(*)=4 AND sum((id=1 AND label='box_a')OR(id=2 AND label='boxXa')OR(id=3 AND label='box_')OR(id=4 AND label='crate'))=4"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": true,
+      "expectedPass": true,
+      "validated": true,
+      "sourceHash": "f9a660f8d7900d8590a11c2c74f7b0a42b108432623983c1a9d97f6335a3410a"
+    },
+    {
+      "id": "sql-29-starter",
+      "output": [],
+      "error": null,
+      "checks": [
+        {
+          "label": "Literal underscore and empty tail",
+          "passed": false,
+          "actual": [
+            {
+              "columns": [
+                "count(*)=2 AND sum(id IN(1,3))=2"
+              ],
+              "values": [
+                [
+                  0
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Source labels preserved",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "count(*)=4"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Exact source values preserved",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "count(*)=4 AND sum((id=1 AND label='box_a')OR(id=2 AND label='boxXa')OR(id=3 AND label='box_')OR(id=4 AND label='crate'))=4"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": false,
+      "expectedPass": false,
+      "validated": true,
+      "sourceHash": "3e599a62eae9b333d62836893b2585086e64f6a1723ab7d0e85431146054190a"
+    },
+    {
+      "id": "sql-30-solution",
+      "output": [
+        {
+          "columns": [
+            "id",
+            "band"
+          ],
+          "values": [
+            [
+              1,
+              "high"
+            ],
+            [
+              2,
+              "middle"
+            ],
+            [
+              3,
+              "low"
+            ],
+            [
+              4,
+              "unknown"
+            ]
+          ]
+        }
+      ],
+      "error": null,
+      "checks": [
+        {
+          "label": "All four labels match boundaries",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "count(*)=4 AND sum((id=1 AND band='high')OR(id=2 AND band='middle')OR(id=3 AND band='low')OR(id=4 AND band='unknown'))=4"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Source score unchanged",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "count(*)=4 AND sum(score)=39 AND sum(score IS NULL)=1"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Exact source values preserved",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "count(*)=4 AND sum((id=1 AND score=20)OR(id=2 AND score=10)OR(id=3 AND score=9)OR(id=4 AND score IS NULL))=4"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": true,
+      "expectedPass": true,
+      "validated": true,
+      "sourceHash": "41284d6701692177eecbe48f6cc67f77880f259ff7f312fb997882ed4f65bd17"
+    },
+    {
+      "id": "sql-30-starter",
+      "output": [],
+      "error": null,
+      "checks": [
+        {
+          "label": "All four labels match boundaries",
+          "passed": false,
+          "actual": [
+            {
+              "columns": [
+                "count(*)=4 AND sum((id=1 AND band='high')OR(id=2 AND band='middle')OR(id=3 AND band='low')OR(id=4 AND band='unknown'))=4"
+              ],
+              "values": [
+                [
+                  0
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Source score unchanged",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "count(*)=4 AND sum(score)=39 AND sum(score IS NULL)=1"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Exact source values preserved",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "count(*)=4 AND sum((id=1 AND score=20)OR(id=2 AND score=10)OR(id=3 AND score=9)OR(id=4 AND score IS NULL))=4"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": false,
+      "expectedPass": false,
+      "validated": true,
+      "sourceHash": "e59839035c32c5336b5c100101680fdee09a26923599ba47dd6b02b981a2e162"
+    },
+    {
+      "id": "sql-31-solution",
+      "output": [
+        {
+          "columns": [
+            "id",
+            "prefix",
+            "size"
+          ],
+          "values": [
+            [
+              1,
+              "Lan",
+              7
+            ],
+            [
+              2,
+              "Go",
+              2
+            ],
+            [
+              3,
+              "",
+              0
+            ],
+            [
+              4,
+              null,
+              null
+            ]
+          ]
+        }
+      ],
+      "error": null,
+      "checks": [
+        {
+          "label": "Long and short names",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "count(*)=2"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Empty and missing remain distinct",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "count(*)=2"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Every source retained",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "(SELECT count(*) FROM prefixes)=4 AND (SELECT count(*) FROM names)=4"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Exact source values preserved",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "count(*)=4 AND sum((id=1 AND name='Lantern')OR(id=2 AND name='Go')OR(id=3 AND name='')OR(id=4 AND name IS NULL))=4"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": true,
+      "expectedPass": true,
+      "validated": true,
+      "sourceHash": "4b29d8eafa8a149a33f2614460ea6a9347d9f27a3fd4e420f5d9421794eb7262"
+    },
+    {
+      "id": "sql-31-starter",
+      "output": [],
+      "error": null,
+      "checks": [
+        {
+          "label": "Long and short names",
+          "passed": false,
+          "actual": [
+            {
+              "columns": [
+                "count(*)=2"
+              ],
+              "values": [
+                [
+                  0
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Empty and missing remain distinct",
+          "passed": false,
+          "actual": [
+            {
+              "columns": [
+                "count(*)=2"
+              ],
+              "values": [
+                [
+                  0
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Every source retained",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "(SELECT count(*) FROM prefixes)=4 AND (SELECT count(*) FROM names)=4"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Exact source values preserved",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "count(*)=4 AND sum((id=1 AND name='Lantern')OR(id=2 AND name='Go')OR(id=3 AND name='')OR(id=4 AND name IS NULL))=4"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": false,
+      "expectedPass": false,
+      "validated": true,
+      "sourceHash": "e9e9b10c7aa19824e4402cb5271cdf8c840ba36d8e55cc0acd6a689ec7f9e06b"
+    },
+    {
+      "id": "sql-32-solution",
+      "output": [
+        {
+          "columns": [
+            "id",
+            "average"
+          ],
+          "values": [
+            [
+              1,
+              3.5
+            ],
+            [
+              2,
+              2
+            ],
+            [
+              3,
+              null
+            ]
+          ]
+        }
+      ],
+      "error": null,
+      "checks": [
+        {
+          "label": "Real and whole averages",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "count(*)=2"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Zero divisor is missing",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "count(*)=1"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Source rows preserved",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "(SELECT count(*) FROM shares)=3 AND (SELECT sum(total) FROM supplies)=18"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Exact source values preserved",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "count(*)=3 AND sum((id=1 AND total=7 AND people=2)OR(id=2 AND total=6 AND people=3)OR(id=3 AND total=5 AND people=0))=3"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": true,
+      "expectedPass": true,
+      "validated": true,
+      "sourceHash": "a5712eedb6f5c67f5bc06f88f8cd4ea29852e6b50bd25bab387537c04de32cbd"
+    },
+    {
+      "id": "sql-32-starter",
+      "output": [],
+      "error": null,
+      "checks": [
+        {
+          "label": "Real and whole averages",
+          "passed": false,
+          "actual": [
+            {
+              "columns": [
+                "count(*)=2"
+              ],
+              "values": [
+                [
+                  0
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Zero divisor is missing",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "count(*)=1"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Source rows preserved",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "(SELECT count(*) FROM shares)=3 AND (SELECT sum(total) FROM supplies)=18"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Exact source values preserved",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "count(*)=3 AND sum((id=1 AND total=7 AND people=2)OR(id=2 AND total=6 AND people=3)OR(id=3 AND total=5 AND people=0))=3"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": false,
+      "expectedPass": false,
+      "validated": true,
+      "sourceHash": "4fb17e0db17e86452433dd781365de0de9510db0b62b7aba01d45e4a5aa0e06a"
+    },
+    {
+      "id": "sql-33-solution",
+      "output": [
+        {
+          "columns": [
+            "id",
+            "kind"
+          ],
+          "values": [
+            [
+              1,
+              "integer"
+            ],
+            [
+              2,
+              "text"
+            ]
+          ]
+        }
+      ],
+      "error": null,
+      "checks": [
+        {
+          "label": "Actual stored types",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "count(*)=2 AND sum((id=1 AND kind='integer')OR(id=2 AND kind='text'))=2"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Actual values retained",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "count(*)=2 AND sum((id=1 AND value=17)OR(id=2 AND value='unknown'))=2"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": true,
+      "expectedPass": true,
+      "validated": true,
+      "sourceHash": "1ce3a957e03355229986f46a57c9c96ca63cf6a33fab9da7dcd6cda78d357129"
+    },
+    {
+      "id": "sql-33-starter",
+      "output": [],
+      "error": null,
+      "checks": [
+        {
+          "label": "Actual stored types",
+          "passed": false,
+          "actual": [
+            {
+              "columns": [
+                "count(*)=2 AND sum((id=1 AND kind='integer')OR(id=2 AND kind='text'))=2"
+              ],
+              "values": [
+                [
+                  0
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Actual values retained",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "count(*)=2 AND sum((id=1 AND value=17)OR(id=2 AND value='unknown'))=2"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": false,
+      "expectedPass": false,
+      "validated": true,
+      "sourceHash": "13aba103f9e939eed8f8e6bdb43275744212365b29ab874773a8248611df3141"
+    },
+    {
+      "id": "sql-34-solution",
+      "output": [
+        {
+          "columns": [
+            "id",
+            "value"
+          ],
+          "values": [
+            [
+              1,
+              14
+            ],
+            [
+              2,
+              9
+            ]
+          ]
+        }
+      ],
+      "error": null,
+      "checks": [
+        {
+          "label": "Strict-table metadata",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "count(*)=1"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Accepted converted values",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "count(*)=2 AND sum((id=1 AND value=14)OR(id=2 AND value=9))=2 AND sum(typeof(value)='integer')=2"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Missing values disallowed by schema",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "count(*)=1"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": true,
+      "expectedPass": true,
+      "validated": true,
+      "sourceHash": "df9df9e86df157b62ef6fc57d991aeea1f8b84475be9225d6baf81f61266214d"
+    },
+    {
+      "id": "sql-34-starter",
+      "output": [],
+      "error": null,
+      "checks": [
+        {
+          "label": "Strict-table metadata",
+          "passed": false,
+          "actual": [
+            {
+              "columns": [
+                "count(*)=1"
+              ],
+              "values": [
+                [
+                  0
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Accepted converted values",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "count(*)=2 AND sum((id=1 AND value=14)OR(id=2 AND value=9))=2 AND sum(typeof(value)='integer')=2"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Missing values disallowed by schema",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "count(*)=1"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": false,
+      "expectedPass": false,
+      "validated": true,
+      "sourceHash": "a21b077ce5229b407b864313754c079b9bca8c3abebe664c3ba5f08a7bc85add"
+    },
+    {
+      "id": "sql-25-worked",
+      "output": [
+        {
+          "columns": [
+            "title",
+            "copies"
+          ],
+          "values": [
+            [
+              "Lena's notes",
+              5
+            ]
+          ]
+        }
+      ],
+      "error": null,
+      "checks": [
+        {
+          "label": "Worked result",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "title='Lena''s notes' AND copies=5"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": true,
+      "expectedPass": true,
+      "validated": true,
+      "sourceHash": "d219d3772d93fe9dc125e72af4e4f4e494a552692f301781070127c016cfe6e0"
+    },
+    {
+      "id": "sql-25-changed",
+      "output": [
+        {
+          "columns": [
+            "title",
+            "copies"
+          ],
+          "values": [
+            [
+              "Milo's map",
+              6
+            ]
+          ]
+        }
+      ],
+      "error": null,
+      "checks": [
+        {
+          "label": "Changed result",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "title='Milo''s map' AND copies=6"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": true,
+      "expectedPass": true,
+      "validated": true,
+      "sourceHash": "5b3f3421d0e41ae55cbf218c0d0cf8789f85402f141de673d1f4a1ac36017b57"
+    },
+    {
+      "id": "sql-26-worked",
+      "output": [
+        {
+          "columns": [
+            "comparison",
+            "missing",
+            "either",
+            "both"
+          ],
+          "values": [
+            [
+              null,
+              1,
+              1,
+              0
+            ]
+          ]
+        }
+      ],
+      "error": null,
+      "checks": [
+        {
+          "label": "Worked result",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "comparison IS NULL AND missing=1 AND either=1 AND both=0"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": true,
+      "expectedPass": true,
+      "validated": true,
+      "sourceHash": "ffa823c085c1aef31bbd6d41b1096cb5ab6f34db7d7d9242b5b74ef3b9bda4a5"
+    },
+    {
+      "id": "sql-26-changed",
+      "output": [
+        {
+          "columns": [
+            "negated",
+            "either",
+            "both"
+          ],
+          "values": [
+            [
+              null,
+              null,
+              null
+            ]
+          ]
+        }
+      ],
+      "error": null,
+      "checks": [
+        {
+          "label": "Changed result",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "negated IS NULL AND either IS NULL AND both IS NULL"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": true,
+      "expectedPass": true,
+      "validated": true,
+      "sourceHash": "1f70465bcc6f58eb99a64d0dea8f45ab9f673c3c3b9d60079564766f2276a4df"
+    },
+    {
+      "id": "sql-27-worked",
+      "output": [
+        {
+          "columns": [
+            "minutes"
+          ],
+          "values": [
+            [
+              5
+            ],
+            [
+              9
+            ]
+          ]
+        }
+      ],
+      "error": null,
+      "checks": [
+        {
+          "label": "Worked result",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "count(*)=2 AND sum(minutes)=14"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": true,
+      "expectedPass": true,
+      "validated": true,
+      "sourceHash": "154fd986f465562189c112ed54df60baeb0829d65dff2b96a67f4c93f8867908"
+    },
+    {
+      "id": "sql-27-changed",
+      "output": [
+        {
+          "columns": [
+            "minutes"
+          ],
+          "values": [
+            [
+              4
+            ],
+            [
+              10
+            ]
+          ]
+        }
+      ],
+      "error": null,
+      "checks": [
+        {
+          "label": "Changed result",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "count(*)=2 AND sum(minutes)=14 AND min(minutes)=4"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": true,
+      "expectedPass": true,
+      "validated": true,
+      "sourceHash": "f1f9d7620392db1ccdd729bacf1c9723e8b6c327f310770ba9ddbf207d1f1fb8"
+    },
+    {
+      "id": "sql-28-worked",
+      "output": [
+        {
+          "columns": [
+            "colour"
+          ],
+          "values": [
+            [
+              "blue"
+            ],
+            [
+              "gold"
+            ]
+          ]
+        }
+      ],
+      "error": null,
+      "checks": [
+        {
+          "label": "Worked result",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "count(*)=2 AND sum(colour IN('blue','gold'))=2"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": true,
+      "expectedPass": true,
+      "validated": true,
+      "sourceHash": "907148ab7703cc9cd0c8031e7f1eca7634c5eeb5b33d7a6337bef309e3171fa6"
+    },
+    {
+      "id": "sql-28-changed",
+      "output": [
+        {
+          "columns": [
+            "colour"
+          ],
+          "values": [
+            [
+              "blue"
+            ]
+          ]
+        }
+      ],
+      "error": null,
+      "checks": [
+        {
+          "label": "Changed result",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "count(*)=1 AND min(colour)='blue'"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": true,
+      "expectedPass": true,
+      "validated": true,
+      "sourceHash": "de743a6d3a7e5dc6d78b3fed1697157d36169ac8e359e1327196ecc0429af073"
+    },
+    {
+      "id": "sql-29-worked",
+      "output": [
+        {
+          "columns": [
+            "literal_match",
+            "not_literal"
+          ],
+          "values": [
+            [
+              1,
+              0
+            ]
+          ]
+        }
+      ],
+      "error": null,
+      "checks": [
+        {
+          "label": "Worked result",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "literal_match=1 AND not_literal=0"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": true,
+      "expectedPass": true,
+      "validated": true,
+      "sourceHash": "e54d4b51b3def595374a9ecf4d777e44b8cffa1fc6f4565e1a929fbe6b076410"
+    },
+    {
+      "id": "sql-29-changed",
+      "output": [
+        {
+          "columns": [
+            "empty_tail",
+            "ascii_fold",
+            "unicode_fold"
+          ],
+          "values": [
+            [
+              1,
+              1,
+              0
+            ]
+          ]
+        }
+      ],
+      "error": null,
+      "checks": [
+        {
+          "label": "Changed result",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "empty_tail=1 AND ascii_fold=1 AND unicode_fold=0"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": true,
+      "expectedPass": true,
+      "validated": true,
+      "sourceHash": "534a16ff4e2e58915b9033887fd4c7eff6e2caf60db73f151516e510c23733f8"
+    },
+    {
+      "id": "sql-30-worked",
+      "output": [
+        {
+          "columns": [
+            "score",
+            "band"
+          ],
+          "values": [
+            [
+              null,
+              "unknown"
+            ],
+            [
+              4,
+              "low"
+            ],
+            [
+              12,
+              "middle"
+            ],
+            [
+              22,
+              "high"
+            ]
+          ]
+        }
+      ],
+      "error": null,
+      "checks": [
+        {
+          "label": "Worked result",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "count(*)=4 AND sum(band IN('unknown','high','middle','low'))=4"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": true,
+      "expectedPass": true,
+      "validated": true,
+      "sourceHash": "7279610d2a6bd8df00d25522bf29e2be6c1da4e97864b4d2986ceeeace9692e8"
+    },
+    {
+      "id": "sql-30-changed",
+      "output": [
+        {
+          "columns": [
+            "band"
+          ],
+          "values": [
+            [
+              "middle"
+            ]
+          ]
+        }
+      ],
+      "error": null,
+      "checks": [
+        {
+          "label": "Changed result",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "band='middle'"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": true,
+      "expectedPass": true,
+      "validated": true,
+      "sourceHash": "74d11f31250698f00170508a271bd2c963ccbfa13da213368bc4b29ac467a82b"
+    },
+    {
+      "id": "sql-31-worked",
+      "output": [
+        {
+          "columns": [
+            "size",
+            "piece"
+          ],
+          "values": [
+            [
+              7,
+              "ant"
+            ]
+          ]
+        }
+      ],
+      "error": null,
+      "checks": [
+        {
+          "label": "Worked result",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "size=7 AND piece='ant'"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": true,
+      "expectedPass": true,
+      "validated": true,
+      "sourceHash": "612f6ed923bc4c2441fe62365331994bfe60e8a60a8d44755f056573e56a38fc"
+    },
+    {
+      "id": "sql-31-changed",
+      "output": [
+        {
+          "columns": [
+            "empty_size",
+            "beyond",
+            "missing"
+          ],
+          "values": [
+            [
+              0,
+              "",
+              null
+            ]
+          ]
+        }
+      ],
+      "error": null,
+      "checks": [
+        {
+          "label": "Changed result",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "empty_size=0 AND beyond='' AND missing IS NULL"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": true,
+      "expectedPass": true,
+      "validated": true,
+      "sourceHash": "48cac689033f15fd99d1fc3e06bb17d3f15b1e5ea6f6ae3e5e4a4ec3850e5c49"
+    },
+    {
+      "id": "sql-32-worked",
+      "output": [
+        {
+          "columns": [
+            "whole",
+            "fraction",
+            "negative"
+          ],
+          "values": [
+            [
+              3,
+              3.5,
+              -3
+            ]
+          ]
+        }
+      ],
+      "error": null,
+      "checks": [
+        {
+          "label": "Worked result",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "whole=3 AND fraction=3.5 AND negative=-3"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": true,
+      "expectedPass": true,
+      "validated": true,
+      "sourceHash": "4f42e41646b08580eb44515103b397e293a3bcf06a0b0ebed794ce01413e4d24"
+    },
+    {
+      "id": "sql-32-changed",
+      "output": [
+        {
+          "columns": [
+            "whole",
+            "fraction",
+            "missing"
+          ],
+          "values": [
+            [
+              2,
+              2.5,
+              null
+            ]
+          ]
+        }
+      ],
+      "error": null,
+      "checks": [
+        {
+          "label": "Changed result",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "whole=2 AND fraction=2.5 AND missing IS NULL"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": true,
+      "expectedPass": true,
+      "validated": true,
+      "sourceHash": "01e84e3b922be090ffd872a01683c9195ee3273017699325da71682d698aa4f4"
+    },
+    {
+      "id": "sql-33-worked",
+      "output": [
+        {
+          "columns": [
+            "id",
+            "value",
+            "kind"
+          ],
+          "values": [
+            [
+              1,
+              12,
+              "integer"
+            ],
+            [
+              2,
+              "twelve",
+              "text"
+            ]
+          ]
+        }
+      ],
+      "error": null,
+      "checks": [
+        {
+          "label": "Worked result",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "count(*)=2 AND sum((id=1 AND kind='integer' AND value=12)OR(id=2 AND kind='text' AND value='twelve'))=2"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": true,
+      "expectedPass": true,
+      "validated": true,
+      "sourceHash": "94af9de68c6be94e3aaeee3dbce44ae8ea925bad0ba788d8eaa7fe5f594b2daa"
+    },
+    {
+      "id": "sql-33-changed",
+      "output": [
+        {
+          "columns": [
+            "id",
+            "value",
+            "kind"
+          ],
+          "values": [
+            [
+              1,
+              "12",
+              "text"
+            ],
+            [
+              2,
+              null,
+              "null"
+            ]
+          ]
+        }
+      ],
+      "error": null,
+      "checks": [
+        {
+          "label": "Changed result",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "count(*)=2 AND sum((id=1 AND kind='text' AND value='12')OR(id=2 AND kind='null' AND value IS NULL))=2"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": true,
+      "expectedPass": true,
+      "validated": true,
+      "sourceHash": "5980866f6e90b196902fb45819cc4a800ae55c48de41c6b28d3aaa0f23064916"
+    },
+    {
+      "id": "sql-34-worked",
+      "output": [
+        {
+          "columns": [
+            "value",
+            "kind"
+          ],
+          "values": [
+            [
+              12,
+              "integer"
+            ]
+          ]
+        }
+      ],
+      "error": null,
+      "checks": [
+        {
+          "label": "Worked result",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "value=12 AND kind='integer'"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": true,
+      "expectedPass": true,
+      "validated": true,
+      "sourceHash": "bbca236f52f79e954a118f42eb07e837c976d63ed7cea0da753601002ec1f8c2"
+    },
+    {
+      "id": "sql-34-changed",
+      "output": [
+        {
+          "columns": [
+            "value",
+            "kind"
+          ],
+          "values": [
+            [
+              6,
+              "integer"
+            ]
+          ]
+        }
+      ],
+      "error": null,
+      "checks": [
+        {
+          "label": "Changed result",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "value=6 AND kind='integer'"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": true,
+      "expectedPass": true,
+      "validated": true,
+      "sourceHash": "c594498cb9fbce4f31a5fcb9077a67cbda97b3c5278bb5943164505b74bfc463"
+    },
+    {
+      "id": "sql-34-incompatible-text",
+      "output": [],
+      "error": "cannot store TEXT value in INTEGER column sample.value",
+      "checks": [
+        {
+          "label": "Earlier row remains",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "count(*)=1 AND min(value)=4"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": true,
+      "expectedPass": true,
+      "validated": true,
+      "sourceHash": "2817a0e29b4cf1afba7470817d53caf6aed748da48cbafa276b8711a8307d018"
+    }
+  ],
+  "passed": true,
+  "count": 41
+}

@@ -1,0 +1,228 @@
+[
+  {
+    "id": "react-31",
+    "quizTarget": "A component increments an outside counter during render. React calls it again for the same props. Why is this a problem?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "A pure render calculates JSX from its current props and state. It does not change an outside counter, edit the DOM or send a message. React may call a component again without committing that result. A calculation must not rely on being called exactly once."
+      },
+      {
+        "paragraph": 1,
+        "fact": "Badge receives count and returns a paragraph; count * 2 calculates a local number without changing count. React invokes Badge through <Badge count={count} />. App returns two independent uses with the same input. The click callbacks request state changes through setters; they are passed to onClick, not called during render. The arrow c => c + 1 returns the next state from the previous value. A data-* attribute stores a testable string on the element; data-night is not a CSS styling rule. The frame calls App as the root component with no supplied props. App returns the JSX tree; define it here without calling App() yourself or adding imports/createRoot."
+      },
+      {
+        "paragraph": 2,
+        "fact": "```react\nfunction Badge({count}) {\n  const doubled = count * 2;\n  return <p data-badge>{doubled} points</p>;\n}\nfunction App() {\n  const [count, setCount] = React.useState(2);\n  const [night, setNight] = React.useState(false);\n  return <main data-night={night}>\n    <Badge count={count} /><Badge count={count} />\n    <button onClick={() => setCount(c => c + 1)}>Add point</button>\n    <button onClick={() => setNight(n => !n)}>Change background</button>\n  </main>;\n}\n```"
+      },
+      {
+        "paragraph": 3,
+        "fact": "```react\nfunction Badge({count}) {\n  const doubled = count * 2;\n  return <p data-badge>{doubled} points</p>;\n}\nfunction App() {\n  const [count, setCount] = React.useState(4);\n  const [night, setNight] = React.useState(false);\n  return <main data-night={night}>\n    <Badge count={count} /><Badge count={count} />\n    <button onClick={() => setCount(c => c + 1)}>Add point</button>\n    <button onClick={() => setNight(n => !n)}>Change background</button>\n  </main>;\n}\n```\nThe changed start produces two “8 points” paragraphs. An unrelated background-state change leaves both values alone; Add point changes both to 10."
+      },
+      {
+        "paragraph": 4,
+        "fact": "Keep both badges pure. Add point must update both; Change background must not change their numbers. These finite behavior checks do not prove that every possible implementation is correct. Optional local practice: change one input, predict the screen, then run it."
+      }
+    ],
+    "reasoning": "Rendering can be repeated; an outside mutation makes repeated calculation change the world. Move user-triggered changes to an event and keep render calculations repeatable.",
+    "source": "https://18.react.dev/learn/keeping-components-pure",
+    "prerequisites": [
+      "react-20",
+      "react-21"
+    ]
+  },
+  {
+    "id": "react-32",
+    "quizTarget": "A ref’s current property is changed. Does that alone ask React to rerender?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "A ref is a stable box for a value that React does not use to decide what to render. React.useRef(null) returns an object with a current property. Unlike a state setter, changing current does not request a render. Call the Hook unconditionally at the top of the component."
+      },
+      {
+        "paragraph": 1,
+        "fact": "Passing ref={field} asks React to put the input DOM node into field.current after committing it, and clear it when removed. The click handler can call that node’s focus() method to move keyboard focus. Optional chaining ?. skips the call if current is null. Do not read or change DOM focus during render. blur() in the changed example removes focus from that node; both DOM methods return undefined. A real button interaction can itself move focus; the supplied synthetic .click() check isolates the handler operation, not physical keyboard or pointer interaction. The frame calls App as the root component with no supplied props. App returns the JSX tree; define it here without calling App() yourself or adding imports/createRoot."
+      },
+      {
+        "paragraph": 2,
+        "fact": "```react\nfunction App() {\n  const field = React.useRef(null);\n  function focusField() {\n    field.current?.focus();\n  }\n  return <main>\n    <label htmlFor=\"study-topic\">Study topic</label>\n    <input id=\"study-topic\" ref={field} />\n    <button onClick={focusField}>Focus topic</button>\n  </main>;\n}\n```"
+      },
+      {
+        "paragraph": 3,
+        "fact": "```react\nfunction App() {\n  const field = React.useRef(null);\n  function focusField() {\n    field.current?.blur();\n  }\n  return <main>\n    <label htmlFor=\"study-topic\">Study topic</label>\n    <input id=\"study-topic\" ref={field} />\n    <button onClick={focusField}>Leave topic</button>\n  </main>;\n}\n```\nThe changed handler removes focus instead of putting it on the input. Try focusing the field first, then activating the button. The visible label association remains unchanged."
+      },
+      {
+        "paragraph": 4,
+        "fact": "Wire the ref to the input and focus that input when Focus topic is clicked. These finite behavior checks do not prove that every possible implementation is correct. Optional local practice: change one input, predict the screen, then run it."
+      }
+    ],
+    "reasoning": "A ref keeps a mutable value without state-update scheduling. React can still use a ref to give event code a committed DOM node.",
+    "source": "https://18.react.dev/learn/manipulating-the-dom-with-refs",
+    "prerequisites": [
+      "react-26",
+      "react-20"
+    ]
+  },
+  {
+    "id": "react-33",
+    "quizTarget": "The title setup reads topic but its dependency list is []. After topic changes, which value can become stale?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "An Effect synchronizes something outside React’s rendered tree. Here the outside value is this sandbox document’s title, not the user’s main browser tab. Derive ordinary JSX directly during render; an Effect is not needed just to calculate a display string."
+      },
+      {
+        "paragraph": 1,
+        "fact": "React.useEffect(setup, [topic]) runs setup after the component commits. React compares each dependency with its previous value using Object.is. The setup reads topic, so topic belongs in the list. Before a changed setup and when removing the component, React calls the cleanup function returned by the previous setup. Here cleanup restores the title captured by that setup. Only one TitleNote owns the title in this example. An empty list would omit this changing input; it is not a way to keep synchronization correct. The frame calls App as the root component with no supplied props. App returns the JSX tree; define it here without calling App() yourself or adding imports/createRoot."
+      },
+      {
+        "paragraph": 2,
+        "fact": "```react\nfunction TitleNote({topic}) {\n  React.useEffect(() => {\n    const previous = document.title;\n    document.title = \"Study: \" + topic;\n    return () => { document.title = previous; };\n  }, [topic]);\n  return <p>Topic: {topic}</p>;\n}\nfunction App() {\n  const [topic, setTopic] = React.useState(\"Maps\");\n  const [visible, setVisible] = React.useState(true);\n  return <main>\n    <button onClick={() => setTopic(\"Birds\")}>Choose Birds</button>\n    <button onClick={() => setVisible(v => !v)}>Toggle note</button>\n    {visible && <TitleNote topic={topic} />}\n  </main>;\n}\n```"
+      },
+      {
+        "paragraph": 3,
+        "fact": "```react\nfunction TitleNote({topic}) {\n  React.useEffect(() => {\n    const previous = document.title;\n    document.title = \"Study: \" + topic;\n    return () => { document.title = previous; };\n  }, []);\n  return <p>Topic: {topic}</p>;\n}\nfunction App() {\n  const [topic, setTopic] = React.useState(\"Maps\");\n  const [visible, setVisible] = React.useState(true);\n  return <main>\n    <button onClick={() => setTopic(\"Birds\")}>Choose Birds</button>\n    <button onClick={() => setVisible(v => !v)}>Toggle note</button>\n    {visible && <TitleNote topic={topic} />}\n  </main>;\n}\n```\nWith [] the paragraph changes to Birds, but the document title remains Study: Maps. This is an intentionally stale changed case, not a recommended fix. Cleanup still runs when the note is removed."
+      },
+      {
+        "paragraph": 4,
+        "fact": "Make the frame title follow topic and restore its prior title when the note is removed. These finite behavior checks do not prove that every possible implementation is correct. Optional local practice: change one input, predict the screen, then run it."
+      }
+    ],
+    "reasoning": "Dependencies describe reactive values read by the setup. Omitting topic skips its update-driven synchronization; state rendering itself still occurs.",
+    "source": "https://18.react.dev/learn/synchronizing-with-effects",
+    "prerequisites": [
+      "react-31",
+      "react-21"
+    ]
+  },
+  {
+    "id": "react-34",
+    "quizTarget": "The key changes from River to Forest. What happens to Draft’s local text state?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "React associates state with a component’s identity at its place in the tree. Keeping its type and key keeps its state through ordinary rerenders. Changing the key deliberately replaces that identity, discarding the old local state and initializing a new instance."
+      },
+      {
+        "paragraph": 1,
+        "fact": "Draft is defined outside App so its component type is stable. useState(name) uses name only when that instance initializes; later prop changes do not overwrite its text automatically. key={name} tells React that each selected topic should start a new draft. key is React metadata, not a normal prop received by Draft; name is passed separately. This reset loses edits intentionally. The input’s change handler reads e.target.value and requests text state; Add mark appends an exclamation mark through an updater. The frame calls App as the root component with no supplied props. App returns the JSX tree; define it here without calling App() yourself or adding imports/createRoot."
+      },
+      {
+        "paragraph": 2,
+        "fact": "```react\nfunction Draft({name}) {\n  const [text, setText] = React.useState(name);\n  return <section>\n    <label>Draft <input value={text} onChange={e => setText(e.target.value)} /></label>\n    <button onClick={() => setText(t => t + \"!\")}>Add mark</button>\n  </section>;\n}\nfunction App() {\n  const [name, setName] = React.useState(\"River\");\n  return <main>\n    <button onClick={() => setName(n => n === \"River\" ? \"Forest\" : \"River\")}>Switch topic</button>\n    <Draft key={name} name={name} />\n  </main>;\n}\n```"
+      },
+      {
+        "paragraph": 3,
+        "fact": "```react\nfunction Draft({name}) {\n  const [text, setText] = React.useState(name);\n  return <section>\n    <label>Draft <input value={text} onChange={e => setText(e.target.value)} /></label>\n    <button onClick={() => setText(t => t + \"!\")}>Add mark</button>\n  </section>;\n}\nfunction App() {\n  const [name, setName] = React.useState(\"River\");\n  return <main>\n    <button onClick={() => setName(n => n === \"River\" ? \"Forest\" : \"River\")}>Switch topic</button>\n    <Draft name={name} />\n  </main>;\n}\n```\nWithout the key, changing the name prop to Forest preserves the edited text River!. The state initializer is not a synchronization rule. With the key, the fresh instance starts with Forest."
+      },
+      {
+        "paragraph": 4,
+        "fact": "Keep edits while using the same topic, but reset the draft to the new name when switching topics. These finite behavior checks do not prove that every possible implementation is correct. Optional local practice: change one input, predict the screen, then run it."
+      }
+    ],
+    "reasoning": "A changed key resets that subtree’s identity. Keys are not a persistence store; keeping previous drafts would require storing them elsewhere.",
+    "source": "https://18.react.dev/learn/preserving-and-resetting-state",
+    "prerequisites": [
+      "react-08",
+      "react-26"
+    ]
+  },
+  {
+    "id": "react-35",
+    "quizTarget": "Why does returning close differ from returning close()?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "StrictMode enables extra development checks for its descendants. In React18 development it can render again and replay an initial Effect setup with cleanup between setups. That rehearsal exposes missing cleanup; it is not a promise that production performs the same rehearsal. The sandbox does not add this wrapper automatically."
+      },
+      {
+        "paragraph": 1,
+        "fact": "This example supplies a local resource counter, not a network connection. connections.open() increments active and returns a close function. Its local closed flag makes repeat closing harmless. Called as connections.open(), this refers to that object; += and -= increase or decrease its count. Listener opens the resource in its Effect and returns close for React to invoke during cleanup. Do not call close immediately with return close(). The UI does not read active as state; the checks inspect this supplied model directly. The frame calls App as the root component with no supplied props. App returns the JSX tree; define it here without calling App() yourself or adding imports/createRoot."
+      },
+      {
+        "paragraph": 2,
+        "fact": "```react\nconst connections = {\n  active: 0,\n  open() {\n    this.active += 1;\n    let closed = false;\n    return () => {\n      if (!closed) { this.active -= 1; closed = true; }\n    };\n  }\n};\nfunction Listener() {\n  React.useEffect(() => {\n    const close = connections.open();\n    return close;\n  }, []);\n  return <p>Listener mounted</p>;\n}\nfunction App() {\n  const [shown, setShown] = React.useState(true);\n  return <main>\n    <button onClick={() => setShown(s => !s)}>Toggle listener</button>\n    <React.StrictMode>{shown && <Listener />}</React.StrictMode>\n  </main>;\n}\n```"
+      },
+      {
+        "paragraph": 3,
+        "fact": "```react\nconst connections = {\n  active: 0,\n  open() {\n    this.active += 1;\n    let closed = false;\n    return () => {\n      if (!closed) { this.active -= 1; closed = true; }\n    };\n  }\n};\nfunction Listener() {\n  React.useEffect(() => {\n    const close = connections.open();\n    return undefined;\n  }, []);\n  return <p>Listener mounted</p>;\n}\nfunction App() {\n  const [shown, setShown] = React.useState(true);\n  return <main>\n    <button onClick={() => setShown(s => !s)}>Toggle listener</button>\n    <React.StrictMode>{shown && <Listener />}</React.StrictMode>\n  </main>;\n}\n```\nReturning undefined instead of close means no cleanup is registered. Removing Listener then leaves active resources behind. In a development build, the extra setup/cleanup rehearsal can expose the leak even earlier. The correct version has one live resource while mounted and zero after removal."
+      },
+      {
+        "paragraph": 4,
+        "fact": "Return the supplied resource’s cleanup so no resource remains after removing Listener, including under the explicit StrictMode wrapper. These finite behavior checks do not prove that every possible implementation is correct. Optional local practice: change one input, predict the screen, then run it."
+      }
+    ],
+    "reasoning": "The Effect return value is a cleanup callback. Passing the function preserves the later operation; invoking it runs the operation now.",
+    "source": "https://18.react.dev/reference/react/StrictMode",
+    "prerequisites": [
+      "react-09",
+      "react-31"
+    ]
+  },
+  {
+    "id": "react-36",
+    "quizTarget": "A cache is discarded and the pure calculation runs again with the same inputs. What should happen?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "Memoization means reusing a previously calculated result when its inputs have not changed. React.useMemo can cache a pure calculation. The screen must still be correct if the calculation runs again; a cache is a performance option, not a place to put a required side effect."
+      },
+      {
+        "paragraph": 1,
+        "fact": "useMemo receives a no-argument calculation callback and its dependencies, and returns the calculated value, not that callback. Here letter is reactive; activities is a fixed array outside the component and is never changed. React compares dependencies with Object.is and may discard a cache for supported reasons. selectActivities receives an array and prefix string; filter returns a new array without changing the input. startsWith returns whether a string begins with the supplied prefix. join makes comma-separated text; || supplies None for an empty result. This tiny example makes no speed claim. The frame calls App as the root component with no supplied props. App returns the JSX tree; define it here without calling App() yourself or adding imports/createRoot."
+      },
+      {
+        "paragraph": 2,
+        "fact": "```react\nconst activities = [\"Draw\", \"Read\", \"Run\"];\nfunction selectActivities(items, letter) {\n  return items.filter(item => item.startsWith(letter));\n}\nfunction App() {\n  const [letter, setLetter] = React.useState(\"R\");\n  const [dark, setDark] = React.useState(false);\n  const visible = React.useMemo(() => selectActivities(activities, letter), [letter]);\n  return <main data-dark={dark}>\n    <p>{visible.join(\", \") || \"None\"}</p>\n    <button onClick={() => setLetter(\"D\")}>Choose D</button>\n    <button onClick={() => setDark(d => !d)}>Toggle background</button>\n  </main>;\n}\n```"
+      },
+      {
+        "paragraph": 3,
+        "fact": "```react\nconst activities = [\"Draw\", \"Read\", \"Run\"];\nfunction selectActivities(items, letter) {\n  return items.filter(item => item.startsWith(letter));\n}\nfunction App() {\n  const [letter, setLetter] = React.useState(\"R\");\n  const [dark, setDark] = React.useState(false);\n  const visible = selectActivities(activities, letter);\n  return <main data-dark={dark}>\n    <p>{visible.join(\", \") || \"None\"}</p>\n    <button onClick={() => setLetter(\"D\")}>Choose D</button>\n    <button onClick={() => setDark(d => !d)}>Toggle background</button>\n  </main>;\n}\n```\nRemoving useMemo preserves the same screen and selection behavior. It may repeat the calculation on an unrelated render, but no output or required side effect should rely on how often it runs."
+      },
+      {
+        "paragraph": 4,
+        "fact": "Keep the selection pure and correct for changed prefixes and no matches; useMemo may reuse the result when letter stays the same. These finite behavior checks do not prove that every possible implementation is correct. Optional local practice: change one input, predict the screen, then run it."
+      }
+    ],
+    "reasoning": "The memoized operation is a pure calculation; repeating it does not alter external state. Memoization is optional for correctness, and these behavior checks do not prove a speedup or cache strategy.",
+    "source": "https://18.react.dev/reference/react/useMemo",
+    "prerequisites": [
+      "react-30",
+      "react-31",
+      "react-26"
+    ]
+  },
+  {
+    "id": "react-37",
+    "quizTarget": "Why should useId not replace record IDs as list keys?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "A label’s htmlFor must name the id of its input. Repeating a component with one hardcoded id creates ambiguous links. React.useId() gives each mounted Hook call its own ID string, stable through ordinary rerenders of that instance. Its spelling is React’s detail, not a value to predict."
+      },
+      {
+        "paragraph": 1,
+        "fact": "Call useId unconditionally at the top of TopicField. The input id and label htmlFor share the returned string. App uses two instances, so their strings differ. Adding -hint creates a related description id; aria-describedby links that text to its input. This establishes markup relationships, not proof of a particular screen-reader experience. useId does not take arguments. It is not a source of list keys: data records must supply their own stable keys. No server-rendering workflow is tested here. The frame calls App as the root component with no supplied props. App returns the JSX tree; define it here without calling App() yourself or adding imports/createRoot."
+      },
+      {
+        "paragraph": 2,
+        "fact": "```react\nfunction TopicField({label}) {\n  const id = React.useId();\n  const hintId = id + \"-hint\";\n  return <section>\n    <label htmlFor={id}>{label}</label>\n    <input id={id} aria-describedby={hintId} />\n    <p id={hintId}>Use a short topic name.</p>\n  </section>;\n}\nfunction App() {\n  const [version, setVersion] = React.useState(0);\n  return <main>\n    <button onClick={() => setVersion(v => v + 1)}>Rerender {version}</button>\n    <TopicField label=\"First topic\" /><TopicField label=\"Second topic\" />\n  </main>;\n}\n```"
+      },
+      {
+        "paragraph": 3,
+        "fact": "```react\nfunction TopicField({label}) {\n  const id = \"shared-topic\";\n  const hintId = id + \"-hint\";\n  return <section>\n    <label htmlFor={id}>{label}</label>\n    <input id={id} aria-describedby={hintId} />\n    <p id={hintId}>Use a short topic name.</p>\n  </section>;\n}\nfunction App() {\n  const [version, setVersion] = React.useState(0);\n  return <main>\n    <button onClick={() => setVersion(v => v + 1)}>Rerender {version}</button>\n    <TopicField label=\"First topic\" /><TopicField label=\"Second topic\" />\n  </main>;\n}\n```\nBoth changed instances now use shared-topic. Their labels and descriptions are no longer uniquely linked on the page, even though each component’s local strings match. A unique id must be unique across these rendered instances."
+      },
+      {
+        "paragraph": 4,
+        "fact": "Give each field a distinct, stable input ID and matching label/description links; keep those links correct after an unrelated rerender. These finite behavior checks do not prove that every possible implementation is correct. Optional local practice: change one input, predict the screen, then run it."
+      }
+    ],
+    "reasoning": "Keys track which data item keeps component identity; generated accessibility IDs solve a different problem. Recreating identity can lose state, while duplicate DOM IDs make relationships ambiguous.",
+    "source": "https://18.react.dev/reference/react/useId",
+    "prerequisites": [
+      "react-19",
+      "react-26",
+      "react-32"
+    ]
+  }
+]

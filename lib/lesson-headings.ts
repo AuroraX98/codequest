@@ -1,3 +1,5 @@
+import {additionalParagraphHeadings} from "./additional-unit-contents";
+import {remainingLessonHeadings} from "./remaining-lesson-headings";
 /** Authored table-of-contents labels for the unchanged explanation paragraphs.
  * Array positions match content/lessons.json exactly; no lesson prose is copied,
  * removed, or reordered here. Labels are concise navigation text, not summaries
@@ -122,9 +124,9 @@ const rows: [string, string][] = [
   ["developer-toolkit-09", "Review a release against actual evidence|Display untrusted text without interpreting HTML|Check permissions, validation, secrets, and packages|Review labels, focus, and keyboard access|Require all review results to be true|Count the possible Boolean review outcomes|Run the review checklist beyond the fixture"],
 ];
 
-export const lessonHeadings: Record<string, string[]> = Object.fromEntries(
+export const lessonHeadings: Record<string, string[]> = {...additionalParagraphHeadings, ...remainingLessonHeadings, ...Object.fromEntries(
   rows.map(([id, headings]) => [id, headings.split("|")]),
-);
+)};
 
 export function getLessonHeadings(lessonId: string): string[] {
   return Object.prototype.hasOwnProperty.call(lessonHeadings, lessonId) ? [...lessonHeadings[lessonId]] : [];

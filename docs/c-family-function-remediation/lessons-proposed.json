@@ -1,0 +1,1525 @@
+[
+  {
+    "id": "csharp-10",
+    "title": "Build and inspect strings",
+    "summary": "Replace topic with \"moon\" before these two operations. What prints?",
+    "learningMode": "concept",
+    "explanation": [
+      "An interpolated string begins with $. Expressions inside braces are evaluated and inserted into the text, as in $\"Score: {score}\".",
+      "A string value is immutable. Methods such as ToUpperInvariant return another string; they do not rewrite the original variable’s value unless you assign that result.\n\nToUpperInvariant() takes no arguments and returns an uppercased string using invariant culture: fixed casing rules rather than the user’s current language settings. The receiver remains unchanged; a distinct new string object is not promised.",
+      "Length counts UTF-16 code units. An index in brackets starts at zero; text[0] reads the first code unit as a char. Some displayed characters use more than one code unit, so Length is not always a count of human-visible symbols.",
+      "Calling a method and ignoring its result leaves the original text unchanged. Store the returned value if you need it later.",
+      "Complete local C# example; the app does not execute it:\n```csharp\nusing System;\nstring topic = \"stars\";\nstring loud = topic.ToUpperInvariant();\nConsole.WriteLine($\"{topic} / {loud}\");\n```",
+      "Expected behavior from this example: stars / STARS. This expected result is a reasoned prediction until a compiler test is recorded.",
+      "Optional local transfer task: Display both the original and transformed text. Change the input and show that ignoring ToUpperInvariant’s returned value does not change the original variable. You may trace it on paper if no C# toolchain is installed; reading completion does not certify a run."
+    ],
+    "analogy": {
+      "familiar": "",
+      "connection": "",
+      "limit": "Small examples isolate a rule; real applications require further testing."
+    },
+    "steps": [
+      "Read one visible idea at a time.",
+      "Trace the changed case before choosing an answer.",
+      "Explain the consequence, then optionally try the local transfer task."
+    ],
+    "starter": "",
+    "solution": "",
+    "runtime": "javascript",
+    "checks": [],
+    "quiz": {
+      "question": "Replace topic with \"moon\" before these two operations. What prints?",
+      "choices": [
+        "MOON / MOON because ToUpperInvariant mutates topic.",
+        "moon / MOON because the method returns a separate result.",
+        "stars / STARS because the code fixes those words."
+      ],
+      "answer": 1,
+      "explanation": "The original string remains moon; the new result stored in loud is MOON."
+    },
+    "hints": [
+      "Return to the preceding idea and compare what changed."
+    ],
+    "math": null,
+    "filename": "",
+    "estimatedMinutes": 7,
+    "externalNotes": "C#14/.NET10 core syllabus. Concept-mode reading and understanding check; no in-app C# execution and no claim of mastery. Full example and optional local transfer task are supplied. Actual compiler validation, if available, is reported separately."
+  },
+  {
+    "id": "csharp-19",
+    "title": "Keep distinct values in a HashSet",
+    "summary": "Change only the second Add argument to 7. What changes?",
+    "learningMode": "concept",
+    "explanation": [
+      "HashSet<int> represents a set of distinct integers. Adding an already-present value does not create another copy.",
+      "Add returns true when the set gains a new member, and false when the member was already present.",
+      "Contains checks whether a value belongs to the set. Count gives the number of distinct members, not the number of attempted additions.\n\nContains(value) checks membership without adding anything and returns a Boolean. In this separate example:\n```csharp\nvar sample = new System.Collections.Generic.HashSet<int> { 4 };\nSystem.Console.WriteLine(sample.Contains(4));\nSystem.Console.WriteLine(sample.Contains(7));\n```\nOutput: True, then False.",
+      "A set has no list-style index and should not be used when your result depends on a promised iteration order. Choose a list when ordered positions are part of your task.",
+      "Complete local C# example; the app does not execute it:\n```csharp\nusing System;\nusing System.Collections.Generic;\nHashSet<int> seen = new HashSet<int>();\nseen.Add(4);\nbool added = seen.Add(4);\nConsole.WriteLine(added);\nConsole.WriteLine(seen.Count);\n```",
+      "Expected behavior from this example: False then 1. This expected result is a reasoned prediction until a compiler test is recorded.",
+      "Optional local transfer task: Track repeated numeric IDs and compare attempts with distinct Count. Predict Add’s Boolean for each attempt. You may trace it on paper if no C# toolchain is installed; reading completion does not certify a run."
+    ],
+    "analogy": {
+      "familiar": "",
+      "connection": "",
+      "limit": "Small examples isolate a rule; real applications require further testing."
+    },
+    "steps": [
+      "Read one visible idea at a time.",
+      "Trace the changed case before choosing an answer.",
+      "Explain the consequence, then optionally try the local transfer task."
+    ],
+    "starter": "",
+    "solution": "",
+    "runtime": "javascript",
+    "checks": [],
+    "quiz": {
+      "question": "Change only the second Add argument to 7. What changes?",
+      "choices": [
+        "It still returns false because the set has one value already.",
+        "It removes 4 to make room for 7.",
+        "It returns true and Count becomes 2."
+      ],
+      "answer": 2,
+      "explanation": "7 is a new member, so the set grows while retaining 4."
+    },
+    "hints": [
+      "Return to the preceding idea and compare what changed."
+    ],
+    "math": null,
+    "filename": "",
+    "estimatedMinutes": 7,
+    "externalNotes": "C#14/.NET10 core syllabus. Concept-mode reading and understanding check; no in-app C# execution and no claim of mastery. Full example and optional local transfer task are supplied. Actual compiler validation, if available, is reported separately."
+  },
+  {
+    "id": "csharp-42",
+    "title": "Read and write a small file",
+    "summary": "Replace the second WriteAllText with AppendAllText(path, \"second\"). What does the successful read return?",
+    "learningMode": "concept",
+    "explanation": [
+      "A file path tells File where to read or write. Use a temporary file for this experiment so you do not overwrite your notes.",
+      "File.WriteAllText(path, text) writes the entire text and closes the file. If the file exists, its previous contents are replaced. File.AppendAllText adds text instead.",
+      "File.ReadAllText returns the file contents as a string. A successful write followed by a read can verify the value you stored; printing a path alone cannot.\n\nThis separate temporary-file example appends B after A. AppendAllText(path, text) returns no value; a read-back observes the stored result. The finally block attempts cleanup even if I/O fails:\n```csharp\nusing System;\nusing System.IO;\nstring samplePath = Path.GetTempFileName();\ntry {\n    File.WriteAllText(samplePath, \"A\");\n    File.AppendAllText(samplePath, \"B\");\n    Console.WriteLine(File.ReadAllText(samplePath));\n}\nfinally { File.Delete(samplePath); }\n```\nOutput: AB.",
+      "File operations can fail because of permissions or I/O problems. The try catches failures from its read/write body; finally attempts cleanup. The initial temporary-file creation is before try, and cleanup itself can fail, so those errors are not covered by these catches.",
+      "Complete local C# example; the app does not execute it:\n```csharp\nusing System;\nusing System.IO;\nstring path = Path.GetTempFileName();\ntry\n{\n    File.WriteAllText(path, \"first\");\n    File.WriteAllText(path, \"second\");\n    Console.WriteLine(File.ReadAllText(path));\n}\ncatch (IOException) { Console.WriteLine(\"File operation failed\"); }\ncatch (UnauthorizedAccessException) { Console.WriteLine(\"Access denied\"); }\nfinally { File.Delete(path); }\n```",
+      "Expected behavior from this example: second when file operations succeed; an environment failure may print the error message instead; cleanup can itself fail. This expected result is a reasoned prediction until a compiler test is recorded.",
+      "Optional local transfer: In a disposable folder, compare replacement and appending. Add an explicit newline and explain why the output changes. This is a separate local practice task, not a requirement to mark the reading complete."
+    ],
+    "analogy": {
+      "familiar": "",
+      "connection": "",
+      "limit": "Small examples isolate a rule; real applications require further testing."
+    },
+    "steps": [
+      "Read one visible idea at a time.",
+      "Trace the changed case before choosing an answer.",
+      "Explain the consequence, then optionally try the local transfer task."
+    ],
+    "starter": "",
+    "solution": "",
+    "runtime": "javascript",
+    "checks": [],
+    "quiz": {
+      "question": "Replace the second WriteAllText with AppendAllText(path, \"second\"). What does the successful read return?",
+      "choices": [
+        "second",
+        "firstsecond",
+        "first followed by an automatic newline and second"
+      ],
+      "answer": 1,
+      "explanation": "Append adds the supplied characters after first. No newline was included, so the result is firstsecond."
+    },
+    "hints": [
+      "Trace the inputs through the visible rule, then compare the changed case."
+    ],
+    "math": null,
+    "filename": "",
+    "estimatedMinutes": 7,
+    "externalNotes": "C#14/.NET10 core syllabus. Concept-mode reading and understanding check; no in-app C# execution and no claim of mastery. Full example and optional local transfer task are supplied. Actual compiler validation, if available, is reported separately."
+  },
+  {
+    "id": "csharp-52",
+    "title": "Await an asynchronous operation",
+    "summary": "ReadMinutesAsync now returns 7 instead of 4. What is printed, and when?",
+    "learningMode": "concept",
+    "explanation": [
+      "Task<T> represents an operation that will produce a T or fail. async permits await inside the method; it does not automatically create a new thread.",
+      "await waits for completion without blocking a thread just to wait for an incomplete task. The continuation uses the resulting value after completion.\n\nTask.Delay(10) takes a delay in milliseconds and returns a Task representing that delay. Awaiting it does not block a thread just to wait; scheduling means continuation is not promised at an exact instant.",
+      "An exception from an asynchronous Task method is observed when awaiting its task. Prefer Task rather than async void for ordinary methods so the caller can await and handle completion.",
+      "Complete local C# example; the app does not execute it:\n```csharp\nusing System;\nusing System.Threading.Tasks;\nint minutes = await ReadMinutesAsync();\nConsole.WriteLine(minutes + 1);\nstatic async Task<int> ReadMinutesAsync()\n{\n    await Task.Delay(10);\n    return 4;\n}\n```",
+      "Expected behavior from this example: 5 after the delay completes; the example does not promise exact timing. This expected result is a reasoned prediction until a compiler test is recorded.",
+      "Optional local transfer: Change the asynchronous method to throw InvalidOperationException and catch it around the await in the caller. This is a separate local practice task, not a requirement to mark the reading complete."
+    ],
+    "analogy": {
+      "familiar": "",
+      "connection": "",
+      "limit": "Small examples isolate a rule; real applications require further testing."
+    },
+    "steps": [
+      "Read one visible idea at a time.",
+      "Trace the changed case before choosing an answer.",
+      "Explain the consequence, then optionally try the local transfer task."
+    ],
+    "starter": "",
+    "solution": "",
+    "runtime": "javascript",
+    "checks": [],
+    "quiz": {
+      "question": "ReadMinutesAsync now returns 7 instead of 4. What is printed, and when?",
+      "choices": [
+        "8 after that task completes",
+        "8 before the task completes",
+        "A Task object, because await never returns a value"
+      ],
+      "answer": 0,
+      "explanation": "Await obtains the returned int, now 7. Only then does minutes + 1 produce 8."
+    },
+    "hints": [
+      "Trace the inputs through the visible rule, then compare the changed case."
+    ],
+    "math": null,
+    "filename": "",
+    "estimatedMinutes": 7,
+    "externalNotes": "C#14/.NET10 core syllabus. Concept-mode reading and understanding check; no in-app C# execution and no claim of mastery. Full example and optional local transfer task are supplied. Actual compiler validation, if available, is reported separately."
+  },
+  {
+    "id": "csharp-61",
+    "title": "Keep equality and hashing consistent",
+    "summary": "Change only second to new TopicKey(\"Python\"). What count should be printed?",
+    "learningMode": "concept",
+    "explanation": [
+      "A hash collection uses equality to decide whether values represent the same key. A record automatically supplies value equality for its data, unlike ordinary class reference equality by default.",
+      "If Equals says two values are equal, GetHashCode must return the same code for them in that execution. Different values may still share a hash; a hash collision is not proof of equality.\n\nEquals(other) tests logical equality and returns a Boolean. GetHashCode() takes no arguments and returns a hash code; compare equal values’ hashes rather than expecting a fixed number:\n```csharp\nusing System;\nvar a = new SampleKey(\"Read\");\nvar b = new SampleKey(\"Read\");\nConsole.WriteLine(a.Equals(b));\nConsole.WriteLine(a.Equals(new SampleKey(\"Write\")));\nConsole.WriteLine(a.GetHashCode() == b.GetHashCode());\npublic record SampleKey(string Name);\n```\nOutput: True, then False, then True.",
+      "Do not mutate fields used by equality or hashing while a key is stored in a hash collection. The record key here is used unchanged. Hash codes are not durable IDs or cryptographic fingerprints.",
+      "Complete local C# example; the app does not execute it:\n```csharp\nusing System;\nusing System.Collections.Generic;\nvar first = new TopicKey(\"C#\");\nvar second = new TopicKey(\"C#\");\nvar topics = new HashSet<TopicKey> { first, second };\nConsole.WriteLine(topics.Count);\npublic record TopicKey(string Name);\n```",
+      "Expected behavior from this example: 1. This expected result is a reasoned prediction until a compiler test is recorded.",
+      "Optional local transfer: Compare two equal records with two new ordinary class instances. Explain why customizing equality also requires compatible hashing. This is a separate local practice task, not a requirement to mark the reading complete."
+    ],
+    "analogy": {
+      "familiar": "",
+      "connection": "",
+      "limit": "Small examples isolate a rule; real applications require further testing."
+    },
+    "steps": [
+      "Read one visible idea at a time.",
+      "Trace the changed case before choosing an answer.",
+      "Explain the consequence, then optionally try the local transfer task."
+    ],
+    "starter": "",
+    "solution": "",
+    "runtime": "javascript",
+    "checks": [],
+    "quiz": {
+      "question": "Change only second to new TopicKey(\"Python\"). What count should be printed?",
+      "choices": [
+        "1 because every record of the same type is equal",
+        "2 because these record values have different names",
+        "It depends only on whether their hash codes collide"
+      ],
+      "answer": 1,
+      "explanation": "Record equality compares the data here. C# and Python are different names, so the set retains both even if hashes ever collide."
+    },
+    "hints": [
+      "Trace the inputs through the visible rule, then compare the changed case."
+    ],
+    "math": null,
+    "filename": "",
+    "estimatedMinutes": 7,
+    "externalNotes": "C#14/.NET10 core syllabus. Concept-mode reading and understanding check; no in-app C# execution and no claim of mastery. Full example and optional local transfer task are supplied. Actual compiler validation, if available, is reported separately."
+  },
+  {
+    "id": "csharp-62",
+    "title": "View a slice with Span",
+    "summary": "Change the declaration to int[] slice = values.AsSpan(1, 2).ToArray(); and keep the assignment. What is printed?",
+    "learningMode": "concept",
+    "explanation": [
+      "Span<T> describes a contiguous region of memory. array.AsSpan(start,length) views a portion of the array without copying its elements.",
+      "The slice below starts at array index 1. Assigning slice[0] therefore changes values[1], not values[0]. Slice indexes are relative to the view.",
+      "Span is a ref struct with lifetime restrictions. Do not store it in an ordinary class field or keep it across an await boundary. ReadOnlySpan prevents writes through that view but does not make the underlying array immutable.",
+      "ToArray makes a separate array. Changing that copy does not change the source; choose a view or a copy deliberately.\n\nToArray() takes no arguments and returns a new array containing the view’s elements. This separate example changes only that copy:\n```csharp\nusing System;\nint[] original = { 4, 5 };\nint[] copy = original.AsSpan(0, 1).ToArray();\ncopy[0] = 9;\nConsole.WriteLine($\"{original[0]} {copy[0]}\");\n```\nOutput: 4 9.",
+      "Complete local C# example; the app does not execute it:\n```csharp\nusing System;\nint[] values = [10, 20, 30];\nSpan<int> slice = values.AsSpan(1, 2);\nslice[0] = 99;\nConsole.WriteLine(string.Join(\",\", values));\n```",
+      "Expected behavior from this example: 10,99,30. This expected result is a reasoned prediction until a compiler test is recorded.",
+      "Optional local transfer: Create a ReadOnlySpan view, then change the original array through its own variable. Explain why the read-only view sees the changed value. This is a separate local practice task, not a requirement to mark the reading complete."
+    ],
+    "analogy": {
+      "familiar": "",
+      "connection": "",
+      "limit": "Small examples isolate a rule; real applications require further testing."
+    },
+    "steps": [
+      "Read one visible idea at a time.",
+      "Trace the changed case before choosing an answer.",
+      "Explain the consequence, then optionally try the local transfer task."
+    ],
+    "starter": "",
+    "solution": "",
+    "runtime": "javascript",
+    "checks": [],
+    "quiz": {
+      "question": "Change the declaration to int[] slice = values.AsSpan(1, 2).ToArray(); and keep the assignment. What is printed?",
+      "choices": [
+        "10,99,30 because every slice shares storage",
+        "99,20,30 because slice index 0 is source index 0",
+        "10,20,30 because the assignment changes an independent copy"
+      ],
+      "answer": 2,
+      "explanation": "ToArray copies the selected elements into another array. Changing its first element no longer writes through to values."
+    },
+    "hints": [
+      "Trace the inputs through the visible rule, then compare the changed case."
+    ],
+    "math": null,
+    "filename": "",
+    "estimatedMinutes": 7,
+    "externalNotes": "C#14/.NET10 core syllabus. Concept-mode reading and understanding check; no in-app C# execution and no claim of mastery. Full example and optional local transfer task are supplied. Actual compiler validation, if available, is reported separately."
+  },
+  {
+    "id": "cpp-19",
+    "title": "Pass inputs by const reference",
+    "summary": "Add name.clear() inside show_size before the output. What happens?",
+    "learningMode": "concept",
+    "explanation": [
+      "A parameter const std::string& name refers to the caller’s string without copying it for the parameter. const prevents this function from modifying that string through this parameter.",
+      "The function may inspect the input during the call. It must not keep a borrowed reference for use after the original object has gone away.",
+      "size() can inspect a const string. Calling a mutating operation such as clear() through this const reference is rejected.\n\nOn a mutable string, clear() takes no arguments, removes all characters and returns no value. This is separate from the const parameter below:\n```cpp\nstd::string text{\"Moon\"};\ntext.clear();\nstd::cout << text.size() << \"\\n\";\n```\nOutput: 0.",
+      "The complete example places the function definition before main, so its signature is known at the call site. void means this function returns no value; it displays the size instead.",
+      "Complete local C++ example; the app itself does not execute it:\n```cpp\n#include <iostream>\n#include <string>\nvoid show_size(const std::string& name)\n{\n    std::cout << name.size() << \"\\n\";\n}\n\nint main()\n{\n    std::string topic{\"Moon\"};\n    show_size(topic);\n    std::cout << topic << \"\\n\";\n}\n\n```",
+      "Expected output or behavior: 4\nMoon. Local compiler test evidence is recorded separately from app reading completion.",
+      "Optional local transfer task: Compare this read-only parameter with passing a string by value. Explain why neither version should be confused with a mutable reference. You may trace this without a compiler; finishing the reading is not proof of a local run."
+    ],
+    "analogy": {
+      "familiar": "",
+      "connection": "",
+      "limit": "The example isolates one rule; safe real software needs further testing."
+    },
+    "steps": [
+      "Read one visible idea at a time.",
+      "Predict the changed case before choosing.",
+      "Explain why, then optionally try the local transfer."
+    ],
+    "starter": "",
+    "solution": "",
+    "runtime": "javascript",
+    "checks": [],
+    "quiz": {
+      "question": "Add name.clear() inside show_size before the output. What happens?",
+      "choices": [
+        "The caller’s string is silently erased.",
+        "Compilation fails because this parameter provides const access.",
+        "clear changes only an automatic parameter copy."
+      ],
+      "answer": 1,
+      "explanation": "This is a reference rather than a copy, and its const access forbids mutation."
+    },
+    "hints": [
+      "Return to the preceding idea and compare what changed."
+    ],
+    "math": null,
+    "filename": "",
+    "estimatedMinutes": 7,
+    "externalNotes": "C++ Core v1, standard C++23 features checked against the available GCC14.2 implementation. This app provides concept reading and an understanding check, not a C++ browser runner. Local example tests are separate evidence and do not certify learner mastery."
+  },
+  {
+    "id": "cpp-29",
+    "title": "Transfer resources with move semantics",
+    "summary": "If b is copied from a instead, why does the final output still read 2 7?",
+    "learningMode": "concept",
+    "explanation": [
+      "std::move from <utility> does not itself move bytes or empty an object. It casts an expression so a receiving operation may use move semantics. Standard containers can transfer owned storage efficiently.",
+      "After moving this vector into b, b has the original values. The source vector remains valid but its value is unspecified; do not predict its size. Calling clear then push_back gives a a known new value.\n\na.clear() removes every element, leaving a.size() equal to zero; it returns no value. The later push_back then establishes the new element.",
+      "Moving is not reference aliasing. Reusing a after resetting it does not change b. Small scalar moves can just copy; std::move is not a universal speed switch.",
+      "Complete local C++ example; the app itself does not execute it:\n```cpp\n#include <iostream>\n#include <utility>\n#include <vector>\nint main() {\n    std::vector<int> a{2, 4};\n    auto b = std::move(a);\n    a.clear();\n    a.push_back(7);\n    std::cout << b[0] << ' ' << a[0] << '\\n';\n}\n\n```",
+      "Expected output or behavior: 2 7\n. Local compiler test evidence is recorded separately from app reading completion.",
+      "Optional local transfer task: Print b.size() after the move; do not assert a particular moved-from size. You may trace this without a compiler; finishing the reading is not proof of a local run."
+    ],
+    "analogy": {
+      "familiar": "",
+      "connection": "",
+      "limit": "The example isolates one rule; safe real software needs further testing."
+    },
+    "steps": [
+      "Read one visible idea at a time.",
+      "Predict the changed case before choosing.",
+      "Explain why, then optionally try the local transfer."
+    ],
+    "starter": "",
+    "solution": "",
+    "runtime": "javascript",
+    "checks": [],
+    "quiz": {
+      "question": "If b is copied from a instead, why does the final output still read 2 7?",
+      "choices": [
+        "Copying is identical to moving internally",
+        "The later clear/push establishes a fresh a in either case",
+        "Both vectors share one element"
+      ],
+      "answer": 1,
+      "explanation": "The final operations deliberately overwrite a’s contents, so the output does not reveal the different transfer/copy work."
+    },
+    "hints": [
+      "Return to the preceding idea and compare what changed."
+    ],
+    "math": null,
+    "filename": "",
+    "estimatedMinutes": 7,
+    "externalNotes": "C++ Core v1, standard C++23 features checked against the available GCC14.2 implementation. This app provides concept reading and an understanding check, not a C++ browser runner. Local example tests are separate evidence and do not certify learner mastery."
+  },
+  {
+    "id": "cpp-46",
+    "title": "Associate ordered keys with values",
+    "summary": "Replace the find/first-print statements with std::cout << scores[\"Zed\"] << \" \" << scores.size() << \"\\n\";. What changes?",
+    "learningMode": "concept",
+    "explanation": [
+      "A std::map<Key,Value> keeps one value for each distinct key and visits keys in comparator order. Here strings use their usual lexicographic ordering, so Ada comes before Mina, regardless of insertion order.",
+      "find(key) returns an iterator or end() when absent. Comparing with end() before dereferencing avoids using a missing element. find does not add a key.",
+      "operator[] is different: scores[\"Zed\"] inserts the missing key with a value-initialized int, which is 0. Use find or contains for observation; use [] when insertion is intended.\n\ncontains(key) returns a Boolean without inserting. In this separate example, indexing the absent key then inserts the default int value zero:\n```cpp\nstd::map<std::string,int> sample{{\"Ada\",2}};\nstd::cout << std::boolalpha << sample.contains(\"Zed\") << \"\\n\";\nstd::cout << sample[\"Zed\"] << \" \" << sample.size() << \"\\n\";\n```\nOutput: false, then 0 2.",
+      "The structured binding const auto& [name, score] gives names to the existing pair’s key and value. It does not copy the whole map. The map key cannot be reassigned through this pair.",
+      "Complete local C++ example; the app itself does not execute it:\n```cpp\n#include <iostream>\n#include <map>\n#include <string>\nint main() {\n    std::map<std::string, int> scores{{\"Mina\", 4}, {\"Ada\", 2}};\n    auto found = scores.find(\"Zed\");\n    std::cout << (found == scores.end()) << \" \" << scores.size() << \"\\n\";\n    for (const auto& [name, score] : scores)\n        std::cout << name << \":\" << score << \"\\n\";\n}\n```",
+      "Expected output or behavior: 1 2\nAda:2\nMina:4. Local compiler test evidence is recorded separately from app reading completion.",
+      "Optional local transfer task: Compare find, contains and [] on an absent key, recording size before and after. You may trace this without a compiler; finishing the reading is not proof of a local run."
+    ],
+    "analogy": {
+      "familiar": "",
+      "connection": "",
+      "limit": "The example isolates one rule; safe real software needs further testing."
+    },
+    "steps": [
+      "Read one visible idea at a time.",
+      "Predict the changed case before choosing.",
+      "Explain why, then optionally try the local transfer."
+    ],
+    "starter": "",
+    "solution": "",
+    "runtime": "javascript",
+    "checks": [],
+    "quiz": {
+      "question": "Replace the find/first-print statements with std::cout << scores[\"Zed\"] << \" \" << scores.size() << \"\\n\";. What changes?",
+      "choices": [
+        "It throws because Zed is absent.",
+        "It prints 0 2 and leaves the map unchanged.",
+        "It prints 0 3, then the loop also visits Zed:0."
+      ],
+      "answer": 2,
+      "explanation": "Indexing inserts Zed with int value 0. The later size is 3, and ordered iteration now includes that key."
+    },
+    "hints": [
+      "Return to the preceding idea and compare what changed."
+    ],
+    "math": null,
+    "filename": "",
+    "estimatedMinutes": 7,
+    "externalNotes": "C++ Core v1, standard C++23 features checked against the available GCC14.2 implementation. This app provides concept reading and an understanding check, not a C++ browser runner. Local example tests are separate evidence and do not certify learner mastery."
+  },
+  {
+    "id": "cpp-49",
+    "title": "Represent an optional result",
+    "summary": "Change reward(true) to reward(false). Which branch runs, and why?",
+    "learningMode": "concept",
+    "explanation": [
+      "std::optional<int> holds either an int or no value. std::nullopt constructs the empty state; it does not mean the integer zero.",
+      "In if(result), optional converts to true when a value is present, even when that value is 0. Only dereference *result after establishing presence; dereferencing an empty optional is not a safe fallback.",
+      "value_or(defaultValue) can supply a fallback without altering the optional. It is useful only when treating absence as that fallback fits the application.\n\nvalue_or(9) returns the contained int or the supplied fallback. has_value() takes no arguments and reports whether a value is present; it confirms the fallback did not fill the empty optional:\n```cpp\nstd::optional<int> present{0};\nstd::optional<int> absent;\nstd::cout << present.value_or(9) << \" \" << absent.value_or(9) << \"\\n\";\nstd::cout << std::boolalpha << absent.has_value() << \"\\n\";\n```\nOutput: 0 9, then false.",
+      "Complete local C++ example; the app itself does not execute it:\n```cpp\n#include <iostream>\n#include <optional>\nstd::optional<int> reward(bool earned) {\n    if (earned) return 0;\n    return std::nullopt;\n}\nint main() {\n    auto result = reward(true);\n    if (result) std::cout << \"value \" << *result << \"\\n\";\n    else std::cout << \"missing\\n\";\n}\n```",
+      "Expected output or behavior: value 0. Local compiler test evidence is recorded separately from app reading completion.",
+      "Optional local transfer task: Return an optional position from a search and handle both found-at-zero and not-found cases. You may trace this without a compiler; finishing the reading is not proof of a local run."
+    ],
+    "analogy": {
+      "familiar": "",
+      "connection": "",
+      "limit": "The example isolates one rule; safe real software needs further testing."
+    },
+    "steps": [
+      "Read one visible idea at a time.",
+      "Predict the changed case before choosing.",
+      "Explain why, then optionally try the local transfer."
+    ],
+    "starter": "",
+    "solution": "",
+    "runtime": "javascript",
+    "checks": [],
+    "quiz": {
+      "question": "Change reward(true) to reward(false). Which branch runs, and why?",
+      "choices": [
+        "missing: there is no contained int.",
+        "value 1: optional converts the payload to a bool first.",
+        "value 0: absence and zero are the same."
+      ],
+      "answer": 0,
+      "explanation": "false selects nullopt. The condition checks presence, not the numeric truthiness of an int."
+    },
+    "hints": [
+      "Return to the preceding idea and compare what changed."
+    ],
+    "math": null,
+    "filename": "",
+    "estimatedMinutes": 7,
+    "externalNotes": "C++ Core v1, standard C++23 features checked against the available GCC14.2 implementation. This app provides concept reading and an understanding check, not a C++ browser runner. Local example tests are separate evidence and do not certify learner mastery."
+  },
+  {
+    "id": "cpp-53",
+    "title": "State exception guarantees honestly",
+    "summary": "Instead, push directly into scores, then throw for a negative value, with no rollback. After adding -2, what does the catch leave?",
+    "learningMode": "concept",
+    "explanation": [
+      "The basic exception guarantee preserves valid invariants and avoids resource leaks, but may leave changed values. The strong guarantee additionally leaves the protected operation’s state unchanged when it fails.",
+      "addValidated builds a separate vector candidate. Copying, allocation or validation can fail before scores is changed. The final swap commits the prepared result; swapping these default-allocator vectors does not throw.\n\nscores.back() returns access to the last element and requires a nonempty vector. The initial element 4 remains present on this rejection path, so that read is valid.",
+      "Replacing the candidate operations with direct edits to scores changes the guarantee. Catching the validation exception does not undo a previously successful push_back. noexcept also does not mean success: an escaping exception from a noexcept function terminates.",
+      "Complete local C++ example; the app itself does not execute it:\n```cpp\n#include <iostream>\n#include <stdexcept>\n#include <vector>\nvoid addValidated(std::vector<int>& scores, int score) {\n    auto candidate = scores;\n    candidate.push_back(score);\n    if (score < 0) throw std::invalid_argument(\"negative\");\n    scores.swap(candidate);\n}\nint main() {\n    std::vector<int> scores{4};\n    try { addValidated(scores, -2); }\n    catch (const std::invalid_argument&) { std::cout << \"rejected \"; }\n    std::cout << scores.size() << \" \" << scores.back() << \"\\n\";\n}\n```",
+      "Expected output or behavior: rejected 1 4. Local compiler test evidence is recorded separately from app reading completion.",
+      "Optional local transfer task: Compare a prepare-then-commit function with a direct-mutation version and state the guarantee you actually implemented. You may trace this without a compiler; finishing the reading is not proof of a local run."
+    ],
+    "analogy": {
+      "familiar": "",
+      "connection": "",
+      "limit": "The example isolates one rule; safe real software needs further testing."
+    },
+    "steps": [
+      "Read one visible idea at a time.",
+      "Predict the changed case before choosing.",
+      "Explain why, then optionally try the local transfer."
+    ],
+    "starter": "",
+    "solution": "",
+    "runtime": "javascript",
+    "checks": [],
+    "quiz": {
+      "question": "Instead, push directly into scores, then throw for a negative value, with no rollback. After adding -2, what does the catch leave?",
+      "choices": [
+        "A valid vector of size 2 whose last value is -2.",
+        "An empty vector, because exceptions clear containers.",
+        "The original vector, because catch automatically reverses mutations."
+      ],
+      "answer": 0,
+      "explanation": "The direct push already succeeded. The catch handles control flow but supplies no rollback, so the strong guarantee has been lost."
+    },
+    "hints": [
+      "Return to the preceding idea and compare what changed."
+    ],
+    "math": null,
+    "filename": "",
+    "estimatedMinutes": 7,
+    "externalNotes": "C++ Core v1, standard C++23 features checked against the available GCC14.2 implementation. This app provides concept reading and an understanding check, not a C++ browser runner. Local example tests are separate evidence and do not certify learner mastery."
+  },
+  {
+    "id": "cpp-55",
+    "title": "Read and write files with streams",
+    "summary": "Open only the second output stream with std::ios::app. What text is read after both writes succeed?",
+    "learningMode": "concept",
+    "explanation": [
+      "This example creates or overwrites practice.txt in the current working directory. Run it only in a disposable folder; the test harness supplies one. Existing personal files are never needed.",
+      "An ofstream opened this way truncates an existing file. std::ios::app instead writes at the end. Neither insertion of a string nor opening in append mode adds a newline automatically.",
+      "if(!out) checks stream failure. Explicit close followed by a state check can detect a failed final write; destruction still closes resources through RAII, but does not report successful persistence to the caller. ifstream and getline also need success checks.\n\nstd::ifstream in(\"practice.txt\") opens that file for input. std::getline(in, text) reads into text until a newline or end-of-file; it consumes a found newline without storing it. Its returned stream can be tested for success before using text.",
+      "Complete local C++ example; the app itself does not execute it:\n```cpp\n#include <fstream>\n#include <iostream>\n#include <string>\nint main() {\n    {\n        std::ofstream out(\"practice.txt\");\n        if (!out) return 1;\n        out << \"first\";\n        out.close();\n        if (!out) return 1;\n    }\n    {\n        std::ofstream out(\"practice.txt\");\n        if (!out) return 1;\n        out << \"second\";\n        out.close();\n        if (!out) return 1;\n    }\n    std::ifstream in(\"practice.txt\");\n    std::string text;\n    if (!in || !std::getline(in, text)) return 1;\n    std::cout << text << \"\\n\";\n}\n```",
+      "Expected output or behavior: second. Local compiler test evidence is recorded separately from app reading completion.",
+      "Optional local transfer task: Try explicit newlines and read all lines in a loop; keep the file inside a disposable folder. You may trace this without a compiler; finishing the reading is not proof of a local run."
+    ],
+    "analogy": {
+      "familiar": "",
+      "connection": "",
+      "limit": "The example isolates one rule; safe real software needs further testing."
+    },
+    "steps": [
+      "Read one visible idea at a time.",
+      "Predict the changed case before choosing.",
+      "Explain why, then optionally try the local transfer."
+    ],
+    "starter": "",
+    "solution": "",
+    "runtime": "javascript",
+    "checks": [],
+    "quiz": {
+      "question": "Open only the second output stream with std::ios::app. What text is read after both writes succeed?",
+      "choices": [
+        "firstsecond",
+        "first followed by an automatic newline and second",
+        "second"
+      ],
+      "answer": 0,
+      "explanation": "Appending preserves first and adds the exact characters second. Neither write supplied a newline."
+    },
+    "hints": [
+      "Return to the preceding idea and compare what changed."
+    ],
+    "math": null,
+    "filename": "",
+    "estimatedMinutes": 7,
+    "externalNotes": "C++ Core v1, standard C++23 features checked against the available GCC14.2 implementation. This app provides concept reading and an understanding check, not a C++ browser runner. Local example tests are separate evidence and do not certify learner mastery."
+  },
+  {
+    "id": "cpp-61",
+    "title": "Use diagnostics and sanitizers responsibly",
+    "summary": "With this course’s -Wall -Wextra -Wpedantic -Werror flags, add int unused = 7; inside main and never use it. What should you do with the build result?",
+    "learningMode": "concept",
+    "explanation": [
+      "Use -Wall -Wextra -Wpedantic to request useful GCC diagnostics. They do not mean every possible warning is enabled. This course also uses -Werror, which treats emitted warnings as build errors rather than silently accepting them.\n\nSave the complete safe example below as main.cpp in a disposable folder. With GCC installed, these terminal commands build it with the stated warning policy and then run it on Linux or macOS:\n```sh\ng++ -std=c++23 -Wall -Wextra -Wpedantic -Werror main.cpp -o example\n./example\n```\nThe output is 2 4. These commands do not install a compiler.",
+      "A local build with -g -fsanitize=address,undefined can instrument checks for supported memory and undefined-behavior errors. It only checks paths that actually execute; a clean run does not prove the whole program safe. Tool availability and platform support matter.\n\nOn a platform whose GCC supports these sanitizers, build the same safe source into a separate executable:\n```sh\ng++ -std=c++23 -Wall -Wextra -Wpedantic -Werror -g -fsanitize=address,undefined main.cpp -o checked\n./checked\n```\nIts normal program output is still 2 4; sanitizer diagnostics, if any, must be investigated. A platform limitation is not a passing safety test.",
+      "The worked array iteration stays in bounds. We do not execute invalid indexing or dangling-pointer examples. To demonstrate a rejected build safely, the changed case adds a genuinely unused variable; the configured warning policy rejects it before any run.",
+      "Complete local C++ example; the app itself does not execute it:\n```cpp\n#include <array>\n#include <iostream>\nint main() {\n    std::array<int, 2> scores{2, 4};\n    for (int score : scores) std::cout << score << \" \";\n    std::cout << \"\\n\";\n}\n```",
+      "Expected output or behavior: 2 4 . Local compiler test evidence is recorded separately from app reading completion.",
+      "Optional local transfer task: Build the safe worked example with sanitizer instrumentation locally, then record both the flags and what paths you actually tested. You may trace this without a compiler; finishing the reading is not proof of a local run."
+    ],
+    "analogy": {
+      "familiar": "",
+      "connection": "",
+      "limit": "The example isolates one rule; safe real software needs further testing."
+    },
+    "steps": [
+      "Read one visible idea at a time.",
+      "Predict the changed case before choosing.",
+      "Explain why, then optionally try the local transfer."
+    ],
+    "starter": "",
+    "solution": "",
+    "runtime": "javascript",
+    "checks": [],
+    "quiz": {
+      "question": "With this course’s -Wall -Wextra -Wpedantic -Werror flags, add int unused = 7; inside main and never use it. What should you do with the build result?",
+      "choices": [
+        "Treat the warning-as-error failure as a rejected build; no run is certified.",
+        "Assume compilation succeeded because unused variables can never matter.",
+        "Run an out-of-bounds access to make the warning go away."
+      ],
+      "answer": 0,
+      "explanation": "GCC diagnoses the unused local, and -Werror makes that diagnostic a compilation failure. Fix the cause or justify a deliberate policy change; do not pretend a binary was produced."
+    },
+    "hints": [
+      "Return to the preceding idea and compare what changed."
+    ],
+    "math": null,
+    "filename": "",
+    "estimatedMinutes": 7,
+    "externalNotes": "C++ Core v1, standard C++23 features checked against the available GCC14.2 implementation. This app provides concept reading and an understanding check, not a C++ browser runner. Local example tests are separate evidence and do not certify learner mastery."
+  },
+  {
+    "id": "cpp-67",
+    "title": "Update a simple counter atomically",
+    "summary": "Change only the final fetch_add(3) to fetch_add(5). Which pair prints?",
+    "learningMode": "concept",
+    "explanation": [
+      "std::atomic<int> supports indivisible accesses to this one counter. fetch_add(1) is an atomic read-modify-write: competing updates do not lose an increment as a separate load followed by store could.",
+      "fetch_add(amount) adds amount but returns the previous value. After both workers finish 100 increments, fetch_add(3) returns 200 while the counter becomes 203.\n\ncount.load() takes no arguments and atomically returns the current counter value without changing it. This call uses the same default sequentially consistent ordering as the fetch-add calls.",
+      "This example keeps the default sequentially consistent ordering. It does not teach custom memory-order or lock-free design. Individual atomic variables do not automatically preserve a multi-variable invariant; mutex-protected groups of operations may still be needed.",
+      "Complete local C++ example; the app itself does not execute it:\n```cpp\n#include <atomic>\n#include <iostream>\n#include <thread>\nint main() {\n    std::atomic<int> count{0};\n    auto work = [&] {\n        for (int i = 0; i < 100; ++i) count.fetch_add(1);\n    };\n    {\n        std::jthread first(work);\n        std::jthread second(work);\n    }\n    int previous = count.fetch_add(3);\n    std::cout << previous << \" \" << count.load() << \"\\n\";\n}\n```",
+      "Expected output or behavior: 200 203. Local compiler test evidence is recorded separately from app reading completion.",
+      "Optional local transfer task: Use the returned old value to assign distinct ticket numbers; do not replace fetch_add with a separate load and store. You may trace this without a compiler; finishing the reading is not proof of a local run."
+    ],
+    "analogy": {
+      "familiar": "",
+      "connection": "",
+      "limit": "The example isolates one rule; safe real software needs further testing."
+    },
+    "steps": [
+      "Read one visible idea at a time.",
+      "Predict the changed case before choosing.",
+      "Explain why, then optionally try the local transfer."
+    ],
+    "starter": "",
+    "solution": "",
+    "runtime": "javascript",
+    "checks": [],
+    "quiz": {
+      "question": "Change only the final fetch_add(3) to fetch_add(5). Which pair prints?",
+      "choices": [
+        "203 205",
+        "205 205",
+        "200 205"
+      ],
+      "answer": 2,
+      "explanation": "fetch_add still returns the old 200 and atomically raises the counter by 5 to 205."
+    },
+    "hints": [
+      "Return to the preceding idea and compare what changed."
+    ],
+    "math": null,
+    "filename": "",
+    "estimatedMinutes": 7,
+    "externalNotes": "C++ Core v1, standard C++23 features checked against the available GCC14.2 implementation. This app provides concept reading and an understanding check, not a C++ browser runner. Local example tests are separate evidence and do not certify learner mastery."
+  },
+  {
+    "id": "java-11",
+    "title": "Compare and preserve String values",
+    "summary": "Replace second’s initializer with first. What do the two comparisons print?",
+    "learningMode": "concept",
+    "explanation": [
+      "For references, == asks whether both refer to the same object. String.equals compares the characters in the two strings.",
+      "new String(\"Moon\") creates a separate String object. Two such objects can contain equal text without being the same object. String literals may be shared internally, so do not generalize from literal identity comparisons.",
+      "Methods such as toUpperCase return a result rather than rewriting the original String object. Assign a returned result if you want a variable to refer to it.\n\ntoUpperCase() takes no arguments and returns uppercased text using the default locale. These letters give this result; locale-sensitive text can differ between locales. The original String is unchanged:\n```java\nString original = \"moon\";\nString upper = original.toUpperCase();\nSystem.out.println(original + \" \" + upper);\n```\nOutput: moon MOON.",
+      "Assigning second = first makes both variables refer to the same String object. It does not create a new object or change the text.",
+      "Complete local Java example; the app itself does not execute it:\n```java\npublic class Main {\n    public static void main(String[] args) {\n        String first = new String(\"Moon\");\n        String second = new String(\"Moon\");\n        System.out.println(first == second);\n        System.out.println(first.equals(second));\n    }\n}\n\n```",
+      "Expected output or behavior: false\ntrue. Compiler evidence is recorded separately from app reading completion.",
+      "Optional local transfer task: Compare two explicitly new equal strings with two references to one string. Explain identity and equality separately. You may trace it without a JDK; reading completion is not proof of a local run."
+    ],
+    "analogy": {
+      "familiar": "",
+      "connection": "",
+      "limit": "A small example isolates one rule; production programs require further testing."
+    },
+    "steps": [
+      "Read one visible idea at a time.",
+      "Predict the changed case before choosing.",
+      "Explain the consequence, then optionally try the local transfer."
+    ],
+    "starter": "",
+    "solution": "",
+    "runtime": "javascript",
+    "checks": [],
+    "quiz": {
+      "question": "Replace second’s initializer with first. What do the two comparisons print?",
+      "choices": [
+        "false then false because assigning references erases text.",
+        "true then true because both identity and text now match.",
+        "true then false because identity prevents equals from working."
+      ],
+      "answer": 1,
+      "explanation": "Both variables now refer to one object, whose text is naturally equal to itself."
+    },
+    "hints": [
+      "Return to the preceding idea and compare what changed."
+    ],
+    "math": null,
+    "filename": "",
+    "estimatedMinutes": 7,
+    "externalNotes": "Java Core v1 uses stable Java25 LTS features without preview flags. The app supplies concept reading and an understanding check, not a Java browser runner. Local compiler results are recorded separately and do not certify learner mastery."
+  },
+  {
+    "id": "java-36",
+    "title": "Keep equals and hashCode consistent",
+    "summary": "Give b the id 8. What changes in equals and the set size?",
+    "learningMode": "concept",
+    "explanation": [
+      "== compares reference identity for objects. equals can define logical equality. A record’s generated equals compares corresponding components, so two separate Key(7) instances are equal.",
+      "If equals returns true, the two objects must have the same hashCode. Unequal objects may still collide; a hash code is not a unique identifier. Records generate compatible equals and hashCode implementations.\n\nhashCode() takes no arguments and returns an int hash. After the Key record declaration shown below, this checks the equal-value requirement without assuming any particular hash number:\n```java\nKey first = new Key(3);\nKey second = new Key(3);\nSystem.out.println(first.hashCode() == second.hashCode());\n```\nOutput: true.",
+      "HashSet uses hashing and equality to detect duplicates. Do not change fields that participate in equality while an object is a hash-based key; this record’s primitive component is stable.",
+      "Complete local Java example; the app itself does not execute it:\n```java\nimport java.util.HashSet;\nrecord Key(int id) {}\npublic class Main {\n    public static void main(String[] args) {\n        Key a = new Key(7);\n        Key b = new Key(7);\n        HashSet<Key> keys = new HashSet<>();\n        keys.add(a);\n        keys.add(b);\n        System.out.println(a == b);\n        System.out.println(a.equals(b));\n        System.out.println(keys.size());\n    }\n}\n\n```",
+      "Expected output or behavior: false\ntrue\n1\n. Compiler evidence is recorded separately from app reading completion.",
+      "Optional local transfer task: Verify equal records have equal hash codes without predicting a universal numeric hash formula. You may trace it without a JDK; reading completion is not proof of a local run."
+    ],
+    "analogy": {
+      "familiar": "",
+      "connection": "",
+      "limit": "A small example isolates one rule; production programs require further testing."
+    },
+    "steps": [
+      "Read one visible idea at a time.",
+      "Predict the changed case before choosing.",
+      "Explain the consequence, then optionally try the local transfer."
+    ],
+    "starter": "",
+    "solution": "",
+    "runtime": "javascript",
+    "checks": [],
+    "quiz": {
+      "question": "Give b the id 8. What changes in equals and the set size?",
+      "choices": [
+        "equals is false and size is 2",
+        "equals is false but all record hashes must be unique",
+        "equals stays true and size stays 1"
+      ],
+      "answer": 0,
+      "explanation": "Different id components make the records unequal. Both distinct logical keys remain in the set; this does not require unique hashes for all possible records."
+    },
+    "hints": [
+      "Return to the preceding idea and compare what changed."
+    ],
+    "math": null,
+    "filename": "",
+    "estimatedMinutes": 7,
+    "externalNotes": "Java Core v1 uses stable Java25 LTS features without preview flags. The app supplies concept reading and an understanding check, not a Java browser runner. Local compiler results are recorded separately and do not certify learner mastery."
+  },
+  {
+    "id": "java-38",
+    "title": "Constrain a generic type parameter",
+    "summary": "Replace Integer.valueOf(3) with the String \"3\". What happens?",
+    "learningMode": "concept",
+    "explanation": [
+      "<T extends Number> limits T to Number or one of its subtypes. The bound lets the method call Number.doubleValue without guessing whether every Object supports it.",
+      "In static <T extends Number> double asDouble(T value), the type-parameter declaration comes before the return type. This is a generic method, not a generic Main class.",
+      "Number includes wrapper types such as Integer and Double; String is not a Number. The bound permits a conversion method, not arbitrary operator arithmetic on T and not protection from null.\n\nInteger.valueOf(3) takes an int and returns an Integer reference representing that value; it does not parse text. value.doubleValue() then returns the numeric value as a double.",
+      "Complete local Java example; the app itself does not execute it:\n```java\npublic class Main {\n    static <T extends Number> double asDouble(T value) {\n        return value.doubleValue();\n    }\n    public static void main(String[] args) {\n        System.out.println(asDouble(Integer.valueOf(3)));\n    }\n}\n\n```",
+      "Expected output or behavior: 3.0\n. Compiler evidence is recorded separately from app reading completion.",
+      "Optional local transfer task: Call the method with Double.valueOf(2.5) and distinguish conversion from parsing. You may trace it without a JDK; reading completion is not proof of a local run."
+    ],
+    "analogy": {
+      "familiar": "",
+      "connection": "",
+      "limit": "A small example isolates one rule; production programs require further testing."
+    },
+    "steps": [
+      "Read one visible idea at a time.",
+      "Predict the changed case before choosing.",
+      "Explain the consequence, then optionally try the local transfer."
+    ],
+    "starter": "",
+    "solution": "",
+    "runtime": "javascript",
+    "checks": [],
+    "quiz": {
+      "question": "Replace Integer.valueOf(3) with the String \"3\". What happens?",
+      "choices": [
+        "It parses the string automatically",
+        "Compilation rejects String because it is not a Number subtype",
+        "It returns 0.0"
+      ],
+      "answer": 1,
+      "explanation": "A bound checks the argument’s type, not whether its contents resemble a number. Parsing text is a separate operation."
+    },
+    "hints": [
+      "Return to the preceding idea and compare what changed."
+    ],
+    "math": null,
+    "filename": "",
+    "estimatedMinutes": 7,
+    "externalNotes": "Java Core v1 uses stable Java25 LTS features without preview flags. The app supplies concept reading and an understanding check, not a Java browser runner. Local compiler results are recorded separately and do not certify learner mastery."
+  },
+  {
+    "id": "java-40",
+    "title": "Box primitive values deliberately",
+    "summary": "Change boxed to null while keeping the guard. What happens?",
+    "learningMode": "concept",
+    "explanation": [
+      "Autoboxing converts an int value to an Integer reference; unboxing retrieves the primitive int. Collections use reference types, so ArrayList<Integer> relies on these conversions when storing or retrieving ints.",
+      "An Integer reference can be null; int cannot. Unboxing null throws NullPointerException. A presence check must occur before the conversion, not after it.",
+      "== on two wrapper references tests identity, and caching can make results misleading. Use equals for non-null logical wrapper equality or compare deliberately unboxed primitives when safe.\n\nFor a non-null Integer receiver, equals(other) returns whether the other object is an Integer with the same int value. It does not ask whether wrapper references share an object:\n```java\nInteger left = 400;\nInteger same = 400;\nInteger other = 401;\nSystem.out.println(left.equals(same));\nSystem.out.println(left.equals(other));\n```\nOutput: true, then false.",
+      "Complete local Java example; the app itself does not execute it:\n```java\npublic class Main {\n    public static void main(String[] args) {\n        Integer boxed = 4;\n        if (boxed != null) {\n            int value = boxed;\n            System.out.println(value + 1);\n        } else {\n            System.out.println(\"missing\");\n        }\n    }\n}\n\n```",
+      "Expected output or behavior: 5\n. Compiler evidence is recorded separately from app reading completion.",
+      "Optional local transfer task: Compare null-safe branching with an intentional local unboxing failure after exceptions are covered. You may trace it without a JDK; reading completion is not proof of a local run."
+    ],
+    "analogy": {
+      "familiar": "",
+      "connection": "",
+      "limit": "A small example isolates one rule; production programs require further testing."
+    },
+    "steps": [
+      "Read one visible idea at a time.",
+      "Predict the changed case before choosing.",
+      "Explain the consequence, then optionally try the local transfer."
+    ],
+    "starter": "",
+    "solution": "",
+    "runtime": "javascript",
+    "checks": [],
+    "quiz": {
+      "question": "Change boxed to null while keeping the guard. What happens?",
+      "choices": [
+        "It prints 1 because null becomes zero",
+        "The missing branch runs and no unboxing occurs",
+        "Unboxing throws before the if"
+      ],
+      "answer": 1,
+      "explanation": "The reference is tested first. The declaration int value = boxed is reached only in the non-null branch."
+    },
+    "hints": [
+      "Return to the preceding idea and compare what changed."
+    ],
+    "math": null,
+    "filename": "",
+    "estimatedMinutes": 7,
+    "externalNotes": "Java Core v1 uses stable Java25 LTS features without preview flags. The app supplies concept reading and an understanding check, not a Java browser runner. Local compiler results are recorded separately and do not certify learner mastery."
+  },
+  {
+    "id": "java-43",
+    "title": "Represent an optional result",
+    "summary": "Replace null with an empty String. Which branch runs?",
+    "learningMode": "concept",
+    "explanation": [
+      "Optional<String> holds a String or no value. Optional.ofNullable accepts a possibly null reference and produces an empty Optional for null. An empty string is still a present String.",
+      "isPresent tests presence; get requires a present value and otherwise throws NoSuchElementException. This explicit guard makes the example safe. Prefer APIs that clearly state whether absence is expected.",
+      "Optional.empty is not null and is not automatically an error. Do not use Optional itself as a null reference. Other combinators can transform values later; the present/absent distinction is the core here.\n\nOptional.empty() takes no arguments and returns an Optional with no value; the generic String type describes what a present value would be:\n```java\njava.util.Optional<String> empty = java.util.Optional.empty();\nSystem.out.println(empty.isPresent());\n```\nOutput: false.",
+      "Complete local Java example; the app itself does not execute it:\n```java\nimport java.util.Optional;\npublic class Main {\n    public static void main(String[] args) {\n        String text = null;\n        Optional<String> result = Optional.ofNullable(text);\n        if (result.isPresent()) System.out.println(result.get().length());\n        else System.out.println(\"missing\");\n    }\n}\n\n```",
+      "Expected output or behavior: missing\n. Compiler evidence is recorded separately from app reading completion.",
+      "Optional local transfer task: Compare a null input, empty String and nonempty String without changing the guard. You may trace it without a JDK; reading completion is not proof of a local run."
+    ],
+    "analogy": {
+      "familiar": "",
+      "connection": "",
+      "limit": "A small example isolates one rule; production programs require further testing."
+    },
+    "steps": [
+      "Read one visible idea at a time.",
+      "Predict the changed case before choosing.",
+      "Explain the consequence, then optionally try the local transfer."
+    ],
+    "starter": "",
+    "solution": "",
+    "runtime": "javascript",
+    "checks": [],
+    "quiz": {
+      "question": "Replace null with an empty String. Which branch runs?",
+      "choices": [
+        "The present branch prints length 0",
+        "get throws because a String must contain letters",
+        "missing, because empty strings are absent"
+      ],
+      "answer": 0,
+      "explanation": "Presence depends on whether a value exists, not whether the value has positive length. An empty String is a present value."
+    },
+    "hints": [
+      "Return to the preceding idea and compare what changed."
+    ],
+    "math": null,
+    "filename": "",
+    "estimatedMinutes": 7,
+    "externalNotes": "Java Core v1 uses stable Java25 LTS features without preview flags. The app supplies concept reading and an understanding check, not a Java browser runner. Local compiler results are recorded separately and do not certify learner mastery."
+  },
+  {
+    "id": "java-44",
+    "title": "Refine a type with pattern matching",
+    "summary": "Pass null instead of \"cat\". What happens?",
+    "learningMode": "concept",
+    "explanation": [
+      "value instanceof String text checks whether value refers to a String and binds a String variable text when the test succeeds. It avoids a separate explicit cast after the test.",
+      "With &&, the right operand runs only when the left is true. text is therefore available in text.isEmpty() and in the successful if body. If value is null, this instanceof test is false.\n\ntext.isEmpty() takes no arguments and returns true exactly when the String has length zero. The ! in this condition requires the opposite: a nonempty String.",
+      "This uses a reference-type pattern, a stable feature. No primitive patterns or preview flags are needed. Pattern matching does not turn unrelated object types into Strings.",
+      "Complete local Java example; the app itself does not execute it:\n```java\npublic class Main {\n    static int length(Object value) {\n        if (value instanceof String text && !text.isEmpty()) {\n            return text.length();\n        }\n        return -1;\n    }\n    public static void main(String[] args) {\n        System.out.println(length(\"cat\"));\n    }\n}\n\n```",
+      "Expected output or behavior: 3\n. Compiler evidence is recorded separately from app reading completion.",
+      "Optional local transfer task: Pass an Integer and an empty String, then explain the separate reasons both reach the fallback. You may trace it without a JDK; reading completion is not proof of a local run."
+    ],
+    "analogy": {
+      "familiar": "",
+      "connection": "",
+      "limit": "A small example isolates one rule; production programs require further testing."
+    },
+    "steps": [
+      "Read one visible idea at a time.",
+      "Predict the changed case before choosing.",
+      "Explain the consequence, then optionally try the local transfer."
+    ],
+    "starter": "",
+    "solution": "",
+    "runtime": "javascript",
+    "checks": [],
+    "quiz": {
+      "question": "Pass null instead of \"cat\". What happens?",
+      "choices": [
+        "NullPointerException from text.isEmpty",
+        "The pattern fails and the method returns -1",
+        "The text variable becomes the String null"
+      ],
+      "answer": 1,
+      "explanation": "instanceof is false for null, so && skips the right side and the method reaches its fallback."
+    },
+    "hints": [
+      "Return to the preceding idea and compare what changed."
+    ],
+    "math": null,
+    "filename": "",
+    "estimatedMinutes": 7,
+    "externalNotes": "Java Core v1 uses stable Java25 LTS features without preview flags. The app supplies concept reading and an understanding check, not a Java browser runner. Local compiler results are recorded separately and do not certify learner mastery."
+  },
+  {
+    "id": "java-48",
+    "title": "Filter and map a stream",
+    "summary": "If the filter keeps odd values instead, what is the result?",
+    "learningMode": "concept",
+    "explanation": [
+      "The local declaration var asks the compiler to infer a fixed static type from its initializer; it is not a dynamically typed variable. filter keeps elements whose predicate is true; map transforms retained elements. Neither changes the source list. toList is a terminal operation that obtains the resulting list.\n\nlist.stream() takes no arguments and creates a sequential stream over that collection; it does not copy the list into a new result list.",
+      "For 1, 2, 3, 4, keeping even values leaves 2 and 4; multiplying each by ten produces 20 and 40. Stream.toList returns an unmodifiable list, not a promise about its concrete class.",
+      "Complete local Java example; the app itself does not execute it:\n```java\nimport java.util.List;\npublic class Main {\n\n  public static void main(String[] args) {\n    var result = List.of(1, 2, 3, 4).stream()\n        .filter(n -> n % 2 == 0).map(n -> n * 10).toList();\n    System.out.println(result);\n  }\n}\n```",
+      "Expected output or behavior: [20, 40]. Compiler evidence is recorded separately from app reading completion.",
+      "Optional local transfer task: Predict map-before-filter using a predicate on the mapped values. You may trace it without a JDK; reading completion is not proof of a local run."
+    ],
+    "analogy": {
+      "familiar": "",
+      "connection": "",
+      "limit": "A small example isolates one rule; production programs require further testing."
+    },
+    "steps": [
+      "Read one visible idea at a time.",
+      "Predict the changed case before choosing.",
+      "Explain the consequence, then optionally try the local transfer."
+    ],
+    "starter": "",
+    "solution": "",
+    "runtime": "javascript",
+    "checks": [],
+    "quiz": {
+      "question": "If the filter keeps odd values instead, what is the result?",
+      "choices": [
+        "[20, 40]",
+        "[10, 30]",
+        "[1, 3]"
+      ],
+      "answer": 1,
+      "explanation": "Changing the predicate changes which inputs reach the unchanged multiplication stage."
+    },
+    "hints": [
+      "Return to the preceding idea and compare what changed."
+    ],
+    "math": null,
+    "filename": "",
+    "estimatedMinutes": 7,
+    "externalNotes": "Java Core v1 uses stable Java25 LTS features without preview flags. The app supplies concept reading and an understanding check, not a Java browser runner. Local compiler results are recorded separately and do not certify learner mastery."
+  },
+  {
+    "id": "java-49",
+    "title": "Collect and group stream results",
+    "summary": "What prints if the requested key changes from 3 to 9?",
+    "learningMode": "concept",
+    "explanation": [
+      "String::length here is an unbound instance method reference: each incoming String becomes the receiver on which length() is called. Collectors.groupingBy computes a key for each element and collects elements with the same key. The downstream counting collector counts each group rather than storing lists.\n\ncollect(collector) executes the stream with the supplied collector and returns its accumulated result: here, the map from length to count.",
+      "The default grouping result has no promised iteration order. Read specific keys to make the output deterministic. getOrDefault supplies zero when no group exists; it does not insert the key.",
+      "Complete local Java example; the app itself does not execute it:\n```java\nimport java.util.List;\nimport java.util.stream.Collectors;\npublic class Main {\n\n  public static void main(String[] args) {\n    var groups = List.of(\"oak\", \"elm\", \"pine\").stream()\n        .collect(Collectors.groupingBy(String::length, Collectors.counting()));\n    System.out.println(groups.getOrDefault(3, 0L));\n  }\n}\n```",
+      "Expected output or behavior: 2. Compiler evidence is recorded separately from app reading completion.",
+      "Optional local transfer task: Add a second four-letter word and predict its count. You may trace it without a JDK; reading completion is not proof of a local run."
+    ],
+    "analogy": {
+      "familiar": "",
+      "connection": "",
+      "limit": "A small example isolates one rule; production programs require further testing."
+    },
+    "steps": [
+      "Read one visible idea at a time.",
+      "Predict the changed case before choosing.",
+      "Explain the consequence, then optionally try the local transfer."
+    ],
+    "starter": "",
+    "solution": "",
+    "runtime": "javascript",
+    "checks": [],
+    "quiz": {
+      "question": "What prints if the requested key changes from 3 to 9?",
+      "choices": [
+        "null",
+        "0",
+        "3"
+      ],
+      "answer": 1,
+      "explanation": "There is no length-nine group, so getOrDefault returns the supplied zero."
+    },
+    "hints": [
+      "Return to the preceding idea and compare what changed."
+    ],
+    "math": null,
+    "filename": "",
+    "estimatedMinutes": 7,
+    "externalNotes": "Java Core v1 uses stable Java25 LTS features without preview flags. The app supplies concept reading and an understanding check, not a Java browser runner. Local compiler results are recorded separately and do not certify learner mastery."
+  },
+  {
+    "id": "java-54",
+    "title": "Work with dates and time zones",
+    "summary": "If the instant is 12:30 UTC the same day, what two dates print?",
+    "learningMode": "concept",
+    "explanation": [
+      "Instant represents a point on the time line. A ZoneId supplies rules for presenting that point as a local date and time. LocalDate alone contains no zone or time-of-day.\n\nInstant.parse(text) parses an ISO-8601 instant such as the supplied UTC text ending in Z. Calling toLocalDate() on the zoned result extracts its calendar date; that LocalDate does not retain the time-of-day or zone.",
+      "At 00:30 UTC on January 1, New York is still on December 31. Converting the instant with atZone preserves the instant, not the displayed calendar date. Region zones carry daylight-saving rules; fixed UTC does not shift seasonally.",
+      "Complete local Java example; the app itself does not execute it:\n```java\nimport java.time.*;\npublic class Main {\n\n  public static void main(String[] args) {\n    Instant point = Instant.parse(\"2025-01-01T00:30:00Z\");\n    System.out.println(point.atZone(ZoneId.of(\"UTC\")).toLocalDate());\n    System.out.println(point.atZone(ZoneId.of(\"America/New_York\")).toLocalDate());\n  }\n}\n```",
+      "Expected output or behavior: 2025-01-01\n2024-12-31. Compiler evidence is recorded separately from app reading completion.",
+      "Optional local transfer task: Explain why a birthday can be a LocalDate while an event timestamp needs an instant and display zone. You may trace it without a JDK; reading completion is not proof of a local run."
+    ],
+    "analogy": {
+      "familiar": "",
+      "connection": "",
+      "limit": "A small example isolates one rule; production programs require further testing."
+    },
+    "steps": [
+      "Read one visible idea at a time.",
+      "Predict the changed case before choosing.",
+      "Explain the consequence, then optionally try the local transfer."
+    ],
+    "starter": "",
+    "solution": "",
+    "runtime": "javascript",
+    "checks": [],
+    "quiz": {
+      "question": "If the instant is 12:30 UTC the same day, what two dates print?",
+      "choices": [
+        "2025-01-01 and 2025-01-01",
+        "2025-01-01 and 2024-12-31 always",
+        "The zone changes the underlying instant."
+      ],
+      "answer": 0,
+      "explanation": "At that later instant New York has also reached January 1."
+    },
+    "hints": [
+      "Return to the preceding idea and compare what changed."
+    ],
+    "math": null,
+    "filename": "",
+    "estimatedMinutes": 7,
+    "externalNotes": "Java Core v1 uses stable Java25 LTS features without preview flags. The app supplies concept reading and an understanding check, not a Java browser runner. Local compiler results are recorded separately and do not certify learner mastery."
+  },
+  {
+    "id": "java-56",
+    "title": "Compose a Comparator",
+    "summary": "What prints when the complete comparator is reversed?",
+    "learningMode": "concept",
+    "explanation": [
+      "Comparator.comparingInt(String::length) sorts by length. thenComparing adds a natural String order only when lengths tie. It does not replace the first key.",
+      "ArrayList is mutable, so sort can reorder it. List.of is unmodifiable and cannot itself be sorted in place. reversed applied to the complete comparator reverses both primary and tie-break ordering.\n\nreversed() takes no arguments and returns the reverse comparator; it does not sort a list until sort uses it. In this separate example:\n```java\nvar sample = new java.util.ArrayList<>(java.util.List.of(\"aa\", \"z\", \"bb\"));\njava.util.Comparator<String> order = java.util.Comparator.comparingInt(String::length)\n    .thenComparing(java.util.Comparator.naturalOrder());\nsample.sort(order.reversed());\nSystem.out.println(sample);\n```\nOutput: [bb, aa, z].",
+      "Complete local Java example; the app itself does not execute it:\n```java\nimport java.util.*;\npublic class Main {\n\n  public static void main(String[] args) {\n    var words = new ArrayList<>(List.of(\"bee\", \"ant\", \"ox\"));\n    Comparator<String> order = Comparator.comparingInt(String::length)\n        .thenComparing(Comparator.naturalOrder());\n    words.sort(order);\n    System.out.println(words);\n  }\n}\n```",
+      "Expected output or behavior: [ox, ant, bee]. Compiler evidence is recorded separately from app reading completion.",
+      "Optional local transfer task: Add another two-letter word and trace both comparison keys. You may trace it without a JDK; reading completion is not proof of a local run."
+    ],
+    "analogy": {
+      "familiar": "",
+      "connection": "",
+      "limit": "A small example isolates one rule; production programs require further testing."
+    },
+    "steps": [
+      "Read one visible idea at a time.",
+      "Predict the changed case before choosing.",
+      "Explain the consequence, then optionally try the local transfer."
+    ],
+    "starter": "",
+    "solution": "",
+    "runtime": "javascript",
+    "checks": [],
+    "quiz": {
+      "question": "What prints when the complete comparator is reversed?",
+      "choices": [
+        "[bee, ant, ox]",
+        "[ox, bee, ant]",
+        "[ant, bee, ox]"
+      ],
+      "answer": 0,
+      "explanation": "Reversing the whole composed comparator reverses both length order and the equal-length tie break."
+    },
+    "hints": [
+      "Return to the preceding idea and compare what changed."
+    ],
+    "math": null,
+    "filename": "",
+    "estimatedMinutes": 7,
+    "externalNotes": "Java Core v1 uses stable Java25 LTS features without preview flags. The app supplies concept reading and an understanding check, not a Java browser runner. Local compiler results are recorded separately and do not certify learner mastery."
+  },
+  {
+    "id": "java-57",
+    "title": "Make a defensive immutable snapshot",
+    "summary": "If copyOf is replaced by unmodifiableList, what prints?",
+    "learningMode": "concept",
+    "explanation": [
+      "List.copyOf makes an unmodifiable snapshot of the elements. Later structural edits to the original list do not change the snapshot. This is a shallow copy: mutable element objects can still be shared.",
+      "Collections.unmodifiableList wraps a live view of the original list. It prevents edits through that view but still reflects edits through the original reference. Neither operation makes arbitrary element objects deeply immutable.\n\nunmodifiableList(source) returns a view that blocks edits through that reference, not through source. In this separate example:\n```java\nvar source = new java.util.ArrayList<>(java.util.List.of(\"Read\"));\nvar view = java.util.Collections.unmodifiableList(source);\nsource.add(\"Write\");\nSystem.out.println(view);\n```\nOutput: [Read, Write].",
+      "Complete local Java example; the app itself does not execute it:\n```java\nimport java.util.*;\npublic class Main {\n\n  public static void main(String[] args) {\n    var original = new ArrayList<>(List.of(\"A\"));\n    var snapshot = List.copyOf(original);\n    original.add(\"B\");\n    System.out.println(snapshot);\n  }\n}\n```",
+      "Expected output or behavior: [A]. Compiler evidence is recorded separately from app reading completion.",
+      "Optional local transfer task: Explain what happens if the elements themselves are mutable lists. You may trace it without a JDK; reading completion is not proof of a local run."
+    ],
+    "analogy": {
+      "familiar": "",
+      "connection": "",
+      "limit": "A small example isolates one rule; production programs require further testing."
+    },
+    "steps": [
+      "Read one visible idea at a time.",
+      "Predict the changed case before choosing.",
+      "Explain the consequence, then optionally try the local transfer."
+    ],
+    "starter": "",
+    "solution": "",
+    "runtime": "javascript",
+    "checks": [],
+    "quiz": {
+      "question": "If copyOf is replaced by unmodifiableList, what prints?",
+      "choices": [
+        "Compilation fails because the original is mutable.",
+        "[A, B]",
+        "[A] because every unmodifiable list is a snapshot"
+      ],
+      "answer": 1,
+      "explanation": "The unmodifiable wrapper is a view backed by original; it sees the later addition."
+    },
+    "hints": [
+      "Return to the preceding idea and compare what changed."
+    ],
+    "math": null,
+    "filename": "",
+    "estimatedMinutes": 7,
+    "externalNotes": "Java Core v1 uses stable Java25 LTS features without preview flags. The app supplies concept reading and an understanding check, not a Java browser runner. Local compiler results are recorded separately and do not certify learner mastery."
+  },
+  {
+    "id": "java-66",
+    "title": "Update a counter atomically",
+    "summary": "If count starts at 10, what is its final value?",
+    "learningMode": "concept",
+    "explanation": [
+      "AtomicInteger.incrementAndGet performs one atomic increment and returns the updated value. Atomic operations avoid a lost update for this single counter; they do not automatically make a sequence of multiple calls one transaction.",
+      "Two workers increment the same AtomicInteger. Joins bound the task lifetime before the final get. No ordering of individual worker execution or performance improvement is promised.\n\nnew AtomicInteger() starts at zero. count.get() takes no arguments and atomically returns the current int without changing it.\n\nThe one-int constructor chooses an explicit initial value instead. No worker has run in this separate example:\n```java\nvar initial = new java.util.concurrent.atomic.AtomicInteger(10);\nSystem.out.println(initial.get());\n```\nOutput: 10.",
+      "Complete local Java example; the app itself does not execute it:\n```java\nimport java.util.concurrent.atomic.AtomicInteger;\npublic class Main {\n\n  public static void main(String[] args) throws InterruptedException {\n    AtomicInteger count = new AtomicInteger();\n    Runnable work = () -> { for (int i = 0; i < 500; i++) count.incrementAndGet(); };\n    Thread a = new Thread(work), b = new Thread(work);\n    a.start(); b.start(); a.join(); b.join();\n    System.out.println(count.get());\n  }\n}\n```",
+      "Expected output or behavior: 1000. Compiler evidence is recorded separately from app reading completion.",
+      "Optional local transfer task: Contrast one atomic increment with a separate get followed by set. You may trace it without a JDK; reading completion is not proof of a local run."
+    ],
+    "analogy": {
+      "familiar": "",
+      "connection": "",
+      "limit": "A small example isolates one rule; production programs require further testing."
+    },
+    "steps": [
+      "Read one visible idea at a time.",
+      "Predict the changed case before choosing.",
+      "Explain the consequence, then optionally try the local transfer."
+    ],
+    "starter": "",
+    "solution": "",
+    "runtime": "javascript",
+    "checks": [],
+    "quiz": {
+      "question": "If count starts at 10, what is its final value?",
+      "choices": [
+        "10 because get ignores worker changes.",
+        "1000 because atomic updates reset the initial value",
+        "1010"
+      ],
+      "answer": 2,
+      "explanation": "The 1000 atomic increments add to the initial ten."
+    },
+    "hints": [
+      "Return to the preceding idea and compare what changed."
+    ],
+    "math": null,
+    "filename": "",
+    "estimatedMinutes": 7,
+    "externalNotes": "Java Core v1 uses stable Java25 LTS features without preview flags. The app supplies concept reading and an understanding check, not a Java browser runner. Local compiler results are recorded separately and do not certify learner mastery."
+  },
+  {
+    "id": "java-68",
+    "title": "Use virtual threads for suitable waiting work",
+    "summary": "If this executor is replaced with newFixedThreadPool(1), what prints?",
+    "learningMode": "concept",
+    "explanation": [
+      "A virtual thread is scheduled by the Java runtime and can be useful for many tasks that mostly wait, often for I/O. It does not make CPU-bound arithmetic inherently faster. Use one per task rather than pooling virtual threads to limit their number.",
+      "newVirtualThreadPerTaskExecutor creates a virtual thread for each task. The task reports its own isVirtual flag. Future.get and executor close give explicit completion; the tiny example proves thread kind, not workload scalability.\n\nThread.currentThread() takes no arguments and returns the Thread executing that call. Inside this submitted task, it refers to the task thread rather than main.",
+      "Complete local Java example; the app itself does not execute it:\n```java\nimport java.util.concurrent.*;\npublic class Main {\n\n  public static void main(String[] args) throws InterruptedException, ExecutionException {\n    try (ExecutorService pool = Executors.newVirtualThreadPerTaskExecutor()) {\n      System.out.println(pool.submit(() -> Thread.currentThread().isVirtual()).get());\n    }\n  }\n}\n```",
+      "Expected output or behavior: true. Compiler evidence is recorded separately from app reading completion.",
+      "Optional local transfer task: Explain why this identity check is not evidence of faster CPU calculations. You may trace it without a JDK; reading completion is not proof of a local run."
+    ],
+    "analogy": {
+      "familiar": "",
+      "connection": "",
+      "limit": "A small example isolates one rule; production programs require further testing."
+    },
+    "steps": [
+      "Read one visible idea at a time.",
+      "Predict the changed case before choosing.",
+      "Explain the consequence, then optionally try the local transfer."
+    ],
+    "starter": "",
+    "solution": "",
+    "runtime": "javascript",
+    "checks": [],
+    "quiz": {
+      "question": "If this executor is replaced with newFixedThreadPool(1), what prints?",
+      "choices": [
+        "true because every Java 25 thread is virtual",
+        "false",
+        "The program must use a preview flag."
+      ],
+      "answer": 1,
+      "explanation": "The fixed pool uses platform threads; virtual threads are a stable feature and need no preview flag."
+    },
+    "hints": [
+      "Return to the preceding idea and compare what changed."
+    ],
+    "math": null,
+    "filename": "",
+    "estimatedMinutes": 7,
+    "externalNotes": "Java Core v1 uses stable Java25 LTS features without preview flags. The app supplies concept reading and an understanding check, not a Java browser runner. Local compiler results are recorded separately and do not certify learner mastery."
+  },
+  {
+    "id": "c-41",
+    "title": "Function pointers and callbacks",
+    "summary": "If apply receives plus_one instead, what prints?",
+    "learningMode": "concept",
+    "explanation": [
+      "int (*operation)(int) declares a pointer to a function accepting an int and returning int. The parentheses matter: without them, int *operation(int) would declare a function returning a pointer.",
+      "A function name can supply its function pointer. operation(value) calls it. The function-pointer type must match the called function; never cast an incompatible function pointer to bypass the contract. Here both functions are safe for the small input 4.\n\nplus_one accepts an int and returns that value plus one. Using the two function definitions below, this separate call selects that callback rather than double_value:\n```c\nprintf(\"%d\\n\", apply(10, plus_one));\n```\nOutput: 11.",
+      "Complete local C example; the app itself does not execute it:\n```c\n#include <stdio.h>\n\nint double_value(int x) { return x * 2; }\nint plus_one(int x) { return x + 1; }\nint apply(int value, int (*operation)(int)) { return operation(value); }\nint main(void) {\n printf(\"%d\\n\", apply(4, double_value));\n}\n```",
+      "Expected output or behavior: 8\n. Compiler evidence is recorded separately from app reading completion.",
+      "Optional local transfer task: Add a square callback and choose an input whose multiplication cannot overflow. You may trace it without a C compiler; reading completion is not proof of a local run."
+    ],
+    "analogy": {
+      "familiar": "",
+      "connection": "",
+      "limit": "A small example isolates one rule; production programs require further testing."
+    },
+    "steps": [
+      "Read one visible idea at a time.",
+      "Predict the changed case before choosing.",
+      "Explain the consequence, then optionally try the local transfer."
+    ],
+    "starter": "",
+    "solution": "",
+    "runtime": "javascript",
+    "checks": [],
+    "quiz": {
+      "question": "If apply receives plus_one instead, what prints?",
+      "choices": [
+        "5",
+        "4",
+        "8"
+      ],
+      "answer": 0,
+      "explanation": "apply invokes the supplied function with four. plus_one adds one instead of doubling it."
+    },
+    "hints": [
+      "Return to the preceding idea and compare what changed."
+    ],
+    "math": null,
+    "filename": "",
+    "estimatedMinutes": 7,
+    "externalNotes": "C Core v1 uses a portable C17 baseline supported by the verified compiler. C23 exists but is not claimed fully supported here. The app supplies concept reading and an understanding check, not a C browser runner. Local compiler results are recorded separately and do not certify learner mastery."
+  },
+  {
+    "id": "c-46",
+    "title": "Conditional compilation and portability",
+    "summary": "If VERBOSE is defined as 1, which text prints?",
+    "learningMode": "concept",
+    "explanation": [
+      "#if examines integer preprocessing expressions. A -D flag can define a configuration macro; #ifndef supplies a default only when the build did not define it. Code in an excluded branch is not compiled as C.\n\nFor the complete source below saved as main.c, this terminal command supplies the macro before preprocessing:\n```sh\ngcc -std=c17 -Wall -Wextra -Wpedantic -Werror -DVERBOSE=1 main.c -o app\n./app\n```\nOn Linux or macOS, running that executable prints details. The command assumes GCC is already installed.",
+      "Use documented feature macros to check optional facilities rather than guessing from an operating-system name. This tiny configuration chooses text; it is not proof that every C23 feature is implemented. The course uses C17 on GCC14.2.",
+      "Complete local C example; the app itself does not execute it:\n```c\n#include <stdio.h>\n#ifndef VERBOSE\n#define VERBOSE 0\n#endif\n#if VERBOSE\n#define MESSAGE \"details\"\n#else\n#define MESSAGE \"brief\"\n#endif\n\nint main(void) {\n    puts(MESSAGE);\n    return 0;\n}\n```",
+      "Expected output or behavior: brief. Compiler evidence is recorded separately from app reading completion.",
+      "Optional local transfer task: Compile with -DVERBOSE=1 instead of editing the default and explain why the guard preserves the build choice. You may trace it without a C compiler; reading completion is not proof of a local run."
+    ],
+    "analogy": {
+      "familiar": "",
+      "connection": "",
+      "limit": "A small example isolates one rule; production programs require further testing."
+    },
+    "steps": [
+      "Read one visible idea at a time.",
+      "Predict the changed case before choosing.",
+      "Explain the consequence, then optionally try the local transfer."
+    ],
+    "starter": "",
+    "solution": "",
+    "runtime": "javascript",
+    "checks": [],
+    "quiz": {
+      "question": "If VERBOSE is defined as 1, which text prints?",
+      "choices": [
+        "brief because #if runs after puts",
+        "details",
+        "Both strings, because excluded branches still execute."
+      ],
+      "answer": 1,
+      "explanation": "Preprocessing retains only the selected macro definition."
+    },
+    "hints": [
+      "Return to the preceding idea and compare what changed."
+    ],
+    "math": null,
+    "filename": "",
+    "estimatedMinutes": 7,
+    "externalNotes": "C Core v1 uses a portable C17 baseline supported by the verified compiler. C23 exists but is not claimed fully supported here. The app supplies concept reading and an understanding check, not a C browser runner. Local compiler results are recorded separately and do not certify learner mastery."
+  },
+  {
+    "id": "c-48",
+    "title": "Open files and check failures",
+    "summary": "If the filename is inside a nonexistent directory in this isolated fixture, what happens?",
+    "learningMode": "concept",
+    "explanation": [
+      "fopen returns a FILE pointer on success and a null pointer on failure. Check it before writing. Mode w creates or truncates a text file, so run this fixture only in a disposable directory: it replaces lesson.txt.",
+      "fputs can report EOF on failure; fclose can report a final flush failure. Once fclose has been called, do not reuse the stream pointer, even if closing reports failure. C does not automatically close a local FILE pointer when a block ends.\n\nfputs(\"ready\", file) writes the characters of the terminated string to that stream without adding a newline. It returns EOF on error and a nonnegative value on success.",
+      "Complete local C example; the app itself does not execute it:\n```c\n#include <stdio.h>\n\nint main(void) {\n    FILE *file = fopen(\"lesson.txt\", \"w\");\n    if (file == NULL) { puts(\"open failed\"); return 1; }\n    int wrote = fputs(\"ready\", file) != EOF;\n    int closed = fclose(file) == 0;\n    if (!wrote || !closed) { puts(\"write failed\"); return 1; }\n    puts(\"saved\");\n    return 0;\n}\n```",
+      "Expected output or behavior: saved. Compiler evidence is recorded separately from app reading completion.",
+      "Optional local transfer task: Explain which operations can fail after a successful open and why each result needs checking. You may trace it without a C compiler; reading completion is not proof of a local run."
+    ],
+    "analogy": {
+      "familiar": "",
+      "connection": "",
+      "limit": "A small example isolates one rule; production programs require further testing."
+    },
+    "steps": [
+      "Read one visible idea at a time.",
+      "Predict the changed case before choosing.",
+      "Explain the consequence, then optionally try the local transfer."
+    ],
+    "starter": "",
+    "solution": "",
+    "runtime": "javascript",
+    "checks": [],
+    "quiz": {
+      "question": "If the filename is inside a nonexistent directory in this isolated fixture, what happens?",
+      "choices": [
+        "The null check reports open failed before any write.",
+        "The program should ignore the pointer and call fclose anyway.",
+        "fputs safely creates all missing directories."
+      ],
+      "answer": 0,
+      "explanation": "fopen cannot create missing parent directories; the guarded failure path returns without dereferencing a null stream."
+    },
+    "hints": [
+      "Return to the preceding idea and compare what changed."
+    ],
+    "math": null,
+    "filename": "",
+    "estimatedMinutes": 7,
+    "externalNotes": "C Core v1 uses a portable C17 baseline supported by the verified compiler. C23 exists but is not claimed fully supported here. The app supplies concept reading and an understanding check, not a C browser runner. Local compiler results are recorded separately and do not certify learner mastery."
+  },
+  {
+    "id": "c-49",
+    "title": "Read text and distinguish EOF",
+    "summary": "For empty input, what count prints?",
+    "learningMode": "concept",
+    "explanation": [
+      "fgetc returns an unsigned char converted to int, or the distinct EOF sentinel. Storing that result directly into char can lose the ability to distinguish all byte values from EOF. getchar has the same result convention for stdin.",
+      "After the loop, ferror reports a stream error; feof identifies end-of-file. For the worked output, supply exactly the three input characters abc with no trailing newline (for example, printf abc | ./app on the local shell). This fixture counts input characters, including any newline supplied. Empty input should finish normally with count zero, not attempt to process an extra character.\n\nfeof(stream) returns nonzero when that stream’s end-of-file indicator is set. Supply empty input to this separate example: first attempt a read, then inspect its outcome; do not use feof as a prediction before reading:\n```c\nint ch = getchar();\nif (ch == EOF && !ferror(stdin)) {\n    printf(\"%d\\n\", feof(stdin) != 0);\n}\n```\nOutput: 1.",
+      "Complete local C example; the app itself does not execute it:\n```c\n#include <stdio.h>\n\nint main(void) {\n    int ch;\n    unsigned count = 0;\n    while ((ch = getchar()) != EOF) {\n      if (count == 1000) { puts(\"too long\"); return 1; }\n      count++;\n    }\n    if (ferror(stdin)) { puts(\"read failed\"); return 1; }\n    printf(\"%u\\n\", count);\n    return 0;\n}\n```",
+      "Expected output or behavior: 3. Compiler evidence is recorded separately from app reading completion.",
+      "Optional local transfer task: Predict the result for text with a final newline and explain why char is the wrong storage type here. You may trace it without a C compiler; reading completion is not proof of a local run."
+    ],
+    "analogy": {
+      "familiar": "",
+      "connection": "",
+      "limit": "A small example isolates one rule; production programs require further testing."
+    },
+    "steps": [
+      "Read one visible idea at a time.",
+      "Predict the changed case before choosing.",
+      "Explain the consequence, then optionally try the local transfer."
+    ],
+    "starter": "",
+    "solution": "",
+    "runtime": "javascript",
+    "checks": [],
+    "quiz": {
+      "question": "For empty input, what count prints?",
+      "choices": [
+        "0",
+        "The result is undefined because getchar returns int.",
+        "1 because EOF is a final character"
+      ],
+      "answer": 0,
+      "explanation": "The loop body runs only for a character result; EOF is tested first."
+    },
+    "hints": [
+      "Return to the preceding idea and compare what changed."
+    ],
+    "math": null,
+    "filename": "",
+    "estimatedMinutes": 7,
+    "externalNotes": "C Core v1 uses a portable C17 baseline supported by the verified compiler. C23 exists but is not claimed fully supported here. The app supplies concept reading and an understanding check, not a C browser runner. Local compiler results are recorded separately and do not certify learner mastery."
+  },
+  {
+    "id": "c-55",
+    "title": "Compiler warnings and sanitizers",
+    "summary": "If an unused local variable is added under this warning policy, what happens?",
+    "learningMode": "concept",
+    "explanation": [
+      "Build with -std=c17 -Wall -Wextra -Wpedantic -Werror. These flags enable useful diagnostics and promote warnings to build failures. An unused local is legal C but rejected by this chosen warning policy.\n\nSave the complete safe example below as main.c in a disposable folder. With GCC installed, build and run on Linux or macOS:\n```sh\ngcc -std=c17 -Wall -Wextra -Wpedantic -Werror main.c -o app\n./app\n```\nThe program prints 6.",
+      "GCC options such as -fsanitize=address,undefined add runtime checks for classes of mistakes. A clean run covers only executed paths; it does not prove memory safety. Run the safe example, not an intentionally undefined access. Sanitizer availability depends on the environment.\n\nFor the same source, a separate instrumented build is:\n```sh\ngcc -std=c17 -Wall -Wextra -Wpedantic -Werror -g -fsanitize=address,undefined main.c -o checked\n./checked\n```\nNormal program output remains 6. Treat unsupported instrumentation or runtime restrictions as a test limitation, not proof of safety.",
+      "Complete local C example; the app itself does not execute it:\n```c\n#include <stdio.h>\n\nint main(void) {\n    int values[2] = {4, 6};\n    printf(\"%d\\n\", values[1]);\n    return 0;\n}\n```",
+      "Expected output or behavior: 6. Compiler evidence is recorded separately from app reading completion.",
+      "Optional local transfer task: Compile the unchanged safe example with address/undefined sanitizers and record actual results and limitations. You may trace it without a C compiler; reading completion is not proof of a local run."
+    ],
+    "analogy": {
+      "familiar": "",
+      "connection": "",
+      "limit": "A small example isolates one rule; production programs require further testing."
+    },
+    "steps": [
+      "Read one visible idea at a time.",
+      "Predict the changed case before choosing.",
+      "Explain the consequence, then optionally try the local transfer."
+    ],
+    "starter": "",
+    "solution": "",
+    "runtime": "javascript",
+    "checks": [],
+    "quiz": {
+      "question": "If an unused local variable is added under this warning policy, what happens?",
+      "choices": [
+        "The build fails because -Werror promotes its warning.",
+        "The executable is guaranteed to crash.",
+        "The C standard makes every unused variable undefined behavior."
+      ],
+      "answer": 0,
+      "explanation": "The diagnostic is a configured build-policy failure, not an undefined-behavior execution."
+    },
+    "hints": [
+      "Return to the preceding idea and compare what changed."
+    ],
+    "math": null,
+    "filename": "",
+    "estimatedMinutes": 7,
+    "externalNotes": "C Core v1 uses a portable C17 baseline supported by the verified compiler. C23 exists but is not claimed fully supported here. The app supplies concept reading and an understanding check, not a C browser runner. Local compiler results are recorded separately and do not certify learner mastery."
+  },
+  {
+    "id": "c-59",
+    "title": "Mutex-protected shared state",
+    "summary": "If both loop bounds change from 1000 to 250, what is the final count?",
+    "learningMode": "concept",
+    "explanation": [
+      "The file-scope static int count has static storage duration and is initialized to zero even without a written initializer. count++ reads and writes shared state; a mutex must protect the entire operation. Both main and the worker call increment using the same mtx_t. mtx_plain requests an ordinary nonrecursive mutex. A failed lock must not be ignored before touching shared state.",
+      "Initialize the mutex before starting work. Join the worker before reading the final count and destroying the mutex. The cast (void)unused explicitly discards the required callback argument. Checked failures abort rather than continuing unprotected; failed thread creation destroys the initialized mutex.\n\nmtx_unlock(&lock) releases that same mutex after the protected update; it returns thrd_success on success. The calling thread must own the lock before unlocking it.",
+      "Complete local C example; the app itself does not execute it:\n```c\n#include <stdio.h>\n#include <stdlib.h>\n#if defined(__STDC_NO_THREADS__) && __STDC_NO_THREADS__\n#error C threads unavailable on this implementation\n#endif\n#include <threads.h>\nstatic mtx_t lock;\nstatic int count;\nstatic void increment(void) {\n    if (mtx_lock(&lock) != thrd_success) abort();\n    count++;\n    if (mtx_unlock(&lock) != thrd_success) abort();\n}\nstatic int work(void *unused) {\n    (void)unused;\n    for (int i = 0; i < 1000; i++) increment();\n    return 0;\n}\nint main(void) {\n    thrd_t worker;\n    if (mtx_init(&lock, mtx_plain) != thrd_success) return 1;\n    if (thrd_create(&worker, work, NULL) != thrd_success) {\n      mtx_destroy(&lock); return 1;\n    }\n    for (int i = 0; i < 1000; i++) increment();\n    if (thrd_join(worker, NULL) != thrd_success) abort();\n    printf(\"%d\\n\", count);\n    mtx_destroy(&lock);\n    return 0;\n}\n```",
+      "Expected output or behavior: 2000. Compiler evidence is recorded separately from app reading completion.",
+      "Optional local transfer task: Explain why a different lock for each participant would not protect this one counter. You may trace it without a C compiler; reading completion is not proof of a local run."
+    ],
+    "analogy": {
+      "familiar": "",
+      "connection": "",
+      "limit": "A small example isolates one rule; production programs require further testing."
+    },
+    "steps": [
+      "Read one visible idea at a time.",
+      "Predict the changed case before choosing.",
+      "Explain the consequence, then optionally try the local transfer."
+    ],
+    "starter": "",
+    "solution": "",
+    "runtime": "javascript",
+    "checks": [],
+    "quiz": {
+      "question": "If both loop bounds change from 1000 to 250, what is the final count?",
+      "choices": [
+        "500",
+        "Any number, because the protected updates still have a data race.",
+        "250 because the mutex discards one participant"
+      ],
+      "answer": 0,
+      "explanation": "All 500 increments use the shared mutex, and observation happens after the worker finishes."
+    },
+    "hints": [
+      "Return to the preceding idea and compare what changed."
+    ],
+    "math": null,
+    "filename": "",
+    "estimatedMinutes": 7,
+    "externalNotes": "C Core v1 uses a portable C17 baseline supported by the verified compiler. C23 exists but is not claimed fully supported here. The app supplies concept reading and an understanding check, not a C browser runner. Local compiler results are recorded separately and do not certify learner mastery."
+  },
+  {
+    "id": "c-60",
+    "title": "Atomic counters and memory order",
+    "summary": "If the counter starts at 10, what prints after joining?",
+    "learningMode": "concept",
+    "explanation": [
+      "atomic_int and atomic_fetch_add come from optional C atomics. atomic_init initializes the counter before any concurrent use. Each fetch-add is one atomic read-modify-write and returns the previous value, which this example intentionally ignores.\n\natomic_load(&count) atomically reads and returns the current int without modifying the counter; this non-explicit form also uses the default sequentially consistent ordering.",
+      "The non-explicit atomic operations here use memory_order_seq_cst. This gives the default strong ordering; it is not a promise that operations are lock-free or fast. Atomics do not automatically turn a sequence of separate operations into a transaction. Do not replace them with volatile or introduce relaxed ordering without a separate proof.",
+      "Complete local C example; the app itself does not execute it:\n```c\n#include <stdio.h>\n#include <stdlib.h>\n#if defined(__STDC_NO_THREADS__) && __STDC_NO_THREADS__\n#error C threads unavailable on this implementation\n#endif\n#include <threads.h>\n#if defined(__STDC_NO_ATOMICS__) && __STDC_NO_ATOMICS__\n#error C atomics unavailable on this implementation\n#endif\n#include <stdatomic.h>\nstatic atomic_int count;\nstatic int work(void *unused) {\n    (void)unused;\n    for (int i = 0; i < 500; i++) atomic_fetch_add(&count, 1);\n    return 0;\n}\nint main(void) {\n    thrd_t worker;\n    atomic_init(&count, 0);\n    if (thrd_create(&worker, work, NULL) != thrd_success) return 1;\n    for (int i = 0; i < 500; i++) atomic_fetch_add(&count, 1);\n    if (thrd_join(worker, NULL) != thrd_success) abort();\n    printf(\"%d\\n\", atomic_load(&count));\n    return 0;\n}\n```",
+      "Expected output or behavior: 1000. Compiler evidence is recorded separately from app reading completion.",
+      "Optional local transfer task: Contrast one fetch-add with a separate load followed by store, and explain why the latter can lose updates. You may trace it without a C compiler; reading completion is not proof of a local run."
+    ],
+    "analogy": {
+      "familiar": "",
+      "connection": "",
+      "limit": "A small example isolates one rule; production programs require further testing."
+    },
+    "steps": [
+      "Read one visible idea at a time.",
+      "Predict the changed case before choosing.",
+      "Explain the consequence, then optionally try the local transfer."
+    ],
+    "starter": "",
+    "solution": "",
+    "runtime": "javascript",
+    "checks": [],
+    "quiz": {
+      "question": "If the counter starts at 10, what prints after joining?",
+      "choices": [
+        "1000 because atomics discard initialization",
+        "10 because atomic_load cannot observe worker updates.",
+        "1010"
+      ],
+      "answer": 2,
+      "explanation": "The 1000 atomic increments add to the initial ten; join completes the worker before the read."
+    },
+    "hints": [
+      "Return to the preceding idea and compare what changed."
+    ],
+    "math": null,
+    "filename": "",
+    "estimatedMinutes": 7,
+    "externalNotes": "C Core v1 uses a portable C17 baseline supported by the verified compiler. C23 exists but is not claimed fully supported here. The app supplies concept reading and an understanding check, not a C browser runner. Local compiler results are recorded separately and do not certify learner mastery."
+  }
+]

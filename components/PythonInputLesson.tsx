@@ -10,8 +10,10 @@ export default function PythonInputLesson({
   onContinue,
   renderReadingMark,
   onParagraphChange,
+  jumpTo,
 }: {
   lesson: Lesson;
+  jumpTo?: {index:number;token:number};
   resumeScope?: string;
   onContinue: () => void;
   renderReadingMark?: (paragraph: number) => ReactNode;
@@ -46,6 +48,7 @@ export default function PythonInputLesson({
   useEffect(() => {
     if (ready && part < lesson.explanation.length) onParagraphChange?.(part);
   }, [ready, part, lesson.explanation.length, onParagraphChange]);
+  useEffect(()=>{if(ready && jumpTo && jumpTo.index>=0 && jumpTo.index<lesson.explanation.length)setPart(jumpTo.index);},[ready,jumpTo,lesson.explanation.length]);
   if (!ready) return <p>Opening your tiny lesson…</p>;
   if (part < lesson.explanation.length)
     return (

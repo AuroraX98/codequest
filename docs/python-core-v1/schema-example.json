@@ -1,0 +1,103 @@
+{
+  "unit": {
+    "id": "python-48",
+    "track": "python",
+    "level": "advanced",
+    "topic": "Keep named options explicit",
+    "origin": "original core expansion",
+    "source": {
+      "url": "https://docs.python.org/3/tutorial/controlflow.html#special-parameters"
+    },
+    "project": {
+      "title": "Keep named options explicit",
+      "task": "Complete make_label(title, *, uppercase=False, **extras). The only permitted extra option is prefix, defaulting to empty text. Return prefix followed by title, uppercasing title only when uppercase is True. Unknown extra names raise ValueError. Inputs have the stated text/Boolean types; preserve prefix exactly.",
+      "done_when": "The changed-input understanding check and behavioral practice checks pass; explain the result. Any separately stated local tool exercise must be verified locally."
+    },
+    "math": {
+      "level": null,
+      "topic": null,
+      "task": null
+    },
+    "prerequisite_ids": [
+      "python-47",
+      "python-07",
+      "python-09",
+      "python-14"
+    ],
+    "interaction_pattern": [
+      "one idea",
+      "next idea",
+      "see a small example",
+      "try a changed case",
+      "check understanding"
+    ],
+    "content_status": "Authored tiny-step explanation, quiz, starter, solution and behavioral checks. Execution evidence is recorded separately."
+  },
+  "lesson": {
+    "id": "python-48",
+    "title": "Keep named options explicit",
+    "summary": "Complete make_label(title, *, uppercase=False, **extras). The only permitted extra option is prefix, defaulting to empty text. Return prefix followed by title, uppercasing title only when uppercase is True. Unknown extra names raise ValueError. Inputs have the stated text/Boolean types; preserve prefix exactly.",
+    "explanation": [
+      "A bare * in a function definition marks following named parameters as keyword-only. Callers must spell the option name instead of supplying its value by position.",
+      "```python\ndef caption(text, *, loud=False):\n    return text.upper() if loud else text\n\nprint(caption(\"Hello\", loud=True))\n```\nThis returns HELLO. caption(\"Hello\", True) is rejected because loud must be named. upper returns uppercase text.",
+      "**extras in a definition collects additional keyword arguments into a dictionary. It is different from *items, which collects positional arguments into a tuple.",
+      "For example, a call with prefix=\"Note: \" stores that value under the key \"prefix\" in extras. extras.get(\"prefix\", \"\") reads it or returns the supplied empty-text default when absent.",
+      "Accepting arbitrary extra names can hide spelling mistakes. In this exercise, loop over extras and raise ValueError if a key is not \"prefix\". The loop reads dictionary keys.",
+      "The task uppercases only title, not prefix. Choose the transformed title, then join prefix and that title with +. Do not add an extra separator: any desired space belongs to prefix.",
+      "Keyword-only arguments clarify call sites. They do not automatically validate the kinds of values, so this exercise states its accepted types.",
+      "The supplied __check_error helper is test infrastructure: it reports whether a sample call raises the expected error. Leave it unchanged; your task is make_label."
+    ],
+    "analogy": {
+      "familiar": "Follow a small change from its starting state to its result.",
+      "connection": "Each instruction changes what the next instruction receives.",
+      "limit": "Use the actual code and checks rather than relying on the comparison."
+    },
+    "steps": [
+      "Read the requirement.",
+      "Make one change to the starter.",
+      "Run the checks.",
+      "Explain why a changed input produces its result."
+    ],
+    "starter": "def __check_error(error_type, expression):\n    try:\n        eval(expression)\n    except error_type:\n        return True\n    return False\n\ndef make_label(title, *, uppercase=False, **extras):\n    # TODO: reject unknown extras and build the requested text.\n    return title",
+    "solution": "def __check_error(error_type, expression):\n    try:\n        eval(expression)\n    except error_type:\n        return True\n    return False\n\ndef make_label(title, *, uppercase=False, **extras):\n    for key in extras:\n        if key != \"prefix\":\n            raise ValueError(\"Unknown option\")\n    text = title.upper() if uppercase else title\n    return extras.get(\"prefix\", \"\") + text",
+    "runtime": "python",
+    "checks": [
+      {
+        "label": "Default options",
+        "expression": "make_label(\"Moon\") == \"Moon\""
+      },
+      {
+        "label": "Prefix preserved while title changes",
+        "expression": "make_label(\"Moon\", uppercase=True, prefix=\"Note: \") == \"Note: MOON\""
+      },
+      {
+        "label": "Empty title preserves prefix",
+        "expression": "make_label(\"\", prefix=\"x\") == \"x\""
+      },
+      {
+        "label": "Unknown option raises",
+        "expression": "__check_error(ValueError, 'make_label(\"Moon\", uprcase=True)')"
+      },
+      {
+        "label": "Keyword-only option rejects positional value",
+        "expression": "__check_error(TypeError, 'make_label(\"Moon\", True)')"
+      }
+    ],
+    "quiz": {
+      "question": "The function accepts **extras, but a caller types uprcase=True. Why reject that unknown name instead of silently ignoring it?",
+      "choices": [
+        "Every keyword dictionary is automatically a syntax error.",
+        "It likely hides an intended option, leaving behavior different from the caller\u2019s expectation.",
+        "Ignoring a spelling mistake always enables the intended option."
+      ],
+      "answer": 1,
+      "explanation": "Collecting keywords does not validate their names. Explicit checking can expose a mistaken option."
+    },
+    "hints": [
+      "Trace the changed case using the primary lesson before editing."
+    ],
+    "math": null,
+    "filename": "main.py",
+    "estimatedMinutes": 16
+  }
+}

@@ -1,0 +1,226 @@
+[
+  {
+    "id": "python-56",
+    "quizTarget": "What does route((\"greet\", 42)) return?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "match command examines a value; each case is a pattern, not a function call. The sequence pattern [\"greet\", name] requires two elements, matches the literal first element, and binds the second to name. A bare name in a pattern captures a value; it does not compare against an earlier variable of that name."
+      },
+      {
+        "paragraph": 1,
+        "fact": "The guard if isinstance(name, str) runs after the shape matches. isinstance receives a value and a class and returns a Boolean; here it rejects a non-string name. Only the first successful case runs. The wildcard _ matches anything without binding a new name, so put the fallback last."
+      },
+      {
+        "paragraph": 2,
+        "fact": "```python\ndef route(command):\n    match command:\n        case [\"greet\", name] if isinstance(name, str):\n            return f\"Hello {name}\"\n        case [\"pause\"]:\n            return \"Paused\"\n        case _:\n            return \"Unknown\"\n\nprint(route([\"greet\", \"Ada\"]))\nprint(route([\"pause\"]))\nprint(route([\"greet\", 7]))\n```\nThe outputs are Hello Ada, Paused, and Unknown. route accepts a command value and returns one message string; it does not change the input."
+      },
+      {
+        "paragraph": 3,
+        "fact": "Sequence patterns also match suitable tuples, but do not split str or bytes into characters. An extra element prevents this exact two-element pattern from matching. For example, route([\"greet\", \"Ada\", \"extra\"]) returns Unknown. Guard failure permits the following cases to be tried."
+      },
+      {
+        "paragraph": 4,
+        "fact": "Implement route with the same three cases. Preserve a string name exactly, including spaces and non-English letters. The optional local transfer is to add a separate literal [\"resume\"] case before the wildcard and explain why its position matters."
+      }
+    ],
+    "reasoning": "The tuple has the required two-element shape, but 42 is not a string, so the guard fails and the fallback returns Unknown.",
+    "source": "https://docs.python.org/3.12/tutorial/controlflow.html",
+    "prerequisites": [
+      "python-03",
+      "python-09"
+    ]
+  },
+  {
+    "id": "python-57",
+    "quizTarget": "If text changes from \"\u00e9\" to \"A\", what are the string length and UTF-8 byte length?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "str stores Unicode text; bytes stores byte values. len on a string counts Unicode code points, not necessarily visible grapheme clusters. len on bytes counts bytes. One visible character may contain several code points, and one code point may need several UTF-8 bytes."
+      },
+      {
+        "paragraph": 1,
+        "fact": "text.encode(\"utf-8\") takes an encoding name and returns new bytes representing the string. encoded.decode(\"utf-8\") interprets bytes using that encoding and returns new text. Neither call edits the original object. The dot selects the method, and parentheses pass its encoding argument."
+      },
+      {
+        "paragraph": 2,
+        "fact": "```python\ntext = \"\u00e9\"\nencoded = text.encode(\"utf-8\")\nprint(len(text))\nprint(len(encoded))\nprint(encoded.decode(\"utf-8\"))\n```\nIt prints 1, then 2, then \u00e9. The encoding changes representation rather than the meaning of the text."
+      },
+      {
+        "paragraph": 3,
+        "fact": "Strict decoding is the default. b\"\\xff\" is a one-byte literal written with a hexadecimal escape; it is not valid UTF-8. This complete example handles its specific failure:\n```python\ntry:\n    b\"\\xff\".decode(\"utf-8\")\nexcept UnicodeDecodeError:\n    print(\"Invalid UTF-8\")\n```\nIt prints Invalid UTF-8. Silently ignoring malformed bytes would lose information; choose a replacement policy only when the application explicitly permits it."
+      },
+      {
+        "paragraph": 4,
+        "fact": "```python\ndef utf8_summary(text):\n    encoded = text.encode(\"utf-8\")\n    return len(encoded), encoded.decode(\"utf-8\")\nprint(utf8_summary(\"Caf\u00e9\"))\n```\nIt returns and prints (5, 'Caf\u00e9'): the byte count and exact round-tripped string. The project accepts ordinary Unicode strings encodable in UTF-8, not isolated surrogate code points. Optional local transfer: compare \"\u00e9\" with \"e\\u0301\"; the two can look alike without being the same code-point sequence."
+      }
+    ],
+    "reasoning": "ASCII A occupies one Unicode code point and one UTF-8 byte. The encoding determines byte length, not a universal one-byte-per-character rule.",
+    "source": "https://docs.python.org/3.12/tutorial/inputoutput.html",
+    "prerequisites": [
+      "python-07",
+      "python-30"
+    ]
+  },
+  {
+    "id": "python-58",
+    "quizTarget": "For math.isclose(5e-8, 0.0, rel_tol=1e-6, abs_tol=0.0), what is returned?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "0.1 and 0.2 are not stored as exact decimal fractions in an ordinary float. Their sum can differ slightly from 0.3. This does not make every equality test wrong; choose exact or approximate comparison according to the contract."
+      },
+      {
+        "paragraph": 1,
+        "fact": "math.isclose(a, b, rel_tol=..., abs_tol=...) returns a Boolean. Relative tolerance scales with the larger absolute input magnitude; absolute tolerance permits a fixed maximum gap, important near zero. The comparison accepts a gap no larger than the greater of these allowances. Use nonnegative tolerances and a relative tolerance below 1 so the comparison represents a meaningful small-error policy."
+      },
+      {
+        "paragraph": 2,
+        "fact": "```python\nimport math\nprint(0.1 + 0.2 == 0.3)\nprint(math.isclose(0.1 + 0.2, 0.3, rel_tol=1e-9, abs_tol=0.0))\nprint(math.isclose(1e-12, 0.0, rel_tol=1e-9, abs_tol=1e-9))\n```\nThe outputs are False, True, True. import math makes the standard module available; the dot selects isclose. 1e-9 means one billionth. Named arguments keep the two policies explicit."
+      },
+      {
+        "paragraph": 3,
+        "fact": "With one input zero and a relative tolerance below one, a nonzero other input cannot pass by relative tolerance alone. Changing the last abs_tol to 0.0 therefore gives False. A tolerance is an application decision, not a measured confidence interval or a repair for incorrect units."
+      },
+      {
+        "paragraph": 4,
+        "fact": "```python\nimport math\n\ndef close_readings(a, b):\n    return math.isclose(a, b, rel_tol=1e-6, abs_tol=1e-9)\nprint(close_readings(100.0, 100.00005))\nprint(close_readings(0.0, 1e-10))\nprint(close_readings(1.0, 1.01))\n```\nThese calls return True, True, False. The project accepts finite real numbers; deciding what NaN or infinity means is outside that contract. Optional local transfer: pick different units and explain how the absolute tolerance would need to change."
+      }
+    ],
+    "reasoning": "The nonzero gap is larger than its relative allowance; there is no absolute allowance to bridge the gap to zero.",
+    "source": "https://docs.python.org/3.12/tutorial/floatingpoint.html",
+    "prerequisites": [
+      "python-02",
+      "python-13"
+    ]
+  },
+  {
+    "id": "python-59",
+    "quizTarget": "If main.py imports greeting_tool and then calls greeting_tool.greeting(\"Ada\"), does greeting_tool\u2019s guarded main() run automatically?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "When a file is run as the top-level program, its __name__ is \"__main__\". When imported normally as greeting_tool, its __name__ is \"greeting_tool\". These are strings set by the execution context, not names you should manually overwrite."
+      },
+      {
+        "paragraph": 1,
+        "fact": "Save this complete source as greeting_tool.py:\n```python\ndef greeting(name):\n    return f\"Hello {name}\"\n\ndef main():\n    print(greeting(\"Reader\"))\n\nif __name__ == \"__main__\":\n    main()\n```\nThe comparison after if uses two equals signs. Its indented main() call runs only in the top-level context. greeting takes a name and returns a string. main takes no arguments, prints a demonstration, and implicitly returns None."
+      },
+      {
+        "paragraph": 2,
+        "fact": "Place this main.py beside greeting_tool.py:\n```python\nimport greeting_tool\nprint(greeting_tool.greeting(\"Ada\"))\n```\nIt prints only Hello Ada. Import makes the definitions available but the guard skips the demonstration. Running python greeting_tool.py directly prints Hello Reader instead. Import still executes other unguarded top-level statements; the guard is not a blanket no-side-effects guarantee."
+      },
+      {
+        "paragraph": 3,
+        "fact": "```python\nimport greeting_tool\ngreeting_tool.main()\n```\nIt prints Hello Reader because you explicitly called main. The guard controls an automatic call during loading, not whether main may ever be called. This two-file example needs the supplied companion file; a single pasted import cannot create it."
+      },
+      {
+        "paragraph": 4,
+        "fact": "Here is a complete wrapper call using the same companion:\n```python\nimport greeting_tool\ndef personal_greeting(name):\n    return greeting_tool.greeting(name)\nprint(personal_greeting(\"Ada\"))\n```\nIt prints Hello Ada. In the editor, complete the main-program caller: import the supplied greeting_tool and define personal_greeting(name) to return greeting_tool.greeting(name). Do not print or call main during this import/use exercise. Native and browser fixtures separately check the companion\u2019s guarded behavior. Optional local transfer: run the companion directly, then run the importing main.py and compare the output."
+      }
+    ],
+    "reasoning": "The guard comparison is false during a normal import. The explicitly requested greeting function is still available to call.",
+    "source": "https://docs.python.org/3.12/tutorial/modules.html",
+    "prerequisites": [
+      "python-13"
+    ]
+  },
+  {
+    "id": "python-60",
+    "quizTarget": "What happens if the overriding method calls self.render() instead of super().render()?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "class FramedLabel(Label) makes Label a base class. FramedLabel inherits its initializer and can replace render with its own implementation. Creating FramedLabel(\"Map\") therefore still initializes self.text on that new instance."
+      },
+      {
+        "paragraph": 1,
+        "fact": "Inside the overriding render method, super() returns a proxy for continuing method lookup after the current class. Calling .render() on that proxy reaches Label.render in this single-inheritance example, with the same instance. It is not a new Label object and does not mean \"call every parent\"."
+      },
+      {
+        "paragraph": 2,
+        "fact": "```python\nclass Label:\n    def __init__(self, text):\n        self.text = text\n\n    def render(self):\n        return self.text\n\nclass FramedLabel(Label):\n    def render(self):\n        return \"[\" + super().render() + \"]\"\n\nplain = Label(\"Map\")\nframed = FramedLabel(\"Map\")\nprint(plain.render())\nprint(framed.render())\n```\nThe outputs are Map and [Map]. Label.render returns its stored string. FramedLabel.render returns a new framed string, leaving self.text unchanged."
+      },
+      {
+        "paragraph": 3,
+        "fact": "Replacing super().render() with self.render() inside FramedLabel.render calls that same overriding method again. With no stopping condition, it eventually raises RecursionError rather than reaching the base implementation."
+      },
+      {
+        "paragraph": 4,
+        "fact": "Keep the base initializer and render method, and complete FramedLabel.render using super. Optional local transfer: make a second subclass with a different outer decoration and confirm neither changes the base object\u2019s output."
+      }
+    ],
+    "reasoning": "self still refers to the FramedLabel receiver, so ordinary lookup selects the same override on every call.",
+    "source": "https://docs.python.org/3.12/tutorial/classes.html",
+    "prerequisites": [
+      "python-11",
+      "python-12"
+    ]
+  },
+  {
+    "id": "python-61",
+    "quizTarget": "Create Duration(8), assign minutes = 3, then attempt minutes = -2 and catch ValueError. What does the next minutes read return?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "@property decorates the getter function so duration.minutes calls that getter through attribute syntax; callers do not write duration.minutes(). The getter returns the current stored value. A leading underscore in _minutes marks an internal convention, not enforced security."
+      },
+      {
+        "paragraph": 1,
+        "fact": "@minutes.setter adds a setter to that same named property. Assignment duration.minutes = value invokes the setter with the receiver and new value. Here it checks the value before storing it in _minutes. Raising ValueError rejects a negative value without changing the old state; a property setter does not supply an assignment return value to the caller."
+      },
+      {
+        "paragraph": 2,
+        "fact": "```python\nclass Duration:\n    def __init__(self, minutes):\n        self.minutes = minutes\n\n    @property\n    def minutes(self):\n        return self._minutes\n\n    @minutes.setter\n    def minutes(self, value):\n        if value < 0:\n            raise ValueError(\"minutes must be nonnegative\")\n        self._minutes = value\n\nduration = Duration(10)\nprint(duration.minutes)\nduration.minutes = 15\nprint(duration.minutes)\ntry:\n    duration.minutes = -1\nexcept ValueError:\n    print(duration.minutes)\n```\nIt prints 10, 15, 15. Construction uses self.minutes = minutes, so the same setter validates initialization too. The project supplies numeric values; deciding which other types to accept is a separate contract."
+      },
+      {
+        "paragraph": 3,
+        "fact": "The getter reads self._minutes, not self.minutes. Reading self.minutes inside its own getter would re-enter the property recursively. The setter similarly stores the backing attribute instead of assigning the managed name again."
+      },
+      {
+        "paragraph": 4,
+        "fact": "Complete the property with numeric nonnegative minutes. The supplied test helpers attempt a known invalid initialization and assignment; __rejects_negative checks that ValueError leaves the prior value intact; it is test infrastructure, not a general input evaluator. Optional local transfer: add a second explicit validation boundary, then show a successful and rejected assignment."
+      }
+    ],
+    "reasoning": "Validation happens before writing the backing attribute, so rejection leaves the last accepted value in place.",
+    "source": "https://docs.python.org/3.12/tutorial/classes.html",
+    "prerequisites": [
+      "python-60",
+      "python-37"
+    ]
+  },
+  {
+    "id": "python-62",
+    "quizTarget": "If the factory uses Session(...) instead of cls(...), what does SpecialSession.from_minutes(12) return?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "@classmethod changes method binding: the first argument, conventionally cls, receives the class used for the call, not an instance. from_minutes takes a number and returns cls(\"Study\", minutes), creating the appropriate class through its constructor."
+      },
+      {
+        "paragraph": 1,
+        "fact": "@staticmethod leaves valid_minutes as a function stored on the class: it receives only the explicit minutes argument and returns whether it is nonnegative. It does not automatically receive self or cls. This predicate checks a value; it does not modify or validate already constructed sessions by itself."
+      },
+      {
+        "paragraph": 2,
+        "fact": "```python\nclass Session:\n    def __init__(self, title, minutes):\n        self.title = title\n        self.minutes = minutes\n\n    @classmethod\n    def from_minutes(cls, minutes):\n        return cls(\"Study\", minutes)\n\n    @staticmethod\n    def valid_minutes(minutes):\n        return minutes >= 0\n\nclass SpecialSession(Session):\n    pass\n\nitem = SpecialSession.from_minutes(12)\nprint(item.title, item.minutes)\nprint(isinstance(item, SpecialSession))\nprint(Session.valid_minutes(0))\nprint(Session.valid_minutes(-1))\n```\nIt prints Study 12, True, True, False. SpecialSession inherits the methods and initializer. Calling its class method passes SpecialSession as cls, so the resulting object is a SpecialSession. isinstance checks that result explicitly."
+      },
+      {
+        "paragraph": 3,
+        "fact": "Replacing cls(\"Study\", minutes) with Session(\"Study\", minutes) always constructs the base class, even when called through SpecialSession. A factory using cls preserves the receiving subclass when its constructor has the compatible argument contract."
+      },
+      {
+        "paragraph": 4,
+        "fact": "Implement the methods exactly as shown by their contracts. from_minutes accepts supplied nonnegative numeric minutes; valid_minutes separately reports a Boolean for numeric inputs. Optional local transfer: call the static predicate through a Session instance and explain why no receiver argument is added."
+      }
+    ],
+    "reasoning": "The explicit constructor name selects the base class. cls is what allowed the original factory to use the receiving subclass.",
+    "source": "https://docs.python.org/3.12/tutorial/classes.html",
+    "prerequisites": [
+      "python-11",
+      "python-37",
+      "python-60"
+    ]
+  }
+]

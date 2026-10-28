@@ -47,7 +47,7 @@ function install(name, value) {
 }
 let root;
 try {
-  await symlink(path.join(cwd, 'node_modules'), path.join(temp, 'node_modules'), 'dir');
+  await symlink(path.join(cwd, 'node_modules'), path.join(temp, 'node_modules'), process.platform === 'win32' ? 'junction' : 'dir');
   await compile('components/LessonStepFlow.tsx');
   const { default: Flow } = await importFile('components/LessonStepFlow.tsx');
   const { buildLessonSteps, codePartPractice, shortLessonThoughts, distinctLessonReference } = await importFile('lib/lesson-step-flow.ts');
@@ -62,7 +62,7 @@ try {
     for (const lesson of lessons) for (const text of lesson.explanation) {
       sections++;
       const steps = buildLessonSteps(text, lesson.runtime), blocks = lessonBlocks(text, lesson.runtime);
-      const prose = steps.filter(step => step.kind === 'explain');
+      const prose = steps.filter(step => step.kind === 'explain' && step.purpose !== 'exercise-preparation');
       assert.equal(normalize(prose.map(step => step.text).join(' ')), normalize(blocks.filter(block => block.kind === 'prose').map(block => block.text).join(' ')), lesson.id);
       for (const idea of prose) {
         assert.equal((idea.text.match(/`/g)?.length ?? 0) % 2, 0, lesson.id + ': inline code remains whole');
@@ -75,6 +75,10 @@ try {
         assert.equal(step.options.filter(option => option === step.answer).length, 1);
         assert.notEqual(step.role, 'Code');
         assert.notEqual(step.role, 'Symbol');
+        for (const rule of step.preparation ?? []) {
+          const prior = steps.slice(0, steps.indexOf(step)).filter(s => s.kind === 'explain').map(s => s.text).join(' ');
+          assert.ok(normalize(prior).includes(normalize(rule)), lesson.id + ': essential preparation precedes practice visibly');
+        }
       }
       ideas += prose.length;
       examples += steps.filter(step => step.kind === 'example').length;
@@ -113,7 +117,7 @@ try {
 
   await check('Examples follow their idea, deduplicate inline snippets, and never quiz an ambiguous role', () => {
     const text = 'Use `print("Hello")` to show text. Then use `print("Hello")` again.';
-    assert.deepEqual(buildLessonSteps(text, 'python').map(step => step.kind), ['explain', 'example', 'practice', 'explain']);
+    assert.deepEqual(buildLessonSteps(text, 'python').map(step => step.kind), ['explain', 'explain', 'explain', 'example', 'practice', 'explain']);
     assert.equal(codePartPractice('print("Hello")', 'python').answer, 'Hello');
     for (const code of ['first(second())', 'a + b + c']) {
       assert.equal(codePartPractice(code, 'python'), null, 'Unknown state does not get a fabricated quiz');
@@ -144,6 +148,7 @@ try {
   const click = async node => { assert.ok(node); await act(async () => { node.focus(); node.click(); }); };
   const primary = () => document.querySelector('[data-step-primary]');
   const panel = () => document.querySelector('[data-step-kind]');
+  const advanceTo = async kind => { for(let n=0;n<20 && panel().dataset.stepKind!==kind;n++) await click(primary()); assert.equal(panel().dataset.stepKind,kind); };
 
   await check('Next replaces one thought with example and practice; Back stays local and preserves parent progress', async () => {
     await render({});
@@ -155,6 +160,11 @@ try {
     const first = panel();
     await click(primary());
     assert.equal(first.isConnected, false);
+    assert.equal(panel().textContent, 'Output is the text or result a program displays.');
+    assert.equal(panel().querySelector('details'), null, 'Essential output definition is ordinary visible content');
+    await click(primary());
+    assert.match(panel().textContent, /without showing the marks/);
+    await click(primary());
     assert.equal(panel().dataset.stepKind, 'example');
     assert.equal(document.activeElement, panel(), 'Focus follows replacing content without scrolling');
     assert.equal(panel().querySelectorAll('[data-code-anatomy]').length, 1);
@@ -194,7 +204,7 @@ try {
     assert.equal(document.querySelector('[data-lesson-step-flow]').dataset.stepIndex, '0');
     await click(document.querySelector('[data-step-back]'));
     assert.equal(back, 1);
-    await click(primary()); await click(primary());
+    await advanceTo('practice');
     assert.equal(panel().dataset.stepKind, 'practice');
     assert.equal(document.querySelector('[data-step-completion]'), null);
     await click(document.querySelector('input')); await click(primary());
@@ -219,7 +229,7 @@ try {
     const values = new Map();
     install('localStorage', {getItem: key => values.get(key) ?? null, setItem: (key, value) => values.set(key, value)});
     await render({resumeKey:'account-a:lesson'});
-    await click(primary());
+    await advanceTo('example');
     assert.equal(panel().querySelector('details').open, false, 'Optional token prose begins collapsed');
     await click(primary());
     await click([...document.querySelectorAll('input')].find(input => input.value === 'Hello'));
@@ -234,6 +244,10 @@ try {
     assert.equal(panel().dataset.stepKind, 'explain');
     assert.equal(panel().textContent, 'Changed curriculum.');
     assert.deepEqual(externalCalls, [], 'No server progress or network side effects');
+    const current = JSON.parse(values.get('account-a:lesson'));
+    values.set('old-flow', JSON.stringify({...current, flowVersion:2, index:1}));
+    await render({resumeKey:'old-flow', text:'Changed curriculum.'});
+    assert.equal(document.querySelector('[data-lesson-step-flow]').dataset.stepIndex, '0', 'Old layout versions cannot skip new essential teaching');
   });
 
   await check('Source is escaped, output is never diagrammed, and controls remain native', async () => {

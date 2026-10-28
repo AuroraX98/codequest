@@ -11,7 +11,8 @@ const allowed = (path) =>
   path === "/manifest.webmanifest" ||
   path === "/offline-pack.json" ||
   path.startsWith("/offline-assets/") ||
-  path.startsWith("/vendor/");
+  path.startsWith("/vendor/") ||
+  path.startsWith("/third-party/");
 const htmlCarriers = {
   "/offline.html": "/offline-assets/offline-shell.base64.txt",
   "/runner/frame.html": "/runner/frame.base64.txt",

@@ -1,0 +1,126 @@
+[
+  {
+    "id": "backend-02",
+    "field": "checks.1",
+    "before": {
+      "label": "Adding a record preserves earlier records",
+      "expression": "(()=>{saveEntry({id:'c',minutes:5});return loadEntries().length===3})()"
+    },
+    "after": {
+      "label": "Adding the exact new record preserves every earlier record",
+      "expression": "(()=>{const before=loadEntries();const snapshot=JSON.stringify(before);saveEntry({id:'c',minutes:5});const after=loadEntries();return JSON.stringify(before)===snapshot&&JSON.stringify(after)===JSON.stringify([...before,{id:'c',minutes:5}]);})()"
+    }
+  },
+  {
+    "id": "backend-12",
+    "field": "checks.3",
+    "before": {
+      "label": "Old state is not modified",
+      "expression": "(()=>{const s=Object.freeze({windowStart:0,count:1});const r=takeRequest(s,10);return s.count===1&&r.state.count===2&&r.state!==s;})()"
+    },
+    "after": {
+      "label": "Mutable old state stays unchanged in both window branches",
+      "expression": "[10,1000].every(now=>{const state={windowStart:0,count:1};const before=JSON.stringify(state);const result=takeRequest(state,now);return JSON.stringify(state)===before&&result.state!==state&&result.state.count===(now===1000?1:2)&&result.state.windowStart===(now===1000?1000:0);})"
+    }
+  },
+  {
+    "id": "backend-03",
+    "field": "checks",
+    "before": [
+      {
+        "label": "Report contains one row per user",
+        "expression": "SELECT COUNT(*)=2 AND COUNT(DISTINCT user_id)=2 FROM report"
+      },
+      {
+        "label": "Known values average correctly",
+        "expression": "SELECT COUNT(*)=1 FROM report WHERE user_id='a' AND row_count=2 AND known_count=2 AND average_minutes=30"
+      },
+      {
+        "label": "Unknown minutes are not treated as zero",
+        "expression": "SELECT COUNT(*)=1 FROM report WHERE user_id='b' AND row_count=2 AND known_count=1 AND average_minutes=10"
+      }
+    ],
+    "after": [
+      {
+        "label": "Report contains one row per user",
+        "expression": "SELECT COUNT(*)=2 AND COUNT(DISTINCT user_id)=2 FROM report"
+      },
+      {
+        "label": "Known values average correctly",
+        "expression": "SELECT COUNT(*)=1 FROM report WHERE user_id='a' AND row_count=2 AND known_count=2 AND average_minutes=30"
+      },
+      {
+        "label": "Unknown minutes are not treated as zero",
+        "expression": "SELECT COUNT(*)=1 FROM report WHERE user_id='b' AND row_count=2 AND known_count=1 AND average_minutes=10"
+      },
+      {
+        "label": "The named report is a view, not a replacement table",
+        "expression": "SELECT COUNT(*)=1 FROM sqlite_master WHERE type='view' AND name='report'"
+      }
+    ]
+  },
+  {
+    "id": "sql-12",
+    "field": "checks",
+    "before": [
+      {
+        "label": "All orders count, but only paid amounts contribute",
+        "expression": "SELECT count(*)=1 FROM customer_orders WHERE customer_id=1 AND name='Alex' AND total_orders=3 AND paid_orders=2 AND paid_cents=1750"
+      },
+      {
+        "label": "A customer with no orders stays with zero totals",
+        "expression": "SELECT count(*)=1 FROM customer_orders WHERE customer_id=2 AND total_orders=0 AND paid_orders=0 AND paid_cents=0"
+      },
+      {
+        "label": "Matching names remain separate and unpaid orders stay unpaid",
+        "expression": "SELECT (SELECT count(*) FROM customer_orders)=3 AND (SELECT count(*) FROM customer_orders WHERE customer_id=3 AND name='Alex' AND total_orders=2 AND paid_orders=0 AND paid_cents=0)=1"
+      }
+    ],
+    "after": [
+      {
+        "label": "All orders count, but only paid amounts contribute",
+        "expression": "SELECT count(*)=1 FROM customer_orders WHERE customer_id=1 AND name='Alex' AND total_orders=3 AND paid_orders=2 AND paid_cents=1750"
+      },
+      {
+        "label": "A customer with no orders stays with zero totals",
+        "expression": "SELECT count(*)=1 FROM customer_orders WHERE customer_id=2 AND total_orders=0 AND paid_orders=0 AND paid_cents=0"
+      },
+      {
+        "label": "Matching names remain separate and unpaid orders stay unpaid",
+        "expression": "SELECT (SELECT count(*) FROM customer_orders)=3 AND (SELECT count(*) FROM customer_orders WHERE customer_id=3 AND name='Alex' AND total_orders=2 AND paid_orders=0 AND paid_cents=0)=1"
+      },
+      {
+        "label": "The named report is a view, not a replacement table",
+        "expression": "SELECT COUNT(*)=1 FROM sqlite_master WHERE type='view' AND name='customer_orders'"
+      }
+    ]
+  },
+  {
+    "id": "backend-05",
+    "field": "checks",
+    "before": [
+      {
+        "label": "A successful change preserves the total",
+        "expression": "(()=>{const r=transfer({available:20,saved:0},7);return r.available===13&&r.saved===7&&r.available+r.saved===20})()"
+      },
+      {
+        "label": "Invalid or failed changes leave old state intact",
+        "expression": "[transfer({available:20,saved:0},21),transfer({available:20,saved:0},7,true),transfer({available:20,saved:0},-1)].every(r=>r.available===20&&r.saved===0)"
+      }
+    ],
+    "after": [
+      {
+        "label": "A successful change preserves the total",
+        "expression": "(()=>{const r=transfer({available:20,saved:0},7);return r.available===13&&r.saved===7&&r.available+r.saved===20})()"
+      },
+      {
+        "label": "Invalid or failed changes leave old state intact",
+        "expression": "[transfer({available:20,saved:0},21),transfer({available:20,saved:0},7,true),transfer({available:20,saved:0},-1)].every(r=>r.available===20&&r.saved===0)"
+      },
+      {
+        "label": "Successful and failed calls preserve ordinary mutable input",
+        "expression": "[false,true].every(fail=>{const state={available:20,saved:0};const before=JSON.stringify(state);transfer(state,7,fail);return JSON.stringify(state)===before;})"
+      }
+    ]
+  }
+]

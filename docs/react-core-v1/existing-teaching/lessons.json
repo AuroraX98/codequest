@@ -1,0 +1,256 @@
+[
+  {
+    "id": "react-08",
+    "title": "Keep state with the right item",
+    "summary": "Preserve each person's counter when the list is reordered.",
+    "explanation": [
+      "React associates component state with its position and identity in the rendered tree.",
+      "Changing ordinary props does not by itself reset that component's state.",
+      "In a list, a stable key helps React match an item before and after a reorder. Use an ID belonging to the item, not its current array index.",
+      "```react\nfunction Score({name}) {\n  const [points, setPoints] = React.useState(0);\n  return <button onClick={() => setPoints(p => p + 1)}>{name}: {points}</button>;\n}\nfunction App() {\n  const players = [{id: \"sun\", name: \"Sol\"}, {id: \"moon\", name: \"Luna\"}];\n  return <div>{players.map(player => <Score key={player.id} name={player.name} />)}</div>;\n}\n```\nEach ID identifies its own counter. Keys need to be unique among these siblings, not across the whole website.",
+      "An index key identifies a position. Reversing the list can then give the first item's old state to a different person.",
+      "Changing a key deliberately tells React to use a different identity and reset that component's state. Generating a fresh random key on every render resets state unintentionally.",
+      "For the exercise, add twice to Ari, then reverse the list. Bea must still show 0 and Ari must still show 2. Repair only the key choice in the supplied list.\n\nThe supplied reversal uses [...current].reverse(). Spread creates a new array container with the same person objects. reverse() reverses that new array in place and returns it; calling current.reverse() instead would mutate the state array. The setter’s updater receives pending state and returns the copied order. This copy is shallow; the person objects are not changed here.\n\nA small ordinary JavaScript example isolates the array operation, without another component:\n```javascript\nconst order = [\"Ari\", \"Bea\"];\nconst reversed = [...order].reverse();\nconsole.log(order.join(\",\"));\nconsole.log(reversed.join(\",\"));\n```\nThe first output is Ari,Bea and the second is Bea,Ari. join(\",\") returns comma-separated text from each array, without changing it; console.log prints that text. The copied array reversed, while order kept its original order."
+    ],
+    "analogy": {
+      "familiar": "",
+      "connection": "",
+      "limit": ""
+    },
+    "steps": [
+      "Run the starter and observe the misplaced count after reversing.",
+      "Use the person's stable ID as its key."
+    ],
+    "starter": "function CounterCard({person}) {\n  const [count, setCount] = React.useState(0);\n  return <li data-person={person.id}>\n    <span>{person.name}: {count}</span>\n    <button aria-label={\"Add for \" + person.name} onClick={() => setCount(c => c + 1)}>Add</button>\n  </li>;\n}\nfunction App() {\n  const [people, setPeople] = React.useState([{id:\"a\",name:\"Ari\"},{id:\"b\",name:\"Bea\"}]);\n  return <main>\n    <button onClick={() => setPeople(current => [...current].reverse())}>Reverse order</button>\n    <ul>{people.map((person, index) => <CounterCard key={index} person={person} />)}</ul>\n  </main>;\n}",
+    "solution": "function CounterCard({person}) {\n  const [count, setCount] = React.useState(0);\n  return <li data-person={person.id}>\n    <span>{person.name}: {count}</span>\n    <button aria-label={\"Add for \" + person.name} onClick={() => setCount(c => c + 1)}>Add</button>\n  </li>;\n}\nfunction App() {\n  const [people, setPeople] = React.useState([{id:\"a\",name:\"Ari\"},{id:\"b\",name:\"Bea\"}]);\n  return <main>\n    <button onClick={() => setPeople(current => [...current].reverse())}>Reverse order</button>\n    <ul>{people.map((person, index) => <CounterCard key={person.id} person={person} />)}</ul>\n  </main>;\n}",
+    "runtime": "react",
+    "checks": [
+      {
+        "label": "Reordering preserves item state",
+        "expression": "(async () => { const click = label => [...document.querySelectorAll(\"button\")].find(b => b.getAttribute(\"aria-label\") === label || b.textContent === label)?.click(); click(\"Add for Ari\"); await new Promise(r=>setTimeout(r,20)); click(\"Add for Ari\"); await new Promise(r=>setTimeout(r,20)); click(\"Reverse order\"); await new Promise(r=>setTimeout(r,20)); const rows = [...document.querySelectorAll(\"li\")]; return rows[0]?.dataset.person === \"b\" && rows[0].textContent.includes(\"Bea: 0\") && rows[1]?.textContent.includes(\"Ari: 2\"); })()"
+      }
+    ],
+    "quiz": {
+      "question": "Ari has count 2 and Bea has count 0. With array-index keys, the list reverses. Why might Bea now display 2?",
+      "choices": [
+        "React stored the state with the old first position, not with Bea's identity",
+        "Array.reverse automatically adds two to every number",
+        "The button text is the key"
+      ],
+      "answer": 0,
+      "explanation": "Index keys can preserve the old component at a position while changing the person passed to it. Stable person IDs let React keep state matched to the correct person."
+    },
+    "hints": [
+      "Run the starter and observe the misplaced count after reversing.",
+      "Use the person's stable ID as its key."
+    ],
+    "math": null,
+    "filename": "App.jsx",
+    "estimatedMinutes": 12,
+    "externalNotes": "Prerequisites include basic list keys already mentioned in react-02; this lesson specifically tests state identity under reorder. DOM lifecycle tested, not merely presence of a key string. Components are defined outside their parent to keep type identity stable."
+  },
+  {
+    "id": "react-11",
+    "title": "Read a value from context",
+    "summary": "Share a theme through a wrapper while respecting nested providers.",
+    "explanation": [
+      "Props are the usual way to pass data. Context is useful when several descendants need a value but intermediate components do not use it.",
+      "Create the context outside components. Its default is used when there is no matching provider above the consumer.\n\nReact.createContext(defaultValue) accepts a fallback value and returns a context object, not the value itself and not a state store. The existing call React.createContext(\"English\") creates LanguageContext. Its .Provider supplies a value to matching descendants in React18; useContext(LanguageContext) reads the closest provider’s value, or the fallback if none exists. The fallback does not change by itself.",
+      "```react\nconst LanguageContext = React.createContext(\"English\");\nfunction Greeting() {\n  const language = React.useContext(LanguageContext);\n  return <p>{language}</p>;\n}\nfunction App() {\n  return <LanguageContext.Provider value=\"Spanish\"><Greeting /></LanguageContext.Provider>;\n}\n```\nGreeting reads Spanish from the provider.",
+      "useContext reads the closest matching provider above that component. A nested provider can override the value for its own descendants.\n\nCompare a consumer outside a provider with one inside:\n```react\nconst LanguageContext = React.createContext(\"English\");\nfunction Greeting() {\n  const language = React.useContext(LanguageContext);\n  return <p>{language}</p>;\n}\nfunction App() {\n  return <main><Greeting /><LanguageContext.Provider value=\"Spanish\"><Greeting /></LanguageContext.Provider></main>;\n}\n```\nThe paragraphs read English, then Spanish. The provider changes only its descendants, not the context fallback.",
+      "A provider does not store state by itself. Parent state can supply its value; updating that state updates consumers.",
+      "For the exercise, Badge must read ThemeContext instead of hardcoding a theme. The main badge follows the changing outer theme, the nested badge stays gold, and the outside badge uses plain."
+    ],
+    "analogy": {
+      "familiar": "",
+      "connection": "",
+      "limit": ""
+    },
+    "steps": [
+      "Read the context inside Badge at its top level.",
+      "Leave provider placement and values intact."
+    ],
+    "starter": "const ThemeContext = React.createContext(\"plain\");\nfunction Badge({id}) { const theme = \"TODO\"; return <p data-badge={id}>{theme}</p>; }\nfunction Middle() { return <Badge id=\"main\" />; }\nfunction App() {\n const [theme,setTheme] = React.useState(\"mint\");\n return <main><button onClick={()=>setTheme(t=>t === \"mint\" ? \"night\" : \"mint\")}>Change theme</button>\n <ThemeContext.Provider value={theme}><Middle /><ThemeContext.Provider value=\"gold\"><Badge id=\"nested\" /></ThemeContext.Provider></ThemeContext.Provider>\n <Badge id=\"outside\" /></main>;\n}",
+    "solution": "const ThemeContext = React.createContext(\"plain\");\nfunction Badge({id}) { const theme = React.useContext(ThemeContext); return <p data-badge={id}>{theme}</p>; }\nfunction Middle() { return <Badge id=\"main\" />; }\nfunction App() {\n const [theme,setTheme] = React.useState(\"mint\");\n return <main><button onClick={()=>setTheme(t=>t === \"mint\" ? \"night\" : \"mint\")}>Change theme</button>\n <ThemeContext.Provider value={theme}><Middle /><ThemeContext.Provider value=\"gold\"><Badge id=\"nested\" /></ThemeContext.Provider></ThemeContext.Provider>\n <Badge id=\"outside\" /></main>;\n}",
+    "runtime": "react",
+    "checks": [
+      {
+        "label": "Nearest provider and default behave correctly",
+        "expression": "(async () => { const read=id=>document.querySelector('[data-badge=\"'+id+'\"]')?.textContent; if(read(\"main\")!==\"mint\"||read(\"nested\")!==\"gold\"||read(\"outside\")!==\"plain\")return false; document.querySelector(\"button\").click();await new Promise(r=>setTimeout(r,20));return read(\"main\")===\"night\"&&read(\"nested\")===\"gold\"&&read(\"outside\")===\"plain\"; })()"
+      }
+    ],
+    "quiz": {
+      "question": "An inner provider says gold and its parent provider changes from mint to night. What does a badge inside the inner provider read?",
+      "choices": [
+        "gold, from its closest matching provider",
+        "night, because the outer update overrides every provider",
+        "plain, because defaults always win"
+      ],
+      "answer": 0,
+      "explanation": "Consumers use the closest matching provider above them. The inner gold provider still supplies that subtree's value."
+    },
+    "hints": [
+      "Read the context inside Badge at its top level.",
+      "Leave provider placement and values intact."
+    ],
+    "math": null,
+    "filename": "App.jsx",
+    "estimatedMinutes": 12,
+    "externalNotes": "Context is not automatically persistent or cross-tab storage. Uses Provider syntax supported by existing React runtime; no new framework features required."
+  },
+  {
+    "id": "react-12",
+    "title": "Reuse state logic with a custom hook",
+    "summary": "Give two counters the same behavior without sharing their stored count.",
+    "explanation": [
+      "A custom hook is a function that uses React hooks to package reusable stateful behavior. Its name begins with use.",
+      "```react\nfunction useToggle(initial) {\n  const [enabled, setEnabled] = React.useState(initial);\n  return [enabled, () => setEnabled(value => !value)];\n}\nfunction App() {\n  const [enabled, toggle] = useToggle(false);\n  return <button onClick={toggle}>{enabled ? \"On\" : \"Off\"}</button>;\n}\n```",
+      "Each call gets its own state. Sharing a hook definition shares logic, not one shared stored value.\n\nChange only the initial argument to true:\n```react\nfunction useToggle(initial) {\n  const [enabled, setEnabled] = React.useState(initial);\n  return [enabled, () => setEnabled(value => !value)];\n}\nfunction App() {\n  const [enabled, toggle] = useToggle(true);\n  return <button onClick={toggle}>{enabled ? \"On\" : \"Off\"}</button>;\n}\n```\nThis instance starts On; one click shows Off. useToggle(initial) returns the current Boolean and an action function. React invokes that function on the click; it queues the opposite pending value. The initial argument seeds useState on mount, not on every later render. In the separate useCounter exercise, reset explicitly uses the initial argument from the current render when that action is invoked; initialization and an explicit reset are different operations.",
+      "Call custom hooks at the top level of a component or another hook. Do not call them conditionally or inside an event handler.",
+      "A hook can return an object containing its current value and actions. A component chooses how to display and trigger those actions.",
+      "For the exercise, useCounter(initial) returns count, increment, and reset. Both counters start at 2. Incrementing A must not change B; resetting A returns only A to its initial value."
+    ],
+    "analogy": {
+      "familiar": "",
+      "connection": "",
+      "limit": ""
+    },
+    "steps": [
+      "Use a functional update to increment the current count.",
+      "Reset only this hook call's count to initial."
+    ],
+    "starter": "function useCounter(initial) {\n const [count,setCount] = React.useState(initial);\n // TODO: return working actions\n return {count,increment:()=>{},reset:()=>{}};\n}\nfunction Counter({name}) {\n const {count,increment,reset} = useCounter(2);\n return <section data-counter={name}><p>{name}: {count}</p><button onClick={increment}>Add {name}</button><button onClick={reset}>Reset {name}</button></section>;\n}\nfunction App() { return <main><Counter name=\"A\" /><Counter name=\"B\" /></main>; }",
+    "solution": "function useCounter(initial) {\n const [count,setCount] = React.useState(initial);\n return {count,increment:()=>setCount(c=>c+1),reset:()=>setCount(initial)};\n}\nfunction Counter({name}) {\n const {count,increment,reset} = useCounter(2);\n return <section data-counter={name}><p>{name}: {count}</p><button onClick={increment}>Add {name}</button><button onClick={reset}>Reset {name}</button></section>;\n}\nfunction App() { return <main><Counter name=\"A\" /><Counter name=\"B\" /></main>; }",
+    "runtime": "react",
+    "checks": [
+      {
+        "label": "Hook calls retain independent state",
+        "expression": "(async()=>{const click=text=>[...document.querySelectorAll(\"button\")].find(b=>b.textContent===text)?.click();const read=name=>document.querySelector('[data-counter=\"'+name+'\"] p')?.textContent;click(\"Add A\");await new Promise(r=>setTimeout(r,20));click(\"Add A\");await new Promise(r=>setTimeout(r,20));if(read(\"A\")!==\"A: 4\"||read(\"B\")!==\"B: 2\")return false;click(\"Add B\");await new Promise(r=>setTimeout(r,20));click(\"Reset A\");await new Promise(r=>setTimeout(r,20));return read(\"A\")===\"A: 2\"&&read(\"B\")===\"B: 3\";})()"
+      }
+    ],
+    "quiz": {
+      "question": "Two components call the same useCounter hook. Why does clicking one not change the other?",
+      "choices": [
+        "Each hook call has its own state associated with its component",
+        "The hook is copied into a separate JavaScript file each time",
+        "All custom hooks are stateless"
+      ],
+      "answer": 0,
+      "explanation": "A custom hook reuses the stateful logic. Its calls use independent React state; shared state would need an explicit common owner or store."
+    },
+    "hints": [
+      "Use a functional update to increment the current count.",
+      "Reset only this hook call's count to initial."
+    ],
+    "math": null,
+    "filename": "App.jsx",
+    "estimatedMinutes": 12,
+    "externalNotes": "The initial argument is stable in this exercise; changing it later does not reinitialize useState automatically. No effect needed. Custom hooks must obey the same top-level call rules as built-in hooks."
+  },
+  {
+    "id": "react-13",
+    "title": "Contain a render failure",
+    "summary": "Show a useful fallback for a failed panel without losing the surrounding dashboard.",
+    "explanation": [
+      "An error boundary handles rendering failures in components below it and can replace that subtree with fallback UI.",
+      "React 18 uses a class component for a boundary. The supplied class extends React.Component; render returns its UI and this.props.children is the content placed inside it.\n\nThe class syntax builds on JavaScript classes. constructor(props) initializes a new boundary instance. super(props) calls the parent React.Component constructor before using this; this.state then stores the initial local failure flag. React creates the instance and calls render after updates; you do not manually run the constructor or render to handle an error.",
+      "getDerivedStateFromError returns a state update after a descendant render fails. render can then choose fallback content instead of the failed children.",
+      "```react\nclass SmallBoundary extends React.Component {\n  constructor(props) { super(props); this.state = {failed:false}; }\n  static getDerivedStateFromError() { return {failed:true}; }\n  render() { return this.state.failed ? <p>Try again later</p> : this.props.children; }\n}\n```\n\nTo exercise the boundary, render it around a child that fails:\n```react\nfunction BrokenPanel() { throw new Error(\"Demo failure\"); }\nfunction App() {\n  return <SmallBoundary><BrokenPanel /></SmallBoundary>;\n}\n```\nWith SmallBoundary defined above, rendering App shows Try again later. React calls the static error method with the thrown error; this example does not use that parameter. The method returns a state update. React then calls render, which takes no explicit arguments and returns fallback UI. The framework invokes these methods; do not call them yourself to simulate handling.\n\nnew Error(\"Demo failure\") constructs an Error object with that message. throw interrupts the child’s render by throwing that object. The nearest suitable boundary can then choose its fallback; Error construction alone, without throw, would not signal a render failure.",
+      "Place the boundary around the area that can fail, not around unrelated controls that should stay usable.",
+      "A boundary does not generally catch errors thrown directly by an event handler or a timer callback. Handle those where they occur; this exercise button changes state and the child then fails during render.",
+      "For the exercise, complete PanelBoundary's fallback behavior. Break panel should show \"Panel unavailable\" while Dashboard remains. Reset panel fixes the input and changes the boundary key to create fresh boundary state."
+    ],
+    "analogy": {
+      "familiar": "",
+      "connection": "",
+      "limit": ""
+    },
+    "steps": [
+      "Set failed state when a descendant render throws.",
+      "Render the fallback only for the failed subtree."
+    ],
+    "starter": "class PanelBoundary extends React.Component {\n constructor(props) { super(props); this.state = {failed:false}; }\n static getDerivedStateFromError() { return {failed:false}; }\n render() { if (this.state.failed) return <p role=\"alert\">Panel unavailable</p>; return this.props.children; }\n}\nfunction RiskyPanel({broken}) { if(broken) throw new Error(\"Practice render failure\"); return <p>Panel ready</p>; }\nfunction App() {\n const [broken,setBroken] = React.useState(false);\n const [version,setVersion] = React.useState(0);\n return <main><h1>Dashboard</h1><button onClick={()=>setBroken(true)}>Break panel</button><button onClick={()=>{setBroken(false);setVersion(v=>v+1);}}>Reset panel</button>\n <PanelBoundary key={version}><RiskyPanel broken={broken}/></PanelBoundary></main>;\n}",
+    "solution": "class PanelBoundary extends React.Component {\n constructor(props) { super(props); this.state = {failed:false}; }\n static getDerivedStateFromError() { return {failed:true}; }\n render() { if (this.state.failed) return <p role=\"alert\">Panel unavailable</p>; return this.props.children; }\n}\nfunction RiskyPanel({broken}) { if(broken) throw new Error(\"Practice render failure\"); return <p>Panel ready</p>; }\nfunction App() {\n const [broken,setBroken] = React.useState(false);\n const [version,setVersion] = React.useState(0);\n return <main><h1>Dashboard</h1><button onClick={()=>setBroken(true)}>Break panel</button><button onClick={()=>{setBroken(false);setVersion(v=>v+1);}}>Reset panel</button>\n <PanelBoundary key={version}><RiskyPanel broken={broken}/></PanelBoundary></main>;\n}",
+    "runtime": "react",
+    "checks": [
+      {
+        "label": "Failure fallback and explicit reset work",
+        "expression": "(async()=>{const click=t=>[...document.querySelectorAll(\"button\")].find(b=>b.textContent===t)?.click();click(\"Break panel\");await new Promise(r=>setTimeout(r,40));if(document.querySelector('[role=\"alert\"]')?.textContent!==\"Panel unavailable\"||document.querySelector(\"h1\")?.textContent!==\"Dashboard\")return false;click(\"Reset panel\");await new Promise(r=>setTimeout(r,40));return !document.querySelector('[role=\"alert\"]')&&document.body.textContent.includes(\"Panel ready\");})()"
+      }
+    ],
+    "quiz": {
+      "question": "An event handler directly throws an error before scheduling a render. Should this render boundary be your error-handling plan for it?",
+      "choices": [
+        "No; handle that event failure explicitly",
+        "Yes; boundaries catch every JavaScript error anywhere",
+        "Yes; adding a key makes all errors disappear"
+      ],
+      "answer": 0,
+      "explanation": "Boundaries protect descendant rendering/lifecycle work, not arbitrary event-handler or asynchronous callback failures. Handle those errors at their source."
+    },
+    "hints": [
+      "Set failed state when a descendant render throws.",
+      "Render the fallback only for the failed subtree."
+    ],
+    "math": null,
+    "filename": "App.jsx",
+    "estimatedMinutes": 12,
+    "externalNotes": "Targets React18.3.1 supported class boundary API. Intentional test failure logs are expected. Broken starter can unmount the root by failing to show fallback; validation must treat this as expected failure, not a successful test. No claim of catching server rendering or all async failures."
+  },
+  {
+    "id": "react-15",
+    "title": "Show a fallback while a component loads",
+    "summary": "Wrap a lazy report in a Suspense boundary and observe pending, ready, and reused states.",
+    "explanation": [
+      "React.lazy(load) declares a component whose loader runs when React first tries to render it. Declare the lazy component outside App so normal App renders reuse the same declaration.",
+      "The loader returns a Promise: an object representing a result that may arrive later. A pending Promise has no result yet. Resolving it supplies a result; rejecting it supplies an error.",
+      "For lazy, the resolved result must be an object whose default property contains a component. For example, React.lazy(() => Promise.resolve({ default: Greeting })) makes Greeting the loaded component. Promise.resolve creates an already-resolved Promise, so that small example need not visibly wait.",
+      "A Suspense boundary surrounds children that can suspend while waiting. fallback is replacement UI, not an error handler. Here is a complete App using a controlled local Promise, with no downloaded module:\n```react\nlet finishGreeting;\nconst greetingModule = new Promise(resolve => {\n  finishGreeting = () => resolve({default: Greeting});\n});\nfunction Greeting() { return <p data-greeting>Hello, explorer</p>; }\nconst LazyGreeting = React.lazy(() => greetingModule);\nfunction App() {\n  return <main><button onClick={() => finishGreeting()}>Finish local load</button>\n    <React.Suspense fallback={<p role=\"status\">Preparing greeting</p>}>\n      <LazyGreeting />\n    </React.Suspense>\n  </main>;\n}\n```\nThe frame mounts App. React first tries LazyGreeting, invokes its loader and receives the pending greetingModule Promise. Preparing greeting appears until the button calls finishGreeting(). That resolves an object whose default is the Greeting component, allowing React to show Hello, explorer. Greeting’s code was already in this file.\n\nThis changed version resolves the same local Promise before the frame mounts App:\n```react\nlet finishGreeting;\nconst greetingModule = new Promise(resolve => {\n  finishGreeting = () => resolve({default: Greeting});\n});\nfunction Greeting() { return <p data-greeting>Hello, explorer</p>; }\nconst LazyGreeting = React.lazy(() => greetingModule);\nfinishGreeting();\nfunction App() {\n  return <main><button onClick={() => finishGreeting()}>Finish local load</button>\n    <React.Suspense fallback={<p role=\"status\">Preparing greeting</p>}>\n      <LazyGreeting />\n    </React.Suspense>\n  </main>;\n}\n```\nThe greeting becomes available without clicking. Do not promise an observable loading frame for an already-settled Promise; the check waits for the greeting instead.",
+      "React caches the loader Promise and its resolved component for that lazy declaration. Hiding and showing it again does not reload the component code. This does not preserve the child's local state after unmounting, and it is not a general data cache.",
+      "If loading rejects, the nearest Error Boundary handles the error; Suspense is for waiting, not a replacement for error handling. Ordinary fetching inside useEffect does not automatically activate Suspense.",
+      "This exercise controls a Promise manually so you can inspect waiting without relying on network timing. new Promise(resolve => { ... }) immediately provides a resolve function; finishLoading saves a callback that resolves it with { default: Report }. The Report code is already present: this simulates a pending module and does not split or download a real file.\n\nThis smaller Promise example exposes the callback and its effect:\n```javascript\nlet finish;\nconst pending = new Promise(resolve => { finish = resolve; });\npending.then(value => console.log(value));\nfinish(\"Ready\");\n```\nThe constructor takes an executor callback and returns a pending Promise. It immediately gives the callback a resolve function, stored here as finish. Calling finish supplies the eventual result, so the reaction later prints Ready. No network request or downloaded module is involved.",
+      "The supplied Toggle report button shows or hides the child. Finish simulated load settles the Promise. Replace the TODO paragraph with a Suspense boundary whose fallback is <p role=\"status\">Loading report</p>, and put <LazyReport /> inside. role=\"status\" identifies a status message for assistive technology and our check.",
+      "In a real bundler-supported app, React.lazy(() => import(\"./Report.js\")) can load a separate module whose default export is the component. That dynamic import is not run by this single-file exercise. Reset the runner to get a fresh pending Promise."
+    ],
+    "analogy": {
+      "familiar": "",
+      "connection": "",
+      "limit": ""
+    },
+    "steps": [
+      "Replace the TODO with a Suspense boundary around LazyReport.",
+      "Use the required status fallback.",
+      "Run the checks and trace pending, ready, and reused states."
+    ],
+    "starter": "let finishLoading;\nlet loaderCalls = 0;\nconst reportModule = new Promise(resolve => {\n  finishLoading = () => resolve({ default: Report });\n});\nfunction Report() { return <p data-report>Report ready</p>; }\nconst LazyReport = React.lazy(() => {\n  loaderCalls += 1;\n  return reportModule;\n});\nfunction App() {\n  const [show, setShow] = React.useState(false);\n  return <main>\n    <button onClick={() => setShow(value => !value)}>Toggle report</button>\n    <button onClick={() => finishLoading()}>Finish simulated load</button>\n    {show && <p>TODO: wrap LazyReport in Suspense with a Loading report status</p>}\n  </main>;\n}\n",
+    "solution": "let finishLoading;\nlet loaderCalls = 0;\nconst reportModule = new Promise(resolve => {\n  finishLoading = () => resolve({ default: Report });\n});\nfunction Report() { return <p data-report>Report ready</p>; }\nconst LazyReport = React.lazy(() => {\n  loaderCalls += 1;\n  return reportModule;\n});\nfunction App() {\n  const [show, setShow] = React.useState(false);\n  return <main>\n    <button onClick={() => setShow(value => !value)}>Toggle report</button>\n    <button onClick={() => finishLoading()}>Finish simulated load</button>\n    {show && <React.Suspense fallback={<p role=\"status\">Loading report</p>}><LazyReport /></React.Suspense>}\n  </main>;\n}\n",
+    "runtime": "react",
+    "checks": [
+      {
+        "label": "The pending report shows its fallback before completion",
+        "expression": "(async()=>{const wait=()=>new Promise(r=>setTimeout(r,40));if(loaderCalls!==0)return false;[...document.querySelectorAll(\"button\")].find(b=>b.textContent===\"Toggle report\").click();await wait();return loaderCalls===1&&document.querySelector(\"[role=status]\")?.textContent===\"Loading report\"&&!document.querySelector(\"[data-report]\");})()"
+      },
+      {
+        "label": "Resolving reveals the report and re-showing reuses the loader",
+        "expression": "(async()=>{const wait=()=>new Promise(r=>setTimeout(r,40));const click=t=>[...document.querySelectorAll(\"button\")].find(b=>b.textContent===t).click();click(\"Finish simulated load\");await wait();if(document.querySelector(\"[data-report]\")?.textContent!==\"Report ready\"||document.querySelector(\"[role=status]\"))return false;click(\"Toggle report\");await wait();if(document.querySelector(\"[data-report]\"))return false;click(\"Toggle report\");await wait();return loaderCalls===1&&document.querySelector(\"[data-report]\")?.textContent===\"Report ready\"&&!document.querySelector(\"[role=status]\");})()"
+      }
+    ],
+    "quiz": {
+      "question": "A lazily loaded HelpPanel finishes loading successfully. You hide it, then show it again using the same lazy declaration. What should you expect?",
+      "choices": [
+        "React calls the loader again every time because the panel was hidden.",
+        "React reuses the loaded component; its code need not load again.",
+        "The panel can never appear again after it has been hidden."
+      ],
+      "answer": 1,
+      "explanation": "The Promise and loaded component are cached for that lazy declaration. Reusing its code does not guarantee preservation of a previously unmounted component's local state."
+    },
+    "hints": [
+      "Compare the changed situation with the rule, not just the spelling."
+    ],
+    "math": null,
+    "filename": "App.jsx",
+    "estimatedMinutes": 12,
+    "externalNotes": "Actual React18.3.1 controlled-Promise fixture. Exercises waiting/reveal/cache semantics, not real network code splitting or React19 APIs. The supplied loader controls are instructional scaffolding."
+  }
+]

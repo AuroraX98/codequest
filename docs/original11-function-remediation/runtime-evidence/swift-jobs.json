@@ -1,0 +1,74 @@
+[
+  {
+    "id": "swift-06-p2",
+    "lessonId": "swift-06",
+    "field": "explanation[2]",
+    "code": "print(abs(-0.25))\nprint(abs(0.25))",
+    "expected": "0.25\n0.25",
+    "outcome": "success",
+    "fileEffects": "none"
+  },
+  {
+    "id": "swift-10-p2",
+    "lessonId": "swift-10",
+    "field": "explanation[2]",
+    "code": "let work = Task {\n    try await Task.sleep(for: .seconds(10))\n    return \"Finished\"\n}\nwork.cancel()\ndo { print(try await work.value) }\ncatch is CancellationError { print(\"Cancelled\") }",
+    "expected": "Cancelled",
+    "outcome": "success",
+    "fileEffects": "none"
+  },
+  {
+    "id": "swift-10-p7",
+    "lessonId": "swift-10",
+    "field": "explanation[7]",
+    "code": "let label = await MainActor.run { \"Ready\" }\nprint(label)",
+    "expected": "Ready",
+    "outcome": "success",
+    "fileEffects": "none"
+  },
+  {
+    "id": "swift-11-p6",
+    "lessonId": "swift-11",
+    "field": "explanation[6]",
+    "code": "import Foundation\nstruct PracticeEntry: Codable { let title: String; let minutes: Int }\nstruct LoadResult { let entries: [PracticeEntry]; let message: String }\nfunc loadEntries(_ data: Data) -> LoadResult {\n    do {\n        let entries = try JSONDecoder().decode([PracticeEntry].self, from: data)\n        return LoadResult(entries: entries, message: \"Loaded\")\n    } catch {\n        return LoadResult(entries: [], message: \"Data could not be read\")\n    }\n}\nfunc loadEntries(from url: URL) -> LoadResult {\n    do { return loadEntries(try Data(contentsOf: url)) }\n    catch { return LoadResult(entries: [], message: \"File could not be read\") }\n}\nlet bytes = Data(\"[{\\\"title\\\":\\\"Map\\\",\\\"minutes\\\":5}]\".utf8)\nlet url = FileManager.default.temporaryDirectory.appendingPathComponent(\"worked-overloads.json\")\ntry bytes.write(to: url, options: .atomic)\nprint(loadEntries(bytes).entries.count)\nprint(loadEntries(from: url).entries.count)\nprint(loadEntries(Data(\"broken\".utf8)).entries.count)",
+    "expected": "1\n1\n0",
+    "outcome": "success",
+    "fileEffects": "Writes worked-overloads.json in temporary directory; run sandboxed and clean test-created file only"
+  },
+  {
+    "id": "swift-20-p3",
+    "lessonId": "swift-20",
+    "field": "explanation[3]",
+    "code": "final class LabelOwner {\n    let text: String\n    init(text: String) { self.text = text }\n    func makeReader() -> () -> String {\n        return { [weak self] in self?.text ?? \"Released\" }\n    }\n}\nfunc releasedReader() -> () -> String {\n    let owner = LabelOwner(text: \"Map\")\n    return owner.makeReader()\n}\nlet read = releasedReader()\nprint(read())",
+    "expected": "Released",
+    "outcome": "success",
+    "fileEffects": "none"
+  },
+  {
+    "id": "swift-21-p3",
+    "lessonId": "swift-21",
+    "field": "explanation[3]",
+    "code": "struct LabelSnapshot: Sendable { let text: String }\nactor LabelStore {\n    private var text = \"Ready\"\n    func snapshot() -> LabelSnapshot { LabelSnapshot(text: text) }\n}\nlet store = LabelStore()\nlet saved = await store.snapshot()\nprint(saved.text)",
+    "expected": "Ready",
+    "outcome": "success",
+    "fileEffects": "none"
+  },
+  {
+    "id": "swift-03-p5",
+    "lessonId": "swift-03",
+    "field": "explanation[5]",
+    "code": "let message = \"Bring paper\"\nprint(message.contains(\"paper\"))\nprint(message.contains(\"yarn\"))",
+    "expected": "true\nfalse",
+    "outcome": "success",
+    "fileEffects": "none"
+  },
+  {
+    "id": "swift-04-p5",
+    "lessonId": "swift-04",
+    "field": "explanation[5]",
+    "code": "let repeated = [3, 2, 2]\nlet unique = Set(repeated)\nprint(unique.count)\nprint(repeated.count)",
+    "expected": "2\n3",
+    "outcome": "success",
+    "fileEffects": "none"
+  }
+]

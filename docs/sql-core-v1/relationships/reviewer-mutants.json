@@ -1,0 +1,921 @@
+{
+  "sourceSha256": "8f394fe3d355e36ccd1269f1f82480824b79f7566a698834e2ff7964b4353506",
+  "status": "PASS",
+  "count": 9,
+  "results": [
+    {
+      "id": "sql-35-independent-duplicate-missing",
+      "passed": true,
+      "execution": {
+        "id": "sql-35-independent-duplicate-missing",
+        "output": [
+          {
+            "columns": [
+              "id",
+              "title",
+              "status"
+            ],
+            "values": [
+              [
+                1,
+                "Read",
+                "open"
+              ],
+              [
+                2,
+                "Walk",
+                null
+              ]
+            ]
+          }
+        ],
+        "error": null,
+        "checks": [
+          {
+            "label": "Exact row count",
+            "passed": true,
+            "actual": [
+              {
+                "columns": [
+                  "COUNT(*) = 2"
+                ],
+                "values": [
+                  [
+                    1
+                  ]
+                ]
+              }
+            ]
+          },
+          {
+            "label": "Omitted status",
+            "passed": false,
+            "actual": [
+              {
+                "columns": [
+                  "COUNT(*) = 1"
+                ],
+                "values": [
+                  [
+                    0
+                  ]
+                ]
+              }
+            ]
+          },
+          {
+            "label": "Explicit null",
+            "passed": false,
+            "actual": [
+              {
+                "columns": [
+                  "COUNT(*) = 1"
+                ],
+                "values": [
+                  [
+                    0
+                  ]
+                ]
+              }
+            ]
+          }
+        ],
+        "passed": false
+      },
+      "job": {
+        "id": "sql-35-independent-duplicate-missing",
+        "setup": "",
+        "code": "CREATE TABLE reminders(id INTEGER PRIMARY KEY, title TEXT NOT NULL, status TEXT DEFAULT 'open');\nINSERT INTO reminders(id,title) VALUES(1,'Read');\nINSERT INTO reminders VALUES(2,'Walk',NULL);\nSELECT id,title,status\nFROM reminders\nORDER BY id;\nCREATE TEMP TABLE saved AS SELECT * FROM reminders; DROP TABLE reminders; CREATE TABLE reminders AS SELECT * FROM saved WHERE rowid<>(SELECT MAX(rowid) FROM saved) UNION ALL SELECT * FROM saved WHERE rowid=(SELECT MIN(rowid) FROM saved);",
+        "checks": [
+          {
+            "label": "Exact row count",
+            "expression": "SELECT COUNT(*) = 2 FROM reminders;"
+          },
+          {
+            "label": "Omitted status",
+            "expression": "SELECT COUNT(*) = 1 FROM reminders WHERE id=1 AND title='Read' AND status='open';"
+          },
+          {
+            "label": "Explicit null",
+            "expression": "SELECT COUNT(*) = 1 FROM reminders WHERE id=2 AND title='Walk' AND status IS NULL;"
+          }
+        ],
+        "outcome": "success"
+      }
+    },
+    {
+      "id": "sql-36-independent-duplicate-missing",
+      "passed": true,
+      "execution": {
+        "id": "sql-36-independent-duplicate-missing",
+        "output": [
+          {
+            "columns": [
+              "id",
+              "seats"
+            ],
+            "values": [
+              [
+                1,
+                1
+              ],
+              [
+                2,
+                4
+              ]
+            ]
+          }
+        ],
+        "error": null,
+        "checks": [
+          {
+            "label": "Exact row count",
+            "passed": true,
+            "actual": [
+              {
+                "columns": [
+                  "COUNT(*) = 2"
+                ],
+                "values": [
+                  [
+                    1
+                  ]
+                ]
+              }
+            ]
+          },
+          {
+            "label": "Lower endpoint",
+            "passed": false,
+            "actual": [
+              {
+                "columns": [
+                  "COUNT(*) = 1"
+                ],
+                "values": [
+                  [
+                    0
+                  ]
+                ]
+              }
+            ]
+          },
+          {
+            "label": "Upper endpoint",
+            "passed": false,
+            "actual": [
+              {
+                "columns": [
+                  "COUNT(*) = 1"
+                ],
+                "values": [
+                  [
+                    0
+                  ]
+                ]
+              }
+            ]
+          }
+        ],
+        "passed": false
+      },
+      "job": {
+        "id": "sql-36-independent-duplicate-missing",
+        "setup": "",
+        "code": "CREATE TABLE bookings(id INTEGER PRIMARY KEY, seats INTEGER NOT NULL CHECK(seats BETWEEN 1 AND 4));\nINSERT INTO bookings VALUES(1,1),(2,4);\nSELECT id,seats\nFROM bookings\nORDER BY id;\nCREATE TEMP TABLE saved AS SELECT * FROM bookings; DROP TABLE bookings; CREATE TABLE bookings AS SELECT * FROM saved WHERE rowid<>(SELECT MAX(rowid) FROM saved) UNION ALL SELECT * FROM saved WHERE rowid=(SELECT MIN(rowid) FROM saved);",
+        "checks": [
+          {
+            "label": "Exact row count",
+            "expression": "SELECT COUNT(*) = 2 FROM bookings;"
+          },
+          {
+            "label": "Lower endpoint",
+            "expression": "SELECT COUNT(*) = 1 FROM bookings WHERE id=1 AND seats=1;"
+          },
+          {
+            "label": "Upper endpoint",
+            "expression": "SELECT COUNT(*) = 1 FROM bookings WHERE id=2 AND seats=4;"
+          }
+        ],
+        "outcome": "success"
+      }
+    },
+    {
+      "id": "sql-37-independent-duplicate-missing",
+      "passed": true,
+      "execution": {
+        "id": "sql-37-independent-duplicate-missing",
+        "output": [
+          {
+            "columns": [
+              "person",
+              "day"
+            ],
+            "values": [
+              [
+                "Mira",
+                "Mon"
+              ],
+              [
+                "Mira",
+                "Tue"
+              ],
+              [
+                "Oren",
+                "Mon"
+              ]
+            ]
+          }
+        ],
+        "error": null,
+        "checks": [
+          {
+            "label": "Exact row count",
+            "passed": true,
+            "actual": [
+              {
+                "columns": [
+                  "COUNT(*) = 3"
+                ],
+                "values": [
+                  [
+                    1
+                  ]
+                ]
+              }
+            ]
+          },
+          {
+            "label": "Pair one",
+            "passed": false,
+            "actual": [
+              {
+                "columns": [
+                  "COUNT(*) = 1"
+                ],
+                "values": [
+                  [
+                    0
+                  ]
+                ]
+              }
+            ]
+          },
+          {
+            "label": "Pair two",
+            "passed": true,
+            "actual": [
+              {
+                "columns": [
+                  "COUNT(*) = 1"
+                ],
+                "values": [
+                  [
+                    1
+                  ]
+                ]
+              }
+            ]
+          }
+        ],
+        "passed": false
+      },
+      "job": {
+        "id": "sql-37-independent-duplicate-missing",
+        "setup": "",
+        "code": "CREATE TABLE slots(person TEXT NOT NULL, day TEXT NOT NULL, PRIMARY KEY(person,day));\nINSERT INTO slots VALUES('Mira','Mon'),('Mira','Tue'),('Oren','Mon');\nSELECT person,day\nFROM slots\nORDER BY person,day;\nCREATE TEMP TABLE saved AS SELECT * FROM slots; DROP TABLE slots; CREATE TABLE slots AS SELECT * FROM saved WHERE rowid<>(SELECT MAX(rowid) FROM saved) UNION ALL SELECT * FROM saved WHERE rowid=(SELECT MIN(rowid) FROM saved);",
+        "checks": [
+          {
+            "label": "Exact row count",
+            "expression": "SELECT COUNT(*) = 3 FROM slots;"
+          },
+          {
+            "label": "Pair one",
+            "expression": "SELECT COUNT(*) = 1 FROM slots WHERE person='Mira' AND day='Mon';"
+          },
+          {
+            "label": "Pair two",
+            "expression": "SELECT COUNT(*) = 1 FROM slots WHERE person='Mira' AND day='Tue';"
+          }
+        ],
+        "outcome": "success"
+      }
+    },
+    {
+      "id": "sql-38-independent-duplicate-missing",
+      "passed": true,
+      "execution": {
+        "id": "sql-38-independent-duplicate-missing",
+        "output": [
+          {
+            "columns": [
+              "name",
+              "title"
+            ],
+            "values": [
+              [
+                "Mira",
+                "Art"
+              ],
+              [
+                "Mira",
+                "Music"
+              ],
+              [
+                "Oren",
+                "Art"
+              ]
+            ]
+          }
+        ],
+        "error": null,
+        "checks": [
+          {
+            "label": "Exact row count",
+            "passed": true,
+            "actual": [
+              {
+                "columns": [
+                  "COUNT(*) = 3"
+                ],
+                "values": [
+                  [
+                    1
+                  ]
+                ]
+              }
+            ]
+          },
+          {
+            "label": "First link",
+            "passed": false,
+            "actual": [
+              {
+                "columns": [
+                  "COUNT(*) = 1"
+                ],
+                "values": [
+                  [
+                    0
+                  ]
+                ]
+              }
+            ]
+          },
+          {
+            "label": "Second link",
+            "passed": true,
+            "actual": [
+              {
+                "columns": [
+                  "COUNT(*) = 1"
+                ],
+                "values": [
+                  [
+                    1
+                  ]
+                ]
+              }
+            ]
+          }
+        ],
+        "passed": false
+      },
+      "job": {
+        "id": "sql-38-independent-duplicate-missing",
+        "setup": "PRAGMA foreign_keys=ON;\nCREATE TABLE people(id INTEGER PRIMARY KEY,name TEXT NOT NULL);\nCREATE TABLE clubs(id INTEGER PRIMARY KEY,title TEXT NOT NULL);\nINSERT INTO people VALUES(1,'Mira'),(2,'Oren');\nINSERT INTO clubs VALUES(10,'Art'),(20,'Music');",
+        "code": "CREATE TABLE membership(person_id INTEGER NOT NULL REFERENCES people(id), club_id INTEGER NOT NULL REFERENCES clubs(id), PRIMARY KEY(person_id,club_id));\nINSERT INTO membership VALUES(1,10),(1,20),(2,10);\nSELECT p.name,c.title\nFROM membership AS m\nJOIN people AS p ON p.id=m.person_id\nJOIN clubs AS c ON c.id=m.club_id\nORDER BY p.name,c.title;\nCREATE TEMP TABLE saved AS SELECT * FROM membership; DROP TABLE membership; CREATE TABLE membership AS SELECT * FROM saved WHERE rowid<>(SELECT MAX(rowid) FROM saved) UNION ALL SELECT * FROM saved WHERE rowid=(SELECT MIN(rowid) FROM saved);",
+        "checks": [
+          {
+            "label": "Exact row count",
+            "expression": "SELECT COUNT(*) = 3 FROM membership;"
+          },
+          {
+            "label": "First link",
+            "expression": "SELECT COUNT(*) = 1 FROM membership WHERE person_id=1 AND club_id=10;"
+          },
+          {
+            "label": "Second link",
+            "expression": "SELECT COUNT(*) = 1 FROM membership WHERE person_id=1 AND club_id=20;"
+          }
+        ],
+        "outcome": "success"
+      }
+    },
+    {
+      "id": "sql-39-independent-duplicate-missing",
+      "passed": true,
+      "execution": {
+        "id": "sql-39-independent-duplicate-missing",
+        "output": [
+          {
+            "columns": [
+              "id"
+            ],
+            "values": [
+              [
+                1
+              ]
+            ]
+          }
+        ],
+        "error": null,
+        "checks": [
+          {
+            "label": "Exact row count",
+            "passed": false,
+            "actual": [
+              {
+                "columns": [
+                  "COUNT(*) = 1"
+                ],
+                "values": [
+                  [
+                    0
+                  ]
+                ]
+              }
+            ]
+          },
+          {
+            "label": "Allowed ID",
+            "passed": false,
+            "actual": [
+              {
+                "columns": [
+                  "COUNT(*) = 1"
+                ],
+                "values": [
+                  [
+                    0
+                  ]
+                ]
+              }
+            ]
+          },
+          {
+            "label": "Sources retained",
+            "passed": true,
+            "actual": [
+              {
+                "columns": [
+                  "(SELECT COUNT(*) FROM candidates)=3 AND (SELECT COUNT(*) FROM blocked)=2"
+                ],
+                "values": [
+                  [
+                    1
+                  ]
+                ]
+              }
+            ]
+          }
+        ],
+        "passed": false
+      },
+      "job": {
+        "id": "sql-39-independent-duplicate-missing",
+        "setup": "CREATE TABLE candidates(id INTEGER);\nCREATE TABLE blocked(id INTEGER);\nINSERT INTO candidates VALUES(1),(2),(NULL);\nINSERT INTO blocked VALUES(2),(NULL);",
+        "code": "CREATE TABLE allowed AS SELECT c.id\nFROM candidates AS c\nWHERE c.id IS NOT NULL AND NOT EXISTS (SELECT 1 FROM blocked AS b WHERE b.id=c.id);\nSELECT id\nFROM allowed\nORDER BY id;\nCREATE TEMP TABLE saved AS SELECT * FROM allowed; DROP TABLE allowed; CREATE TABLE allowed AS SELECT * FROM saved UNION ALL SELECT * FROM saved;",
+        "checks": [
+          {
+            "label": "Exact row count",
+            "expression": "SELECT COUNT(*) = 1 FROM allowed;"
+          },
+          {
+            "label": "Allowed ID",
+            "expression": "SELECT COUNT(*) = 1 FROM allowed WHERE id=1;"
+          },
+          {
+            "label": "Sources retained",
+            "expression": "SELECT (SELECT COUNT(*) FROM candidates)=3 AND (SELECT COUNT(*) FROM blocked)=2;"
+          }
+        ],
+        "outcome": "success"
+      }
+    },
+    {
+      "id": "sql-40-independent-duplicate-missing",
+      "passed": true,
+      "execution": {
+        "id": "sql-40-independent-duplicate-missing",
+        "output": [
+          {
+            "columns": [
+              "worker",
+              "manager"
+            ],
+            "values": [
+              [
+                "Ari",
+                null
+              ],
+              [
+                "Bo",
+                "Ari"
+              ],
+              [
+                "Cy",
+                "Ari"
+              ],
+              [
+                "Dee",
+                "Bo"
+              ]
+            ]
+          }
+        ],
+        "error": null,
+        "checks": [
+          {
+            "label": "Exact row count",
+            "passed": true,
+            "actual": [
+              {
+                "columns": [
+                  "COUNT(*) = 4"
+                ],
+                "values": [
+                  [
+                    1
+                  ]
+                ]
+              }
+            ]
+          },
+          {
+            "label": "Top worker",
+            "passed": false,
+            "actual": [
+              {
+                "columns": [
+                  "COUNT(*) = 1"
+                ],
+                "values": [
+                  [
+                    0
+                  ]
+                ]
+              }
+            ]
+          },
+          {
+            "label": "Bo manager",
+            "passed": true,
+            "actual": [
+              {
+                "columns": [
+                  "COUNT(*) = 1"
+                ],
+                "values": [
+                  [
+                    1
+                  ]
+                ]
+              }
+            ]
+          }
+        ],
+        "passed": false
+      },
+      "job": {
+        "id": "sql-40-independent-duplicate-missing",
+        "setup": "CREATE TABLE staff(id INTEGER PRIMARY KEY,name TEXT NOT NULL,manager_id INTEGER);\nINSERT INTO staff VALUES(1,'Ari',NULL),(2,'Bo',1),(3,'Cy',1),(4,'Dee',2);",
+        "code": "CREATE TABLE report AS SELECT child.name AS worker,parent.name AS manager\nFROM staff AS child\nLEFT JOIN staff AS parent ON parent.id=child.manager_id\nORDER BY child.id;\nSELECT worker,manager\nFROM report\nORDER BY worker;\nCREATE TEMP TABLE saved AS SELECT * FROM report; DROP TABLE report; CREATE TABLE report AS SELECT * FROM saved WHERE rowid<>(SELECT MAX(rowid) FROM saved) UNION ALL SELECT * FROM saved WHERE rowid=(SELECT MIN(rowid) FROM saved);",
+        "checks": [
+          {
+            "label": "Exact row count",
+            "expression": "SELECT COUNT(*) = 4 FROM report;"
+          },
+          {
+            "label": "Top worker",
+            "expression": "SELECT COUNT(*) = 1 FROM report WHERE worker='Ari' AND manager IS NULL;"
+          },
+          {
+            "label": "Bo manager",
+            "expression": "SELECT COUNT(*) = 1 FROM report WHERE worker='Bo' AND manager='Ari';"
+          }
+        ],
+        "outcome": "success"
+      }
+    },
+    {
+      "id": "sql-41-independent-duplicate-missing",
+      "passed": true,
+      "execution": {
+        "id": "sql-41-independent-duplicate-missing",
+        "output": [
+          {
+            "columns": [
+              "project_id",
+              "task_id"
+            ],
+            "values": [
+              [
+                1,
+                11
+              ],
+              [
+                2,
+                null
+              ],
+              [
+                3,
+                null
+              ]
+            ]
+          }
+        ],
+        "error": null,
+        "checks": [
+          {
+            "label": "Exact row count",
+            "passed": true,
+            "actual": [
+              {
+                "columns": [
+                  "COUNT(*) = 3"
+                ],
+                "values": [
+                  [
+                    1
+                  ]
+                ]
+              }
+            ]
+          },
+          {
+            "label": "Open match",
+            "passed": false,
+            "actual": [
+              {
+                "columns": [
+                  "COUNT(*) = 1"
+                ],
+                "values": [
+                  [
+                    0
+                  ]
+                ]
+              }
+            ]
+          },
+          {
+            "label": "Finished-only parent",
+            "passed": true,
+            "actual": [
+              {
+                "columns": [
+                  "COUNT(*) = 1"
+                ],
+                "values": [
+                  [
+                    1
+                  ]
+                ]
+              }
+            ]
+          }
+        ],
+        "passed": false
+      },
+      "job": {
+        "id": "sql-41-independent-duplicate-missing",
+        "setup": "CREATE TABLE projects(id INTEGER PRIMARY KEY,title TEXT);\nCREATE TABLE tasks(id INTEGER PRIMARY KEY,project_id INTEGER,done INTEGER);\nINSERT INTO projects VALUES(1,'Map'),(2,'Song'),(3,'Garden');\nINSERT INTO tasks VALUES(10,1,1),(11,1,0),(12,2,1);",
+        "code": "CREATE TABLE open_tasks AS SELECT p.id AS project_id,t.id AS task_id\nFROM projects AS p\nLEFT JOIN tasks AS t ON t.project_id=p.id AND t.done=0\nORDER BY p.id,t.id;\nSELECT project_id,task_id\nFROM open_tasks\nORDER BY project_id,task_id;\nCREATE TEMP TABLE saved AS SELECT * FROM open_tasks; DROP TABLE open_tasks; CREATE TABLE open_tasks AS SELECT * FROM saved WHERE rowid<>(SELECT MAX(rowid) FROM saved) UNION ALL SELECT * FROM saved WHERE rowid=(SELECT MIN(rowid) FROM saved);",
+        "checks": [
+          {
+            "label": "Exact row count",
+            "expression": "SELECT COUNT(*) = 3 FROM open_tasks;"
+          },
+          {
+            "label": "Open match",
+            "expression": "SELECT COUNT(*) = 1 FROM open_tasks WHERE project_id=1 AND task_id=11;"
+          },
+          {
+            "label": "Finished-only parent",
+            "expression": "SELECT COUNT(*) = 1 FROM open_tasks WHERE project_id=2 AND task_id IS NULL;"
+          }
+        ],
+        "outcome": "success"
+      }
+    },
+    {
+      "id": "sql-42-independent-duplicate-missing",
+      "passed": true,
+      "execution": {
+        "id": "sql-42-independent-duplicate-missing",
+        "output": [
+          {
+            "columns": [
+              "id",
+              "score"
+            ],
+            "values": [
+              [
+                3,
+                8
+              ],
+              [
+                4,
+                8
+              ]
+            ]
+          }
+        ],
+        "error": null,
+        "checks": [
+          {
+            "label": "Exact row count",
+            "passed": true,
+            "actual": [
+              {
+                "columns": [
+                  "COUNT(*) = 2"
+                ],
+                "values": [
+                  [
+                    1
+                  ]
+                ]
+              }
+            ]
+          },
+          {
+            "label": "First selected",
+            "passed": false,
+            "actual": [
+              {
+                "columns": [
+                  "COUNT(*) = 1"
+                ],
+                "values": [
+                  [
+                    0
+                  ]
+                ]
+              }
+            ]
+          },
+          {
+            "label": "Second selected",
+            "passed": false,
+            "actual": [
+              {
+                "columns": [
+                  "COUNT(*) = 1"
+                ],
+                "values": [
+                  [
+                    0
+                  ]
+                ]
+              }
+            ]
+          }
+        ],
+        "passed": false
+      },
+      "job": {
+        "id": "sql-42-independent-duplicate-missing",
+        "setup": "CREATE TABLE notes(id INTEGER PRIMARY KEY,score INTEGER);\nINSERT INTO notes VALUES(1,10),(2,10),(3,8),(4,8),(5,5);",
+        "code": "CREATE TABLE page AS SELECT id,score\nFROM notes\nORDER BY score DESC,id ASC\nLIMIT 2\nOFFSET 2;\nSELECT id,score\nFROM page\nORDER BY score DESC,id;\nCREATE TEMP TABLE saved AS SELECT * FROM page; DROP TABLE page; CREATE TABLE page AS SELECT * FROM saved WHERE rowid<>(SELECT MAX(rowid) FROM saved) UNION ALL SELECT * FROM saved WHERE rowid=(SELECT MIN(rowid) FROM saved);",
+        "checks": [
+          {
+            "label": "Exact row count",
+            "expression": "SELECT COUNT(*) = 2 FROM page;"
+          },
+          {
+            "label": "First selected",
+            "expression": "SELECT COUNT(*) = 1 FROM page WHERE id=3 AND score=8;"
+          },
+          {
+            "label": "Second selected",
+            "expression": "SELECT COUNT(*) = 1 FROM page WHERE id=4 AND score=8;"
+          }
+        ],
+        "outcome": "success"
+      }
+    },
+    {
+      "id": "sql-43-independent-duplicate-missing",
+      "passed": true,
+      "execution": {
+        "id": "sql-43-independent-duplicate-missing",
+        "output": [
+          {
+            "columns": [
+              "id",
+              "name",
+              "score",
+              "position",
+              "level"
+            ],
+            "values": [
+              [
+                1,
+                "Mira",
+                9,
+                1,
+                1
+              ],
+              [
+                2,
+                "Oren",
+                9,
+                2,
+                1
+              ],
+              [
+                3,
+                "Paz",
+                7,
+                3,
+                2
+              ],
+              [
+                4,
+                "Rin",
+                5,
+                4,
+                3
+              ]
+            ]
+          }
+        ],
+        "error": null,
+        "checks": [
+          {
+            "label": "Exact row count",
+            "passed": true,
+            "actual": [
+              {
+                "columns": [
+                  "COUNT(*) = 4"
+                ],
+                "values": [
+                  [
+                    1
+                  ]
+                ]
+              }
+            ]
+          },
+          {
+            "label": "First tie",
+            "passed": false,
+            "actual": [
+              {
+                "columns": [
+                  "COUNT(*) = 1"
+                ],
+                "values": [
+                  [
+                    0
+                  ]
+                ]
+              }
+            ]
+          },
+          {
+            "label": "Second tie",
+            "passed": true,
+            "actual": [
+              {
+                "columns": [
+                  "COUNT(*) = 1"
+                ],
+                "values": [
+                  [
+                    1
+                  ]
+                ]
+              }
+            ]
+          }
+        ],
+        "passed": false
+      },
+      "job": {
+        "id": "sql-43-independent-duplicate-missing",
+        "setup": "CREATE TABLE results(id INTEGER PRIMARY KEY,name TEXT,score INTEGER);\nINSERT INTO results VALUES(1,'Mira',9),(2,'Oren',9),(3,'Paz',7),(4,'Rin',5);",
+        "code": "CREATE TABLE ranked AS SELECT id,name,score,ROW_NUMBER() OVER (ORDER BY score DESC,id) AS position,DENSE_RANK() OVER (ORDER BY score DESC) AS level\nFROM results\nORDER BY score DESC,id;\nSELECT id,name,score,position,level\nFROM ranked\nORDER BY position;\nCREATE TEMP TABLE saved AS SELECT * FROM ranked; DROP TABLE ranked; CREATE TABLE ranked AS SELECT * FROM saved WHERE rowid<>(SELECT MAX(rowid) FROM saved) UNION ALL SELECT * FROM saved WHERE rowid=(SELECT MIN(rowid) FROM saved);",
+        "checks": [
+          {
+            "label": "Exact row count",
+            "expression": "SELECT COUNT(*) = 4 FROM ranked;"
+          },
+          {
+            "label": "First tie",
+            "expression": "SELECT COUNT(*) = 1 FROM ranked WHERE id=1 AND name='Mira' AND score=9 AND position=1 AND level=1;"
+          },
+          {
+            "label": "Second tie",
+            "expression": "SELECT COUNT(*) = 1 FROM ranked WHERE id=2 AND name='Oren' AND score=9 AND position=2 AND level=1;"
+          }
+        ],
+        "outcome": "success"
+      }
+    }
+  ],
+  "scope": "Independent reviewer duplicate/missing output probes; no full runtime rerun; schema checks excluded so rejection is attributable to tuple multiplicity."
+}

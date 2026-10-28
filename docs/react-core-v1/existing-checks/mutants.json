@@ -1,0 +1,82 @@
+[
+  {
+    "id": "react-02-no-trim",
+    "lessonId": "react-02",
+    "code": "function App() {\n  const [draft, setDraft] = React.useState(\"\");\n  const [items, setItems] = React.useState([]);\n  const [message, setMessage] = React.useState(\"\");\n  function submit(event) {\n    event.preventDefault();\n    const cleaned = draft;\n    if (!cleaned) { setMessage(\"Enter an activity first.\"); return; }\n    setItems(current => [...current, cleaned]);\n    setDraft(\"\"); setMessage(\"Activity added.\");\n  }\n  return <main>\n    <form onSubmit={submit}>\n      <label>Activity <input value={draft} onChange={e => setDraft(e.target.value)} /></label>\n      <button type=\"submit\">Add activity</button>\n    </form>\n    <p role=\"status\">{message}</p><ul>{items.map((item, i) => <li key={i}>{item}</li>)}</ul>\n  </main>;\n}",
+    "checks": [
+      {
+        "label": "Field has an associated visible Activity label",
+        "expression": "(()=>{const input=document.querySelector('input');return !!input&&[...input.labels].some(label=>label.textContent.includes('Activity'));})()"
+      },
+      {
+        "label": "Submission button exists",
+        "expression": "document.querySelector(\"button[type=submit]\") !== null"
+      },
+      {
+        "label": "Status is available",
+        "expression": "document.querySelector(\"[role=status]\") !== null"
+      },
+      {
+        "label": "Empty, whitespace and two distinct submissions behave correctly",
+        "expression": "(async()=>{const until=async test=>{const end=Date.now()+1500;while(!test()){if(Date.now()>end)return false;await new Promise(r=>setTimeout(r,10));}return true;};const click=text=>{const b=[...document.querySelectorAll('button')].find(b=>b.textContent===text||b.getAttribute('aria-label')===text);if(!b)throw new Error('Missing button: '+text);ReactDOM.flushSync(()=>b.click());};const type=(input,value)=>ReactDOM.flushSync(()=>{Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(input,value);input.dispatchEvent(new Event('input',{bubbles:true}));});const form=document.querySelector('form'),input=document.querySelector('input');if(!form||!input)return false;const submit=()=>{const e=new Event('submit',{bubbles:true,cancelable:true});ReactDOM.flushSync(()=>form.dispatchEvent(e));return e.defaultPrevented;};for(const value of ['', '   ']){type(input,value);if(!submit()||document.querySelectorAll('li').length!==0||document.querySelector('[role=status]')?.textContent!=='Enter an activity first.')return false;}for(const value of ['  Read  ',' Draw ']){type(input,value);if(!submit())return false;}return [...document.querySelectorAll('li')].map(e=>e.textContent).join('|')==='Read|Draw'&&input.value===''&&document.querySelector('[role=status]')?.textContent==='Activity added.';})()"
+      }
+    ],
+    "expectedPass": false,
+    "reason": "no-trim"
+  },
+  {
+    "id": "react-02-overwrite-items",
+    "lessonId": "react-02",
+    "code": "function App() {\n  const [draft, setDraft] = React.useState(\"\");\n  const [items, setItems] = React.useState([]);\n  const [message, setMessage] = React.useState(\"\");\n  function submit(event) {\n    event.preventDefault();\n    const cleaned = draft.trim();\n    if (!cleaned) { setMessage(\"Enter an activity first.\"); return; }\n    setItems(current => [cleaned]);\n    setDraft(\"\"); setMessage(\"Activity added.\");\n  }\n  return <main>\n    <form onSubmit={submit}>\n      <label>Activity <input value={draft} onChange={e => setDraft(e.target.value)} /></label>\n      <button type=\"submit\">Add activity</button>\n    </form>\n    <p role=\"status\">{message}</p><ul>{items.map((item, i) => <li key={i}>{item}</li>)}</ul>\n  </main>;\n}",
+    "checks": [
+      {
+        "label": "Field has an associated visible Activity label",
+        "expression": "(()=>{const input=document.querySelector('input');return !!input&&[...input.labels].some(label=>label.textContent.includes('Activity'));})()"
+      },
+      {
+        "label": "Submission button exists",
+        "expression": "document.querySelector(\"button[type=submit]\") !== null"
+      },
+      {
+        "label": "Status is available",
+        "expression": "document.querySelector(\"[role=status]\") !== null"
+      },
+      {
+        "label": "Empty, whitespace and two distinct submissions behave correctly",
+        "expression": "(async()=>{const until=async test=>{const end=Date.now()+1500;while(!test()){if(Date.now()>end)return false;await new Promise(r=>setTimeout(r,10));}return true;};const click=text=>{const b=[...document.querySelectorAll('button')].find(b=>b.textContent===text||b.getAttribute('aria-label')===text);if(!b)throw new Error('Missing button: '+text);ReactDOM.flushSync(()=>b.click());};const type=(input,value)=>ReactDOM.flushSync(()=>{Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(input,value);input.dispatchEvent(new Event('input',{bubbles:true}));});const form=document.querySelector('form'),input=document.querySelector('input');if(!form||!input)return false;const submit=()=>{const e=new Event('submit',{bubbles:true,cancelable:true});ReactDOM.flushSync(()=>form.dispatchEvent(e));return e.defaultPrevented;};for(const value of ['', '   ']){type(input,value);if(!submit()||document.querySelectorAll('li').length!==0||document.querySelector('[role=status]')?.textContent!=='Enter an activity first.')return false;}for(const value of ['  Read  ',' Draw ']){type(input,value);if(!submit())return false;}return [...document.querySelectorAll('li')].map(e=>e.textContent).join('|')==='Read|Draw'&&input.value===''&&document.querySelector('[role=status]')?.textContent==='Activity added.';})()"
+      }
+    ],
+    "expectedPass": false,
+    "reason": "overwrite-items"
+  },
+  {
+    "id": "react-05-stale-query",
+    "lessonId": "react-05",
+    "code": "function App() {\n  const items = React.useMemo(() => Array.from({ length: 1000 }, (_, i) => `Book ${i}`), []);\n  const [query, setQuery] = React.useState(\"Book 99\");\n  const [repeat, setRepeat] = React.useState(0);\n  const [totals, setTotals] = React.useState({ baseline: 0, memoized: 0 });\n  const previous = React.useRef({ baseline: null, memoized: null, baselineTotal: 0, memoizedTotal: 0 });\n  function measure() {\n    let examined = 0;\n    const matches = items.filter(item => { examined += 1; return item.toLowerCase().includes(query.toLowerCase()); });\n    return { matches, examined };\n  }\n  const baseline = React.useMemo(measure, [items, query, repeat]);\n  const memoized = React.useMemo(measure, [items]);\n  React.useEffect(() => {\n    const last = previous.current;\n    if (last.baseline !== baseline) last.baselineTotal += baseline.examined;\n    if (last.memoized !== memoized) last.memoizedTotal += memoized.examined;\n    last.baseline = baseline; last.memoized = memoized;\n    setTotals({ baseline: last.baselineTotal, memoized: last.memoizedTotal });\n  }, [baseline, memoized]);\n  const same = baseline.matches.length === memoized.matches.length && baseline.matches.every((value, index) => value === memoized.matches[index]);\n  return <main><label>Search <input value={query} onChange={e => setQuery(e.target.value)} /></label>\n    <button onClick={() => setRepeat(value => value + 1)}>Repeat same search</button>\n    <p>Baseline total comparisons: {totals.baseline}</p><p>Memoized total comparisons: {totals.memoized}</p>\n    <p>Same results: {same ? \"yes\" : \"no\"}</p><p>Matches: {memoized.matches.length}</p>\n    <ul>{memoized.matches.slice(0, 10).map(item => <li key={item}>{item}</li>)}</ul></main>;\n}",
+    "checks": [
+      {
+        "label": "The fixed list has the correct matching results",
+        "expression": "document.querySelector(\"main\")?.textContent.includes(\"Matches: 11\") && document.querySelectorAll(\"li\").length === 10 && document.querySelector(\"li\")?.textContent === \"Book 99\""
+      },
+      {
+        "label": "Repeat reuses the memo and a changed query refreshes it",
+        "expression": "(async()=>{const until=async test=>{const end=Date.now()+1500;while(!test()){if(Date.now()>end)return false;await new Promise(r=>setTimeout(r,10));}return true;};const click=text=>{const b=[...document.querySelectorAll('button')].find(b=>b.textContent===text||b.getAttribute('aria-label')===text);if(!b)throw new Error('Missing button: '+text);ReactDOM.flushSync(()=>b.click());};const type=(input,value)=>ReactDOM.flushSync(()=>{Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(input,value);input.dispatchEvent(new Event('input',{bubbles:true}));});const text=()=>document.querySelector('main')?.textContent||'';if(!await until(()=>text().includes('Baseline total comparisons: 1000')&&text().includes('Memoized total comparisons: 1000')))return false;click('Repeat same search');if(!await until(()=>text().includes('Baseline total comparisons: 2000')&&text().includes('Memoized total comparisons: 1000')&&text().includes('Same results: yes')))return false;const input=document.querySelector('input');if(!input)return false;type(input,'Book 123');if(!await until(()=>text().includes('Baseline total comparisons: 3000')&&text().includes('Memoized total comparisons: 2000')&&text().includes('Same results: yes')&&text().includes('Matches: 1')))return false;return document.querySelectorAll('li').length===1&&document.querySelector('li').textContent==='Book 123';})()"
+      }
+    ],
+    "expectedPass": false,
+    "reason": "stale-query"
+  },
+  {
+    "id": "react-09-missing-cleanup",
+    "lessonId": "react-09",
+    "code": "function Listener({channel}) {\n  const [count, setCount] = React.useState(0);\n  React.useEffect(() => {\n    function receive() { setCount(c => c + 1); }\n    window.addEventListener(channel, receive);\n    return undefined;\n  }, [channel]);\n  return <p role=\"status\">Received: {count}</p>;\n}\nfunction App() {\n  const [visible, setVisible] = React.useState(false);\n  const [channel, setChannel] = React.useState(\"practice-alpha\");\n  return <main>\n    <button onClick={() => setVisible(v => !v)}>{visible ? \"Hide listener\" : \"Show listener\"}</button>\n    <button onClick={() => setChannel(c => c === \"practice-alpha\" ? \"practice-beta\" : \"practice-alpha\")}>Switch channel</button>\n    <button onClick={() => window.dispatchEvent(new Event(channel))}>Send signal</button>\n    {visible && <Listener channel={channel} />}\n  </main>;\n}",
+    "checks": [
+      {
+        "label": "Switch, unmount and remount maintain exactly one current listener",
+        "expression": "(async()=>{const until=async test=>{const end=Date.now()+1500;while(!test()){if(Date.now()>end)return false;await new Promise(r=>setTimeout(r,10));}return true;};const click=text=>{const b=[...document.querySelectorAll('button')].find(b=>b.textContent===text||b.getAttribute('aria-label')===text);if(!b)throw new Error('Missing button: '+text);ReactDOM.flushSync(()=>b.click());};const type=(input,value)=>ReactDOM.flushSync(()=>{Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(input,value);input.dispatchEvent(new Event('input',{bubbles:true}));});const originalAdd=window.addEventListener,originalRemove=window.removeEventListener;const active=new Map();const size=t=>active.get(t)?.size||0;window.addEventListener=function(type,fn,options){if(type.startsWith('practice-')){if(!active.has(type))active.set(type,new Set());active.get(type).add(fn);}return originalAdd.call(this,type,fn,options);};window.removeEventListener=function(type,fn,options){active.get(type)?.delete(fn);return originalRemove.call(this,type,fn,options);};const send=t=>ReactDOM.flushSync(()=>window.dispatchEvent(new Event(t)));const status=()=>document.querySelector('[role=status]')?.textContent;try{click('Show listener');if(!await until(()=>size('practice-alpha')===1))return false;send('practice-alpha');if(status()!=='Received: 1')return false;click('Switch channel');if(!await until(()=>size('practice-alpha')===0&&size('practice-beta')===1))return false;send('practice-alpha');if(status()!=='Received: 1')return false;send('practice-beta');if(status()!=='Received: 2')return false;click('Hide listener');if(!await until(()=>!document.querySelector('[role=status]')&&[...active.values()].every(s=>s.size===0)))return false;click('Show listener');if(!await until(()=>size('practice-beta')===1&&status()==='Received: 0'))return false;send('practice-alpha');if(status()!=='Received: 0')return false;send('practice-beta');if(status()!=='Received: 1')return false;click('Hide listener');return await until(()=>!document.querySelector('[role=status]')&&[...active.values()].every(s=>s.size===0));}finally{for(const [type,listeners]of active)for(const fn of listeners)originalRemove.call(window,type,fn);window.addEventListener=originalAdd;window.removeEventListener=originalRemove;}})()"
+      }
+    ],
+    "expectedPass": false,
+    "reason": "missing-cleanup"
+  }
+]

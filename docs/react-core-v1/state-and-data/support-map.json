@@ -1,0 +1,226 @@
+[
+  {
+    "id": "react-24",
+    "quizTarget": "If the false branch is <p>Closed</p> instead of null, what exists while open is false?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "Conditional rendering means choosing which JSX belongs in this render. The expression condition ? yes : no chooses one branch. Here false selects null, which adds no panel to the tree; it is not merely invisible CSS."
+      },
+      {
+        "paragraph": 1,
+        "fact": "React.useState(false) supplies the current Boolean and its setter. The click callback runs after a click, not while rendering. setOpen(value => !value) queues the opposite Boolean from pending state. Keep the Hook at the component’s top level, before any conditional return. aria-expanded mirrors the same value; aria-controls names the panel ID."
+      },
+      {
+        "paragraph": 2,
+        "fact": "```react\nfunction App() {\n  const [open, setOpen] = React.useState(false);\n  return <main>\n    <button aria-expanded={open} aria-controls=\"detail\" onClick={() => setOpen(value => !value)}>Details</button>\n    {open ? <section id=\"detail\"><h2>Trail notes</h2><p>Bring a pencil.</p></section> : null}\n  </main>;\n}\n```\nInitially only Details appears. One click creates the section; another removes it."
+      },
+      {
+        "paragraph": 3,
+        "fact": "```react\nfunction App() {\n  const [open, setOpen] = React.useState(true);\n  return <main>\n    <button aria-expanded={open} aria-controls=\"detail\" onClick={() => setOpen(value => !value)}>Details</button>\n    {open ? <section id=\"detail\"><h2>Trail notes</h2><p>Bring a pencil.</p></section> : null}\n  </main>;\n}\n```\nThis changed App starts open because its initial value is true. Its first click removes the panel."
+      },
+      {
+        "paragraph": 4,
+        "fact": "Optional practice: Replace the paragraph text, then explain why null does not create an empty section. The checks cover these finite behaviors; a matching DOM alone does not prove every implementation choice. The frame supplies React and mounts App. No imports, server, persistence or network are involved."
+      }
+    ],
+    "reasoning": "The ternary includes exactly its chosen branch. null contributes no node, but a paragraph is a real element.",
+    "source": "https://18.react.dev/learn/conditional-rendering",
+    "prerequisites": [
+      "react-21"
+    ]
+  },
+  {
+    "id": "react-25",
+    "quizTarget": "Two records share a title but have distinct stable IDs. Which key belongs on Card?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "A key identifies a sibling item across renders. Use a stable ID stored in the data, not the array position or a freshly generated random value. key is React’s identity hint; it is not passed as an ordinary prop, so Card receives the separate card prop."
+      },
+      {
+        "paragraph": 1,
+        "fact": "cards.map(callback) calls the callback for each record and returns a new array of JSX elements. React renders those elements. Card destructures its card prop and returns one list item. The input deliberately uses defaultValue: it starts from that text, then the browser holds its edits. This makes identity visible when rows move. The defective starter uses cards.indexOf(card): indexOf returns this object’s current zero-based array position, which changes when the order changes. It is shown to explain the bug, not as a key recommendation. [...current] makes a shallow array copy; reverse() reverses that copy in place, leaving the original state array untouched."
+      },
+      {
+        "paragraph": 2,
+        "fact": "```react\nconst initialCards = [{id: \"map\", title: \"Map\"}, {id: \"lamp\", title: \"Lamp\"}];\nfunction Card({card}) {\n  return <li><label>{card.title} note <input defaultValue={card.title} /></label></li>;\n}\nfunction App() {\n  const [cards, setCards] = React.useState(initialCards);\n  return <main><button onClick={() => setCards(current => [...current].reverse())}>Reverse</button>\n    <ul>{cards.map(card => <Card key={card.id} card={card} />)}</ul>\n  </main>;\n}\n```\nEdit the Map note, then reverse. The same input and its edit travel with the map record."
+      },
+      {
+        "paragraph": 3,
+        "fact": "```react\nconst initialCards = [{id: \"map\", title: \"Shared\"}, {id: \"lamp\", title: \"Shared\"}];\nfunction Card({card}) {\n  return <li><label>{card.title} note <input defaultValue={card.title} /></label></li>;\n}\nfunction App() {\n  const [cards, setCards] = React.useState(initialCards);\n  return <main><button onClick={() => setCards(current => [...current].reverse())}>Reverse</button>\n    <ul>{cards.map(card => <Card key={card.id} card={card} />)}</ul>\n  </main>;\n}\n```\nThe changed records have equal titles but different IDs. Their independent edits still follow their own records, demonstrating why a display title need not be a suitable key."
+      },
+      {
+        "paragraph": 4,
+        "fact": "Optional practice: Reverse twice and explain why the edited input returns to its first position. The checks cover these finite behaviors; a matching DOM alone does not prove every implementation choice. The frame supplies React and mounts App. No imports, server, persistence or network are involved."
+      }
+    ],
+    "reasoning": "IDs distinguish records independently of title or position. Position keys can attach an existing input to the wrong record after reordering.",
+    "source": "https://18.react.dev/learn/rendering-lists",
+    "prerequisites": [
+      "react-18",
+      "javascript-05",
+      "javascript-10"
+    ]
+  },
+  {
+    "id": "react-26",
+    "quizTarget": "The input receives value={title}, but its change handler never calls the setter. What should you expect?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "A controlled text input takes its displayed text from a state string through value. Its onChange handler must synchronously request the latest event.target.value. Start with a string, including the empty string, rather than switching between undefined and a string."
+      },
+      {
+        "paragraph": 1,
+        "fact": "The browser supplies the change event; event.target is the input and its value is the current text. setTitle receives that string and requests another render. The status paragraph uses the same state. htmlFor on label matches the input id, so the visible label names the field. Clear sets the same state to an empty string; do not independently edit the DOM value in learner code."
+      },
+      {
+        "paragraph": 2,
+        "fact": "```react\nfunction App() {\n  const [title, setTitle] = React.useState(\"\");\n  return <main><label htmlFor=\"title\">Notebook title</label>\n    <input id=\"title\" value={title} onChange={event => setTitle(event.target.value)} />\n    <p role=\"status\">Title: {title}</p>\n    <button onClick={() => setTitle(\"\")}>Clear</button>\n  </main>;\n}\n```\nTyping Orbit requests state \"Orbit\", so the input and status agree. Clear empties both."
+      },
+      {
+        "paragraph": 3,
+        "fact": "```react\nfunction App() {\n  const [title, setTitle] = React.useState(\"Draft\");\n  return <main><label htmlFor=\"title\">Notebook title</label>\n    <input id=\"title\" value={title} onChange={event => setTitle(event.target.value)} />\n    <p role=\"status\">Title: {title}</p>\n    <button onClick={() => setTitle(\"\")}>Clear</button>\n  </main>;\n}\n```\nThis version starts with Draft. Erasing all text is a valid change to an empty string, not missing state."
+      },
+      {
+        "paragraph": 4,
+        "fact": "Optional practice: Change the initial title, then verify Clear still empties it. The checks cover these finite behaviors; a matching DOM alone does not prove every implementation choice. The frame supplies React and mounts App. No imports, server, persistence or network are involved."
+      }
+    ],
+    "reasoning": "A controlled field displays the value React supplies. Its change handler must request the new state; a value prop is not automatic two-way binding.",
+    "source": "https://18.react.dev/reference/react-dom/components/input",
+    "prerequisites": [
+      "react-21",
+      "html-05"
+    ]
+  },
+  {
+    "id": "react-27",
+    "quizTarget": "After saving Moon, the user types Star without submitting. What should the saved snapshot show?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "A form’s onSubmit receives a submission event. Put the save logic there once, rather than repeating it in both onClick and onSubmit. A submit button can initiate submission; browser keyboard submission is another route to the same form handler in a normal browser setup. This isolated preview does not enable native form submission. Use Run checks to exercise the handler here; test submit-button and Enter-key behavior in a normal browser setup."
+      },
+      {
+        "paragraph": 1,
+        "fact": "save(event) calls event.preventDefault() to cancel this local form’s default navigation, then records the current draft and increments count with a functional updater. It does not stop event bubbling or persist anything to a server. saved is deliberately a submitted snapshot, while draft remains editable; these are distinct meanings, not redundant copies."
+      },
+      {
+        "paragraph": 2,
+        "fact": "```react\nfunction App() {\n  const [draft, setDraft] = React.useState(\"\");\n  const [saved, setSaved] = React.useState(\"\");\n  const [count, setCount] = React.useState(0);\n  function save(event) {\n    event.preventDefault();\n    setSaved(draft);\n    setCount(value => value + 1);\n  }\n  return <main><form onSubmit={save}>\n    <label htmlFor=\"entry\">Entry</label>\n    <input id=\"entry\" value={draft} onChange={event => setDraft(event.target.value)} />\n    <button type=\"submit\">Save</button>\n  </form><p role=\"status\">Saved: {saved}; count: {count}</p></main>;\n}\n```\nOne submission stores the current draft and increments count once. A second intentional submission increments it again."
+      },
+      {
+        "paragraph": 3,
+        "fact": "```react\nfunction App() {\n  const [draft, setDraft] = React.useState(\"Seed\");\n  const [saved, setSaved] = React.useState(\"\");\n  const [count, setCount] = React.useState(0);\n  function save(event) {\n    event.preventDefault();\n    setSaved(draft);\n    setCount(value => value + 1);\n  }\n  return <main><form onSubmit={save}>\n    <label htmlFor=\"entry\">Entry</label>\n    <input id=\"entry\" value={draft} onChange={event => setDraft(event.target.value)} />\n    <button type=\"submit\">Save</button>\n  </form><p role=\"status\">Saved: {saved}; count: {count}</p></main>;\n}\n```\nThis changed App begins with draft Seed. Submitting without editing saves Seed once."
+      },
+      {
+        "paragraph": 4,
+        "fact": "Optional practice: Edit again after saving and explain why saved text stays unchanged until another submission. Checks dispatch cancelable submit events; they do not prove Enter-key or screen-reader behavior. The checks cover these finite behaviors; a matching DOM alone does not prove every implementation choice. The frame supplies React and mounts App. No imports, server, persistence or network are involved."
+      }
+    ],
+    "reasoning": "Draft is current editing text; saved is the last submitted text. Only the submit handler replaces that snapshot.",
+    "source": "https://18.react.dev/reference/react-dom/components/form",
+    "prerequisites": [
+      "react-26",
+      "javascript-59"
+    ]
+  },
+  {
+    "id": "react-28",
+    "quizTarget": "If {...plan, minutes: 15} becomes {minutes: 15, ...plan} and plan.minutes is 10, what value wins?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "Treat an object already in state as read-only. A replacement object allows the next render to use new data without changing the previous object. Object spread {...plan} copies its own enumerable fields into a new object; the later minutes field replaces only that copied value."
+      },
+      {
+        "paragraph": 1,
+        "fact": "extend(plan) accepts a record and returns a new record with five extra minutes. It does not modify the input. setPlan(current => extend(current)) bases each click on the pending state. Spread is shallow: nested objects would still be shared, so changing a nested field requires copying each changed level. These examples use only flat fields."
+      },
+      {
+        "paragraph": 2,
+        "fact": "```react\nconst initialPlan = {name: \"Survey\", minutes: 10};\nfunction extend(plan) {\n  return {...plan, minutes: plan.minutes + 5};\n}\nfunction App() {\n  const [plan, setPlan] = React.useState(initialPlan);\n  return <main><p role=\"status\">{plan.name}: {plan.minutes} minutes</p>\n    <button onClick={() => setPlan(current => extend(current))}>Add five</button>\n  </main>;\n}\n```\nThe first click shows Survey: 15 minutes; the second shows 20. initialPlan still contains 10."
+      },
+      {
+        "paragraph": 3,
+        "fact": "```react\nconst initialPlan = {name: \"Sketch\", minutes: 0};\nfunction extend(plan) {\n  return {...plan, minutes: plan.minutes + 5};\n}\nfunction App() {\n  const [plan, setPlan] = React.useState(initialPlan);\n  return <main><p role=\"status\">{plan.name}: {plan.minutes} minutes</p>\n    <button onClick={() => setPlan(current => extend(current))}>Add five</button>\n  </main>;\n}\n```\nThis version starts Sketch at zero. One click returns a replacement with 5 minutes and keeps the name."
+      },
+      {
+        "paragraph": 4,
+        "fact": "Optional practice: Add an unchanged flat label field and check that extend preserves it. The checks cover these finite behaviors; a matching DOM alone does not prove every implementation choice. The frame supplies React and mounts App. No imports, server, persistence or network are involved."
+      }
+    ],
+    "reasoning": "Object fields written later overwrite earlier fields with the same key. Spreading plan last restores its old minutes value.",
+    "source": "https://18.react.dev/learn/updating-objects-in-state",
+    "prerequisites": [
+      "react-21",
+      "javascript-22"
+    ]
+  },
+  {
+    "id": "react-29",
+    "quizTarget": "If the selected ID is absent from the array, what does this filter return?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "filter returns a new array containing the elements whose callback returns true. To remove one selected ID, keep records with a different ID. This changes membership without splicing the old state array. Existing kept objects are shared; filter does not deep-copy them."
+      },
+      {
+        "paragraph": 1,
+        "fact": "without(tasks, id) accepts the old array and an ID, then returns the filtered array. task.id !== id means keep this record if its ID is not strictly equal to the target. Each remove callback captures its own task ID, not its label or position. setTasks uses pending state; map renders the remaining records with stable keys."
+      },
+      {
+        "paragraph": 2,
+        "fact": "```react\nconst initialTasks = [{id: \"a\", text: \"Pack\"}, {id: \"b\", text: \"Check\"}];\nfunction without(tasks, id) {\n  return tasks.filter(task => task.id !== id);\n}\nfunction App() {\n  const [tasks, setTasks] = React.useState(initialTasks);\n  return <main><ul>{tasks.map(task => <li key={task.id}>{task.text}\n    <button onClick={() => setTasks(current => without(current, task.id))}>Remove {task.text}</button>\n  </li>)}</ul><p role=\"status\">Remaining: {tasks.length}</p></main>;\n}\n```\nRemove Pack, then Check. The array becomes empty and the status reads zero; initialTasks still has two entries."
+      },
+      {
+        "paragraph": 3,
+        "fact": "```react\nconst initialTasks = [{id: \"a\", text: \"Pack\"}, {id: \"b\", text: \"Pack\"}];\nfunction without(tasks, id) {\n  return tasks.filter(task => task.id !== id);\n}\nfunction App() {\n  const [tasks, setTasks] = React.useState(initialTasks);\n  return <main><ul>{tasks.map(task => <li key={task.id}>{task.text}\n    <button onClick={() => setTasks(current => without(current, task.id))}>Remove {task.text}</button>\n  </li>)}</ul><p role=\"status\">Remaining: {tasks.length}</p></main>;\n}\n```\nBoth labels now say Pack. Removing ID a keeps record b, despite the duplicate text."
+      },
+      {
+        "paragraph": 4,
+        "fact": "Optional practice: Call without with an absent ID and explain why all records remain. The checks cover these finite behaviors; a matching DOM alone does not prove every implementation choice. The frame supplies React and mounts App. No imports, server, persistence or network are involved."
+      }
+    ],
+    "reasoning": "Every record has a different ID and passes the predicate. filter creates a new array, while retaining references to its kept objects.",
+    "source": "https://18.react.dev/learn/updating-arrays-in-state",
+    "prerequisites": [
+      "react-25",
+      "react-28",
+      "javascript-22"
+    ]
+  },
+  {
+    "id": "react-30",
+    "quizTarget": "Why does reduce here pass 0 as its second argument?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "A derived value is calculated from existing props or state. Here minutes is the changing source; total is recomputed during each render. Storing both separately would create two values that every edit must keep synchronized. No external system is involved, so no Effect is needed."
+      },
+      {
+        "paragraph": 1,
+        "fact": "totalMinutes(values) reduces a numeric array to one sum. reduce calls its callback with the running total and next value, starting at the supplied 0. That explicit start also makes an empty array return 0. The function only calculates; it does not update state. The click handler appends to a copied array, or Clear replaces it with an empty array."
+      },
+      {
+        "paragraph": 2,
+        "fact": "```react\nconst initialMinutes = [5, 8];\nfunction totalMinutes(values) {\n  return values.reduce((total, value) => total + value, 0);\n}\nfunction App() {\n  const [minutes, setMinutes] = React.useState(initialMinutes);\n  const total = totalMinutes(minutes);\n  return <main><p role=\"status\">Total: {total} minutes</p>\n    <button onClick={() => setMinutes(current => [...current, 3])}>Add three</button>\n    <button onClick={() => setMinutes([])}>Clear</button>\n  </main>;\n}\n```\nThe initial total is 13. Add three gives 16; Clear gives 0. The calculation follows the current array on every render."
+      },
+      {
+        "paragraph": 3,
+        "fact": "```react\nconst initialMinutes = [];\nfunction totalMinutes(values) {\n  return values.reduce((total, value) => total + value, 0);\n}\nfunction App() {\n  const [minutes, setMinutes] = React.useState(initialMinutes);\n  const total = totalMinutes(minutes);\n  return <main><p role=\"status\">Total: {total} minutes</p>\n    <button onClick={() => setMinutes(current => [...current, 3])}>Add three</button>\n    <button onClick={() => setMinutes([])}>Clear</button>\n  </main>;\n}\n```\nThis changed App begins empty and correctly shows 0 because reduce has an initial accumulator."
+      },
+      {
+        "paragraph": 4,
+        "fact": "Optional practice: Change the record values, then predict the sum before running. Passing behavior checks cannot prove the absence of redundant state; inspect the code too. The checks cover these finite behaviors; a matching DOM alone does not prove every implementation choice. The frame supplies React and mounts App. No imports, server, persistence or network are involved."
+      }
+    ],
+    "reasoning": "The reducer begins with 0, so each value is added once and no values still means a sum of 0. This argument belongs to reduce, not to React.",
+    "source": "https://18.react.dev/learn/you-might-not-need-an-effect",
+    "prerequisites": [
+      "react-29"
+    ]
+  }
+]

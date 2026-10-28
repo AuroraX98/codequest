@@ -1,0 +1,359 @@
+[
+  {
+    "id": "rust-47-worked",
+    "lessonId": "rust-47",
+    "code": "pub fn clamp(n: i32) -> i32 { n.clamp(0, 10) }\n\n#[cfg(test)]\nmod tests {\n    use super::clamp;\n    #[test]\n    fn lower_boundary() { assert_eq!(clamp(-1), 0); }\n}\n",
+    "stdin": "",
+    "expected": "",
+    "outcome": "success",
+    "mode": "cargo-test",
+    "filename": "src/lib.rs",
+    "outputContains": [
+      "tests::lower_boundary ... ok",
+      "upper_boundary ... ok"
+    ],
+    "extraFiles": {
+      "Cargo.toml": "[package]\nname = \"study-lib\"\nversion = \"0.1.0\"\nedition = \"2024\"\n",
+      "tests/public.rs": "#[test]\nfn upper_boundary() { assert_eq!(study_lib::clamp(11), 10); }\n"
+    }
+  },
+  {
+    "lessonId": "rust-47",
+    "id": "rust-47-changed",
+    "code": "pub fn clamp(n: i32) -> i32 { n.clamp(0, 10) }\n\n#[cfg(test)]\nmod tests {\n    use super::clamp;\n    #[test]\n    fn lower_boundary() { assert_eq!(clamp(-1), 1); }\n}\n",
+    "expected": "",
+    "outcome": "runtime-failure",
+    "errorContains": "assertion `left == right` failed",
+    "mode": "cargo-test",
+    "filename": "src/lib.rs",
+    "outputContains": [
+      "tests::lower_boundary ... ok",
+      "upper_boundary ... ok"
+    ],
+    "extraFiles": {
+      "Cargo.toml": "[package]\nname = \"study-lib\"\nversion = \"0.1.0\"\nedition = \"2024\"\n",
+      "tests/public.rs": "#[test]\nfn upper_boundary() { assert_eq!(study_lib::clamp(11), 10); }\n"
+    }
+  },
+  {
+    "id": "rust-48-worked",
+    "lessonId": "rust-48",
+    "code": "use std::fmt;\n#[derive(Debug)]\nstruct InvalidMinutes;\nimpl fmt::Display for InvalidMinutes {\n    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {\n        write!(f, \"minutes must be 1 through 60\")\n    }\n}\nimpl std::error::Error for InvalidMinutes {}\nfn parse_minutes(text: &str) -> Result<u8, InvalidMinutes> {\n    let n = text.parse::<u8>().map_err(|_| InvalidMinutes)?;\n    if !(1..=60).contains(&n) { return Err(InvalidMinutes); }\n    Ok(n)\n}\nfn main() {\n    match parse_minutes(\"15\") {\n        Ok(n) => println!(\"{n}\"),\n        Err(error) => println!(\"{error}\"),\n    }\n}",
+    "stdin": "",
+    "expected": "15",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "rust-48",
+    "id": "rust-48-changed",
+    "code": "use std::fmt;\n#[derive(Debug)]\nstruct InvalidMinutes;\nimpl fmt::Display for InvalidMinutes {\n    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {\n        write!(f, \"minutes must be 1 through 60\")\n    }\n}\nimpl std::error::Error for InvalidMinutes {}\nfn parse_minutes(text: &str) -> Result<u8, InvalidMinutes> {\n    let n = text.parse::<u8>().map_err(|_| InvalidMinutes)?;\n    if !(1..=60).contains(&n) { return Err(InvalidMinutes); }\n    Ok(n)\n}\nfn main() {\n    match parse_minutes(\"0\") {\n        Ok(n) => println!(\"{n}\"),\n        Err(error) => println!(\"{error}\"),\n    }\n}",
+    "expected": "minutes must be 1 through 60",
+    "outcome": "success"
+  },
+  {
+    "id": "rust-49-worked",
+    "lessonId": "rust-49",
+    "code": "\nenum List { Cons(i32, Box<List>), Nil }\nimpl List {\n    fn sum(&self) -> i32 {\n        match self { Self::Cons(n, tail) => n + tail.sum(), Self::Nil => 0 }\n    }\n}\nfn main() {\n    let list = List::Cons(3, Box::new(List::Cons(4, Box::new(List::Nil))));\n    println!(\"{}\", list.sum());\n}",
+    "stdin": "",
+    "expected": "7",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "rust-49",
+    "id": "rust-49-changed",
+    "code": "\nenum List { Cons(i32, Box<List>), Nil }\nimpl List {\n    fn sum(&self) -> i32 {\n        match self { Self::Cons(n, tail) => n + tail.sum(), Self::Nil => 0 }\n    }\n}\nfn main() {\n    let list = List::Cons(3, Box::new(List::Cons(9, Box::new(List::Nil))));\n    println!(\"{}\", list.sum());\n}",
+    "expected": "12",
+    "outcome": "success"
+  },
+  {
+    "id": "rust-50-worked",
+    "lessonId": "rust-50",
+    "code": "use std::rc::Rc;\n\nfn main() {\n    let first = Rc::new(String::from(\"read\"));\n    let second = Rc::clone(&first);\n    println!(\"{}\", Rc::strong_count(&first));\n    drop(second);\n    println!(\"{}\", Rc::strong_count(&first));\n}",
+    "stdin": "",
+    "expected": "2\n1",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "rust-50",
+    "id": "rust-50-changed",
+    "code": "use std::rc::Rc;\n\nfn main() {\n    let first = Rc::new(String::from(\"read\"));\n    let second = Rc::new(String::from(\"read\"));\n    println!(\"{}\", Rc::strong_count(&first));\n    drop(second);\n    println!(\"{}\", Rc::strong_count(&first));\n}",
+    "expected": "1\n1",
+    "outcome": "success"
+  },
+  {
+    "id": "rust-51-worked",
+    "lessonId": "rust-51",
+    "code": "use std::cell::RefCell;\n\nfn main() {\n    let value = RefCell::new(3);\n    let read = value.borrow();\n    println!(\"{}\", value.try_borrow_mut().is_err());\n    drop(read);\n    *value.borrow_mut() = 9;\n    println!(\"{}\", value.borrow());\n}",
+    "stdin": "",
+    "expected": "true\n9",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "rust-51",
+    "id": "rust-51-changed",
+    "code": "use std::cell::RefCell;\n\nfn main() {\n    let value = RefCell::new(3);\n    let read = value.borrow();\n    drop(read);\n    println!(\"{}\", value.try_borrow_mut().is_err());\n    *value.borrow_mut() = 9;\n    println!(\"{}\", value.borrow());\n}",
+    "expected": "false\n9",
+    "outcome": "success"
+  },
+  {
+    "id": "rust-52-worked",
+    "lessonId": "rust-52",
+    "code": "use std::sync::Arc;\n\nfn main() {\n    let mut value = Arc::new(7);\n    let other = Arc::clone(&value);\n    println!(\"{}\", Arc::get_mut(&mut value).is_some());\n    drop(other);\n    println!(\"{}\", Arc::get_mut(&mut value).is_some());\n}",
+    "stdin": "",
+    "expected": "false\ntrue",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "rust-52",
+    "id": "rust-52-changed",
+    "code": "use std::sync::Arc;\n\nfn main() {\n    let mut value = Arc::new(7);\n    let other = Arc::new(7);\n    println!(\"{}\", Arc::get_mut(&mut value).is_some());\n    drop(other);\n    println!(\"{}\", Arc::get_mut(&mut value).is_some());\n}",
+    "expected": "true\ntrue",
+    "outcome": "success"
+  },
+  {
+    "id": "rust-53-worked",
+    "lessonId": "rust-53",
+    "code": "use std::sync::Mutex;\n\nfn main() {\n    let value = Mutex::new(3);\n    {\n        let mut guard = value.lock().expect(\"mutex poisoned\");\n        *guard += 4;\n    }\n    println!(\"{}\", *value.lock().expect(\"mutex poisoned\"));\n}",
+    "stdin": "",
+    "expected": "7",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "rust-53",
+    "id": "rust-53-changed",
+    "code": "use std::sync::Mutex;\n\nfn main() {\n    let value = Mutex::new(3);\n    {\n        let mut guard = value.lock().expect(\"mutex poisoned\");\n        *guard += 9;\n    }\n    println!(\"{}\", *value.lock().expect(\"mutex poisoned\"));\n}",
+    "expected": "12",
+    "outcome": "success"
+  },
+  {
+    "id": "rust-54-worked",
+    "lessonId": "rust-54",
+    "code": "use std::thread;\n\nfn main() {\n    let text = String::from(\"read\");\n    let worker = thread::spawn(move || text.len());\n    let length = worker.join().expect(\"worker panicked\");\n    println!(\"{length}\");\n}",
+    "stdin": "",
+    "expected": "4",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "rust-54",
+    "id": "rust-54-changed",
+    "code": "use std::thread;\n\nfn main() {\n    let text = String::from(\"explore\");\n    let worker = thread::spawn(move || text.len());\n    let length = worker.join().expect(\"worker panicked\");\n    println!(\"{length}\");\n}",
+    "expected": "7",
+    "outcome": "success"
+  },
+  {
+    "id": "rust-55-worked",
+    "lessonId": "rust-55",
+    "code": "use std::sync::mpsc;\nuse std::thread;\n\nfn main() {\n    let (sender, receiver) = mpsc::channel();\n    let worker = thread::spawn(move || {\n        sender.send(String::from(\"ready\")).expect(\"receiver gone\");\n    });\n    for message in receiver { println!(\"{message}\"); }\n    worker.join().expect(\"worker panicked\");\n}",
+    "stdin": "",
+    "expected": "ready",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "rust-55",
+    "id": "rust-55-changed",
+    "code": "use std::sync::mpsc;\nuse std::thread;\n\nfn main() {\n    let (sender, receiver) = mpsc::channel();\n    let worker = thread::spawn(move || {\n        sender.send(String::from(\"finished\")).expect(\"receiver gone\");\n    });\n    for message in receiver { println!(\"{message}\"); }\n    worker.join().expect(\"worker panicked\");\n}",
+    "expected": "finished",
+    "outcome": "success"
+  },
+  {
+    "id": "rust-56-worked",
+    "lessonId": "rust-56",
+    "code": "use std::sync::Arc;\nuse std::thread;\n\nfn main() {\n    let value = Arc::new(7);\n    let worker = thread::spawn(move || *value);\n    println!(\"{}\", worker.join().expect(\"worker panicked\"));\n}",
+    "stdin": "",
+    "expected": "7",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "rust-56",
+    "id": "rust-56-changed",
+    "code": "use std::rc::Rc;\nuse std::thread;\n\nfn main() {\n    let value = Rc::new(7);\n    let worker = thread::spawn(move || *value);\n    println!(\"{}\", worker.join().expect(\"worker panicked\"));\n}",
+    "expected": "",
+    "outcome": "compile-failure",
+    "errorContains": "cannot be sent between threads safely"
+  },
+  {
+    "id": "rust-57-worked",
+    "lessonId": "rust-57",
+    "code": "use std::sync::{Arc, atomic::{AtomicUsize, Ordering}};\nuse std::thread;\n\nfn main() {\n    let count = Arc::new(AtomicUsize::new(0));\n    let mut workers = Vec::new();\n    for _ in 0..2 {\n        let local = Arc::clone(&count);\n        workers.push(thread::spawn(move || {\n            for _ in 0..100 { local.fetch_add(1, Ordering::SeqCst); }\n        }));\n    }\n    for worker in workers { worker.join().expect(\"worker panicked\"); }\n    println!(\"{}\", count.load(Ordering::SeqCst));\n}",
+    "stdin": "",
+    "expected": "200",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "rust-57",
+    "id": "rust-57-changed",
+    "code": "use std::sync::{Arc, atomic::{AtomicUsize, Ordering}};\nuse std::thread;\n\nfn main() {\n    let count = Arc::new(AtomicUsize::new(0));\n    let mut workers = Vec::new();\n    for _ in 0..2 {\n        let local = Arc::clone(&count);\n        workers.push(thread::spawn(move || {\n            for _ in 0..100 { local.fetch_add(2, Ordering::SeqCst); }\n        }));\n    }\n    for worker in workers { worker.join().expect(\"worker panicked\"); }\n    println!(\"{}\", count.load(Ordering::SeqCst));\n}",
+    "expected": "400",
+    "outcome": "success"
+  },
+  {
+    "id": "rust-58-worked",
+    "lessonId": "rust-58",
+    "code": "use std::{fs, io};\nfn save_and_read(path: &str) -> io::Result<String> {\n    fs::write(path, \"ready\")?;\n    fs::read_to_string(path)\n}\nfn main() {\n    match save_and_read(\"notes.txt\") {\n        Ok(text) => println!(\"{text}\"),\n        Err(_) => println!(\"I/O failed\"),\n    }\n}",
+    "stdin": "",
+    "expected": "ready",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "rust-58",
+    "id": "rust-58-changed",
+    "code": "use std::{fs, io};\nfn save_and_read(path: &str) -> io::Result<String> {\n    fs::write(path, \"ready\")?;\n    fs::read_to_string(path)\n}\nfn main() {\n    match save_and_read(\"missing-parent/notes.txt\") {\n        Ok(text) => println!(\"{text}\"),\n        Err(_) => println!(\"I/O failed\"),\n    }\n}",
+    "expected": "I/O failed",
+    "outcome": "success"
+  },
+  {
+    "id": "rust-59-worked",
+    "lessonId": "rust-59",
+    "code": "use std::io::{self, BufRead, Cursor};\nfn invalid(message: &str) -> io::Error { io::Error::new(io::ErrorKind::InvalidData, message) }\nfn total(input: &str) -> io::Result<u32> {\n    if input.len() > 32 { return Err(invalid(\"input too long\")); }\n    let mut sum = 0;\n    for (index, line) in Cursor::new(input.as_bytes()).lines().enumerate() {\n        if index >= 2 { return Err(invalid(\"too many lines\")); }\n        let n: u32 = line?.parse().map_err(|_| invalid(\"invalid integer\"))?;\n        if !(1..=60).contains(&n) { return Err(invalid(\"invalid minutes\")); }\n        sum += n;\n    }\n    Ok(sum)\n}\nfn main() {\n    match total(\"15\\n20\\n\") {\n        Ok(n) => println!(\"{n}\"),\n        Err(error) => println!(\"{error}\"),\n    }\n}",
+    "stdin": "",
+    "expected": "35",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "rust-59",
+    "id": "rust-59-changed",
+    "code": "use std::io::{self, BufRead, Cursor};\nfn invalid(message: &str) -> io::Error { io::Error::new(io::ErrorKind::InvalidData, message) }\nfn total(input: &str) -> io::Result<u32> {\n    if input.len() > 32 { return Err(invalid(\"input too long\")); }\n    let mut sum = 0;\n    for (index, line) in Cursor::new(input.as_bytes()).lines().enumerate() {\n        if index >= 2 { return Err(invalid(\"too many lines\")); }\n        let n: u32 = line?.parse().map_err(|_| invalid(\"invalid integer\"))?;\n        if !(1..=60).contains(&n) { return Err(invalid(\"invalid minutes\")); }\n        sum += n;\n    }\n    Ok(sum)\n}\nfn main() {\n    match total(\"15\\n20\\n5\\n\") {\n        Ok(n) => println!(\"{n}\"),\n        Err(error) => println!(\"{error}\"),\n    }\n}",
+    "expected": "too many lines",
+    "outcome": "success"
+  },
+  {
+    "id": "rust-60-worked",
+    "lessonId": "rust-60",
+    "code": "use std::path::Path;\n\nfn main() {\n    let path = Path::new(\"notes\").join(\"today.txt\");\n    let name = path.file_name().and_then(|part| part.to_str()).unwrap_or(\"not text\");\n    println!(\"{name}\");\n}",
+    "stdin": "",
+    "expected": "today.txt",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "rust-60",
+    "id": "rust-60-changed",
+    "code": "use std::path::Path;\n\nfn main() {\n    let path = Path::new(\"notes\").join(\"tomorrow.txt\");\n    let name = path.file_name().and_then(|part| part.to_str()).unwrap_or(\"not text\");\n    println!(\"{name}\");\n}",
+    "expected": "tomorrow.txt",
+    "outcome": "success"
+  },
+  {
+    "id": "rust-61-worked",
+    "lessonId": "rust-61",
+    "code": "\n\nfn main() {\n    let args: Vec<String> = std::env::args().skip(1).collect();\n    match args.as_slice() {\n        [topic] => println!(\"topic={topic}\"),\n        _ => println!(\"usage: app TOPIC\"),\n    }\n}",
+    "stdin": "",
+    "expected": "topic=read",
+    "outcome": "success",
+    "args": [
+      "read"
+    ]
+  },
+  {
+    "lessonId": "rust-61",
+    "id": "rust-61-changed",
+    "code": "\n\nfn main() {\n    let args: Vec<String> = std::env::args().skip(1).collect();\n    match args.as_slice() {\n        [topic] => println!(\"topic={topic}\"),\n        _ => println!(\"usage: app TOPIC\"),\n    }\n}",
+    "expected": "usage: app TOPIC",
+    "outcome": "success",
+    "args": []
+  },
+  {
+    "id": "rust-62-worked",
+    "lessonId": "rust-62",
+    "code": "\nfn minutes(text: &str) -> Result<u32, &'static str> {\n    let n = text.trim().parse::<u32>().map_err(|_| \"invalid integer\")?;\n    if !(1..=60).contains(&n) { return Err(\"outside 1 through 60\"); }\n    Ok(n)\n}\nfn main() {\n    match minutes(\" 15 \") {\n        Ok(value) => println!(\"{value}\"),\n        Err(message) => println!(\"{message}\"),\n    }\n}",
+    "stdin": "",
+    "expected": "15",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "rust-62",
+    "id": "rust-62-changed",
+    "code": "\nfn minutes(text: &str) -> Result<u32, &'static str> {\n    let n = text.trim().parse::<u32>().map_err(|_| \"invalid integer\")?;\n    if !(1..=60).contains(&n) { return Err(\"outside 1 through 60\"); }\n    Ok(n)\n}\nfn main() {\n    match minutes(\"61\") {\n        Ok(value) => println!(\"{value}\"),\n        Err(message) => println!(\"{message}\"),\n    }\n}",
+    "expected": "outside 1 through 60",
+    "outcome": "success"
+  },
+  {
+    "id": "rust-63-worked",
+    "lessonId": "rust-63",
+    "code": "use std::fmt;\nstruct Session { minutes: u32 }\nimpl fmt::Display for Session {\n    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {\n        write!(f, \"{} min\", self.minutes)\n    }\n}\nfn main() {\n    let session = Session { minutes: 15 };\n    println!(\"{session}\");\n}",
+    "stdin": "",
+    "expected": "15 min",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "rust-63",
+    "id": "rust-63-changed",
+    "code": "use std::fmt;\nstruct Session { minutes: u32 }\nimpl fmt::Display for Session {\n    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {\n        write!(f, \"{} min\", self.minutes)\n    }\n}\nfn main() {\n    let session = Session { minutes: 20 };\n    println!(\"{session}\");\n}",
+    "expected": "20 min",
+    "outcome": "success"
+  },
+  {
+    "id": "rust-64-worked",
+    "lessonId": "rust-64",
+    "code": "\n\nfn main() {\n    let future = async { println!(\"body\"); 7 };\n    println!(\"created\");\n    drop(future);\n}",
+    "stdin": "",
+    "expected": "created",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "rust-64",
+    "id": "rust-64-changed",
+    "code": "\n\nfn main() {\n    let future = async { println!(\"body\"); 7 };\n    println!(\"created\");\n    let _ = future.await;\n}",
+    "expected": "Compilation rejects await in ordinary main",
+    "outcome": "compile-failure",
+    "errorContains": "only allowed inside `async` functions and blocks"
+  },
+  {
+    "id": "rust-65-worked",
+    "lessonId": "rust-65",
+    "code": "use std::future::{ready, Future};\nuse std::task::{Context, Poll, Waker};\n\nfn main() {\n    let mut future = Box::pin(ready(7));\n    let mut context = Context::from_waker(Waker::noop());\n    match future.as_mut().poll(&mut context) {\n        Poll::Ready(value) => println!(\"{value}\"),\n        Poll::Pending => panic!(\"ready future unexpectedly pending\"),\n    }\n}",
+    "stdin": "",
+    "expected": "7",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "rust-65",
+    "id": "rust-65-changed",
+    "code": "use std::future::{ready, Future};\nuse std::task::{Context, Poll, Waker};\n\nfn main() {\n    let mut future = Box::pin(ready(11));\n    let mut context = Context::from_waker(Waker::noop());\n    match future.as_mut().poll(&mut context) {\n        Poll::Ready(value) => println!(\"{value}\"),\n        Poll::Pending => panic!(\"ready future unexpectedly pending\"),\n    }\n}",
+    "expected": "11",
+    "outcome": "success"
+  },
+  {
+    "id": "rust-66-worked",
+    "lessonId": "rust-66",
+    "code": "\nmacro_rules! twice {\n    ($value:expr) => {{ let value = $value; value + value }};\n}\nfn main() {\n    let mut calls = 0;\n    let answer = twice!({ calls += 1; 3 });\n    println!(\"{answer} {calls}\");\n}",
+    "stdin": "",
+    "expected": "6 1",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "rust-66",
+    "id": "rust-66-changed",
+    "code": "\nmacro_rules! twice {\n    ($value:expr) => { ($value) + ($value) };\n}\nfn main() {\n    let mut calls = 0;\n    let answer = twice!({ calls += 1; 3 });\n    println!(\"{answer} {calls}\");\n}",
+    "expected": "6 2",
+    "outcome": "success"
+  },
+  {
+    "id": "rust-67-worked",
+    "lessonId": "rust-67",
+    "code": "\n\nfn main() {\n    let values = [10, 20];\n    match values.get(3) {\n        Some(value) => println!(\"{value}\"),\n        None => println!(\"missing\"),\n    }\n}",
+    "stdin": "",
+    "expected": "missing",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "rust-67",
+    "id": "rust-67-changed",
+    "code": "\n\nfn main() {\n    let values = [10, 20];\n    match values.get(1) {\n        Some(value) => println!(\"{value}\"),\n        None => println!(\"missing\"),\n    }\n}",
+    "expected": "20",
+    "outcome": "success"
+  },
+  {
+    "id": "rust-68-worked",
+    "lessonId": "rust-68",
+    "code": "\n\nfn main() {\n    let input = [\"15\", \"bad\", \"0\", \"20\"];\n    let accepted: Vec<u32> = input.into_iter()\n        .filter_map(|text| text.parse::<u32>().ok())\n        .filter(|n| (1..=60).contains(n))\n        .take(2).collect();\n    println!(\"{accepted:?}\");\n    println!(\"{}\", accepted.iter().sum::<u32>());\n}",
+    "stdin": "",
+    "expected": "[15, 20]\n35",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "rust-68",
+    "id": "rust-68-changed",
+    "code": "\n\nfn main() {\n    let input = [\"70\", \"bad\", \"0\", \"20\"];\n    let accepted: Vec<u32> = input.into_iter()\n        .filter_map(|text| text.parse::<u32>().ok())\n        .filter(|n| (1..=60).contains(n))\n        .take(2).collect();\n    println!(\"{accepted:?}\");\n    println!(\"{}\", accepted.iter().sum::<u32>());\n}",
+    "expected": "[20]\n20",
+    "outcome": "success"
+  }
+]

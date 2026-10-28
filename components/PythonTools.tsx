@@ -78,18 +78,14 @@ export default function PythonTools({
               <h2>{group[0].toUpperCase() + group.slice(1)}</h2>
               <div className="python-tool-grid">
                 {rows.map((item) => (
-                  <button
-                    key={item.id}
-                    className="panel python-tool-card"
-                    onClick={() => onOpen(item)}
-                  >
+                  <article key={item.id} className="panel python-tool-card">
                     <span className="small-tag">{item.kind}</span>
                     <h3>{item.title}</h3>
                     <p>{item.hint}</p>
-                    <span className="python-tool-link">
+                    <button type="button" className="secondary python-tool-link project-study-button" onClick={() => onOpen(item)}>
                       {studyLabel(item.title)} <ArrowRight size={16} />
-                    </span>
-                  </button>
+                    </button>
+                  </article>
                 ))}
               </div>
             </section>

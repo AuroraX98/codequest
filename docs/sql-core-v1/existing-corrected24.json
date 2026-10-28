@@ -1,0 +1,1678 @@
+[
+  {
+    "id": "sql-01",
+    "title": "SQL Basics",
+    "summary": "Select book titles from a supplied table and put the results in order.",
+    "explanation": [
+      "SQL is a language for asking a database questions. A database stores organized data. A table contains rows, one for each thing, and columns, one for each detail. In the exercise, each books row describes one book. Its id identifies it, title stores its name, and status tells whether it has been read. Reading rows with SELECT does not edit those saved books.",
+      "Here is a complete separate SQLite example. Run this block once in a fresh database. TEXT stores text; INTEGER stores whole numbers. PRIMARY KEY makes each id identify one row. Parentheses group columns or values; commas separate them; a semicolon finishes each SQL statement. Single quotes mark text values.\n```sql\nCREATE TABLE demo_books (\n  id INTEGER PRIMARY KEY,\n  title TEXT,\n  status TEXT\n);\nINSERT INTO demo_books VALUES\n  (1, 'Ocean Map', 'unread'),\n  (2, 'Apple Tree', 'read'),\n  (3, 'Cloud Diary', 'unread');\nSELECT title, status\nFROM demo_books;\n```\nThe final query returns all three books and both selected columns. INSERT supplies values in the table's column order.",
+      "SELECT chooses the columns to return. FROM names the table to read. WHERE tests each row and keeps only rows whose test is true. The equals sign in SQL compares values: status = 'unread' asks whether the status text matches unread. This equals sign does not assign a new status. Capitalized keywords make the query easier to scan; their capitalization does not change its meaning.",
+      "Now run this query after the previous setup:\n```sql\nSELECT title\nFROM demo_books\nWHERE status = 'unread'\nORDER BY title ASC;\n```\nFROM reads demo_books; WHERE keeps Ocean Map and Cloud Diary; SELECT returns only their titles. ORDER BY title arranges the returned titles alphabetically. ASC means ascending, and is the default: Cloud Diary appears before Ocean Map. The read book Apple Tree is excluded even though its title would sort first.",
+      "Without ORDER BY, the database promises no particular result order. The order may look stable on a small table and change later. DESC requests descending order instead. Sorting changes the order of the answer, not the order in which the books are stored. For numbers, ascending goes from smaller to larger; for these English titles, it goes alphabetically.\n\nFor a numeric example, sorting 11, 3, 7 in ascending order produces 3, 7, 11: choose the smallest first, then the next smallest. Sorting text uses text comparison, not numeric arithmetic.",
+      "The exercise wants a temporary answer table. CREATE TEMP TABLE answer AS followed by SELECT saves that query's result in a table named answer for this database session. AS here connects the table to the query that fills it. The starter has WHERE 0: zero is false, so it creates an empty answer table. Replace that false condition with the actual status test, and select just title. Saving rows in a table does not give that table an inherent display order. After creating answer, use SELECT title FROM answer ORDER BY title to display it.",
+      "Before running your exercise, inspect setup.sql. River Notes and Small Atlas are unread; Moon Garden and Quiet Room are read. Keep only the unread rows. In your final display query, ORDER BY title puts River Notes first. Use single quotes for text values. The checks verify saved result membership, not a table's physical row order; inspect the explicitly ordered display separately."
+    ],
+    "analogy": {
+      "familiar": "A labeled filing shelf",
+      "connection": "Find unread titles and place them in predictable order.",
+      "limit": "Without ORDER BY the database does not promise an order."
+    },
+    "steps": [
+      "Start with `SELECT title FROM books`.",
+      "Use `WHERE` to keep only unread books.",
+      "Add `ORDER BY title` to sort the results."
+    ],
+    "starter": "CREATE TEMP TABLE answer AS SELECT title FROM books WHERE 0;",
+    "solution": "CREATE TEMP TABLE answer AS\nSELECT title\nFROM books\nWHERE status='unread';\nSELECT title\nFROM answer\nORDER BY title;",
+    "runtime": "sql",
+    "checks": [
+      {
+        "label": "Exact answer rows and multiplicities",
+        "expression": "WITH expected(\"title\") AS (VALUES ('River Notes'),('Small Atlas')), actual AS (SELECT \"title\",COUNT(*) AS multiplicity FROM \"answer\" GROUP BY \"title\"), wanted AS (SELECT \"title\",COUNT(*) AS multiplicity FROM expected GROUP BY \"title\") SELECT NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+      },
+      {
+        "label": "Exact books rows and multiplicities",
+        "expression": "WITH expected(\"id\",\"title\",\"status\") AS (VALUES (1,'Moon Garden','read'),(2,'River Notes','unread'),(3,'Small Atlas','unread'),(4,'Quiet Room','read')), actual AS (SELECT \"id\",\"title\",\"status\",COUNT(*) AS multiplicity FROM \"books\" GROUP BY \"id\",\"title\",\"status\"), wanted AS (SELECT \"id\",\"title\",\"status\",COUNT(*) AS multiplicity FROM expected GROUP BY \"id\",\"title\",\"status\") SELECT NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+      }
+    ],
+    "quiz": {
+      "question": "A SELECT query has no ORDER BY. It appeared alphabetically once. Can the app rely on that order next time?",
+      "choices": [
+        "Yes; the first displayed order becomes permanent",
+        "Yes; selecting title always sorts by title",
+        "No; add ORDER BY title when that order is required"
+      ],
+      "answer": 2,
+      "explanation": "A result without ORDER BY has no promised presentation order. Selecting a column does not request sorting by it."
+    },
+    "hints": [
+      "Open setup.sql and note which books have status unread.",
+      "Filter on status=\"unread\".",
+      "Sort by title and save the result as answer."
+    ],
+    "math": {
+      "explanation": "Ascending order is smallest to largest.",
+      "question": "What is the ascending order of 9, 2, 5?",
+      "choices": [
+        "9,5,2",
+        "2,5,9",
+        "2,9,5"
+      ],
+      "answer": 1,
+      "feedback": "2 is smallest, then 5, then 9."
+    },
+    "filename": "answer.sql",
+    "estimatedMinutes": 16,
+    "extraFiles": [
+      {
+        "name": "setup.sql",
+        "code": "CREATE TABLE books(id INTEGER PRIMARY KEY, title TEXT, status TEXT);\nINSERT INTO books VALUES (1,\"Moon Garden\",\"read\"),(2,\"River Notes\",\"unread\"),(3,\"Small Atlas\",\"unread\"),(4,\"Quiet Room\",\"read\");"
+      }
+    ]
+  },
+  {
+    "id": "sql-02",
+    "title": "Table Management",
+    "summary": "Create a table, add rows, update one row, and remove a selected row.",
+    "explanation": [
+      "SQL can change saved rows as well as read them. CREATE TABLE defines a table's columns. INSERT INTO adds a row; UPDATE changes rows already there; DELETE FROM removes rows. These operations have different jobs. To make an edit safely, first be clear about which row you mean. An id is useful because a primary key identifies one row even when names are repeated.",
+      "Run this complete practice setup once in a fresh SQLite database:\n```sql\nCREATE TABLE demo_collection (\n  id INTEGER PRIMARY KEY,\n  name TEXT,\n  count INTEGER CHECK(count >= 0)\n);\nINSERT INTO demo_collection (id, name, count)\nVALUES\n  (1, 'Stones', 6),\n  (2, 'Tickets', 2),\n  (3, 'Ribbons', 4);\nSELECT id, name, count\nFROM demo_collection\nORDER BY id;\n```\nThe result has three rows. The explicit column list tells SQL which value belongs to which column. CHECK(count >= 0) refuses a row whose count is negative; >= means greater than or equal to.",
+      "An INSERT can name its columns and give one new set of VALUES. An UPDATE uses SET to say what changes, then WHERE to choose the existing rows. In SET count = count + 1, the right side reads the old count and adds one; the left side names the column that receives the result. In WHERE id = 1, equals compares the id with 1. Its meaning depends on its place.",
+      "Run this after the setup:\n```sql\nINSERT INTO demo_collection (id, name, count)\nVALUES (4, 'Pins', 3);\nUPDATE demo_collection\nSET count = count + 1\nWHERE id = 1;\nUPDATE demo_collection\nSET name = 'Train tickets'\nWHERE id = 2;\nDELETE FROM demo_collection\nWHERE id = 3;\nSELECT name, count\nFROM demo_collection\nORDER BY id;\n```\nYou get Stones with 7, Train tickets with 2, and Pins with 3. The first command adds; the next two edit; the fourth removes Ribbons. The last query reads the finished table.",
+      "WHERE is especially important for writes. UPDATE without WHERE changes every row; DELETE without WHERE removes every row. A WHERE that matches nothing makes no change, like the starter's id = -1. Before editing, a SELECT with the same WHERE can show which rows will match. A text comparison must match the stored name, including its spaces. Renaming a row also changes which name will match next time.",
+      "The exercise already supplies collection, so do not create it again. Add Cards with id 4 and count 1, increase Shells from 3 to 4, rename Badges to Travel badges, and remove Coins. Each edit should have a narrow condition. A final SELECT can help you see the rows, but this exercise checks collection itself; creating a separate answer table does not perform the requested edits.",
+      "Check both values and membership: exactly three rows should remain, with no Coins row. Increasing a count should leave the other counts alone. INSERT does not rename an old row, and ORDER BY does not add one. If you rerun an INSERT in the same unchanged database, the repeated primary key can cause an error; use a fresh practice setup when starting this walkthrough again.\n\nCounting uses the same idea of one added item per step. If you record one task each day for seven days, the count is 7 × 1 = 7. Updating a count by one once per day would produce 1, 2, 3, 4, 5, 6, 7."
+    ],
+    "analogy": {
+      "familiar": "A filing cabinet with labeled folders",
+      "connection": "Each command makes a specific change to collection.",
+      "limit": "An absent or broad WHERE can affect too few or too many rows."
+    },
+    "steps": [
+      "Use `INSERT` to add Cards.",
+      "Use `UPDATE ... SET ... WHERE` to make each of the two requested edits.",
+      "Use `DELETE FROM collection WHERE name=\"Coins\"` to remove Coins."
+    ],
+    "starter": "UPDATE collection SET count = count + 1 WHERE id = -1;",
+    "solution": "INSERT INTO collection VALUES (4,\"Cards\",1);\nUPDATE collection SET count = count + 1 WHERE name = \"Shells\";\nUPDATE collection SET name = \"Travel badges\" WHERE name = \"Badges\";\nDELETE FROM collection WHERE name = \"Coins\";",
+    "runtime": "sql",
+    "checks": [
+      {
+        "label": "Final rows match expected edits",
+        "expression": "SELECT CASE WHEN (SELECT count(*) FROM collection)=3 AND (SELECT count FROM collection WHERE name=\"Shells\")=4 AND (SELECT count FROM collection WHERE name=\"Travel badges\")=2 AND (SELECT count FROM collection WHERE name=\"Cards\")=1 AND NOT EXISTS(SELECT 1 FROM collection WHERE name=\"Coins\") THEN 1 ELSE 0 END"
+      }
+    ],
+    "quiz": {
+      "question": "You want to change the title of an existing book without adding a second row. Which operation fits?",
+      "choices": [
+        "ORDER BY the new title",
+        "UPDATE that row using its ID in WHERE",
+        "INSERT another row with the new title"
+      ],
+      "answer": 1,
+      "explanation": "UPDATE changes selected existing rows. INSERT adds a row, and ORDER BY changes result order rather than stored data."
+    },
+    "hints": [
+      "Insert id 4 with Cards and count 1.",
+      "Update Shells and rename Badges with WHERE clauses.",
+      "Delete only the Coins row."
+    ],
+    "math": {
+      "explanation": "Count one task for each day.",
+      "question": "Seven days with one task per day: how many tasks?",
+      "choices": [
+        "6",
+        "7",
+        "8"
+      ],
+      "answer": 1,
+      "feedback": "7 × 1 = 7 tasks."
+    },
+    "filename": "answer.sql",
+    "estimatedMinutes": 16,
+    "extraFiles": [
+      {
+        "name": "setup.sql",
+        "code": "CREATE TABLE collection(id INTEGER PRIMARY KEY, name TEXT, count INTEGER CHECK(count >= 0));\nINSERT INTO collection VALUES (1,\"Shells\",3),(2,\"Badges\",2),(3,\"Coins\",5);"
+      }
+    ]
+  },
+  {
+    "id": "sql-03",
+    "title": "Filters",
+    "summary": "Filter a supplied activity table by name and difficulty.",
+    "explanation": [
+      "A filter is a condition that decides which rows belong in a result. WHERE reads a row's details and asks a true-or-false question. You can combine questions: AND requires both to be true; OR requires at least one. Choosing rows with SELECT and WHERE does not delete the rows that fail the filter. They stay in the saved table.",
+      "This complete SQLite setup gives us three activities to examine:\n```sql\nCREATE TABLE demo_activities (\n  id INTEGER PRIMARY KEY,\n  name TEXT,\n  difficulty TEXT,\n  minutes INTEGER\n);\nINSERT INTO demo_activities VALUES\n  (1, 'Draw a leaf', 'easy', 8),\n  (2, 'Build a bridge', 'hard', 8),\n  (3, 'Read a chapter', 'easy', 18);\nSELECT name, minutes\nFROM demo_activities\nWHERE minutes <= 8;\n```\nThe query returns Draw a leaf and Build a bridge. <= means less than or equal to: 8 passes, while 18 does not.",
+      "The comparison symbols have precise boundaries. < excludes equality; <= includes it. > means greater than; >= includes the equal case. For text, difficulty = 'easy' matches a particular stored value. These two tests describe different details: being easy does not tell us how long an activity takes. We need both tests when both requirements matter.",
+      "Run this on the same practice table:\n```sql\nSELECT name\nFROM demo_activities\nWHERE difficulty = 'easy'\n  AND minutes <= 8\nORDER BY name;\n```\nOnly Draw a leaf appears. Build a bridge passes the time test but fails the difficulty test. Read a chapter passes the difficulty test but fails the time test. AND rejects both. The line break before AND is just formatting; it remains part of the same WHERE condition.",
+      "If you used OR instead, all three practice activities would pass because each satisfies at least one condition. Sorting cannot rescue a failed filter: ORDER BY arranges the rows that were kept; it does not make a false condition true. Parentheses help make grouping explicit when a future query combines AND and OR, for example (difficulty = 'easy' OR difficulty = 'medium') AND minutes <= 8.",
+      "For the exercise, select name from activities and keep difficulty 'easy' AND minutes at most 10. Ten is included because the symbol is <=. An easy activity taking 25 minutes fails because 25 <= 10 is false. Save the selected names using CREATE TEMP TABLE answer AS followed by your query; replace the starter's WHERE 0, which deliberately matches no rows.",
+      "Read the supplied fixture before predicting the result. Tiny quiz takes 5 minutes and Word puzzle takes 10, so both pass. Code maze and Logic grid do not pass the combined tests. ORDER BY name puts Tiny quiz before Word puzzle. Keeping the query column as name matters because the check reads that column from answer. A saved table has no inherent display order. Use SELECT name FROM answer ORDER BY name for display; these checks verify membership rather than table scan order."
+    ],
+    "analogy": {
+      "familiar": "A search card with two checkboxes",
+      "connection": "An activity must be easy and take at most ten minutes.",
+      "limit": "Filtering changes returned rows, not stored rows."
+    },
+    "steps": [
+      "Put both filter checks in `WHERE`.",
+      "Use `<=` so the time limit itself is allowed.",
+      "Connect the checks with `AND` so both must be true."
+    ],
+    "starter": "CREATE TEMP TABLE answer AS SELECT name FROM activities WHERE 0;",
+    "solution": "CREATE TEMP TABLE answer AS\nSELECT name\nFROM activities\nWHERE difficulty='easy' AND minutes<=10;\nSELECT name\nFROM answer\nORDER BY name;",
+    "runtime": "sql",
+    "checks": [
+      {
+        "label": "Exact answer rows and multiplicities",
+        "expression": "WITH expected(\"name\") AS (VALUES ('Tiny quiz'),('Word puzzle')), actual AS (SELECT \"name\",COUNT(*) AS multiplicity FROM \"answer\" GROUP BY \"name\"), wanted AS (SELECT \"name\",COUNT(*) AS multiplicity FROM expected GROUP BY \"name\") SELECT NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+      }
+    ],
+    "quiz": {
+      "question": "The filter is difficulty = 'easy' AND minutes <= 10. A hard activity takes 6 minutes. Does it pass?",
+      "choices": [
+        "No; passing the time limit does not satisfy the difficulty condition",
+        "Yes; a duration below 10 is enough",
+        "Yes; AND accepts either condition"
+      ],
+      "answer": 0,
+      "explanation": "6 <= 10 is true, but 'hard' does not match 'easy'. AND needs both conditions to be true, so this row is excluded."
+    },
+    "hints": [
+      "Select name from activities.",
+      "Add the difficulty and duration tests.",
+      "Join with AND and order the result."
+    ],
+    "math": {
+      "explanation": "Substitute the number into the inequality.",
+      "question": "Is 20 < 30 true?",
+      "choices": [
+        "True",
+        "False",
+        "Unknown"
+      ],
+      "answer": 0,
+      "feedback": "20 is less than 30, so the condition is true."
+    },
+    "filename": "answer.sql",
+    "estimatedMinutes": 15,
+    "extraFiles": [
+      {
+        "name": "setup.sql",
+        "code": "CREATE TABLE activities(id INTEGER PRIMARY KEY, name TEXT, difficulty TEXT, minutes INTEGER);\nINSERT INTO activities VALUES (1,\"Word puzzle\",\"easy\",10),(2,\"Code maze\",\"medium\",25),(3,\"Logic grid\",\"hard\",30),(4,\"Tiny quiz\",\"easy\",5);"
+      }
+    ]
+  },
+  {
+    "id": "sql-04",
+    "title": "Aggregate Functions",
+    "summary": "Group sessions by subject and calculate counts, totals, and averages.",
+    "explanation": [
+      "An aggregate function combines several values into one result. COUNT counts, SUM adds, and AVG finds the arithmetic average: total divided by the number of known values. GROUP BY makes separate groups before those calculations. A report grouped by subject returns one row for each subject, rather than one row for every session.",
+      "Run this complete SQLite example once:\n```sql\nCREATE TABLE demo_sessions (\n  id INTEGER PRIMARY KEY,\n  subject TEXT,\n  minutes INTEGER\n);\nINSERT INTO demo_sessions VALUES\n  (1, 'Art', 12),\n  (2, 'Art', 24),\n  (3, 'Music', 18),\n  (4, 'Music', NULL);\nSELECT COUNT(*) AS rows,\n       COUNT(minutes) AS known_minutes\nFROM demo_sessions;\n```\nThe result is rows 4 and known_minutes 3. NULL represents an unknown or missing value. It is not zero and is not the text 'NULL'. COUNT(*) counts rows; COUNT(minutes) counts rows with a known minutes value.",
+      "A function call puts its input inside parentheses, such as SUM(minutes). AS gives a result column a name, also called an alias. The * in COUNT(*) means count every row; it is not multiplication here. SUM and AVG also ignore NULL inputs. Music's missing duration does not mean a zero-minute session, so it should not pull the known average down.",
+      "Run this query after that setup:\n```sql\nSELECT subject,\n       COUNT(minutes) AS session_count,\n       SUM(minutes) AS total_minutes,\n       AVG(minutes) AS average_minutes\nFROM demo_sessions\nGROUP BY subject\nORDER BY subject;\n```\nArt has count 2, total 36, average 18. Music has count 1, total 18, average 18. GROUP BY subject gives each function only the rows for that subject. ORDER BY makes the report's order predictable.",
+      "If a group contains only NULL minutes, COUNT(minutes) is 0, while SUM(minutes) and AVG(minutes) are NULL. The average is unknown because there are no known durations to divide by. A grouped query over an empty table returns no groups. A nongrouped COUNT query over an empty table returns 0. Keep these cases distinct instead of inventing a measured zero.",
+      "The exercise needs subject and three named calculations: session_count, total_minutes, and average_minutes. Use COUNT(minutes), not COUNT(*), for the requested known-session count. Put all calculations in one SELECT and GROUP BY subject. CREATE TEMP TABLE answer AS saves that grouped result. The starter's numeric zeros are placeholders, not calculated totals.",
+      "In the supplied sessions, Math has 20 and 40: two known values, total 60, average 30. Spanish has 30 and NULL, so its known count is 1 and its average is 30. Coding has one known value, 50. Keep the report honest about missing values. A correct total alone does not prove that the count or average is correct."
+    ],
+    "analogy": {
+      "familiar": "A report grouped by subject",
+      "connection": "Each output row reports one subject’s study time.",
+      "limit": "COUNT(minutes) and AVG(minutes) ignore NULL, unlike COUNT(*)."
+    },
+    "steps": [
+      "Give the result columns the names requested in the project.",
+      "Use `GROUP BY subject` to calculate each subject separately.",
+      "Use `COUNT(minutes)` when you want to count only known minutes, not `NULL`."
+    ],
+    "starter": "CREATE TEMP TABLE answer AS SELECT subject, 0 AS session_count, 0 AS total_minutes, 0 AS average_minutes FROM sessions WHERE 0;",
+    "solution": "CREATE TEMP TABLE answer AS SELECT subject, COUNT(minutes) AS session_count, SUM(minutes) AS total_minutes, AVG(minutes) AS average_minutes FROM sessions GROUP BY subject;",
+    "runtime": "sql",
+    "checks": [
+      {
+        "label": "Exact answer rows and multiplicities",
+        "expression": "WITH expected(\"subject\",\"session_count\",\"total_minutes\",\"average_minutes\") AS (VALUES ('Math',2,60,30),('Spanish',1,30,30),('Coding',1,50,50)), actual AS (SELECT \"subject\",\"session_count\",\"total_minutes\",\"average_minutes\",COUNT(*) AS multiplicity FROM \"answer\" GROUP BY \"subject\",\"session_count\",\"total_minutes\",\"average_minutes\"), wanted AS (SELECT \"subject\",\"session_count\",\"total_minutes\",\"average_minutes\",COUNT(*) AS multiplicity FROM expected GROUP BY \"subject\",\"session_count\",\"total_minutes\",\"average_minutes\") SELECT NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+      }
+    ],
+    "quiz": {
+      "question": "A group contains minutes values 10, NULL, and 26. What are COUNT(minutes), SUM(minutes), and AVG(minutes)?",
+      "choices": [
+        "3, 36, 12",
+        "2, 36, 18",
+        "2, 36, 36"
+      ],
+      "answer": 1,
+      "explanation": "These aggregates use the two known durations. Their sum is 10 + 26 = 36, and their average is 36 / 2 = 18. NULL is missing information, not a zero-minute value."
+    },
+    "hints": [
+      "Group by subject.",
+      "Use COUNT(minutes), SUM(minutes), AVG(minutes).",
+      "For Math, (20+40)/2=30."
+    ],
+    "math": {
+      "explanation": "Add and divide by the number of values.",
+      "question": "What is the average of 4 and 8?",
+      "choices": [
+        "4",
+        "6",
+        "12"
+      ],
+      "answer": 1,
+      "feedback": "(4+8)/2=12/2=6."
+    },
+    "filename": "answer.sql",
+    "estimatedMinutes": 21,
+    "extraFiles": [
+      {
+        "name": "setup.sql",
+        "code": "CREATE TABLE sessions(id INTEGER PRIMARY KEY, subject TEXT, minutes INTEGER);\nINSERT INTO sessions VALUES (1,\"Math\",20),(2,\"Math\",40),(3,\"Spanish\",30),(4,\"Spanish\",NULL),(5,\"Coding\",50);"
+      }
+    ]
+  },
+  {
+    "id": "sql-05",
+    "title": "Joins",
+    "summary": "Join two supplied tables and include authors who have no books.",
+    "explanation": [
+      "A join connects related rows from two tables. Each author has one id. A book's author_id points to the id of its author. That relationship lets SQL attach the author's name to each book. Joining does not combine all books into a single text value: one author can appear in several output rows when that author has several books.",
+      "Run this full SQLite setup and query in a fresh database:\n```sql\nCREATE TABLE demo_authors (\n  id INTEGER PRIMARY KEY,\n  name TEXT\n);\nCREATE TABLE demo_books (\n  id INTEGER PRIMARY KEY,\n  author_id INTEGER REFERENCES demo_authors(id),\n  title TEXT\n);\nINSERT INTO demo_authors VALUES\n  (1, 'Nora'), (2, 'Luis'), (3, 'Imani');\nINSERT INTO demo_books VALUES\n  (1, 1, 'Sea Path'),\n  (2, 1, 'Garden Gate'),\n  (3, 2, 'Sky Notes');\nSELECT a.name, b.title\nFROM demo_authors AS a\nINNER JOIN demo_books AS b ON b.author_id = a.id;\n```\nThis returns three matched rows: two for Nora, one for Luis. Imani has no matching book, so INNER JOIN leaves Imani out.",
+      "AS a and AS b give the tables short names. The dot in a.id means the id column from table a. ON specifies the matching condition: a book belongs to an author when b.author_id equals a.id. REFERENCES documents the relationship in the schema; the ON condition is still needed to tell this query how to join. SQLite enforcement of foreign keys must be enabled separately when you rely on that constraint.",
+      "Run this query on the same tables:\n```sql\nSELECT a.name AS author, b.title\nFROM demo_authors AS a\nLEFT JOIN demo_books AS b\n  ON b.author_id = a.id\nORDER BY a.id, b.title;\n```\nYou get Nora/Garden Gate, Nora/Sea Path, Luis/Sky Notes, and Imani/NULL. LEFT JOIN preserves each left-side author. When there is no matching book, right-side columns are NULL in the result. SQL has not stored an imaginary book for Imani.",
+      "The left table matters. Putting books on the left preserves books, not bookless authors. Also, a later WHERE b.title IS NOT NULL removes the unmatched author rows and defeats this goal. Use IS NULL to test missing values; value = NULL does not mean 'is missing' in SQL. COUNT(*) on the joined result counts the unmatched placeholder row too, while COUNT(b.title) counts known titles.\n\nSets describe distinct members. With A = {red, blue} and B = {blue, green}, blue is the only shared member, so the overlap has size 1. A join is related but can repeat matching rows: it is not automatically a set of distinct names.\n\nOn the demo tables above:\n```sql\nSELECT COUNT(*) AS joined_rows, COUNT(b.title) AS known_titles\nFROM demo_authors AS a\nLEFT JOIN demo_books AS b ON b.author_id = a.id;\n```\nThis returns joined_rows=4 and known_titles=3. COUNT receives either * for rows or an expression whose non-NULL values are counted, and returns an integer. It does not change the tables.",
+      "The exercise supplies authors and books. Keep authors on the left, join books.author_id to authors.id, and select authors.name AS author with books.title. Save the query in the temporary answer table. The author alias matters because the checks look for that result column. There is no need to remove duplicate author names: repeated names represent distinct books.",
+      "Ari Vale has two matches, Bo Lin has one, and Casey North has none. The LEFT JOIN therefore produces four rows, including Casey North with a NULL title. If you got only three rows, check whether you used INNER JOIN or filtered out NULL. If you got too many, check the ON relationship; matching unrelated ids can pair rows incorrectly."
+    ],
+    "analogy": {
+      "familiar": "Two filing cabinets connected by an author label",
+      "connection": "Each book’s author_id points to authors.id.",
+      "limit": "Missing book columns become NULL; SQL does not invent a book row."
+    },
+    "steps": [
+      "Use `ON` to match each book to its author.",
+      "Use `LEFT JOIN` to keep authors who have no books.",
+      "Keep the unmatched author too; do not filter out rows with a NULL book title."
+    ],
+    "starter": "CREATE TEMP TABLE answer AS SELECT authors.name AS author, books.title FROM authors LEFT JOIN books ON books.author_id=authors.id WHERE 0;",
+    "solution": "CREATE TEMP TABLE answer AS SELECT authors.name AS author, books.title FROM authors LEFT JOIN books ON books.author_id=authors.id;",
+    "runtime": "sql",
+    "checks": [
+      {
+        "label": "Exact answer rows and multiplicities",
+        "expression": "WITH expected(\"author\",\"title\") AS (VALUES ('Ari Vale','Blue Window'),('Ari Vale','First Light'),('Bo Lin','Paper Roads'),('Casey North',NULL)), actual AS (SELECT \"author\",\"title\",COUNT(*) AS multiplicity FROM \"answer\" GROUP BY \"author\",\"title\"), wanted AS (SELECT \"author\",\"title\",COUNT(*) AS multiplicity FROM expected GROUP BY \"author\",\"title\") SELECT NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+      }
+    ],
+    "quiz": {
+      "question": "Which join keeps Casey North in the result even though they have no books?",
+      "choices": [
+        "LEFT JOIN",
+        "INNER JOIN",
+        "ORDER BY"
+      ],
+      "answer": 0,
+      "explanation": "LEFT JOIN keeps all authors; Casey has no match, so books.title is NULL."
+    },
+    "hints": [
+      "Keep authors on the left side.",
+      "Match books.author_id with authors.id.",
+      "Select author and title; retain NULL for Casey."
+    ],
+    "math": {
+      "explanation": "Count the values that occur in both sets.",
+      "question": "A={red,blue}, B={blue,green}. How many values are shared?",
+      "choices": [
+        "0",
+        "1",
+        "2"
+      ],
+      "answer": 1,
+      "feedback": "Only blue is shared, so the intersection size is 1."
+    },
+    "filename": "answer.sql",
+    "estimatedMinutes": 21,
+    "extraFiles": [
+      {
+        "name": "setup.sql",
+        "code": "CREATE TABLE authors(id INTEGER PRIMARY KEY, name TEXT);\nCREATE TABLE books(id INTEGER PRIMARY KEY, author_id INTEGER REFERENCES authors(id), title TEXT);\nINSERT INTO authors VALUES (1,\"Ari Vale\"),(2,\"Bo Lin\"),(3,\"Casey North\");\nINSERT INTO books VALUES (1,1,\"Blue Window\"),(2,1,\"First Light\"),(3,2,\"Paper Roads\");"
+      }
+    ]
+  },
+  {
+    "id": "sql-06",
+    "title": "Subqueries",
+    "summary": "Find scores above the average for their own subject using a subquery.",
+    "explanation": [
+      "A subquery is a query placed inside another query. It can calculate a number that the outer query uses for comparison. An overall average uses all scores. A group average uses only one subject's scores. For this project, each learner's score must be compared with the average for that same subject.",
+      "Run this complete SQLite setup and overall-average query:\n```sql\nCREATE TABLE demo_scores (\n  id INTEGER PRIMARY KEY,\n  learner TEXT,\n  subject TEXT,\n  score INTEGER\n);\nINSERT INTO demo_scores VALUES\n  (1, 'Nia', 'Art', 50),\n  (2, 'Leo', 'Art', 70),\n  (3, 'Uma', 'Art', 60),\n  (4, 'Nia', 'Music', 100),\n  (5, 'Leo', 'Music', 80);\nSELECT learner, subject, score\nFROM demo_scores\nWHERE score > (SELECT AVG(score) FROM demo_scores);\n```\nThe inner query returns the overall average 72. Only the Music scores 100 and 80 exceed it. Parentheses make the inner query a single value used by the outer > comparison.",
+      "A correlated subquery refers to the current row of the outer query. Give the outer and inner tables different aliases so the reference is clear. Outer means the row we are deciding about now; inner means rows being averaged. SQL decides results as if it checked each outer row, though the database may optimize how it does the work.",
+      "Run the subject-average version on that setup:\n```sql\nSELECT outer_score.learner,\n       outer_score.subject,\n       outer_score.score\nFROM demo_scores AS outer_score\nWHERE outer_score.score > (\n  SELECT AVG(inner_score.score)\n  FROM demo_scores AS inner_score\n  WHERE inner_score.subject = outer_score.subject\n);\n```\nArt's average is 60, so Leo's 70 passes. Music's average is 90, so Nia's 100 passes. Leo's 80 no longer passes. The two aliases keep the inner subject tied to the outer row's subject.",
+      "Strictly above means >, not >=. A score equal to its group average is excluded. Be careful with an unqualified column inside a subquery: SQL searches the inner scope first. If both sides refer to the inner table, a condition can compare that row's subject with itself and average all subjects accidentally. Different aliases and fully qualified columns make this mistake visible.",
+      "Your answer should contain learner, subject, and score for qualifying rows, saved using CREATE TEMP TABLE answer AS followed by the correlated SELECT. In the corrected exercise fixture, Math has 70, 90, 80, and Dana's 81. Its average is (70 + 90 + 80 + 81) / 4 = 80.25, so Bo's 90 and Dana's 81 pass. Spanish's average remains (95 + 75) / 2 = 85, so Ari's 95 passes. There are three qualifying rows.",
+      "An average of no known scores is NULL. A comparison such as score > NULL is unknown and does not pass WHERE. The supplied fixture has known scores in both subjects. To tell whether your query really uses subject averages, try a separate fixture like the walkthrough, where the overall average and group averages choose different rows. Matching one small fixture alone can hide a correlation mistake."
+    ],
+    "analogy": {
+      "familiar": "A score card compared with its group average",
+      "connection": "Compare each learner with others in the same subject.",
+      "limit": "Without the subject correlation, the average would mix both subjects."
+    },
+    "steps": [
+      "Name the outer table `outer_scores`.",
+      "Name the table in the inner query `inner_scores`.",
+      "Calculate the average for rows where the two subject names match.",
+      "Keep only outer scores above that subject’s average.",
+      "Store the kept rows in `answer`."
+    ],
+    "starter": "CREATE TEMP TABLE answer AS SELECT learner, subject, score FROM scores WHERE 0;",
+    "solution": "CREATE TEMP TABLE answer AS\nSELECT outer_scores.learner, outer_scores.subject, outer_scores.score\nFROM scores AS outer_scores\nWHERE outer_scores.score > (\n  SELECT AVG(inner_scores.score)\n  FROM scores AS inner_scores\n  WHERE inner_scores.subject = outer_scores.subject\n);",
+    "runtime": "sql",
+    "checks": [
+      {
+        "label": "Above-group-average rows",
+        "expression": "SELECT CASE WHEN (SELECT count(*) FROM answer)=3 AND EXISTS(SELECT 1 FROM answer WHERE learner='Bo' AND subject='Math' AND score=90) AND EXISTS(SELECT 1 FROM answer WHERE learner='Dana' AND subject='Math' AND score=81) AND EXISTS(SELECT 1 FROM answer WHERE learner='Ari' AND subject='Spanish' AND score=95) THEN 1 ELSE 0 END"
+      }
+    ],
+    "quiz": {
+      "question": "A subject has scores 60, 80, and 100. Which score is strictly above that subject’s average?",
+      "choices": [
+        "100",
+        "80",
+        "60"
+      ],
+      "answer": 0,
+      "explanation": "The average is (60 + 80 + 100) / 3 = 80. Only 100 is strictly above it; the score equal to the average does not pass."
+    },
+    "hints": [
+      "Write the outer select first.",
+      "Use AVG(score) inside a subquery.",
+      "Name the outer table `outer_scores` and the inner table `inner_scores`. Match `inner_scores.subject = outer_scores.subject`, then compare the outer score with `>`."
+    ],
+    "math": {
+      "explanation": "Add and divide by the number of values.",
+      "question": "What is the average of 4 and 8?",
+      "choices": [
+        "4",
+        "6",
+        "12"
+      ],
+      "answer": 1,
+      "feedback": "(4+8)/2=12/2=6."
+    },
+    "filename": "answer.sql",
+    "estimatedMinutes": 21,
+    "extraFiles": [
+      {
+        "name": "setup.sql",
+        "code": "CREATE TABLE scores(id INTEGER PRIMARY KEY, learner TEXT, subject TEXT, score INTEGER);\nINSERT INTO scores VALUES\n  (1,'Ari','Math',70),\n  (2,'Bo','Math',90),\n  (3,'Casey','Math',80),\n  (4,'Ari','Spanish',95),\n  (5,'Bo','Spanish',75),\n  (6,'Dana','Math',81);"
+      }
+    ]
+  },
+  {
+    "id": "sql-07",
+    "title": "Window functions",
+    "summary": "Calculate running totals and ranks within groups using a fixed dataset.",
+    "explanation": [
+      "A window function calculates across related rows while keeping each original row in the result. GROUP BY usually reduces a group to one report row; a window can attach a running total or rank to every practice row. OVER introduces the window's rules: which group to use, which order to follow, and which rows count for a calculation.",
+      "Run this complete SQLite setup and running-total query:\n```sql\nCREATE TABLE demo_practice (\n  id INTEGER PRIMARY KEY,\n  subject TEXT,\n  day TEXT,\n  minutes INTEGER\n);\nINSERT INTO demo_practice VALUES\n  (1, 'Art', '2026-01-01', 10),\n  (2, 'Art', '2026-01-02', 25),\n  (3, 'Art', '2026-01-03', 25),\n  (4, 'Music', '2026-01-01', 8);\nSELECT subject, day, minutes,\n  SUM(minutes) OVER (\n    PARTITION BY subject\n    ORDER BY day, id\n    ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW\n  ) AS running_total\nFROM demo_practice\nORDER BY subject, day, id;\n```\nArt's totals are 10, 35, 60. Music begins its own total at 8. There are still four output rows.",
+      "PARTITION BY subject separates the calculations by subject. ORDER BY day, id inside OVER sets the order for accumulation. Fixed year-month-day text sorts these dates chronologically. id breaks a tie when two sessions share a day. ROWS selects individual rows; UNBOUNDED PRECEDING means the start of the partition, and CURRENT ROW means the row being calculated. SUM adds that whole frame.",
+      "Run this ranking query after the same setup:\n```sql\nSELECT subject, day, minutes,\n  RANK() OVER (\n    PARTITION BY subject\n    ORDER BY minutes DESC\n  ) AS duration_rank\nFROM demo_practice\nORDER BY subject, day, id;\n```\nBoth Art rows with 25 minutes get rank 1, and the 10-minute row gets rank 3. RANK leaves a gap after a tie because two rows occupy the first two positions. Music's single row ranks 1. Empty parentheses mean RANK needs no direct input argument.",
+      "Each window has its own order. Running totals need chronological order; duration ranks need minutes descending, largest first. Do not add id to the ranking order if equal durations should tie: that extra detail would separate them. The outer ORDER BY controls display order, independently of the two window calculations. A rank of 1 does not move that row to the first displayed row by itself.\n\nMean is another name for the arithmetic average. For 3, 6, 9, add 3 + 6 + 9 = 18, then divide by their count 3: 18 / 3 = 6. A running total stops at each current row; a mean also needs a denominator, so it is a different calculation.",
+      "For the exercise, select subject, day, and minutes, then add running_total and duration_rank as named result columns. Save that SELECT as answer. The running-total frame must stop at the current row, rather than sum the entire partition every time. RANK needs PARTITION BY subject so a Spanish session is compared with Spanish sessions.",
+      "The supplied Math durations are 20, 30, 30: chronological running totals 20, 50, 80. The two 30-minute entries tie at duration rank 1. Spanish starts again at 15 and then totals 40. The checks now compare every fixture row's running total and rank, including both partitions. They test these results, not every possible input or one required SQL spelling."
+    ],
+    "analogy": {
+      "familiar": "A practice report with a running counter",
+      "connection": "The total accumulates as each subject’s dated rows are reached.",
+      "limit": "GROUP BY collapses rows; a window function does not. Tied RANK values share a rank."
+    },
+    "steps": [
+      "Keep every source row in the result.",
+      "Use `SUM` with an ordered window to add a running total.",
+      "Use `RANK` so tied top values get the same rank."
+    ],
+    "starter": "CREATE TEMP TABLE answer AS SELECT subject, day, minutes, 0 AS running_total, 0 AS duration_rank FROM practice WHERE 0;",
+    "solution": "CREATE TEMP TABLE answer AS SELECT subject, day, minutes, SUM(minutes) OVER(PARTITION BY subject ORDER BY day, id ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS running_total, RANK() OVER(PARTITION BY subject ORDER BY minutes DESC) AS duration_rank FROM practice;",
+    "runtime": "sql",
+    "checks": [
+      {
+        "label": "Exact answer rows and multiplicities",
+        "expression": "WITH expected(\"subject\",\"day\",\"minutes\",\"running_total\",\"duration_rank\") AS (VALUES ('Math','2026-09-01',20,20,3),('Math','2026-09-02',30,50,1),('Math','2026-09-03',30,80,1),('Spanish','2026-09-01',15,15,2),('Spanish','2026-09-02',25,40,1)), actual AS (SELECT \"subject\",\"day\",\"minutes\",\"running_total\",\"duration_rank\",COUNT(*) AS multiplicity FROM \"answer\" GROUP BY \"subject\",\"day\",\"minutes\",\"running_total\",\"duration_rank\"), wanted AS (SELECT \"subject\",\"day\",\"minutes\",\"running_total\",\"duration_rank\",COUNT(*) AS multiplicity FROM expected GROUP BY \"subject\",\"day\",\"minutes\",\"running_total\",\"duration_rank\") SELECT NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+      }
+    ],
+    "quiz": {
+      "question": "Two rows tie for the most minutes. What rank does `RANK` give them?",
+      "choices": [
+        "Both rank 1",
+        "One rank 1 and one rank 2",
+        "Both rank 2"
+      ],
+      "answer": 0,
+      "explanation": "Both 30-minute rows tie for the highest duration, so RANK assigns each rank 1."
+    },
+    "hints": [
+      "Add OVER(...) to SUM(minutes).",
+      "Partition by subject and order by date.",
+      "Use RANK() over each subject ordered by minutes descending."
+    ],
+    "math": {
+      "explanation": "Mean is total divided by count.",
+      "question": "For 2,4,6, what is the mean?",
+      "choices": [
+        "3",
+        "4",
+        "6"
+      ],
+      "answer": 1,
+      "feedback": "2+4+6=12 and 12/3=4."
+    },
+    "filename": "answer.sql",
+    "estimatedMinutes": 21,
+    "extraFiles": [
+      {
+        "name": "setup.sql",
+        "code": "CREATE TABLE practice(id INTEGER PRIMARY KEY, subject TEXT, day TEXT, minutes INTEGER);\nINSERT INTO practice VALUES (1,\"Math\",\"2026-09-01\",20),(2,\"Math\",\"2026-09-02\",30),(3,\"Math\",\"2026-09-03\",30),(4,\"Spanish\",\"2026-09-01\",15),(5,\"Spanish\",\"2026-09-02\",25);"
+      }
+    ]
+  },
+  {
+    "id": "sql-08",
+    "title": "Query plans and indexes",
+    "summary": "Compare query plans before and after adding an appropriate index.",
+    "explanation": [
+      "An index is an extra structure the database maintains to help it find rows. Think of an index in a book: it can guide you to a topic without reading every page. SQL still decides which rows belong in the result. An index should preserve those intended results; it does not remove duplicates or make every query faster.",
+      "Here is a complete small SQLite dataset:\n```sql\nCREATE TABLE demo_books (\n  id INTEGER PRIMARY KEY,\n  title TEXT,\n  genre TEXT\n);\nINSERT INTO demo_books VALUES\n  (1, 'Stone Cities', 'history'),\n  (2, 'Cloud Tales', 'fiction'),\n  (3, 'Ancient Roads', 'history'),\n  (4, 'Trade Routes', 'history');\nEXPLAIN QUERY PLAN\nSELECT title\nFROM demo_books\nWHERE genre = 'history'\nORDER BY title\nLIMIT 2;\n```\nEXPLAIN QUERY PLAN reports how SQLite plans to find the result; it does not return the titles themselves. The exact plan text can vary. Without a helpful index it may scan rows and use temporary sorting work.",
+      "A scan examines many rows. An indexed search can use indexed keys to narrow the search. A composite index has more than one column in a chosen order. An index on genre, title first groups entries by genre, then orders titles within each genre. That fits a query that fixes one genre and sorts by title. LIMIT 2 asks for at most two returned rows.",
+      "Run this after the setup:\n```sql\nCREATE INDEX demo_genre_title\nON demo_books (genre, title);\nEXPLAIN QUERY PLAN\nSELECT title\nFROM demo_books\nWHERE genre = 'history'\nORDER BY title\nLIMIT 2;\nSELECT title\nFROM demo_books\nWHERE genre = 'history'\nORDER BY title\nLIMIT 2;\n```\nThe title result is Ancient Roads, then Stone Cities. The new plan may mention the named index. CREATE INDEX builds it; ON names the table and indexed columns. The query's requested rows remain the same.",
+      "An index costs storage and work during INSERT, UPDATE, and DELETE because its entries must stay current. SQLite chooses a plan; a tiny table may be fast even without an index. Timing depends on machine load, database size, and caching. Compare identical queries and verify identical results before calling an index helpful. A plan is evidence about strategy, not a guarantee of a particular duration.\n\nA full scan that checks each of n rows once has linear work, written O(n). If a 12-row table needs 12 comparisons, a similar 24-row full scan needs about 24: twice the input gives twice the comparisons. This describes growth of work, not a guaranteed elapsed time. An index may avoid that full scan for a suitable query.",
+      "The exercise fixture creates 1,000 books with a recursive number generator. WITH RECURSIVE names an intermediate numbers sequence; UNION ALL appends the next values until value < 1000 becomes false. The || operator joins text, forming titles such as Book 10. The % operator finds the remainder: value % 5 = 0 marks every fifth book history. CASE WHEN chooses history for that condition, otherwise fiction. These are setup mechanics; your task is to add the index and query.",
+      "Create the specifically named idx_books_genre_title on books(genre, title), then save the first five history titles in answer with ORDER BY title LIMIT 5. Titles sort as text: Book 100 appears before Book 20. The checks compare the index's key-column metadata and exact selected title membership. Display answer with an explicit ORDER BY title. Inspect the demonstrated EXPLAIN QUERY PLAN before and after; neither these checks nor a particular plan proves a speed gain."
+    ],
+    "analogy": {
+      "familiar": "A book shelf with an index card",
+      "connection": "The index groups titles by genre.",
+      "limit": "Indexes use storage and add write work; the engine may still choose a scan."
+    },
+    "steps": [
+      "Put `genre` first in the index because the query filters by genre.",
+      "Put `title` next in the index.",
+      "Compare the query plans before and after the index.",
+      "Compare the actual run times too."
+    ],
+    "starter": "CREATE TEMP TABLE answer AS SELECT title FROM books WHERE genre=\"history\" ORDER BY title LIMIT 5;",
+    "solution": "CREATE INDEX idx_books_genre_title ON books(genre, title);\nCREATE TEMP TABLE answer AS\nSELECT title\nFROM books\nWHERE genre=\"history\"\nORDER BY title\nLIMIT 5;\nSELECT title\nFROM answer\nORDER BY title;",
+    "runtime": "sql",
+    "checks": [
+      {
+        "label": "Index has the requested key columns",
+        "expression": "SELECT (SELECT count(*) FROM pragma_index_info('idx_books_genre_title'))=2 AND EXISTS(SELECT 1 FROM pragma_index_info('idx_books_genre_title') WHERE seqno=0 AND name='genre') AND EXISTS(SELECT 1 FROM pragma_index_info('idx_books_genre_title') WHERE seqno=1 AND name='title')"
+      },
+      {
+        "label": "Exact answer rows and multiplicities",
+        "expression": "WITH expected(\"title\") AS (VALUES ('Book 10'),('Book 100'),('Book 1000'),('Book 105'),('Book 110')), actual AS (SELECT \"title\",COUNT(*) AS multiplicity FROM \"answer\" GROUP BY \"title\"), wanted AS (SELECT \"title\",COUNT(*) AS multiplicity FROM expected GROUP BY \"title\") SELECT NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+      }
+    ],
+    "quiz": {
+      "question": "You add an index and rerun the same query on unchanged data. What should remain the same?",
+      "choices": [
+        "The exact query plan on every run",
+        "The query’s intended result rows",
+        "The measured runtime on every run"
+      ],
+      "answer": 1,
+      "explanation": "An index may change how SQLite obtains the answer, not which rows the query means to return. Timing and the chosen plan can vary."
+    },
+    "hints": [
+      "Create the named index on genre,title.",
+      "Keep the history condition and title ordering.",
+      "Inspect EXPLAIN QUERY PLAN; do not assume it got faster."
+    ],
+    "math": {
+      "explanation": "Linear work grows in proportion to input size.",
+      "question": "If n doubles from 10 to 20, about how many steps for O(n) work that took 10?",
+      "choices": [
+        "10",
+        "20",
+        "40"
+      ],
+      "answer": 1,
+      "feedback": "Doubling n roughly doubles linear work: about 20 steps."
+    },
+    "filename": "answer.sql",
+    "estimatedMinutes": 22,
+    "extraFiles": [
+      {
+        "name": "setup.sql",
+        "code": "CREATE TABLE books(id INTEGER PRIMARY KEY, title TEXT, genre TEXT);\nWITH RECURSIVE numbers(value) AS (SELECT 1 UNION ALL SELECT value+1 FROM numbers WHERE value<1000) INSERT INTO books(title,genre) SELECT \"Book \"||value, CASE WHEN value % 5=0 THEN \"history\" ELSE \"fiction\" END FROM numbers;"
+      }
+    ],
+    "externalNotes": "SQL fixtures and checks use SQLite syntax. Query-plan timing varies by database engine and machine; inspect EXPLAIN QUERY PLAN locally for the index exercise."
+  },
+  {
+    "id": "sql-09",
+    "title": "Transactions and consistency",
+    "summary": "Move a quantity between records atomically and handle a deliberate failure.",
+    "explanation": [
+      "A transaction groups related database changes into one unit. BEGIN starts the unit; COMMIT saves it; ROLLBACK discards its uncommitted changes. A transfer should subtract from one record and add the same quantity to another, so their total stays unchanged. Atomic means the intended changes succeed together or the earlier state is preserved.",
+      "Run this complete SQLite example in a fresh database:\n```sql\nCREATE TABLE demo_inventory (\n  id TEXT PRIMARY KEY,\n  quantity INTEGER NOT NULL CHECK(quantity >= 0)\n);\nINSERT INTO demo_inventory VALUES ('X', 12), ('Y', 5);\nBEGIN;\nUPDATE demo_inventory\nSET quantity = quantity - 4\nWHERE id = 'X' AND quantity >= 4;\nUPDATE demo_inventory\nSET quantity = quantity + 4\nWHERE id = 'Y' AND changes() = 1;\nCOMMIT;\nSELECT id, quantity FROM demo_inventory ORDER BY id;\n```\nX now has 8 and Y has 9; the total stays 17. NOT NULL requires a known quantity, and CHECK requires a nonnegative quantity.",
+      "The first UPDATE must match both the source id and sufficient stock. SQLite's changes() reports the row count changed by the most recently completed write. Immediately after that source UPDATE, changes() = 1 means one source row changed. The destination UPDATE uses that fact as its guard. Keep the two writes adjacent: an intervening write could change what changes() reports. This pattern assumes the supplied destination exists and the source key identifies one row.",
+      "Here is a rollback example after the first block:\n```sql\nBEGIN;\nUPDATE demo_inventory\nSET quantity = quantity - 2\nWHERE id = 'X';\nUPDATE demo_inventory\nSET quantity = quantity + 2\nWHERE id = 'Y';\nROLLBACK;\nSELECT id, quantity FROM demo_inventory ORDER BY id;\n```\nDuring the transaction the rows briefly become 6 and 11. ROLLBACK cancels both edits, so the final query still shows 8 and 9. Merely running statements next to each other without a transaction does not provide this recovery.",
+      "A SQL error does not always roll back an entire SQLite transaction automatically. Real transfer code must handle errors and issue ROLLBACK when needed. It must also verify the destination write; if that destination did not exist, guarding only the source would be insufficient. The exercise's fixed fixture provides both rows. Its deliberate failure is insufficient stock, handled by making both updates no-ops rather than by throwing an error.",
+      "In the exercise, transfer 3 from A's 10 to B's 4 inside a transaction. Require quantity >= 3 on the source and changes() = 1 on the immediately following destination update. Commit the valid transfer. Then CREATE TEMP TABLE before_failed AS SELECT id, quantity FROM inventory records the finished state for comparison. A snapshot here is a copied set of values, not another transfer.",
+      "Try the 99-unit attempt using the same guards. A has only 7, so the source changes zero rows; changes() is 0, so the destination also changes zero. COMMIT then saves no changes. Both stay at 7, their total remains 14, and the snapshot still matches. Conservation alone would not catch every incorrect distribution; check both individual quantities and unchanged state after rejection."
+    ],
+    "analogy": {
+      "familiar": "A labeled inventory ledger",
+      "connection": "Subtract from A and add the same quantity to B.",
+      "limit": "This fixture guards an impossible transfer; production failure recovery may also need rollback or savepoints."
+    },
+    "steps": [
+      "Require `quantity >= 3` before taking 3 from the source.",
+      "Use `changes()` to check that exactly one row changed.",
+      "Check both final quantities.",
+      "Check that their combined total stayed the same."
+    ],
+    "starter": "BEGIN;\nUPDATE inventory SET quantity=quantity-1 WHERE id=\"A\";\nUPDATE inventory SET quantity=quantity+1 WHERE id=\"B\";\nCOMMIT;",
+    "solution": "BEGIN;\nUPDATE inventory SET quantity=quantity-3 WHERE id=\"A\" AND quantity>=3;\nUPDATE inventory SET quantity=quantity+3 WHERE id=\"B\" AND changes()=1;\nCOMMIT;\nCREATE TEMP TABLE before_failed AS SELECT id, quantity FROM inventory;\nBEGIN;\nUPDATE inventory SET quantity=quantity-99 WHERE id=\"A\" AND quantity>=99;\nUPDATE inventory SET quantity=quantity+99 WHERE id=\"B\" AND changes()=1;\nCOMMIT;",
+    "runtime": "sql",
+    "checks": [
+      {
+        "label": "Exact inventory rows and multiplicities",
+        "expression": "WITH expected(\"id\",\"quantity\") AS (VALUES ('A',7),('B',7)), actual AS (SELECT \"id\",\"quantity\",COUNT(*) AS multiplicity FROM \"inventory\" GROUP BY \"id\",\"quantity\"), wanted AS (SELECT \"id\",\"quantity\",COUNT(*) AS multiplicity FROM expected GROUP BY \"id\",\"quantity\") SELECT NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+      },
+      {
+        "label": "Exact before_failed rows and multiplicities",
+        "expression": "WITH expected(\"id\",\"quantity\") AS (VALUES ('A',7),('B',7)), actual AS (SELECT \"id\",\"quantity\",COUNT(*) AS multiplicity FROM \"before_failed\" GROUP BY \"id\",\"quantity\"), wanted AS (SELECT \"id\",\"quantity\",COUNT(*) AS multiplicity FROM expected GROUP BY \"id\",\"quantity\") SELECT NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+      }
+    ],
+    "quiz": {
+      "question": "The source UPDATE matches zero rows because stock is insufficient. The immediately following destination UPDATE is guarded by changes()=1. What does it do?",
+      "choices": [
+        "Adds the requested amount anyway.",
+        "Changes no destination row.",
+        "Automatically rolls back every earlier transaction."
+      ],
+      "answer": 1,
+      "explanation": "changes() reports zero for that source write, so the destination guard is false. This no-op path is not a promise of automatic transaction rollback."
+    },
+    "hints": [
+      "Keep the valid pair of updates inside BEGIN and COMMIT.",
+      "Subtract and add the same quantity.",
+      "Guard the source; update the destination only if the source changed."
+    ],
+    "math": {
+      "explanation": "A transfer changes locations but preserves the total.",
+      "question": "Move 3 from 10 to 4. What is the new total?",
+      "choices": [
+        "11",
+        "14",
+        "17"
+      ],
+      "answer": 1,
+      "feedback": "10−3=7 and 4+3=7; 7+7=14, the original total."
+    },
+    "filename": "answer.sql",
+    "estimatedMinutes": 21,
+    "extraFiles": [
+      {
+        "name": "setup.sql",
+        "code": "CREATE TABLE inventory(id TEXT PRIMARY KEY, quantity INTEGER NOT NULL CHECK(quantity >= 0));\nINSERT INTO inventory VALUES (\"A\",10),(\"B\",4);\nCREATE TABLE transfer_audit(note TEXT);"
+      }
+    ]
+  },
+  {
+    "id": "sql-10",
+    "title": "A supply category directory",
+    "summary": "Create a view named category_directory with one column, category. Read supplies, omit NULL and empty-string categories, and keep each remaining category once. Display the view sorted by category. Keep spaces and capitalization as stored; the supplied categories need no cleanup.",
+    "explanation": [
+      "A directory should list each category once even when many supplies belong to it. A SQL table stores rows under named columns. SELECT chooses columns; FROM chooses a table. DISTINCT removes duplicate result rows. This lesson builds a reusable directory from the supplies table rather than manually typing the category names.",
+      "SELECT DISTINCT category returns each different category value once. DISTINCT applies to the whole selected row. If you also select item_name, two rows with the same category and different items remain different rows. Choose only the column that defines the directory entry.",
+      "This self-contained example uses a temporary set of values.\n```sql\nWITH supplies(category) AS (\n  VALUES ('paper'), ('tools'), ('paper')\n)\nSELECT DISTINCT category\nFROM supplies\nORDER BY category;\n```\nThe result has paper and tools once each. WITH gives this query a named input; it does not create a permanent table.",
+      "NULL represents missing information. It differs from the empty string, which is present text of length zero. Use category IS NOT NULL to omit missing values and category <> '' to omit empty text. The AND keyword requires both conditions to hold. Neither condition trims spaces or changes spelling.",
+      "A filter can run before duplicate removal.\n```sql\nWITH labels(name) AS (VALUES ('A'), (NULL), (''), ('A'), ('B'))\nSELECT DISTINCT name\nFROM labels\nWHERE name IS NOT NULL AND name <> ''\nORDER BY name;\n```\nThe result is A and B. ORDER BY requests output order explicitly; SQL does not promise a useful row order when it is omitted.",
+      "A view is a saved query, not a separate copy of its results. CREATE VIEW category_directory AS followed by SELECT defines the reusable query. Later, SELECT * FROM category_directory ORDER BY category displays it. If a new category is added to supplies, the view reads the new data without rebuilding a manual list.",
+      "The setup file creates supplies for each run. Your query should create the view without changing those source rows, then display the sorted directory. Checks look for duplicates and omitted empty values in the supplied data. After passing, add a new category in setup.sql and rerun: a real view derives its results from the source instead of storing a manually typed list."
+    ],
+    "analogy": {
+      "familiar": "A directory with one heading for each kind of supply",
+      "connection": "DISTINCT keeps each category heading once.",
+      "limit": "Distinctness follows database comparison rules; it does not know that differently spelled names might mean the same thing."
+    },
+    "steps": [
+      "Read the `supplies` table in `setup.sql`.",
+      "Create `category_directory` with `SELECT DISTINCT category` so each category appears once.",
+      "Leave out `NULL` and empty text.",
+      "Display the view with `ORDER BY category`.",
+      "Run the checks."
+    ],
+    "starter": "CREATE VIEW category_directory AS\nSELECT category FROM supplies WHERE 0;\n\nSELECT * FROM category_directory ORDER BY category;",
+    "solution": "CREATE VIEW category_directory AS\nSELECT DISTINCT category\nFROM supplies\nWHERE category IS NOT NULL AND category <> '';\n\nSELECT * FROM category_directory ORDER BY category;",
+    "runtime": "sql",
+    "checks": [
+      {
+        "label": "Each nonempty category appears once",
+        "expression": "SELECT count(*) = 3 AND count(DISTINCT category) = 3 FROM category_directory"
+      },
+      {
+        "label": "The directory contains the source categories",
+        "expression": "SELECT (SELECT group_concat(category, '|') FROM (SELECT category FROM category_directory ORDER BY category)) = 'craft|paper|tools'"
+      },
+      {
+        "label": "Empty and missing categories are absent",
+        "expression": "SELECT count(*) = 0 FROM category_directory WHERE category IS NULL OR category = ''"
+      }
+    ],
+    "quiz": {
+      "question": "Two rows are (\"Tools\", \"Hammer\") and (\"Tools\", \"Saw\"). How many rows does SELECT DISTINCT category return?",
+      "choices": [
+        "1",
+        "2",
+        "0"
+      ],
+      "answer": 0,
+      "explanation": "Only category is selected, so both result rows would be Tools. DISTINCT removes that duplicate; selecting the item name too would keep the rows different."
+    },
+    "hints": [
+      "Keep only category in the view's SELECT list.",
+      "Use WHERE category IS NOT NULL AND category <> ''.",
+      "Place DISTINCT immediately after SELECT."
+    ],
+    "math": null,
+    "filename": "query.sql",
+    "estimatedMinutes": 18,
+    "extraFiles": [
+      {
+        "name": "setup.sql",
+        "code": "CREATE TABLE supplies(id INTEGER PRIMARY KEY, item_name TEXT NOT NULL, category TEXT);\nINSERT INTO supplies VALUES (1,'Notebook','paper'),(2,'Scissors','tools'),(3,'Card','paper'),(4,'Ribbon','craft'),(5,'Unknown',NULL),(6,'Unsorted','');"
+      }
+    ]
+  },
+  {
+    "id": "sql-11",
+    "title": "A reachable contact list",
+    "summary": "Create a view contact_choices with id, name and contact for every row in contacts. Prefer a nonempty trimmed email, then a nonempty trimmed phone, otherwise use \"No contact yet\". The stored values can be NULL, empty, or contain outside spaces. Do not change the source table.",
+    "explanation": [
+      "A contact record may be missing an email, a phone number or both. NULL means a missing or unknown value in SQL. An empty string and spaces-only text are present strings, so they need cleanup before a fallback can treat them as missing. This project makes one useful display value per person.",
+      "TRIM(text) removes outside spaces in SQLite. It preserves spaces inside a phone number. TRIM(NULL) remains NULL. NULLIF(value, '') returns NULL when value is an empty string and otherwise returns value. Combining them turns an empty or spaces-only field into NULL.",
+      "This example shows the cleanup step.\n```sql\nWITH data(email) AS (VALUES ('  a@example.org  '), (''), ('   '), (NULL))\nSELECT NULLIF(TRIM(email), '') AS cleaned\nFROM data;\n```\nThe first result is a@example.org. The remaining values are NULL. AS cleaned gives the output column a useful name.",
+      "COALESCE chooses the first argument that is not NULL. Its argument order expresses your preference: cleaned email first, cleaned phone second, a written fallback last. COALESCE does not consider a plain empty string missing; that is why the NULLIF cleanup matters.",
+      "Here is a complete fallback example.\n```sql\nWITH people(email, phone) AS (VALUES ('   ', ' 555 0100 '))\nSELECT COALESCE(\n  NULLIF(TRIM(email), ''),\n  NULLIF(TRIM(phone), ''),\n  'No contact yet'\n) AS contact\nFROM people;\n```\nIt returns 555 0100. The outside spaces disappear but the internal space remains.",
+      "This is a display choice, not proof that an email or phone number is valid or reachable. Do not invent stricter validation than the task requests. Keep id and name in the view so a caller can associate the chosen contact with the right person. Every input person should produce one output row.",
+      "Create the contact_choices view and display it ordered by id. Check a person with both fields, phone only, neither field and spaces-only email. The preference rule must keep email when both are available. The source table should remain unchanged because formatting a view need not edit saved contact details."
+    ],
+    "analogy": {
+      "familiar": "Choosing the first usable contact line on a form",
+      "connection": "The ordered fallbacks try email, then phone, then a clear missing-contact message.",
+      "limit": "A nonempty value can still be mistyped; choosing it does not verify that it works."
+    },
+    "steps": [
+      "Use `TRIM` to remove spaces at the edges of each contact field.",
+      "Use `NULLIF` to treat empty text as missing.",
+      "Use `COALESCE` to choose email first, then phone, then the fallback message.",
+      "Make a view with `id`, `name`, and `contact` for every person.",
+      "Display the rows in `id` order.",
+      "Run the check that confirms the source data stayed unchanged."
+    ],
+    "starter": "CREATE VIEW contact_choices AS\nSELECT id, name, 'No contact yet' AS contact FROM contacts;\nSELECT * FROM contact_choices ORDER BY id;",
+    "solution": "CREATE VIEW contact_choices AS\nSELECT id, name, COALESCE(NULLIF(TRIM(email), ''), NULLIF(TRIM(phone), ''), 'No contact yet') AS contact\nFROM contacts;\nSELECT * FROM contact_choices ORDER BY id;",
+    "runtime": "sql",
+    "checks": [
+      {
+        "label": "Display formatting does not edit stored data",
+        "expression": "SELECT email='  mira@example.org  ' FROM contacts WHERE id=1"
+      },
+      {
+        "label": "Exact contact_choices rows and multiplicities",
+        "expression": "WITH expected(\"id\",\"name\",\"contact\") AS (VALUES (1,'Mira','mira@example.org'),(2,'Sam','555 0102'),(3,'Lee','No contact yet'),(4,'Jo','555 0104')), actual AS (SELECT \"id\",\"name\",\"contact\",COUNT(*) AS multiplicity FROM \"contact_choices\" GROUP BY \"id\",\"name\",\"contact\"), wanted AS (SELECT \"id\",\"name\",\"contact\",COUNT(*) AS multiplicity FROM expected GROUP BY \"id\",\"name\",\"contact\") SELECT NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+      }
+    ],
+    "quiz": {
+      "question": "What does COALESCE('', 'phone') return?",
+      "choices": [
+        "phone",
+        "An empty string",
+        "NULL"
+      ],
+      "answer": 1,
+      "explanation": "COALESCE skips NULL values, but an empty string is not NULL. NULLIF can turn the empty string into NULL first."
+    },
+    "hints": [
+      "NULLIF(TRIM(email), '') handles empty and spaces-only email.",
+      "Apply the same cleanup to phone.",
+      "Put 'No contact yet' last in COALESCE."
+    ],
+    "math": null,
+    "filename": "query.sql",
+    "estimatedMinutes": 25,
+    "extraFiles": [
+      {
+        "name": "setup.sql",
+        "code": "CREATE TABLE contacts(id INTEGER PRIMARY KEY, name TEXT NOT NULL, email TEXT, phone TEXT);\nINSERT INTO contacts VALUES (1,'Mira','  mira@example.org  ','555 0101'),(2,'Sam',NULL,' 555 0102 '),(3,'Lee','','   '),(4,'Jo','   ','555 0104');"
+      }
+    ]
+  },
+  {
+    "id": "sql-12",
+    "title": "An order status dashboard",
+    "summary": "Create a view customer_orders with customer_id, name, total_orders, paid_orders and paid_cents. Include every customer, even those without orders. Count all their orders, count only status=\"paid\" orders, and sum only paid amounts. Missing totals must be zero. Amounts are nonnegative integer cents.",
+    "explanation": [
+      "A dashboard may need several summaries from the same data. Aggregation combines rows, using functions such as COUNT and SUM. Conditional aggregation adds a decision inside the aggregate so different summary columns can include different rows. Here, a customer can have paid, pending or cancelled orders.",
+      "Start from customers and LEFT JOIN orders using the customer ID. A left join keeps a customer even when no order matches. The unmatched order columns become NULL. COUNT(*) would count that retained row as one, so use COUNT(o.id) to count only real orders; COUNT(column) skips NULL.",
+      "CASE turns a condition into a value before SUM adds it.\n```sql\nWITH orders(status, cents) AS (VALUES ('paid', 300), ('pending', 500), ('paid', 200))\nSELECT SUM(CASE WHEN status = 'paid' THEN 1 ELSE 0 END) AS paid_orders,\n       SUM(CASE WHEN status = 'paid' THEN cents ELSE 0 END) AS paid_cents\nFROM orders;\n```\nThis returns 2 paid orders and 500 paid cents. The pending amount is deliberately excluded.",
+      "GROUP BY chooses which rows belong to each summary. Group by customer ID and name. Names alone are unsafe because two different customers can share a name. Aliases such as c for customers and o for orders shorten qualified column names, including c.id and o.customer_id.",
+      "This example keeps a customer with no order.\n```sql\nWITH customers(id) AS (VALUES (1), (2)),\norders(id, customer_id) AS (VALUES (10, 1))\nSELECT c.id, COUNT(o.id) AS total_orders\nFROM customers AS c LEFT JOIN orders AS o ON o.customer_id = c.id\nGROUP BY c.id\nORDER BY c.id;\n```\nCustomer 1 has one order; customer 2 has zero. An inner join would lose customer 2 entirely.",
+      "Do not place WHERE o.status = 'paid' after the join: it would remove unpaid orders before total_orders is counted and remove customers without paid orders. Put that condition inside each paid aggregate. CASE with ELSE 0 gives the retained no-order row a zero contribution.",
+      "Integer cents avoid floating-point rounding for this small monetary total. The view summarizes orders; it does not charge anyone or infer payment from an amount. Checks include two customers sharing a name, a customer with no orders and unpaid orders that must not count toward revenue. Display the final view ordered by customer_id."
+    ],
+    "analogy": {
+      "familiar": "One summary line for each customer on a shop report",
+      "connection": "Conditional totals count different kinds of orders without losing the customer.",
+      "limit": "A summary depends on the stored status; it does not verify that a real payment occurred."
+    },
+    "steps": [
+      "Use `LEFT JOIN` to match customers to orders by customer ID.",
+      "Count `o.id` to count the orders.",
+      "Use one `CASE` expression to count paid orders.",
+      "Use another `CASE` expression to add paid amounts.",
+      "Group the results by customer ID and name.",
+      "Display the view."
+    ],
+    "starter": "CREATE VIEW customer_orders AS\nSELECT id AS customer_id, name, 0 AS total_orders, 0 AS paid_orders, 0 AS paid_cents FROM customers;\nSELECT * FROM customer_orders ORDER BY customer_id;",
+    "solution": "CREATE VIEW customer_orders AS\nSELECT c.id AS customer_id, c.name, COUNT(o.id) AS total_orders,\n       SUM(CASE WHEN o.status = 'paid' THEN 1 ELSE 0 END) AS paid_orders,\n       SUM(CASE WHEN o.status = 'paid' THEN o.amount_cents ELSE 0 END) AS paid_cents\nFROM customers AS c LEFT JOIN orders AS o ON o.customer_id = c.id\nGROUP BY c.id, c.name;\nSELECT * FROM customer_orders ORDER BY customer_id;",
+    "runtime": "sql",
+    "checks": [
+      {
+        "label": "All orders count, but only paid amounts contribute",
+        "expression": "SELECT count(*)=1 FROM customer_orders WHERE customer_id=1 AND name='Alex' AND total_orders=3 AND paid_orders=2 AND paid_cents=1750"
+      },
+      {
+        "label": "A customer with no orders stays with zero totals",
+        "expression": "SELECT count(*)=1 FROM customer_orders WHERE customer_id=2 AND total_orders=0 AND paid_orders=0 AND paid_cents=0"
+      },
+      {
+        "label": "Matching names remain separate and unpaid orders stay unpaid",
+        "expression": "SELECT (SELECT count(*) FROM customer_orders)=3 AND (SELECT count(*) FROM customer_orders WHERE customer_id=3 AND name='Alex' AND total_orders=2 AND paid_orders=0 AND paid_cents=0)=1"
+      }
+    ],
+    "quiz": {
+      "question": "After a LEFT JOIN, a customer with no orders has one retained row with o.id = NULL. What does COUNT(o.id) return for them?",
+      "choices": [
+        "NULL",
+        "0",
+        "1"
+      ],
+      "answer": 1,
+      "explanation": "COUNT(o.id) counts non-NULL IDs, so there are zero orders. COUNT(*) would instead count the retained placeholder row."
+    },
+    "hints": [
+      "Start from customers so people without orders remain.",
+      "Use SUM(CASE WHEN o.status = 'paid' THEN 1 ELSE 0 END).",
+      "For paid_cents, use o.amount_cents instead of 1; do not filter the whole query to paid rows."
+    ],
+    "math": null,
+    "filename": "query.sql",
+    "estimatedMinutes": 25,
+    "extraFiles": [
+      {
+        "name": "setup.sql",
+        "code": "CREATE TABLE customers(id INTEGER PRIMARY KEY, name TEXT NOT NULL);\nCREATE TABLE orders(id INTEGER PRIMARY KEY, customer_id INTEGER NOT NULL, status TEXT NOT NULL, amount_cents INTEGER NOT NULL);\nINSERT INTO customers VALUES (1,'Alex'),(2,'Rin'),(3,'Alex');\nINSERT INTO orders VALUES (10,1,'paid',1200),(11,1,'pending',900),(12,1,'paid',550),(13,3,'cancelled',800),(14,3,'pending',400);"
+      }
+    ]
+  },
+  {
+    "id": "sql-13",
+    "title": "A folder path explorer",
+    "summary": "Create a view folder_paths with id, path and depth from folders(id, name, parent_id). Roots have NULL parent_id, path equal to their name and depth 0. Children append \"/\" plus their name and increase depth by 1. Include every folder in the supplied acyclic forest. Names contain no slash; keep the source unchanged.",
+    "explanation": [
+      "A folder tree stores one row per folder and the ID of its parent. A root has no parent. A forest is a collection of separate trees, so there can be several roots. A recursive query repeatedly uses earlier results to find the next level. It can build full paths even when the depth varies.",
+      "A common table expression, or CTE, gives a query a temporary name after WITH. WITH RECURSIVE allows a CTE to refer to itself. It has an anchor query that provides starting rows and a recursive query that expands from them. UNION ALL combines the starting and later rows without removing duplicates.",
+      "This complete recursive example counts upward.\n```sql\nWITH RECURSIVE numbers(n) AS (\n  SELECT 0\n  UNION ALL\n  SELECT n + 1 FROM numbers WHERE n < 3\n)\nSELECT n FROM numbers ORDER BY n;\n```\nIt produces 0, 1, 2 and 3. The WHERE condition prevents further expansion after 3. A recursive query needs a reason to stop.",
+      "For folder paths, the anchor selects rows whose parent_id IS NULL. Give each root its own name as the path and zero as the depth. The recursive part joins a child folder to an already discovered parent path using child.parent_id = parent.id. When no undiscovered descendants remain to expand, the supplied acyclic tree is finished.",
+      "SQLite joins text with ||. Here is a small one-level example.\n```sql\nWITH parent(id, path, depth) AS (VALUES (1, 'Home', 0)),\nchild(id, name, parent_id) AS (VALUES (2, 'Notes', 1))\nSELECT child.id, parent.path || '/' || child.name AS path, parent.depth + 1 AS depth\nFROM child JOIN parent ON child.parent_id = parent.id;\n```\nThe output is ID 2, Home/Notes and depth 1. The full recursive query repeats that same expansion at every level.",
+      "The input contract guarantees an acyclic forest and existing parents. General untrusted graphs need cycle detection or another explicit bound; this exercise does not claim to handle arbitrary cycles. Start from every root so a second tree is not lost. Repeated folder names under different parents are allowed because IDs, not names, connect the rows.",
+      "Wrap the CTE query in CREATE VIEW folder_paths AS and select id, path and depth from its result. Display the view ORDER BY path. Checks include two roots, a deeper descendant and repeated names in different branches. A fixed number of self-joins would solve only a fixed depth; recursion expresses the repeated operation directly."
+    ],
+    "analogy": {
+      "familiar": "Following branches from each top-level folder",
+      "connection": "Each discovered parent provides the starting path for its children.",
+      "limit": "The supplied data is a tree; arbitrary cyclic relationships need additional handling."
+    },
+    "steps": [
+      "Make a recursive CTE with `id`, `path`, and `depth`. A CTE is a named query used by the main query.",
+      "Start with the root folders at depth zero.",
+      "Match each child folder to a parent already found.",
+      "Add the child’s name to the path.",
+      "Add one to the depth for each level.",
+      "Make this result available as `folder_paths`.",
+      "Display the paths in order."
+    ],
+    "starter": "CREATE VIEW folder_paths AS\nSELECT id, name AS path, 0 AS depth FROM folders WHERE parent_id IS NULL;\nSELECT * FROM folder_paths ORDER BY path;",
+    "solution": "CREATE VIEW folder_paths AS\nWITH RECURSIVE paths(id, path, depth) AS (\n  SELECT id, name, 0 FROM folders WHERE parent_id IS NULL\n  UNION ALL\n  SELECT child.id, parent.path || '/' || child.name, parent.depth + 1\n  FROM folders AS child JOIN paths AS parent ON child.parent_id = parent.id\n)\nSELECT id, path, depth FROM paths;\nSELECT * FROM folder_paths ORDER BY path;",
+    "runtime": "sql",
+    "checks": [
+      {
+        "label": "Both roots start at depth zero",
+        "expression": "SELECT count(*)=2 FROM folder_paths WHERE (id=1 AND path='Home' AND depth=0) OR (id=6 AND path='Work' AND depth=0)"
+      },
+      {
+        "label": "Paths reach the deeper descendant",
+        "expression": "SELECT count(*)=1 FROM folder_paths WHERE id=4 AND path='Home/Notes/Projects/Code' AND depth=3"
+      },
+      {
+        "label": "Repeated names retain their distinct parents and every ID appears once",
+        "expression": "SELECT (SELECT count(*) FROM folder_paths)=7 AND (SELECT count(DISTINCT id) FROM folder_paths)=7 AND (SELECT count(*) FROM folder_paths WHERE (id=2 AND path='Home/Notes' AND depth=1) OR (id=7 AND path='Work/Notes' AND depth=1))=2"
+      }
+    ],
+    "quiz": {
+      "question": "A forest has two roots, Home and Work, both with parent_id NULL. Which starting rows keep both trees in the recursive result?",
+      "choices": [
+        "Both roots",
+        "Only Home, because it appears first",
+        "Only children whose parent_id is not NULL"
+      ],
+      "answer": 0,
+      "explanation": "Every root must be an anchor row. Starting from just one root loses the other tree; recursive expansion then follows each selected root’s descendants."
+    },
+    "hints": [
+      "Use UNION ALL between anchor and recursive SELECT.",
+      "Join child.parent_id to parent.id, not the other way around.",
+      "Build parent.path || '/' || child.name and parent.depth + 1."
+    ],
+    "math": null,
+    "filename": "query.sql",
+    "estimatedMinutes": 35,
+    "extraFiles": [
+      {
+        "name": "setup.sql",
+        "code": "CREATE TABLE folders(id INTEGER PRIMARY KEY, name TEXT NOT NULL, parent_id INTEGER);\nINSERT INTO folders VALUES (1,'Home',NULL),(2,'Notes',1),(3,'Projects',2),(4,'Code',3),(5,'Photos',1),(6,'Work',NULL),(7,'Notes',6);"
+      }
+    ]
+  },
+  {
+    "id": "sql-14",
+    "title": "Keep subjects that meet the total",
+    "summary": "Create a view named qualifying_subjects with subject and total_minutes. Include subjects whose summed known minutes are at least 30. Display the result ordered by subject. Do not modify sessions.",
+    "explanation": [
+      "WHERE filters individual rows before they are grouped.",
+      "GROUP BY puts rows with the same group value together. SUM then adds the known numbers in each group.",
+      "HAVING filters the grouped results. It can ask a question about SUM(minutes).",
+      "This separate example keeps a group whose total reaches 20.\n```sql\nWITH practice(subject, minutes) AS (\n  VALUES ('Drawing', 8), ('Drawing', 14), ('Singing', 15)\n)\nSELECT subject, SUM(minutes) AS total_minutes\nFROM practice\nGROUP BY subject\nHAVING SUM(minutes) >= 20\nORDER BY subject;\n```",
+      "Drawing remains with 22 minutes. Neither individual Drawing row reaches 20, but the total does.",
+      "Using WHERE minutes >= 20 instead would remove both Drawing rows before addition. It answers a different question.",
+      "The >= comparison includes the exact boundary. A total of 30 qualifies when the minimum is 30.",
+      "SUM ignores NULL inputs. A group with only NULL minutes has an unknown total, so it does not pass this numeric condition.",
+      "Create the view from a grouped SELECT. A view saves the query; it is not a separate copied table.",
+      "Check a group that reaches the target through several small entries, one just below the target, and one with unknown minutes."
+    ],
+    "analogy": {
+      "familiar": "Follow a small change from its starting state to its result.",
+      "connection": "Each instruction changes what the next instruction receives.",
+      "limit": "Use the actual code and checks rather than relying on the comparison."
+    },
+    "steps": [
+      "Read the requirement.",
+      "Make one change to the starter.",
+      "Run the checks.",
+      "Explain why a changed input produces its result."
+    ],
+    "starter": "CREATE VIEW qualifying_subjects AS\nSELECT subject, SUM(minutes) AS total_minutes\nFROM sessions\nGROUP BY subject;\n-- TODO: filter totals before the semicolon above.\nSELECT * FROM qualifying_subjects ORDER BY subject;",
+    "solution": "CREATE VIEW qualifying_subjects AS\nSELECT subject, SUM(minutes) AS total_minutes\nFROM sessions\nGROUP BY subject\nHAVING SUM(minutes) >= 30;\nSELECT * FROM qualifying_subjects ORDER BY subject;",
+    "runtime": "sql",
+    "checks": [
+      {
+        "label": "Several small entries can meet the exact boundary",
+        "expression": "SELECT count(*)=1 FROM qualifying_subjects WHERE subject='Art' AND total_minutes=30"
+      },
+      {
+        "label": "Below-target and unknown totals are excluded",
+        "expression": "SELECT count(*)=0 FROM qualifying_subjects WHERE subject IN ('Music','Unknown')"
+      },
+      {
+        "label": "Known values still add when one value is missing",
+        "expression": "SELECT count(*)=1 FROM qualifying_subjects WHERE subject='Mixed' AND total_minutes=32"
+      },
+      {
+        "label": "Only the three qualifying groups remain",
+        "expression": "SELECT count(*)=3 AND sum(total_minutes)=97 FROM qualifying_subjects"
+      },
+      {
+        "label": "Source rows remain intact",
+        "expression": "SELECT count(*)=8 AND sum(minutes)=126 FROM sessions"
+      }
+    ],
+    "quiz": {
+      "question": "A subject has entries of 11 and 14 minutes. You want subjects totaling at least 25 minutes. What happens if you use WHERE minutes >= 25 before GROUP BY?",
+      "choices": [
+        "The subject remains because 11 + 14 = 25.",
+        "The subject appears twice.",
+        "Both rows disappear before the total can be calculated."
+      ],
+      "answer": 2,
+      "explanation": "WHERE evaluates each row: neither 11 nor 14 meets 25. HAVING SUM(minutes) >= 25 checks the combined total and would keep the subject."
+    },
+    "hints": [
+      "Keep rows available until the sum has been calculated.",
+      "Place HAVING after GROUP BY.",
+      "Use the aggregate SUM(minutes) in the group condition."
+    ],
+    "math": null,
+    "filename": "query.sql",
+    "estimatedMinutes": 16,
+    "extraFiles": [
+      {
+        "name": "setup.sql",
+        "code": "CREATE TABLE sessions(id INTEGER PRIMARY KEY, subject TEXT NOT NULL, minutes INTEGER);\nINSERT INTO sessions VALUES(1,'Art',12),(2,'Art',18),(3,'Music',29),(4,'Coding',35),(5,'Unknown',NULL),(6,'Mixed',10),(7,'Mixed',NULL),(8,'Mixed',22);"
+      }
+    ],
+    "externalNotes": "This practice executes SQLite. The threshold is inclusive; unknown is not treated as zero."
+  },
+  {
+    "id": "sql-15",
+    "title": "Keep every note attached to an author",
+    "summary": "Enable foreign keys and create notes with id INTEGER PRIMARY KEY, author_id INTEGER NOT NULL referencing authors(id), and title TEXT NOT NULL. Insert note 1 for author 2 with title Moon. Do not change authors.",
+    "explanation": [
+      "A constraint is a rule the database checks when data changes.",
+      "NOT NULL rejects a missing value in that column. It does not reject an empty string by itself.",
+      "A foreign key links a stored value to a key in another table. It can stop a note from naming an author who does not exist.",
+      "SQLite requires foreign-key enforcement to be enabled on the connection. Do this before beginning a transaction.\n```sql\nPRAGMA foreign_keys = ON;\n```",
+      "A reference declares which key must exist.\n```sql\nCREATE TABLE teams (id INTEGER PRIMARY KEY);\nCREATE TABLE players (\n  id INTEGER PRIMARY KEY,\n  team_id INTEGER NOT NULL REFERENCES teams(id)\n);\n```",
+      "With enforcement on, a player cannot refer to team 8 unless teams already has id 8.",
+      "The parent row must exist before its child is inserted.\n```sql\nINSERT INTO teams VALUES (8);\nINSERT INTO players VALUES (1, 8);\n```",
+      "An ordinary join reads relationships; it does not enforce them. The foreign-key constraint checks future writes.",
+      "In the practice, authors already contains ids 1 and 2. Create notes, then store the note belonging to author 2.",
+      "An attempt to use author 99 should fail instead of creating an orphan note. A missing author_id should fail because NOT NULL is also required. The project checks inspect connection/schema metadata and the accepted row. They do not execute expected failing writes as learner checks. The separate local constraint demonstrations in the later row-rule and relationship lessons show those errors; do not insert a deliberate failure into this normal solution."
+    ],
+    "analogy": {
+      "familiar": "Follow a small change from its starting state to its result.",
+      "connection": "Each instruction changes what the next instruction receives.",
+      "limit": "Use the actual code and checks rather than relying on the comparison."
+    },
+    "steps": [
+      "Read the requirement.",
+      "Make one change to the starter.",
+      "Run the checks.",
+      "Explain why a changed input produces its result."
+    ],
+    "starter": "PRAGMA foreign_keys = ON;\n-- TODO: create notes with the required constraints.\n-- Then insert the one requested note.",
+    "solution": "PRAGMA foreign_keys = ON;\nCREATE TABLE notes (id INTEGER PRIMARY KEY, author_id INTEGER NOT NULL REFERENCES authors(id), title TEXT NOT NULL);\nINSERT INTO notes (id, author_id, title) VALUES (1, 2, 'Moon');\nSELECT * FROM notes;",
+    "runtime": "sql",
+    "checks": [
+      {
+        "label": "Foreign-key enforcement is on",
+        "expression": "SELECT foreign_keys=1 FROM pragma_foreign_keys"
+      },
+      {
+        "label": "author_id references the authors key",
+        "expression": "SELECT count(*)=1 FROM pragma_foreign_key_list('notes') WHERE \"table\"='authors' AND \"from\"='author_id' AND \"to\"='id'"
+      },
+      {
+        "label": "Missing author and title are disallowed",
+        "expression": "SELECT count(*)=2 FROM pragma_table_info('notes') WHERE name IN ('author_id','title') AND \"notnull\"=1"
+      },
+      {
+        "label": "The requested note refers to its existing author",
+        "expression": "SELECT count(*)=1 FROM notes JOIN authors ON authors.id=notes.author_id WHERE notes.id=1 AND notes.title='Moon' AND authors.name='Jo'"
+      },
+      {
+        "label": "Source authors are unchanged",
+        "expression": "SELECT count(*)=2 AND sum(id)=3 FROM authors"
+      }
+    ],
+    "quiz": {
+      "question": "You declared a foreign key, but a new SQLite connection has foreign_keys off. Can you rely on that connection to reject a note for a missing author?",
+      "choices": [
+        "Yes; the column name author_id is enough.",
+        "No; enable enforcement on that connection before relying on it.",
+        "Yes; SELECT queries enable it automatically."
+      ],
+      "answer": 1,
+      "explanation": "Declaring a relationship and enabling its enforcement are different. SQLite connection settings must be checked before relying on writes being rejected."
+    },
+    "hints": [
+      "Declare REFERENCES authors(id) on author_id.",
+      "A reference alone still permits NULL unless you also use NOT NULL.",
+      "Insert the child only after the parent exists."
+    ],
+    "math": null,
+    "filename": "query.sql",
+    "estimatedMinutes": 16,
+    "extraFiles": [
+      {
+        "name": "setup.sql",
+        "code": "CREATE TABLE authors(id INTEGER PRIMARY KEY, name TEXT NOT NULL); INSERT INTO authors VALUES(1,'Ari'),(2,'Jo');"
+      }
+    ],
+    "externalNotes": "In-app checks inspect enforcement and the declared schema. Author validation separately attempted invalid inserts and confirmed rejection. Enforcement is connection-specific; do not assume a later connection inherits it."
+  },
+  {
+    "id": "sql-16",
+    "title": "Make one invitation list",
+    "summary": "Create a view invitations with one name column combining names in morning and afternoon, with each distinct name once. Display it alphabetically. Preserve both source tables.",
+    "explanation": [
+      "UNION combines the rows produced by two SELECT queries.",
+      "Both queries must return the same number of columns. Here each returns a single name column.",
+      "UNION removes duplicate result rows.\n```sql\nSELECT 'Ari' AS name\nUNION\nSELECT 'Ari' AS name;\n```",
+      "This returns one Ari row, not two.",
+      "UNION ALL keeps every result row, including repeated ones.\n```sql\nSELECT 'Ari' AS name\nUNION ALL\nSELECT 'Ari' AS name;\n```",
+      "This returns two Ari rows. Keeping duplicates is useful when each occurrence represents a separate event.",
+      "Use UNION for one invitation per distinct name in this simplified exercise. In a real contact system, names alone are not reliable unique person identifiers.",
+      "ORDER BY at the end sorts the combined result. It does not decide which duplicates are removed.",
+      "A view can save the combined SELECT for reuse. The source rows remain in their original tables."
+    ],
+    "analogy": {
+      "familiar": "Follow a small change from its starting state to its result.",
+      "connection": "Each instruction changes what the next instruction receives.",
+      "limit": "Use the actual code and checks rather than relying on the comparison."
+    },
+    "steps": [
+      "Read the requirement.",
+      "Make one change to the starter.",
+      "Run the checks.",
+      "Explain why a changed input produces its result."
+    ],
+    "starter": "CREATE VIEW invitations AS\nSELECT name FROM morning;\n-- TODO: combine afternoon names without duplicates.\nSELECT name FROM invitations ORDER BY name;",
+    "solution": "CREATE VIEW invitations AS\nSELECT name FROM morning\nUNION\nSELECT name FROM afternoon;\nSELECT name FROM invitations ORDER BY name;",
+    "runtime": "sql",
+    "checks": [
+      {
+        "label": "The shared name appears once",
+        "expression": "SELECT count(*)=1 FROM invitations WHERE name='Ari'"
+      },
+      {
+        "label": "Names from both groups remain",
+        "expression": "SELECT count(*)=3 AND sum(name IN ('Ari','Bo','Cy'))=3 FROM invitations"
+      },
+      {
+        "label": "Repeated rows inside one source are removed too",
+        "expression": "SELECT count(*)=1 FROM invitations WHERE name='Bo'"
+      },
+      {
+        "label": "Neither source table is changed",
+        "expression": "SELECT (SELECT count(*) FROM morning)=3 AND (SELECT count(*) FROM afternoon)=2"
+      }
+    ],
+    "quiz": {
+      "question": "One query returns Ari twice and another returns Ari once. How many Ari rows does UNION ALL return?",
+      "choices": [
+        "1",
+        "2",
+        "3"
+      ],
+      "answer": 2,
+      "explanation": "UNION ALL keeps all three occurrences. UNION without ALL would remove duplicates and return one Ari row."
+    },
+    "hints": [
+      "The two SELECT queries need the same output column shape.",
+      "UNION removes duplicate result rows; UNION ALL does not.",
+      "Put ORDER BY on the final query used to display the view."
+    ],
+    "math": null,
+    "filename": "query.sql",
+    "estimatedMinutes": 16,
+    "extraFiles": [
+      {
+        "name": "setup.sql",
+        "code": "CREATE TABLE morning(name TEXT NOT NULL);CREATE TABLE afternoon(name TEXT NOT NULL);INSERT INTO morning VALUES('Ari'),('Bo'),('Bo');INSERT INTO afternoon VALUES('Ari'),('Cy');"
+      }
+    ]
+  },
+  {
+    "id": "sql-17",
+    "title": "Find who joined and who is still waiting",
+    "summary": "Create joined(name) for names in both invited and attending, and waiting(name) for invited names not in attending. Each view should contain distinct names. Do not change either source table.",
+    "explanation": [
+      "INTERSECT keeps result rows that appear in both queries.",
+      "EXCEPT keeps rows from the first query that do not appear in the second.",
+      "Both operations compare result rows, not the physical positions of rows in the tables.",
+      "For sets A={Ari, Bo} and B={Bo, Cy}, the shared name is Bo. The names in A but not B contain Ari.",
+      "The order of EXCEPT matters. Reversing A and B gives Cy instead of Ari.",
+      "This complete example supplies both tables before comparing their rows.\n```sql\nCREATE TABLE morning(name TEXT);\nCREATE TABLE evening(name TEXT);\nINSERT INTO morning VALUES('Ari'),('Bo'),('Bo');\nINSERT INTO evening VALUES('Bo'),('Cy');\nSELECT name\nFROM morning\nINTERSECT\nSELECT name\nFROM evening\nORDER BY name;\nSELECT name\nFROM morning\nEXCEPT\nSELECT name\nFROM evening\nORDER BY name;\n```\nThe intersection returns Bo. The second result returns Ari: it starts with morning and removes shared names.",
+      "The result has distinct shared names. Duplicate occurrences do not turn one shared name into several rows.",
+      "For the waiting view, put invited first because you want invited people missing from attendance.",
+      "This simplified exercise identifies people by name. A real system should normally compare stable person IDs instead."
+    ],
+    "analogy": {
+      "familiar": "Follow a small change from its starting state to its result.",
+      "connection": "Each instruction changes what the next instruction receives.",
+      "limit": "Use the actual code and checks rather than relying on the comparison."
+    },
+    "steps": [
+      "Read the requirement.",
+      "Make one change to the starter.",
+      "Run the checks.",
+      "Explain why a changed input produces its result."
+    ],
+    "starter": "CREATE VIEW joined AS SELECT name FROM invited WHERE 0;\nCREATE VIEW waiting AS SELECT name FROM invited WHERE 0;\n-- TODO: replace the empty queries with the two set operations.",
+    "solution": "CREATE VIEW joined AS SELECT name FROM invited INTERSECT SELECT name FROM attending;\nCREATE VIEW waiting AS SELECT name FROM invited EXCEPT SELECT name FROM attending;\nSELECT name FROM joined ORDER BY name;\nSELECT name FROM waiting ORDER BY name;",
+    "runtime": "sql",
+    "checks": [
+      {
+        "label": "Sources remain unchanged",
+        "expression": "SELECT (SELECT count(*) FROM invited)=4 AND (SELECT count(*) FROM attending)=2"
+      },
+      {
+        "label": "Exact joined rows and multiplicities",
+        "expression": "WITH expected(\"name\") AS (VALUES ('Bo')), actual AS (SELECT \"name\",COUNT(*) AS multiplicity FROM \"joined\" GROUP BY \"name\"), wanted AS (SELECT \"name\",COUNT(*) AS multiplicity FROM expected GROUP BY \"name\") SELECT NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+      },
+      {
+        "label": "Exact waiting rows and multiplicities",
+        "expression": "WITH expected(\"name\") AS (VALUES ('Ari'),('Dee')), actual AS (SELECT \"name\",COUNT(*) AS multiplicity FROM \"waiting\" GROUP BY \"name\"), wanted AS (SELECT \"name\",COUNT(*) AS multiplicity FROM expected GROUP BY \"name\") SELECT NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+      }
+    ],
+    "quiz": {
+      "question": "A contains Ari and Bo. B contains Bo and Cy. What does B EXCEPT A return?",
+      "choices": [
+        "Ari",
+        "Bo",
+        "Cy"
+      ],
+      "answer": 2,
+      "explanation": "Start with B, then remove its shared Bo row. Cy remains; reversing the operands would ask a different question."
+    },
+    "hints": [
+      "Use INTERSECT for shared result rows.",
+      "Use EXCEPT with invited first for waiting people.",
+      "Compare the same output columns on each side."
+    ],
+    "math": null,
+    "filename": "query.sql",
+    "estimatedMinutes": 16,
+    "extraFiles": [
+      {
+        "name": "setup.sql",
+        "code": "CREATE TABLE invited(name TEXT NOT NULL); CREATE TABLE attending(name TEXT NOT NULL); INSERT INTO invited VALUES('Ari'),('Bo'),('Bo'),('Dee'); INSERT INTO attending VALUES('Bo'),('Cy');"
+      }
+    ]
+  },
+  {
+    "id": "sql-18",
+    "title": "Store each author name once",
+    "summary": "Create authors(id PRIMARY KEY,name) from the distinct author records in raw_notes, and notes(id PRIMARY KEY,author_id,title) from every raw note. Preserve raw_notes. Each author_id consistently has one name in this fixture.",
+    "explanation": [
+      "If every note repeats its author’s name, a name change may require updating many rows.\n\nThe supplied practice database contains raw_notes(note_id, author_id, author_name, title). The names inside parentheses are the available columns; use these exact identifiers when reading the fixture tables.",
+      "Missing one repeated copy creates inconsistent answers. This is an update anomaly.",
+      "Separate the author entity from the notes that refer to it. Store the name once under an author ID.",
+      "The notes keep author_id rather than their own repeated copy of the author name. A join can display the name when needed.",
+      "Two people can share a name, so use the supplied stable author_id to identify them.",
+      "INSERT INTO ... SELECT can populate a table from query results. This complete independent example copies distinct ID/name pairs.\n```sql\nCREATE TABLE raw_items(category_id INTEGER,category_name TEXT);\nCREATE TABLE categories(id INTEGER PRIMARY KEY,name TEXT);\nINSERT INTO raw_items VALUES(10,'paper'),(10,'paper'),(20,'tools');\nINSERT INTO categories(id,name)\nSELECT DISTINCT category_id,category_name\nFROM raw_items;\nSELECT id,name\nFROM categories\nORDER BY id;\n```\nThe result is 10/paper and 20/tools; the repeated source pair becomes one category.",
+      "DISTINCT removes repeated identical result rows. The fixture guarantees one name per ID; conflicting source names would require a separate resolution policy.",
+      "Copy every note into notes, preserving its note ID and relationship. Do not collapse different notes just because their author is the same.",
+      "Normalization organizes data by its dependencies. It is not simply splitting every column into its own table."
+    ],
+    "analogy": {
+      "familiar": "Follow a small change from its starting state to its result.",
+      "connection": "Each instruction changes what the next instruction receives.",
+      "limit": "Use the actual code and checks rather than relying on the comparison."
+    },
+    "steps": [
+      "Read the requirement.",
+      "Make one change to the starter.",
+      "Run the checks.",
+      "Explain why a changed input produces its result."
+    ],
+    "starter": "CREATE TABLE authors(id INTEGER PRIMARY KEY, name TEXT NOT NULL);\nCREATE TABLE notes(id INTEGER PRIMARY KEY, author_id INTEGER NOT NULL, title TEXT NOT NULL);\n-- TODO: populate both tables from raw_notes.",
+    "solution": "CREATE TABLE authors(id INTEGER PRIMARY KEY, name TEXT NOT NULL);\nCREATE TABLE notes(id INTEGER PRIMARY KEY, author_id INTEGER NOT NULL REFERENCES authors(id), title TEXT NOT NULL);\nINSERT INTO authors SELECT DISTINCT author_id, author_name FROM raw_notes;\nINSERT INTO notes SELECT note_id, author_id, title FROM raw_notes;\nSELECT notes.title, authors.name FROM notes JOIN authors ON authors.id=notes.author_id ORDER BY notes.id;",
+    "runtime": "sql",
+    "checks": [
+      {
+        "label": "Exact authors rows and multiplicities",
+        "expression": "WITH expected(\"id\",\"name\") AS (VALUES (10,'Sam'),(20,'Sam')), actual AS (SELECT \"id\",\"name\",COUNT(*) AS multiplicity FROM \"authors\" GROUP BY \"id\",\"name\"), wanted AS (SELECT \"id\",\"name\",COUNT(*) AS multiplicity FROM expected GROUP BY \"id\",\"name\") SELECT NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+      },
+      {
+        "label": "Exact notes rows and multiplicities",
+        "expression": "WITH expected(\"id\",\"author_id\",\"title\") AS (VALUES (1,10,'Moon'),(2,10,'Sun'),(3,20,'Sea')), actual AS (SELECT \"id\",\"author_id\",\"title\",COUNT(*) AS multiplicity FROM \"notes\" GROUP BY \"id\",\"author_id\",\"title\"), wanted AS (SELECT \"id\",\"author_id\",\"title\",COUNT(*) AS multiplicity FROM expected GROUP BY \"id\",\"author_id\",\"title\") SELECT NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+      },
+      {
+        "label": "Exact raw_notes rows and multiplicities",
+        "expression": "WITH expected(\"note_id\",\"author_id\",\"author_name\",\"title\") AS (VALUES (1,10,'Sam','Moon'),(2,10,'Sam','Sun'),(3,20,'Sam','Sea')), actual AS (SELECT \"note_id\",\"author_id\",\"author_name\",\"title\",COUNT(*) AS multiplicity FROM \"raw_notes\" GROUP BY \"note_id\",\"author_id\",\"author_name\",\"title\"), wanted AS (SELECT \"note_id\",\"author_id\",\"author_name\",\"title\",COUNT(*) AS multiplicity FROM expected GROUP BY \"note_id\",\"author_id\",\"author_name\",\"title\") SELECT NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+      }
+    ],
+    "quiz": {
+      "question": "Two authors are both named Sam, with IDs 10 and 20. Why should a notes table store author_id rather than use name as its identity?",
+      "choices": [
+        "IDs preserve which Sam wrote each note despite matching names.",
+        "Names always uniquely identify people.",
+        "A foreign key automatically changes the authors’ names."
+      ],
+      "answer": 0,
+      "explanation": "A display name can be shared or changed. The stable key keeps the relationship attached to the intended author."
+    },
+    "hints": [
+      "Select distinct ID/name pairs for authors.",
+      "Copy all note rows, not just one per author.",
+      "Keep the supplied author IDs instead of inventing new ones."
+    ],
+    "math": null,
+    "filename": "query.sql",
+    "estimatedMinutes": 16,
+    "extraFiles": [
+      {
+        "name": "setup.sql",
+        "code": "CREATE TABLE raw_notes(note_id INTEGER,author_id INTEGER,author_name TEXT,title TEXT); INSERT INTO raw_notes VALUES(1,10,'Sam','Moon'),(2,10,'Sam','Sun'),(3,20,'Sam','Sea');"
+      }
+    ]
+  },
+  {
+    "id": "sql-19",
+    "title": "Find customers who have paid orders",
+    "summary": "Create a view paid_customers(id,name) containing each customer with at least one paid order. Multiple paid orders must not duplicate that customer. Keep source tables unchanged.",
+    "explanation": [
+      "EXISTS asks whether a subquery returns at least one row.\n\nThe supplied practice database contains customers(id, name) and orders(id, customer_id, status). The names inside parentheses are the available columns; use these exact identifiers when reading the fixture tables.",
+      "It is a yes-or-no condition. It does not add all matching child rows to the outer result.",
+      "A correlated subquery refers to the current outer row. Run this complete example in a fresh database.\n```sql\nCREATE TABLE authors(id INTEGER PRIMARY KEY);\nCREATE TABLE books(id INTEGER PRIMARY KEY,author_id INTEGER);\nINSERT INTO authors VALUES(1),(2);\nINSERT INTO books VALUES(10,1),(11,1);\nSELECT a.id\nFROM authors AS a\nWHERE EXISTS(\nSELECT 1\nFROM books AS b\nWHERE b.author_id=a.id)\nORDER BY a.id;\nSELECT a.id\nFROM authors AS a\nWHERE NOT EXISTS(\nSELECT 1\nFROM books AS b\nWHERE b.author_id=a.id)\nORDER BY a.id;\n```\nThe first result contains ID 1 once, despite two matching books. The NOT EXISTS result contains ID 2.",
+      "For each author, the inner query asks whether any matching book exists. SELECT 1 is enough because the condition needs existence, not a book’s data.",
+      "Keep the relationship condition inside the subquery. Without b.author_id = a.id, any book could make every author qualify.",
+      "For your practice, require both the matching customer ID and status equal to paid.",
+      "A customer with no paid orders is excluded even if they have pending orders. A customer with several paid orders appears only once.",
+      "NOT EXISTS would ask the opposite question: no matching row. It differs from assuming every customer without a match has a zero-valued order."
+    ],
+    "analogy": {
+      "familiar": "Follow a small change from its starting state to its result.",
+      "connection": "Each instruction changes what the next instruction receives.",
+      "limit": "Use the actual code and checks rather than relying on the comparison."
+    },
+    "steps": [
+      "Read the requirement.",
+      "Make one change to the starter.",
+      "Run the checks.",
+      "Explain why a changed input produces its result."
+    ],
+    "starter": "CREATE VIEW paid_customers AS\nSELECT id, name FROM customers WHERE 0;\n-- TODO: use a correlated existence condition.",
+    "solution": "CREATE VIEW paid_customers AS\nSELECT c.id, c.name FROM customers AS c\nWHERE EXISTS (SELECT 1 FROM orders AS o WHERE o.customer_id=c.id AND o.status='paid');\nSELECT * FROM paid_customers ORDER BY id;",
+    "runtime": "sql",
+    "checks": [
+      {
+        "label": "Multiple paid orders do not duplicate the customer",
+        "expression": "SELECT count(*)=1 FROM paid_customers WHERE id=1"
+      },
+      {
+        "label": "Pending-only customers are excluded",
+        "expression": "SELECT count(*)=0 FROM paid_customers WHERE id=2"
+      },
+      {
+        "label": "No-order customers are excluded",
+        "expression": "SELECT count(*)=0 FROM paid_customers WHERE id=3"
+      },
+      {
+        "label": "All and only qualifying customers remain",
+        "expression": "SELECT count(*)=2 AND sum(id)=5 FROM paid_customers"
+      }
+    ],
+    "quiz": {
+      "question": "A customer has three paid orders. A query uses WHERE EXISTS for their paid orders. How many outer customer rows does this produce for that customer?",
+      "choices": [
+        "Three, one per order.",
+        "One, because existence is a condition on the customer row.",
+        "Zero, because EXISTS requires exactly one match."
+      ],
+      "answer": 1,
+      "explanation": "EXISTS is true when any match exists. It filters the outer customer row rather than multiplying it by the number of orders."
+    },
+    "hints": [
+      "Correlate o.customer_id with c.id.",
+      "Check paid status inside the same subquery.",
+      "EXISTS needs a match, not a count of exactly one."
+    ],
+    "math": null,
+    "filename": "query.sql",
+    "estimatedMinutes": 16,
+    "extraFiles": [
+      {
+        "name": "setup.sql",
+        "code": "CREATE TABLE customers(id INTEGER PRIMARY KEY,name TEXT);CREATE TABLE orders(id INTEGER PRIMARY KEY,customer_id INTEGER,status TEXT);INSERT INTO customers VALUES(1,'Ari'),(2,'Bo'),(3,'Cy'),(4,'Dee');INSERT INTO orders VALUES(1,1,'paid'),(2,1,'paid'),(3,2,'pending'),(4,4,'paid');"
+      }
+    ]
+  },
+  {
+    "id": "sql-20",
+    "title": "Summarize paid work in two readable steps",
+    "summary": "Create a view paid_totals(customer_id,total) summing paid order amounts by customer. Use an ordinary CTE named paid to first select paid orders. Keep only totals at least 10. Do not change orders.",
+    "explanation": [
+      "An ordinary common table expression gives a query result a temporary name within one statement.\n\nThe supplied practice database contains orders(customer_id, status, amount). The names inside parentheses are the available columns; use these exact identifiers when reading the fixture tables.",
+      "WITH introduces that name before the main query. Unlike a saved view, the name does not remain available to later statements.",
+      "This complete example names a filtered result before summing it. The first named row set supplies the input values.\n```sql\nWITH demo(amount) AS(VALUES(-2),(3),(4)),\npositive AS(\nSELECT amount\nFROM demo\nWHERE amount>0)\nSELECT SUM(amount) AS total\nFROM positive;\n```\nThe total is 7: only 3 and 4 contribute.",
+      "The name positive refers to the query result, not a separately stored table.",
+      "Breaking a complex query into named steps can make its intent easier to inspect. It does not automatically make it faster.",
+      "For this practice, paid selects the customer_id and amount of paid orders. The outer query groups that result and filters its totals.",
+      "HAVING applies the minimum to the group total. Applying the minimum to each original amount would discard small orders that should contribute.",
+      "CREATE VIEW can wrap the complete WITH statement so the final report has a reusable name."
+    ],
+    "analogy": {
+      "familiar": "Follow a small change from its starting state to its result.",
+      "connection": "Each instruction changes what the next instruction receives.",
+      "limit": "Use the actual code and checks rather than relying on the comparison."
+    },
+    "steps": [
+      "Read the requirement.",
+      "Make one change to the starter.",
+      "Run the checks.",
+      "Explain why a changed input produces its result."
+    ],
+    "starter": "CREATE VIEW paid_totals AS\nSELECT customer_id, SUM(amount) AS total FROM orders GROUP BY customer_id;\n-- TODO: filter paid rows in a CTE, then keep qualifying totals.",
+    "solution": "CREATE VIEW paid_totals AS\nWITH paid AS (SELECT customer_id, amount FROM orders WHERE status='paid')\nSELECT customer_id, SUM(amount) AS total FROM paid\nGROUP BY customer_id HAVING SUM(amount)>=10;\nSELECT * FROM paid_totals ORDER BY customer_id;",
+    "runtime": "sql",
+    "checks": [
+      {
+        "label": "Small paid orders can meet the combined boundary",
+        "expression": "SELECT count(*)=1 FROM paid_totals WHERE customer_id=1 AND total=10"
+      },
+      {
+        "label": "Pending money is excluded",
+        "expression": "SELECT count(*)=0 FROM paid_totals WHERE customer_id=2"
+      },
+      {
+        "label": "Only qualifying paid totals remain",
+        "expression": "SELECT count(*)=2 AND sum(total)=25 FROM paid_totals"
+      },
+      {
+        "label": "Source orders remain",
+        "expression": "SELECT count(*)=5 FROM orders"
+      }
+    ],
+    "quiz": {
+      "question": "A CTE named paid is defined in one SELECT statement. Can the next independent SELECT automatically read paid as a saved table?",
+      "choices": [
+        "Yes; every CTE permanently creates a table.",
+        "No; the CTE name belongs to its statement.",
+        "Only if the previous query returned more than one row."
+      ],
+      "answer": 1,
+      "explanation": "An ordinary CTE is a named query step scoped to one statement. A table or view is a separately created database object."
+    },
+    "hints": [
+      "Place WITH after CREATE VIEW ... AS.",
+      "The inner filter selects paid rows before grouping.",
+      "The outer HAVING checks the sum, not individual amounts."
+    ],
+    "math": null,
+    "filename": "query.sql",
+    "estimatedMinutes": 16,
+    "extraFiles": [
+      {
+        "name": "setup.sql",
+        "code": "CREATE TABLE orders(customer_id INTEGER,status TEXT,amount INTEGER);INSERT INTO orders VALUES(1,'paid',4),(1,'paid',6),(2,'pending',30),(2,'paid',3),(3,'paid',15);"
+      }
+    ]
+  },
+  {
+    "id": "sql-21",
+    "title": "Update an existing preference without duplicating it",
+    "summary": "Store theme=dark and language=en in settings. Existing theme must be updated, missing language inserted, and the unrelated font preference preserved. Use the key uniqueness constraint to handle conflicts.",
+    "explanation": [
+      "An INSERT can conflict with a UNIQUE or PRIMARY KEY constraint when its key already exists.",
+      "UPSERT describes what to do for that uniqueness conflict: update the matching row or leave it unchanged.",
+      "This complete example updates an existing key and inserts a missing one without removing the unrelated preference.\n```sql\nCREATE TABLE demo_settings(key TEXT PRIMARY KEY NOT NULL,value TEXT NOT NULL);\nINSERT INTO demo_settings VALUES('sound','on'),('font','large');\nINSERT INTO demo_settings(key,value) VALUES('sound','off') ON CONFLICT(key) DO UPDATE SET value=excluded.value;\nINSERT INTO demo_settings(key,value) VALUES('alerts','on') ON CONFLICT(key) DO UPDATE SET value=excluded.value;\nSELECT key,value\nFROM demo_settings\nORDER BY key;\n```\nThe rows are alerts/on, font/large and sound/off.",
+      "excluded.value refers to the value the attempted insertion would have stored.",
+      "The conflict target key chooses the uniqueness rule being handled. It does not mean every kind of constraint failure should be ignored.",
+      "Updating an existing row is different from adding a duplicate preference. The primary key ensures there is only one row per key.",
+      "For the practice, apply the same insert-or-update behavior to theme and language. Do not clear the settings table.",
+      "Check an existing key, a missing key, and an unrelated key that must survive unchanged."
+    ],
+    "analogy": {
+      "familiar": "Follow a small change from its starting state to its result.",
+      "connection": "Each instruction changes what the next instruction receives.",
+      "limit": "Use the actual code and checks rather than relying on the comparison."
+    },
+    "steps": [
+      "Read the requirement.",
+      "Make one change to the starter.",
+      "Run the checks.",
+      "Explain why a changed input produces its result."
+    ],
+    "starter": "-- TODO: insert or update theme=dark and language=en.\nSELECT * FROM settings ORDER BY key;",
+    "solution": "INSERT INTO settings(key,value) VALUES('theme','dark') ON CONFLICT(key) DO UPDATE SET value=excluded.value;\nINSERT INTO settings(key,value) VALUES('language','en') ON CONFLICT(key) DO UPDATE SET value=excluded.value;\nSELECT * FROM settings ORDER BY key;",
+    "runtime": "sql",
+    "checks": [
+      {
+        "label": "The existing theme is updated once",
+        "expression": "SELECT count(*)=1 FROM settings WHERE key='theme' AND value='dark'"
+      },
+      {
+        "label": "The missing language is inserted",
+        "expression": "SELECT count(*)=1 FROM settings WHERE key='language' AND value='en'"
+      },
+      {
+        "label": "An unrelated preference remains",
+        "expression": "SELECT count(*)=1 FROM settings WHERE key='font' AND value='large'"
+      },
+      {
+        "label": "There are no duplicate or removed keys",
+        "expression": "SELECT count(*)=3 FROM settings"
+      }
+    ],
+    "quiz": {
+      "question": "settings already contains theme=light. An insert attempts theme=dark with ON CONFLICT(key) DO UPDATE SET value=excluded.value. What is stored afterward?",
+      "choices": [
+        "Two theme rows.",
+        "One theme row with dark.",
+        "The theme row is removed."
+      ],
+      "answer": 1,
+      "explanation": "The key conflict chooses the update path. excluded.value is the attempted new value dark, so the existing row receives it."
+    },
+    "hints": [
+      "Use ON CONFLICT(key) after the insert values.",
+      "Read the incoming value through excluded.value.",
+      "Do not replace or drop the whole table."
+    ],
+    "math": null,
+    "filename": "query.sql",
+    "estimatedMinutes": 16,
+    "extraFiles": [
+      {
+        "name": "setup.sql",
+        "code": "CREATE TABLE settings(key TEXT PRIMARY KEY, value TEXT NOT NULL);INSERT INTO settings VALUES('theme','light'),('font','large');"
+      }
+    ]
+  },
+  {
+    "id": "sql-22",
+    "title": "Undo a trial change but keep the approved change",
+    "summary": "Begin a transaction. Increase account 1 balance from 10 to 15, then create savepoint trial. Temporarily set account 2 balance to 99, roll back only to trial, release it, and commit. Final balances must be 15 and 20.",
+    "explanation": [
+      "A transaction can contain a named savepoint for a smaller reversible portion of its work.",
+      "ROLLBACK TO returns to the state at that savepoint without cancelling the whole outer transaction.",
+      "Changes made before the savepoint remain part of the transaction.",
+      "This complete example makes both changes visible before choosing which part to undo.\n```sql\nCREATE TABLE demo_accounts(id INTEGER PRIMARY KEY,balance INTEGER);\nINSERT INTO demo_accounts VALUES(1,10),(2,20);\nBEGIN;\nUPDATE demo_accounts SET balance=15\nWHERE id=1;\nSAVEPOINT trial;\nUPDATE demo_accounts SET balance=99\nWHERE id=2;\nROLLBACK TO trial;\nRELEASE trial;\nCOMMIT;\nSELECT id,balance\nFROM demo_accounts\nORDER BY id;\n```\nThe final rows are 1/15 and 2/20: the first change survives, the later trial change does not.",
+      "ROLLBACK TO does not itself remove the named savepoint. RELEASE removes that mark after you are finished with it.",
+      "Releasing an inner savepoint is not the same as committing the outer transaction. A later outer rollback can still undo its changes.",
+      "In this practice, the first account changes before trial. Only the second account’s tentative update should be undone.",
+      "Use this only on the supplied isolated data. It is a transaction lesson, not a real financial operation."
+    ],
+    "analogy": {
+      "familiar": "Follow a small change from its starting state to its result.",
+      "connection": "Each instruction changes what the next instruction receives.",
+      "limit": "Use the actual code and checks rather than relying on the comparison."
+    },
+    "steps": [
+      "Read the requirement.",
+      "Make one change to the starter.",
+      "Run the checks.",
+      "Explain why a changed input produces its result."
+    ],
+    "starter": "BEGIN;\nUPDATE accounts SET balance=15 WHERE id=1;\nSAVEPOINT trial;\nUPDATE accounts SET balance=99 WHERE id=2;\n-- TODO: undo the tentative section and finish the transaction.",
+    "solution": "BEGIN;\nUPDATE accounts SET balance=15 WHERE id=1;\nSAVEPOINT trial;\nUPDATE accounts SET balance=99 WHERE id=2;\nROLLBACK TO trial;\nRELEASE trial;\nCOMMIT;\nSELECT * FROM accounts ORDER BY id;",
+    "runtime": "sql",
+    "checks": [
+      {
+        "label": "The approved earlier change remains",
+        "expression": "SELECT balance=15 FROM accounts WHERE id=1"
+      },
+      {
+        "label": "The tentative change is undone",
+        "expression": "SELECT balance=20 FROM accounts WHERE id=2"
+      },
+      {
+        "label": "No rows were removed",
+        "expression": "SELECT count(*)=2 FROM accounts"
+      }
+    ],
+    "quiz": {
+      "question": "You update A, create savepoint S, update B, then ROLLBACK TO S. Which changes remain in the open transaction?",
+      "choices": [
+        "A remains; B is undone.",
+        "Both A and B are committed permanently.",
+        "A is undone; B remains."
+      ],
+      "answer": 0,
+      "explanation": "The savepoint was established after A and before B. Rolling back to it removes the later portion, not the earlier work."
+    },
+    "hints": [
+      "Rollback to the named savepoint, not the entire transaction.",
+      "Release the savepoint after returning to it.",
+      "Commit the outer transaction after the intended state is restored."
+    ],
+    "math": null,
+    "filename": "query.sql",
+    "estimatedMinutes": 16,
+    "extraFiles": [
+      {
+        "name": "setup.sql",
+        "code": "CREATE TABLE accounts(id INTEGER PRIMARY KEY,balance INTEGER);INSERT INTO accounts VALUES(1,10),(2,20);"
+      }
+    ]
+  },
+  {
+    "id": "sql-23",
+    "title": "Calculate a next-day reminder",
+    "summary": "Create reminders(id,reminder_date) as a view that returns the calendar day after each stored event_date. Dates in this fixture are valid YYYY-MM-DD text dates. Use SQLite date functions, not numeric addition on the string.",
+    "explanation": [
+      "SQLite does not have a dedicated date datatype. Applications choose a consistent supported representation.",
+      "This fixture uses YYYY-MM-DD text for calendar dates without a time of day.",
+      "date accepts supported date text and modifiers.\n```sql\nSELECT date('2026-04-30', '+1 day');\n```",
+      "The result is 2026-05-01. The date function handles the month boundary.",
+      "Adding the number 1 to a text date is not calendar arithmetic. Use the date function for this contract.",
+      "A leap day is a useful boundary test. The day after 2024-02-28 is 2024-02-29.",
+      "Calendar dates are not the same as timezone-aware instants. If your app stores moments, choose and document an explicit timezone/UTC policy separately.",
+      "This exercise uses fixed supplied dates, not the current clock, so tests remain reproducible."
+    ],
+    "analogy": {
+      "familiar": "Follow a small change from its starting state to its result.",
+      "connection": "Each instruction changes what the next instruction receives.",
+      "limit": "Use the actual code and checks rather than relying on the comparison."
+    },
+    "steps": [
+      "Read the requirement.",
+      "Make one change to the starter.",
+      "Run the checks.",
+      "Explain why a changed input produces its result."
+    ],
+    "starter": "CREATE VIEW reminders AS SELECT id, event_date AS reminder_date FROM events;\n-- TODO: compute the following calendar day.",
+    "solution": "CREATE VIEW reminders AS SELECT id, date(event_date, '+1 day') AS reminder_date FROM events;\nSELECT * FROM reminders ORDER BY id;",
+    "runtime": "sql",
+    "checks": [
+      {
+        "label": "Month end advances correctly",
+        "expression": "SELECT reminder_date='2026-05-01' FROM reminders WHERE id=1"
+      },
+      {
+        "label": "Leap year is respected",
+        "expression": "SELECT reminder_date='2024-02-29' FROM reminders WHERE id=2"
+      },
+      {
+        "label": "Year end advances correctly",
+        "expression": "SELECT reminder_date='2027-01-01' FROM reminders WHERE id=3"
+      },
+      {
+        "label": "Every event is retained",
+        "expression": "SELECT count(*)=3 FROM reminders"
+      }
+    ],
+    "quiz": {
+      "question": "Why is event_date + 1 not a reliable way to find the next day for a text date?",
+      "choices": [
+        "Numeric addition does not apply calendar month/year rules to the text representation.",
+        "Every month has exactly thirty days.",
+        "SQLite date functions always use today instead of supplied dates."
+      ],
+      "answer": 0,
+      "explanation": "Calendar arithmetic has boundaries and representation rules. date(value, \"+1 day\") interprets the supported date text instead of treating it as an ordinary number."
+    },
+    "hints": [
+      "Use date(event_date, modifier).",
+      "The modifier is the text +1 day.",
+      "Preserve the event ID in the result."
+    ],
+    "math": null,
+    "filename": "query.sql",
+    "estimatedMinutes": 16,
+    "extraFiles": [
+      {
+        "name": "setup.sql",
+        "code": "CREATE TABLE events(id INTEGER PRIMARY KEY,event_date TEXT NOT NULL);INSERT INTO events VALUES(1,'2026-04-30'),(2,'2024-02-28'),(3,'2026-12-31');"
+      }
+    ]
+  },
+  {
+    "id": "sql-24",
+    "title": "Record only real title changes",
+    "summary": "Create an AFTER UPDATE OF title trigger named record_title_change on notes. When the new title differs from the old title, insert note ID, old title, and new title into note_audit. Then run the supplied updates; an unchanged title must not create an audit row.",
+    "explanation": [
+      "A trigger is database work that runs automatically when its specified event happens. Unlike a SELECT, it can cause additional writes.",
+      "The supplied database has notes(id,title) and note_audit(note_id,old_title,new_title). Titles are never NULL in this fixture.",
+      "In an UPDATE trigger, OLD refers to the row before the update and NEW refers to the row after it. OLD.title and NEW.title read those two title values.",
+      "Run this complete trigger example in a fresh database, separate from the notes project.\n```sql\nCREATE TABLE demo(id INTEGER PRIMARY KEY,label TEXT NOT NULL);\nCREATE TABLE demo_log(old_label TEXT,new_label TEXT);\nINSERT INTO demo VALUES(1,'Draft');\nCREATE TRIGGER log_label AFTER UPDATE OF label ON demo\nWHEN NEW.label <> OLD.label\nBEGIN\n INSERT INTO demo_log(old_label,new_label) VALUES(OLD.label,NEW.label);\nEND;\nUPDATE demo SET label='Ready'\nWHERE id=1;\nUPDATE demo SET label='Ready'\nWHERE id=1;\nSELECT old_label,new_label\nFROM demo_log;\n```\nOnly Draft/Ready is logged. The second assignment triggers the event but fails the WHEN condition.",
+      "AFTER means the row update happens before this trigger’s work. UPDATE OF title identifies updates assigning that column, even when the assigned value equals the old value.",
+      "WHEN NEW.title <> OLD.title limits the trigger to changed titles. The <> operator means not equal. Use NEW.id for the note identity.",
+      "The supplied operations change note 1 from Moon to Moon draft, leave note 2 at Sea, then change note 1 to Moon final. The audit should contain exactly the two actual changes, in their recorded order.",
+      "Use the isolated practice data only. Triggers run inside database operations and their effects participate in transactions; test them before applying them to real stored data."
+    ],
+    "analogy": {
+      "familiar": "Follow a small change from its starting state to its result.",
+      "connection": "Each instruction changes what the next instruction receives.",
+      "limit": "Use the actual code and checks rather than relying on the comparison."
+    },
+    "steps": [
+      "Read the requirement.",
+      "Make one change to the starter.",
+      "Run the checks.",
+      "Explain why a changed input produces its result."
+    ],
+    "starter": "-- TODO: define record_title_change before these updates.\nUPDATE notes SET title='Moon draft' WHERE id=1;\nUPDATE notes SET title='Sea' WHERE id=2;\nUPDATE notes SET title='Moon final' WHERE id=1;",
+    "solution": "CREATE TRIGGER record_title_change AFTER UPDATE OF title ON notes\nWHEN NEW.title <> OLD.title\nBEGIN\n INSERT INTO note_audit(note_id,old_title,new_title) VALUES(NEW.id,OLD.title,NEW.title);\nEND;\nUPDATE notes SET title='Moon draft' WHERE id=1;\nUPDATE notes SET title='Sea' WHERE id=2;\nUPDATE notes SET title='Moon final' WHERE id=1;\nSELECT * FROM note_audit ORDER BY rowid;",
+    "runtime": "sql",
+    "checks": [
+      {
+        "label": "Exactly two changed rows audited",
+        "expression": "SELECT count(*)=2 FROM note_audit"
+      },
+      {
+        "label": "Original to first new title",
+        "expression": "SELECT count(*)=1 FROM note_audit WHERE note_id=1 AND old_title='Moon' AND new_title='Moon draft'"
+      },
+      {
+        "label": "Second real change",
+        "expression": "SELECT count(*)=1 FROM note_audit WHERE note_id=1 AND old_title='Moon draft' AND new_title='Moon final'"
+      },
+      {
+        "label": "Unchanged note not audited",
+        "expression": "SELECT count(*)=0 FROM note_audit WHERE note_id=2"
+      },
+      {
+        "label": "Exact notes rows and multiplicities",
+        "expression": "WITH expected(\"id\",\"title\") AS (VALUES (1,'Moon final'),(2,'Sea')), actual AS (SELECT \"id\",\"title\",COUNT(*) AS multiplicity FROM \"notes\" GROUP BY \"id\",\"title\"), wanted AS (SELECT \"id\",\"title\",COUNT(*) AS multiplicity FROM expected GROUP BY \"id\",\"title\") SELECT NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+      }
+    ],
+    "quiz": {
+      "question": "An UPDATE assigns the same title it already had. Why is the WHEN comparison needed in this trigger?",
+      "choices": [
+        "UPDATE OF can fire for that assignment even though the title value did not change.",
+        "AFTER triggers never see the previous value.",
+        "The comparison makes unchanged data disappear."
+      ],
+      "answer": 0,
+      "explanation": "The event identifies the update operation; the condition separately decides whether the value actually differs."
+    },
+    "hints": [
+      "Trace the changed case using the primary lesson before editing."
+    ],
+    "math": null,
+    "filename": "query.sql",
+    "estimatedMinutes": 16,
+    "extraFiles": [
+      {
+        "name": "setup.sql",
+        "code": "CREATE TABLE notes(id INTEGER PRIMARY KEY,title TEXT NOT NULL); CREATE TABLE note_audit(note_id INTEGER, old_title TEXT, new_title TEXT); INSERT INTO notes VALUES(1,'Moon'),(2,'Sea');"
+      }
+    ]
+  }
+]

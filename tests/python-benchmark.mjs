@@ -1,0 +1,13 @@
+import assert from'node:assert/strict';import fs from'node:fs';import{createHash}from'node:crypto';import{historicalBenchmarkBaseline}from'./python-authorized-baseline.mjs';
+const read=p=>JSON.parse(fs.readFileSync(p)),root='docs/python-benchmark-v1/';
+const canonical=x=>Array.isArray(x)?x.map(canonical):x&&typeof x==='object'?Object.fromEntries(Object.keys(x).sort().map(k=>[k,canonical(x[k])])):x;const hash=x=>createHash('sha256').update(JSON.stringify(canonical(x))).digest('hex');
+const lessons=read('content/lessons.json'),units=read('content/catalog.json').units,terms=read('content/terminology.json'),base=read(root+'preservation-baseline.json'),frozen=read(root+'all-twenty-one.json'),deltas=read(root+'authorized-deltas.json');
+assert.equal(lessons.length,1088);assert.equal(terms.length,942);assert.equal(lessons.filter(l=>l.id.startsWith('python-')).length,92);assert.equal(deltas.length,3);
+assert.equal(hash(historicalBenchmarkBaseline(lessons.slice(0,928))),base.lessons928);assert.equal(hash(historicalBenchmarkBaseline(units.slice(0,928))),base.units928);assert.deepEqual(terms.slice(0,782),base.terms782);assert.deepEqual(read('content/course-descriptions.json'),base.courseDescriptions);
+assert.deepEqual(lessons.slice(928,949),frozen.lessons);assert.deepEqual(units.slice(928,949),frozen.units);
+for(const d of deltas){const row=(d.kind==='paragraph'?lessons:units).find(l=>l.id===d.id);assert.deepEqual(d.kind==='paragraph'?row.explanation[d.paragraph]:row[d.field],d.after);}
+const runtime=read(root+'runtime-evidence/summary.json');assert.equal(runtime.passed,427);assert.equal(runtime.lessons,92);assert.equal(runtime.projectChecksPerRuntime,302);assert.equal(runtime.nativePackagingPipelines,2);for(const[p,h]of Object.entries(runtime.hashes))assert.equal(createHash('sha256').update(fs.readFileSync(root+p)).digest('hex'),h);
+const heads=read(root+'all-headings.json');assert.equal(Object.keys(heads).length,21);for(const[id,items]of Object.entries(heads)){assert.equal(items[0].index,0);const l=lessons.find(l=>l.id===id);for(const h of items)assert.ok(l.explanation[h.index]);}
+console.log('PASS Python92 benchmark21:949 lessons/803 terms, exact frozen additions and3 authorized old-field deltas; every other928 lesson/unit field and782 prior terms preserved;427 source-matched runtime cases and2 native offline packaging pipelines.');
+
+const functions=read(root+"all-function-evidence.json");assert.equal(functions.length,84);for(const e of functions){const p=lessons.find(l=>l.id===e.lessonId).explanation[e.paragraph];assert.ok(p.includes(e.visibleCall),e.lessonId+":"+e.target);}

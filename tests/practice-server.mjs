@@ -14,7 +14,7 @@ const require = createRequire(import.meta.url);
 const query = (sql, params = []) => {
   const code =
     "import sqlite3,json,sys\nc=sqlite3.connect(sys.argv[1]);c.row_factory=sqlite3.Row\nsql,p=json.loads(sys.stdin.read());r=c.execute(sql,p);out=[dict(x) for x in r.fetchall()];c.commit();c.close();print(json.dumps(out))";
-  const result = spawnSync("python3", ["-c", code, sqlite], {
+  const result = spawnSync(process.env.PYTHON || "python3", ["-c", code, sqlite], {
     input: JSON.stringify([sql, params]),
     encoding: "utf8",
   });
@@ -194,6 +194,10 @@ try {
   const usage = () =>
     query("SELECT SUM(tutor_used) AS used FROM activity")[0].used ?? 0;
   let assertions = 0;
+  const beforeConceptCalls=calls.length,beforeConceptUsage=usage();
+  for(const concept of lessons.filter(l=>l.learningMode==='concept')){const rejected=await send({baseUnitId:concept.id});assert.equal(rejected.status,400);assert.match((await rejected.json()).error,/without a supported coding runtime/);}
+  assert.equal(calls.length,beforeConceptCalls);assert.equal(usage(),beforeConceptUsage);
+
   for (const provider of providers.providerIds) {
     connection = { provider, key: "synthetic-personal-practice-key" };
     answer = JSON.stringify(generated());

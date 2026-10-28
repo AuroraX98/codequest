@@ -1,0 +1,342 @@
+[
+  {
+    "id": "python-56-solution",
+    "lessonId": "python-56",
+    "mode": "solution",
+    "code": "def route(command):\n    match command:\n        case [\"greet\", name] if isinstance(name, str):\n            return f\"Hello {name}\"\n        case [\"pause\"]:\n            return \"Paused\"\n        case _:\n            return \"Unknown\"\n",
+    "checks": [
+      {
+        "label": "String greeting and exact name",
+        "expression": "route([\"greet\", \"Caf\u00e9 day\"]) == \"Hello Caf\u00e9 day\""
+      },
+      {
+        "label": "Literal case",
+        "expression": "route([\"pause\"]) == \"Paused\""
+      },
+      {
+        "label": "Guard and shape rejection",
+        "expression": "route([\"greet\", 7]) == \"Unknown\" and route([\"greet\", \"A\", \"B\"]) == \"Unknown\" and route(\"pause\") == \"Unknown\""
+      },
+      {
+        "label": "Tuple sequence and empty input",
+        "expression": "route((\"greet\", \"Ada\")) == \"Hello Ada\" and route([]) == \"Unknown\""
+      }
+    ],
+    "extraFiles": []
+  },
+  {
+    "id": "python-57-solution",
+    "lessonId": "python-57",
+    "mode": "solution",
+    "code": "def utf8_summary(text):\n    encoded = text.encode(\"utf-8\")\n    return len(encoded), encoded.decode(\"utf-8\")",
+    "checks": [
+      {
+        "label": "Multibyte and ASCII",
+        "expression": "utf8_summary(\"\u00e9\") == (2, \"\u00e9\") and utf8_summary(\"A\") == (1, \"A\")"
+      },
+      {
+        "label": "Empty text",
+        "expression": "utf8_summary(\"\") == (0, \"\")"
+      },
+      {
+        "label": "Exact combining sequence and emoji",
+        "expression": "utf8_summary(\"e\u0301\") == (3, \"e\u0301\") and utf8_summary(\"\ud83c\udf31\") == (4, \"\ud83c\udf31\")"
+      }
+    ],
+    "extraFiles": []
+  },
+  {
+    "id": "python-58-solution",
+    "lessonId": "python-58",
+    "mode": "solution",
+    "code": "import math\n\ndef close_readings(a, b):\n    return math.isclose(a, b, rel_tol=1e-6, abs_tol=1e-9)",
+    "checks": [
+      {
+        "label": "Decimal approximation",
+        "expression": "close_readings(0.1 + 0.2, 0.3) is True"
+      },
+      {
+        "label": "Magnitude-relative tolerance",
+        "expression": "close_readings(100.0, 100.00005) is True and close_readings(100.0, 100.01) is False"
+      },
+      {
+        "label": "Near-zero absolute tolerance",
+        "expression": "close_readings(0.0, 1e-10) is True and close_readings(0.0, 1e-7) is False"
+      },
+      {
+        "label": "Symmetric negative readings",
+        "expression": "close_readings(-100.0, -100.00005) is True and close_readings(-100.00005, -100.0) is True"
+      }
+    ],
+    "extraFiles": []
+  },
+  {
+    "id": "python-59-solution",
+    "lessonId": "python-59",
+    "mode": "solution",
+    "code": "import greeting_tool\n\ndef personal_greeting(name):\n    return greeting_tool.greeting(name)",
+    "checks": [
+      {
+        "label": "Import is quiet",
+        "expression": "__output == []"
+      },
+      {
+        "label": "Reusable module call",
+        "expression": "personal_greeting(\"Ada\") == \"Hello Ada\" and personal_greeting(\"Caf\u00e9\") == \"Hello Caf\u00e9\""
+      },
+      {
+        "label": "Empty name follows stated greeting",
+        "expression": "personal_greeting(\"\") == \"Hello \""
+      }
+    ],
+    "extraFiles": [
+      {
+        "name": "greeting_tool.py",
+        "code": "def greeting(name):\n    return f\"Hello {name}\"\n\ndef main():\n    print(greeting(\"Reader\"))\n\nif __name__ == \"__main__\":\n    main()\n"
+      }
+    ]
+  },
+  {
+    "id": "python-60-solution",
+    "lessonId": "python-60",
+    "mode": "solution",
+    "code": "class Label:\n    def __init__(self, text):\n        self.text = text\n\n    def render(self):\n        return self.text\n\nclass FramedLabel(Label):\n    def render(self):\n        return \"[\" + super().render() + \"]\"\n",
+    "checks": [
+      {
+        "label": "Base and derived behavior",
+        "expression": "Label(\"Map\").render() == \"Map\" and FramedLabel(\"Map\").render() == \"[Map]\""
+      },
+      {
+        "label": "Empty and Unicode text",
+        "expression": "FramedLabel(\"\").render() == \"[]\" and FramedLabel(\"Caf\u00e9\").render() == \"[Caf\u00e9]\""
+      },
+      {
+        "label": "Stored input unchanged",
+        "expression": "(lambda x: x.render() == \"[A]\" and x.text == \"A\")(FramedLabel(\"A\"))"
+      }
+    ],
+    "extraFiles": []
+  },
+  {
+    "id": "python-61-solution",
+    "lessonId": "python-61",
+    "mode": "solution",
+    "code": "def __rejects_negative(obj):\n    before = obj.minutes\n    try:\n        obj.minutes = -1\n    except ValueError:\n        return obj.minutes == before\n    return False\n\ndef __rejects_initial():\n    try:\n        Duration(-1)\n    except ValueError:\n        return True\n    return False\n\nclass Duration:\n    def __init__(self, minutes):\n        self.minutes = minutes\n\n    @property\n    def minutes(self):\n        return self._minutes\n\n    @minutes.setter\n    def minutes(self, value):\n        if value < 0:\n            raise ValueError(\"minutes must be nonnegative\")\n        self._minutes = value\n",
+    "checks": [
+      {
+        "label": "Initialize and read",
+        "expression": "Duration(0).minutes == 0 and Duration(2.5).minutes == 2.5"
+      },
+      {
+        "label": "Setter accepts a changed value",
+        "expression": "(lambda x: (setattr(x, \"minutes\", 7), x.minutes)[1] == 7)(Duration(2))"
+      },
+      {
+        "label": "Reject negative update without changing state",
+        "expression": "__rejects_negative(Duration(4))"
+      },
+      {
+        "label": "Reject negative initialization",
+        "expression": "__rejects_initial()"
+      }
+    ],
+    "extraFiles": []
+  },
+  {
+    "id": "python-62-solution",
+    "lessonId": "python-62",
+    "mode": "solution",
+    "code": "class Session:\n    def __init__(self, title, minutes):\n        self.title = title\n        self.minutes = minutes\n\n    @classmethod\n    def from_minutes(cls, minutes):\n        return cls(\"Study\", minutes)\n\n    @staticmethod\n    def valid_minutes(minutes):\n        return minutes >= 0\n\nclass SpecialSession(Session):\n    pass\n",
+    "checks": [
+      {
+        "label": "Factory values",
+        "expression": "(lambda x: x.title == \"Study\" and x.minutes == 8)(Session.from_minutes(8))"
+      },
+      {
+        "label": "Factory preserves receiving subclass",
+        "expression": "isinstance(SpecialSession.from_minutes(2), SpecialSession)"
+      },
+      {
+        "label": "Static predicate boundaries",
+        "expression": "Session.valid_minutes(0) is True and Session.valid_minutes(-1) is False and Session.valid_minutes(2.5) is True"
+      },
+      {
+        "label": "Static call through instance",
+        "expression": "Session(\"X\", 1).valid_minutes(3) is True"
+      }
+    ],
+    "extraFiles": []
+  },
+  {
+    "lessonId": "python-56",
+    "id": "python-56-worked",
+    "paragraph": 2,
+    "code": "def route(command):\n    match command:\n        case [\"greet\", name] if isinstance(name, str):\n            return f\"Hello {name}\"\n        case [\"pause\"]:\n            return \"Paused\"\n        case _:\n            return \"Unknown\"\n\nprint(route([\"greet\", \"Ada\"]))\nprint(route([\"pause\"]))\nprint(route([\"greet\", 7]))",
+    "expected": "Hello Ada\nPaused\nUnknown",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "python-56",
+    "id": "python-56-changed",
+    "paragraph": 3,
+    "code": "def route(command):\n    match command:\n        case [\"greet\", name] if isinstance(name, str):\n            return f\"Hello {name}\"\n        case [\"pause\"]:\n            return \"Paused\"\n        case _:\n            return \"Unknown\"\n\nprint(route([\"greet\", \"Ada\", \"extra\"]))",
+    "expected": "Unknown",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "python-57",
+    "id": "python-57-worked",
+    "paragraph": 2,
+    "code": "text = \"\u00e9\"\nencoded = text.encode(\"utf-8\")\nprint(len(text))\nprint(len(encoded))\nprint(encoded.decode(\"utf-8\"))",
+    "expected": "1\n2\n\u00e9",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "python-57",
+    "id": "python-57-changed",
+    "paragraph": 2,
+    "code": "text = \"A\"\nencoded = text.encode(\"utf-8\")\nprint(len(text))\nprint(len(encoded))\nprint(encoded.decode(\"utf-8\"))",
+    "expected": "1\n1\nA",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "python-57",
+    "id": "python-57-decode-caught",
+    "paragraph": 3,
+    "code": "try:\n    b\"\\xff\".decode(\"utf-8\")\nexcept UnicodeDecodeError:\n    print(\"Invalid UTF-8\")",
+    "expected": "Invalid UTF-8",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "python-57",
+    "id": "python-57-summary",
+    "paragraph": 4,
+    "code": "def utf8_summary(text):\n    encoded = text.encode(\"utf-8\")\n    return len(encoded), encoded.decode(\"utf-8\")\nprint(utf8_summary(\"Caf\u00e9\"))",
+    "expected": "(5, 'Caf\u00e9')",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "python-58",
+    "id": "python-58-worked",
+    "paragraph": 2,
+    "code": "import math\nprint(0.1 + 0.2 == 0.3)\nprint(math.isclose(0.1 + 0.2, 0.3, rel_tol=1e-9, abs_tol=0.0))\nprint(math.isclose(1e-12, 0.0, rel_tol=1e-9, abs_tol=1e-9))",
+    "expected": "False\nTrue\nTrue",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "python-58",
+    "id": "python-58-changed",
+    "paragraph": 3,
+    "code": "import math\nprint(math.isclose(1e-12, 0.0, rel_tol=1e-9, abs_tol=0.0))",
+    "expected": "False",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "python-58",
+    "id": "python-58-project-call",
+    "paragraph": 4,
+    "code": "import math\n\ndef close_readings(a, b):\n    return math.isclose(a, b, rel_tol=1e-6, abs_tol=1e-9)\nprint(close_readings(100.0, 100.00005))\nprint(close_readings(0.0, 1e-10))\nprint(close_readings(1.0, 1.01))",
+    "expected": "True\nTrue\nFalse",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "python-59",
+    "id": "python-59-direct",
+    "paragraph": 1,
+    "code": "def greeting(name):\n    return f\"Hello {name}\"\n\ndef main():\n    print(greeting(\"Reader\"))\n\nif __name__ == \"__main__\":\n    main()\n",
+    "expected": "Hello Reader",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "python-59",
+    "id": "python-59-import",
+    "paragraph": 2,
+    "code": "import greeting_tool\nprint(greeting_tool.greeting(\"Ada\"))",
+    "expected": "Hello Ada",
+    "outcome": "success",
+    "extraFiles": [
+      {
+        "name": "greeting_tool.py",
+        "code": "def greeting(name):\n    return f\"Hello {name}\"\n\ndef main():\n    print(greeting(\"Reader\"))\n\nif __name__ == \"__main__\":\n    main()\n"
+      }
+    ]
+  },
+  {
+    "lessonId": "python-59",
+    "id": "python-59-explicit-call",
+    "paragraph": 3,
+    "code": "import greeting_tool\ngreeting_tool.main()",
+    "expected": "Hello Reader",
+    "outcome": "success",
+    "extraFiles": [
+      {
+        "name": "greeting_tool.py",
+        "code": "def greeting(name):\n    return f\"Hello {name}\"\n\ndef main():\n    print(greeting(\"Reader\"))\n\nif __name__ == \"__main__\":\n    main()\n"
+      }
+    ]
+  },
+  {
+    "lessonId": "python-59",
+    "id": "python-59-wrapper",
+    "paragraph": 4,
+    "code": "import greeting_tool\ndef personal_greeting(name):\n    return greeting_tool.greeting(name)\nprint(personal_greeting(\"Ada\"))",
+    "expected": "Hello Ada",
+    "outcome": "success",
+    "extraFiles": [
+      {
+        "name": "greeting_tool.py",
+        "code": "def greeting(name):\n    return f\"Hello {name}\"\n\ndef main():\n    print(greeting(\"Reader\"))\n\nif __name__ == \"__main__\":\n    main()\n"
+      }
+    ]
+  },
+  {
+    "lessonId": "python-60",
+    "id": "python-60-worked",
+    "paragraph": 2,
+    "code": "class Label:\n    def __init__(self, text):\n        self.text = text\n\n    def render(self):\n        return self.text\n\nclass FramedLabel(Label):\n    def render(self):\n        return \"[\" + super().render() + \"]\"\n\nplain = Label(\"Map\")\nframed = FramedLabel(\"Map\")\nprint(plain.render())\nprint(framed.render())",
+    "expected": "Map\n[Map]",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "python-60",
+    "id": "python-60-changed",
+    "paragraph": 3,
+    "code": "class Label:\n    def __init__(self, text):\n        self.text = text\n\n    def render(self):\n        return self.text\n\nclass FramedLabel(Label):\n    def render(self):\n        return \"[\" + self.render() + \"]\"\n\nplain = Label(\"Map\")\nframed = FramedLabel(\"Map\")\nprint(plain.render())\nprint(framed.render())",
+    "expected": "",
+    "outcome": "runtime-failure",
+    "errorContains": "RecursionError"
+  },
+  {
+    "lessonId": "python-61",
+    "id": "python-61-worked",
+    "paragraph": 2,
+    "code": "class Duration:\n    def __init__(self, minutes):\n        self.minutes = minutes\n\n    @property\n    def minutes(self):\n        return self._minutes\n\n    @minutes.setter\n    def minutes(self, value):\n        if value < 0:\n            raise ValueError(\"minutes must be nonnegative\")\n        self._minutes = value\n\nduration = Duration(10)\nprint(duration.minutes)\nduration.minutes = 15\nprint(duration.minutes)\ntry:\n    duration.minutes = -1\nexcept ValueError:\n    print(duration.minutes)",
+    "expected": "10\n15\n15",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "python-61",
+    "id": "python-61-negative-construction",
+    "paragraph": 2,
+    "code": "class Duration:\n    def __init__(self, minutes):\n        self.minutes = minutes\n\n    @property\n    def minutes(self):\n        return self._minutes\n\n    @minutes.setter\n    def minutes(self, value):\n        if value < 0:\n            raise ValueError(\"minutes must be nonnegative\")\n        self._minutes = value\n\nDuration(-1)",
+    "expected": "",
+    "outcome": "runtime-failure",
+    "errorContains": "minutes must be nonnegative"
+  },
+  {
+    "lessonId": "python-62",
+    "id": "python-62-worked",
+    "paragraph": 2,
+    "code": "class Session:\n    def __init__(self, title, minutes):\n        self.title = title\n        self.minutes = minutes\n\n    @classmethod\n    def from_minutes(cls, minutes):\n        return cls(\"Study\", minutes)\n\n    @staticmethod\n    def valid_minutes(minutes):\n        return minutes >= 0\n\nclass SpecialSession(Session):\n    pass\n\nitem = SpecialSession.from_minutes(12)\nprint(item.title, item.minutes)\nprint(isinstance(item, SpecialSession))\nprint(Session.valid_minutes(0))\nprint(Session.valid_minutes(-1))",
+    "expected": "Study 12\nTrue\nTrue\nFalse",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "python-62",
+    "id": "python-62-changed",
+    "paragraph": 3,
+    "code": "class Session:\n    def __init__(self, title, minutes):\n        self.title = title\n        self.minutes = minutes\n\n    @classmethod\n    def from_minutes(cls, minutes):\n        return Session(\"Study\", minutes)\n\n    @staticmethod\n    def valid_minutes(minutes):\n        return minutes >= 0\n\nclass SpecialSession(Session):\n    pass\n\nitem = SpecialSession.from_minutes(12)\nprint(item.title, item.minutes)\nprint(isinstance(item, SpecialSession))\nprint(Session.valid_minutes(0))\nprint(Session.valid_minutes(-1))",
+    "expected": "Study 12\nFalse\nTrue\nFalse",
+    "outcome": "success"
+  }
+]

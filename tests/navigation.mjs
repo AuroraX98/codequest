@@ -37,7 +37,7 @@ try {
       };
       assert.deepEqual(
         parseRoute(routeHash(route), "javascript-01", units, lessons),
-        route,
+        {...route, view:view === "quest" ? "studio" : view},
         `Return from ${view} retains the course, theory page, and studio choice`,
       );
     }

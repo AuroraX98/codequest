@@ -1,0 +1,4714 @@
+{
+  "scope": "Each case uses a separate Node process, fresh JS realm/SQL.js module/VFS; actual bundled SQLite3.49.1, not browser UI",
+  "sourceHashes": {
+    "lessons.json": "8f394fe3d355e36ccd1269f1f82480824b79f7566a698834e2ff7964b4353506",
+    "execution-cases.json": "8d2edb920f56ddfee2afbb1da0e223f26fbf5e1356b4a1dcca79cd073a0cffdb"
+  },
+  "jobs": [
+    {
+      "id": "sql-35-solution",
+      "lessonId": "sql-35",
+      "kind": "solution",
+      "code": "CREATE TABLE reminders(id INTEGER PRIMARY KEY, title TEXT NOT NULL, status TEXT DEFAULT 'open');\nINSERT INTO reminders(id,title) VALUES(1,'Read');\nINSERT INTO reminders VALUES(2,'Walk',NULL);\nSELECT id,title,status\nFROM reminders\nORDER BY id;",
+      "setup": "",
+      "checks": [
+        {
+          "label": "Exact row count",
+          "expression": "SELECT COUNT(*) = 2 FROM reminders;"
+        },
+        {
+          "label": "Omitted status",
+          "expression": "SELECT COUNT(*) = 1 FROM reminders WHERE id=1 AND title='Read' AND status='open';"
+        },
+        {
+          "label": "Explicit null",
+          "expression": "SELECT COUNT(*) = 1 FROM reminders WHERE id=2 AND title='Walk' AND status IS NULL;"
+        },
+        {
+          "label": "Required title metadata",
+          "expression": "SELECT COUNT(*)=1 FROM pragma_table_info('reminders') WHERE name='title' AND [notnull]=1;"
+        }
+      ],
+      "outcome": "success",
+      "expectedPass": true
+    },
+    {
+      "id": "sql-35-starter",
+      "lessonId": "sql-35",
+      "kind": "starter",
+      "code": "CREATE TABLE reminders(id INTEGER PRIMARY KEY, title TEXT NOT NULL, status TEXT DEFAULT 'open');\nINSERT INTO reminders VALUES(1,'Read',NULL),(2,'Walk','open');",
+      "setup": "",
+      "checks": [
+        {
+          "label": "Exact row count",
+          "expression": "SELECT COUNT(*) = 2 FROM reminders;"
+        },
+        {
+          "label": "Omitted status",
+          "expression": "SELECT COUNT(*) = 1 FROM reminders WHERE id=1 AND title='Read' AND status='open';"
+        },
+        {
+          "label": "Explicit null",
+          "expression": "SELECT COUNT(*) = 1 FROM reminders WHERE id=2 AND title='Walk' AND status IS NULL;"
+        },
+        {
+          "label": "Required title metadata",
+          "expression": "SELECT COUNT(*)=1 FROM pragma_table_info('reminders') WHERE name='title' AND [notnull]=1;"
+        }
+      ],
+      "outcome": "success",
+      "expectedPass": false
+    },
+    {
+      "id": "sql-36-solution",
+      "lessonId": "sql-36",
+      "kind": "solution",
+      "code": "CREATE TABLE bookings(id INTEGER PRIMARY KEY, seats INTEGER NOT NULL CHECK(seats BETWEEN 1 AND 4));\nINSERT INTO bookings VALUES(1,1),(2,4);\nSELECT id,seats\nFROM bookings\nORDER BY id;",
+      "setup": "",
+      "checks": [
+        {
+          "label": "Exact row count",
+          "expression": "SELECT COUNT(*) = 2 FROM bookings;"
+        },
+        {
+          "label": "Lower endpoint",
+          "expression": "SELECT COUNT(*) = 1 FROM bookings WHERE id=1 AND seats=1;"
+        },
+        {
+          "label": "Upper endpoint",
+          "expression": "SELECT COUNT(*) = 1 FROM bookings WHERE id=2 AND seats=4;"
+        },
+        {
+          "label": "Required seats metadata",
+          "expression": "SELECT COUNT(*)=1 FROM pragma_table_info('bookings') WHERE name='seats' AND [notnull]=1;"
+        }
+      ],
+      "outcome": "success",
+      "expectedPass": true
+    },
+    {
+      "id": "sql-36-starter",
+      "lessonId": "sql-36",
+      "kind": "starter",
+      "code": "CREATE TABLE bookings(id INTEGER PRIMARY KEY, seats INTEGER CHECK(seats BETWEEN 1 AND 4));\nINSERT INTO bookings VALUES(1,NULL),(2,3);",
+      "setup": "",
+      "checks": [
+        {
+          "label": "Exact row count",
+          "expression": "SELECT COUNT(*) = 2 FROM bookings;"
+        },
+        {
+          "label": "Lower endpoint",
+          "expression": "SELECT COUNT(*) = 1 FROM bookings WHERE id=1 AND seats=1;"
+        },
+        {
+          "label": "Upper endpoint",
+          "expression": "SELECT COUNT(*) = 1 FROM bookings WHERE id=2 AND seats=4;"
+        },
+        {
+          "label": "Required seats metadata",
+          "expression": "SELECT COUNT(*)=1 FROM pragma_table_info('bookings') WHERE name='seats' AND [notnull]=1;"
+        }
+      ],
+      "outcome": "success",
+      "expectedPass": false
+    },
+    {
+      "id": "sql-37-solution",
+      "lessonId": "sql-37",
+      "kind": "solution",
+      "code": "CREATE TABLE slots(person TEXT NOT NULL, day TEXT NOT NULL, PRIMARY KEY(person,day));\nINSERT INTO slots VALUES('Mira','Mon'),('Mira','Tue'),('Oren','Mon');\nSELECT person,day\nFROM slots\nORDER BY person,day;",
+      "setup": "",
+      "checks": [
+        {
+          "label": "Exact row count",
+          "expression": "SELECT COUNT(*) = 3 FROM slots;"
+        },
+        {
+          "label": "Pair one",
+          "expression": "SELECT COUNT(*) = 1 FROM slots WHERE person='Mira' AND day='Mon';"
+        },
+        {
+          "label": "Pair two",
+          "expression": "SELECT COUNT(*) = 1 FROM slots WHERE person='Mira' AND day='Tue';"
+        },
+        {
+          "label": "Pair three",
+          "expression": "SELECT COUNT(*) = 1 FROM slots WHERE person='Oren' AND day='Mon';"
+        },
+        {
+          "label": "Required composite identity metadata",
+          "expression": "SELECT COUNT(*)=2 AND SUM(pk>0)=2 FROM pragma_table_info('slots') WHERE name IN ('person','day') AND [notnull]=1;"
+        },
+        {
+          "label": "Only those primary key columns",
+          "expression": "SELECT COUNT(*)=2 FROM pragma_table_info('slots') WHERE pk>0;"
+        }
+      ],
+      "outcome": "success",
+      "expectedPass": true
+    },
+    {
+      "id": "sql-37-starter",
+      "lessonId": "sql-37",
+      "kind": "starter",
+      "code": "CREATE TABLE slots(person TEXT NOT NULL, day TEXT NOT NULL, PRIMARY KEY(person,day));\nINSERT INTO slots VALUES('Mira','Mon');",
+      "setup": "",
+      "checks": [
+        {
+          "label": "Exact row count",
+          "expression": "SELECT COUNT(*) = 3 FROM slots;"
+        },
+        {
+          "label": "Pair one",
+          "expression": "SELECT COUNT(*) = 1 FROM slots WHERE person='Mira' AND day='Mon';"
+        },
+        {
+          "label": "Pair two",
+          "expression": "SELECT COUNT(*) = 1 FROM slots WHERE person='Mira' AND day='Tue';"
+        },
+        {
+          "label": "Pair three",
+          "expression": "SELECT COUNT(*) = 1 FROM slots WHERE person='Oren' AND day='Mon';"
+        },
+        {
+          "label": "Required composite identity metadata",
+          "expression": "SELECT COUNT(*)=2 AND SUM(pk>0)=2 FROM pragma_table_info('slots') WHERE name IN ('person','day') AND [notnull]=1;"
+        },
+        {
+          "label": "Only those primary key columns",
+          "expression": "SELECT COUNT(*)=2 FROM pragma_table_info('slots') WHERE pk>0;"
+        }
+      ],
+      "outcome": "success",
+      "expectedPass": false
+    },
+    {
+      "id": "sql-38-solution",
+      "lessonId": "sql-38",
+      "kind": "solution",
+      "code": "CREATE TABLE membership(person_id INTEGER NOT NULL REFERENCES people(id), club_id INTEGER NOT NULL REFERENCES clubs(id), PRIMARY KEY(person_id,club_id));\nINSERT INTO membership VALUES(1,10),(1,20),(2,10);\nSELECT p.name,c.title\nFROM membership AS m\nJOIN people AS p ON p.id=m.person_id\nJOIN clubs AS c ON c.id=m.club_id\nORDER BY p.name,c.title;",
+      "setup": "PRAGMA foreign_keys=ON;\nCREATE TABLE people(id INTEGER PRIMARY KEY,name TEXT NOT NULL);\nCREATE TABLE clubs(id INTEGER PRIMARY KEY,title TEXT NOT NULL);\nINSERT INTO people VALUES(1,'Mira'),(2,'Oren');\nINSERT INTO clubs VALUES(10,'Art'),(20,'Music');",
+      "checks": [
+        {
+          "label": "Exact row count",
+          "expression": "SELECT COUNT(*) = 3 FROM membership;"
+        },
+        {
+          "label": "First link",
+          "expression": "SELECT COUNT(*) = 1 FROM membership WHERE person_id=1 AND club_id=10;"
+        },
+        {
+          "label": "Second link",
+          "expression": "SELECT COUNT(*) = 1 FROM membership WHERE person_id=1 AND club_id=20;"
+        },
+        {
+          "label": "Third link",
+          "expression": "SELECT COUNT(*) = 1 FROM membership WHERE person_id=2 AND club_id=10;"
+        },
+        {
+          "label": "Parent people unchanged",
+          "expression": "SELECT COUNT(*)=2 AND SUM(id)=3 FROM people;"
+        },
+        {
+          "label": "Parent clubs unchanged",
+          "expression": "SELECT COUNT(*)=2 AND SUM(id)=30 FROM clubs;"
+        },
+        {
+          "label": "Foreign keys enabled",
+          "expression": "SELECT foreign_keys=1 FROM pragma_foreign_keys;"
+        },
+        {
+          "label": "Required pair identity",
+          "expression": "SELECT COUNT(*)=2 AND SUM(pk>0)=2 FROM pragma_table_info('membership') WHERE name IN ('person_id','club_id') AND [notnull]=1;"
+        },
+        {
+          "label": "Only pair primary key",
+          "expression": "SELECT COUNT(*)=2 FROM pragma_table_info('membership') WHERE pk>0;"
+        },
+        {
+          "label": "Person reference",
+          "expression": "SELECT COUNT(*)=1 FROM pragma_foreign_key_list('membership') WHERE [table]='people' AND [from]='person_id' AND [to]='id';"
+        },
+        {
+          "label": "Club reference",
+          "expression": "SELECT COUNT(*)=1 FROM pragma_foreign_key_list('membership') WHERE [table]='clubs' AND [from]='club_id' AND [to]='id';"
+        },
+        {
+          "label": "Exact source multiset: people",
+          "expression": "WITH wanted(id,name) AS (VALUES (1,'Mira'),(2,'Oren')) SELECT NOT EXISTS(SELECT id,name,COUNT(*) FROM people GROUP BY id,name EXCEPT SELECT id,name,COUNT(*) FROM wanted GROUP BY id,name) AND NOT EXISTS(SELECT id,name,COUNT(*) FROM wanted GROUP BY id,name EXCEPT SELECT id,name,COUNT(*) FROM people GROUP BY id,name);"
+        },
+        {
+          "label": "Exact source multiset: clubs",
+          "expression": "WITH wanted(id,title) AS (VALUES (10,'Art'),(20,'Music')) SELECT NOT EXISTS(SELECT id,title,COUNT(*) FROM clubs GROUP BY id,title EXCEPT SELECT id,title,COUNT(*) FROM wanted GROUP BY id,title) AND NOT EXISTS(SELECT id,title,COUNT(*) FROM wanted GROUP BY id,title EXCEPT SELECT id,title,COUNT(*) FROM clubs GROUP BY id,title);"
+        }
+      ],
+      "outcome": "success",
+      "expectedPass": true
+    },
+    {
+      "id": "sql-38-starter",
+      "lessonId": "sql-38",
+      "kind": "starter",
+      "code": "CREATE TABLE membership(person_id INTEGER NOT NULL REFERENCES people(id), club_id INTEGER NOT NULL REFERENCES clubs(id), PRIMARY KEY(person_id,club_id));\nINSERT INTO membership VALUES(1,10);",
+      "setup": "PRAGMA foreign_keys=ON;\nCREATE TABLE people(id INTEGER PRIMARY KEY,name TEXT NOT NULL);\nCREATE TABLE clubs(id INTEGER PRIMARY KEY,title TEXT NOT NULL);\nINSERT INTO people VALUES(1,'Mira'),(2,'Oren');\nINSERT INTO clubs VALUES(10,'Art'),(20,'Music');",
+      "checks": [
+        {
+          "label": "Exact row count",
+          "expression": "SELECT COUNT(*) = 3 FROM membership;"
+        },
+        {
+          "label": "First link",
+          "expression": "SELECT COUNT(*) = 1 FROM membership WHERE person_id=1 AND club_id=10;"
+        },
+        {
+          "label": "Second link",
+          "expression": "SELECT COUNT(*) = 1 FROM membership WHERE person_id=1 AND club_id=20;"
+        },
+        {
+          "label": "Third link",
+          "expression": "SELECT COUNT(*) = 1 FROM membership WHERE person_id=2 AND club_id=10;"
+        },
+        {
+          "label": "Parent people unchanged",
+          "expression": "SELECT COUNT(*)=2 AND SUM(id)=3 FROM people;"
+        },
+        {
+          "label": "Parent clubs unchanged",
+          "expression": "SELECT COUNT(*)=2 AND SUM(id)=30 FROM clubs;"
+        },
+        {
+          "label": "Foreign keys enabled",
+          "expression": "SELECT foreign_keys=1 FROM pragma_foreign_keys;"
+        },
+        {
+          "label": "Required pair identity",
+          "expression": "SELECT COUNT(*)=2 AND SUM(pk>0)=2 FROM pragma_table_info('membership') WHERE name IN ('person_id','club_id') AND [notnull]=1;"
+        },
+        {
+          "label": "Only pair primary key",
+          "expression": "SELECT COUNT(*)=2 FROM pragma_table_info('membership') WHERE pk>0;"
+        },
+        {
+          "label": "Person reference",
+          "expression": "SELECT COUNT(*)=1 FROM pragma_foreign_key_list('membership') WHERE [table]='people' AND [from]='person_id' AND [to]='id';"
+        },
+        {
+          "label": "Club reference",
+          "expression": "SELECT COUNT(*)=1 FROM pragma_foreign_key_list('membership') WHERE [table]='clubs' AND [from]='club_id' AND [to]='id';"
+        },
+        {
+          "label": "Exact source multiset: people",
+          "expression": "WITH wanted(id,name) AS (VALUES (1,'Mira'),(2,'Oren')) SELECT NOT EXISTS(SELECT id,name,COUNT(*) FROM people GROUP BY id,name EXCEPT SELECT id,name,COUNT(*) FROM wanted GROUP BY id,name) AND NOT EXISTS(SELECT id,name,COUNT(*) FROM wanted GROUP BY id,name EXCEPT SELECT id,name,COUNT(*) FROM people GROUP BY id,name);"
+        },
+        {
+          "label": "Exact source multiset: clubs",
+          "expression": "WITH wanted(id,title) AS (VALUES (10,'Art'),(20,'Music')) SELECT NOT EXISTS(SELECT id,title,COUNT(*) FROM clubs GROUP BY id,title EXCEPT SELECT id,title,COUNT(*) FROM wanted GROUP BY id,title) AND NOT EXISTS(SELECT id,title,COUNT(*) FROM wanted GROUP BY id,title EXCEPT SELECT id,title,COUNT(*) FROM clubs GROUP BY id,title);"
+        }
+      ],
+      "outcome": "success",
+      "expectedPass": false
+    },
+    {
+      "id": "sql-39-solution",
+      "lessonId": "sql-39",
+      "kind": "solution",
+      "code": "CREATE TABLE allowed AS SELECT c.id\nFROM candidates AS c\nWHERE c.id IS NOT NULL AND NOT EXISTS (SELECT 1 FROM blocked AS b WHERE b.id=c.id);\nSELECT id\nFROM allowed\nORDER BY id;",
+      "setup": "CREATE TABLE candidates(id INTEGER);\nCREATE TABLE blocked(id INTEGER);\nINSERT INTO candidates VALUES(1),(2),(NULL);\nINSERT INTO blocked VALUES(2),(NULL);",
+      "checks": [
+        {
+          "label": "Exact row count",
+          "expression": "SELECT COUNT(*) = 1 FROM allowed;"
+        },
+        {
+          "label": "Allowed ID",
+          "expression": "SELECT COUNT(*) = 1 FROM allowed WHERE id=1;"
+        },
+        {
+          "label": "Sources retained",
+          "expression": "SELECT (SELECT COUNT(*) FROM candidates)=3 AND (SELECT COUNT(*) FROM blocked)=2;"
+        },
+        {
+          "label": "Source values preserved",
+          "expression": "SELECT (SELECT COUNT(*) FROM candidates WHERE id IS NULL)=1 AND (SELECT COUNT(*) FROM candidates WHERE id=1)=1 AND (SELECT COUNT(*) FROM candidates WHERE id=2)=1 AND (SELECT COUNT(*) FROM blocked WHERE id IS NULL)=1 AND (SELECT COUNT(*) FROM blocked WHERE id=2)=1;"
+        }
+      ],
+      "outcome": "success",
+      "expectedPass": true
+    },
+    {
+      "id": "sql-39-starter",
+      "lessonId": "sql-39",
+      "kind": "starter",
+      "code": "CREATE TABLE allowed AS SELECT id\nFROM candidates\nWHERE id NOT IN (SELECT id FROM blocked);",
+      "setup": "CREATE TABLE candidates(id INTEGER);\nCREATE TABLE blocked(id INTEGER);\nINSERT INTO candidates VALUES(1),(2),(NULL);\nINSERT INTO blocked VALUES(2),(NULL);",
+      "checks": [
+        {
+          "label": "Exact row count",
+          "expression": "SELECT COUNT(*) = 1 FROM allowed;"
+        },
+        {
+          "label": "Allowed ID",
+          "expression": "SELECT COUNT(*) = 1 FROM allowed WHERE id=1;"
+        },
+        {
+          "label": "Sources retained",
+          "expression": "SELECT (SELECT COUNT(*) FROM candidates)=3 AND (SELECT COUNT(*) FROM blocked)=2;"
+        },
+        {
+          "label": "Source values preserved",
+          "expression": "SELECT (SELECT COUNT(*) FROM candidates WHERE id IS NULL)=1 AND (SELECT COUNT(*) FROM candidates WHERE id=1)=1 AND (SELECT COUNT(*) FROM candidates WHERE id=2)=1 AND (SELECT COUNT(*) FROM blocked WHERE id IS NULL)=1 AND (SELECT COUNT(*) FROM blocked WHERE id=2)=1;"
+        }
+      ],
+      "outcome": "success",
+      "expectedPass": false
+    },
+    {
+      "id": "sql-40-solution",
+      "lessonId": "sql-40",
+      "kind": "solution",
+      "code": "CREATE TABLE report AS SELECT child.name AS worker,parent.name AS manager\nFROM staff AS child\nLEFT JOIN staff AS parent ON parent.id=child.manager_id\nORDER BY child.id;\nSELECT worker,manager\nFROM report\nORDER BY worker;",
+      "setup": "CREATE TABLE staff(id INTEGER PRIMARY KEY,name TEXT NOT NULL,manager_id INTEGER);\nINSERT INTO staff VALUES(1,'Ari',NULL),(2,'Bo',1),(3,'Cy',1),(4,'Dee',2);",
+      "checks": [
+        {
+          "label": "Exact row count",
+          "expression": "SELECT COUNT(*) = 4 FROM report;"
+        },
+        {
+          "label": "Top worker",
+          "expression": "SELECT COUNT(*) = 1 FROM report WHERE worker='Ari' AND manager IS NULL;"
+        },
+        {
+          "label": "Bo manager",
+          "expression": "SELECT COUNT(*) = 1 FROM report WHERE worker='Bo' AND manager='Ari';"
+        },
+        {
+          "label": "Cy manager",
+          "expression": "SELECT COUNT(*) = 1 FROM report WHERE worker='Cy' AND manager='Ari';"
+        },
+        {
+          "label": "Dee manager",
+          "expression": "SELECT COUNT(*) = 1 FROM report WHERE worker='Dee' AND manager='Bo';"
+        },
+        {
+          "label": "Source intact",
+          "expression": "SELECT COUNT(*)=4 AND SUM(id)=10 FROM staff;"
+        },
+        {
+          "label": "Exact source multiset: staff",
+          "expression": "WITH wanted(id,name,manager_id) AS (VALUES (1,'Ari',NULL),(2,'Bo',1),(3,'Cy',1),(4,'Dee',2)) SELECT NOT EXISTS(SELECT id,name,manager_id,COUNT(*) FROM staff GROUP BY id,name,manager_id EXCEPT SELECT id,name,manager_id,COUNT(*) FROM wanted GROUP BY id,name,manager_id) AND NOT EXISTS(SELECT id,name,manager_id,COUNT(*) FROM wanted GROUP BY id,name,manager_id EXCEPT SELECT id,name,manager_id,COUNT(*) FROM staff GROUP BY id,name,manager_id);"
+        }
+      ],
+      "outcome": "success",
+      "expectedPass": true
+    },
+    {
+      "id": "sql-40-starter",
+      "lessonId": "sql-40",
+      "kind": "starter",
+      "code": "CREATE TABLE report AS SELECT name AS worker,name AS manager\nFROM staff;",
+      "setup": "CREATE TABLE staff(id INTEGER PRIMARY KEY,name TEXT NOT NULL,manager_id INTEGER);\nINSERT INTO staff VALUES(1,'Ari',NULL),(2,'Bo',1),(3,'Cy',1),(4,'Dee',2);",
+      "checks": [
+        {
+          "label": "Exact row count",
+          "expression": "SELECT COUNT(*) = 4 FROM report;"
+        },
+        {
+          "label": "Top worker",
+          "expression": "SELECT COUNT(*) = 1 FROM report WHERE worker='Ari' AND manager IS NULL;"
+        },
+        {
+          "label": "Bo manager",
+          "expression": "SELECT COUNT(*) = 1 FROM report WHERE worker='Bo' AND manager='Ari';"
+        },
+        {
+          "label": "Cy manager",
+          "expression": "SELECT COUNT(*) = 1 FROM report WHERE worker='Cy' AND manager='Ari';"
+        },
+        {
+          "label": "Dee manager",
+          "expression": "SELECT COUNT(*) = 1 FROM report WHERE worker='Dee' AND manager='Bo';"
+        },
+        {
+          "label": "Source intact",
+          "expression": "SELECT COUNT(*)=4 AND SUM(id)=10 FROM staff;"
+        },
+        {
+          "label": "Exact source multiset: staff",
+          "expression": "WITH wanted(id,name,manager_id) AS (VALUES (1,'Ari',NULL),(2,'Bo',1),(3,'Cy',1),(4,'Dee',2)) SELECT NOT EXISTS(SELECT id,name,manager_id,COUNT(*) FROM staff GROUP BY id,name,manager_id EXCEPT SELECT id,name,manager_id,COUNT(*) FROM wanted GROUP BY id,name,manager_id) AND NOT EXISTS(SELECT id,name,manager_id,COUNT(*) FROM wanted GROUP BY id,name,manager_id EXCEPT SELECT id,name,manager_id,COUNT(*) FROM staff GROUP BY id,name,manager_id);"
+        }
+      ],
+      "outcome": "success",
+      "expectedPass": false
+    },
+    {
+      "id": "sql-41-solution",
+      "lessonId": "sql-41",
+      "kind": "solution",
+      "code": "CREATE TABLE open_tasks AS SELECT p.id AS project_id,t.id AS task_id\nFROM projects AS p\nLEFT JOIN tasks AS t ON t.project_id=p.id AND t.done=0\nORDER BY p.id,t.id;\nSELECT project_id,task_id\nFROM open_tasks\nORDER BY project_id,task_id;",
+      "setup": "CREATE TABLE projects(id INTEGER PRIMARY KEY,title TEXT);\nCREATE TABLE tasks(id INTEGER PRIMARY KEY,project_id INTEGER,done INTEGER);\nINSERT INTO projects VALUES(1,'Map'),(2,'Song'),(3,'Garden');\nINSERT INTO tasks VALUES(10,1,1),(11,1,0),(12,2,1);",
+      "checks": [
+        {
+          "label": "Exact row count",
+          "expression": "SELECT COUNT(*) = 3 FROM open_tasks;"
+        },
+        {
+          "label": "Open match",
+          "expression": "SELECT COUNT(*) = 1 FROM open_tasks WHERE project_id=1 AND task_id=11;"
+        },
+        {
+          "label": "Finished-only parent",
+          "expression": "SELECT COUNT(*) = 1 FROM open_tasks WHERE project_id=2 AND task_id IS NULL;"
+        },
+        {
+          "label": "Empty parent",
+          "expression": "SELECT COUNT(*) = 1 FROM open_tasks WHERE project_id=3 AND task_id IS NULL;"
+        },
+        {
+          "label": "Source rows retained",
+          "expression": "SELECT (SELECT COUNT(*) FROM projects)=3 AND (SELECT COUNT(*) FROM tasks)=3;"
+        },
+        {
+          "label": "Exact source multiset: projects",
+          "expression": "WITH wanted(id,title) AS (VALUES (1,'Map'),(2,'Song'),(3,'Garden')) SELECT NOT EXISTS(SELECT id,title,COUNT(*) FROM projects GROUP BY id,title EXCEPT SELECT id,title,COUNT(*) FROM wanted GROUP BY id,title) AND NOT EXISTS(SELECT id,title,COUNT(*) FROM wanted GROUP BY id,title EXCEPT SELECT id,title,COUNT(*) FROM projects GROUP BY id,title);"
+        },
+        {
+          "label": "Exact source multiset: tasks",
+          "expression": "WITH wanted(id,project_id,done) AS (VALUES (10,1,1),(11,1,0),(12,2,1)) SELECT NOT EXISTS(SELECT id,project_id,done,COUNT(*) FROM tasks GROUP BY id,project_id,done EXCEPT SELECT id,project_id,done,COUNT(*) FROM wanted GROUP BY id,project_id,done) AND NOT EXISTS(SELECT id,project_id,done,COUNT(*) FROM wanted GROUP BY id,project_id,done EXCEPT SELECT id,project_id,done,COUNT(*) FROM tasks GROUP BY id,project_id,done);"
+        }
+      ],
+      "outcome": "success",
+      "expectedPass": true
+    },
+    {
+      "id": "sql-41-starter",
+      "lessonId": "sql-41",
+      "kind": "starter",
+      "code": "CREATE TABLE open_tasks AS SELECT p.id AS project_id,t.id AS task_id\nFROM projects AS p\nJOIN tasks AS t ON t.project_id=p.id;",
+      "setup": "CREATE TABLE projects(id INTEGER PRIMARY KEY,title TEXT);\nCREATE TABLE tasks(id INTEGER PRIMARY KEY,project_id INTEGER,done INTEGER);\nINSERT INTO projects VALUES(1,'Map'),(2,'Song'),(3,'Garden');\nINSERT INTO tasks VALUES(10,1,1),(11,1,0),(12,2,1);",
+      "checks": [
+        {
+          "label": "Exact row count",
+          "expression": "SELECT COUNT(*) = 3 FROM open_tasks;"
+        },
+        {
+          "label": "Open match",
+          "expression": "SELECT COUNT(*) = 1 FROM open_tasks WHERE project_id=1 AND task_id=11;"
+        },
+        {
+          "label": "Finished-only parent",
+          "expression": "SELECT COUNT(*) = 1 FROM open_tasks WHERE project_id=2 AND task_id IS NULL;"
+        },
+        {
+          "label": "Empty parent",
+          "expression": "SELECT COUNT(*) = 1 FROM open_tasks WHERE project_id=3 AND task_id IS NULL;"
+        },
+        {
+          "label": "Source rows retained",
+          "expression": "SELECT (SELECT COUNT(*) FROM projects)=3 AND (SELECT COUNT(*) FROM tasks)=3;"
+        },
+        {
+          "label": "Exact source multiset: projects",
+          "expression": "WITH wanted(id,title) AS (VALUES (1,'Map'),(2,'Song'),(3,'Garden')) SELECT NOT EXISTS(SELECT id,title,COUNT(*) FROM projects GROUP BY id,title EXCEPT SELECT id,title,COUNT(*) FROM wanted GROUP BY id,title) AND NOT EXISTS(SELECT id,title,COUNT(*) FROM wanted GROUP BY id,title EXCEPT SELECT id,title,COUNT(*) FROM projects GROUP BY id,title);"
+        },
+        {
+          "label": "Exact source multiset: tasks",
+          "expression": "WITH wanted(id,project_id,done) AS (VALUES (10,1,1),(11,1,0),(12,2,1)) SELECT NOT EXISTS(SELECT id,project_id,done,COUNT(*) FROM tasks GROUP BY id,project_id,done EXCEPT SELECT id,project_id,done,COUNT(*) FROM wanted GROUP BY id,project_id,done) AND NOT EXISTS(SELECT id,project_id,done,COUNT(*) FROM wanted GROUP BY id,project_id,done EXCEPT SELECT id,project_id,done,COUNT(*) FROM tasks GROUP BY id,project_id,done);"
+        }
+      ],
+      "outcome": "success",
+      "expectedPass": false
+    },
+    {
+      "id": "sql-42-solution",
+      "lessonId": "sql-42",
+      "kind": "solution",
+      "code": "CREATE TABLE page AS SELECT id,score\nFROM notes\nORDER BY score DESC,id ASC\nLIMIT 2\nOFFSET 2;\nSELECT id,score\nFROM page\nORDER BY score DESC,id;",
+      "setup": "CREATE TABLE notes(id INTEGER PRIMARY KEY,score INTEGER);\nINSERT INTO notes VALUES(1,10),(2,10),(3,8),(4,8),(5,5);",
+      "checks": [
+        {
+          "label": "Exact row count",
+          "expression": "SELECT COUNT(*) = 2 FROM page;"
+        },
+        {
+          "label": "First selected",
+          "expression": "SELECT COUNT(*) = 1 FROM page WHERE id=3 AND score=8;"
+        },
+        {
+          "label": "Second selected",
+          "expression": "SELECT COUNT(*) = 1 FROM page WHERE id=4 AND score=8;"
+        },
+        {
+          "label": "Source intact",
+          "expression": "SELECT COUNT(*)=5 AND SUM(score)=41 FROM notes;"
+        },
+        {
+          "label": "Exact source multiset: notes",
+          "expression": "WITH wanted(id,score) AS (VALUES (1,10),(2,10),(3,8),(4,8),(5,5)) SELECT NOT EXISTS(SELECT id,score,COUNT(*) FROM notes GROUP BY id,score EXCEPT SELECT id,score,COUNT(*) FROM wanted GROUP BY id,score) AND NOT EXISTS(SELECT id,score,COUNT(*) FROM wanted GROUP BY id,score EXCEPT SELECT id,score,COUNT(*) FROM notes GROUP BY id,score);"
+        }
+      ],
+      "outcome": "success",
+      "expectedPass": true
+    },
+    {
+      "id": "sql-42-starter",
+      "lessonId": "sql-42",
+      "kind": "starter",
+      "code": "CREATE TABLE page AS SELECT id,score\nFROM notes\nLIMIT 2;",
+      "setup": "CREATE TABLE notes(id INTEGER PRIMARY KEY,score INTEGER);\nINSERT INTO notes VALUES(1,10),(2,10),(3,8),(4,8),(5,5);",
+      "checks": [
+        {
+          "label": "Exact row count",
+          "expression": "SELECT COUNT(*) = 2 FROM page;"
+        },
+        {
+          "label": "First selected",
+          "expression": "SELECT COUNT(*) = 1 FROM page WHERE id=3 AND score=8;"
+        },
+        {
+          "label": "Second selected",
+          "expression": "SELECT COUNT(*) = 1 FROM page WHERE id=4 AND score=8;"
+        },
+        {
+          "label": "Source intact",
+          "expression": "SELECT COUNT(*)=5 AND SUM(score)=41 FROM notes;"
+        },
+        {
+          "label": "Exact source multiset: notes",
+          "expression": "WITH wanted(id,score) AS (VALUES (1,10),(2,10),(3,8),(4,8),(5,5)) SELECT NOT EXISTS(SELECT id,score,COUNT(*) FROM notes GROUP BY id,score EXCEPT SELECT id,score,COUNT(*) FROM wanted GROUP BY id,score) AND NOT EXISTS(SELECT id,score,COUNT(*) FROM wanted GROUP BY id,score EXCEPT SELECT id,score,COUNT(*) FROM notes GROUP BY id,score);"
+        }
+      ],
+      "outcome": "success",
+      "expectedPass": false
+    },
+    {
+      "id": "sql-43-solution",
+      "lessonId": "sql-43",
+      "kind": "solution",
+      "code": "CREATE TABLE ranked AS SELECT id,name,score,ROW_NUMBER() OVER (ORDER BY score DESC,id) AS position,DENSE_RANK() OVER (ORDER BY score DESC) AS level\nFROM results\nORDER BY score DESC,id;\nSELECT id,name,score,position,level\nFROM ranked\nORDER BY position;",
+      "setup": "CREATE TABLE results(id INTEGER PRIMARY KEY,name TEXT,score INTEGER);\nINSERT INTO results VALUES(1,'Mira',9),(2,'Oren',9),(3,'Paz',7),(4,'Rin',5);",
+      "checks": [
+        {
+          "label": "Exact row count",
+          "expression": "SELECT COUNT(*) = 4 FROM ranked;"
+        },
+        {
+          "label": "First tie",
+          "expression": "SELECT COUNT(*) = 1 FROM ranked WHERE id=1 AND name='Mira' AND score=9 AND position=1 AND level=1;"
+        },
+        {
+          "label": "Second tie",
+          "expression": "SELECT COUNT(*) = 1 FROM ranked WHERE id=2 AND name='Oren' AND score=9 AND position=2 AND level=1;"
+        },
+        {
+          "label": "Next group",
+          "expression": "SELECT COUNT(*) = 1 FROM ranked WHERE id=3 AND name='Paz' AND score=7 AND position=3 AND level=2;"
+        },
+        {
+          "label": "Last group",
+          "expression": "SELECT COUNT(*) = 1 FROM ranked WHERE id=4 AND name='Rin' AND score=5 AND position=4 AND level=3;"
+        },
+        {
+          "label": "Source intact",
+          "expression": "SELECT COUNT(*)=4 AND SUM(score)=30 FROM results;"
+        },
+        {
+          "label": "Exact source multiset: results",
+          "expression": "WITH wanted(id,name,score) AS (VALUES (1,'Mira',9),(2,'Oren',9),(3,'Paz',7),(4,'Rin',5)) SELECT NOT EXISTS(SELECT id,name,score,COUNT(*) FROM results GROUP BY id,name,score EXCEPT SELECT id,name,score,COUNT(*) FROM wanted GROUP BY id,name,score) AND NOT EXISTS(SELECT id,name,score,COUNT(*) FROM wanted GROUP BY id,name,score EXCEPT SELECT id,name,score,COUNT(*) FROM results GROUP BY id,name,score);"
+        }
+      ],
+      "outcome": "success",
+      "expectedPass": true
+    },
+    {
+      "id": "sql-43-starter",
+      "lessonId": "sql-43",
+      "kind": "starter",
+      "code": "CREATE TABLE ranked AS SELECT id,name,score,1 AS position,1 AS level\nFROM results;",
+      "setup": "CREATE TABLE results(id INTEGER PRIMARY KEY,name TEXT,score INTEGER);\nINSERT INTO results VALUES(1,'Mira',9),(2,'Oren',9),(3,'Paz',7),(4,'Rin',5);",
+      "checks": [
+        {
+          "label": "Exact row count",
+          "expression": "SELECT COUNT(*) = 4 FROM ranked;"
+        },
+        {
+          "label": "First tie",
+          "expression": "SELECT COUNT(*) = 1 FROM ranked WHERE id=1 AND name='Mira' AND score=9 AND position=1 AND level=1;"
+        },
+        {
+          "label": "Second tie",
+          "expression": "SELECT COUNT(*) = 1 FROM ranked WHERE id=2 AND name='Oren' AND score=9 AND position=2 AND level=1;"
+        },
+        {
+          "label": "Next group",
+          "expression": "SELECT COUNT(*) = 1 FROM ranked WHERE id=3 AND name='Paz' AND score=7 AND position=3 AND level=2;"
+        },
+        {
+          "label": "Last group",
+          "expression": "SELECT COUNT(*) = 1 FROM ranked WHERE id=4 AND name='Rin' AND score=5 AND position=4 AND level=3;"
+        },
+        {
+          "label": "Source intact",
+          "expression": "SELECT COUNT(*)=4 AND SUM(score)=30 FROM results;"
+        },
+        {
+          "label": "Exact source multiset: results",
+          "expression": "WITH wanted(id,name,score) AS (VALUES (1,'Mira',9),(2,'Oren',9),(3,'Paz',7),(4,'Rin',5)) SELECT NOT EXISTS(SELECT id,name,score,COUNT(*) FROM results GROUP BY id,name,score EXCEPT SELECT id,name,score,COUNT(*) FROM wanted GROUP BY id,name,score) AND NOT EXISTS(SELECT id,name,score,COUNT(*) FROM wanted GROUP BY id,name,score EXCEPT SELECT id,name,score,COUNT(*) FROM results GROUP BY id,name,score);"
+        }
+      ],
+      "outcome": "success",
+      "expectedPass": false
+    },
+    {
+      "lessonId": "sql-35",
+      "id": "sql-35-worked",
+      "paragraph": 2,
+      "code": "CREATE TABLE reminders(id INTEGER PRIMARY KEY, title TEXT NOT NULL, status TEXT DEFAULT 'open');\nINSERT INTO reminders(id,title) VALUES(1,'Read');\nINSERT INTO reminders VALUES(2,'Walk',NULL);\nSELECT id,title,status\nFROM reminders\nORDER BY id;",
+      "checks": [
+        {
+          "label": "Exact row count",
+          "expression": "SELECT COUNT(*) = 2 FROM reminders;"
+        },
+        {
+          "label": "Omitted status",
+          "expression": "SELECT COUNT(*) = 1 FROM reminders WHERE id=1 AND title='Read' AND status='open';"
+        },
+        {
+          "label": "Explicit null",
+          "expression": "SELECT COUNT(*) = 1 FROM reminders WHERE id=2 AND title='Walk' AND status IS NULL;"
+        }
+      ],
+      "expectedResults": [
+        {
+          "columns": [
+            "id",
+            "title",
+            "status"
+          ],
+          "values": [
+            [
+              1,
+              "Read",
+              "open"
+            ],
+            [
+              2,
+              "Walk",
+              null
+            ]
+          ]
+        }
+      ],
+      "outcome": "success",
+      "kind": "example",
+      "expectedPass": true
+    },
+    {
+      "lessonId": "sql-35",
+      "id": "sql-35-changed",
+      "paragraph": 3,
+      "code": "CREATE TABLE reminders(id INTEGER PRIMARY KEY, title TEXT NOT NULL, status TEXT DEFAULT 'open');\nINSERT INTO reminders(id,title) VALUES(1,'Read');\nINSERT INTO reminders VALUES(2,'Walk','done');\nSELECT id,title,status\nFROM reminders\nORDER BY id;",
+      "checks": [
+        {
+          "label": "Exact row count",
+          "expression": "SELECT COUNT(*) = 2 FROM reminders;"
+        },
+        {
+          "label": "Provided status",
+          "expression": "SELECT COUNT(*) = 1 FROM reminders WHERE id=2 AND status='done';"
+        }
+      ],
+      "expectedResults": [
+        {
+          "columns": [
+            "id",
+            "title",
+            "status"
+          ],
+          "values": [
+            [
+              1,
+              "Read",
+              "open"
+            ],
+            [
+              2,
+              "Walk",
+              "done"
+            ]
+          ]
+        }
+      ],
+      "outcome": "success",
+      "kind": "example",
+      "expectedPass": true
+    },
+    {
+      "lessonId": "sql-35",
+      "id": "sql-35-not-null",
+      "paragraph": 5,
+      "setup": "CREATE TABLE strict_note(title TEXT NOT NULL DEFAULT 'New');",
+      "code": "INSERT INTO strict_note VALUES(NULL);",
+      "outcome": "expected-error",
+      "errorContains": "NOT NULL constraint failed: strict_note.title",
+      "postChecks": [
+        {
+          "label": "No row inserted",
+          "expression": "SELECT COUNT(*)=0 FROM strict_note;"
+        }
+      ],
+      "supplemental": true,
+      "gradingScope": "Author-validated rejection fixture; not current learner SELECT-check capability.",
+      "kind": "example",
+      "expectedPass": true
+    },
+    {
+      "lessonId": "sql-36",
+      "id": "sql-36-worked",
+      "paragraph": 2,
+      "code": "CREATE TABLE bookings(id INTEGER PRIMARY KEY, seats INTEGER CHECK(seats BETWEEN 1 AND 4));\nINSERT INTO bookings VALUES(1,3);\nSELECT id,seats\nFROM bookings\nORDER BY id;",
+      "checks": [
+        {
+          "label": "Exact row count",
+          "expression": "SELECT COUNT(*) = 1 FROM bookings;"
+        },
+        {
+          "label": "Accepted 3",
+          "expression": "SELECT COUNT(*) = 1 FROM bookings WHERE id=1 AND seats=3;"
+        }
+      ],
+      "expectedResults": [
+        {
+          "columns": [
+            "id",
+            "seats"
+          ],
+          "values": [
+            [
+              1,
+              3
+            ]
+          ]
+        }
+      ],
+      "outcome": "success",
+      "kind": "example",
+      "expectedPass": true
+    },
+    {
+      "lessonId": "sql-36",
+      "id": "sql-36-changed",
+      "paragraph": 3,
+      "code": "CREATE TABLE bookings(id INTEGER PRIMARY KEY, seats INTEGER CHECK(seats BETWEEN 1 AND 4));\nINSERT INTO bookings VALUES(1,NULL);\nSELECT id,seats\nFROM bookings\nORDER BY id;",
+      "checks": [
+        {
+          "label": "Exact row count",
+          "expression": "SELECT COUNT(*) = 1 FROM bookings;"
+        },
+        {
+          "label": "Accepted missing",
+          "expression": "SELECT COUNT(*) = 1 FROM bookings WHERE id=1 AND seats IS NULL;"
+        }
+      ],
+      "expectedResults": [
+        {
+          "columns": [
+            "id",
+            "seats"
+          ],
+          "values": [
+            [
+              1,
+              null
+            ]
+          ]
+        }
+      ],
+      "outcome": "success",
+      "kind": "example",
+      "expectedPass": true
+    },
+    {
+      "lessonId": "sql-36",
+      "id": "sql-36-outside-range",
+      "paragraph": 5,
+      "setup": "CREATE TABLE bookings(id INTEGER PRIMARY KEY, seats INTEGER CHECK(seats BETWEEN 1 AND 4));",
+      "code": "INSERT INTO bookings VALUES(1,5);",
+      "outcome": "expected-error",
+      "errorContains": "CHECK constraint failed: seats BETWEEN 1 AND 4",
+      "postChecks": [
+        {
+          "label": "No insertion",
+          "expression": "SELECT COUNT(*)=0 FROM bookings;"
+        }
+      ],
+      "supplemental": true,
+      "gradingScope": "Author-validated rejection fixture; not current learner SELECT-check capability.",
+      "kind": "example",
+      "expectedPass": true
+    },
+    {
+      "lessonId": "sql-36",
+      "id": "sql-36-required",
+      "paragraph": 5,
+      "setup": "CREATE TABLE bookings(id INTEGER PRIMARY KEY, seats INTEGER NOT NULL CHECK(seats BETWEEN 1 AND 4));",
+      "code": "INSERT INTO bookings VALUES(1,NULL);",
+      "outcome": "expected-error",
+      "errorContains": "NOT NULL constraint failed: bookings.seats",
+      "postChecks": [
+        {
+          "label": "No insertion",
+          "expression": "SELECT COUNT(*)=0 FROM bookings;"
+        }
+      ],
+      "supplemental": true,
+      "gradingScope": "Author-validated rejection fixture; not current learner SELECT-check capability.",
+      "kind": "example",
+      "expectedPass": true
+    },
+    {
+      "lessonId": "sql-37",
+      "id": "sql-37-worked",
+      "paragraph": 2,
+      "code": "CREATE TABLE slots(person TEXT NOT NULL, day TEXT NOT NULL, PRIMARY KEY(person,day));\nINSERT INTO slots VALUES('Mira','Mon'),('Mira','Tue'),('Oren','Mon');\nSELECT person,day\nFROM slots\nORDER BY person,day;",
+      "checks": [
+        {
+          "label": "Three pairs",
+          "expression": "SELECT COUNT(*)=3 FROM slots;"
+        }
+      ],
+      "expectedResults": [
+        {
+          "columns": [
+            "person",
+            "day"
+          ],
+          "values": [
+            [
+              "Mira",
+              "Mon"
+            ],
+            [
+              "Mira",
+              "Tue"
+            ],
+            [
+              "Oren",
+              "Mon"
+            ]
+          ]
+        }
+      ],
+      "outcome": "success",
+      "kind": "example",
+      "expectedPass": true
+    },
+    {
+      "lessonId": "sql-37",
+      "id": "sql-37-changed",
+      "paragraph": 3,
+      "code": "CREATE TABLE nullable_pair(person TEXT, day TEXT, UNIQUE(person,day));\nINSERT INTO nullable_pair VALUES('Mira',NULL),('Mira',NULL);\nSELECT person,day\nFROM nullable_pair\nORDER BY rowid;",
+      "checks": [
+        {
+          "label": "Both nullable rows",
+          "expression": "SELECT COUNT(*)=2 FROM nullable_pair WHERE person='Mira' AND day IS NULL;"
+        }
+      ],
+      "expectedResults": [
+        {
+          "columns": [
+            "person",
+            "day"
+          ],
+          "values": [
+            [
+              "Mira",
+              null
+            ],
+            [
+              "Mira",
+              null
+            ]
+          ]
+        }
+      ],
+      "outcome": "success",
+      "kind": "example",
+      "expectedPass": true
+    },
+    {
+      "lessonId": "sql-37",
+      "id": "sql-37-duplicate-pair",
+      "paragraph": 5,
+      "setup": "CREATE TABLE slots(person TEXT NOT NULL, day TEXT NOT NULL, PRIMARY KEY(person,day));\nINSERT INTO slots VALUES('Mira','Mon');",
+      "code": "INSERT INTO slots VALUES('Mira','Mon');",
+      "outcome": "expected-error",
+      "errorContains": "UNIQUE constraint failed: slots.person, slots.day",
+      "postChecks": [
+        {
+          "label": "First row preserved",
+          "expression": "SELECT COUNT(*)=1 FROM slots;"
+        }
+      ],
+      "supplemental": true,
+      "gradingScope": "Author-validated rejection fixture; not current learner SELECT-check capability.",
+      "kind": "example",
+      "expectedPass": true
+    },
+    {
+      "lessonId": "sql-38",
+      "id": "sql-38-worked",
+      "paragraph": 2,
+      "code": "PRAGMA foreign_keys=ON;\nCREATE TABLE people(id INTEGER PRIMARY KEY,name TEXT NOT NULL);\nCREATE TABLE clubs(id INTEGER PRIMARY KEY,title TEXT NOT NULL);\nINSERT INTO people VALUES(1,'Mira'),(2,'Oren');\nINSERT INTO clubs VALUES(10,'Art'),(20,'Music');\nCREATE TABLE membership(person_id INTEGER NOT NULL REFERENCES people(id), club_id INTEGER NOT NULL REFERENCES clubs(id), PRIMARY KEY(person_id,club_id));\nINSERT INTO membership VALUES(1,10),(1,20),(2,10);\nSELECT p.name,c.title\nFROM membership AS m\nJOIN people AS p ON p.id=m.person_id\nJOIN clubs AS c ON c.id=m.club_id\nORDER BY p.name,c.title;",
+      "checks": [
+        {
+          "label": "Three links",
+          "expression": "SELECT COUNT(*)=3 FROM membership;"
+        }
+      ],
+      "expectedResults": [
+        {
+          "columns": [
+            "name",
+            "title"
+          ],
+          "values": [
+            [
+              "Mira",
+              "Art"
+            ],
+            [
+              "Mira",
+              "Music"
+            ],
+            [
+              "Oren",
+              "Art"
+            ]
+          ]
+        }
+      ],
+      "outcome": "success",
+      "kind": "example",
+      "expectedPass": true
+    },
+    {
+      "lessonId": "sql-38",
+      "id": "sql-38-changed",
+      "paragraph": 3,
+      "code": "PRAGMA foreign_keys=ON;\nCREATE TABLE people(id INTEGER PRIMARY KEY,name TEXT NOT NULL);\nCREATE TABLE clubs(id INTEGER PRIMARY KEY,title TEXT NOT NULL);\nINSERT INTO people VALUES(1,'Mira'),(2,'Oren');\nINSERT INTO clubs VALUES(10,'Art'),(20,'Music');\nCREATE TABLE membership(person_id INTEGER NOT NULL REFERENCES people(id), club_id INTEGER NOT NULL REFERENCES clubs(id), PRIMARY KEY(person_id,club_id));\nINSERT INTO membership VALUES(1,10),(1,20),(2,10),(2,20);\nSELECT p.name,c.title\nFROM membership AS m\nJOIN people AS p ON p.id=m.person_id\nJOIN clubs AS c ON c.id=m.club_id\nORDER BY p.name,c.title;",
+      "checks": [
+        {
+          "label": "Four links",
+          "expression": "SELECT COUNT(*)=4 FROM membership;"
+        }
+      ],
+      "expectedResults": [
+        {
+          "columns": [
+            "name",
+            "title"
+          ],
+          "values": [
+            [
+              "Mira",
+              "Art"
+            ],
+            [
+              "Mira",
+              "Music"
+            ],
+            [
+              "Oren",
+              "Art"
+            ],
+            [
+              "Oren",
+              "Music"
+            ]
+          ]
+        }
+      ],
+      "outcome": "success",
+      "kind": "example",
+      "expectedPass": true
+    },
+    {
+      "lessonId": "sql-38",
+      "id": "sql-38-missing-parent",
+      "paragraph": 5,
+      "setup": "PRAGMA foreign_keys=ON;\nCREATE TABLE people(id INTEGER PRIMARY KEY,name TEXT NOT NULL);\nCREATE TABLE clubs(id INTEGER PRIMARY KEY,title TEXT NOT NULL);\nINSERT INTO people VALUES(1,'Mira'),(2,'Oren');\nINSERT INTO clubs VALUES(10,'Art'),(20,'Music');\nCREATE TABLE membership(person_id INTEGER NOT NULL REFERENCES people(id), club_id INTEGER NOT NULL REFERENCES clubs(id), PRIMARY KEY(person_id,club_id));",
+      "code": "INSERT INTO membership VALUES(1,99);",
+      "outcome": "expected-error",
+      "errorContains": "FOREIGN KEY constraint failed",
+      "postChecks": [
+        {
+          "label": "No orphan",
+          "expression": "SELECT COUNT(*)=0 FROM membership;"
+        }
+      ],
+      "supplemental": true,
+      "gradingScope": "Author-validated rejection fixture; not current learner SELECT-check capability.",
+      "kind": "example",
+      "expectedPass": true
+    },
+    {
+      "lessonId": "sql-39",
+      "id": "sql-39-worked",
+      "paragraph": 2,
+      "code": "CREATE TABLE candidates(id INTEGER);\nCREATE TABLE blocked(id INTEGER);\nINSERT INTO candidates VALUES(1),(2),(NULL);\nINSERT INTO blocked VALUES(2),(NULL);\nSELECT c.id\nFROM candidates AS c\nWHERE NOT EXISTS (SELECT 1 FROM blocked AS b WHERE b.id=c.id)\nORDER BY c.id;",
+      "checks": [
+        {
+          "label": "Unmatched count",
+          "expression": "SELECT COUNT(*)=2 FROM candidates AS c WHERE NOT EXISTS(SELECT 1 FROM blocked AS b WHERE b.id=c.id);"
+        }
+      ],
+      "expectedResults": [
+        {
+          "columns": [
+            "id"
+          ],
+          "values": [
+            [
+              null
+            ],
+            [
+              1
+            ]
+          ]
+        }
+      ],
+      "outcome": "success",
+      "kind": "example",
+      "expectedPass": true
+    },
+    {
+      "lessonId": "sql-39",
+      "id": "sql-39-changed",
+      "paragraph": 3,
+      "code": "CREATE TABLE candidates(id INTEGER);\nCREATE TABLE blocked(id INTEGER);\nINSERT INTO candidates VALUES(1),(2),(NULL);\nINSERT INTO blocked VALUES(2),(NULL);\nSELECT id\nFROM candidates\nWHERE id NOT IN (SELECT id FROM blocked)\nORDER BY id;",
+      "checks": [
+        {
+          "label": "NOT IN empty",
+          "expression": "SELECT COUNT(*)=0 FROM candidates WHERE id NOT IN(SELECT id FROM blocked);"
+        }
+      ],
+      "expectedResults": [],
+      "outcome": "success",
+      "kind": "example",
+      "expectedPass": true
+    },
+    {
+      "lessonId": "sql-40",
+      "id": "sql-40-worked",
+      "paragraph": 2,
+      "code": "CREATE TABLE staff(id INTEGER PRIMARY KEY,name TEXT NOT NULL,manager_id INTEGER);\nINSERT INTO staff VALUES(1,'Ari',NULL),(2,'Bo',1),(3,'Cy',1),(4,'Dee',2);\nSELECT child.name AS worker,parent.name AS manager\nFROM staff AS child\nLEFT JOIN staff AS parent ON parent.id=child.manager_id\nORDER BY child.id;",
+      "checks": [
+        {
+          "label": "All children",
+          "expression": "SELECT COUNT(*)=4 FROM staff AS child LEFT JOIN staff AS parent ON parent.id=child.manager_id;"
+        }
+      ],
+      "expectedResults": [
+        {
+          "columns": [
+            "worker",
+            "manager"
+          ],
+          "values": [
+            [
+              "Ari",
+              null
+            ],
+            [
+              "Bo",
+              "Ari"
+            ],
+            [
+              "Cy",
+              "Ari"
+            ],
+            [
+              "Dee",
+              "Bo"
+            ]
+          ]
+        }
+      ],
+      "outcome": "success",
+      "kind": "example",
+      "expectedPass": true
+    },
+    {
+      "lessonId": "sql-40",
+      "id": "sql-40-changed",
+      "paragraph": 3,
+      "code": "CREATE TABLE staff(id INTEGER PRIMARY KEY,name TEXT NOT NULL,manager_id INTEGER);\nINSERT INTO staff VALUES(1,'Ari',NULL),(2,'Bo',1),(3,'Cy',1),(4,'Dee',2);\nSELECT child.name AS worker,parent.name AS manager\nFROM staff AS child\nJOIN staff AS parent ON parent.id=child.manager_id\nORDER BY child.id;",
+      "checks": [
+        {
+          "label": "Matched only",
+          "expression": "SELECT COUNT(*)=3 FROM staff AS child JOIN staff AS parent ON parent.id=child.manager_id;"
+        }
+      ],
+      "expectedResults": [
+        {
+          "columns": [
+            "worker",
+            "manager"
+          ],
+          "values": [
+            [
+              "Bo",
+              "Ari"
+            ],
+            [
+              "Cy",
+              "Ari"
+            ],
+            [
+              "Dee",
+              "Bo"
+            ]
+          ]
+        }
+      ],
+      "outcome": "success",
+      "kind": "example",
+      "expectedPass": true
+    },
+    {
+      "lessonId": "sql-41",
+      "id": "sql-41-worked",
+      "paragraph": 2,
+      "code": "CREATE TABLE projects(id INTEGER PRIMARY KEY,title TEXT);\nCREATE TABLE tasks(id INTEGER PRIMARY KEY,project_id INTEGER,done INTEGER);\nINSERT INTO projects VALUES(1,'Map'),(2,'Song'),(3,'Garden');\nINSERT INTO tasks VALUES(10,1,1),(11,1,0),(12,2,1);\nSELECT p.id AS project_id,t.id AS task_id\nFROM projects AS p\nLEFT JOIN tasks AS t ON t.project_id=p.id AND t.done=0\nORDER BY p.id,t.id;",
+      "checks": [
+        {
+          "label": "Retained projects",
+          "expression": "SELECT COUNT(*)=3 FROM projects p LEFT JOIN tasks t ON t.project_id=p.id AND t.done=0;"
+        }
+      ],
+      "expectedResults": [
+        {
+          "columns": [
+            "project_id",
+            "task_id"
+          ],
+          "values": [
+            [
+              1,
+              11
+            ],
+            [
+              2,
+              null
+            ],
+            [
+              3,
+              null
+            ]
+          ]
+        }
+      ],
+      "outcome": "success",
+      "kind": "example",
+      "expectedPass": true
+    },
+    {
+      "lessonId": "sql-41",
+      "id": "sql-41-changed",
+      "paragraph": 3,
+      "code": "CREATE TABLE projects(id INTEGER PRIMARY KEY,title TEXT);\nCREATE TABLE tasks(id INTEGER PRIMARY KEY,project_id INTEGER,done INTEGER);\nINSERT INTO projects VALUES(1,'Map'),(2,'Song'),(3,'Garden');\nINSERT INTO tasks VALUES(10,1,1),(11,1,0),(12,2,1);\nSELECT p.id AS project_id,t.id AS task_id\nFROM projects AS p\nLEFT JOIN tasks AS t ON t.project_id=p.id\nWHERE t.done=0\nORDER BY p.id,t.id;",
+      "checks": [
+        {
+          "label": "Only open match",
+          "expression": "SELECT COUNT(*)=1 FROM projects p LEFT JOIN tasks t ON t.project_id=p.id WHERE t.done=0;"
+        }
+      ],
+      "expectedResults": [
+        {
+          "columns": [
+            "project_id",
+            "task_id"
+          ],
+          "values": [
+            [
+              1,
+              11
+            ]
+          ]
+        }
+      ],
+      "outcome": "success",
+      "kind": "example",
+      "expectedPass": true
+    },
+    {
+      "lessonId": "sql-42",
+      "id": "sql-42-worked",
+      "paragraph": 2,
+      "code": "CREATE TABLE notes(id INTEGER PRIMARY KEY,score INTEGER);\nINSERT INTO notes VALUES(1,10),(2,10),(3,8),(4,8),(5,5);\nSELECT id,score\nFROM notes\nORDER BY score DESC,id ASC\nLIMIT 2\nOFFSET 2;",
+      "checks": [
+        {
+          "label": "Second pair count",
+          "expression": "SELECT COUNT(*)=2 FROM (SELECT id FROM notes ORDER BY score DESC,id LIMIT 2 OFFSET 2);"
+        },
+        {
+          "label": "Second pair sum",
+          "expression": "SELECT SUM(id)=7 FROM (SELECT id FROM notes ORDER BY score DESC,id LIMIT 2 OFFSET 2);"
+        }
+      ],
+      "expectedResults": [
+        {
+          "columns": [
+            "id",
+            "score"
+          ],
+          "values": [
+            [
+              3,
+              8
+            ],
+            [
+              4,
+              8
+            ]
+          ]
+        }
+      ],
+      "outcome": "success",
+      "kind": "example",
+      "expectedPass": true
+    },
+    {
+      "lessonId": "sql-42",
+      "id": "sql-42-changed",
+      "paragraph": 3,
+      "code": "CREATE TABLE notes(id INTEGER PRIMARY KEY,score INTEGER);\nINSERT INTO notes VALUES(1,10),(2,10),(3,8),(4,8),(5,5);\nSELECT id,score\nFROM notes\nORDER BY score DESC,id ASC\nLIMIT 2\nOFFSET 4;",
+      "checks": [
+        {
+          "label": "Last row",
+          "expression": "SELECT COUNT(*)=1 AND SUM(id)=5 FROM (SELECT id FROM notes ORDER BY score DESC,id LIMIT 2 OFFSET 4);"
+        }
+      ],
+      "expectedResults": [
+        {
+          "columns": [
+            "id",
+            "score"
+          ],
+          "values": [
+            [
+              5,
+              5
+            ]
+          ]
+        }
+      ],
+      "outcome": "success",
+      "kind": "example",
+      "expectedPass": true
+    },
+    {
+      "lessonId": "sql-43",
+      "id": "sql-43-worked",
+      "paragraph": 2,
+      "code": "CREATE TABLE results(id INTEGER PRIMARY KEY,name TEXT,score INTEGER);\nINSERT INTO results VALUES(1,'Mira',9),(2,'Oren',9),(3,'Paz',7),(4,'Rin',5);\nSELECT id,name,score,ROW_NUMBER() OVER (ORDER BY score DESC,id) AS position,DENSE_RANK() OVER (ORDER BY score DESC) AS level\nFROM results\nORDER BY score DESC,id;",
+      "checks": [
+        {
+          "label": "Dense tie",
+          "expression": "SELECT COUNT(*)=2 FROM (SELECT DENSE_RANK() OVER (ORDER BY score DESC) AS r FROM results) WHERE r=1;"
+        }
+      ],
+      "expectedResults": [
+        {
+          "columns": [
+            "id",
+            "name",
+            "score",
+            "position",
+            "level"
+          ],
+          "values": [
+            [
+              1,
+              "Mira",
+              9,
+              1,
+              1
+            ],
+            [
+              2,
+              "Oren",
+              9,
+              2,
+              1
+            ],
+            [
+              3,
+              "Paz",
+              7,
+              3,
+              2
+            ],
+            [
+              4,
+              "Rin",
+              5,
+              4,
+              3
+            ]
+          ]
+        }
+      ],
+      "outcome": "success",
+      "kind": "example",
+      "expectedPass": true
+    },
+    {
+      "lessonId": "sql-43",
+      "id": "sql-43-changed",
+      "paragraph": 3,
+      "code": "CREATE TABLE results(id INTEGER PRIMARY KEY,name TEXT,score INTEGER);\nINSERT INTO results VALUES(1,'Mira',9),(2,'Oren',9),(3,'Paz',7),(4,'Rin',5);\nSELECT id,name,score,ROW_NUMBER() OVER (ORDER BY score DESC,id) AS position,DENSE_RANK() OVER (ORDER BY score DESC,id) AS level\nFROM results\nORDER BY score DESC,id;",
+      "checks": [
+        {
+          "label": "All different",
+          "expression": "SELECT COUNT(DISTINCT r)=4 FROM (SELECT DENSE_RANK() OVER (ORDER BY score DESC,id) AS r FROM results);"
+        }
+      ],
+      "expectedResults": [
+        {
+          "columns": [
+            "id",
+            "name",
+            "score",
+            "position",
+            "level"
+          ],
+          "values": [
+            [
+              1,
+              "Mira",
+              9,
+              1,
+              1
+            ],
+            [
+              2,
+              "Oren",
+              9,
+              2,
+              2
+            ],
+            [
+              3,
+              "Paz",
+              7,
+              3,
+              3
+            ],
+            [
+              4,
+              "Rin",
+              5,
+              4,
+              4
+            ]
+          ]
+        }
+      ],
+      "outcome": "success",
+      "kind": "example",
+      "expectedPass": true
+    }
+  ],
+  "results": [
+    {
+      "id": "sql-35-solution",
+      "output": [
+        {
+          "columns": [
+            "id",
+            "title",
+            "status"
+          ],
+          "values": [
+            [
+              1,
+              "Read",
+              "open"
+            ],
+            [
+              2,
+              "Walk",
+              null
+            ]
+          ]
+        }
+      ],
+      "error": null,
+      "checks": [
+        {
+          "label": "Exact row count",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*) = 2"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Omitted status",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*) = 1"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Explicit null",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*) = 1"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Required title metadata",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*)=1"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": true,
+      "expectedPass": true,
+      "validated": true,
+      "sourceHash": "b7edee4dd8ac3024ec1d54ad1d97267cb77d523f3d9ed7b31db4497668960e76"
+    },
+    {
+      "id": "sql-35-starter",
+      "output": [],
+      "error": null,
+      "checks": [
+        {
+          "label": "Exact row count",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*) = 2"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Omitted status",
+          "passed": false,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*) = 1"
+              ],
+              "values": [
+                [
+                  0
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Explicit null",
+          "passed": false,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*) = 1"
+              ],
+              "values": [
+                [
+                  0
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Required title metadata",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*)=1"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": false,
+      "expectedPass": false,
+      "validated": true,
+      "sourceHash": "f37c8286ba8411d369e8708f76269578cc0583deb6ed29b77d6e752faf724ff6"
+    },
+    {
+      "id": "sql-36-solution",
+      "output": [
+        {
+          "columns": [
+            "id",
+            "seats"
+          ],
+          "values": [
+            [
+              1,
+              1
+            ],
+            [
+              2,
+              4
+            ]
+          ]
+        }
+      ],
+      "error": null,
+      "checks": [
+        {
+          "label": "Exact row count",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*) = 2"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Lower endpoint",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*) = 1"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Upper endpoint",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*) = 1"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Required seats metadata",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*)=1"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": true,
+      "expectedPass": true,
+      "validated": true,
+      "sourceHash": "e76fdbc13a0324db550f204eae31a5e46c32e22af3f3ade8ff3afb4638508587"
+    },
+    {
+      "id": "sql-36-starter",
+      "output": [],
+      "error": null,
+      "checks": [
+        {
+          "label": "Exact row count",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*) = 2"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Lower endpoint",
+          "passed": false,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*) = 1"
+              ],
+              "values": [
+                [
+                  0
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Upper endpoint",
+          "passed": false,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*) = 1"
+              ],
+              "values": [
+                [
+                  0
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Required seats metadata",
+          "passed": false,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*)=1"
+              ],
+              "values": [
+                [
+                  0
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": false,
+      "expectedPass": false,
+      "validated": true,
+      "sourceHash": "3fb166b425629e8d1fc08ed1fa13b9c8b5bf65d3b50dc19a717c92db21c6b59d"
+    },
+    {
+      "id": "sql-37-solution",
+      "output": [
+        {
+          "columns": [
+            "person",
+            "day"
+          ],
+          "values": [
+            [
+              "Mira",
+              "Mon"
+            ],
+            [
+              "Mira",
+              "Tue"
+            ],
+            [
+              "Oren",
+              "Mon"
+            ]
+          ]
+        }
+      ],
+      "error": null,
+      "checks": [
+        {
+          "label": "Exact row count",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*) = 3"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Pair one",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*) = 1"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Pair two",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*) = 1"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Pair three",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*) = 1"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Required composite identity metadata",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*)=2 AND SUM(pk>0)=2"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Only those primary key columns",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*)=2"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": true,
+      "expectedPass": true,
+      "validated": true,
+      "sourceHash": "4f2fcaab23ef4228ead83c841aecdf4fb826db6dae4f4c7aa522e1b8d5ff95b4"
+    },
+    {
+      "id": "sql-37-starter",
+      "output": [],
+      "error": null,
+      "checks": [
+        {
+          "label": "Exact row count",
+          "passed": false,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*) = 3"
+              ],
+              "values": [
+                [
+                  0
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Pair one",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*) = 1"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Pair two",
+          "passed": false,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*) = 1"
+              ],
+              "values": [
+                [
+                  0
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Pair three",
+          "passed": false,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*) = 1"
+              ],
+              "values": [
+                [
+                  0
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Required composite identity metadata",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*)=2 AND SUM(pk>0)=2"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Only those primary key columns",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*)=2"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": false,
+      "expectedPass": false,
+      "validated": true,
+      "sourceHash": "e7a8fb0bfd3061f3779e7dd33ed2ea96bfd5a692127d72882b4919e28beb5e18"
+    },
+    {
+      "id": "sql-38-solution",
+      "output": [
+        {
+          "columns": [
+            "name",
+            "title"
+          ],
+          "values": [
+            [
+              "Mira",
+              "Art"
+            ],
+            [
+              "Mira",
+              "Music"
+            ],
+            [
+              "Oren",
+              "Art"
+            ]
+          ]
+        }
+      ],
+      "error": null,
+      "checks": [
+        {
+          "label": "Exact row count",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*) = 3"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "First link",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*) = 1"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Second link",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*) = 1"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Third link",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*) = 1"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Parent people unchanged",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*)=2 AND SUM(id)=3"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Parent clubs unchanged",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*)=2 AND SUM(id)=30"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Foreign keys enabled",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "foreign_keys=1"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Required pair identity",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*)=2 AND SUM(pk>0)=2"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Only pair primary key",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*)=2"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Person reference",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*)=1"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Club reference",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*)=1"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Exact source multiset: people",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "NOT EXISTS(SELECT id,name,COUNT(*) FROM people GROUP BY id,name EXCEPT SELECT id,name,COUNT(*) FROM wanted GROUP BY id,name) AND NOT EXISTS(SELECT id,name,COUNT(*) FROM wanted GROUP BY id,name EXCEPT SELECT id,name,COUNT(*) FROM people GROUP BY id,name)"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Exact source multiset: clubs",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "NOT EXISTS(SELECT id,title,COUNT(*) FROM clubs GROUP BY id,title EXCEPT SELECT id,title,COUNT(*) FROM wanted GROUP BY id,title) AND NOT EXISTS(SELECT id,title,COUNT(*) FROM wanted GROUP BY id,title EXCEPT SELECT id,title,COUNT(*) FROM clubs GROUP BY id,title)"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": true,
+      "expectedPass": true,
+      "validated": true,
+      "sourceHash": "00dd467169fc40f0fa0d72efad410d507f78e65e20673a4dda35b721afc9467f"
+    },
+    {
+      "id": "sql-38-starter",
+      "output": [],
+      "error": null,
+      "checks": [
+        {
+          "label": "Exact row count",
+          "passed": false,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*) = 3"
+              ],
+              "values": [
+                [
+                  0
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "First link",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*) = 1"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Second link",
+          "passed": false,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*) = 1"
+              ],
+              "values": [
+                [
+                  0
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Third link",
+          "passed": false,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*) = 1"
+              ],
+              "values": [
+                [
+                  0
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Parent people unchanged",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*)=2 AND SUM(id)=3"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Parent clubs unchanged",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*)=2 AND SUM(id)=30"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Foreign keys enabled",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "foreign_keys=1"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Required pair identity",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*)=2 AND SUM(pk>0)=2"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Only pair primary key",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*)=2"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Person reference",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*)=1"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Club reference",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*)=1"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Exact source multiset: people",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "NOT EXISTS(SELECT id,name,COUNT(*) FROM people GROUP BY id,name EXCEPT SELECT id,name,COUNT(*) FROM wanted GROUP BY id,name) AND NOT EXISTS(SELECT id,name,COUNT(*) FROM wanted GROUP BY id,name EXCEPT SELECT id,name,COUNT(*) FROM people GROUP BY id,name)"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Exact source multiset: clubs",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "NOT EXISTS(SELECT id,title,COUNT(*) FROM clubs GROUP BY id,title EXCEPT SELECT id,title,COUNT(*) FROM wanted GROUP BY id,title) AND NOT EXISTS(SELECT id,title,COUNT(*) FROM wanted GROUP BY id,title EXCEPT SELECT id,title,COUNT(*) FROM clubs GROUP BY id,title)"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": false,
+      "expectedPass": false,
+      "validated": true,
+      "sourceHash": "c2b9dd5b27c8191de64acccddc3d890c0412589e2bef28ebd1d74d254d7531d2"
+    },
+    {
+      "id": "sql-39-solution",
+      "output": [
+        {
+          "columns": [
+            "id"
+          ],
+          "values": [
+            [
+              1
+            ]
+          ]
+        }
+      ],
+      "error": null,
+      "checks": [
+        {
+          "label": "Exact row count",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*) = 1"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Allowed ID",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*) = 1"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Sources retained",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "(SELECT COUNT(*) FROM candidates)=3 AND (SELECT COUNT(*) FROM blocked)=2"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Source values preserved",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "(SELECT COUNT(*) FROM candidates WHERE id IS NULL)=1 AND (SELECT COUNT(*) FROM candidates WHERE id=1)=1 AND (SELECT COUNT(*) FROM candidates WHERE id=2)=1 AND (SELECT COUNT(*) FROM blocked WHERE id IS NULL)=1 AND (SELECT COUNT(*) FROM blocked WHERE id=2)=1"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": true,
+      "expectedPass": true,
+      "validated": true,
+      "sourceHash": "75441dd4aba91e0b5d234adc6f8cdc00e9c5d793397e998d19b79d5f5b2237d7"
+    },
+    {
+      "id": "sql-39-starter",
+      "output": [],
+      "error": null,
+      "checks": [
+        {
+          "label": "Exact row count",
+          "passed": false,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*) = 1"
+              ],
+              "values": [
+                [
+                  0
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Allowed ID",
+          "passed": false,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*) = 1"
+              ],
+              "values": [
+                [
+                  0
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Sources retained",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "(SELECT COUNT(*) FROM candidates)=3 AND (SELECT COUNT(*) FROM blocked)=2"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Source values preserved",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "(SELECT COUNT(*) FROM candidates WHERE id IS NULL)=1 AND (SELECT COUNT(*) FROM candidates WHERE id=1)=1 AND (SELECT COUNT(*) FROM candidates WHERE id=2)=1 AND (SELECT COUNT(*) FROM blocked WHERE id IS NULL)=1 AND (SELECT COUNT(*) FROM blocked WHERE id=2)=1"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": false,
+      "expectedPass": false,
+      "validated": true,
+      "sourceHash": "a22b02518727b15df8c2429ac2f7f1ca34c1233c6ed12d1cb703a081d4d9069c"
+    },
+    {
+      "id": "sql-40-solution",
+      "output": [
+        {
+          "columns": [
+            "worker",
+            "manager"
+          ],
+          "values": [
+            [
+              "Ari",
+              null
+            ],
+            [
+              "Bo",
+              "Ari"
+            ],
+            [
+              "Cy",
+              "Ari"
+            ],
+            [
+              "Dee",
+              "Bo"
+            ]
+          ]
+        }
+      ],
+      "error": null,
+      "checks": [
+        {
+          "label": "Exact row count",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*) = 4"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Top worker",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*) = 1"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Bo manager",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*) = 1"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Cy manager",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*) = 1"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Dee manager",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*) = 1"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Source intact",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*)=4 AND SUM(id)=10"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Exact source multiset: staff",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "NOT EXISTS(SELECT id,name,manager_id,COUNT(*) FROM staff GROUP BY id,name,manager_id EXCEPT SELECT id,name,manager_id,COUNT(*) FROM wanted GROUP BY id,name,manager_id) AND NOT EXISTS(SELECT id,name,manager_id,COUNT(*) FROM wanted GROUP BY id,name,manager_id EXCEPT SELECT id,name,manager_id,COUNT(*) FROM staff GROUP BY id,name,manager_id)"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": true,
+      "expectedPass": true,
+      "validated": true,
+      "sourceHash": "7a6aaf8447868c68804d40404f5be5dbd2b92152b585d083ef760fbce016f1a7"
+    },
+    {
+      "id": "sql-40-starter",
+      "output": [],
+      "error": null,
+      "checks": [
+        {
+          "label": "Exact row count",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*) = 4"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Top worker",
+          "passed": false,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*) = 1"
+              ],
+              "values": [
+                [
+                  0
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Bo manager",
+          "passed": false,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*) = 1"
+              ],
+              "values": [
+                [
+                  0
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Cy manager",
+          "passed": false,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*) = 1"
+              ],
+              "values": [
+                [
+                  0
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Dee manager",
+          "passed": false,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*) = 1"
+              ],
+              "values": [
+                [
+                  0
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Source intact",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*)=4 AND SUM(id)=10"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Exact source multiset: staff",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "NOT EXISTS(SELECT id,name,manager_id,COUNT(*) FROM staff GROUP BY id,name,manager_id EXCEPT SELECT id,name,manager_id,COUNT(*) FROM wanted GROUP BY id,name,manager_id) AND NOT EXISTS(SELECT id,name,manager_id,COUNT(*) FROM wanted GROUP BY id,name,manager_id EXCEPT SELECT id,name,manager_id,COUNT(*) FROM staff GROUP BY id,name,manager_id)"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": false,
+      "expectedPass": false,
+      "validated": true,
+      "sourceHash": "a2a1ee1f9cafcd677fea62819679e8122f95f51ff84753354b1171fea6d3f67e"
+    },
+    {
+      "id": "sql-41-solution",
+      "output": [
+        {
+          "columns": [
+            "project_id",
+            "task_id"
+          ],
+          "values": [
+            [
+              1,
+              11
+            ],
+            [
+              2,
+              null
+            ],
+            [
+              3,
+              null
+            ]
+          ]
+        }
+      ],
+      "error": null,
+      "checks": [
+        {
+          "label": "Exact row count",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*) = 3"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Open match",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*) = 1"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Finished-only parent",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*) = 1"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Empty parent",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*) = 1"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Source rows retained",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "(SELECT COUNT(*) FROM projects)=3 AND (SELECT COUNT(*) FROM tasks)=3"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Exact source multiset: projects",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "NOT EXISTS(SELECT id,title,COUNT(*) FROM projects GROUP BY id,title EXCEPT SELECT id,title,COUNT(*) FROM wanted GROUP BY id,title) AND NOT EXISTS(SELECT id,title,COUNT(*) FROM wanted GROUP BY id,title EXCEPT SELECT id,title,COUNT(*) FROM projects GROUP BY id,title)"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Exact source multiset: tasks",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "NOT EXISTS(SELECT id,project_id,done,COUNT(*) FROM tasks GROUP BY id,project_id,done EXCEPT SELECT id,project_id,done,COUNT(*) FROM wanted GROUP BY id,project_id,done) AND NOT EXISTS(SELECT id,project_id,done,COUNT(*) FROM wanted GROUP BY id,project_id,done EXCEPT SELECT id,project_id,done,COUNT(*) FROM tasks GROUP BY id,project_id,done)"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": true,
+      "expectedPass": true,
+      "validated": true,
+      "sourceHash": "fb6612f748e86399f8efe44adc67e752854a550862874e4edeabf15fea57860f"
+    },
+    {
+      "id": "sql-41-starter",
+      "output": [],
+      "error": null,
+      "checks": [
+        {
+          "label": "Exact row count",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*) = 3"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Open match",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*) = 1"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Finished-only parent",
+          "passed": false,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*) = 1"
+              ],
+              "values": [
+                [
+                  0
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Empty parent",
+          "passed": false,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*) = 1"
+              ],
+              "values": [
+                [
+                  0
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Source rows retained",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "(SELECT COUNT(*) FROM projects)=3 AND (SELECT COUNT(*) FROM tasks)=3"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Exact source multiset: projects",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "NOT EXISTS(SELECT id,title,COUNT(*) FROM projects GROUP BY id,title EXCEPT SELECT id,title,COUNT(*) FROM wanted GROUP BY id,title) AND NOT EXISTS(SELECT id,title,COUNT(*) FROM wanted GROUP BY id,title EXCEPT SELECT id,title,COUNT(*) FROM projects GROUP BY id,title)"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Exact source multiset: tasks",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "NOT EXISTS(SELECT id,project_id,done,COUNT(*) FROM tasks GROUP BY id,project_id,done EXCEPT SELECT id,project_id,done,COUNT(*) FROM wanted GROUP BY id,project_id,done) AND NOT EXISTS(SELECT id,project_id,done,COUNT(*) FROM wanted GROUP BY id,project_id,done EXCEPT SELECT id,project_id,done,COUNT(*) FROM tasks GROUP BY id,project_id,done)"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": false,
+      "expectedPass": false,
+      "validated": true,
+      "sourceHash": "3b3440c4caf1599df8981bba4ce4b7455f1dd2261d8651e77e3d1b9284c726e9"
+    },
+    {
+      "id": "sql-42-solution",
+      "output": [
+        {
+          "columns": [
+            "id",
+            "score"
+          ],
+          "values": [
+            [
+              3,
+              8
+            ],
+            [
+              4,
+              8
+            ]
+          ]
+        }
+      ],
+      "error": null,
+      "checks": [
+        {
+          "label": "Exact row count",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*) = 2"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "First selected",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*) = 1"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Second selected",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*) = 1"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Source intact",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*)=5 AND SUM(score)=41"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Exact source multiset: notes",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "NOT EXISTS(SELECT id,score,COUNT(*) FROM notes GROUP BY id,score EXCEPT SELECT id,score,COUNT(*) FROM wanted GROUP BY id,score) AND NOT EXISTS(SELECT id,score,COUNT(*) FROM wanted GROUP BY id,score EXCEPT SELECT id,score,COUNT(*) FROM notes GROUP BY id,score)"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": true,
+      "expectedPass": true,
+      "validated": true,
+      "sourceHash": "e5606402d26dd1b0894f52bea8b15c42634d797e97ec5e51541eb0ec79e46fba"
+    },
+    {
+      "id": "sql-42-starter",
+      "output": [],
+      "error": null,
+      "checks": [
+        {
+          "label": "Exact row count",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*) = 2"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "First selected",
+          "passed": false,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*) = 1"
+              ],
+              "values": [
+                [
+                  0
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Second selected",
+          "passed": false,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*) = 1"
+              ],
+              "values": [
+                [
+                  0
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Source intact",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*)=5 AND SUM(score)=41"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Exact source multiset: notes",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "NOT EXISTS(SELECT id,score,COUNT(*) FROM notes GROUP BY id,score EXCEPT SELECT id,score,COUNT(*) FROM wanted GROUP BY id,score) AND NOT EXISTS(SELECT id,score,COUNT(*) FROM wanted GROUP BY id,score EXCEPT SELECT id,score,COUNT(*) FROM notes GROUP BY id,score)"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": false,
+      "expectedPass": false,
+      "validated": true,
+      "sourceHash": "2286c7ab9fac811bb6497da0a2a99636b448d7dc33931325a38bf85a2a0ce0cc"
+    },
+    {
+      "id": "sql-43-solution",
+      "output": [
+        {
+          "columns": [
+            "id",
+            "name",
+            "score",
+            "position",
+            "level"
+          ],
+          "values": [
+            [
+              1,
+              "Mira",
+              9,
+              1,
+              1
+            ],
+            [
+              2,
+              "Oren",
+              9,
+              2,
+              1
+            ],
+            [
+              3,
+              "Paz",
+              7,
+              3,
+              2
+            ],
+            [
+              4,
+              "Rin",
+              5,
+              4,
+              3
+            ]
+          ]
+        }
+      ],
+      "error": null,
+      "checks": [
+        {
+          "label": "Exact row count",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*) = 4"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "First tie",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*) = 1"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Second tie",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*) = 1"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Next group",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*) = 1"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Last group",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*) = 1"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Source intact",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*)=4 AND SUM(score)=30"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Exact source multiset: results",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "NOT EXISTS(SELECT id,name,score,COUNT(*) FROM results GROUP BY id,name,score EXCEPT SELECT id,name,score,COUNT(*) FROM wanted GROUP BY id,name,score) AND NOT EXISTS(SELECT id,name,score,COUNT(*) FROM wanted GROUP BY id,name,score EXCEPT SELECT id,name,score,COUNT(*) FROM results GROUP BY id,name,score)"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": true,
+      "expectedPass": true,
+      "validated": true,
+      "sourceHash": "eaf6daf6aa948dca2f45ab94017fd397096e14723c08c2d14b76fff4c9e065c4"
+    },
+    {
+      "id": "sql-43-starter",
+      "output": [],
+      "error": null,
+      "checks": [
+        {
+          "label": "Exact row count",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*) = 4"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "First tie",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*) = 1"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Second tie",
+          "passed": false,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*) = 1"
+              ],
+              "values": [
+                [
+                  0
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Next group",
+          "passed": false,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*) = 1"
+              ],
+              "values": [
+                [
+                  0
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Last group",
+          "passed": false,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*) = 1"
+              ],
+              "values": [
+                [
+                  0
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Source intact",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*)=4 AND SUM(score)=30"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Exact source multiset: results",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "NOT EXISTS(SELECT id,name,score,COUNT(*) FROM results GROUP BY id,name,score EXCEPT SELECT id,name,score,COUNT(*) FROM wanted GROUP BY id,name,score) AND NOT EXISTS(SELECT id,name,score,COUNT(*) FROM wanted GROUP BY id,name,score EXCEPT SELECT id,name,score,COUNT(*) FROM results GROUP BY id,name,score)"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": false,
+      "expectedPass": false,
+      "validated": true,
+      "sourceHash": "239d92765a7502577cbda693a8c3ea3282d68fda3f2d6192d5658356e6bf285e"
+    },
+    {
+      "id": "sql-35-worked",
+      "output": [
+        {
+          "columns": [
+            "id",
+            "title",
+            "status"
+          ],
+          "values": [
+            [
+              1,
+              "Read",
+              "open"
+            ],
+            [
+              2,
+              "Walk",
+              null
+            ]
+          ]
+        }
+      ],
+      "error": null,
+      "checks": [
+        {
+          "label": "Exact row count",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*) = 2"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Omitted status",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*) = 1"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Explicit null",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*) = 1"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": true,
+      "expectedPass": true,
+      "validated": true,
+      "sourceHash": "45951c1e34aa04ca22cc23866a1cb6c8f689aeda3bfab40d17e923fc595dddab"
+    },
+    {
+      "id": "sql-35-changed",
+      "output": [
+        {
+          "columns": [
+            "id",
+            "title",
+            "status"
+          ],
+          "values": [
+            [
+              1,
+              "Read",
+              "open"
+            ],
+            [
+              2,
+              "Walk",
+              "done"
+            ]
+          ]
+        }
+      ],
+      "error": null,
+      "checks": [
+        {
+          "label": "Exact row count",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*) = 2"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Provided status",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*) = 1"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": true,
+      "expectedPass": true,
+      "validated": true,
+      "sourceHash": "a2990bedb26573a883c7fc21c66588ea4c04206cf6625dc000c92447f0bb7d90"
+    },
+    {
+      "id": "sql-35-not-null",
+      "output": [],
+      "error": "NOT NULL constraint failed: strict_note.title",
+      "checks": [
+        {
+          "label": "No row inserted",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*)=0"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": true,
+      "expectedPass": true,
+      "validated": true,
+      "sourceHash": "217e731f1718babea9e8c946846116cbb4313c365f2dd6178feac5492d2fb21e"
+    },
+    {
+      "id": "sql-36-worked",
+      "output": [
+        {
+          "columns": [
+            "id",
+            "seats"
+          ],
+          "values": [
+            [
+              1,
+              3
+            ]
+          ]
+        }
+      ],
+      "error": null,
+      "checks": [
+        {
+          "label": "Exact row count",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*) = 1"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Accepted 3",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*) = 1"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": true,
+      "expectedPass": true,
+      "validated": true,
+      "sourceHash": "ddbfd3ed19d2cf5a429797ac59af536eba5add2df9cc29551c5250b65869700b"
+    },
+    {
+      "id": "sql-36-changed",
+      "output": [
+        {
+          "columns": [
+            "id",
+            "seats"
+          ],
+          "values": [
+            [
+              1,
+              null
+            ]
+          ]
+        }
+      ],
+      "error": null,
+      "checks": [
+        {
+          "label": "Exact row count",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*) = 1"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Accepted missing",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*) = 1"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": true,
+      "expectedPass": true,
+      "validated": true,
+      "sourceHash": "4753e0d730d220669760b4fea0f871d94ba28a67d13914f3e611dae70e323b5c"
+    },
+    {
+      "id": "sql-36-outside-range",
+      "output": [],
+      "error": "CHECK constraint failed: seats BETWEEN 1 AND 4",
+      "checks": [
+        {
+          "label": "No insertion",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*)=0"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": true,
+      "expectedPass": true,
+      "validated": true,
+      "sourceHash": "6dcae2623c7dfaabd3701ef13f00610aee707fd883ca0aabee72de8590c794c7"
+    },
+    {
+      "id": "sql-36-required",
+      "output": [],
+      "error": "NOT NULL constraint failed: bookings.seats",
+      "checks": [
+        {
+          "label": "No insertion",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*)=0"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": true,
+      "expectedPass": true,
+      "validated": true,
+      "sourceHash": "0889e40aa018c6354572c2e7763fb96725f3172bfb5d37bfa24fbb3fe7877a41"
+    },
+    {
+      "id": "sql-37-worked",
+      "output": [
+        {
+          "columns": [
+            "person",
+            "day"
+          ],
+          "values": [
+            [
+              "Mira",
+              "Mon"
+            ],
+            [
+              "Mira",
+              "Tue"
+            ],
+            [
+              "Oren",
+              "Mon"
+            ]
+          ]
+        }
+      ],
+      "error": null,
+      "checks": [
+        {
+          "label": "Three pairs",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*)=3"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": true,
+      "expectedPass": true,
+      "validated": true,
+      "sourceHash": "31d2125a1f8a8bdd751e3f8aec4248a87b1d4d7f3830d185deea4e66d21d6f9d"
+    },
+    {
+      "id": "sql-37-changed",
+      "output": [
+        {
+          "columns": [
+            "person",
+            "day"
+          ],
+          "values": [
+            [
+              "Mira",
+              null
+            ],
+            [
+              "Mira",
+              null
+            ]
+          ]
+        }
+      ],
+      "error": null,
+      "checks": [
+        {
+          "label": "Both nullable rows",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*)=2"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": true,
+      "expectedPass": true,
+      "validated": true,
+      "sourceHash": "9fb0b90ec549ff0e3536483baf807f39857785f953a3d37d52521a007663f1b5"
+    },
+    {
+      "id": "sql-37-duplicate-pair",
+      "output": [],
+      "error": "UNIQUE constraint failed: slots.person, slots.day",
+      "checks": [
+        {
+          "label": "First row preserved",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*)=1"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": true,
+      "expectedPass": true,
+      "validated": true,
+      "sourceHash": "e92002eb691a6a584533d779b1187dd80b971eadcc5bb7b93b65042002b98320"
+    },
+    {
+      "id": "sql-38-worked",
+      "output": [
+        {
+          "columns": [
+            "name",
+            "title"
+          ],
+          "values": [
+            [
+              "Mira",
+              "Art"
+            ],
+            [
+              "Mira",
+              "Music"
+            ],
+            [
+              "Oren",
+              "Art"
+            ]
+          ]
+        }
+      ],
+      "error": null,
+      "checks": [
+        {
+          "label": "Three links",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*)=3"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": true,
+      "expectedPass": true,
+      "validated": true,
+      "sourceHash": "e15688d1b058e066561fc454b9dce9ff11535dc7a905cdb97bd37a6f4e569628"
+    },
+    {
+      "id": "sql-38-changed",
+      "output": [
+        {
+          "columns": [
+            "name",
+            "title"
+          ],
+          "values": [
+            [
+              "Mira",
+              "Art"
+            ],
+            [
+              "Mira",
+              "Music"
+            ],
+            [
+              "Oren",
+              "Art"
+            ],
+            [
+              "Oren",
+              "Music"
+            ]
+          ]
+        }
+      ],
+      "error": null,
+      "checks": [
+        {
+          "label": "Four links",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*)=4"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": true,
+      "expectedPass": true,
+      "validated": true,
+      "sourceHash": "9f9adb78022eadf05122b9faaad448754e3502010d8977a45ef0386fab6468ff"
+    },
+    {
+      "id": "sql-38-missing-parent",
+      "output": [],
+      "error": "FOREIGN KEY constraint failed",
+      "checks": [
+        {
+          "label": "No orphan",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*)=0"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": true,
+      "expectedPass": true,
+      "validated": true,
+      "sourceHash": "47ab75bc36c795a61b82fee3904a480fee0c6ca4c36685113fae5554068db9c0"
+    },
+    {
+      "id": "sql-39-worked",
+      "output": [
+        {
+          "columns": [
+            "id"
+          ],
+          "values": [
+            [
+              null
+            ],
+            [
+              1
+            ]
+          ]
+        }
+      ],
+      "error": null,
+      "checks": [
+        {
+          "label": "Unmatched count",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*)=2"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": true,
+      "expectedPass": true,
+      "validated": true,
+      "sourceHash": "6674104538979207fd83604d0e95ccbaf677ae8fb9903431997f3e99afd81032"
+    },
+    {
+      "id": "sql-39-changed",
+      "output": [],
+      "error": null,
+      "checks": [
+        {
+          "label": "NOT IN empty",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*)=0"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": true,
+      "expectedPass": true,
+      "validated": true,
+      "sourceHash": "859d76d9e511c5e020ec2f70b43f6d0aa0b1adfec8dff6e5c5793b2eced59a53"
+    },
+    {
+      "id": "sql-40-worked",
+      "output": [
+        {
+          "columns": [
+            "worker",
+            "manager"
+          ],
+          "values": [
+            [
+              "Ari",
+              null
+            ],
+            [
+              "Bo",
+              "Ari"
+            ],
+            [
+              "Cy",
+              "Ari"
+            ],
+            [
+              "Dee",
+              "Bo"
+            ]
+          ]
+        }
+      ],
+      "error": null,
+      "checks": [
+        {
+          "label": "All children",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*)=4"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": true,
+      "expectedPass": true,
+      "validated": true,
+      "sourceHash": "abd21b52501b283090335daeb6a1b616b480f80af0536ae5f7b7b2730b3719d8"
+    },
+    {
+      "id": "sql-40-changed",
+      "output": [
+        {
+          "columns": [
+            "worker",
+            "manager"
+          ],
+          "values": [
+            [
+              "Bo",
+              "Ari"
+            ],
+            [
+              "Cy",
+              "Ari"
+            ],
+            [
+              "Dee",
+              "Bo"
+            ]
+          ]
+        }
+      ],
+      "error": null,
+      "checks": [
+        {
+          "label": "Matched only",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*)=3"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": true,
+      "expectedPass": true,
+      "validated": true,
+      "sourceHash": "81d95c0d2f740dbe4e8da2feb7280be39af45f4e61b85985c2995f65f0f9e1eb"
+    },
+    {
+      "id": "sql-41-worked",
+      "output": [
+        {
+          "columns": [
+            "project_id",
+            "task_id"
+          ],
+          "values": [
+            [
+              1,
+              11
+            ],
+            [
+              2,
+              null
+            ],
+            [
+              3,
+              null
+            ]
+          ]
+        }
+      ],
+      "error": null,
+      "checks": [
+        {
+          "label": "Retained projects",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*)=3"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": true,
+      "expectedPass": true,
+      "validated": true,
+      "sourceHash": "6aa98be010f18efd0a71e70b0f5f6be6047012073e670e84ece61f6b1849c263"
+    },
+    {
+      "id": "sql-41-changed",
+      "output": [
+        {
+          "columns": [
+            "project_id",
+            "task_id"
+          ],
+          "values": [
+            [
+              1,
+              11
+            ]
+          ]
+        }
+      ],
+      "error": null,
+      "checks": [
+        {
+          "label": "Only open match",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*)=1"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": true,
+      "expectedPass": true,
+      "validated": true,
+      "sourceHash": "98bd36053f938060cc3107d08ed5c72b5265b2046c2ff3a877dd7b5b498a6c33"
+    },
+    {
+      "id": "sql-42-worked",
+      "output": [
+        {
+          "columns": [
+            "id",
+            "score"
+          ],
+          "values": [
+            [
+              3,
+              8
+            ],
+            [
+              4,
+              8
+            ]
+          ]
+        }
+      ],
+      "error": null,
+      "checks": [
+        {
+          "label": "Second pair count",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*)=2"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Second pair sum",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "SUM(id)=7"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": true,
+      "expectedPass": true,
+      "validated": true,
+      "sourceHash": "d13a5f89a689ad144bbd821d377aed9ed2abeb8f82b5825e0cb781776c50d8e7"
+    },
+    {
+      "id": "sql-42-changed",
+      "output": [
+        {
+          "columns": [
+            "id",
+            "score"
+          ],
+          "values": [
+            [
+              5,
+              5
+            ]
+          ]
+        }
+      ],
+      "error": null,
+      "checks": [
+        {
+          "label": "Last row",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*)=1 AND SUM(id)=5"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": true,
+      "expectedPass": true,
+      "validated": true,
+      "sourceHash": "6b8243031f9a76293ec1d72c7d892bd66ac3546abaa17aba134b60436d3a1982"
+    },
+    {
+      "id": "sql-43-worked",
+      "output": [
+        {
+          "columns": [
+            "id",
+            "name",
+            "score",
+            "position",
+            "level"
+          ],
+          "values": [
+            [
+              1,
+              "Mira",
+              9,
+              1,
+              1
+            ],
+            [
+              2,
+              "Oren",
+              9,
+              2,
+              1
+            ],
+            [
+              3,
+              "Paz",
+              7,
+              3,
+              2
+            ],
+            [
+              4,
+              "Rin",
+              5,
+              4,
+              3
+            ]
+          ]
+        }
+      ],
+      "error": null,
+      "checks": [
+        {
+          "label": "Dense tie",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*)=2"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": true,
+      "expectedPass": true,
+      "validated": true,
+      "sourceHash": "3c07eddd98cc5939da63c44513a8430bd5c78dd30cfe75f91776e14a34550cbb"
+    },
+    {
+      "id": "sql-43-changed",
+      "output": [
+        {
+          "columns": [
+            "id",
+            "name",
+            "score",
+            "position",
+            "level"
+          ],
+          "values": [
+            [
+              1,
+              "Mira",
+              9,
+              1,
+              1
+            ],
+            [
+              2,
+              "Oren",
+              9,
+              2,
+              2
+            ],
+            [
+              3,
+              "Paz",
+              7,
+              3,
+              3
+            ],
+            [
+              4,
+              "Rin",
+              5,
+              4,
+              4
+            ]
+          ]
+        }
+      ],
+      "error": null,
+      "checks": [
+        {
+          "label": "All different",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(DISTINCT r)=4"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": true,
+      "expectedPass": true,
+      "validated": true,
+      "sourceHash": "bd0d11a7f5b2b3ce12a3239ec2794cbcbb8ad370bf6d31f50440e7cbbdbe9240"
+    }
+  ],
+  "passed": true,
+  "count": 41
+}

@@ -9,6 +9,7 @@ export type Runtime =
   | "react"
   | "swift";
 export type Unit = {
+  prerequisite_ids?: string[];
   id: string;
   track: string;
   level: string;
@@ -25,6 +26,7 @@ export type Question = {
   feedback?: string;
 };
 export type Lesson = {
+  learningMode?: "concept";
   id: string;
   title: string;
   summary: string;
@@ -35,6 +37,8 @@ export type Lesson = {
   solution: string;
   runtime: Runtime;
   checks: { label: string; expression: string }[];
+  typeAssertions?: { label: string; code: string; expect: "accept" | "reject"; diagnosticCodes?: number[] }[];
+  typeVariants?: { label: string; alias: string; appendType: string; functionName: string; diagnosticCodes: number[] }[];
   quiz: Question;
   hints: string[];
   math: (Question & { explanation: string }) | null;

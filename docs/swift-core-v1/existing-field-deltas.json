@@ -1,0 +1,492 @@
+[
+  {
+    "kind": "lesson",
+    "id": "swift-06",
+    "field": "checks",
+    "before": [
+      {
+        "label": "First conversion",
+        "expression": "abs(convert(2, factor: 1.6) - 3.2) < 0.0001"
+      },
+      {
+        "label": "Second conversion",
+        "expression": "convert(5, factor: 1.6) == 8"
+      },
+      {
+        "label": "Results are stored",
+        "expression": "abs(shortTrip - 3.2) < 0.0001 && longTrip == 8"
+      }
+    ],
+    "after": [
+      {
+        "label": "First conversion",
+        "expression": "abs(convert(2, factor: 1.6) - 3.2) < 0.0001"
+      },
+      {
+        "label": "Second conversion",
+        "expression": "convert(5, factor: 1.6) == 8"
+      },
+      {
+        "label": "Results are stored",
+        "expression": "abs(shortTrip - 3.2) < 0.0001 && longTrip == 8"
+      },
+      {
+        "label": "Changed factor and zero",
+        "expression": "convert(3, factor: 2) == 6 && convert(0, factor: 7) == 0"
+      }
+    ]
+  },
+  {
+    "kind": "lesson",
+    "id": "swift-08",
+    "field": "starter",
+    "before": "protocol Transport { var description: String { get } }\nstruct Train: Transport { var description: String { \"Train\" } }\nstruct Bicycle: Transport { var description: String { \"Bicycle\" } }\nstruct Trip { var destination: String; var note: String? }\nfunc tripSummary(_ trip: Trip, by transport: any Transport) -> String {\n    let noteText = trip.note ?? \"No extra note\"\n    return \"TODO\"\n}\nlet trip = Trip(destination: \"Salem\", note: nil)\nlet summary = tripSummary(trip, by: Train())",
+    "after": "protocol Transport { var description: String { get } }\nstruct Train: Transport { var description: String { \"Train\" } }\nstruct Bicycle: Transport { var description: String { \"Bicycle\" } }\nstruct Trip { var destination: String; var note: String? }\nfunc tripSummary(_ trip: Trip, by transport: any Transport) -> String {\n    let noteText = trip.note ?? \"No extra note\"\n    return \"TODO\"\n}\nlet trip = Trip(destination: \"Salem\", note: nil)\nlet summary = tripSummary(trip, by: Train())\nlet bikeSummary = tripSummary(Trip(destination: \"Eugene\", note: \"Pack a light\"), by: Bicycle())"
+  },
+  {
+    "kind": "lesson",
+    "id": "swift-08",
+    "field": "checks",
+    "before": [
+      {
+        "label": "Missing note is safe",
+        "expression": "summary.contains(\"No extra note\")"
+      },
+      {
+        "label": "Transport description appears",
+        "expression": "summary.contains(\"Train\") && summary.contains(\"Salem\")"
+      },
+      {
+        "label": "Another transport works",
+        "expression": "bikeSummary.contains(\"Eugene\") && bikeSummary.contains(\"Bicycle\") && bikeSummary.contains(\"Pack a light\")"
+      }
+    ],
+    "after": [
+      {
+        "label": "Missing note is safe",
+        "expression": "summary.contains(\"No extra note\")"
+      },
+      {
+        "label": "Transport description appears",
+        "expression": "summary.contains(\"Train\") && summary.contains(\"Salem\")"
+      },
+      {
+        "label": "Another transport works",
+        "expression": "bikeSummary.contains(\"Eugene\") && bikeSummary.contains(\"Bicycle\") && bikeSummary.contains(\"Pack a light\")"
+      },
+      {
+        "label": "Changed trip and empty present note",
+        "expression": "{ let trip = Trip(destination: \"Corvallis\", note: \"\"); let text = tripSummary(trip, by: Bicycle()); return text.contains(\"Corvallis\") && text.contains(\"Bicycle\") && !text.contains(\"No extra note\") }()"
+      }
+    ]
+  },
+  {
+    "kind": "lesson",
+    "id": "swift-10",
+    "field": "explanation.7",
+    "before": "Model the loader's states in ordinary words: Ready before a request, Loading during it, Loaded with entries after success, Could not load after failure, or Load cancelled after cancellation. An outdated task should not change either the result or the current message. catch is CancellationError recognizes that error type; a following catch handles other errors. if accepts(...) inside those catches prevents a stale task from replacing a newer message. The supplied driver uses MainActor.run to read or construct main-actor state from its async context. It also stores two values in a tuple, accessed as .0 and .1, to inspect the result and message together.\n\n```swift\nlet label = await MainActor.run { \"Ready\" }\nprint(label)\n```\nIn a top-level async program this prints Ready. MainActor.run receives a synchronous closure, executes it on the main actor and returns its value through the awaited call. It does not make an entire async operation uninterrupted.",
+    "after": "Model the loader's states in ordinary words: Ready before a request, Loading during it, Loaded with entries after success, Could not load after failure, or Load cancelled after cancellation. An outdated task should not change either the result or the current message. catch is CancellationError recognizes that error type; a following catch handles other errors. if accepts(...) inside those catches prevents a stale task from replacing a newer message. The supplied driver uses MainActor.run to read or construct main-actor state from its async context. It also stores two values in a tuple, accessed as .0 and .1, to inspect the result and message together.\n\n```swift\nlet label = await MainActor.run { \"Ready\" }\nprint(label)\n```\nIn a top-level async program this prints Ready. MainActor.run receives a synchronous closure, executes it on the main actor and returns its value through the awaited call. It does not make an entire async operation uninterrupted. The supplied start method returns its Task<Void, Never> handle as well as storing it for cancellation. The driver awaits each handle’s value before reading results, including the superseded and cancelled tasks. This observes completion instead of assuming that a chosen sleep interval is long enough. For the cancellation demonstration, one synchronous MainActor.run closure starts and cancels the task before its inherited MainActor body can execute; then the driver awaits completion. This controlled ordering does not undo work that already completed before a later cancellation. The simulated loader still uses a cancellable delay to represent work; it does not promise a scheduling order."
+  },
+  {
+    "kind": "lesson",
+    "id": "swift-10",
+    "field": "explanation.8",
+    "before": "For the exercise, use the supplied real async driver: slow request 1 followed by faster request 2 should leave session-2 in both the loader and actor store. Request 0 should produce Could not load practice data. Explicit cancellation of request 1 should preserve session-2 and show Load cancelled. Store and cancel the Task, capture each new ID, and guard after awaits; do not depend on delays alone. In the math scenario, request A with ID 4 remains stale once B with ID 5 is current, so B stays visible even if A finishes last. Compile and run with the compatible Mac companion or Apple toolchain, then test in Xcode when attaching a real interface. The browser cannot execute this Swift concurrency or prove its scheduling behavior.",
+    "after": "For the exercise, use the supplied real async driver: slow request 1 followed by faster request 2 should leave session-2 in both the loader and actor store. Request 0 should produce Could not load practice data. Explicit cancellation of request 1 should preserve session-2 and show Load cancelled. Store and cancel the Task, capture each new ID, and guard after awaits; do not depend on delays alone. In the math scenario, request A with ID 4 remains stale once B with ID 5 is current, so B stays visible even if A finishes last. Compile and run with Swift 6 language mode using the configured Mac companion or a compatible local toolchain; test in Xcode when attaching a real Apple interface. The browser cannot execute this Swift concurrency or prove its scheduling behavior."
+  },
+  {
+    "kind": "lesson",
+    "id": "swift-10",
+    "field": "externalNotes",
+    "before": "Uses actual top-level async Swift, Task scheduling, actor storage, and supplied race/failure/cancellation scenarios. The Mac companion must compile and run this code using a compatible Apple toolchain. Run it in Xcode as well when attaching a real interface; browser execution cannot replace that Apple environment.",
+    "after": "The driver awaits the actual Task handles; no fixed observation sleep proves completion. Loader guards the currently visible request. PracticeStore separately rejects a replacement older than its last stored request; it is not notified whenever a new request starts or is cancelled. Native Linux validation does not establish Mac sandbox or Apple UI behavior."
+  },
+  {
+    "kind": "lesson",
+    "id": "swift-10",
+    "field": "starter",
+    "before": "func accepts(request: Int, current: Int) -> Bool { false // TODO: compare the identifiers }\nenum LoadError: Error { case unavailable }\nactor PracticeStore {\n    private var entries: [String] = []\n    private var requestID = 0\n    func replace(with newEntries: [String], request: Int) {\n        guard request >= requestID else { return }\n        requestID = request\n        // TODO: replace entries\n    }\n    func snapshot() -> [String] { entries }\n}\nfunc loadPractice(_ id: Int) async throws -> [String] {\n    try await Task.sleep(for: .milliseconds(id == 1 ? 80 : 10))\n    try Task.checkCancellation()\n    if id == 0 { throw LoadError.unavailable }\n    return [\"session-\\(id)\"]\n}\n@MainActor final class Loader {\n    private(set) var result: [String] = []\n    private(set) var message = \"Ready\"\n    let store = PracticeStore()\n    private var task: Task<Void, Never>?\n    private var requestID = 0\n    func start(_ id: Int) {\n        task?.cancel()\n        requestID += 1\n        let thisRequest = requestID\n        message = \"Loading\"\n        task = Task {\n            do {\n                let values = try await loadPractice(id)\n                guard !Task.isCancelled, accepts(request: thisRequest, current: requestID) else { return }\n                await store.replace(with: values, request: thisRequest)\n                guard !Task.isCancelled, accepts(request: thisRequest, current: requestID) else { return }\n                // TODO: apply the latest result\n                message = \"Loaded \\(values.count) entries\"\n            } catch is CancellationError {\n                if accepts(request: thisRequest, current: requestID) { message = \"TODO\" }\n            } catch {\n                if accepts(request: thisRequest, current: requestID) { message = \"TODO\" }\n            }\n        }\n    }\n    func cancel() {\n        task?.cancel()\n        requestID += 1\n        message = \"TODO\"\n    }\n}\nlet loader = await MainActor.run { Loader() }\nawait loader.start(1)\nawait loader.start(2)\ntry await Task.sleep(for: .milliseconds(140))\nlet afterRace = await MainActor.run { loader.result }\nlet storedAfterRace = await loader.store.snapshot()\nawait loader.start(0)\ntry await Task.sleep(for: .milliseconds(50))\nlet afterFailure = await MainActor.run { loader.message }\nawait loader.start(1)\nawait loader.cancel()\ntry await Task.sleep(for: .milliseconds(100))\nlet afterCancellation = await MainActor.run { (loader.result, loader.message) }\nprint(\"Latest data: \\(afterRace); failure: \\(afterFailure); cancellation: \\(afterCancellation.1)\")",
+    "after": "func accepts(request: Int, current: Int) -> Bool {\n  // TODO: compare the identifiers\n  return false\n}\nenum LoadError: Error { case unavailable }\nactor PracticeStore {\n  private var entries: [String] = []\n  private var requestID = 0\n  func replace(with newEntries: [String], request: Int) {\n    guard request >= requestID else { return }\n    requestID = request\n    // TODO: replace entries\n  }\n  func snapshot() -> [String] { entries }\n}\nfunc loadPractice(_ id: Int) async throws -> [String] {\n  try await Task.sleep(for: .milliseconds(id == 1 ? 80 : 10))\n  try Task.checkCancellation()\n  if id == 0 { throw LoadError.unavailable }\n  return [\"session-\\(id)\"]\n}\n@MainActor final class Loader {\n  private(set) var result: [String] = []\n  private(set) var message = \"Ready\"\n  let store = PracticeStore()\n  private var task: Task<Void, Never>?\n  private var requestID = 0\n  func start(_ id: Int) -> Task<Void, Never> {\n    task?.cancel()\n    requestID += 1\n    let thisRequest = requestID\n    message = \"Loading\"\n    let started = Task {\n      do {\n        let values = try await loadPractice(id)\n        guard !Task.isCancelled, accepts(request: thisRequest, current: requestID) else { return }\n        await store.replace(with: values, request: thisRequest)\n        guard !Task.isCancelled, accepts(request: thisRequest, current: requestID) else { return }\n        // TODO: apply the latest result\n        message = \"Loaded \\(values.count) entries\"\n      } catch is CancellationError {\n        if accepts(request: thisRequest, current: requestID) { message = \"TODO\" }\n      } catch {\n        if accepts(request: thisRequest, current: requestID) { message = \"TODO\" }\n      }\n    }\n    task = started\n    return started\n  }\n  func cancel() {\n    task?.cancel()\n    requestID += 1\n    message = \"TODO\"\n  }\n}\nlet loader = await MainActor.run { Loader() }\nlet earlier = await loader.start(1)\nlet current = await loader.start(2)\nawait earlier.value\nawait current.value\nlet afterRace = await MainActor.run { loader.result }\nlet storedAfterRace = await loader.store.snapshot()\nlet failed = await loader.start(0)\nawait failed.value\nlet afterFailure = await MainActor.run { loader.message }\nlet cancelled = await MainActor.run {\n  let handle = loader.start(1)\n  loader.cancel()\n  return handle\n}\nawait cancelled.value\nlet afterCancellation = await MainActor.run { (loader.result, loader.message) }\nprint(\"Latest data: \\(afterRace); failure: \\(afterFailure); cancellation: \\(afterCancellation.1)\")\n"
+  },
+  {
+    "kind": "lesson",
+    "id": "swift-10",
+    "field": "solution",
+    "before": "func accepts(request: Int, current: Int) -> Bool { request == current }\nenum LoadError: Error { case unavailable }\nactor PracticeStore {\n    private var entries: [String] = []\n    private var requestID = 0\n    func replace(with newEntries: [String], request: Int) {\n        guard request >= requestID else { return }\n        requestID = request\n        entries = newEntries\n    }\n    func snapshot() -> [String] { entries }\n}\nfunc loadPractice(_ id: Int) async throws -> [String] {\n    try await Task.sleep(for: .milliseconds(id == 1 ? 80 : 10))\n    try Task.checkCancellation()\n    if id == 0 { throw LoadError.unavailable }\n    return [\"session-\\(id)\"]\n}\n@MainActor final class Loader {\n    private(set) var result: [String] = []\n    private(set) var message = \"Ready\"\n    let store = PracticeStore()\n    private var task: Task<Void, Never>?\n    private var requestID = 0\n    func start(_ id: Int) {\n        task?.cancel()\n        requestID += 1\n        let thisRequest = requestID\n        message = \"Loading\"\n        task = Task {\n            do {\n                let values = try await loadPractice(id)\n                guard !Task.isCancelled, accepts(request: thisRequest, current: requestID) else { return }\n                await store.replace(with: values, request: thisRequest)\n                guard !Task.isCancelled, accepts(request: thisRequest, current: requestID) else { return }\n                result = values\n                message = \"Loaded \\(values.count) entries\"\n            } catch is CancellationError {\n                if accepts(request: thisRequest, current: requestID) { message = \"Load cancelled\" }\n            } catch {\n                if accepts(request: thisRequest, current: requestID) { message = \"Could not load practice data\" }\n            }\n        }\n    }\n    func cancel() {\n        task?.cancel()\n        requestID += 1\n        message = \"Load cancelled\"\n    }\n}\nlet loader = await MainActor.run { Loader() }\nawait loader.start(1)\nawait loader.start(2)\ntry await Task.sleep(for: .milliseconds(140))\nlet afterRace = await MainActor.run { loader.result }\nlet storedAfterRace = await loader.store.snapshot()\nawait loader.start(0)\ntry await Task.sleep(for: .milliseconds(50))\nlet afterFailure = await MainActor.run { loader.message }\nawait loader.start(1)\nawait loader.cancel()\ntry await Task.sleep(for: .milliseconds(100))\nlet afterCancellation = await MainActor.run { (loader.result, loader.message) }\nprint(\"Latest data: \\(afterRace); failure: \\(afterFailure); cancellation: \\(afterCancellation.1)\")",
+    "after": "func accepts(request: Int, current: Int) -> Bool { request == current }\nenum LoadError: Error { case unavailable }\nactor PracticeStore {\n  private var entries: [String] = []\n  private var requestID = 0\n  func replace(with newEntries: [String], request: Int) {\n    guard request >= requestID else { return }\n    requestID = request\n    entries = newEntries\n  }\n  func snapshot() -> [String] { entries }\n}\nfunc loadPractice(_ id: Int) async throws -> [String] {\n  try await Task.sleep(for: .milliseconds(id == 1 ? 80 : 10))\n  try Task.checkCancellation()\n  if id == 0 { throw LoadError.unavailable }\n  return [\"session-\\(id)\"]\n}\n@MainActor final class Loader {\n  private(set) var result: [String] = []\n  private(set) var message = \"Ready\"\n  let store = PracticeStore()\n  private var task: Task<Void, Never>?\n  private var requestID = 0\n  func start(_ id: Int) -> Task<Void, Never> {\n    task?.cancel()\n    requestID += 1\n    let thisRequest = requestID\n    message = \"Loading\"\n    let started = Task {\n      do {\n        let values = try await loadPractice(id)\n        guard !Task.isCancelled, accepts(request: thisRequest, current: requestID) else { return }\n        await store.replace(with: values, request: thisRequest)\n        guard !Task.isCancelled, accepts(request: thisRequest, current: requestID) else { return }\n        result = values\n        message = \"Loaded \\(values.count) entries\"\n      } catch is CancellationError {\n        if accepts(request: thisRequest, current: requestID) { message = \"Load cancelled\" }\n      } catch {\n        if accepts(request: thisRequest, current: requestID) {\n          message = \"Could not load practice data\"\n        }\n      }\n    }\n    task = started\n    return started\n  }\n  func cancel() {\n    task?.cancel()\n    requestID += 1\n    message = \"Load cancelled\"\n  }\n}\nlet loader = await MainActor.run { Loader() }\nlet earlier = await loader.start(1)\nlet current = await loader.start(2)\nawait earlier.value\nawait current.value\nlet afterRace = await MainActor.run { loader.result }\nlet storedAfterRace = await loader.store.snapshot()\nlet failed = await loader.start(0)\nawait failed.value\nlet afterFailure = await MainActor.run { loader.message }\nlet cancelled = await MainActor.run {\n  let handle = loader.start(1)\n  loader.cancel()\n  return handle\n}\nawait cancelled.value\nlet afterCancellation = await MainActor.run { (loader.result, loader.message) }\nprint(\"Latest data: \\(afterRace); failure: \\(afterFailure); cancellation: \\(afterCancellation.1)\")\n"
+  },
+  {
+    "kind": "lesson",
+    "id": "swift-11",
+    "field": "externalNotes",
+    "before": "The companion deletes its sandbox directory after each run, so this exercise checks atomic disk round-tripping and malformed-data recovery within one run. To verify survival across app restarts, inject an application-support URL in an Xcode app, save an entry, stop the app, and launch again. Plan versioning/migration separately; the temporary companion fixture does not establish persistent iOS storage. This Foundation-dependent lesson may hit the companion's 30-second cold compile limit on the development toolchain; compilation and execution have not yet been verified there.",
+    "after": "The companion deletes its sandbox directory after each run, so this exercise checks atomic disk round-tripping and malformed-data recovery within one run. To verify survival across app restarts, inject an application-support URL in an Xcode app, save an entry, stop the app, and launch again. Plan versioning/migration separately; the temporary companion fixture does not establish persistent iOS storage. Native Linux execution and Apple SDK/companion execution are separate evidence; a cold Mac compile may still reach the companion time limit."
+  },
+  {
+    "kind": "lesson",
+    "id": "swift-11",
+    "field": "starter",
+    "before": "import Foundation\nstruct PracticeEntry: Codable, Equatable {\n    let title: String\n    let minutes: Int\n}\nstruct LoadResult { let entries: [PracticeEntry]; let message: String }\nfunc encodeEntries(_ entries: [PracticeEntry]) throws -> Data {\n    // TODO: encode with JSONEncoder\n    Data()\n}\nfunc loadEntries(_ data: Data) -> LoadResult {\n    // TODO: decode, or recover from invalid bytes\n    LoadResult(entries: [], message: \"TODO\")\n}",
+    "after": "import Foundation\nstruct PracticeEntry: Codable, Equatable {\n    let title: String\n    let minutes: Int\n}\nstruct LoadResult { let entries: [PracticeEntry]; let message: String }\nfunc encodeEntries(_ entries: [PracticeEntry]) throws -> Data {\n    // TODO: encode with JSONEncoder\n    Data()\n}\nfunc loadEntries(_ data: Data) -> LoadResult {\n    // TODO: decode, or recover from invalid bytes\n    LoadResult(entries: [], message: \"TODO\")\n}\nfunc saveEntries(_ entries: [PracticeEntry], to url: URL) throws {\n    try encodeEntries(entries).write(to: url, options: .atomic)\n}\nfunc loadEntries(from url: URL) -> LoadResult {\n    do { return loadEntries(try Data(contentsOf: url)) }\n    catch { return LoadResult(entries: [], message: \"Saved file could not be read; starting with an empty list.\") }\n}\nlet original = [PracticeEntry(title: \"Swift\", minutes: 20)]\nlet fileURL = FileManager.default.temporaryDirectory.appendingPathComponent(\"practice-entries.json\")\ntry saveEntries(original, to: fileURL)\nlet restored = loadEntries(from: fileURL)\nlet recovered = loadEntries(Data(\"broken\".utf8))"
+  },
+  {
+    "kind": "lesson",
+    "id": "swift-12",
+    "field": "starter",
+    "before": "struct SearchResult { let index: Int?; let comparisons: Int }\nfunc find(_ target: Int, in values: [Int]) -> SearchResult {\n    // TODO: inspect values in order and count each comparison\n    SearchResult(index: nil, comparisons: 0)\n}\nlet sample = Array(0..<100)\nlet smallRun = find(99, in: sample)\nlet largeRun = find(199, in: Array(0..<200))",
+    "after": "struct SearchResult { let index: Int?; let comparisons: Int }\nfunc find(_ target: Int, in values: [Int]) -> SearchResult {\n    // TODO: inspect values in order and count each comparison\n    SearchResult(index: nil, comparisons: 0)\n}\nlet sample = Array(0..<100)\nlet smallRun = find(99, in: sample)\nlet largeRun = find(199, in: Array(0..<200))\nlet missingRun = find(-1, in: sample)"
+  },
+  {
+    "kind": "lesson",
+    "id": "swift-12",
+    "field": "checks",
+    "before": [
+      {
+        "label": "Last item is found",
+        "expression": "smallRun.index == 99"
+      },
+      {
+        "label": "Missing item reports nil",
+        "expression": "missingRun.index == nil"
+      },
+      {
+        "label": "Doubling this list doubles comparisons",
+        "expression": "largeRun.comparisons == smallRun.comparisons * 2"
+      },
+      {
+        "label": "First item takes one comparison",
+        "expression": "find(0, in: sample).index == 0 && find(0, in: sample).comparisons == 1"
+      },
+      {
+        "label": "Missing target examines every item",
+        "expression": "missingRun.comparisons == sample.count"
+      }
+    ],
+    "after": [
+      {
+        "label": "Last item is found",
+        "expression": "smallRun.index == 99"
+      },
+      {
+        "label": "Missing item reports nil",
+        "expression": "missingRun.index == nil"
+      },
+      {
+        "label": "Doubling this list doubles comparisons",
+        "expression": "largeRun.comparisons == smallRun.comparisons * 2"
+      },
+      {
+        "label": "First item takes one comparison",
+        "expression": "find(0, in: sample).index == 0 && find(0, in: sample).comparisons == 1"
+      },
+      {
+        "label": "Missing target examines every item",
+        "expression": "missingRun.comparisons == sample.count"
+      },
+      {
+        "label": "Empty and repeated target",
+        "expression": "find(4, in: []).index == nil && find(4, in: []).comparisons == 0 && find(4, in: [4, 4]).index == 0 && find(4, in: [4, 4]).comparisons == 1"
+      }
+    ]
+  },
+  {
+    "kind": "lesson",
+    "id": "swift-13",
+    "field": "externalNotes",
+    "before": "Prerequisites: swift-03 switch branches and swift-06 functions; string interpolation from swift-01. Authored and statically reviewed; Swift compiler was unavailable in the authoring environment. These execution checks require a compatible Swift runner. This lesson does not require SwiftUI.",
+    "after": "This standard Swift enum exercise does not require SwiftUI."
+  },
+  {
+    "kind": "lesson",
+    "id": "swift-14",
+    "field": "externalNotes",
+    "before": "Static review only: Swift compiler unavailable in authoring environment; execution checks require a compatible Swift runner. String keys here meet Set's Hashable requirement. No locale-aware sorting or case normalization is implied.",
+    "after": "String keys here meet Set's Hashable requirement. No locale-aware sorting or case normalization is implied."
+  },
+  {
+    "kind": "lesson",
+    "id": "swift-15",
+    "field": "externalNotes",
+    "before": "Static review only: Swift compiler unavailable. Exercises require compatible Swift execution. The quiz explains $0 shorthand; lesson examples use named arguments to avoid introducing unexplained punctuation.",
+    "after": ""
+  },
+  {
+    "kind": "lesson",
+    "id": "swift-16",
+    "field": "externalNotes",
+    "before": "Expands error mechanics beyond swift-11 file IO; no file IO duplicated. Static review only: no Swift compiler available. defer does not guarantee cleanup after process termination or a scope that never reaches it.",
+    "after": "defer does not guarantee cleanup after process termination or a scope that never reaches it."
+  },
+  {
+    "kind": "lesson",
+    "id": "swift-17",
+    "field": "externalNotes",
+    "before": "Swift compiler unavailable: statically reviewed, not execution verified. Uses struct and computed-property foundations from swift-08.",
+    "after": ""
+  },
+  {
+    "kind": "lesson",
+    "id": "swift-18",
+    "field": "externalNotes",
+    "before": "Swift compiler unavailable: static review only. No claim of verified generic type diagnostics. Compile-negative local practice: assign firstOr([1,2],fallback:0) to a String.",
+    "after": "Local compiler practice: assign firstOr([1, 2], fallback: 0) to a String and inspect the type error. This intentionally rejected program is separate from the normally compiling project and its behavior checks."
+  },
+  {
+    "kind": "lesson",
+    "id": "swift-19",
+    "field": "externalNotes",
+    "before": "Swift compiler unavailable: static review only. This narrow exercise uses a directly initialized property in its own class, not inheritance or observer reentrancy.",
+    "after": "This narrow exercise directly initializes a property in its own class; it does not cover inheritance or observer reentrancy."
+  },
+  {
+    "kind": "lesson",
+    "id": "swift-20",
+    "field": "externalNotes",
+    "before": "Swift runtime unavailable: static review only. ARC applies to class instances; weak is not a universal fix and is appropriate only when the callback must not own the instance. No lifetime execution claim.",
+    "after": "ARC applies to class instances. weak is appropriate here because the callback must not own the instance; it is not a universal ownership fix."
+  },
+  {
+    "kind": "lesson",
+    "id": "swift-21",
+    "field": "externalNotes",
+    "before": "Static review only: Swift compiler unavailable. Requires a compatible Swift concurrency toolchain and strict Swift 6 concurrency compilation review before claiming checked Sendable behavior. Top-level await follows the existing async lesson driver pattern. Swift 6 isolation defaults/settings can affect diagnostics; no @unchecked Sendable escape hatch.",
+    "after": "Use Swift 6 language mode for the stated Sendable checking. Compiler version, language mode and an Xcode project’s isolation defaults are distinct settings. Do not add @unchecked Sendable to bypass the contract."
+  },
+  {
+    "kind": "unit",
+    "id": "swift-02",
+    "field": "prerequisite_ids",
+    "before": null,
+    "after": [
+      "swift-01"
+    ]
+  },
+  {
+    "kind": "unit",
+    "id": "swift-03",
+    "field": "prerequisite_ids",
+    "before": null,
+    "after": [
+      "swift-02",
+      "swift-06"
+    ]
+  },
+  {
+    "kind": "unit",
+    "id": "swift-04",
+    "field": "prerequisite_ids",
+    "before": null,
+    "after": [
+      "swift-01",
+      "swift-02",
+      "swift-05"
+    ]
+  },
+  {
+    "kind": "unit",
+    "id": "swift-05",
+    "field": "prerequisite_ids",
+    "before": null,
+    "after": [
+      "swift-01"
+    ]
+  },
+  {
+    "kind": "unit",
+    "id": "swift-06",
+    "field": "prerequisite_ids",
+    "before": null,
+    "after": [
+      "swift-01",
+      "swift-02"
+    ]
+  },
+  {
+    "kind": "unit",
+    "id": "swift-07",
+    "field": "prerequisite_ids",
+    "before": null,
+    "after": [
+      "swift-32",
+      "swift-06"
+    ]
+  },
+  {
+    "kind": "unit",
+    "id": "swift-08",
+    "field": "prerequisite_ids",
+    "before": null,
+    "after": [
+      "swift-26",
+      "swift-38"
+    ]
+  },
+  {
+    "kind": "unit",
+    "id": "swift-09",
+    "field": "project",
+    "before": {
+      "title": "An iOS practice tracker",
+      "task": "Build a small SwiftUI screen with a list, form, and local state.",
+      "done_when": "The app runs in the agreed Apple environment and updates after valid input."
+    },
+    "after": {
+      "title": "An iOS practice tracker",
+      "task": "Build the supplied SwiftUI practice screen with editable form controls, a list and local state in VStack; review it in an Apple simulator or device.",
+      "done_when": "The app runs in the agreed Apple environment and updates after valid input."
+    }
+  },
+  {
+    "kind": "unit",
+    "id": "swift-09",
+    "field": "prerequisite_ids",
+    "before": null,
+    "after": [
+      "swift-08",
+      "swift-15",
+      "swift-31"
+    ]
+  },
+  {
+    "kind": "unit",
+    "id": "swift-10",
+    "field": "prerequisite_ids",
+    "before": null,
+    "after": [
+      "swift-16",
+      "swift-21",
+      "swift-36"
+    ]
+  },
+  {
+    "kind": "unit",
+    "id": "swift-11",
+    "field": "project",
+    "before": {
+      "title": "A durable iOS tracker",
+      "task": "Store entries, separate display from data logic, and recover from invalid stored data.",
+      "done_when": "Entries survive restart and malformed data produces a controlled recovery."
+    },
+    "after": {
+      "title": "A durable iOS tracker",
+      "task": "Store entries, separate display from data logic, and recover from invalid stored data.",
+      "done_when": "Entries round-trip through a temporary disk file within one run, and malformed data produces the stated recovery result."
+    }
+  },
+  {
+    "kind": "unit",
+    "id": "swift-11",
+    "field": "prerequisite_ids",
+    "before": null,
+    "after": [
+      "swift-16",
+      "swift-45",
+      "swift-32"
+    ]
+  },
+  {
+    "kind": "unit",
+    "id": "swift-12",
+    "field": "prerequisite_ids",
+    "before": null,
+    "after": [
+      "swift-31",
+      "swift-23",
+      "swift-58"
+    ]
+  },
+  {
+    "kind": "unit",
+    "id": "swift-13",
+    "field": "prerequisite_ids",
+    "before": [
+      "swift-03",
+      "swift-06"
+    ],
+    "after": [
+      "swift-03"
+    ]
+  },
+  {
+    "kind": "unit",
+    "id": "swift-15",
+    "field": "prerequisite_ids",
+    "before": [
+      "swift-05",
+      "swift-06",
+      "swift-14"
+    ],
+    "after": [
+      "swift-05",
+      "swift-06"
+    ]
+  },
+  {
+    "kind": "unit",
+    "id": "swift-16",
+    "field": "prerequisite_ids",
+    "before": [
+      "swift-06",
+      "swift-07",
+      "swift-13"
+    ],
+    "after": [
+      "swift-13",
+      "swift-06",
+      "swift-07"
+    ]
+  },
+  {
+    "kind": "unit",
+    "id": "swift-17",
+    "field": "prerequisite_ids",
+    "before": [
+      "swift-08"
+    ],
+    "after": [
+      "swift-38"
+    ]
+  },
+  {
+    "kind": "unit",
+    "id": "swift-18",
+    "field": "prerequisite_ids",
+    "before": [
+      "swift-06",
+      "swift-08"
+    ],
+    "after": [
+      "swift-05",
+      "swift-06",
+      "swift-26"
+    ]
+  },
+  {
+    "kind": "unit",
+    "id": "swift-20",
+    "field": "prerequisite_ids",
+    "before": [
+      "swift-07",
+      "swift-15"
+    ],
+    "after": [
+      "swift-07",
+      "swift-36",
+      "swift-28"
+    ]
+  },
+  {
+    "kind": "unit",
+    "id": "swift-21",
+    "field": "prerequisite_ids",
+    "before": [
+      "swift-10",
+      "swift-08"
+    ],
+    "after": [
+      "swift-38",
+      "swift-06",
+      "swift-08"
+    ]
+  }
+]

@@ -1,0 +1,382 @@
+[
+  {
+    "id": "r-27",
+    "quizTarget": "Insert force(x) as the first statement of choose. What happens for the same call?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "A supplied function argument is usually a promise: its expression and calling environment are retained until the value is needed. An unused argument can therefore contain an expression that would fail if evaluated. stop(message) raises an error and interrupts normal execution."
+      },
+      {
+        "paragraph": 1,
+        "fact": "force(x) evaluates the promise for x now. It is useful before returning a closure that should retain the current argument value. It does not recursively force every promise stored elsewhere."
+      }
+    ],
+    "reasoning": "force makes the stop expression run even though the later if branch would not otherwise use x.",
+    "source": "https://stat.ethz.ch/R-manual/R-patched/library/base/html/force.html",
+    "prerequisites": [
+      "r-26"
+    ]
+  },
+  {
+    "id": "r-28",
+    "quizTarget": "Replace remove = TRUE with rem = 1. What prints?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "... collects arguments not matched to other formal parameters and can forward them into another call. sum(..., na.rm = remove) passes those values to sum and separately sets its missing-value policy."
+      },
+      {
+        "paragraph": 1,
+        "fact": "Formal parameters after ... must be matched by their exact names. Partial names are not matched to remove here. sum adds numeric values; without na.rm = TRUE, a missing value makes this result missing. A numeric argument accidentally captured by ... becomes data, not an option."
+      }
+    ],
+    "reasoning": "rem is captured in ... rather than matching remove. remove stays FALSE, so the NA is not removed.",
+    "source": "https://stat.ethz.ch/R-manual/R-patched/library/base/html/dots.html",
+    "prerequisites": [
+      "r-27"
+    ]
+  },
+  {
+    "id": "r-29",
+    "quizTarget": "Remove force(amount), keeping the later base <- 9. What prints?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "A closure combines a function with the environment where it was defined. The returned function can still find amount in the completed make_adder call\u2019s environment."
+      },
+      {
+        "paragraph": 1,
+        "fact": "force(amount) evaluates the supplied base expression while base is 2. Without forcing before return, the retained promise can evaluate that expression later, after the caller changes base. A closure retains bindings and environments, not automatically frozen snapshots of all names."
+      }
+    ],
+    "reasoning": "The unforced promise evaluates base when add first needs amount, so it obtains 9 and adds 3.",
+    "source": "https://stat.ethz.ch/R-manual/R-patched/library/base/html/function.html",
+    "prerequisites": [
+      "r-28"
+    ]
+  },
+  {
+    "id": "r-30",
+    "quizTarget": "Replace new.env(parent = emptyenv()) with list(). What prints?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "new.env creates an environment, a mutable mapping from names to values. Assigning it to alias does not copy the environment; both names refer to the same bindings. $ reads or assigns a named binding in this example."
+      },
+      {
+        "paragraph": 1,
+        "fact": "parent = emptyenv() makes this a data-only environment with no inherited bindings. Ordinary lists use value-like copy-on-modify behavior, while environments are intentionally shared. Do not infer that changing any R object through an alias always updates the original."
+      }
+    ],
+    "reasoning": "Updating the list through alias does not change the original state list, unlike updating the shared environment binding.",
+    "source": "https://stat.ethz.ch/R-manual/R-patched/library/base/html/environment.html",
+    "prerequisites": [
+      "r-29"
+    ]
+  },
+  {
+    "id": "r-31",
+    "quizTarget": "Change the unit attribute to hours. Does the numeric storage convert?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "attr(x, name) reads a named attribute; assigning through it attaches metadata. Attributes can record names, dimensions, class or a custom unit. This custom unit label does not itself convert numbers or enforce a unit system."
+      },
+      {
+        "paragraph": 1,
+        "fact": "typeof reports the underlying R type. class reports the class used by many higher-level operations; setting a class label does not validate that the object satisfies its intended contract. Special attributes can alter interpretation without replacing the stored numbers."
+      }
+    ],
+    "reasoning": "The custom unit attribute is metadata, not executable conversion logic.",
+    "source": "https://stat.ethz.ch/R-manual/R-patched/library/base/html/attributes.html",
+    "prerequisites": [
+      "r-30"
+    ]
+  },
+  {
+    "id": "r-32",
+    "quizTarget": "Change class = \"minutes\" to class = \"other\". What prints?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "UseMethod(\"describe\") selects a method according to the class of the generic\u2019s first argument. describe.minutes names a method for the minutes class; describe.default is the fallback when no matching class method is found."
+      },
+      {
+        "paragraph": 1,
+        "fact": "structure(5, class = \"minutes\") creates the value with a class attribute. This S3 tag is informal: production constructors must check their own invariants. Call the generic rather than guessing a method name at each call site."
+      }
+    ],
+    "reasoning": "No describe.other method exists, so dispatch reaches describe.default.",
+    "source": "https://stat.ethz.ch/R-manual/R-patched/library/base/html/UseMethod.html",
+    "prerequisites": [
+      "r-31"
+    ]
+  },
+  {
+    "id": "r-33",
+    "quizTarget": "Replace minutes = 5 with minutes = \"five\". What happens?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "S4 classes can declare named slots and their classes. methods::setClass defines StudyEntry with a numeric minutes slot. package::name accesses an exported function from that installed package without attaching it to the search path; methods is part of this R installation."
+      },
+      {
+        "paragraph": 1,
+        "fact": "methods::new constructs an S4 object and checks its declared representation. entry@minutes accesses the slot. A numeric slot does not by itself require positive minutes; domain constraints need a validity rule or explicit validation."
+      }
+    ],
+    "reasoning": "The declared numeric slot does not accept a character value. Declaring structure catches this mismatch, though it does not validate every domain rule.",
+    "source": "https://stat.ethz.ch/R-manual/R-patched/library/methods/html/setClass.html",
+    "prerequisites": [
+      "r-32"
+    ]
+  },
+  {
+    "id": "r-34",
+    "quizTarget": "Change read_minutes(0) to read_minutes(3). What prints?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "tryCatch evaluates an expression and uses a matching handler when a condition is signaled. error = function(e) receives the error object; its return value becomes the tryCatch result. The failed function does not resume at its next statement."
+      },
+      {
+        "paragraph": 1,
+        "fact": "Here -1 is a deliberate sentinel outside the allowed positive domain. Real code can instead return a structured result with status and message. Catch errors only where you can handle them; blanket fallback values can hide defects."
+      }
+    ],
+    "reasoning": "No error is raised for 3, so the normal function result is returned and the handler is unused.",
+    "source": "https://stat.ethz.ch/R-manual/R-patched/library/base/html/conditions.html",
+    "prerequisites": [
+      "r-33"
+    ]
+  },
+  {
+    "id": "r-35",
+    "quizTarget": "Replace withCallingHandlers with tryCatch, and replace invokeRestart(\"muffleWarning\") with 9. What prints?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "warning signals a condition but normally allows evaluation to continue. withCallingHandlers runs a matching handler in the signaling context. This differs from tryCatch\u2019s exiting handler, which abandons that expression\u2019s remaining normal path."
+      },
+      {
+        "paragraph": 1,
+        "fact": "invokeRestart(\"muffleWarning\") invokes the restart provided by warning to suppress its default reporting after the handler has recorded it. This is not blanket suppression of all failures. The returned result still comes from the code after warning."
+      }
+    ],
+    "reasoning": "The tryCatch warning handler exits the expression and supplies 9, so the following 4 is not evaluated.",
+    "source": "https://stat.ethz.ch/R-manual/R-patched/library/base/html/conditions.html",
+    "prerequisites": [
+      "r-34"
+    ]
+  },
+  {
+    "id": "r-36",
+    "quizTarget": "Change work() to work(TRUE). What prints after the error is caught?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "on.exit records an expression to run when the current function exits normally or through an error. Register cleanup as soon as a resource or temporary state needs restoring. add = TRUE adds a cleanup expression instead of replacing an earlier one."
+      },
+      {
+        "paragraph": 1,
+        "fact": "The on.exit expression here restores a shared environment binding; it does not replace the normal return value. Cleanup can itself fail, so keep it reliable and avoid masking the original failure. This example changes only a local fixture environment, not global configuration."
+      }
+    ],
+    "reasoning": "The error triggers the handler\u2019s -1, but function exit still runs the registered restoration to FALSE.",
+    "source": "https://stat.ethz.ch/R-manual/R-patched/library/base/html/on.exit.html",
+    "prerequisites": [
+      "r-35"
+    ]
+  },
+  {
+    "id": "r-37",
+    "quizTarget": "Replace sum with function(x) x, keeping numeric(1). What happens?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "lapply returns one list element per input element, preserving a list result even when values are simple. vapply additionally requires each function result to match an explicit length and compatible type template."
+      },
+      {
+        "paragraph": 1,
+        "fact": "numeric(1) is a length-one double template here. Each sum returns one numeric total. vapply may promote compatible simpler types, but it rejects an incompatible result length or type rather than silently choosing a different output shape as sapply can."
+      }
+    ],
+    "reasoning": "The identity function returns each two-element vector, violating the one-element template.",
+    "source": "https://stat.ethz.ch/R-manual/R-patched/library/base/html/lapply.html",
+    "prerequisites": [
+      "r-36"
+    ]
+  },
+  {
+    "id": "r-38",
+    "quizTarget": "Change the margin from 1 to 2. What prints?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "apply(m, 1, sum) applies sum to each row; margin 2 selects columns. Matrix filling is column-major by default, so these rows contain 1,3,5 and 2,4,6."
+      },
+      {
+        "paragraph": 1,
+        "fact": "apply operates on arrays and may convert a data frame to a matrix first. Mixing character and numeric columns can therefore coerce all cells to text. For plain numeric totals, rowSums or colSums are more direct; apply is not automatically faster than every explicit alternative."
+      }
+    ],
+    "reasoning": "Columns are (1,2), (3,4) and (5,6), so their sums are 3, 7 and 11.",
+    "source": "https://stat.ethz.ch/R-manual/R-patched/library/base/html/apply.html",
+    "prerequisites": [
+      "r-37"
+    ]
+  },
+  {
+    "id": "r-39",
+    "quizTarget": "Change na.rm = TRUE to na.rm = FALSE. What prints?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "split(values, groups) returns a list of vectors, one per grouping level. Here a contains 2 and NA while b contains 6. Equal-length input and group vectors avoid unintended recycling; missing group labels need an explicit policy."
+      },
+      {
+        "paragraph": 1,
+        "fact": "mean averages a numeric vector. na.rm = TRUE removes missing observations for each group; an all-missing group can produce NaN rather than an informative average. Removing missing observations changes which data support each estimate, so record counts as well when needed."
+      }
+    ],
+    "reasoning": "Group a contains an NA and now propagates it; group b has no missing value and remains 6.",
+    "source": "https://stat.ethz.ch/R-manual/R-patched/library/base/html/split.html",
+    "prerequisites": [
+      "r-38"
+    ]
+  },
+  {
+    "id": "r-40",
+    "quizTarget": "Remove scores from order(keys, scores). What changes in the first line?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "order(keys, scores) returns row positions sorted by keys, breaking equal-key ties with scores. For this default ordering, unresolved ties retain their original relative order. Apply the same index to every aligned column; sorting one column alone breaks row relationships."
+      },
+      {
+        "paragraph": 1,
+        "fact": "duplicated marks occurrences after the first equal value. It does not automatically merge or remove all rows belonging to repeated keys. To detect a nonunique key policy, use those flags deliberately rather than assuming sorting removes duplicates."
+      }
+    ],
+    "reasoning": "The equal a keys retain their original order when no score tie-breaker is supplied, so scores 3 and 2 precede b\u2019s 1.",
+    "source": "https://stat.ethz.ch/R-manual/R-patched/library/base/html/order.html",
+    "prerequisites": [
+      "r-39"
+    ]
+  },
+  {
+    "id": "r-41",
+    "quizTarget": "Replace the right table with one row id = 1, label = \"a\". How many joined rows remain?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "merge(left, right, by = \"id\") combines rows with equal id values. Its default is an inner join: unmatched keys are omitted. all.x = TRUE retains unmatched left rows with missing right-side values."
+      },
+      {
+        "paragraph": 1,
+        "fact": "Repeated keys can create multiple row pairs: two matching left rows and two matching right rows produce four joined rows. Validate key uniqueness when your model expects one-to-one or many-to-one relationships. Do not silently interpret duplicated joins as new independent observations."
+      }
+    ],
+    "reasoning": "Each of the two left rows now has exactly one matching right row.",
+    "source": "https://stat.ethz.ch/R-manual/R-patched/library/base/html/merge.html",
+    "prerequisites": [
+      "r-40"
+    ]
+  },
+  {
+    "id": "r-42",
+    "quizTarget": "Change the day labels times = c(1, 2) to times = c(10, 20). What changes in the printed row count and sum?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "A wide table stores day1 and day2 in separate columns. A long table stores a day identifier and one minutes column, with repeated id values. This changes the layout, not the underlying measurements."
+      },
+      {
+        "paragraph": 1,
+        "fact": "reshape uses varying for the measurement columns, v.names for their shared value name, timevar and times for the new occasion labels, and idvar for the entity identifier. direction = \"long\" selects this conversion. Verify unique entity/occasion pairs before trying a reverse wide transformation."
+      }
+    ],
+    "reasoning": "times supplies occasion labels rather than multipliers or repetition counts, so the same four values remain.",
+    "source": "https://stat.ethz.ch/R-manual/R-patched/library/stats/html/reshape.html",
+    "prerequisites": [
+      "r-41"
+    ]
+  },
+  {
+    "id": "r-43",
+    "quizTarget": "Change na.rm = TRUE to na.rm = FALSE. What prints?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "The native |> pipe normally inserts its left expression as the first argument of the call on the right. This expression is equivalent to sum(c(1, NA, 3), na.rm = TRUE); it is ordinary R syntax, not a package dependency."
+      },
+      {
+        "paragraph": 1,
+        "fact": "To place the value explicitly in a named argument, a named _ placeholder can be used once in an eligible call, such as value |> round(x = _, digits = 1). A pipe does not automatically vectorize a scalar-only function or change its missing-value behavior."
+      }
+    ],
+    "reasoning": "The pipe only places the vector into sum; the explicit missing-value policy still controls the result.",
+    "source": "https://stat.ethz.ch/R-manual/R-patched/library/base/html/pipeOp.html",
+    "prerequisites": [
+      "r-42"
+    ]
+  },
+  {
+    "id": "r-44",
+    "quizTarget": "Remove fixed = TRUE from both calls. What prints?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "grepl returns one logical match result per input string. With fixed = TRUE the dot is literal; without it, dot is a regular-expression wildcard matching a character. Know which interpretation your input needs."
+      },
+      {
+        "paragraph": 1,
+        "fact": "gsub replaces every match and returns strings; sub replaces only the first match in each string. Neither evaluates the replacement as R code. Complex regular expressions and unbounded external input need separate performance and validation limits."
+      }
+    ],
+    "reasoning": "The dot now matches each character, so both strings match and all three characters in each become hyphens.",
+    "source": "https://stat.ethz.ch/R-manual/R-patched/library/base/html/grep.html",
+    "prerequisites": [
+      "r-43"
+    ]
+  },
+  {
+    "id": "r-45",
+    "quizTarget": "Change instant + 3600 to instant + 1. What time prints on the second line?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "as.Date represents calendar dates, and adding a number adds days. as.POSIXct represents instants; adding a number adds seconds. Specify a time zone when parsing clock text to avoid relying on the session\u2019s local zone."
+      },
+      {
+        "paragraph": 1,
+        "fact": "format turns values into display strings. %Y-%m-%d selects a date and %H:%M selects hours and minutes. Regional daylight-saving rules mean one calendar day is not always 86400 elapsed seconds; the fixture uses UTC deliberately and does not assert regional behavior."
+      }
+    ],
+    "reasoning": "One second advances to 00:30:01; the format omits seconds, so the displayed minute stays 00:30.",
+    "source": "https://stat.ethz.ch/R-manual/R-patched/library/base/html/DateTimeClasses.html",
+    "prerequisites": [
+      "r-44"
+    ]
+  },
+  {
+    "id": "r-46",
+    "quizTarget": "Replace stats::median with median in the last line. What prints?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "library attaches an installed package\u2019s exported names to the search path. Another binding can mask an unqualified name. package::name selects that package\u2019s exported object directly without attaching all of its names; it does not install a missing package."
+      },
+      {
+        "paragraph": 1,
+        "fact": "stats is included in this R installation. Its median selects the middle ordered value for this odd-length vector. A local function named median can coexist with stats::median. Avoid package:::internal as an application contract: unexported internals may change. Record R and package versions; do not assume an attached package implies the latest release."
+      }
+    ],
+    "reasoning": "Both unqualified calls now resolve to the local function, whereas the qualified call bypassed that masking.",
+    "source": "https://stat.ethz.ch/R-manual/R-patched/library/base/html/ns-dblcolon.html",
+    "prerequisites": [
+      "r-45"
+    ]
+  }
+]

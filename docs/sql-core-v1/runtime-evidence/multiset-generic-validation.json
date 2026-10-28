@@ -1,0 +1,117 @@
+{
+  "results": [
+    {
+      "job": {
+        "id": "legitimate-duplicates",
+        "code": "CREATE TABLE x(a,b);INSERT INTO x VALUES (NULL,'v'),(NULL,'v'),(2,'w');",
+        "checks": [
+          {
+            "label": "Exact repeated NULL tuples",
+            "expression": "WITH expected(\"a\",\"b\") AS (VALUES (NULL,'v'),(NULL,'v'),(2,'w')), actual AS (SELECT \"a\",\"b\",COUNT(*) AS multiplicity FROM \"x\" GROUP BY \"a\",\"b\"), wanted AS (SELECT \"a\",\"b\",COUNT(*) AS multiplicity FROM expected GROUP BY \"a\",\"b\") SELECT NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+          }
+        ]
+      },
+      "result": {
+        "id": "legitimate-duplicates",
+        "output": [],
+        "error": null,
+        "checks": [
+          {
+            "label": "Exact repeated NULL tuples",
+            "passed": true,
+            "actual": [
+              {
+                "columns": [
+                  "NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+                ],
+                "values": [
+                  [
+                    1
+                  ]
+                ]
+              }
+            ]
+          }
+        ],
+        "passed": true
+      },
+      "validated": true
+    },
+    {
+      "job": {
+        "id": "wrong-multiplicity",
+        "code": "CREATE TABLE x(a,b);INSERT INTO x VALUES (NULL,'v'),(2,'w'),(2,'w');",
+        "checks": [
+          {
+            "label": "Exact repeated NULL tuples",
+            "expression": "WITH expected(\"a\",\"b\") AS (VALUES (NULL,'v'),(NULL,'v'),(2,'w')), actual AS (SELECT \"a\",\"b\",COUNT(*) AS multiplicity FROM \"x\" GROUP BY \"a\",\"b\"), wanted AS (SELECT \"a\",\"b\",COUNT(*) AS multiplicity FROM expected GROUP BY \"a\",\"b\") SELECT NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+          }
+        ]
+      },
+      "result": {
+        "id": "wrong-multiplicity",
+        "output": [],
+        "error": null,
+        "checks": [
+          {
+            "label": "Exact repeated NULL tuples",
+            "passed": false,
+            "actual": [
+              {
+                "columns": [
+                  "NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+                ],
+                "values": [
+                  [
+                    0
+                  ]
+                ]
+              }
+            ]
+          }
+        ],
+        "passed": false
+      },
+      "validated": true
+    },
+    {
+      "job": {
+        "id": "empty",
+        "code": "CREATE TABLE x(a,b);",
+        "checks": [
+          {
+            "label": "Exact repeated NULL tuples",
+            "expression": "WITH expected(\"a\",\"b\") AS (VALUES (NULL,'v'),(NULL,'v'),(2,'w')), actual AS (SELECT \"a\",\"b\",COUNT(*) AS multiplicity FROM \"x\" GROUP BY \"a\",\"b\"), wanted AS (SELECT \"a\",\"b\",COUNT(*) AS multiplicity FROM expected GROUP BY \"a\",\"b\") SELECT NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+          }
+        ]
+      },
+      "result": {
+        "id": "empty",
+        "output": [],
+        "error": null,
+        "checks": [
+          {
+            "label": "Exact repeated NULL tuples",
+            "passed": false,
+            "actual": [
+              {
+                "columns": [
+                  "NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+                ],
+                "values": [
+                  [
+                    0
+                  ]
+                ]
+              }
+            ]
+          }
+        ],
+        "passed": false
+      },
+      "validated": true
+    }
+  ],
+  "passed": true,
+  "formatterLiteralPreservation": true
+}

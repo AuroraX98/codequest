@@ -1,0 +1,51 @@
+[
+  {
+    "lessonId": "react-08",
+    "field": "explanation",
+    "paragraph": 6,
+    "before": "For the exercise, add twice to Ari, then reverse the list. Bea must still show 0 and Ari must still show 2. Repair only the key choice in the supplied list.",
+    "after": "For the exercise, add twice to Ari, then reverse the list. Bea must still show 0 and Ari must still show 2. Repair only the key choice in the supplied list.\n\nThe supplied reversal uses [...current].reverse(). Spread creates a new array container with the same person objects. reverse() reverses that new array in place and returns it; calling current.reverse() instead would mutate the state array. The setter’s updater receives pending state and returns the copied order. This copy is shallow; the person objects are not changed here.\n\nA small ordinary JavaScript example isolates the array operation, without another component:\n```javascript\nconst order = [\"Ari\", \"Bea\"];\nconst reversed = [...order].reverse();\nconsole.log(order.join(\",\"));\nconsole.log(reversed.join(\",\"));\n```\nThe first output is Ari,Bea and the second is Bea,Ari. join(\",\") returns comma-separated text from each array, without changing it; console.log prints that text. The copied array reversed, while order kept its original order."
+  },
+  {
+    "lessonId": "react-11",
+    "field": "explanation",
+    "paragraph": 1,
+    "before": "Create the context outside components. Its default is used when there is no matching provider above the consumer.",
+    "after": "Create the context outside components. Its default is used when there is no matching provider above the consumer.\n\nReact.createContext(defaultValue) accepts a fallback value and returns a context object, not the value itself and not a state store. The existing call React.createContext(\"English\") creates LanguageContext. Its .Provider supplies a value to matching descendants in React18; useContext(LanguageContext) reads the closest provider’s value, or the fallback if none exists. The fallback does not change by itself."
+  },
+  {
+    "lessonId": "react-11",
+    "field": "explanation",
+    "paragraph": 3,
+    "before": "useContext reads the closest matching provider above that component. A nested provider can override the value for its own descendants.",
+    "after": "useContext reads the closest matching provider above that component. A nested provider can override the value for its own descendants.\n\nCompare a consumer outside a provider with one inside:\n```react\nconst LanguageContext = React.createContext(\"English\");\nfunction Greeting() {\n  const language = React.useContext(LanguageContext);\n  return <p>{language}</p>;\n}\nfunction App() {\n  return <main><Greeting /><LanguageContext.Provider value=\"Spanish\"><Greeting /></LanguageContext.Provider></main>;\n}\n```\nThe paragraphs read English, then Spanish. The provider changes only its descendants, not the context fallback."
+  },
+  {
+    "lessonId": "react-12",
+    "field": "explanation",
+    "paragraph": 2,
+    "before": "Each call gets its own state. Sharing a hook definition shares logic, not one shared stored value.",
+    "after": "Each call gets its own state. Sharing a hook definition shares logic, not one shared stored value.\n\nChange only the initial argument to true:\n```react\nfunction useToggle(initial) {\n  const [enabled, setEnabled] = React.useState(initial);\n  return [enabled, () => setEnabled(value => !value)];\n}\nfunction App() {\n  const [enabled, toggle] = useToggle(true);\n  return <button onClick={toggle}>{enabled ? \"On\" : \"Off\"}</button>;\n}\n```\nThis instance starts On; one click shows Off. useToggle(initial) returns the current Boolean and an action function. React invokes that function on the click; it queues the opposite pending value. The initial argument seeds useState on mount, not on every later render. In the separate useCounter exercise, reset explicitly uses the initial argument from the current render when that action is invoked; initialization and an explicit reset are different operations."
+  },
+  {
+    "lessonId": "react-13",
+    "field": "explanation",
+    "paragraph": 1,
+    "before": "React 18 uses a class component for a boundary. The supplied class extends React.Component; render returns its UI and this.props.children is the content placed inside it.",
+    "after": "React 18 uses a class component for a boundary. The supplied class extends React.Component; render returns its UI and this.props.children is the content placed inside it.\n\nThe class syntax builds on JavaScript classes. constructor(props) initializes a new boundary instance. super(props) calls the parent React.Component constructor before using this; this.state then stores the initial local failure flag. React creates the instance and calls render after updates; you do not manually run the constructor or render to handle an error."
+  },
+  {
+    "lessonId": "react-13",
+    "field": "explanation",
+    "paragraph": 3,
+    "before": "```react\nclass SmallBoundary extends React.Component {\n  constructor(props) { super(props); this.state = {failed:false}; }\n  static getDerivedStateFromError() { return {failed:true}; }\n  render() { return this.state.failed ? <p>Try again later</p> : this.props.children; }\n}\n```\n\nTo exercise the boundary, render it around a child that fails:\n```react\nfunction BrokenPanel() { throw new Error(\"Demo failure\"); }\nfunction App() {\n  return <SmallBoundary><BrokenPanel /></SmallBoundary>;\n}\n```\nWith SmallBoundary defined above, rendering App shows Try again later. React calls the static error method with the thrown error; this example does not use that parameter. The method returns a state update. React then calls render, which takes no explicit arguments and returns fallback UI. The framework invokes these methods; do not call them yourself to simulate handling.",
+    "after": "```react\nclass SmallBoundary extends React.Component {\n  constructor(props) { super(props); this.state = {failed:false}; }\n  static getDerivedStateFromError() { return {failed:true}; }\n  render() { return this.state.failed ? <p>Try again later</p> : this.props.children; }\n}\n```\n\nTo exercise the boundary, render it around a child that fails:\n```react\nfunction BrokenPanel() { throw new Error(\"Demo failure\"); }\nfunction App() {\n  return <SmallBoundary><BrokenPanel /></SmallBoundary>;\n}\n```\nWith SmallBoundary defined above, rendering App shows Try again later. React calls the static error method with the thrown error; this example does not use that parameter. The method returns a state update. React then calls render, which takes no explicit arguments and returns fallback UI. The framework invokes these methods; do not call them yourself to simulate handling.\n\nnew Error(\"Demo failure\") constructs an Error object with that message. throw interrupts the child’s render by throwing that object. The nearest suitable boundary can then choose its fallback; Error construction alone, without throw, would not signal a render failure."
+  },
+  {
+    "lessonId": "react-15",
+    "field": "explanation",
+    "paragraph": 3,
+    "before": "A Suspense boundary surrounds children that can suspend while waiting. Its fallback is the replacement UI shown while the lazy child is pending. Once the child is ready, React renders it instead of the fallback.\n```react\n<React.Suspense fallback={<p>Preparing greeting</p>}>\n  <LazyGreeting />\n</React.Suspense>\n```",
+    "after": "A Suspense boundary surrounds children that can suspend while waiting. fallback is replacement UI, not an error handler. Here is a complete App using a controlled local Promise, with no downloaded module:\n```react\nlet finishGreeting;\nconst greetingModule = new Promise(resolve => {\n  finishGreeting = () => resolve({default: Greeting});\n});\nfunction Greeting() { return <p data-greeting>Hello, explorer</p>; }\nconst LazyGreeting = React.lazy(() => greetingModule);\nfunction App() {\n  return <main><button onClick={() => finishGreeting()}>Finish local load</button>\n    <React.Suspense fallback={<p role=\"status\">Preparing greeting</p>}>\n      <LazyGreeting />\n    </React.Suspense>\n  </main>;\n}\n```\nThe frame mounts App. React first tries LazyGreeting, invokes its loader and receives the pending greetingModule Promise. Preparing greeting appears until the button calls finishGreeting(). That resolves an object whose default is the Greeting component, allowing React to show Hello, explorer. Greeting’s code was already in this file.\n\nThis changed version resolves the same local Promise before the frame mounts App:\n```react\nlet finishGreeting;\nconst greetingModule = new Promise(resolve => {\n  finishGreeting = () => resolve({default: Greeting});\n});\nfunction Greeting() { return <p data-greeting>Hello, explorer</p>; }\nconst LazyGreeting = React.lazy(() => greetingModule);\nfinishGreeting();\nfunction App() {\n  return <main><button onClick={() => finishGreeting()}>Finish local load</button>\n    <React.Suspense fallback={<p role=\"status\">Preparing greeting</p>}>\n      <LazyGreeting />\n    </React.Suspense>\n  </main>;\n}\n```\nThe greeting becomes available without clicking. Do not promise an observable loading frame for an already-settled Promise; the check waits for the greeting instead."
+  }
+]

@@ -1,0 +1,2214 @@
+{
+  "scope": "Each case uses a separate Node process, fresh JS realm/SQL.js module/VFS; actual bundled SQLite3.49.1, not browser UI",
+  "sourceHashes": {
+    "lessons.json": "e075021e7b1184b027ab98e6ccc6c5623eba90dd54c592dd536b2f60e6eb20c3",
+    "execution-cases.json": "167e54b342759dbec880a6ec156ea44d7025c7e3e0b5a2c326ac8a7c5a88decd"
+  },
+  "jobs": [
+    {
+      "id": "sql-44-solution",
+      "lessonId": "sql-44",
+      "kind": "solution",
+      "code": "CREATE TEMP TABLE answer AS\nSELECT id, LAG(value,1,-1) OVER (PARTITION BY room ORDER BY tick,id) AS previous\nFROM readings\nORDER BY id;\nSELECT id,previous\nFROM answer\nORDER BY id;",
+      "setup": "CREATE TABLE readings(id INTEGER PRIMARY KEY, room TEXT, tick INTEGER, value INTEGER);\nINSERT INTO readings VALUES (1,'east',1,8),(2,'east',2,NULL),(3,'east',3,12),(4,'west',1,5);",
+      "checks": [
+        {
+          "label": "Exact previous values including stored NULL",
+          "expression": "SELECT ((SELECT COUNT(*) FROM answer)=4 AND (SELECT COUNT(*) FROM answer WHERE id IS 1 AND previous IS -1)=1 AND (SELECT COUNT(*) FROM answer WHERE id IS 2 AND previous IS 8)=1 AND (SELECT COUNT(*) FROM answer WHERE id IS 3 AND previous IS NULL)=1 AND (SELECT COUNT(*) FROM answer WHERE id IS 4 AND previous IS -1)=1)"
+        },
+        {
+          "label": "Every original source row preserved",
+          "expression": "SELECT ((SELECT COUNT(*) FROM readings)=4 AND (SELECT COUNT(*) FROM readings WHERE id IS 1 AND room IS 'east' AND tick IS 1 AND value IS 8)=1 AND (SELECT COUNT(*) FROM readings WHERE id IS 2 AND room IS 'east' AND tick IS 2 AND value IS NULL)=1 AND (SELECT COUNT(*) FROM readings WHERE id IS 3 AND room IS 'east' AND tick IS 3 AND value IS 12)=1 AND (SELECT COUNT(*) FROM readings WHERE id IS 4 AND room IS 'west' AND tick IS 1 AND value IS 5)=1)"
+        }
+      ],
+      "outcome": "success",
+      "expectedPass": true
+    },
+    {
+      "id": "sql-44-starter",
+      "lessonId": "sql-44",
+      "kind": "starter",
+      "code": "CREATE TEMP TABLE answer AS\nSELECT id, -1 AS previous\nFROM readings;",
+      "setup": "CREATE TABLE readings(id INTEGER PRIMARY KEY, room TEXT, tick INTEGER, value INTEGER);\nINSERT INTO readings VALUES (1,'east',1,8),(2,'east',2,NULL),(3,'east',3,12),(4,'west',1,5);",
+      "checks": [
+        {
+          "label": "Exact previous values including stored NULL",
+          "expression": "SELECT ((SELECT COUNT(*) FROM answer)=4 AND (SELECT COUNT(*) FROM answer WHERE id IS 1 AND previous IS -1)=1 AND (SELECT COUNT(*) FROM answer WHERE id IS 2 AND previous IS 8)=1 AND (SELECT COUNT(*) FROM answer WHERE id IS 3 AND previous IS NULL)=1 AND (SELECT COUNT(*) FROM answer WHERE id IS 4 AND previous IS -1)=1)"
+        },
+        {
+          "label": "Every original source row preserved",
+          "expression": "SELECT ((SELECT COUNT(*) FROM readings)=4 AND (SELECT COUNT(*) FROM readings WHERE id IS 1 AND room IS 'east' AND tick IS 1 AND value IS 8)=1 AND (SELECT COUNT(*) FROM readings WHERE id IS 2 AND room IS 'east' AND tick IS 2 AND value IS NULL)=1 AND (SELECT COUNT(*) FROM readings WHERE id IS 3 AND room IS 'east' AND tick IS 3 AND value IS 12)=1 AND (SELECT COUNT(*) FROM readings WHERE id IS 4 AND room IS 'west' AND tick IS 1 AND value IS 5)=1)"
+        }
+      ],
+      "outcome": "success",
+      "expectedPass": false
+    },
+    {
+      "id": "sql-45-solution",
+      "lessonId": "sql-45",
+      "kind": "solution",
+      "code": "CREATE TEMP TABLE answer AS\nSELECT id, SUM(amount) OVER (ORDER BY tick RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS peers_total, SUM(amount) OVER (ORDER BY tick,id ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS row_total\nFROM moves\nORDER BY id;\nSELECT id,peers_total,row_total\nFROM answer\nORDER BY id;",
+      "setup": "CREATE TABLE moves(id INTEGER PRIMARY KEY, tick INTEGER, amount INTEGER);\nINSERT INTO moves VALUES (1,1,4),(2,1,7),(3,2,3);",
+      "checks": [
+        {
+          "label": "Peer and row totals",
+          "expression": "SELECT ((SELECT COUNT(*) FROM answer)=3 AND (SELECT COUNT(*) FROM answer WHERE id IS 1 AND peers_total IS 11 AND row_total IS 4)=1 AND (SELECT COUNT(*) FROM answer WHERE id IS 2 AND peers_total IS 11 AND row_total IS 11)=1 AND (SELECT COUNT(*) FROM answer WHERE id IS 3 AND peers_total IS 14 AND row_total IS 14)=1)"
+        },
+        {
+          "label": "Every original source row preserved",
+          "expression": "SELECT ((SELECT COUNT(*) FROM moves)=3 AND (SELECT COUNT(*) FROM moves WHERE id IS 1 AND tick IS 1 AND amount IS 4)=1 AND (SELECT COUNT(*) FROM moves WHERE id IS 2 AND tick IS 1 AND amount IS 7)=1 AND (SELECT COUNT(*) FROM moves WHERE id IS 3 AND tick IS 2 AND amount IS 3)=1)"
+        }
+      ],
+      "outcome": "success",
+      "expectedPass": true
+    },
+    {
+      "id": "sql-45-starter",
+      "lessonId": "sql-45",
+      "kind": "starter",
+      "code": "CREATE TEMP TABLE answer AS\nSELECT id,amount AS peers_total,amount AS row_total\nFROM moves;",
+      "setup": "CREATE TABLE moves(id INTEGER PRIMARY KEY, tick INTEGER, amount INTEGER);\nINSERT INTO moves VALUES (1,1,4),(2,1,7),(3,2,3);",
+      "checks": [
+        {
+          "label": "Peer and row totals",
+          "expression": "SELECT ((SELECT COUNT(*) FROM answer)=3 AND (SELECT COUNT(*) FROM answer WHERE id IS 1 AND peers_total IS 11 AND row_total IS 4)=1 AND (SELECT COUNT(*) FROM answer WHERE id IS 2 AND peers_total IS 11 AND row_total IS 11)=1 AND (SELECT COUNT(*) FROM answer WHERE id IS 3 AND peers_total IS 14 AND row_total IS 14)=1)"
+        },
+        {
+          "label": "Every original source row preserved",
+          "expression": "SELECT ((SELECT COUNT(*) FROM moves)=3 AND (SELECT COUNT(*) FROM moves WHERE id IS 1 AND tick IS 1 AND amount IS 4)=1 AND (SELECT COUNT(*) FROM moves WHERE id IS 2 AND tick IS 1 AND amount IS 7)=1 AND (SELECT COUNT(*) FROM moves WHERE id IS 3 AND tick IS 2 AND amount IS 3)=1)"
+        }
+      ],
+      "outcome": "success",
+      "expectedPass": false
+    },
+    {
+      "id": "sql-46-solution",
+      "lessonId": "sql-46",
+      "kind": "solution",
+      "code": "CREATE TEMP TABLE answer AS\nSELECT team, COUNT(*) AS all_rows, COUNT(*) FILTER (WHERE done=1) AS done_rows, SUM(minutes) FILTER (WHERE done=1) AS done_minutes\nFROM sessions\nGROUP BY team\nORDER BY team;\nSELECT team,all_rows,done_rows,done_minutes\nFROM answer\nORDER BY team;",
+      "setup": "CREATE TABLE sessions(id INTEGER PRIMARY KEY, team TEXT, done INTEGER, minutes INTEGER);\nINSERT INTO sessions VALUES (1,'fern',1,10),(2,'fern',0,20),(3,'moss',0,7);",
+      "checks": [
+        {
+          "label": "Both teams and empty aggregate semantics",
+          "expression": "SELECT ((SELECT COUNT(*) FROM answer)=2 AND (SELECT COUNT(*) FROM answer WHERE team IS 'fern' AND all_rows IS 2 AND done_rows IS 1 AND done_minutes IS 10)=1 AND (SELECT COUNT(*) FROM answer WHERE team IS 'moss' AND all_rows IS 1 AND done_rows IS 0 AND done_minutes IS NULL)=1)"
+        },
+        {
+          "label": "Every original source row preserved",
+          "expression": "SELECT ((SELECT COUNT(*) FROM sessions)=3 AND (SELECT COUNT(*) FROM sessions WHERE id IS 1 AND team IS 'fern' AND done IS 1 AND minutes IS 10)=1 AND (SELECT COUNT(*) FROM sessions WHERE id IS 2 AND team IS 'fern' AND done IS 0 AND minutes IS 20)=1 AND (SELECT COUNT(*) FROM sessions WHERE id IS 3 AND team IS 'moss' AND done IS 0 AND minutes IS 7)=1)"
+        }
+      ],
+      "outcome": "success",
+      "expectedPass": true
+    },
+    {
+      "id": "sql-46-starter",
+      "lessonId": "sql-46",
+      "kind": "starter",
+      "code": "CREATE TEMP TABLE answer AS\nSELECT team,COUNT(*) AS all_rows,COUNT(*) AS done_rows,SUM(minutes) AS done_minutes\nFROM sessions\nGROUP BY team;",
+      "setup": "CREATE TABLE sessions(id INTEGER PRIMARY KEY, team TEXT, done INTEGER, minutes INTEGER);\nINSERT INTO sessions VALUES (1,'fern',1,10),(2,'fern',0,20),(3,'moss',0,7);",
+      "checks": [
+        {
+          "label": "Both teams and empty aggregate semantics",
+          "expression": "SELECT ((SELECT COUNT(*) FROM answer)=2 AND (SELECT COUNT(*) FROM answer WHERE team IS 'fern' AND all_rows IS 2 AND done_rows IS 1 AND done_minutes IS 10)=1 AND (SELECT COUNT(*) FROM answer WHERE team IS 'moss' AND all_rows IS 1 AND done_rows IS 0 AND done_minutes IS NULL)=1)"
+        },
+        {
+          "label": "Every original source row preserved",
+          "expression": "SELECT ((SELECT COUNT(*) FROM sessions)=3 AND (SELECT COUNT(*) FROM sessions WHERE id IS 1 AND team IS 'fern' AND done IS 1 AND minutes IS 10)=1 AND (SELECT COUNT(*) FROM sessions WHERE id IS 2 AND team IS 'fern' AND done IS 0 AND minutes IS 20)=1 AND (SELECT COUNT(*) FROM sessions WHERE id IS 3 AND team IS 'moss' AND done IS 0 AND minutes IS 7)=1)"
+        }
+      ],
+      "outcome": "success",
+      "expectedPass": false
+    },
+    {
+      "id": "sql-47-solution",
+      "lessonId": "sql-47",
+      "kind": "solution",
+      "code": "BEGIN;\nALTER TABLE plans ADD COLUMN status TEXT NOT NULL DEFAULT 'draft';\nALTER TABLE plans RENAME COLUMN title TO label;\nCOMMIT;\nSELECT id,label,status\nFROM plans\nORDER BY id;",
+      "setup": "CREATE TABLE plans(id INTEGER PRIMARY KEY, title TEXT);\nINSERT INTO plans VALUES (1,'Map'),(2,'Sketch');",
+      "checks": [
+        {
+          "label": "Rows preserved with default",
+          "expression": "SELECT ((SELECT COUNT(*) FROM plans)=2 AND (SELECT COUNT(*) FROM plans WHERE id IS 1 AND label IS 'Map' AND status IS 'draft')=1 AND (SELECT COUNT(*) FROM plans WHERE id IS 2 AND label IS 'Sketch' AND status IS 'draft')=1)"
+        },
+        {
+          "label": "New schema metadata",
+          "expression": "SELECT (COUNT(*)=1 AND MIN(type)='TEXT' AND MIN(\"notnull\")=1 AND MIN(dflt_value)='''draft''') FROM pragma_table_info('plans') WHERE name='status'"
+        },
+        {
+          "label": "Old name removed",
+          "expression": "SELECT COUNT(*)=0 FROM pragma_table_info('plans') WHERE name='title'"
+        }
+      ],
+      "outcome": "success",
+      "expectedPass": true
+    },
+    {
+      "id": "sql-47-starter",
+      "lessonId": "sql-47",
+      "kind": "starter",
+      "code": "-- Make the requested schema changes here.\nSELECT id,title\nFROM plans;",
+      "setup": "CREATE TABLE plans(id INTEGER PRIMARY KEY, title TEXT);\nINSERT INTO plans VALUES (1,'Map'),(2,'Sketch');",
+      "checks": [
+        {
+          "label": "Rows preserved with default",
+          "expression": "SELECT ((SELECT COUNT(*) FROM plans)=2 AND (SELECT COUNT(*) FROM plans WHERE id IS 1 AND label IS 'Map' AND status IS 'draft')=1 AND (SELECT COUNT(*) FROM plans WHERE id IS 2 AND label IS 'Sketch' AND status IS 'draft')=1)"
+        },
+        {
+          "label": "New schema metadata",
+          "expression": "SELECT (COUNT(*)=1 AND MIN(type)='TEXT' AND MIN(\"notnull\")=1 AND MIN(dflt_value)='''draft''') FROM pragma_table_info('plans') WHERE name='status'"
+        },
+        {
+          "label": "Old name removed",
+          "expression": "SELECT COUNT(*)=0 FROM pragma_table_info('plans') WHERE name='title'"
+        }
+      ],
+      "outcome": "success",
+      "expectedPass": false
+    },
+    {
+      "id": "sql-48-solution",
+      "lessonId": "sql-48",
+      "kind": "solution",
+      "code": "DELETE\nFROM folders\nWHERE id=1;\nSELECT id,folder_id\nFROM notes\nORDER BY id;",
+      "setup": "PRAGMA foreign_keys=ON;\nCREATE TABLE folders(id INTEGER PRIMARY KEY);\nCREATE TABLE notes(id INTEGER PRIMARY KEY, folder_id INTEGER NOT NULL REFERENCES folders(id) ON DELETE CASCADE);\nINSERT INTO folders VALUES (1),(2);\nINSERT INTO notes VALUES (10,1),(11,1),(12,2);",
+      "checks": [
+        {
+          "label": "Only unaffected folder",
+          "expression": "SELECT ((SELECT COUNT(*) FROM folders)=1 AND (SELECT COUNT(*) FROM folders WHERE id IS 2)=1)"
+        },
+        {
+          "label": "Only unaffected note",
+          "expression": "SELECT ((SELECT COUNT(*) FROM notes)=1 AND (SELECT COUNT(*) FROM notes WHERE id IS 12 AND folder_id IS 2)=1)"
+        },
+        {
+          "label": "Enforcement enabled",
+          "expression": "SELECT foreign_keys=1 FROM pragma_foreign_keys"
+        }
+      ],
+      "outcome": "success",
+      "expectedPass": true
+    },
+    {
+      "id": "sql-48-starter",
+      "lessonId": "sql-48",
+      "kind": "starter",
+      "code": "DELETE\nFROM folders\nWHERE id=99;",
+      "setup": "PRAGMA foreign_keys=ON;\nCREATE TABLE folders(id INTEGER PRIMARY KEY);\nCREATE TABLE notes(id INTEGER PRIMARY KEY, folder_id INTEGER NOT NULL REFERENCES folders(id) ON DELETE CASCADE);\nINSERT INTO folders VALUES (1),(2);\nINSERT INTO notes VALUES (10,1),(11,1),(12,2);",
+      "checks": [
+        {
+          "label": "Only unaffected folder",
+          "expression": "SELECT ((SELECT COUNT(*) FROM folders)=1 AND (SELECT COUNT(*) FROM folders WHERE id IS 2)=1)"
+        },
+        {
+          "label": "Only unaffected note",
+          "expression": "SELECT ((SELECT COUNT(*) FROM notes)=1 AND (SELECT COUNT(*) FROM notes WHERE id IS 12 AND folder_id IS 2)=1)"
+        },
+        {
+          "label": "Enforcement enabled",
+          "expression": "SELECT foreign_keys=1 FROM pragma_foreign_keys"
+        }
+      ],
+      "outcome": "success",
+      "expectedPass": false
+    },
+    {
+      "id": "sql-49-solution",
+      "lessonId": "sql-49",
+      "kind": "solution",
+      "code": "INSERT INTO tickets(label) VALUES ('Atlas')\nRETURNING id,label,status;",
+      "setup": "CREATE TABLE tickets(id INTEGER PRIMARY KEY, label TEXT, status TEXT DEFAULT 'new');",
+      "checks": [
+        {
+          "label": "Ticket state",
+          "expression": "SELECT ((SELECT COUNT(*) FROM tickets)=1 AND (SELECT COUNT(*) FROM tickets WHERE id IS 1 AND label IS 'Atlas' AND status IS 'new')=1)"
+        }
+      ],
+      "outcome": "success",
+      "expectedPass": true
+    },
+    {
+      "id": "sql-49-starter",
+      "lessonId": "sql-49",
+      "kind": "starter",
+      "code": "INSERT INTO tickets(label) VALUES ('Wrong');",
+      "setup": "CREATE TABLE tickets(id INTEGER PRIMARY KEY, label TEXT, status TEXT DEFAULT 'new');",
+      "checks": [
+        {
+          "label": "Ticket state",
+          "expression": "SELECT ((SELECT COUNT(*) FROM tickets)=1 AND (SELECT COUNT(*) FROM tickets WHERE id IS 1 AND label IS 'Atlas' AND status IS 'new')=1)"
+        }
+      ],
+      "outcome": "success",
+      "expectedPass": false
+    },
+    {
+      "id": "sql-50-solution",
+      "lessonId": "sql-50",
+      "kind": "solution",
+      "code": "CREATE INDEX open_priority ON jobs(priority,id)\nWHERE status='open';\nCREATE TEMP TABLE answer AS\nSELECT id,priority\nFROM jobs\nWHERE status='open'\nORDER BY priority,id;\nSELECT id,priority\nFROM answer\nORDER BY priority,id;",
+      "setup": "CREATE TABLE jobs(id INTEGER PRIMARY KEY, status TEXT, priority INTEGER);\nINSERT INTO jobs VALUES (1,'open',2),(2,'closed',1),(3,'open',1),(4,NULL,0);",
+      "checks": [
+        {
+          "label": "Open result rows",
+          "expression": "SELECT ((SELECT COUNT(*) FROM answer)=2 AND (SELECT COUNT(*) FROM answer WHERE id IS 3 AND priority IS 1)=1 AND (SELECT COUNT(*) FROM answer WHERE id IS 1 AND priority IS 2)=1)"
+        },
+        {
+          "label": "Partial index exists",
+          "expression": "SELECT COUNT(*)=1 FROM pragma_index_list('jobs') WHERE name='open_priority' AND partial=1"
+        },
+        {
+          "label": "Indexed keys",
+          "expression": "SELECT group_concat(name,',')='priority,id' FROM (SELECT name FROM pragma_index_info('open_priority') ORDER BY seqno)"
+        },
+        {
+          "label": "Every original source row preserved",
+          "expression": "SELECT ((SELECT COUNT(*) FROM jobs)=4 AND (SELECT COUNT(*) FROM jobs WHERE id IS 1 AND status IS 'open' AND priority IS 2)=1 AND (SELECT COUNT(*) FROM jobs WHERE id IS 2 AND status IS 'closed' AND priority IS 1)=1 AND (SELECT COUNT(*) FROM jobs WHERE id IS 3 AND status IS 'open' AND priority IS 1)=1 AND (SELECT COUNT(*) FROM jobs WHERE id IS 4 AND status IS NULL AND priority IS 0)=1)"
+        }
+      ],
+      "outcome": "success",
+      "expectedPass": true
+    },
+    {
+      "id": "sql-50-starter",
+      "lessonId": "sql-50",
+      "kind": "starter",
+      "code": "CREATE TEMP TABLE answer AS\nSELECT id,priority\nFROM jobs\nWHERE status='closed';",
+      "setup": "CREATE TABLE jobs(id INTEGER PRIMARY KEY, status TEXT, priority INTEGER);\nINSERT INTO jobs VALUES (1,'open',2),(2,'closed',1),(3,'open',1),(4,NULL,0);",
+      "checks": [
+        {
+          "label": "Open result rows",
+          "expression": "SELECT ((SELECT COUNT(*) FROM answer)=2 AND (SELECT COUNT(*) FROM answer WHERE id IS 3 AND priority IS 1)=1 AND (SELECT COUNT(*) FROM answer WHERE id IS 1 AND priority IS 2)=1)"
+        },
+        {
+          "label": "Partial index exists",
+          "expression": "SELECT COUNT(*)=1 FROM pragma_index_list('jobs') WHERE name='open_priority' AND partial=1"
+        },
+        {
+          "label": "Indexed keys",
+          "expression": "SELECT group_concat(name,',')='priority,id' FROM (SELECT name FROM pragma_index_info('open_priority') ORDER BY seqno)"
+        },
+        {
+          "label": "Every original source row preserved",
+          "expression": "SELECT ((SELECT COUNT(*) FROM jobs)=4 AND (SELECT COUNT(*) FROM jobs WHERE id IS 1 AND status IS 'open' AND priority IS 2)=1 AND (SELECT COUNT(*) FROM jobs WHERE id IS 2 AND status IS 'closed' AND priority IS 1)=1 AND (SELECT COUNT(*) FROM jobs WHERE id IS 3 AND status IS 'open' AND priority IS 1)=1 AND (SELECT COUNT(*) FROM jobs WHERE id IS 4 AND status IS NULL AND priority IS 0)=1)"
+        }
+      ],
+      "outcome": "success",
+      "expectedPass": false
+    },
+    {
+      "lessonId": "sql-44",
+      "id": "sql-44-worked",
+      "paragraph": 1,
+      "code": "CREATE TABLE readings(id INTEGER PRIMARY KEY, room TEXT, tick INTEGER, value INTEGER);\nINSERT INTO readings VALUES (1,'east',1,8),(2,'east',2,NULL),(3,'east',3,12),(4,'west',1,5);\nSELECT id, LAG(value,1,-1) OVER (PARTITION BY room ORDER BY tick,id) AS previous\nFROM readings\nORDER BY id;",
+      "checks": [
+        {
+          "label": "Four observations remain",
+          "expression": "SELECT CASE WHEN (SELECT COUNT(*) FROM readings)=4 THEN 1 ELSE 0 END"
+        }
+      ],
+      "expectedResults": [
+        {
+          "columns": [
+            "id",
+            "previous"
+          ],
+          "values": [
+            [
+              1,
+              -1
+            ],
+            [
+              2,
+              8
+            ],
+            [
+              3,
+              null
+            ],
+            [
+              4,
+              -1
+            ]
+          ]
+        }
+      ],
+      "outcome": "success",
+      "kind": "example",
+      "expectedPass": true
+    },
+    {
+      "lessonId": "sql-44",
+      "id": "sql-44-changed",
+      "paragraph": 2,
+      "code": "CREATE TABLE readings(id INTEGER PRIMARY KEY, room TEXT, tick INTEGER, value INTEGER);\nINSERT INTO readings VALUES (1,'east',1,8),(2,'east',2,9),(3,'east',3,12),(4,'west',1,5);\nSELECT id, LAG(value,1,-1) OVER (PARTITION BY room ORDER BY tick,id) AS previous\nFROM readings\nORDER BY id;",
+      "checks": [],
+      "expectedResults": [
+        {
+          "columns": [
+            "id",
+            "previous"
+          ],
+          "values": [
+            [
+              1,
+              -1
+            ],
+            [
+              2,
+              8
+            ],
+            [
+              3,
+              9
+            ],
+            [
+              4,
+              -1
+            ]
+          ]
+        }
+      ],
+      "outcome": "success",
+      "kind": "example",
+      "expectedPass": true
+    },
+    {
+      "lessonId": "sql-45",
+      "id": "sql-45-worked",
+      "paragraph": 1,
+      "code": "CREATE TABLE moves(id INTEGER PRIMARY KEY, tick INTEGER, amount INTEGER);\nINSERT INTO moves VALUES (1,1,4),(2,1,7),(3,2,3);\nSELECT id, SUM(amount) OVER (ORDER BY tick RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS peers_total, SUM(amount) OVER (ORDER BY tick,id ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS row_total\nFROM moves\nORDER BY id;",
+      "checks": [],
+      "expectedResults": [
+        {
+          "columns": [
+            "id",
+            "peers_total",
+            "row_total"
+          ],
+          "values": [
+            [
+              1,
+              11,
+              4
+            ],
+            [
+              2,
+              11,
+              11
+            ],
+            [
+              3,
+              14,
+              14
+            ]
+          ]
+        }
+      ],
+      "outcome": "success",
+      "kind": "example",
+      "expectedPass": true
+    },
+    {
+      "lessonId": "sql-45",
+      "id": "sql-45-changed",
+      "paragraph": 2,
+      "code": "CREATE TABLE moves(id INTEGER PRIMARY KEY, tick INTEGER, amount INTEGER);\nINSERT INTO moves VALUES (1,1,4),(2,3,7),(3,2,3);\nSELECT id, SUM(amount) OVER (ORDER BY tick RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS peers_total, SUM(amount) OVER (ORDER BY tick,id ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS row_total\nFROM moves\nORDER BY id;",
+      "checks": [],
+      "expectedResults": [
+        {
+          "columns": [
+            "id",
+            "peers_total",
+            "row_total"
+          ],
+          "values": [
+            [
+              1,
+              4,
+              4
+            ],
+            [
+              2,
+              14,
+              14
+            ],
+            [
+              3,
+              7,
+              7
+            ]
+          ]
+        }
+      ],
+      "outcome": "success",
+      "kind": "example",
+      "expectedPass": true
+    },
+    {
+      "lessonId": "sql-46",
+      "id": "sql-46-worked",
+      "paragraph": 1,
+      "code": "CREATE TABLE sessions(id INTEGER PRIMARY KEY, team TEXT, done INTEGER, minutes INTEGER);\nINSERT INTO sessions VALUES (1,'fern',1,10),(2,'fern',0,20),(3,'moss',0,7);\nSELECT team, COUNT(*) AS all_rows, COUNT(*) FILTER (WHERE done=1) AS done_rows, SUM(minutes) FILTER (WHERE done=1) AS done_minutes\nFROM sessions\nGROUP BY team\nORDER BY team;",
+      "checks": [],
+      "expectedResults": [
+        {
+          "columns": [
+            "team",
+            "all_rows",
+            "done_rows",
+            "done_minutes"
+          ],
+          "values": [
+            [
+              "fern",
+              2,
+              1,
+              10
+            ],
+            [
+              "moss",
+              1,
+              0,
+              null
+            ]
+          ]
+        }
+      ],
+      "outcome": "success",
+      "kind": "example",
+      "expectedPass": true
+    },
+    {
+      "lessonId": "sql-46",
+      "id": "sql-46-changed",
+      "paragraph": 2,
+      "code": "CREATE TABLE sessions(id INTEGER PRIMARY KEY, team TEXT, done INTEGER, minutes INTEGER);\nINSERT INTO sessions VALUES (1,'fern',1,10),(2,'fern',0,20),(3,'moss',1,7);\nSELECT team, COUNT(*) AS all_rows, COUNT(*) FILTER (WHERE done=1) AS done_rows, SUM(minutes) FILTER (WHERE done=1) AS done_minutes\nFROM sessions\nGROUP BY team\nORDER BY team;",
+      "checks": [],
+      "expectedResults": [
+        {
+          "columns": [
+            "team",
+            "all_rows",
+            "done_rows",
+            "done_minutes"
+          ],
+          "values": [
+            [
+              "fern",
+              2,
+              1,
+              10
+            ],
+            [
+              "moss",
+              1,
+              1,
+              7
+            ]
+          ]
+        }
+      ],
+      "outcome": "success",
+      "kind": "example",
+      "expectedPass": true
+    },
+    {
+      "lessonId": "sql-47",
+      "id": "sql-47-worked",
+      "paragraph": 1,
+      "code": "CREATE TABLE plans(id INTEGER PRIMARY KEY, title TEXT);\nINSERT INTO plans VALUES (1,'Map'),(2,'Sketch');\nBEGIN;\nALTER TABLE plans ADD COLUMN status TEXT NOT NULL DEFAULT 'draft';\nALTER TABLE plans RENAME COLUMN title TO label;\nCOMMIT;\nSELECT id,label,status\nFROM plans\nORDER BY id;",
+      "checks": [],
+      "expectedResults": [
+        {
+          "columns": [
+            "id",
+            "label",
+            "status"
+          ],
+          "values": [
+            [
+              1,
+              "Map",
+              "draft"
+            ],
+            [
+              2,
+              "Sketch",
+              "draft"
+            ]
+          ]
+        }
+      ],
+      "outcome": "success",
+      "kind": "example",
+      "expectedPass": true
+    },
+    {
+      "lessonId": "sql-47",
+      "id": "sql-47-changed",
+      "paragraph": 2,
+      "code": "CREATE TABLE plans(id INTEGER PRIMARY KEY, title TEXT);\nINSERT INTO plans VALUES (1,'Map'),(2,'Sketch');\nBEGIN;\nALTER TABLE plans ADD COLUMN status TEXT NOT NULL DEFAULT 'draft';\nALTER TABLE plans RENAME COLUMN title TO label;\nROLLBACK;\nSELECT id,title\nFROM plans\nORDER BY id;",
+      "checks": [],
+      "expectedResults": [
+        {
+          "columns": [
+            "id",
+            "title"
+          ],
+          "values": [
+            [
+              1,
+              "Map"
+            ],
+            [
+              2,
+              "Sketch"
+            ]
+          ]
+        }
+      ],
+      "outcome": "success",
+      "kind": "example",
+      "expectedPass": true
+    },
+    {
+      "lessonId": "sql-47",
+      "id": "sql-47-missing-default",
+      "paragraph": 3,
+      "setup": "CREATE TABLE plans(id INTEGER PRIMARY KEY, title TEXT);\nINSERT INTO plans VALUES (1,'Map'),(2,'Sketch');",
+      "code": "ALTER TABLE plans ADD COLUMN status TEXT NOT NULL;",
+      "outcome": "expected-error",
+      "errorContains": "Cannot add a NOT NULL column with default value NULL",
+      "postChecks": [
+        {
+          "label": "Rows intact",
+          "expression": "SELECT CASE WHEN (SELECT COUNT(*) FROM plans)=2 THEN 1 ELSE 0 END"
+        },
+        {
+          "label": "Column not added",
+          "expression": "SELECT COUNT(*)=0 FROM pragma_table_info('plans') WHERE name='status'"
+        }
+      ],
+      "supplemental": true,
+      "gradingScope": "Author-validated rejection fixture; not current learner SELECT-check capability.",
+      "kind": "example",
+      "expectedPass": true
+    },
+    {
+      "lessonId": "sql-48",
+      "id": "sql-48-worked",
+      "paragraph": 1,
+      "code": "PRAGMA foreign_keys=ON;\nCREATE TABLE folders(id INTEGER PRIMARY KEY);\nCREATE TABLE notes(id INTEGER PRIMARY KEY, folder_id INTEGER NOT NULL REFERENCES folders(id) ON DELETE CASCADE);\nINSERT INTO folders VALUES (1),(2);\nINSERT INTO notes VALUES (10,1),(11,1),(12,2);\nDELETE\nFROM folders\nWHERE id=1;\nSELECT id,folder_id\nFROM notes\nORDER BY id;",
+      "checks": [],
+      "expectedResults": [
+        {
+          "columns": [
+            "id",
+            "folder_id"
+          ],
+          "values": [
+            [
+              12,
+              2
+            ]
+          ]
+        }
+      ],
+      "outcome": "success",
+      "kind": "example",
+      "expectedPass": true
+    },
+    {
+      "lessonId": "sql-48",
+      "id": "sql-48-changed",
+      "paragraph": 2,
+      "code": "PRAGMA foreign_keys=ON;\nCREATE TABLE folders(id INTEGER PRIMARY KEY);\nCREATE TABLE notes(id INTEGER PRIMARY KEY, folder_id INTEGER NOT NULL REFERENCES folders(id) ON DELETE CASCADE);\nINSERT INTO folders VALUES (1),(2);\nINSERT INTO notes VALUES (10,1),(11,1),(12,2);\nDELETE\nFROM folders\nWHERE id=2;\nSELECT id,folder_id\nFROM notes\nORDER BY id;",
+      "checks": [],
+      "expectedResults": [
+        {
+          "columns": [
+            "id",
+            "folder_id"
+          ],
+          "values": [
+            [
+              10,
+              1
+            ],
+            [
+              11,
+              1
+            ]
+          ]
+        }
+      ],
+      "outcome": "success",
+      "kind": "example",
+      "expectedPass": true
+    },
+    {
+      "lessonId": "sql-48",
+      "id": "sql-48-default-refusal",
+      "paragraph": 3,
+      "setup": "PRAGMA foreign_keys=ON;\nCREATE TABLE folders(id INTEGER PRIMARY KEY);\nCREATE TABLE notes(id INTEGER PRIMARY KEY, folder_id INTEGER NOT NULL REFERENCES folders(id));\nINSERT INTO folders VALUES (1),(2);\nINSERT INTO notes VALUES (10,1),(11,1),(12,2);",
+      "code": "DELETE\nFROM folders\nWHERE id=1;",
+      "outcome": "expected-error",
+      "errorContains": "FOREIGN KEY constraint failed",
+      "postChecks": [
+        {
+          "label": "Parents preserved",
+          "expression": "SELECT ((SELECT COUNT(*) FROM folders)=2 AND (SELECT COUNT(*) FROM folders WHERE id IS 1)=1 AND (SELECT COUNT(*) FROM folders WHERE id IS 2)=1)"
+        },
+        {
+          "label": "Children preserved",
+          "expression": "SELECT ((SELECT COUNT(*) FROM notes)=3 AND (SELECT COUNT(*) FROM notes WHERE id IS 10 AND folder_id IS 1)=1 AND (SELECT COUNT(*) FROM notes WHERE id IS 11 AND folder_id IS 1)=1 AND (SELECT COUNT(*) FROM notes WHERE id IS 12 AND folder_id IS 2)=1)"
+        }
+      ],
+      "supplemental": true,
+      "gradingScope": "Author-validated rejection fixture; not current learner SELECT-check capability.",
+      "kind": "example",
+      "expectedPass": true
+    },
+    {
+      "lessonId": "sql-49",
+      "id": "sql-49-worked",
+      "paragraph": 1,
+      "code": "CREATE TABLE tickets(id INTEGER PRIMARY KEY, label TEXT, status TEXT DEFAULT 'new');\nINSERT INTO tickets(label) VALUES ('Atlas')\nRETURNING id,label,status;",
+      "checks": [],
+      "expectedResults": [
+        {
+          "columns": [
+            "id",
+            "label",
+            "status"
+          ],
+          "values": [
+            [
+              1,
+              "Atlas",
+              "new"
+            ]
+          ]
+        }
+      ],
+      "outcome": "success",
+      "kind": "example",
+      "expectedPass": true
+    },
+    {
+      "lessonId": "sql-49",
+      "id": "sql-49-changed",
+      "paragraph": 2,
+      "code": "CREATE TABLE tickets(id INTEGER PRIMARY KEY, label TEXT, status TEXT DEFAULT 'new');\nINSERT INTO tickets(label) VALUES ('Atlas');\nBEGIN;\nUPDATE tickets SET status='done'\nWHERE id=1\nRETURNING id,status;\nROLLBACK;\nSELECT id,status\nFROM tickets\nORDER BY id;",
+      "checks": [],
+      "expectedResults": [
+        {
+          "columns": [
+            "id",
+            "status"
+          ],
+          "values": [
+            [
+              1,
+              "done"
+            ]
+          ]
+        },
+        {
+          "columns": [
+            "id",
+            "status"
+          ],
+          "values": [
+            [
+              1,
+              "new"
+            ]
+          ]
+        }
+      ],
+      "outcome": "success",
+      "kind": "example",
+      "expectedPass": true
+    },
+    {
+      "lessonId": "sql-50",
+      "id": "sql-50-worked",
+      "paragraph": 1,
+      "code": "CREATE TABLE jobs(id INTEGER PRIMARY KEY, status TEXT, priority INTEGER);\nINSERT INTO jobs VALUES (1,'open',2),(2,'closed',1),(3,'open',1),(4,NULL,0);\nCREATE INDEX open_priority ON jobs(priority,id)\nWHERE status='open';\nSELECT id,priority\nFROM jobs\nWHERE status='open'\nORDER BY priority,id;",
+      "checks": [],
+      "expectedResults": [
+        {
+          "columns": [
+            "id",
+            "priority"
+          ],
+          "values": [
+            [
+              3,
+              1
+            ],
+            [
+              1,
+              2
+            ]
+          ]
+        }
+      ],
+      "outcome": "success",
+      "kind": "example",
+      "expectedPass": true
+    },
+    {
+      "lessonId": "sql-50",
+      "id": "sql-50-changed",
+      "paragraph": 2,
+      "code": "CREATE TABLE jobs(id INTEGER PRIMARY KEY, status TEXT, priority INTEGER);\nINSERT INTO jobs VALUES (1,'open',2),(2,'closed',1),(3,'open',1),(4,NULL,0);\nCREATE INDEX open_priority ON jobs(priority,id)\nWHERE status='open';\nSELECT id,priority\nFROM jobs\nWHERE status='closed'\nORDER BY priority,id;",
+      "checks": [],
+      "expectedResults": [
+        {
+          "columns": [
+            "id",
+            "priority"
+          ],
+          "values": [
+            [
+              2,
+              1
+            ]
+          ]
+        }
+      ],
+      "outcome": "success",
+      "kind": "example",
+      "expectedPass": true
+    },
+    {
+      "lessonId": "sql-50",
+      "id": "sql-50-plan-diagnostic",
+      "paragraph": 3,
+      "code": "CREATE TABLE jobs(id INTEGER PRIMARY KEY, status TEXT, priority INTEGER);\nINSERT INTO jobs VALUES (1,'open',2),(2,'closed',1),(3,'open',1),(4,NULL,0);\nCREATE INDEX open_priority ON jobs(priority,id)\nWHERE status='open';\nEXPLAIN QUERY PLAN\nSELECT id,priority\nFROM jobs\nWHERE status='open'\nORDER BY priority,id;",
+      "checks": [],
+      "expectedResults": [
+        {
+          "columns": [
+            "id",
+            "parent",
+            "notused",
+            "detail"
+          ],
+          "values": [
+            [
+              3,
+              0,
+              202,
+              "SCAN jobs USING COVERING INDEX open_priority"
+            ]
+          ]
+        }
+      ],
+      "outcome": "success",
+      "kind": "example",
+      "expectedPass": true
+    }
+  ],
+  "results": [
+    {
+      "id": "sql-44-solution",
+      "output": [
+        {
+          "columns": [
+            "id",
+            "previous"
+          ],
+          "values": [
+            [
+              1,
+              -1
+            ],
+            [
+              2,
+              8
+            ],
+            [
+              3,
+              null
+            ],
+            [
+              4,
+              -1
+            ]
+          ]
+        }
+      ],
+      "error": null,
+      "checks": [
+        {
+          "label": "Exact previous values including stored NULL",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "((SELECT COUNT(*) FROM answer)=4 AND (SELECT COUNT(*) FROM answer WHERE id IS 1 AND previous IS -1)=1 AND (SELECT COUNT(*) FROM answer WHERE id IS 2 AND previous IS 8)=1 AND (SELECT COUNT(*) FROM answer WHERE id IS 3 AND previous IS NULL)=1 AND (SELECT COUNT(*) FROM answer WHERE id IS 4 AND previous IS -1)=1)"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Every original source row preserved",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "((SELECT COUNT(*) FROM readings)=4 AND (SELECT COUNT(*) FROM readings WHERE id IS 1 AND room IS 'east' AND tick IS 1 AND value IS 8)=1 AND (SELECT COUNT(*) FROM readings WHERE id IS 2 AND room IS 'east' AND tick IS 2 AND value IS NULL)=1 AND (SELECT COUNT(*) FROM readings WHERE id IS 3 AND room IS 'east' AND tick IS 3 AND value IS 12)=1 AND (SELECT COUNT(*) FROM readings WHERE id IS 4 AND room IS 'west' AND tick IS 1 AND value IS 5)=1)"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": true,
+      "expectedPass": true,
+      "validated": true,
+      "sourceHash": "c06c5a3d81ea242fa5d5c367a06ccd87279044053a4cf7734476bec3486295dd"
+    },
+    {
+      "id": "sql-44-starter",
+      "output": [],
+      "error": null,
+      "checks": [
+        {
+          "label": "Exact previous values including stored NULL",
+          "passed": false,
+          "actual": [
+            {
+              "columns": [
+                "((SELECT COUNT(*) FROM answer)=4 AND (SELECT COUNT(*) FROM answer WHERE id IS 1 AND previous IS -1)=1 AND (SELECT COUNT(*) FROM answer WHERE id IS 2 AND previous IS 8)=1 AND (SELECT COUNT(*) FROM answer WHERE id IS 3 AND previous IS NULL)=1 AND (SELECT COUNT(*) FROM answer WHERE id IS 4 AND previous IS -1)=1)"
+              ],
+              "values": [
+                [
+                  0
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Every original source row preserved",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "((SELECT COUNT(*) FROM readings)=4 AND (SELECT COUNT(*) FROM readings WHERE id IS 1 AND room IS 'east' AND tick IS 1 AND value IS 8)=1 AND (SELECT COUNT(*) FROM readings WHERE id IS 2 AND room IS 'east' AND tick IS 2 AND value IS NULL)=1 AND (SELECT COUNT(*) FROM readings WHERE id IS 3 AND room IS 'east' AND tick IS 3 AND value IS 12)=1 AND (SELECT COUNT(*) FROM readings WHERE id IS 4 AND room IS 'west' AND tick IS 1 AND value IS 5)=1)"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": false,
+      "expectedPass": false,
+      "validated": true,
+      "sourceHash": "912240dcc0b34408aea8568f684c134352e579ed1f8eb5beb891146eaa276293"
+    },
+    {
+      "id": "sql-45-solution",
+      "output": [
+        {
+          "columns": [
+            "id",
+            "peers_total",
+            "row_total"
+          ],
+          "values": [
+            [
+              1,
+              11,
+              4
+            ],
+            [
+              2,
+              11,
+              11
+            ],
+            [
+              3,
+              14,
+              14
+            ]
+          ]
+        }
+      ],
+      "error": null,
+      "checks": [
+        {
+          "label": "Peer and row totals",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "((SELECT COUNT(*) FROM answer)=3 AND (SELECT COUNT(*) FROM answer WHERE id IS 1 AND peers_total IS 11 AND row_total IS 4)=1 AND (SELECT COUNT(*) FROM answer WHERE id IS 2 AND peers_total IS 11 AND row_total IS 11)=1 AND (SELECT COUNT(*) FROM answer WHERE id IS 3 AND peers_total IS 14 AND row_total IS 14)=1)"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Every original source row preserved",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "((SELECT COUNT(*) FROM moves)=3 AND (SELECT COUNT(*) FROM moves WHERE id IS 1 AND tick IS 1 AND amount IS 4)=1 AND (SELECT COUNT(*) FROM moves WHERE id IS 2 AND tick IS 1 AND amount IS 7)=1 AND (SELECT COUNT(*) FROM moves WHERE id IS 3 AND tick IS 2 AND amount IS 3)=1)"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": true,
+      "expectedPass": true,
+      "validated": true,
+      "sourceHash": "748a2bb3f9f4938ff21fe21e6615d994be6d060177ffbbb2be8c9bbb348114b7"
+    },
+    {
+      "id": "sql-45-starter",
+      "output": [],
+      "error": null,
+      "checks": [
+        {
+          "label": "Peer and row totals",
+          "passed": false,
+          "actual": [
+            {
+              "columns": [
+                "((SELECT COUNT(*) FROM answer)=3 AND (SELECT COUNT(*) FROM answer WHERE id IS 1 AND peers_total IS 11 AND row_total IS 4)=1 AND (SELECT COUNT(*) FROM answer WHERE id IS 2 AND peers_total IS 11 AND row_total IS 11)=1 AND (SELECT COUNT(*) FROM answer WHERE id IS 3 AND peers_total IS 14 AND row_total IS 14)=1)"
+              ],
+              "values": [
+                [
+                  0
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Every original source row preserved",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "((SELECT COUNT(*) FROM moves)=3 AND (SELECT COUNT(*) FROM moves WHERE id IS 1 AND tick IS 1 AND amount IS 4)=1 AND (SELECT COUNT(*) FROM moves WHERE id IS 2 AND tick IS 1 AND amount IS 7)=1 AND (SELECT COUNT(*) FROM moves WHERE id IS 3 AND tick IS 2 AND amount IS 3)=1)"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": false,
+      "expectedPass": false,
+      "validated": true,
+      "sourceHash": "d9b9d6cbd15034301d84e0fc4778807234105187b5ded46b4b1e491b59c392f1"
+    },
+    {
+      "id": "sql-46-solution",
+      "output": [
+        {
+          "columns": [
+            "team",
+            "all_rows",
+            "done_rows",
+            "done_minutes"
+          ],
+          "values": [
+            [
+              "fern",
+              2,
+              1,
+              10
+            ],
+            [
+              "moss",
+              1,
+              0,
+              null
+            ]
+          ]
+        }
+      ],
+      "error": null,
+      "checks": [
+        {
+          "label": "Both teams and empty aggregate semantics",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "((SELECT COUNT(*) FROM answer)=2 AND (SELECT COUNT(*) FROM answer WHERE team IS 'fern' AND all_rows IS 2 AND done_rows IS 1 AND done_minutes IS 10)=1 AND (SELECT COUNT(*) FROM answer WHERE team IS 'moss' AND all_rows IS 1 AND done_rows IS 0 AND done_minutes IS NULL)=1)"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Every original source row preserved",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "((SELECT COUNT(*) FROM sessions)=3 AND (SELECT COUNT(*) FROM sessions WHERE id IS 1 AND team IS 'fern' AND done IS 1 AND minutes IS 10)=1 AND (SELECT COUNT(*) FROM sessions WHERE id IS 2 AND team IS 'fern' AND done IS 0 AND minutes IS 20)=1 AND (SELECT COUNT(*) FROM sessions WHERE id IS 3 AND team IS 'moss' AND done IS 0 AND minutes IS 7)=1)"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": true,
+      "expectedPass": true,
+      "validated": true,
+      "sourceHash": "c146b035c802321ebdab4a89219aa4282e0e7ed5fef6dfad3ab338b214232ba8"
+    },
+    {
+      "id": "sql-46-starter",
+      "output": [],
+      "error": null,
+      "checks": [
+        {
+          "label": "Both teams and empty aggregate semantics",
+          "passed": false,
+          "actual": [
+            {
+              "columns": [
+                "((SELECT COUNT(*) FROM answer)=2 AND (SELECT COUNT(*) FROM answer WHERE team IS 'fern' AND all_rows IS 2 AND done_rows IS 1 AND done_minutes IS 10)=1 AND (SELECT COUNT(*) FROM answer WHERE team IS 'moss' AND all_rows IS 1 AND done_rows IS 0 AND done_minutes IS NULL)=1)"
+              ],
+              "values": [
+                [
+                  0
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Every original source row preserved",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "((SELECT COUNT(*) FROM sessions)=3 AND (SELECT COUNT(*) FROM sessions WHERE id IS 1 AND team IS 'fern' AND done IS 1 AND minutes IS 10)=1 AND (SELECT COUNT(*) FROM sessions WHERE id IS 2 AND team IS 'fern' AND done IS 0 AND minutes IS 20)=1 AND (SELECT COUNT(*) FROM sessions WHERE id IS 3 AND team IS 'moss' AND done IS 0 AND minutes IS 7)=1)"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": false,
+      "expectedPass": false,
+      "validated": true,
+      "sourceHash": "78074b11d01c8815700eecf3933185b0b3c1cc03649493a34b4ae3b0eaa04c8c"
+    },
+    {
+      "id": "sql-47-solution",
+      "output": [
+        {
+          "columns": [
+            "id",
+            "label",
+            "status"
+          ],
+          "values": [
+            [
+              1,
+              "Map",
+              "draft"
+            ],
+            [
+              2,
+              "Sketch",
+              "draft"
+            ]
+          ]
+        }
+      ],
+      "error": null,
+      "checks": [
+        {
+          "label": "Rows preserved with default",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "((SELECT COUNT(*) FROM plans)=2 AND (SELECT COUNT(*) FROM plans WHERE id IS 1 AND label IS 'Map' AND status IS 'draft')=1 AND (SELECT COUNT(*) FROM plans WHERE id IS 2 AND label IS 'Sketch' AND status IS 'draft')=1)"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "New schema metadata",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "(COUNT(*)=1 AND MIN(type)='TEXT' AND MIN(\"notnull\")=1 AND MIN(dflt_value)='''draft''')"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Old name removed",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*)=0"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": true,
+      "expectedPass": true,
+      "validated": true,
+      "sourceHash": "8a98f43cec9e442140a4429dc0e94069d59639b71547d8d44e2ce4112fa51546"
+    },
+    {
+      "id": "sql-47-starter",
+      "output": [
+        {
+          "columns": [
+            "id",
+            "title"
+          ],
+          "values": [
+            [
+              1,
+              "Map"
+            ],
+            [
+              2,
+              "Sketch"
+            ]
+          ]
+        }
+      ],
+      "error": null,
+      "checks": [
+        {
+          "label": "Rows preserved with default",
+          "passed": false,
+          "error": "no such column: label"
+        },
+        {
+          "label": "New schema metadata",
+          "passed": false,
+          "actual": [
+            {
+              "columns": [
+                "(COUNT(*)=1 AND MIN(type)='TEXT' AND MIN(\"notnull\")=1 AND MIN(dflt_value)='''draft''')"
+              ],
+              "values": [
+                [
+                  0
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Old name removed",
+          "passed": false,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*)=0"
+              ],
+              "values": [
+                [
+                  0
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": false,
+      "expectedPass": false,
+      "validated": true,
+      "sourceHash": "aeb6425628bae7953f6fc33c9be954899c0decbbf2f5407f5a4603f3f252c376"
+    },
+    {
+      "id": "sql-48-solution",
+      "output": [
+        {
+          "columns": [
+            "id",
+            "folder_id"
+          ],
+          "values": [
+            [
+              12,
+              2
+            ]
+          ]
+        }
+      ],
+      "error": null,
+      "checks": [
+        {
+          "label": "Only unaffected folder",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "((SELECT COUNT(*) FROM folders)=1 AND (SELECT COUNT(*) FROM folders WHERE id IS 2)=1)"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Only unaffected note",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "((SELECT COUNT(*) FROM notes)=1 AND (SELECT COUNT(*) FROM notes WHERE id IS 12 AND folder_id IS 2)=1)"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Enforcement enabled",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "foreign_keys=1"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": true,
+      "expectedPass": true,
+      "validated": true,
+      "sourceHash": "9c7da12c0afc5e13aa6c36c708abe2f8e8c24f085ef4dbc0be936d8d391562d4"
+    },
+    {
+      "id": "sql-48-starter",
+      "output": [],
+      "error": null,
+      "checks": [
+        {
+          "label": "Only unaffected folder",
+          "passed": false,
+          "actual": [
+            {
+              "columns": [
+                "((SELECT COUNT(*) FROM folders)=1 AND (SELECT COUNT(*) FROM folders WHERE id IS 2)=1)"
+              ],
+              "values": [
+                [
+                  0
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Only unaffected note",
+          "passed": false,
+          "actual": [
+            {
+              "columns": [
+                "((SELECT COUNT(*) FROM notes)=1 AND (SELECT COUNT(*) FROM notes WHERE id IS 12 AND folder_id IS 2)=1)"
+              ],
+              "values": [
+                [
+                  0
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Enforcement enabled",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "foreign_keys=1"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": false,
+      "expectedPass": false,
+      "validated": true,
+      "sourceHash": "cb0c3fd638641ede5fcc38ea140aa0827f9e29b463f1ce9338a86bdcb424c20e"
+    },
+    {
+      "id": "sql-49-solution",
+      "output": [
+        {
+          "columns": [
+            "id",
+            "label",
+            "status"
+          ],
+          "values": [
+            [
+              1,
+              "Atlas",
+              "new"
+            ]
+          ]
+        }
+      ],
+      "error": null,
+      "checks": [
+        {
+          "label": "Ticket state",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "((SELECT COUNT(*) FROM tickets)=1 AND (SELECT COUNT(*) FROM tickets WHERE id IS 1 AND label IS 'Atlas' AND status IS 'new')=1)"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": true,
+      "expectedPass": true,
+      "validated": true,
+      "sourceHash": "09717ab4684858b2472d9e2dd2c100364422c3ae3a1d37a761fbc3ec94553979"
+    },
+    {
+      "id": "sql-49-starter",
+      "output": [],
+      "error": null,
+      "checks": [
+        {
+          "label": "Ticket state",
+          "passed": false,
+          "actual": [
+            {
+              "columns": [
+                "((SELECT COUNT(*) FROM tickets)=1 AND (SELECT COUNT(*) FROM tickets WHERE id IS 1 AND label IS 'Atlas' AND status IS 'new')=1)"
+              ],
+              "values": [
+                [
+                  0
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": false,
+      "expectedPass": false,
+      "validated": true,
+      "sourceHash": "4fa837c164324b427667002093c32cb1934763bf9838c5cfaf72a58debf71da2"
+    },
+    {
+      "id": "sql-50-solution",
+      "output": [
+        {
+          "columns": [
+            "id",
+            "priority"
+          ],
+          "values": [
+            [
+              3,
+              1
+            ],
+            [
+              1,
+              2
+            ]
+          ]
+        }
+      ],
+      "error": null,
+      "checks": [
+        {
+          "label": "Open result rows",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "((SELECT COUNT(*) FROM answer)=2 AND (SELECT COUNT(*) FROM answer WHERE id IS 3 AND priority IS 1)=1 AND (SELECT COUNT(*) FROM answer WHERE id IS 1 AND priority IS 2)=1)"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Partial index exists",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*)=1"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Indexed keys",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "group_concat(name,',')='priority,id'"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Every original source row preserved",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "((SELECT COUNT(*) FROM jobs)=4 AND (SELECT COUNT(*) FROM jobs WHERE id IS 1 AND status IS 'open' AND priority IS 2)=1 AND (SELECT COUNT(*) FROM jobs WHERE id IS 2 AND status IS 'closed' AND priority IS 1)=1 AND (SELECT COUNT(*) FROM jobs WHERE id IS 3 AND status IS 'open' AND priority IS 1)=1 AND (SELECT COUNT(*) FROM jobs WHERE id IS 4 AND status IS NULL AND priority IS 0)=1)"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": true,
+      "expectedPass": true,
+      "validated": true,
+      "sourceHash": "bd675cc6ace49f6cc0a1f7079d4672be81b2444ecd4154b859268b27e70382dc"
+    },
+    {
+      "id": "sql-50-starter",
+      "output": [],
+      "error": null,
+      "checks": [
+        {
+          "label": "Open result rows",
+          "passed": false,
+          "actual": [
+            {
+              "columns": [
+                "((SELECT COUNT(*) FROM answer)=2 AND (SELECT COUNT(*) FROM answer WHERE id IS 3 AND priority IS 1)=1 AND (SELECT COUNT(*) FROM answer WHERE id IS 1 AND priority IS 2)=1)"
+              ],
+              "values": [
+                [
+                  0
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Partial index exists",
+          "passed": false,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*)=1"
+              ],
+              "values": [
+                [
+                  0
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Indexed keys",
+          "passed": false,
+          "actual": [
+            {
+              "columns": [
+                "group_concat(name,',')='priority,id'"
+              ],
+              "values": [
+                [
+                  null
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Every original source row preserved",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "((SELECT COUNT(*) FROM jobs)=4 AND (SELECT COUNT(*) FROM jobs WHERE id IS 1 AND status IS 'open' AND priority IS 2)=1 AND (SELECT COUNT(*) FROM jobs WHERE id IS 2 AND status IS 'closed' AND priority IS 1)=1 AND (SELECT COUNT(*) FROM jobs WHERE id IS 3 AND status IS 'open' AND priority IS 1)=1 AND (SELECT COUNT(*) FROM jobs WHERE id IS 4 AND status IS NULL AND priority IS 0)=1)"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": false,
+      "expectedPass": false,
+      "validated": true,
+      "sourceHash": "2658c9648cef5a1f7c0cc458e7274a368cf0bb576a7d674fe9b4f995b41c9d9c"
+    },
+    {
+      "id": "sql-44-worked",
+      "output": [
+        {
+          "columns": [
+            "id",
+            "previous"
+          ],
+          "values": [
+            [
+              1,
+              -1
+            ],
+            [
+              2,
+              8
+            ],
+            [
+              3,
+              null
+            ],
+            [
+              4,
+              -1
+            ]
+          ]
+        }
+      ],
+      "error": null,
+      "checks": [
+        {
+          "label": "Four observations remain",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "CASE WHEN (SELECT COUNT(*) FROM readings)=4 THEN 1 ELSE 0 END"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": true,
+      "expectedPass": true,
+      "validated": true,
+      "sourceHash": "ead9039a52a5311eb9a78b6cf35dfd60735c05568e4d66056da4608be4d72101"
+    },
+    {
+      "id": "sql-44-changed",
+      "output": [
+        {
+          "columns": [
+            "id",
+            "previous"
+          ],
+          "values": [
+            [
+              1,
+              -1
+            ],
+            [
+              2,
+              8
+            ],
+            [
+              3,
+              9
+            ],
+            [
+              4,
+              -1
+            ]
+          ]
+        }
+      ],
+      "error": null,
+      "checks": [],
+      "passed": true,
+      "expectedPass": true,
+      "validated": true,
+      "sourceHash": "6f545030ce1e89351e581217bc470166c0bddbbb9042771bd93b234f21e7cd86"
+    },
+    {
+      "id": "sql-45-worked",
+      "output": [
+        {
+          "columns": [
+            "id",
+            "peers_total",
+            "row_total"
+          ],
+          "values": [
+            [
+              1,
+              11,
+              4
+            ],
+            [
+              2,
+              11,
+              11
+            ],
+            [
+              3,
+              14,
+              14
+            ]
+          ]
+        }
+      ],
+      "error": null,
+      "checks": [],
+      "passed": true,
+      "expectedPass": true,
+      "validated": true,
+      "sourceHash": "3d70e5bda4ce0b873e8b914705bf0669041d22a62ce7126044d1184cda2d4daf"
+    },
+    {
+      "id": "sql-45-changed",
+      "output": [
+        {
+          "columns": [
+            "id",
+            "peers_total",
+            "row_total"
+          ],
+          "values": [
+            [
+              1,
+              4,
+              4
+            ],
+            [
+              2,
+              14,
+              14
+            ],
+            [
+              3,
+              7,
+              7
+            ]
+          ]
+        }
+      ],
+      "error": null,
+      "checks": [],
+      "passed": true,
+      "expectedPass": true,
+      "validated": true,
+      "sourceHash": "9d6853c53b641322dea6f6e1035600325877b37f1a750a3691c4d9ebcc946814"
+    },
+    {
+      "id": "sql-46-worked",
+      "output": [
+        {
+          "columns": [
+            "team",
+            "all_rows",
+            "done_rows",
+            "done_minutes"
+          ],
+          "values": [
+            [
+              "fern",
+              2,
+              1,
+              10
+            ],
+            [
+              "moss",
+              1,
+              0,
+              null
+            ]
+          ]
+        }
+      ],
+      "error": null,
+      "checks": [],
+      "passed": true,
+      "expectedPass": true,
+      "validated": true,
+      "sourceHash": "322f3cf1d9fc8965184609afc08adaf4cbe48906ba787fd5d276ecefbafbf596"
+    },
+    {
+      "id": "sql-46-changed",
+      "output": [
+        {
+          "columns": [
+            "team",
+            "all_rows",
+            "done_rows",
+            "done_minutes"
+          ],
+          "values": [
+            [
+              "fern",
+              2,
+              1,
+              10
+            ],
+            [
+              "moss",
+              1,
+              1,
+              7
+            ]
+          ]
+        }
+      ],
+      "error": null,
+      "checks": [],
+      "passed": true,
+      "expectedPass": true,
+      "validated": true,
+      "sourceHash": "f6807291267e444da6dc4cd5f71f5b44e1d57b6bd22df256501e8e08be179153"
+    },
+    {
+      "id": "sql-47-worked",
+      "output": [
+        {
+          "columns": [
+            "id",
+            "label",
+            "status"
+          ],
+          "values": [
+            [
+              1,
+              "Map",
+              "draft"
+            ],
+            [
+              2,
+              "Sketch",
+              "draft"
+            ]
+          ]
+        }
+      ],
+      "error": null,
+      "checks": [],
+      "passed": true,
+      "expectedPass": true,
+      "validated": true,
+      "sourceHash": "9e720622de6d7e276b9d5f39fd0e2f560022df241e9e42266688ae9e2a33c761"
+    },
+    {
+      "id": "sql-47-changed",
+      "output": [
+        {
+          "columns": [
+            "id",
+            "title"
+          ],
+          "values": [
+            [
+              1,
+              "Map"
+            ],
+            [
+              2,
+              "Sketch"
+            ]
+          ]
+        }
+      ],
+      "error": null,
+      "checks": [],
+      "passed": true,
+      "expectedPass": true,
+      "validated": true,
+      "sourceHash": "52fe9082053802281d65bf30dd8dbdabb23221d4704439b0cf3cf589e7bbbc8d"
+    },
+    {
+      "id": "sql-47-missing-default",
+      "output": [],
+      "error": "Cannot add a NOT NULL column with default value NULL",
+      "checks": [
+        {
+          "label": "Rows intact",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "CASE WHEN (SELECT COUNT(*) FROM plans)=2 THEN 1 ELSE 0 END"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Column not added",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "COUNT(*)=0"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": true,
+      "expectedPass": true,
+      "validated": true,
+      "sourceHash": "0c9d11e953b2a46bdbf2481a0fc1f6f1dcbad94c3193211e0cac7576b4bcaa4f"
+    },
+    {
+      "id": "sql-48-worked",
+      "output": [
+        {
+          "columns": [
+            "id",
+            "folder_id"
+          ],
+          "values": [
+            [
+              12,
+              2
+            ]
+          ]
+        }
+      ],
+      "error": null,
+      "checks": [],
+      "passed": true,
+      "expectedPass": true,
+      "validated": true,
+      "sourceHash": "9245af29c548c984b1fb7aa95de4d054909e596d0a58cfd9c85c8626fffe171e"
+    },
+    {
+      "id": "sql-48-changed",
+      "output": [
+        {
+          "columns": [
+            "id",
+            "folder_id"
+          ],
+          "values": [
+            [
+              10,
+              1
+            ],
+            [
+              11,
+              1
+            ]
+          ]
+        }
+      ],
+      "error": null,
+      "checks": [],
+      "passed": true,
+      "expectedPass": true,
+      "validated": true,
+      "sourceHash": "614e84dd99c9b76f9ce2b4d996a9f8a8fb2fecb7a0e79d6374d619cc5176e24c"
+    },
+    {
+      "id": "sql-48-default-refusal",
+      "output": [],
+      "error": "FOREIGN KEY constraint failed",
+      "checks": [
+        {
+          "label": "Parents preserved",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "((SELECT COUNT(*) FROM folders)=2 AND (SELECT COUNT(*) FROM folders WHERE id IS 1)=1 AND (SELECT COUNT(*) FROM folders WHERE id IS 2)=1)"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Children preserved",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "((SELECT COUNT(*) FROM notes)=3 AND (SELECT COUNT(*) FROM notes WHERE id IS 10 AND folder_id IS 1)=1 AND (SELECT COUNT(*) FROM notes WHERE id IS 11 AND folder_id IS 1)=1 AND (SELECT COUNT(*) FROM notes WHERE id IS 12 AND folder_id IS 2)=1)"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": true,
+      "expectedPass": true,
+      "validated": true,
+      "sourceHash": "1c2a34d07c58bb4eeca8b1d0bcec704bd094e2b544136d829ab1af28c7b4525d"
+    },
+    {
+      "id": "sql-49-worked",
+      "output": [
+        {
+          "columns": [
+            "id",
+            "label",
+            "status"
+          ],
+          "values": [
+            [
+              1,
+              "Atlas",
+              "new"
+            ]
+          ]
+        }
+      ],
+      "error": null,
+      "checks": [],
+      "passed": true,
+      "expectedPass": true,
+      "validated": true,
+      "sourceHash": "25f9463184f0fd4d2c6cd5356bf758858409d4e49d7f5f87e385f770a1a01c9d"
+    },
+    {
+      "id": "sql-49-changed",
+      "output": [
+        {
+          "columns": [
+            "id",
+            "status"
+          ],
+          "values": [
+            [
+              1,
+              "done"
+            ]
+          ]
+        },
+        {
+          "columns": [
+            "id",
+            "status"
+          ],
+          "values": [
+            [
+              1,
+              "new"
+            ]
+          ]
+        }
+      ],
+      "error": null,
+      "checks": [],
+      "passed": true,
+      "expectedPass": true,
+      "validated": true,
+      "sourceHash": "f73b0e2fc851add89c976f400d4d4673686cf47d3921e64510b01de643eaf3b5"
+    },
+    {
+      "id": "sql-50-worked",
+      "output": [
+        {
+          "columns": [
+            "id",
+            "priority"
+          ],
+          "values": [
+            [
+              3,
+              1
+            ],
+            [
+              1,
+              2
+            ]
+          ]
+        }
+      ],
+      "error": null,
+      "checks": [],
+      "passed": true,
+      "expectedPass": true,
+      "validated": true,
+      "sourceHash": "7ca623f029885024dd87709b208105caf39ed3d98385998567a0dd9aa5405462"
+    },
+    {
+      "id": "sql-50-changed",
+      "output": [
+        {
+          "columns": [
+            "id",
+            "priority"
+          ],
+          "values": [
+            [
+              2,
+              1
+            ]
+          ]
+        }
+      ],
+      "error": null,
+      "checks": [],
+      "passed": true,
+      "expectedPass": true,
+      "validated": true,
+      "sourceHash": "554c4bdae5043f0bf30f17e7989c886cf8f909f687695b4e7666d1d760ae8e8e"
+    },
+    {
+      "id": "sql-50-plan-diagnostic",
+      "output": [
+        {
+          "columns": [
+            "id",
+            "parent",
+            "notused",
+            "detail"
+          ],
+          "values": [
+            [
+              3,
+              0,
+              202,
+              "SCAN jobs USING COVERING INDEX open_priority"
+            ]
+          ]
+        }
+      ],
+      "error": null,
+      "checks": [],
+      "passed": true,
+      "expectedPass": true,
+      "validated": true,
+      "sourceHash": "8e02fa75945c2d22a7b777aa2379bd4508c57448c95ec2df65179fc2303702ac"
+    }
+  ],
+  "passed": true,
+  "count": 31
+}

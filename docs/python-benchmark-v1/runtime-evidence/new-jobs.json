@@ -1,0 +1,895 @@
+[
+  {
+    "id": "python-71-solution",
+    "lessonId": "python-71",
+    "code": "def find_square(target, limit):\n    for candidate in range(limit + 1):\n        if candidate * candidate == target:\n            return candidate\n    return None",
+    "checks": [
+      {
+        "label": "Zero and endpoint",
+        "expression": "find_square(0, 0) == 0 and find_square(16, 4) == 4"
+      },
+      {
+        "label": "Bounded miss",
+        "expression": "find_square(16, 3) is None and find_square(7, 5) is None"
+      },
+      {
+        "label": "Ordinary hit",
+        "expression": "find_square(25, 8) == 5"
+      }
+    ],
+    "extraFiles": [],
+    "mode": "solution"
+  },
+  {
+    "id": "python-72-solution",
+    "lessonId": "python-72",
+    "code": "def bisect_sqrt(value, width=0.001, max_steps=100):\n    if value < 0 or width <= 0 or max_steps < 0:\n        raise ValueError(\"invalid bounds\")\n    low = 0.0\n    high = max(1.0, value)\n    for _ in range(max_steps):\n        if high - low <= width:\n            return (low + high) / 2\n        middle = (low + high) / 2\n        if middle * middle < value:\n            low = middle\n        else:\n            high = middle\n    if high - low <= width:\n        return (low + high) / 2\n    return None\n\ndef __invalid_bounds_rejected():\n    for args in [(-1, 0.01, 10), (1, 0, 10), (1, 0.01, -1)]:\n        try:\n            bisect_sqrt(*args)\n        except ValueError:\n            continue\n        return False\n    return True",
+    "checks": [
+      {
+        "label": "Below one and ordinary root",
+        "expression": "abs(bisect_sqrt(0.25) - 0.5) <= 0.001 and abs(bisect_sqrt(9) - 3) <= 0.001"
+      },
+      {
+        "label": "Zero and budget",
+        "expression": "abs(bisect_sqrt(0)) <= 0.001 and bisect_sqrt(9, max_steps=0) is None"
+      },
+      {
+        "label": "One update may suffice",
+        "expression": "abs(bisect_sqrt(1, width=0.5, max_steps=1) - 1) <= 0.5"
+      },
+      {
+        "label": "Reject invalid bounds",
+        "expression": "__invalid_bounds_rejected()"
+      }
+    ],
+    "extraFiles": [],
+    "mode": "solution"
+  },
+  {
+    "id": "python-73-solution",
+    "lessonId": "python-73",
+    "code": "def entry_allowed(age):\n    return age >= 18\n\ndef first_disagreement(candidate):\n    for age, expected in [(17, False), (18, True), (19, True)]:\n        if candidate(age) != expected:\n            return age\n    return None",
+    "checks": [
+      {
+        "label": "Threshold",
+        "expression": "entry_allowed(17) is False and entry_allowed(18) is True and entry_allowed(19) is True"
+      },
+      {
+        "label": "Detect strict comparison",
+        "expression": "first_disagreement(lambda age: age > 18) == 18"
+      },
+      {
+        "label": "Detect always true and accept correct",
+        "expression": "first_disagreement(lambda age: True) == 17 and first_disagreement(entry_allowed) is None"
+      }
+    ],
+    "extraFiles": [],
+    "mode": "solution"
+  },
+  {
+    "id": "python-74-solution",
+    "lessonId": "python-74",
+    "code": "def total_prefix(values, count):\n    total = 0\n    for index in range(count):\n        total += values[index]\n    return total",
+    "checks": [
+      {
+        "label": "Minimal regression",
+        "expression": "total_prefix([4], 0) == 0 and total_prefix([], 0) == 0"
+      },
+      {
+        "label": "Exact prefix",
+        "expression": "total_prefix([4, 7, 9], 2) == 11"
+      },
+      {
+        "label": "All values",
+        "expression": "total_prefix([4, 7, 9], 3) == 20"
+      },
+      {
+        "label": "Preserve input values",
+        "expression": "(lambda x: (total_prefix(x, 2), x))([2, 8, 5]) == (10, [2, 8, 5])"
+      }
+    ],
+    "extraFiles": [],
+    "mode": "solution"
+  },
+  {
+    "id": "python-75-solution",
+    "lessonId": "python-75",
+    "code": "def recursive_total(values):\n    if not values:\n        return 0\n    first = values[0]\n    rest_total = recursive_total(values[1:])\n    return first + rest_total",
+    "checks": [
+      {
+        "label": "Base and singleton",
+        "expression": "recursive_total([]) == 0 and recursive_total([7]) == 7"
+      },
+      {
+        "label": "Several calls",
+        "expression": "recursive_total([2, 5, -1]) == 6"
+      },
+      {
+        "label": "No mutation",
+        "expression": "(lambda x: (recursive_total(x), x))([3, 4]) == (7, [3, 4])"
+      }
+    ],
+    "extraFiles": [],
+    "mode": "solution"
+  },
+  {
+    "id": "python-76-solution",
+    "lessonId": "python-76",
+    "code": "class Label:\n    def __init__(self, text):\n        self.text = text\n\n    def __str__(self):\n        return self.text\n\n    def __repr__(self):\n        return f\"Label({self.text!r})\"",
+    "checks": [
+      {
+        "label": "Display and representation",
+        "expression": "str(Label(\"Moon\")) == \"Moon\" and repr(Label(\"Moon\")) == \"Label('Moon')\""
+      },
+      {
+        "label": "Escaped input",
+        "expression": "repr(Label(\"a\\nb\")) == \"Label(\" + repr(\"a\\nb\") + \")\""
+      },
+      {
+        "label": "Empty value",
+        "expression": "str(Label(\"\")) == \"\" and repr(Label(\"\")) == \"Label('')\""
+      }
+    ],
+    "extraFiles": [],
+    "mode": "solution"
+  },
+  {
+    "id": "python-77-solution",
+    "lessonId": "python-77",
+    "code": "class Tag:\n    def __init__(self, text):\n        self.text = text\n\n    def __eq__(self, other):\n        if not isinstance(other, Tag):\n            return NotImplemented\n        return self.text == other.text",
+    "checks": [
+      {
+        "label": "Equal distinct values",
+        "expression": "Tag(\"a\") == Tag(\"a\") and not (Tag(\"a\") == Tag(\"b\"))"
+      },
+      {
+        "label": "Unsupported protocol",
+        "expression": "Tag(\"a\").__eq__(\"a\") is NotImplemented and (Tag(\"a\") == \"a\") is False"
+      },
+      {
+        "label": "Identity stays separate",
+        "expression": "(lambda a,b: a == b and a is not b)(Tag(\"x\"), Tag(\"x\"))"
+      }
+    ],
+    "extraFiles": [],
+    "mode": "solution"
+  },
+  {
+    "id": "python-78-solution",
+    "lessonId": "python-78",
+    "code": "class Task:\n    def __init__(self, title, category):\n        self.title = title\n        self.category = category\n\n    def __eq__(self, other):\n        if not isinstance(other, Task):\n            return NotImplemented\n        return (self.title, self.category) == (other.title, other.category)\n\ndef snapshot_key(task):\n    return (task.title, task.category)\n\ndef __snapshot_preserved():\n    task = Task(\"read\", \"study\")\n    key = snapshot_key(task)\n    task.title = \"write\"\n    return key == (\"read\", \"study\") and snapshot_key(task) == (\"write\", \"study\")",
+    "checks": [
+      {
+        "label": "Exact field tuple",
+        "expression": "snapshot_key(Task(\"Read\", \"my notes\")) == (\"Read\", \"my notes\")"
+      },
+      {
+        "label": "Equal keys have equal hashes",
+        "expression": "hash(snapshot_key(Task(\"read\", \"study\"))) == hash(snapshot_key(Task(\"read\", \"study\")))"
+      },
+      {
+        "label": "Empty strings preserved",
+        "expression": "snapshot_key(Task(\"\", \"\")) == (\"\", \"\")"
+      },
+      {
+        "label": "Preserve the stated snapshot/copy contract",
+        "expression": "__snapshot_preserved()"
+      }
+    ],
+    "extraFiles": [],
+    "mode": "solution"
+  },
+  {
+    "id": "python-79-solution",
+    "lessonId": "python-79",
+    "code": "def counted_find(values, target):\n    comparisons = 0\n    for index, value in enumerate(values):\n        comparisons += 1\n        if value == target:\n            return index, comparisons\n    return None, comparisons",
+    "checks": [
+      {
+        "label": "First and later match",
+        "expression": "counted_find([4, 8, 4], 4) == (0, 1) and counted_find([4, 8, 4], 8) == (1, 2)"
+      },
+      {
+        "label": "Missing and empty",
+        "expression": "counted_find([4, 8], 7) == (None, 2) and counted_find([], 7) == (None, 0)"
+      },
+      {
+        "label": "Last position",
+        "expression": "counted_find([1, 2, 3, 4], 4) == (3, 4)"
+      }
+    ],
+    "extraFiles": [],
+    "mode": "solution"
+  },
+  {
+    "id": "python-80-solution",
+    "lessonId": "python-80",
+    "code": "def growth_counts(n):\n    fixed = 1\n    linear = 0\n    pairs = 0\n    for i in range(n):\n        linear += 1\n        for j in range(n):\n            pairs += 1\n    halvings = 0\n    remaining = n\n    while remaining > 1:\n        remaining //= 2\n        halvings += 1\n    return fixed, linear, pairs, halvings",
+    "checks": [
+      {
+        "label": "Zero and one",
+        "expression": "growth_counts(0) == (1, 0, 0, 0) and growth_counts(1) == (1, 1, 1, 0)"
+      },
+      {
+        "label": "Non-power and power",
+        "expression": "growth_counts(7) == (1, 7, 49, 2) and growth_counts(8) == (1, 8, 64, 3)"
+      },
+      {
+        "label": "Bounded large input",
+        "expression": "growth_counts(64) == (1, 64, 4096, 6)"
+      }
+    ],
+    "extraFiles": [],
+    "mode": "solution"
+  },
+  {
+    "id": "python-81-solution",
+    "lessonId": "python-81",
+    "code": "def binary_find(values, target):\n    low = 0\n    high = len(values) - 1\n    probes = 0\n    while low <= high:\n        mid = (low + high) // 2\n        probes += 1\n        if values[mid] == target:\n            return mid, probes\n        if values[mid] < target:\n            low = mid + 1\n        else:\n            high = mid - 1\n    return None, probes",
+    "checks": [
+      {
+        "label": "Middle and empty",
+        "expression": "binary_find([2, 4, 6, 8, 10], 6) == (2, 1) and binary_find([], 3) == (None, 0)"
+      },
+      {
+        "label": "Right boundary and missing",
+        "expression": "binary_find([2, 4, 6, 8, 10], 10) == (4, 3) and binary_find([2, 4, 6, 8, 10], 7) == (None, 2)"
+      },
+      {
+        "label": "Duplicate match",
+        "expression": "binary_find([1, 2, 2, 2, 5], 2)[0] in (1, 2, 3)"
+      },
+      {
+        "label": "Single item",
+        "expression": "binary_find([9], 9) == (0, 1) and binary_find([9], 8) == (None, 1)"
+      }
+    ],
+    "extraFiles": [],
+    "mode": "solution"
+  },
+  {
+    "id": "python-82-solution",
+    "lessonId": "python-82",
+    "code": "def insertion_sort(records):\n    result = records.copy()\n    shifts = 0\n    for i in range(1, len(result)):\n        item = result[i]\n        j = i - 1\n        while j >= 0 and result[j][0] > item[0]:\n            result[j + 1] = result[j]\n            shifts += 1\n            j -= 1\n        result[j + 1] = item\n    return result, shifts\n\ndef __insertion_preserved():\n    source = [(2, \"A\"), (1, \"B\"), (1, \"C\")]\n    before = source.copy()\n    result, shifts = insertion_sort(source)\n    empty = []\n    empty_result, empty_shifts = insertion_sort(empty)\n    return source == before and result is not source and result == [(1, \"B\"), (1, \"C\"), (2, \"A\")] and empty_result == [] and empty_result is not empty",
+    "checks": [
+      {
+        "label": "Stable equal keys",
+        "expression": "insertion_sort([(2, \"A\"), (1, \"B\"), (2, \"C\")]) == ([(1, \"B\"), (2, \"A\"), (2, \"C\")], 1)"
+      },
+      {
+        "label": "Reverse order",
+        "expression": "insertion_sort([(3, \"C\"), (2, \"B\"), (1, \"A\")]) == ([(1, \"A\"), (2, \"B\"), (3, \"C\")], 3)"
+      },
+      {
+        "label": "Empty and sorted",
+        "expression": "insertion_sort([]) == ([], 0) and insertion_sort([(1, \"A\"), (1, \"B\")]) == ([(1, \"A\"), (1, \"B\")], 0)"
+      },
+      {
+        "label": "Preserve the stated snapshot/copy contract",
+        "expression": "__insertion_preserved()"
+      }
+    ],
+    "extraFiles": [],
+    "mode": "solution"
+  },
+  {
+    "id": "python-83-solution",
+    "lessonId": "python-83",
+    "code": "def merge(left, right):\n    result = []\n    i = 0\n    j = 0\n    while i < len(left) and j < len(right):\n        if left[i] <= right[j]:\n            result.append(left[i])\n            i += 1\n        else:\n            result.append(right[j])\n            j += 1\n    result.extend(left[i:])\n    result.extend(right[j:])\n    return result\n\ndef __merge_preserved():\n    left = [1, 4]\n    right = [2, 3]\n    result = merge(left, right)\n    empty = []\n    tail = merge(empty, right)\n    return left == [1, 4] and right == [2, 3] and result == [1, 2, 3, 4] and result is not left and result is not right and tail == [2, 3] and tail is not right and tail is not empty",
+    "checks": [
+      {
+        "label": "Interleaved and duplicate values",
+        "expression": "merge([1, 4, 4], [2, 4, 8]) == [1, 2, 4, 4, 4, 8]"
+      },
+      {
+        "label": "Empty sides",
+        "expression": "merge([], [3, 5]) == [3, 5] and merge([1], []) == [1] and merge([], []) == []"
+      },
+      {
+        "label": "Uneven lengths",
+        "expression": "merge([0], [1, 2, 3, 4]) == [0, 1, 2, 3, 4]"
+      },
+      {
+        "label": "Preserve the stated snapshot/copy contract",
+        "expression": "__merge_preserved()"
+      }
+    ],
+    "extraFiles": [],
+    "mode": "solution"
+  },
+  {
+    "id": "python-84-solution",
+    "lessonId": "python-84",
+    "code": "def merge_counted(left, right):\n    result = []\n    i = 0\n    j = 0\n    comparisons = 0\n    while i < len(left) and j < len(right):\n        comparisons += 1\n        if left[i] <= right[j]:\n            result.append(left[i])\n            i += 1\n        else:\n            result.append(right[j])\n            j += 1\n    result.extend(left[i:])\n    result.extend(right[j:])\n    return result, comparisons\n\ndef merge_sort(values):\n    if len(values) <= 1:\n        return values.copy(), 0\n    mid = len(values) // 2\n    left, left_count = merge_sort(values[:mid])\n    right, right_count = merge_sort(values[mid:])\n    result, merge_count = merge_counted(left, right)\n    return result, left_count + right_count + merge_count\n\ndef __sort_preserved():\n    for source in ([], [7], [3, 1, 2]):\n        before = source.copy()\n        result, count = merge_sort(source)\n        if source != before or result is source:\n            return False\n    return True",
+    "checks": [
+      {
+        "label": "Unsorted input and exact count",
+        "expression": "merge_sort([4, 1, 3, 2]) == ([1, 2, 3, 4], 5)"
+      },
+      {
+        "label": "Base cases",
+        "expression": "merge_sort([]) == ([], 0) and merge_sort([7]) == ([7], 0)"
+      },
+      {
+        "label": "Duplicates and ordered values",
+        "expression": "merge_sort([2, 2, 1]) == ([1, 2, 2], 3) and merge_sort([1, 2, 3, 4]) == ([1, 2, 3, 4], 4)"
+      },
+      {
+        "label": "Preserve the stated snapshot/copy contract",
+        "expression": "__sort_preserved()"
+      }
+    ],
+    "extraFiles": [],
+    "mode": "solution"
+  },
+  {
+    "id": "python-85-solution",
+    "lessonId": "python-85",
+    "code": "def route_errors(errors, handled):\n    if not errors:\n        return\n    try:\n        raise ExceptionGroup(\"batch\", errors)\n    except* ValueError as group:\n        for error in group.exceptions:\n            handled.append(str(error))\n\ndef observe(errors):\n    handled = []\n    remaining = []\n    try:\n        route_errors(errors, handled)\n    except ExceptionGroup as group:\n        remaining = [type(error).__name__ for error in group.exceptions]\n    return handled, remaining\n",
+    "checks": [
+      {
+        "label": "All handled",
+        "expression": "observe([ValueError('a'), ValueError('b')]) == (['a', 'b'], [])"
+      },
+      {
+        "label": "Mixed failures retain remainder",
+        "expression": "observe([ValueError('a'), TypeError('shape')]) == (['a'], ['TypeError'])"
+      },
+      {
+        "label": "No matching failure",
+        "expression": "observe([RuntimeError('offline')]) == ([], ['RuntimeError'])"
+      },
+      {
+        "label": "Empty input",
+        "expression": "observe([]) == ([], [])"
+      }
+    ],
+    "extraFiles": [],
+    "mode": "solution"
+  },
+  {
+    "id": "python-86-solution",
+    "lessonId": "python-86",
+    "code": "import asyncio\n\nasync def run_pair(label=\"handled\"):\n    events = []\n    ready = asyncio.Event()\n    blocked = asyncio.Event()\n    async def waiting():\n        try:\n            ready.set()\n            await blocked.wait()\n        finally:\n            events.append(\"cleanup\")\n    async def failing():\n        await ready.wait()\n        raise ValueError(\"worker failed\")\n    try:\n        async with asyncio.TaskGroup() as group:\n            group.create_task(waiting())\n            group.create_task(failing())\n    except* ValueError:\n        events.append(label)\n    events.append(\"done\")\n    return events\n",
+    "checks": [
+      {
+        "label": "Default completion order",
+        "expression": "asyncio.run(run_pair()) == ['cleanup', 'handled', 'done']"
+      },
+      {
+        "label": "Changed label",
+        "expression": "asyncio.run(run_pair('reported')) == ['cleanup', 'reported', 'done']"
+      },
+      {
+        "label": "Fresh state on repeated calls",
+        "expression": "asyncio.run(run_pair('again')) == ['cleanup', 'again', 'done']"
+      }
+    ],
+    "extraFiles": [],
+    "mode": "solution"
+  },
+  {
+    "id": "python-87-solution",
+    "lessonId": "python-87",
+    "code": "from unittest.mock import Mock\n\ndef load_topic(fetch, key):\n    try:\n        topic = fetch(key)\n    except KeyError:\n        return \"Missing\"\n    return \"Topic: \" + topic\n\ndef check_fetch(key, missing=False):\n    fake = Mock(side_effect=KeyError(\"absent\")) if missing else Mock(return_value=\"Maps\")\n    result = load_topic(fake, key)\n    fake.assert_called_once_with(key)\n    return result\n\ndef check_other_error():\n    fake = Mock(side_effect=RuntimeError(\"offline\"))\n    try:\n        load_topic(fake, \"id\")\n    except RuntimeError:\n        fake.assert_called_once_with(\"id\")\n        return True\n    return False\n",
+    "checks": [
+      {
+        "label": "Returned value and exact key",
+        "expression": "check_fetch('alpha') == 'Topic: Maps'"
+      },
+      {
+        "label": "Changed key still forwarded once",
+        "expression": "check_fetch('beta') == 'Topic: Maps'"
+      },
+      {
+        "label": "Dependency failure is handled",
+        "expression": "check_fetch('absent', missing=True) == 'Missing'"
+      },
+      {
+        "label": "Different topic",
+        "expression": "load_topic(Mock(return_value='Ocean'), 'id') == 'Topic: Ocean'"
+      },
+      {
+        "label": "Other failure is not swallowed",
+        "expression": "check_other_error()"
+      }
+    ],
+    "extraFiles": [],
+    "mode": "solution"
+  },
+  {
+    "id": "python-88-solution",
+    "lessonId": "python-88",
+    "code": "import logging\nfrom io import StringIO\n\ndef capture_status(ok, token, level=logging.INFO):\n    stream = StringIO()\n    logger = logging.Logger(\"lesson-local\", level=level)\n    logger.propagate = False\n    handler = logging.StreamHandler(stream)\n    handler.setFormatter(logging.Formatter(\"%(levelname)s:%(message)s\"))\n    logger.addHandler(handler)\n    try:\n        logger.debug(\"diagnostic\")\n        logger.info(\"status=%s\", \"ok\" if ok else \"failed\")\n        return stream.getvalue()\n    finally:\n        logger.removeHandler(handler)\n        handler.close()\n",
+    "checks": [
+      {
+        "label": "INFO filters debug",
+        "expression": "capture_status(True, 'secret') == 'INFO:status=ok\\n'"
+      },
+      {
+        "label": "Changed status and DEBUG",
+        "expression": "capture_status(False, 'hidden', logging.DEBUG) == 'DEBUG:diagnostic\\nINFO:status=failed\\n'"
+      },
+      {
+        "label": "Never include the supplied token",
+        "expression": "'DO-NOT-LOG' not in capture_status(True, 'DO-NOT-LOG')"
+      },
+      {
+        "label": "Higher threshold omits both",
+        "expression": "capture_status(True, 'secret', logging.WARNING) == ''"
+      },
+      {
+        "label": "Fresh handler state",
+        "expression": "capture_status(True, 'x') == capture_status(True, 'y') == 'INFO:status=ok\\n'"
+      }
+    ],
+    "extraFiles": [],
+    "mode": "solution"
+  },
+  {
+    "id": "python-89-solution",
+    "lessonId": "python-89",
+    "code": "def first_title(groups: dict[str, list[str]], key: str) -> str | None:\n    titles = groups.get(key, [])\n    return titles[0] if titles else None\n\ndef identity_count(value: int) -> int:\n    return value\n",
+    "checks": [
+      {
+        "label": "First title",
+        "expression": "first_title({'today': ['Read', 'Draw']}, 'today') == 'Read'"
+      },
+      {
+        "label": "Changed key",
+        "expression": "first_title({'later': ['Explore']}, 'later') == 'Explore'"
+      },
+      {
+        "label": "Empty list",
+        "expression": "first_title({'today': []}, 'today') is None"
+      },
+      {
+        "label": "Missing key",
+        "expression": "first_title({}, 'today') is None"
+      },
+      {
+        "label": "Annotations do not enforce execution",
+        "expression": "identity_count('text') == 'text'"
+      }
+    ],
+    "extraFiles": [],
+    "mode": "solution"
+  },
+  {
+    "id": "python-90-solution",
+    "lessonId": "python-90",
+    "code": "import timeit\n\ndef measure(operation, repeats=2, number=3):\n    if repeats < 1 or number < 1:\n        raise ValueError(\"positive repetition counts required\")\n    timer = timeit.Timer(operation)\n    return timer.repeat(repeat=repeats, number=number)\n\ndef counted_measure():\n    calls = []\n    def operation():\n        calls.append(1)\n    samples = measure(operation, repeats=2, number=3)\n    return len(samples), len(calls), all(value >= 0 for value in samples)\n\ndef rejects_count(repeats, number):\n    try:\n        measure(lambda: 1, repeats=repeats, number=number)\n    except ValueError:\n        return True\n    return False\n",
+    "checks": [
+      {
+        "label": "Requested count and actual calls",
+        "expression": "counted_measure() == (2, 6, True)"
+      },
+      {
+        "label": "Changed repeat count",
+        "expression": "len(measure(lambda: 1, repeats=3, number=2)) == 3"
+      },
+      {
+        "label": "Nonnegative elapsed samples",
+        "expression": "all(value >= 0 for value in measure(lambda: 1, repeats=1, number=1))"
+      },
+      {
+        "label": "Reject nonpositive counts",
+        "expression": "rejects_count(0, 1) and rejects_count(1, 0) and rejects_count(-1, 1)"
+      }
+    ],
+    "extraFiles": [],
+    "mode": "solution"
+  },
+  {
+    "id": "python-91-solution",
+    "lessonId": "python-91",
+    "code": "import cProfile\nimport pstats\n\ndef square(value):\n    return value * value\n\ndef workload(count):\n    total = 0\n    for value in range(count):\n        total += square(value)\n    return total\n\ndef profile_work(count):\n    profiler = cProfile.Profile()\n    result = profiler.runcall(workload, count)\n    stats = pstats.Stats(profiler)\n    calls = 0\n    for key, entry in stats.stats.items():\n        if key[2] == \"square\":\n            calls += entry[1]\n    return result, calls\n",
+    "checks": [
+      {
+        "label": "Three inputs",
+        "expression": "profile_work(3) == (5, 3)"
+      },
+      {
+        "label": "Changed count",
+        "expression": "profile_work(4) == (14, 4)"
+      },
+      {
+        "label": "Empty workload",
+        "expression": "profile_work(0) == (0, 0)"
+      },
+      {
+        "label": "One call still matters",
+        "expression": "profile_work(1) == (0, 1)"
+      }
+    ],
+    "extraFiles": [],
+    "mode": "solution"
+  },
+  {
+    "lessonId": "python-71",
+    "id": "python-71-worked",
+    "paragraph": 3,
+    "code": "def find_square(target, limit):\n    for candidate in range(limit + 1):\n        if candidate * candidate == target:\n            return candidate\n    return None\nprint(find_square(9, 5))\nprint(find_square(9, 2))",
+    "expected": "3\nNone",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "python-71",
+    "id": "python-71-changed",
+    "paragraph": 3,
+    "code": "def find_square(target, limit):\n    for candidate in range(limit + 1):\n        if candidate * candidate == target:\n            return candidate\n    return None\nprint(find_square(25, 4))",
+    "expected": "None",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "python-72",
+    "id": "python-72-worked",
+    "paragraph": 4,
+    "code": "def bisect_sqrt(value, width=0.001, max_steps=100):\n    if value < 0 or width <= 0 or max_steps < 0:\n        raise ValueError(\"invalid bounds\")\n    low = 0.0\n    high = max(1.0, value)\n    for _ in range(max_steps):\n        if high - low <= width:\n            return (low + high) / 2\n        middle = (low + high) / 2\n        if middle * middle < value:\n            low = middle\n        else:\n            high = middle\n    if high - low <= width:\n        return (low + high) / 2\n    return None\nanswer = bisect_sqrt(0.25)\nprint(abs(answer - 0.5) <= 0.001)\nprint(bisect_sqrt(9, max_steps=0))",
+    "expected": "True\nNone",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "python-72",
+    "id": "python-72-changed",
+    "paragraph": 4,
+    "code": "def bisect_sqrt(value, width=0.001, max_steps=100):\n    if value < 0 or width <= 0 or max_steps < 0:\n        raise ValueError(\"invalid bounds\")\n    low = 0.0\n    high = max(1.0, value)\n    for _ in range(max_steps):\n        if high - low <= width:\n            return (low + high) / 2\n        middle = (low + high) / 2\n        if middle * middle < value:\n            low = middle\n        else:\n            high = middle\n    if high - low <= width:\n        return (low + high) / 2\n    return None\nprint(bisect_sqrt(4, width=0.01, max_steps=1))",
+    "expected": "None",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "python-73",
+    "id": "python-73-worked",
+    "paragraph": 3,
+    "code": "def entry_allowed(age):\n    return age >= 18\n\ndef first_disagreement(candidate):\n    for age, expected in [(17, False), (18, True), (19, True)]:\n        if candidate(age) != expected:\n            return age\n    return None\ndef wrong_rule(age):\n    return age > 18\n\nprint(first_disagreement(wrong_rule))\nprint(first_disagreement(entry_allowed))\nprint(entry_allowed(18))",
+    "expected": "18\nNone\nTrue",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "python-73",
+    "id": "python-73-changed",
+    "paragraph": 3,
+    "code": "def entry_allowed(age):\n    return age >= 18\n\ndef first_disagreement(candidate):\n    for age, expected in [(17, False), (18, True), (19, True)]:\n        if candidate(age) != expected:\n            return age\n    return None\nprint(first_disagreement(lambda age: True))",
+    "expected": "17",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "python-74",
+    "id": "python-74-worked",
+    "paragraph": 4,
+    "code": "def total_prefix(values, count):\n    total = 0\n    for index in range(count):\n        total += values[index]\n    return total\nprint(total_prefix([4, 7, 9], 2))\nprint(total_prefix([4], 0))",
+    "expected": "11\n0",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "python-74",
+    "id": "python-74-changed",
+    "paragraph": 4,
+    "code": "def total_prefix(values, count):\n    total = 0\n    for index in range(count):\n        total += values[index]\n    return total\nprint(total_prefix([2, 8, 5], 1))",
+    "expected": "2",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "python-75",
+    "id": "python-75-worked",
+    "paragraph": 4,
+    "code": "def recursive_total(values):\n    if not values:\n        return 0\n    first = values[0]\n    rest_total = recursive_total(values[1:])\n    return first + rest_total\nprint(recursive_total([2, 5]))\nprint(recursive_total([]))",
+    "expected": "7\n0",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "python-75",
+    "id": "python-75-changed",
+    "paragraph": 4,
+    "code": "def recursive_total(values):\n    if not values:\n        return 0\n    first = values[0]\n    rest_total = recursive_total(values[1:])\n    return first + rest_total\nprint(recursive_total([3, 4]))",
+    "expected": "7",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "python-76",
+    "id": "python-76-worked",
+    "paragraph": 3,
+    "code": "class Label:\n    def __init__(self, text):\n        self.text = text\n\n    def __str__(self):\n        return self.text\n\n    def __repr__(self):\n        return f\"Label({self.text!r})\"\nitem = Label(\"Moon\")\nprint(str(item))\nprint(repr(item))",
+    "expected": "Moon\nLabel('Moon')",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "python-76",
+    "id": "python-76-changed",
+    "paragraph": 3,
+    "code": "class Label:\n    def __init__(self, text):\n        self.text = text\n\n    def __str__(self):\n        return self.text\n\n    def __repr__(self):\n        return f\"Label({self.text!r})\"\nprint(repr(Label(\"\")))",
+    "expected": "Label('')",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "python-77",
+    "id": "python-77-worked",
+    "paragraph": 4,
+    "code": "class Tag:\n    def __init__(self, text):\n        self.text = text\n\n    def __eq__(self, other):\n        if not isinstance(other, Tag):\n            return NotImplemented\n        return self.text == other.text\nleft = Tag(\"music\")\nright = Tag(\"music\")\nprint(left == right)\nprint(left is right)\nprint(left == \"music\")",
+    "expected": "True\nFalse\nFalse",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "python-77",
+    "id": "python-77-changed",
+    "paragraph": 4,
+    "code": "class Tag:\n    def __init__(self, text):\n        self.text = text\n\n    def __eq__(self, other):\n        if not isinstance(other, Tag):\n            return NotImplemented\n        return self.text == other.text\nprint(Tag(\"a\").__eq__(\"a\") is NotImplemented)",
+    "expected": "True",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "python-78",
+    "id": "python-78-worked",
+    "paragraph": 2,
+    "code": "class Task:\n    def __init__(self, title, category):\n        self.title = title\n        self.category = category\n\n    def __eq__(self, other):\n        if not isinstance(other, Task):\n            return NotImplemented\n        return (self.title, self.category) == (other.title, other.category)\n\ndef snapshot_key(task):\n    return (task.title, task.category)\nfirst = Task(\"read\", \"study\")\nsecond = Task(\"read\", \"study\")\na = snapshot_key(first)\nb = snapshot_key(second)\nprint(first == second)\nprint(a == b, hash(a) == hash(b))\ntry:\n    hash(first)\nexcept TypeError:\n    print(\"unhashable task\")",
+    "expected": "True\nTrue True\nunhashable task",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "python-78",
+    "id": "python-78-changed",
+    "paragraph": 3,
+    "code": "class Task:\n    def __init__(self, title, category):\n        self.title = title\n        self.category = category\n\n    def __eq__(self, other):\n        if not isinstance(other, Task):\n            return NotImplemented\n        return (self.title, self.category) == (other.title, other.category)\n\ndef snapshot_key(task):\n    return (task.title, task.category)\ntask = Task(\"draw\", \"art\")\nold_key = snapshot_key(task)\ntask.category = \"work\"\nprint(old_key)\nprint(old_key == snapshot_key(task))",
+    "expected": "('draw', 'art')\nFalse",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "python-79",
+    "id": "python-79-worked",
+    "paragraph": 1,
+    "code": "def counted_find(values, target):\n    comparisons = 0\n    for index, value in enumerate(values):\n        comparisons += 1\n        if value == target:\n            return index, comparisons\n    return None, comparisons\nprint(counted_find([7, 2, 7], 7))\nprint(counted_find([7, 2, 7], 9))",
+    "expected": "(0, 1)\n(None, 3)",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "python-79",
+    "id": "python-79-changed",
+    "paragraph": 1,
+    "code": "def counted_find(values, target):\n    comparisons = 0\n    for index, value in enumerate(values):\n        comparisons += 1\n        if value == target:\n            return index, comparisons\n    return None, comparisons\nprint(counted_find([3, 8, 8, 2], 8))",
+    "expected": "(1, 2)",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "python-80",
+    "id": "python-80-worked",
+    "paragraph": 3,
+    "code": "def growth_counts(n):\n    fixed = 1\n    linear = 0\n    pairs = 0\n    for i in range(n):\n        linear += 1\n        for j in range(n):\n            pairs += 1\n    halvings = 0\n    remaining = n\n    while remaining > 1:\n        remaining //= 2\n        halvings += 1\n    return fixed, linear, pairs, halvings\nprint(growth_counts(4))\nprint(growth_counts(8))",
+    "expected": "(1, 4, 16, 2)\n(1, 8, 64, 3)",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "python-80",
+    "id": "python-80-changed",
+    "paragraph": 3,
+    "code": "def growth_counts(n):\n    fixed = 1\n    linear = 0\n    pairs = 0\n    for i in range(n):\n        linear += 1\n        for j in range(n):\n            pairs += 1\n    halvings = 0\n    remaining = n\n    while remaining > 1:\n        remaining //= 2\n        halvings += 1\n    return fixed, linear, pairs, halvings\nprint(growth_counts(16))",
+    "expected": "(1, 16, 256, 4)",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "python-81",
+    "id": "python-81-worked",
+    "paragraph": 2,
+    "code": "def binary_find(values, target):\n    low = 0\n    high = len(values) - 1\n    probes = 0\n    while low <= high:\n        mid = (low + high) // 2\n        probes += 1\n        if values[mid] == target:\n            return mid, probes\n        if values[mid] < target:\n            low = mid + 1\n        else:\n            high = mid - 1\n    return None, probes\nprint(binary_find([2, 4, 6, 8, 10], 8))\nprint(binary_find([], 8))",
+    "expected": "(3, 2)\n(None, 0)",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "python-81",
+    "id": "python-81-changed",
+    "paragraph": 2,
+    "code": "def binary_find(values, target):\n    low = 0\n    high = len(values) - 1\n    probes = 0\n    while low <= high:\n        mid = (low + high) // 2\n        probes += 1\n        if values[mid] == target:\n            return mid, probes\n        if values[mid] < target:\n            low = mid + 1\n        else:\n            high = mid - 1\n    return None, probes\nprint(binary_find([1, 3, 5, 7], 4))",
+    "expected": "(None, 2)",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "python-82",
+    "id": "python-82-worked",
+    "paragraph": 2,
+    "code": "def insertion_sort(records):\n    result = records.copy()\n    shifts = 0\n    for i in range(1, len(result)):\n        item = result[i]\n        j = i - 1\n        while j >= 0 and result[j][0] > item[0]:\n            result[j + 1] = result[j]\n            shifts += 1\n            j -= 1\n        result[j + 1] = item\n    return result, shifts\nsource = [(2, \"A\"), (1, \"B\"), (2, \"C\")]\nprint(insertion_sort(source))\nprint(source)",
+    "expected": "([(1, 'B'), (2, 'A'), (2, 'C')], 1)\n[(2, 'A'), (1, 'B'), (2, 'C')]",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "python-82",
+    "id": "python-82-changed",
+    "paragraph": 2,
+    "code": "def insertion_sort(records):\n    result = records.copy()\n    shifts = 0\n    for i in range(1, len(result)):\n        item = result[i]\n        j = i - 1\n        while j >= 0 and result[j][0] > item[0]:\n            result[j + 1] = result[j]\n            shifts += 1\n            j -= 1\n        result[j + 1] = item\n    return result, shifts\nprint(insertion_sort([(1, \"Z\"), (1, \"A\"), (0, \"B\")]))",
+    "expected": "([(0, 'B'), (1, 'Z'), (1, 'A')], 2)",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "python-83",
+    "id": "python-83-worked",
+    "paragraph": 2,
+    "code": "def merge(left, right):\n    result = []\n    i = 0\n    j = 0\n    while i < len(left) and j < len(right):\n        if left[i] <= right[j]:\n            result.append(left[i])\n            i += 1\n        else:\n            result.append(right[j])\n            j += 1\n    result.extend(left[i:])\n    result.extend(right[j:])\n    return result\nprint(merge([1, 4, 4], [2, 4, 8]))\nprint(merge([], [3, 5]))",
+    "expected": "[1, 2, 4, 4, 4, 8]\n[3, 5]",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "python-83",
+    "id": "python-83-changed",
+    "paragraph": 2,
+    "code": "def merge(left, right):\n    result = []\n    i = 0\n    j = 0\n    while i < len(left) and j < len(right):\n        if left[i] <= right[j]:\n            result.append(left[i])\n            i += 1\n        else:\n            result.append(right[j])\n            j += 1\n    result.extend(left[i:])\n    result.extend(right[j:])\n    return result\nprint(merge([1, 3], [1, 1, 2]))",
+    "expected": "[1, 1, 1, 2, 3]",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "python-84",
+    "id": "python-84-helper-worked",
+    "paragraph": 1,
+    "code": "def merge_counted(left, right):\n    result = []\n    i = 0\n    j = 0\n    comparisons = 0\n    while i < len(left) and j < len(right):\n        comparisons += 1\n        if left[i] <= right[j]:\n            result.append(left[i])\n            i += 1\n        else:\n            result.append(right[j])\n            j += 1\n    result.extend(left[i:])\n    result.extend(right[j:])\n    return result, comparisons\nprint(merge_counted([1], [2, 3]))",
+    "expected": "([1, 2, 3], 1)",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "python-84",
+    "id": "python-84-worked",
+    "paragraph": 2,
+    "code": "def merge_counted(left, right):\n    result = []\n    i = 0\n    j = 0\n    comparisons = 0\n    while i < len(left) and j < len(right):\n        comparisons += 1\n        if left[i] <= right[j]:\n            result.append(left[i])\n            i += 1\n        else:\n            result.append(right[j])\n            j += 1\n    result.extend(left[i:])\n    result.extend(right[j:])\n    return result, comparisons\n\ndef merge_sort(values):\n    if len(values) <= 1:\n        return values.copy(), 0\n    mid = len(values) // 2\n    left, left_count = merge_sort(values[:mid])\n    right, right_count = merge_sort(values[mid:])\n    result, merge_count = merge_counted(left, right)\n    return result, left_count + right_count + merge_count\nprint(merge_sort([4, 1, 3, 2]))\nprint(merge_sort([]))",
+    "expected": "([1, 2, 3, 4], 5)\n([], 0)",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "python-84",
+    "id": "python-84-changed",
+    "paragraph": 2,
+    "code": "def merge_counted(left, right):\n    result = []\n    i = 0\n    j = 0\n    comparisons = 0\n    while i < len(left) and j < len(right):\n        comparisons += 1\n        if left[i] <= right[j]:\n            result.append(left[i])\n            i += 1\n        else:\n            result.append(right[j])\n            j += 1\n    result.extend(left[i:])\n    result.extend(right[j:])\n    return result, comparisons\n\ndef merge_sort(values):\n    if len(values) <= 1:\n        return values.copy(), 0\n    mid = len(values) // 2\n    left, left_count = merge_sort(values[:mid])\n    right, right_count = merge_sort(values[mid:])\n    result, merge_count = merge_counted(left, right)\n    return result, left_count + right_count + merge_count\nprint(merge_sort([1, 2, 3, 4]))",
+    "expected": "([1, 2, 3, 4], 4)",
+    "outcome": "success"
+  },
+  {
+    "id": "python-78-snapshot-preserved",
+    "paragraph": 3,
+    "code": "class Task:\n    def __init__(self, title, category):\n        self.title = title\n        self.category = category\n\n    def __eq__(self, other):\n        if not isinstance(other, Task):\n            return NotImplemented\n        return (self.title, self.category) == (other.title, other.category)\n\ndef snapshot_key(task):\n    return (task.title, task.category)\ntask = Task(\"read\", \"study\")\nkey = snapshot_key(task)\ntask.title = \"write\"\nprint(key == (\"read\", \"study\"))\nprint(snapshot_key(task) == (\"write\", \"study\"))",
+    "expected": "True\nTrue",
+    "outcome": "success"
+  },
+  {
+    "id": "python-81-boundaries-preserved",
+    "paragraph": 4,
+    "code": "def binary_find(values, target):\n    low = 0\n    high = len(values) - 1\n    probes = 0\n    while low <= high:\n        mid = (low + high) // 2\n        probes += 1\n        if values[mid] == target:\n            return mid, probes\n        if values[mid] < target:\n            low = mid + 1\n        else:\n            high = mid - 1\n    return None, probes\nsource = [1, 2, 2, 2, 5]\nbefore = source.copy()\nindex, probes = binary_find(source, 2)\nprint(source[index] == 2)\nprint(source == before)\nprint(binary_find([], 2))",
+    "expected": "True\nTrue\n(None, 0)",
+    "outcome": "success"
+  },
+  {
+    "id": "python-82-copy-preserved",
+    "paragraph": 4,
+    "code": "def insertion_sort(records):\n    result = records.copy()\n    shifts = 0\n    for i in range(1, len(result)):\n        item = result[i]\n        j = i - 1\n        while j >= 0 and result[j][0] > item[0]:\n            result[j + 1] = result[j]\n            shifts += 1\n            j -= 1\n        result[j + 1] = item\n    return result, shifts\nsource = [(3, \"C\"), (1, \"A\"), (1, \"B\")]\nbefore = source.copy()\nresult, shifts = insertion_sort(source)\nprint(result)\nprint(source == before, result is not source)\nprint(insertion_sort([]))",
+    "expected": "[(1, 'A'), (1, 'B'), (3, 'C')]\nTrue True\n([], 0)",
+    "outcome": "success"
+  },
+  {
+    "id": "python-83-sources-preserved",
+    "paragraph": 4,
+    "code": "def merge(left, right):\n    result = []\n    i = 0\n    j = 0\n    while i < len(left) and j < len(right):\n        if left[i] <= right[j]:\n            result.append(left[i])\n            i += 1\n        else:\n            result.append(right[j])\n            j += 1\n    result.extend(left[i:])\n    result.extend(right[j:])\n    return result\nleft = [1, 4]\nright = [2, 2]\nresult = merge(left, right)\nprint(result)\nprint(left == [1, 4], right == [2, 2])\nprint(result is not left and result is not right)\nprint(merge([], []))",
+    "expected": "[1, 2, 2, 4]\nTrue True\nTrue\n[]",
+    "outcome": "success"
+  },
+  {
+    "id": "python-84-copy-and-duplicates",
+    "paragraph": 4,
+    "code": "def merge_counted(left, right):\n    result = []\n    i = 0\n    j = 0\n    comparisons = 0\n    while i < len(left) and j < len(right):\n        comparisons += 1\n        if left[i] <= right[j]:\n            result.append(left[i])\n            i += 1\n        else:\n            result.append(right[j])\n            j += 1\n    result.extend(left[i:])\n    result.extend(right[j:])\n    return result, comparisons\n\ndef merge_sort(values):\n    if len(values) <= 1:\n        return values.copy(), 0\n    mid = len(values) // 2\n    left, left_count = merge_sort(values[:mid])\n    right, right_count = merge_sort(values[mid:])\n    result, merge_count = merge_counted(left, right)\n    return result, left_count + right_count + merge_count\nsource = [2, 2, 1]\nresult, count = merge_sort(source)\nprint(result, count)\nprint(source == [2, 2, 1], result is not source)\nsingle = [8]\nprint(merge_sort(single)[0] is not single)",
+    "expected": "[1, 2, 2] 3\nTrue True\nTrue",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "python-85",
+    "id": "python-85-worked",
+    "paragraph": 2,
+    "code": "def route_errors(errors, handled):\n    if not errors:\n        return\n    try:\n        raise ExceptionGroup(\"batch\", errors)\n    except* ValueError as group:\n        for error in group.exceptions:\n            handled.append(str(error))\ndef observe(errors):\n    handled = []\n    remaining = []\n    try:\n        route_errors(errors, handled)\n    except ExceptionGroup as group:\n        remaining = [type(error).__name__ for error in group.exceptions]\n    return handled, remaining\nprint(observe([ValueError(\"bad minutes\"), TypeError(\"wrong shape\")]))\n",
+    "expected": "(['bad minutes'], ['TypeError'])",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "python-85",
+    "id": "python-85-changed",
+    "paragraph": 2,
+    "code": "def route_errors(errors, handled):\n    if not errors:\n        return\n    try:\n        raise ExceptionGroup(\"batch\", errors)\n    except* ValueError as group:\n        for error in group.exceptions:\n            handled.append(str(error))\ndef observe(errors):\n    handled = []\n    remaining = []\n    try:\n        route_errors(errors, handled)\n    except ExceptionGroup as group:\n        remaining = [type(error).__name__ for error in group.exceptions]\n    return handled, remaining\nprint(observe([ValueError(\"first\"), ValueError(\"second\")]))\n",
+    "expected": "(['first', 'second'], [])",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "python-86",
+    "id": "python-86-worked",
+    "paragraph": 2,
+    "code": "import asyncio\n\nasync def run_pair(label=\"handled\"):\n    events = []\n    ready = asyncio.Event()\n    blocked = asyncio.Event()\n    async def waiting():\n        try:\n            ready.set()\n            await blocked.wait()\n        finally:\n            events.append(\"cleanup\")\n    async def failing():\n        await ready.wait()\n        raise ValueError(\"worker failed\")\n    try:\n        async with asyncio.TaskGroup() as group:\n            group.create_task(waiting())\n            group.create_task(failing())\n    except* ValueError:\n        events.append(label)\n    events.append(\"done\")\n    return events\nprint(asyncio.run(run_pair()))\n",
+    "expected": "['cleanup', 'handled', 'done']",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "python-86",
+    "id": "python-86-changed",
+    "paragraph": 2,
+    "code": "import asyncio\n\nasync def run_pair(label=\"handled\"):\n    events = []\n    ready = asyncio.Event()\n    blocked = asyncio.Event()\n    async def waiting():\n        try:\n            ready.set()\n            await blocked.wait()\n        finally:\n            events.append(\"cleanup\")\n    async def failing():\n        await ready.wait()\n        raise ValueError(\"worker failed\")\n    try:\n        async with asyncio.TaskGroup() as group:\n            group.create_task(waiting())\n            group.create_task(failing())\n    except* TypeError:\n        events.append(label)\n    events.append(\"done\")\n    return events\ntry:\n    asyncio.run(run_pair())\nexcept ExceptionGroup:\n    print(\"unhandled ValueError\")\n",
+    "expected": "unhandled ValueError",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "python-87",
+    "id": "python-87-worked",
+    "paragraph": 2,
+    "code": "from unittest.mock import Mock\n\ndef load_topic(fetch, key):\n    try:\n        topic = fetch(key)\n    except KeyError:\n        return \"Missing\"\n    return \"Topic: \" + topic\nfake = Mock(return_value=\"Stars\")\nprint(load_topic(fake, \"topic-7\"))\nfake.assert_called_once_with(\"topic-7\")\nprint(\"call verified\")\n",
+    "expected": "Topic: Stars\ncall verified",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "python-87",
+    "id": "python-87-changed",
+    "paragraph": 2,
+    "code": "from unittest.mock import Mock\n\ndef load_topic(fetch, key):\n    try:\n        topic = fetch(key)\n    except KeyError:\n        return \"Missing\"\n    return \"Topic: \" + topic\nfake = Mock(return_value=\"Stars\")\nprint(load_topic(fake, \"topic-7\"))\nfake.assert_called_once_with(\"wrong-key\")\nprint(\"call verified\")\n",
+    "expected": "",
+    "outcome": "runtime-failure",
+    "errorContains": "expected call not found"
+  },
+  {
+    "lessonId": "python-87",
+    "id": "python-87-failure-worked",
+    "paragraph": 3,
+    "code": "from unittest.mock import Mock\n\ndef load_topic(fetch, key):\n    try:\n        topic = fetch(key)\n    except KeyError:\n        return \"Missing\"\n    return \"Topic: \" + topic\nfake = Mock(side_effect=KeyError(\"absent\"))\nprint(load_topic(fake, \"topic-7\"))\nfake.assert_called_once_with(\"topic-7\")\n",
+    "expected": "Missing",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "python-88",
+    "id": "python-88-worked",
+    "paragraph": 2,
+    "code": "import logging\nfrom io import StringIO\n\ndef capture_status(ok, token, level=logging.INFO):\n    stream = StringIO()\n    logger = logging.Logger(\"lesson-local\", level=level)\n    logger.propagate = False\n    handler = logging.StreamHandler(stream)\n    handler.setFormatter(logging.Formatter(\"%(levelname)s:%(message)s\"))\n    logger.addHandler(handler)\n    try:\n        logger.debug(\"diagnostic\")\n        logger.info(\"status=%s\", \"ok\" if ok else \"failed\")\n        return stream.getvalue()\n    finally:\n        logger.removeHandler(handler)\n        handler.close()\nprint(capture_status(True, \"synthetic-secret\"), end=\"\")\n",
+    "expected": "INFO:status=ok",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "python-88",
+    "id": "python-88-changed",
+    "paragraph": 2,
+    "code": "import logging\nfrom io import StringIO\n\ndef capture_status(ok, token, level=logging.INFO):\n    stream = StringIO()\n    logger = logging.Logger(\"lesson-local\", level=level)\n    logger.propagate = False\n    handler = logging.StreamHandler(stream)\n    handler.setFormatter(logging.Formatter(\"%(levelname)s:%(message)s\"))\n    logger.addHandler(handler)\n    try:\n        logger.debug(\"diagnostic\")\n        logger.info(\"status=%s\", \"ok\" if ok else \"failed\")\n        return stream.getvalue()\n    finally:\n        logger.removeHandler(handler)\n        handler.close()\nprint(capture_status(False, \"synthetic-secret\", logging.DEBUG), end=\"\")\n",
+    "expected": "DEBUG:diagnostic\nINFO:status=failed",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "python-89",
+    "id": "python-89-worked",
+    "paragraph": 1,
+    "code": "def first_title(groups: dict[str, list[str]], key: str) -> str | None:\n    titles = groups.get(key, [])\n    return titles[0] if titles else None\n\ndef identity_count(value: int) -> int:\n    return value\nprint(first_title({\"today\": [\"Read\", \"Draw\"]}, \"today\"))\nprint(first_title({\"today\": []}, \"today\"))\nprint(identity_count(\"text\"))\n",
+    "expected": "Read\nNone\ntext",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "python-89",
+    "id": "python-89-changed",
+    "paragraph": 1,
+    "code": "def first_title(groups: dict[str, list[str]], key: str) -> str | None:\n    titles = groups.get(key, [])\n    return titles[0] if titles else None\n\ndef identity_count(value: int) -> int:\n    return value\nprint(first_title({\"later\": [\"Explore\"]}, \"today\"))\nprint(identity_count(8))\n",
+    "expected": "None\n8",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "python-90",
+    "id": "python-90-worked",
+    "paragraph": 2,
+    "code": "import timeit\n\ndef measure(operation, repeats=2, number=3):\n    if repeats < 1 or number < 1:\n        raise ValueError(\"positive repetition counts required\")\n    timer = timeit.Timer(operation)\n    return timer.repeat(repeat=repeats, number=number)\nvalues = [1, 2, 3]\ndef operation():\n    return sum(values)\nsamples = measure(operation, repeats=2, number=3)\nprint(len(samples), all(value >= 0 for value in samples))\n",
+    "expected": "2 True",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "python-90",
+    "id": "python-90-changed",
+    "paragraph": 2,
+    "code": "import timeit\n\ndef measure(operation, repeats=2, number=3):\n    if repeats < 1 or number < 1:\n        raise ValueError(\"positive repetition counts required\")\n    timer = timeit.Timer(operation)\n    return timer.repeat(repeat=repeats, number=number)\nvalues = [1, 2, 3]\ndef operation():\n    return sum(values)\nsamples = measure(operation, repeats=3, number=2)\nprint(len(samples), all(value >= 0 for value in samples))\n",
+    "expected": "3 True",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "python-91",
+    "id": "python-91-worked",
+    "paragraph": 2,
+    "code": "import cProfile\nimport pstats\n\ndef square(value):\n    return value * value\n\ndef workload(count):\n    total = 0\n    for value in range(count):\n        total += square(value)\n    return total\n\ndef profile_work(count):\n    profiler = cProfile.Profile()\n    result = profiler.runcall(workload, count)\n    stats = pstats.Stats(profiler)\n    calls = 0\n    for key, entry in stats.stats.items():\n        if key[2] == \"square\":\n            calls += entry[1]\n    return result, calls\nprint(profile_work(3))\n",
+    "expected": "(5, 3)",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "python-91",
+    "id": "python-91-changed",
+    "paragraph": 2,
+    "code": "import cProfile\nimport pstats\n\ndef square(value):\n    return value * value\n\ndef workload(count):\n    total = 0\n    for value in range(count):\n        total += square(value)\n    return total\n\ndef profile_work(count):\n    profiler = cProfile.Profile()\n    result = profiler.runcall(workload, count)\n    stats = pstats.Stats(profiler)\n    calls = 0\n    for key, entry in stats.stats.items():\n        if key[2] == \"square\":\n            calls += entry[1]\n    return result, calls\nprint(profile_work(4))\n",
+    "expected": "(14, 4)",
+    "outcome": "success"
+  }
+]

@@ -1,0 +1,192 @@
+[
+  {
+    "job": {
+      "id": "sql-33-wrong-declared-type",
+      "code": "CREATE TABLE readings(id INTEGER PRIMARY KEY,value ANY);\nINSERT INTO readings VALUES(1,17),(2,'unknown');\nCREATE VIEW observed AS\nSELECT id,typeof(value) AS kind\nFROM readings;\nSELECT *\nFROM observed\nORDER BY id;",
+      "checks": [
+        {
+          "label": "Exact observed rows and multiplicities",
+          "expression": "WITH expected(\"id\",\"kind\") AS (VALUES (1,'integer'),(2,'text')), actual AS (SELECT \"id\",\"kind\",COUNT(*) AS multiplicity FROM \"observed\" GROUP BY \"id\",\"kind\"), wanted AS (SELECT \"id\",\"kind\",COUNT(*) AS multiplicity FROM expected GROUP BY \"id\",\"kind\") SELECT NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+        },
+        {
+          "label": "Exact readings rows and multiplicities",
+          "expression": "WITH expected(\"id\",\"value\") AS (VALUES (1,17),(2,'unknown')), actual AS (SELECT \"id\",\"value\",COUNT(*) AS multiplicity FROM \"readings\" GROUP BY \"id\",\"value\"), wanted AS (SELECT \"id\",\"value\",COUNT(*) AS multiplicity FROM expected GROUP BY \"id\",\"value\") SELECT NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+        }
+      ]
+    },
+    "result": {
+      "id": "sql-33-wrong-declared-type",
+      "output": [
+        {
+          "columns": [
+            "id",
+            "kind"
+          ],
+          "values": [
+            [
+              1,
+              "integer"
+            ],
+            [
+              2,
+              "text"
+            ]
+          ]
+        }
+      ],
+      "error": null,
+      "postOutput": null,
+      "postError": null,
+      "checks": [
+        {
+          "label": "Exact observed rows and multiplicities",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Exact readings rows and multiplicities",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": true
+    }
+  },
+  {
+    "job": {
+      "id": "sql-34-wrong-declared-type",
+      "code": "CREATE TABLE readings(id INTEGER PRIMARY KEY,value ANY NOT NULL) STRICT;\nINSERT INTO readings VALUES(1,14),(2,9);\nSELECT *\nFROM readings\nORDER BY id;",
+      "checks": [
+        {
+          "label": "Exact readings rows and multiplicities",
+          "expression": "WITH expected(\"id\",\"value\") AS (VALUES (1,14),(2,9)), actual AS (SELECT \"id\",\"value\",COUNT(*) AS multiplicity FROM \"readings\" GROUP BY \"id\",\"value\"), wanted AS (SELECT \"id\",\"value\",COUNT(*) AS multiplicity FROM expected GROUP BY \"id\",\"value\") SELECT NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+        },
+        {
+          "label": "Strict-table metadata",
+          "expression": "SELECT count(*)=1 FROM pragma_table_list WHERE name='readings' AND schema='main' AND strict=1"
+        },
+        {
+          "label": "Missing values disallowed by schema",
+          "expression": "SELECT count(*)=1 FROM pragma_table_info('readings') WHERE name='value' AND \"notnull\"=1"
+        },
+        {
+          "label": "Integer stored types",
+          "expression": "SELECT count(*)=2 AND sum(typeof(value)='integer')=2 FROM readings"
+        }
+      ]
+    },
+    "result": {
+      "id": "sql-34-wrong-declared-type",
+      "output": [
+        {
+          "columns": [
+            "id",
+            "value"
+          ],
+          "values": [
+            [
+              1,
+              14
+            ],
+            [
+              2,
+              9
+            ]
+          ]
+        }
+      ],
+      "error": null,
+      "postOutput": null,
+      "postError": null,
+      "checks": [
+        {
+          "label": "Exact readings rows and multiplicities",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Strict-table metadata",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "count(*)=1"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Missing values disallowed by schema",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "count(*)=1"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Integer stored types",
+          "passed": true,
+          "actual": [
+            {
+              "columns": [
+                "count(*)=2 AND sum(typeof(value)='integer')=2"
+              ],
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "passed": true
+    }
+  }
+]

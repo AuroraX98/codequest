@@ -1,0 +1,92 @@
+[
+  {
+    "id": "rust-16-transfer",
+    "outcome": "compile-failure",
+    "requiredDiagnostic": "E0308",
+    "actualDiagnostic": "error[E0308]: mismatched types\n --> main.rs:1:26\n  |\n1 | fn double(value: i32) -> i32 { value * 2; }\n  |    ------                ^^^            - help: remove this semicolon to return this value\n  |    |                     |\n  |    |                     expected `i32`, found `()`\n  |    implicitly returns `()` as its body has no tail or `return` expression\n\nerror: aborting due to 1 previous error\n\nFor more information about this error, try `rustc --explain E0308`.\n"
+  },
+  {
+    "id": "rust-17-transfer",
+    "outcome": "compile-failure",
+    "requiredDiagnostic": "E0425",
+    "actualDiagnostic": "error[E0425]: cannot find value `text` in this scope\n --> main.rs:5:20\n  |\n5 |     println!(\"{}\", text);\n  |                    ^^^^\n  |\nhelp: the binding `text` is available in a different scope in the same function\n --> main.rs:3:13\n  |\n3 |         let text = String::from(\"inside\");\n  |             ^^^^\n\nerror: aborting due to 1 previous error\n\nFor more information about this error, try `rustc --explain E0425`.\n"
+  },
+  {
+    "id": "rust-18-transfer",
+    "outcome": "compile-failure",
+    "requiredDiagnostic": "E0382",
+    "actualDiagnostic": "error[E0382]: borrow of moved value: `source`\n --> main.rs:4:20\n  |\n2 |     let source = String::from(\"moon\");\n  |         ------ move occurs because `source` has type `String`, which does not implement the `Copy` trait\n3 |     let target = source;\n  |                  ------ value moved here\n4 |     println!(\"{}\", source);\n  |                    ^^^^^^ value borrowed here after move\n  |\nhelp: consider cloning the value if the performance cost is acceptable\n  |\n3 |     let target = source.clone();\n  |                        ++++++++\n\nwarning: unused variable: `target`\n --> main.rs:3:9\n  |\n3 |     let target = source;\n  |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_target`\n  |\n  = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default\n\nerror: aborting due to 1 previous error; 1 warning emitted\n\nFor more information about this error, try `rustc --explain E0382`.\n"
+  },
+  {
+    "id": "rust-22-transfer",
+    "outcome": "compile-failure",
+    "requiredDiagnostic": "E0502",
+    "actualDiagnostic": "error[E0502]: cannot borrow `text` as mutable because it is also borrowed as immutable\n --> main.rs:4:5\n  |\n3 |     let view = &text;\n  |                ----- immutable borrow occurs here\n4 |     text.push('!');\n  |     ^^^^^^^^^^^^^^ mutable borrow occurs here\n5 |     println!(\"{}\", view);\n  |                    ---- immutable borrow later used here\n\nerror: aborting due to 1 previous error\n\nFor more information about this error, try `rustc --explain E0502`.\n"
+  },
+  {
+    "id": "rust-28-changed",
+    "outcome": "compile-failure",
+    "requiredDiagnostic": "borrow of moved value",
+    "actualDiagnostic": "error[E0382]: borrow of moved value: `session.topic`\n --> main.rs:5:23\n  |\n4 |     let topic = session.topic;\n  |                 ------------- value moved here\n5 |     println!(\"{} {}\", session.topic, session.minutes);\n  |                       ^^^^^^^^^^^^^ value borrowed here after move\n  |\n  = note: move occurs because `session.topic` has type `String`, which does not implement the `Copy` trait\n\nwarning: unused variable: `topic`\n --> main.rs:4:9\n  |\n4 |     let topic = session.topic;\n  |         ^^^^^ help: if this is intentional, prefix it with an underscore: `_topic`\n  |\n  = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default\n\nerror: aborting due to 1 previous error; 1 warning emitted\n\nFor more information about this error, try `rustc --explain E0382`.\n"
+  },
+  {
+    "id": "rust-29-changed",
+    "outcome": "compile-failure",
+    "requiredDiagnostic": "cannot borrow",
+    "actualDiagnostic": "error[E0596]: cannot borrow `counter` as mutable, as it is not declared as mutable\n --> main.rs:8:5\n  |\n8 |     counter.inc();\n  |     ^^^^^^^ cannot borrow as mutable\n  |\nhelp: consider changing this to be mutable\n  |\n7 |     let mut counter = Counter { n: 4 };\n  |         +++\n\nerror: aborting due to 1 previous error\n\nFor more information about this error, try `rustc --explain E0596`.\n"
+  },
+  {
+    "id": "rust-34-changed",
+    "outcome": "compile-failure",
+    "requiredDiagnostic": "mismatched types",
+    "actualDiagnostic": "error[E0308]: mismatched types\n --> main.rs:3:44\n  |\n3 |     let pair = Pair { first: 2u32, second: String::from(\"three\") };\n  |                                            ^^^^^^^^^^^^^^^^^^^^^ expected `u32`, found `String`\n\nerror: aborting due to 1 previous error\n\nFor more information about this error, try `rustc --explain E0308`.\n"
+  },
+  {
+    "id": "rust-35-changed",
+    "outcome": "compile-failure",
+    "requiredDiagnostic": "trait bound",
+    "actualDiagnostic": "error[E0277]: the trait bound `Topic: Label` is not satisfied\n --> main.rs:6:40\n  |\n6 | fn main() { let value = Topic; generic(&value); dynamic(&value); }\n  |                                ------- ^^^^^^ unsatisfied trait bound\n  |                                |\n  |                                required by a bound introduced by this call\n  |\nhelp: the trait `Label` is not implemented for `Topic`\n --> main.rs:2:1\n  |\n2 | struct Topic;\n  | ^^^^^^^^^^^^\nhelp: this trait has no implementations, consider adding one\n --> main.rs:1:1\n  |\n1 | trait Label { fn label(&self) -> &str; }\n  | ^^^^^^^^^^^\nnote: required by a bound in `generic`\n --> main.rs:4:15\n  |\n4 | fn generic<T: Label>(value: &T) { println!(\"{}\", value.label()); }\n  |               ^^^^^ required by this bound in `generic`\n\nerror[E0277]: the trait bound `Topic: Label` is not satisfied\n --> main.rs:6:57\n  |\n6 | fn main() { let value = Topic; generic(&value); dynamic(&value); }\n  |                                                         ^^^^^^ unsatisfied trait bound\n  |\nhelp: the trait `Label` is not implemented for `Topic`\n --> main.rs:2:1\n  |\n2 | struct Topic;\n  | ^^^^^^^^^^^^\nhelp: this trait has no implementations, consider adding one\n --> main.rs:1:1\n  |\n1 | trait Label { fn label(&self) -> &str; }\n  | ^^^^^^^^^^^\n  = note: required for the cast from `&Topic` to `&dyn Label`\n\nerror: aborting due to 2 previous errors\n\nFor more information about this error, try `rustc --explain E0277`.\n"
+  },
+  {
+    "id": "rust-37-changed",
+    "outcome": "compile-failure",
+    "requiredDiagnostic": "cannot return reference",
+    "actualDiagnostic": "error[E0515]: cannot return reference to local variable `local`\n --> main.rs:1:66\n  |\n1 | fn view(_text: &str) -> &str { let local = String::from(\"gone\"); &local }\n  |                                                                  ^^^^^^ returns a reference to data owned by the current function\n\nerror: aborting due to 1 previous error\n\nFor more information about this error, try `rustc --explain E0515`.\n"
+  },
+  {
+    "id": "rust-39-changed",
+    "outcome": "compile-failure",
+    "requiredDiagnostic": "cannot borrow",
+    "actualDiagnostic": "error[E0502]: cannot borrow `count` as immutable because it is also borrowed as mutable\n --> main.rs:5:16\n  |\n3 |     let mut increment = || { count += 1; };\n  |                         --   ----- first borrow occurs due to use of `count` in closure\n  |                         |\n  |                         mutable borrow occurs here\n4 |     increment();\n5 |     println!(\"{count}\");\n  |                ^^^^^ immutable borrow occurs here\n6 |     increment();\n  |     --------- mutable borrow later used here\n\nerror: aborting due to 1 previous error\n\nFor more information about this error, try `rustc --explain E0502`.\n"
+  },
+  {
+    "id": "rust-40-changed",
+    "outcome": "compile-failure",
+    "requiredDiagnostic": "borrow of moved value",
+    "actualDiagnostic": "error[E0382]: borrow of moved value: `text`\n --> main.rs:4:16\n  |\n2 |     let text = String::from(\"Rust\");\n  |         ---- move occurs because `text` has type `String`, which does not implement the `Copy` trait\n3 |     let length = move || text.len();\n  |                  ------- ---- variable moved due to use in closure\n  |                  |\n  |                  value moved into closure here\n4 |     println!(\"{text}\");\n  |                ^^^^ value borrowed here after move\n  |\nhelp: consider cloning the value before moving it into the closure\n  |\n3 ~     let value = text.clone();\n4 ~     let length = move || value.len();\n  |\n\nerror: aborting due to 1 previous error\n\nFor more information about this error, try `rustc --explain E0382`.\n"
+  },
+  {
+    "id": "rust-45-changed",
+    "outcome": "compile-failure",
+    "requiredDiagnostic": "private",
+    "actualDiagnostic": "error[E0603]: function `label` is private\n --> main.rs:4:20\n  |\n4 | use crate::helper::label;\n  |                    ^^^^^ private function\n  |\nnote: the function `label` is defined here\n --> main.rs:2:5\n  |\n2 |     fn label() -> &'static str { \"review\" }\n  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^\n\nerror: aborting due to 1 previous error\n\nFor more information about this error, try `rustc --explain E0603`.\n"
+  },
+  {
+    "id": "rust-47-changed",
+    "outcome": "runtime-failure",
+    "requiredDiagnostic": "assertion `left == right` failed",
+    "actualDiagnostic": "\nrunning 1 test\ntest tests::lower_boundary ... FAILED\n\nfailures:\n\n---- tests::lower_boundary stdout ----\n\nthread 'tests::lower_boundary' (220) panicked at src/lib.rs:7:27:\nassertion `left == right` failed\n  left: 0\n right: 1\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n\n\nfailures:\n    tests::lower_boundary\n\ntest result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.00s\n     Running unittests src/lib.rs (target/debug/deps/study_lib-636b382fe3aabf8b)\nerror: test failed, to rerun pass `--lib`\n"
+  },
+  {
+    "id": "rust-56-changed",
+    "outcome": "compile-failure",
+    "requiredDiagnostic": "cannot be sent between threads safely",
+    "actualDiagnostic": "error[E0277]: `Rc<i32>` cannot be sent between threads safely\n --> main.rs:6:32\n  |\n6 |     let worker = thread::spawn(move || *value);\n  |                  ------------- -------^^^^^^^\n  |                  |             |\n  |                  |             `Rc<i32>` cannot be sent between threads safely\n  |                  |             within this `{closure@main.rs:6:32: 6:39}`\n  |                  required by a bound introduced by this call\n  |\n  = help: within `{closure@main.rs:6:32: 6:39}`, the trait `Send` is not implemented for `Rc<i32>`\nnote: required because it's used within this closure\n --> main.rs:6:32\n  |\n6 |     let worker = thread::spawn(move || *value);\n  |                                ^^^^^^^\nnote: required by a bound in `spawn`\n --> /rustc/58cf8f9c35b355199727627d07ae34a4e2846d67/library/std/src/thread/functions.rs:125:0\n\nerror: aborting due to 1 previous error\n\nFor more information about this error, try `rustc --explain E0277`.\n"
+  },
+  {
+    "id": "rust-64-changed",
+    "outcome": "compile-failure",
+    "requiredDiagnostic": "only allowed inside `async` functions and blocks",
+    "actualDiagnostic": "error[E0728]: `await` is only allowed inside `async` functions and blocks\n --> main.rs:6:20\n  |\n3 | fn main() {\n  | --------- this is not `async`\n...\n6 |     let _ = future.await;\n  |                    ^^^^^ only allowed inside `async` functions and blocks\n\nerror: aborting due to 1 previous error\n\nFor more information about this error, try `rustc --explain E0728`.\n"
+  }
+]

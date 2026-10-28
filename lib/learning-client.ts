@@ -1,3 +1,4 @@
+import { projectChecks, hasTypeContracts } from "./project-checks";
 import type { AIProvider } from "./ai-providers";
 import type { Lesson, QuestState } from "./types";
 import { normalizeProfile } from "./profile";
@@ -123,6 +124,8 @@ export class LearningClient {
         else p.mathPassed = 1;
       }
     } else if (a.action === "complete") {
+      if (l.learningMode === "concept")
+        throw new Error("Concept lessons finish online after reading and practice, not code checks.");
       if (
         validate &&
         !p.quizPassed
@@ -130,13 +133,13 @@ export class LearningClient {
         throw new Error("Finish the practice question first.");
       if (validate && a.code !== p.code)
         throw new Error("Save your project and run it again.");
-      if (validate && l.externalNotes && !a.manualReview)
+      if (validate && l.externalNotes && !hasTypeContracts(l) && !a.manualReview)
         throw new Error("Confirm the local project steps first.");
       if (
         validate &&
         (!a.checks ||
-          a.checks.length !== l.checks.length ||
-          a.checks.some((c, i) => !c.passed || c.label !== l.checks[i].label) ||
+          a.checks.length !== projectChecks(l).length ||
+          a.checks.some((c, i) => !c.passed || c.label !== projectChecks(l)[i].label) ||
           (!l.checks.length && !(l.runtime === "swift" && a.manualReview)))
       )
         throw new Error("Run the project and pass its checks first.");
@@ -299,6 +302,36 @@ export class LearningClient {
   ): Promise<
     QuestState | { state: QuestState; correct: boolean; feedback: string }
   > {
+    if (a.action === "completeConcept") {
+      const scope = this.scope;
+      if (!scope) throw new Error("Your learning account is still loading.");
+      if (a.deviceScope !== undefined && a.deviceScope !== scope)
+        throw new Error("Account changed. Reopen this lesson.");
+      if (this.lesson(a.unitId).learningMode !== "concept")
+        throw new Error("This lesson requires its project completion flow.");
+      if (!navigator.onLine)
+        throw new Error("Reconnect to finish this concept lesson. No completion has been saved.");
+      await this.sync(true); // Flush queued quiz attempts before the authoritative gate.
+      if (this.scope !== scope) throw new Error("Account changed. Reopen this lesson.");
+      if (this.status.pending || this.status.conflict || this.status.error)
+        throw new Error("Sync your pending work and resolve any conflict before finishing this concept lesson.");
+      const data = await this.onlineAction({ action: "completeConcept", unitId: a.unitId, deviceScope: scope }, scope) as QuestState;
+      if (this.scope !== scope || data.draftScope !== scope)
+        throw new Error("Account changed. Reopen this lesson.");
+      if (this.status.storageAvailable) {
+        const record = await editAccount<Account>(scope, r => {
+          if (!r) throw new Error("Your device account is missing. Reopen this lesson online.");
+          r.remote = data;
+          return r;
+        });
+        if (this.scope !== scope) throw new Error("Account changed. Reopen this lesson.");
+        this.adopt(record);
+      } else {
+        this.current = data;
+        this.emit();
+      }
+      return this.current;
+    }
     if (["key", "disconnect"].includes(a.action)) {
       const scope = this.scope;
       if (!scope) throw new Error("Your learning account is still loading.");

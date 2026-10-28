@@ -1,0 +1,292 @@
+[
+  {
+    "id": "sql-33-solution",
+    "lesson": {
+      "id": "sql-33",
+      "title": "Stored values and column affinity",
+      "summary": "Create an ordinary table readings(id INTEGER PRIMARY KEY,value INTEGER). Insert ID1 text 17 and ID2 text unknown. Create observed(id,kind) exposing typeof(value). This task deliberately observes flexible affinity rather than rejecting text.",
+      "explanation": [
+        "Ordinary SQLite tables use flexible value types. A column declared INTEGER has integer affinity: it tries suitable numeric conversion when storing a value, but its declaration alone does not reject every nonnumeric text. This differs from rigid typing in many other database systems.",
+        "typeof(value) returns the stored value's storage-class name, such as integer, real, text, blob or null. It inspects a value, not the column declaration. In an INTEGER-affinity column, '12' can be stored as integer 12, while 'twelve' remains text. Use STRICT or appropriate constraints when that flexibility is not your intended contract.",
+        "Run this complete example in a fresh database.\n```sql\nCREATE TABLE readings(id INTEGER PRIMARY KEY,value INTEGER);\nINSERT INTO readings VALUES(1,'12'),(2,'twelve');\nCREATE TEMP VIEW shown AS\nSELECT id,value,typeof(value) AS kind\nFROM readings;\nSELECT *\nFROM shown\nORDER BY id;\n```",
+        "Change the supplied values and trace the result. This is a separate complete example.\n```sql\nCREATE TABLE readings(id INTEGER PRIMARY KEY,value TEXT);\nINSERT INTO readings VALUES(1,12),(2,NULL);\nCREATE TEMP VIEW shown AS\nSELECT id,value,typeof(value) AS kind\nFROM readings;\nSELECT *\nFROM shown\nORDER BY id;\n```",
+        "Application: Create an ordinary table readings(id INTEGER PRIMARY KEY,value INTEGER). Insert ID1 text 17 and ID2 text unknown. Create observed(id,kind) exposing typeof(value). This task deliberately observes flexible affinity rather than rejecting text."
+      ],
+      "analogy": {
+        "familiar": "",
+        "connection": "",
+        "limit": ""
+      },
+      "steps": [
+        "Read the small example and explain its inputs and effects.",
+        "Complete the starter for this lesson.",
+        "Run the behavior checks, then predict a changed case."
+      ],
+      "starter": "CREATE TABLE readings(id INTEGER PRIMARY KEY,value TEXT);\nINSERT INTO readings VALUES(1,'17'),(2,'unknown');\nCREATE VIEW observed AS\nSELECT id,typeof(value) AS kind\nFROM readings;",
+      "solution": "CREATE TABLE readings(id INTEGER PRIMARY KEY,value INTEGER);\nINSERT INTO readings VALUES(1,'17'),(2,'unknown');\nCREATE VIEW observed AS\nSELECT id,typeof(value) AS kind\nFROM readings;\nSELECT *\nFROM observed\nORDER BY id;",
+      "runtime": "sql",
+      "checks": [
+        {
+          "label": "Exact observed rows and multiplicities",
+          "expression": "WITH expected(\"id\",\"kind\") AS (VALUES (1,'integer'),(2,'text')), actual AS (SELECT \"id\",\"kind\",COUNT(*) AS multiplicity FROM \"observed\" GROUP BY \"id\",\"kind\"), wanted AS (SELECT \"id\",\"kind\",COUNT(*) AS multiplicity FROM expected GROUP BY \"id\",\"kind\") SELECT NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+        },
+        {
+          "label": "Exact readings rows and multiplicities",
+          "expression": "WITH expected(\"id\",\"value\") AS (VALUES (1,17),(2,'unknown')), actual AS (SELECT \"id\",\"value\",COUNT(*) AS multiplicity FROM \"readings\" GROUP BY \"id\",\"value\"), wanted AS (SELECT \"id\",\"value\",COUNT(*) AS multiplicity FROM expected GROUP BY \"id\",\"value\") SELECT NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+        },
+        {
+          "label": "Integer-affinity column declaration",
+          "expression": "SELECT count(*)=1 FROM pragma_table_info('readings') WHERE name='value' AND instr(upper(type),'INT')>0"
+        },
+        {
+          "label": "Ordinary non-STRICT table",
+          "expression": "SELECT count(*)=1 FROM pragma_table_list WHERE name='readings' AND schema='main' AND strict=0"
+        }
+      ],
+      "quiz": {
+        "question": "An ordinary INTEGER-affinity column receives the text cloudy. What can SQLite store without an additional constraint?",
+        "choices": [
+          "Only NULL",
+          "The text cloudy",
+          "The integer zero in every case"
+        ],
+        "answer": 1,
+        "explanation": "A nonnumeric text that cannot be converted may remain text in an ordinary flexible table."
+      },
+      "hints": [
+        "Trace the supplied rows and resulting rows before changing the query."
+      ],
+      "math": null,
+      "filename": "query.sql",
+      "estimatedMinutes": 12,
+      "extraFiles": [
+        {
+          "name": "setup.sql",
+          "code": ""
+        }
+      ]
+    },
+    "code": "CREATE TABLE readings(id INTEGER PRIMARY KEY,value INTEGER);\nINSERT INTO readings VALUES(1,'17'),(2,'unknown');\nCREATE VIEW observed AS\nSELECT id,typeof(value) AS kind\nFROM readings;\nSELECT *\nFROM observed\nORDER BY id;",
+    "expected": true
+  },
+  {
+    "id": "sql-33-starter",
+    "lesson": {
+      "id": "sql-33",
+      "title": "Stored values and column affinity",
+      "summary": "Create an ordinary table readings(id INTEGER PRIMARY KEY,value INTEGER). Insert ID1 text 17 and ID2 text unknown. Create observed(id,kind) exposing typeof(value). This task deliberately observes flexible affinity rather than rejecting text.",
+      "explanation": [
+        "Ordinary SQLite tables use flexible value types. A column declared INTEGER has integer affinity: it tries suitable numeric conversion when storing a value, but its declaration alone does not reject every nonnumeric text. This differs from rigid typing in many other database systems.",
+        "typeof(value) returns the stored value's storage-class name, such as integer, real, text, blob or null. It inspects a value, not the column declaration. In an INTEGER-affinity column, '12' can be stored as integer 12, while 'twelve' remains text. Use STRICT or appropriate constraints when that flexibility is not your intended contract.",
+        "Run this complete example in a fresh database.\n```sql\nCREATE TABLE readings(id INTEGER PRIMARY KEY,value INTEGER);\nINSERT INTO readings VALUES(1,'12'),(2,'twelve');\nCREATE TEMP VIEW shown AS\nSELECT id,value,typeof(value) AS kind\nFROM readings;\nSELECT *\nFROM shown\nORDER BY id;\n```",
+        "Change the supplied values and trace the result. This is a separate complete example.\n```sql\nCREATE TABLE readings(id INTEGER PRIMARY KEY,value TEXT);\nINSERT INTO readings VALUES(1,12),(2,NULL);\nCREATE TEMP VIEW shown AS\nSELECT id,value,typeof(value) AS kind\nFROM readings;\nSELECT *\nFROM shown\nORDER BY id;\n```",
+        "Application: Create an ordinary table readings(id INTEGER PRIMARY KEY,value INTEGER). Insert ID1 text 17 and ID2 text unknown. Create observed(id,kind) exposing typeof(value). This task deliberately observes flexible affinity rather than rejecting text."
+      ],
+      "analogy": {
+        "familiar": "",
+        "connection": "",
+        "limit": ""
+      },
+      "steps": [
+        "Read the small example and explain its inputs and effects.",
+        "Complete the starter for this lesson.",
+        "Run the behavior checks, then predict a changed case."
+      ],
+      "starter": "CREATE TABLE readings(id INTEGER PRIMARY KEY,value TEXT);\nINSERT INTO readings VALUES(1,'17'),(2,'unknown');\nCREATE VIEW observed AS\nSELECT id,typeof(value) AS kind\nFROM readings;",
+      "solution": "CREATE TABLE readings(id INTEGER PRIMARY KEY,value INTEGER);\nINSERT INTO readings VALUES(1,'17'),(2,'unknown');\nCREATE VIEW observed AS\nSELECT id,typeof(value) AS kind\nFROM readings;\nSELECT *\nFROM observed\nORDER BY id;",
+      "runtime": "sql",
+      "checks": [
+        {
+          "label": "Exact observed rows and multiplicities",
+          "expression": "WITH expected(\"id\",\"kind\") AS (VALUES (1,'integer'),(2,'text')), actual AS (SELECT \"id\",\"kind\",COUNT(*) AS multiplicity FROM \"observed\" GROUP BY \"id\",\"kind\"), wanted AS (SELECT \"id\",\"kind\",COUNT(*) AS multiplicity FROM expected GROUP BY \"id\",\"kind\") SELECT NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+        },
+        {
+          "label": "Exact readings rows and multiplicities",
+          "expression": "WITH expected(\"id\",\"value\") AS (VALUES (1,17),(2,'unknown')), actual AS (SELECT \"id\",\"value\",COUNT(*) AS multiplicity FROM \"readings\" GROUP BY \"id\",\"value\"), wanted AS (SELECT \"id\",\"value\",COUNT(*) AS multiplicity FROM expected GROUP BY \"id\",\"value\") SELECT NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+        },
+        {
+          "label": "Integer-affinity column declaration",
+          "expression": "SELECT count(*)=1 FROM pragma_table_info('readings') WHERE name='value' AND instr(upper(type),'INT')>0"
+        },
+        {
+          "label": "Ordinary non-STRICT table",
+          "expression": "SELECT count(*)=1 FROM pragma_table_list WHERE name='readings' AND schema='main' AND strict=0"
+        }
+      ],
+      "quiz": {
+        "question": "An ordinary INTEGER-affinity column receives the text cloudy. What can SQLite store without an additional constraint?",
+        "choices": [
+          "Only NULL",
+          "The text cloudy",
+          "The integer zero in every case"
+        ],
+        "answer": 1,
+        "explanation": "A nonnumeric text that cannot be converted may remain text in an ordinary flexible table."
+      },
+      "hints": [
+        "Trace the supplied rows and resulting rows before changing the query."
+      ],
+      "math": null,
+      "filename": "query.sql",
+      "estimatedMinutes": 12,
+      "extraFiles": [
+        {
+          "name": "setup.sql",
+          "code": ""
+        }
+      ]
+    },
+    "code": "CREATE TABLE readings(id INTEGER PRIMARY KEY,value TEXT);\nINSERT INTO readings VALUES(1,'17'),(2,'unknown');\nCREATE VIEW observed AS\nSELECT id,typeof(value) AS kind\nFROM readings;",
+    "expected": false
+  },
+  {
+    "id": "sql-34-solution",
+    "lesson": {
+      "id": "sql-34",
+      "title": "Use a STRICT table",
+      "summary": "Create STRICT table readings(id INTEGER PRIMARY KEY,value INTEGER NOT NULL), then insert ID1 with text 14 and ID2 with integer 9. Both stored values must be integers. Do not include an intentional failure in the normal project submission.",
+      "explanation": [
+        "STRICT after a CREATE TABLE definition asks SQLite to enforce its supported column types. It does not mean every value must arrive with exactly that storage class: a lossless conversion can still be accepted. The text 12 can become integer 12, but the text cloudy cannot be stored in a STRICT INTEGER column.",
+        "These examples use INTEGER and TEXT. SQLite restricts the type names permitted in STRICT tables; do not copy arbitrary type names from another database. The project checks inspect the strict-table flag and stored values. The separate rejected-write example demonstrates an error, but this editor\u2019s normal checks do not grade whether your table rejects every invalid input.",
+        "Run this complete example in a fresh database.\n```sql\nCREATE TABLE readings(id INTEGER PRIMARY KEY,value INTEGER) STRICT;\nINSERT INTO readings VALUES(1,'12');\nCREATE TEMP VIEW shown AS\nSELECT value,typeof(value) AS kind\nFROM readings;\nSELECT *\nFROM shown;\n```",
+        "Change the supplied values and trace the result. This is a separate complete example.\n```sql\nCREATE TABLE readings(id INTEGER PRIMARY KEY,value INTEGER) STRICT;\nINSERT INTO readings VALUES(1,'06');\nCREATE TEMP VIEW shown AS\nSELECT value,typeof(value) AS kind\nFROM readings;\nSELECT *\nFROM shown;\n```",
+        "Application: Create STRICT table readings(id INTEGER PRIMARY KEY,value INTEGER NOT NULL), then insert ID1 with text 14 and ID2 with integer 9. Both stored values must be integers. Do not include an intentional failure in the normal project submission.",
+        "Separate error experiment: run the following complete block in a fresh database, not after the project. The final statement should fail because cloudy cannot become an INTEGER. The earlier row with value 4 remains. Inspect it with SELECT value FROM sample if your local connection stays open after reporting the error. A normal Run checks error is not awarded as a successful project.\n```sql\nCREATE TABLE sample(value INTEGER) STRICT;\nINSERT INTO sample VALUES(4);\nINSERT INTO sample VALUES('cloudy');\n```"
+      ],
+      "analogy": {
+        "familiar": "",
+        "connection": "",
+        "limit": ""
+      },
+      "steps": [
+        "Read the small example and explain its inputs and effects.",
+        "Complete the starter for this lesson.",
+        "Run the behavior checks, then predict a changed case."
+      ],
+      "starter": "CREATE TABLE readings(id INTEGER PRIMARY KEY,value INTEGER NOT NULL);\nINSERT INTO readings VALUES(1,'14'),(2,9);",
+      "solution": "CREATE TABLE readings(id INTEGER PRIMARY KEY,value INTEGER NOT NULL) STRICT;\nINSERT INTO readings VALUES(1,'14'),(2,9);\nSELECT *\nFROM readings\nORDER BY id;",
+      "runtime": "sql",
+      "checks": [
+        {
+          "label": "Exact readings rows and multiplicities",
+          "expression": "WITH expected(\"id\",\"value\") AS (VALUES (1,14),(2,9)), actual AS (SELECT \"id\",\"value\",COUNT(*) AS multiplicity FROM \"readings\" GROUP BY \"id\",\"value\"), wanted AS (SELECT \"id\",\"value\",COUNT(*) AS multiplicity FROM expected GROUP BY \"id\",\"value\") SELECT NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+        },
+        {
+          "label": "Strict-table metadata",
+          "expression": "SELECT count(*)=1 FROM pragma_table_list WHERE name='readings' AND schema='main' AND strict=1"
+        },
+        {
+          "label": "Missing values disallowed by schema",
+          "expression": "SELECT count(*)=1 FROM pragma_table_info('readings') WHERE name='value' AND \"notnull\"=1"
+        },
+        {
+          "label": "Integer stored types",
+          "expression": "SELECT count(*)=2 AND sum(typeof(value)='integer')=2 FROM readings"
+        },
+        {
+          "label": "Integer-affinity column declaration",
+          "expression": "SELECT count(*)=1 FROM pragma_table_info('readings') WHERE name='value' AND instr(upper(type),'INT')>0"
+        }
+      ],
+      "quiz": {
+        "question": "A STRICT INTEGER column receives the text '18'. Must it reject that value solely because it began as text?",
+        "choices": [
+          "No; a lossless conversion to integer can succeed.",
+          "Yes; STRICT forbids all conversion.",
+          "No; STRICT stores every text unchanged."
+        ],
+        "answer": 0,
+        "explanation": "STRICT requires compatibility after permitted lossless conversion, not an exact incoming storage-class match."
+      },
+      "hints": [
+        "Trace the supplied rows and resulting rows before changing the query."
+      ],
+      "math": null,
+      "filename": "query.sql",
+      "estimatedMinutes": 12,
+      "extraFiles": [
+        {
+          "name": "setup.sql",
+          "code": ""
+        }
+      ]
+    },
+    "code": "CREATE TABLE readings(id INTEGER PRIMARY KEY,value INTEGER NOT NULL) STRICT;\nINSERT INTO readings VALUES(1,'14'),(2,9);\nSELECT *\nFROM readings\nORDER BY id;",
+    "expected": true
+  },
+  {
+    "id": "sql-34-starter",
+    "lesson": {
+      "id": "sql-34",
+      "title": "Use a STRICT table",
+      "summary": "Create STRICT table readings(id INTEGER PRIMARY KEY,value INTEGER NOT NULL), then insert ID1 with text 14 and ID2 with integer 9. Both stored values must be integers. Do not include an intentional failure in the normal project submission.",
+      "explanation": [
+        "STRICT after a CREATE TABLE definition asks SQLite to enforce its supported column types. It does not mean every value must arrive with exactly that storage class: a lossless conversion can still be accepted. The text 12 can become integer 12, but the text cloudy cannot be stored in a STRICT INTEGER column.",
+        "These examples use INTEGER and TEXT. SQLite restricts the type names permitted in STRICT tables; do not copy arbitrary type names from another database. The project checks inspect the strict-table flag and stored values. The separate rejected-write example demonstrates an error, but this editor\u2019s normal checks do not grade whether your table rejects every invalid input.",
+        "Run this complete example in a fresh database.\n```sql\nCREATE TABLE readings(id INTEGER PRIMARY KEY,value INTEGER) STRICT;\nINSERT INTO readings VALUES(1,'12');\nCREATE TEMP VIEW shown AS\nSELECT value,typeof(value) AS kind\nFROM readings;\nSELECT *\nFROM shown;\n```",
+        "Change the supplied values and trace the result. This is a separate complete example.\n```sql\nCREATE TABLE readings(id INTEGER PRIMARY KEY,value INTEGER) STRICT;\nINSERT INTO readings VALUES(1,'06');\nCREATE TEMP VIEW shown AS\nSELECT value,typeof(value) AS kind\nFROM readings;\nSELECT *\nFROM shown;\n```",
+        "Application: Create STRICT table readings(id INTEGER PRIMARY KEY,value INTEGER NOT NULL), then insert ID1 with text 14 and ID2 with integer 9. Both stored values must be integers. Do not include an intentional failure in the normal project submission.",
+        "Separate error experiment: run the following complete block in a fresh database, not after the project. The final statement should fail because cloudy cannot become an INTEGER. The earlier row with value 4 remains. Inspect it with SELECT value FROM sample if your local connection stays open after reporting the error. A normal Run checks error is not awarded as a successful project.\n```sql\nCREATE TABLE sample(value INTEGER) STRICT;\nINSERT INTO sample VALUES(4);\nINSERT INTO sample VALUES('cloudy');\n```"
+      ],
+      "analogy": {
+        "familiar": "",
+        "connection": "",
+        "limit": ""
+      },
+      "steps": [
+        "Read the small example and explain its inputs and effects.",
+        "Complete the starter for this lesson.",
+        "Run the behavior checks, then predict a changed case."
+      ],
+      "starter": "CREATE TABLE readings(id INTEGER PRIMARY KEY,value INTEGER NOT NULL);\nINSERT INTO readings VALUES(1,'14'),(2,9);",
+      "solution": "CREATE TABLE readings(id INTEGER PRIMARY KEY,value INTEGER NOT NULL) STRICT;\nINSERT INTO readings VALUES(1,'14'),(2,9);\nSELECT *\nFROM readings\nORDER BY id;",
+      "runtime": "sql",
+      "checks": [
+        {
+          "label": "Exact readings rows and multiplicities",
+          "expression": "WITH expected(\"id\",\"value\") AS (VALUES (1,14),(2,9)), actual AS (SELECT \"id\",\"value\",COUNT(*) AS multiplicity FROM \"readings\" GROUP BY \"id\",\"value\"), wanted AS (SELECT \"id\",\"value\",COUNT(*) AS multiplicity FROM expected GROUP BY \"id\",\"value\") SELECT NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+        },
+        {
+          "label": "Strict-table metadata",
+          "expression": "SELECT count(*)=1 FROM pragma_table_list WHERE name='readings' AND schema='main' AND strict=1"
+        },
+        {
+          "label": "Missing values disallowed by schema",
+          "expression": "SELECT count(*)=1 FROM pragma_table_info('readings') WHERE name='value' AND \"notnull\"=1"
+        },
+        {
+          "label": "Integer stored types",
+          "expression": "SELECT count(*)=2 AND sum(typeof(value)='integer')=2 FROM readings"
+        },
+        {
+          "label": "Integer-affinity column declaration",
+          "expression": "SELECT count(*)=1 FROM pragma_table_info('readings') WHERE name='value' AND instr(upper(type),'INT')>0"
+        }
+      ],
+      "quiz": {
+        "question": "A STRICT INTEGER column receives the text '18'. Must it reject that value solely because it began as text?",
+        "choices": [
+          "No; a lossless conversion to integer can succeed.",
+          "Yes; STRICT forbids all conversion.",
+          "No; STRICT stores every text unchanged."
+        ],
+        "answer": 0,
+        "explanation": "STRICT requires compatibility after permitted lossless conversion, not an exact incoming storage-class match."
+      },
+      "hints": [
+        "Trace the supplied rows and resulting rows before changing the query."
+      ],
+      "math": null,
+      "filename": "query.sql",
+      "estimatedMinutes": 12,
+      "extraFiles": [
+        {
+          "name": "setup.sql",
+          "code": ""
+        }
+      ]
+    },
+    "code": "CREATE TABLE readings(id INTEGER PRIMARY KEY,value INTEGER NOT NULL);\nINSERT INTO readings VALUES(1,'14'),(2,9);",
+    "expected": false
+  }
+]

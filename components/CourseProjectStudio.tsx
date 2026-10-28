@@ -6,8 +6,8 @@ import type { Lesson, RunResult } from "../lib/types";
 import type { CourseProject } from "../lib/course-projects";
 import { loadCourseProject, saveCourseProject, type CourseProjectDraft } from "../lib/course-project-storage";
 
-type Props = { project: CourseProject; lesson: Lesson; scope: string; initialCode?: string; onCompleteCore: (code: string, checks: RunResult["checks"]) => Promise<void> };
-export default function CourseProjectStudio({ project, lesson, scope, initialCode, onCompleteCore }: Props) {
+type Props = { finishBlockedReason?: string; project: CourseProject; lesson: Lesson; scope: string; initialCode?: string; onCompleteCore: (code: string, checks: RunResult["checks"]) => Promise<void> };
+export default function CourseProjectStudio({ project, lesson, scope, initialCode, onCompleteCore, finishBlockedReason }: Props) {
   const [draft, setDraft] = useState<CourseProjectDraft | null>(null);
   const [result, setResult] = useState<RunResult | null>(null);
   const [running, setRunning] = useState(false);
@@ -53,6 +53,7 @@ export default function CourseProjectStudio({ project, lesson, scope, initialCod
     if (!passed || !latest.current || running || finishing) return;
     setFinishing(true);
     const snapshot = latest.current;
+    if (snapshot.step === project.steps.length - 1 && finishBlockedReason) { setError(finishBlockedReason); setFinishing(false); return; }
     setError("");
     try {
       if (snapshot.step < project.steps.length - 1) { await persist({ ...snapshot, step: snapshot.step + 1, updatedAt: new Date().toISOString() }); setResult(null); }
@@ -74,14 +75,14 @@ export default function CourseProjectStudio({ project, lesson, scope, initialCod
       <CodeEditor code={draft.code} onChange={code => { if (finishing) return; setResult(null); void persist({ ...draft, code, completedSource: undefined, updatedAt: new Date().toISOString() }).catch(() => {}); }} runtime={lesson.runtime} unitId={`${scope}:${project.id}`} />
       <div className="editor-actions"><button className="primary" disabled={running || finishing} onClick={run}>{running ? "Running…" : "Run code"}</button>{running && <button className="secondary" onClick={() => abort.current?.abort()}>Stop</button>}
         <button className="secondary" disabled={running || finishing || draft.step === 0} onClick={() => { setResult(null); void persist({ ...draft, step: draft.step - 1, updatedAt: new Date().toISOString() }).catch(() => {}); }}>Back</button>
-        <button className="primary" disabled={!passed || running || finishing || completed} onClick={next}>{draft.step < project.steps.length - 1 ? "Next" : project.core ? "Finish course project" : "Finish practice"}</button>
+        <button className="primary" title={finishBlockedReason} disabled={!passed || running || finishing || completed || (draft.step === project.steps.length - 1 && !!finishBlockedReason)} onClick={next}>{draft.step < project.steps.length - 1 ? "Next" : project.core ? "Finish course project" : "Finish practice"}</button>
       </div>
     </div>
-    <div className="panel result-panel"><h3>What your code did</h3><iframe ref={frame} title="Isolated guided project runner" sandbox="allow-scripts" className="worker-frame" src="about:blank" />
-      {result && <><pre>{result.output.join("\n") || "No output yet."}</pre>{result.error && <p role="alert">{result.error}</p>}{result.checks.map(c => <p key={c.label}>{c.passed ? "✓" : "○"} {c.label}</p>)}</>}
+    <div className="panel result-panel guided-project-results"><h3>What your code did</h3><iframe ref={frame} title="Isolated guided project runner" sandbox="allow-scripts" className="worker-frame" src="about:blank" />
+      {result && <><pre>{result.output.join("\n") || "No output yet."}</pre>{result.error && <p role="alert">{result.error}</p>}{result.checks.length > 0 && <ul className="guided-project-checks">{result.checks.map(c => <li key={c.label}><span className="guided-check-icon" aria-label={c.passed ? "Passed" : "Not passed"}>{c.passed ? "✓" : "○"}</span><span>{c.label}</span></li>)}</ul>}</>}
       {completed && <p role="status">{project.core ? "Course project complete." : "Practice complete. This extra project does not change your course XP."}</p>}
       {error && <p role="alert">{error}</p>}
-      <p className="muted">Draft and step progress are saved on this device, not synced to other devices.</p>
+      <p className="muted guided-project-save-note">Draft and step progress are saved on this device, not synced to other devices.</p>
     </div>
   </section>;
 }

@@ -1,0 +1,46 @@
+[
+  {
+    "id": "sql-51-worked",
+    "lessonId": "sql-51",
+    "paragraph": 1,
+    "filename": "sql-51-worked.cjs",
+    "code": "const initSqlJs = require('./vendor/sql-wasm.cjs');\ninitSqlJs({ locateFile: file => __dirname + '/vendor/' + file }).then(SQL => {\n  const db = new SQL.Database();\n  try {\n    db.run(`CREATE TABLE labels(id INTEGER PRIMARY KEY, label TEXT);\nINSERT INTO labels VALUES (1,'Map'),(2,'Map'' OR 1=1 --');`);\n    const input = \"Map' OR 1=1 --\";\n    const stmt = db.prepare('SELECT id,label FROM labels WHERE label=$label ORDER BY id');\n    const rows = [];\n    try {\n      stmt.bind({ $label: input });\n      while (stmt.step()) rows.push(stmt.getAsObject());\n    } finally {\n      stmt.free();\n    }\n    console.log(JSON.stringify(rows));\n    console.log(db.exec('SELECT COUNT(*) FROM labels')[0].values[0][0]);\n  } finally {\n    db.close();\n  }\n}).catch(error => { console.error(error.message); process.exitCode = 1; });",
+    "expected": "[{\"id\":2,\"label\":\"Map' OR 1=1 --\"}]\n2\n",
+    "outcome": "success",
+    "runtime": "node-local",
+    "requirements": "Node.js; supplied SQL.js1.13.0 JS/WASM in vendor; fresh disposable cwd per job"
+  },
+  {
+    "id": "sql-51-changed",
+    "lessonId": "sql-51",
+    "paragraph": 3,
+    "filename": "sql-51-changed.cjs",
+    "code": "const initSqlJs = require('./vendor/sql-wasm.cjs');\ninitSqlJs({ locateFile: file => __dirname + '/vendor/' + file }).then(SQL => {\n  const db = new SQL.Database();\n  try {\n    db.run(`CREATE TABLE labels(id INTEGER PRIMARY KEY, label TEXT);\nINSERT INTO labels VALUES (1,'Map'),(2,'Map'' OR 1=1 --');`);\n    const input = \"Missing\";\n    const stmt = db.prepare('SELECT id,label FROM labels WHERE label=$label ORDER BY id');\n    const rows = [];\n    try {\n      stmt.bind({ $label: input });\n      while (stmt.step()) rows.push(stmt.getAsObject());\n    } finally {\n      stmt.free();\n    }\n    console.log(JSON.stringify(rows));\n    console.log(db.exec('SELECT COUNT(*) FROM labels')[0].values[0][0]);\n  } finally {\n    db.close();\n  }\n}).catch(error => { console.error(error.message); process.exitCode = 1; });",
+    "expected": "[]\n2\n",
+    "outcome": "success",
+    "runtime": "node-local",
+    "requirements": "Node.js; supplied SQL.js1.13.0 JS/WASM in vendor; fresh disposable cwd per job"
+  },
+  {
+    "id": "sql-52-worked",
+    "lessonId": "sql-52",
+    "paragraph": 1,
+    "filename": "sql-52-worked.cjs",
+    "code": "const initSqlJs = require('./vendor/sql-wasm.cjs');\nconst { writeFileSync, readFileSync } = require('node:fs');\ninitSqlJs({ locateFile: file => __dirname + '/vendor/' + file }).then(SQL => {\n  const db = new SQL.Database();\n  let bytes;\n  try {\n    db.run(`CREATE TABLE notes(id INTEGER PRIMARY KEY, text TEXT);\nINSERT INTO notes VALUES (1,'First');`);\n    bytes = db.export();\n    db.run(`INSERT INTO notes VALUES (2,'Later');`);\n    console.log(db.exec('SELECT COUNT(*) FROM notes')[0].values[0][0]);\n  } finally {\n    db.close();\n  }\n  writeFileSync('study.sqlite', bytes, { flag: 'wx' });\n  const saved = readFileSync('study.sqlite');\n  const reopened = new SQL.Database(saved);\n  try {\n    console.log(JSON.stringify(reopened.exec('SELECT id,text FROM notes ORDER BY id')[0].values));\n  } finally {\n    reopened.close();\n  }\n}).catch(error => { console.error(error.message); process.exitCode = 1; });",
+    "expected": "2\n[[1,\"First\"]]\n",
+    "outcome": "success",
+    "runtime": "node-local",
+    "requirements": "Node.js; supplied SQL.js1.13.0 JS/WASM in vendor; fresh disposable cwd per job"
+  },
+  {
+    "id": "sql-52-changed",
+    "lessonId": "sql-52",
+    "paragraph": 3,
+    "filename": "sql-52-changed.cjs",
+    "code": "const initSqlJs = require('./vendor/sql-wasm.cjs');\nconst { writeFileSync, readFileSync } = require('node:fs');\ninitSqlJs({ locateFile: file => __dirname + '/vendor/' + file }).then(SQL => {\n  const db = new SQL.Database();\n  let bytes;\n  try {\n    db.run(`CREATE TABLE notes(id INTEGER PRIMARY KEY, text TEXT);\nINSERT INTO notes VALUES (1,'First');`);\n    db.run(`INSERT INTO notes VALUES (2,'Later');`);\n    bytes = db.export();\n    console.log(db.exec('SELECT COUNT(*) FROM notes')[0].values[0][0]);\n  } finally {\n    db.close();\n  }\n  writeFileSync('study.sqlite', bytes, { flag: 'wx' });\n  const saved = readFileSync('study.sqlite');\n  const reopened = new SQL.Database(saved);\n  try {\n    console.log(JSON.stringify(reopened.exec('SELECT id,text FROM notes ORDER BY id')[0].values));\n  } finally {\n    reopened.close();\n  }\n}).catch(error => { console.error(error.message); process.exitCode = 1; });",
+    "expected": "2\n[[1,\"First\"],[2,\"Later\"]]\n",
+    "outcome": "success",
+    "runtime": "node-local",
+    "requirements": "Node.js; supplied SQL.js1.13.0 JS/WASM in vendor; fresh disposable cwd per job"
+  }
+]

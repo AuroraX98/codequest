@@ -1,0 +1,1739 @@
+[
+  {
+    "id": "backend-01",
+    "title": "A practice-session API",
+    "summary": "Create routes for reading and adding practice entries in Express.",
+    "explanation": [
+      "An API is an agreed way for programs to ask another program to do something. An HTTP request includes a method, a path, and sometimes a body of data. A route matches a method and path. GET /entries reads records; POST /entries asks to create one. A response has a status number and a body. JSON is a text format used to send objects and arrays between programs.",
+      "This standalone JavaScript example models a route decision without a real network:\n```javascript\nconst visits = [];\nfunction handle(method, path, body = {}) {\n  if (method === 'GET' && path === '/visits') {\n    return { status: 200, body: [...visits] };\n  }\n  if (method === 'POST' && path === '/visits') {\n    if (!Number.isInteger(body.minutes) || body.minutes < 1 || body.minutes > 180) {\n      return { status: 400, body: { error: 'Use 1 to 180 whole minutes' } };\n    }\n    const visit = { id: visits.length + 1, minutes: body.minutes };\n    visits.push(visit);\n    return { status: 201, body: visit };\n  }\n  return { status: 404, body: { error: 'Not found' } };\n}\nconsole.log(handle('POST', '/visits', { minutes: 45 }));\nconsole.log(handle('GET', '/visits'));\n```\nThe first response is status 201 with {id: 1, minutes: 45}; the second is 200 with an array containing that saved visit.",
+      "Number.isInteger requires a whole finite number, so it rejects a fraction, undefined, NaN, Infinity, and quoted numeric text. The bounds include 1 and 180; 0 and 181 fail. || means any invalid condition rejects the request. The default body = {} handles an omitted argument in this example. [...visits] makes a new array for the response, and push appends the valid record only after validation.",
+      "Express is a package for writing HTTP routes in Node.js, which runs JavaScript outside the browser. Save this complete separate example as server.mjs in a local project with the supplied Express dependency installed:\n```javascript\nimport express from 'express';\nconst app = express();\napp.use(express.json({ limit: '20kb' }));\nconst visits = [];\napp.get('/visits', (req, res) => res.json(visits));\napp.post('/visits', (req, res) => {\n  const minutes = req.body?.minutes;\n  if (!Number.isInteger(minutes) || minutes < 1 || minutes > 180) {\n    return res.status(400).json({ error: 'Use 1 to 180 whole minutes' });\n  }\n  const visit = { id: crypto.randomUUID(), minutes };\n  visits.push(visit);\n  res.status(201).json(visit);\n});\napp.listen(3000, '127.0.0.1', () => console.log('Local server ready'));\n```\nRun with Node.js 22.13 or newer. The callback receives req for request information and res for the response. listen starts the local server on port 3000.",
+      "app.use installs middleware, code that runs before route handlers. express.json reads JSON request bodies, with a 20-kilobyte size limit. res.status chooses the status and res.json sends JSON. crypto.randomUUID creates a unique record identifier in this Node environment. A 200 means the read succeeded; 201 means a record was created; 400 asks the caller to fix invalid input; 404 means no matching route here. JSON parsing and other server failures are additional cases beyond this small route exercise.",
+      "With that server running, this JavaScript fragment can be used in a browser console on the same local origin, or in a Node environment supporting fetch:\n```javascript\nconst created = await fetch('http://127.0.0.1:3000/visits', {\n  method: 'POST',\n  headers: { 'Content-Type': 'application/json' },\n  body: JSON.stringify({ minutes: 45 })\n});\nconsole.log(created.status);\nconst response = await fetch('http://127.0.0.1:3000/visits');\nconsole.log(await response.json());\n```\nIt prints 201 then the saved array. JSON.stringify turns the object into request text. await waits for each promise's result; response.json parses returned JSON. Cross-origin browser pages may need CORS permission, so prefer the local server's origin or Node for this walkthrough.",
+      "For the exercise, implement handleRequest for /entries, validate before push, preserve saved records for later GET calls, and return 404 for /missing. The array is memory-only and disappears when the server stops. The browser checks your decision function; it does not launch Node or prove actual HTTP behavior. Download the supplied server and tests, install its declared packages locally, start it in one terminal, and run npm test in another to check the real routes."
+    ],
+    "analogy": {
+      "familiar": "An order slip at a counter",
+      "connection": "The slip states what you want and supplies the needed details. A request method says whether you are reading or adding.",
+      "limit": "The server still checks every request; an address alone does not give permission."
+    },
+    "steps": [
+      "In handleRequest, return status 200 and a copy of entries for GET /entries.",
+      "For POST /entries, accept only whole-number minutes from 1 to 180, including 1 and 180.",
+      "For valid input, add an entry and return status 201.",
+      "For invalid input, return status 400. For a route you do not recognize, return status 404.",
+      "Download package.json, server.mjs, and test.mjs into one folder.",
+      "Install Node.js 22.13 or newer.",
+      "Open a terminal in the downloaded folder and run npm install.",
+      "Run npm start.",
+      "Open a second terminal in the same folder and run npm test.",
+      "Try 1 and 180 minutes, which are allowed. Also try 0 and 181, which are outside the limits."
+    ],
+    "starter": "const entries = [];\nfunction handleRequest(method, path, body = {}) {\n  // TODO: decide the route and validate minutes\n  return {status:404,body:{error:'Not found'}};\n}\nconsole.log(handleRequest('POST','/entries',{minutes:25}));",
+    "solution": "const entries=[];\nfunction handleRequest(method,path,body={}) {\n if(method==='GET'&&path==='/entries')return {status:200,body:[...entries]};\n if(method==='POST'&&path==='/entries'){if(!Number.isInteger(body.minutes)||body.minutes<1||body.minutes>180)return {status:400,body:{error:'Use 1 to 180 whole minutes'}};const entry={id:entries.length+1,minutes:body.minutes};entries.push(entry);return {status:201,body:entry};}\n return {status:404,body:{error:'Not found'}};\n}\nconsole.log(handleRequest('POST','/entries',{minutes:25}));",
+    "runtime": "javascript",
+    "checks": [
+      {
+        "label": "Valid entry is saved and readable",
+        "expression": "handleRequest('POST','/entries',{minutes:30}).status===201 && handleRequest('GET','/entries').body.some(e=>e.minutes===30)"
+      },
+      {
+        "label": "Boundaries and invalid input are checked",
+        "expression": "[0,181,1.5,undefined].every(minutes=>handleRequest('POST','/entries',{minutes}).status===400) && handleRequest('POST','/entries',{minutes:1}).status===201 && handleRequest('POST','/entries',{minutes:180}).status===201"
+      },
+      {
+        "label": "Unknown route returns 404",
+        "expression": "handleRequest('GET','/missing').status===404"
+      }
+    ],
+    "quiz": {
+      "question": "Which response fits a request with minutes: 0?",
+      "choices": [
+        "201: created",
+        "400: fix the input",
+        "200: read successfully"
+      ],
+      "answer": 1,
+      "explanation": "Zero is outside the allowed range, so this request should be rejected with 400."
+    },
+    "hints": [
+      "Check method and path together before reading or adding.",
+      "Reject values unless Number.isInteger(body.minutes) is true and the range includes them.",
+      "Use entries.push(entry) for a valid POST, then return the new entry with status 201."
+    ],
+    "math": {
+      "explanation": "A closed range includes both ends. Here the allowed whole numbers run from 1 through 180.",
+      "question": "Allowed whole numbers are 1 through 180 inclusive. Which input must be rejected?",
+      "choices": [
+        "180",
+        "1",
+        "181"
+      ],
+      "answer": 2,
+      "feedback": "One hundred eighty-one is above the maximum. Both 1 and 180 are permitted endpoints."
+    },
+    "filename": "main.js",
+    "estimatedMinutes": 29,
+    "extraFiles": [
+      {
+        "name": "package.json",
+        "code": "{\n  \"name\": \"practice-api\",\n  \"type\": \"module\",\n  \"scripts\": {\n    \"start\": \"node server.mjs\",\n    \"test\": \"node --test test.mjs\"\n  },\n  \"dependencies\": {\n    \"express\": \"5.1.0\"\n  }\n}"
+      },
+      {
+        "name": "server.mjs",
+        "code": "import express from 'express';\nconst app = express();\napp.use(express.json({limit:'20kb'}));\nconst entries = [];\napp.get('/entries', (req,res)=>res.json(entries));\napp.post('/entries', (req,res)=>{\n  const {minutes} = req.body;\n  if (!Number.isInteger(minutes) || minutes < 1 || minutes > 180)\n    return res.status(400).json({error:'Minutes must be a whole number from 1 to 180.'});\n  const entry = {id:crypto.randomUUID(),minutes};\n  entries.push(entry);\n  res.status(201).json(entry);\n});\napp.listen(3000,'127.0.0.1',()=>console.log('Open http://127.0.0.1:3000/entries'));\n"
+      },
+      {
+        "name": "test.mjs",
+        "code": "import test from 'node:test';\nimport assert from 'node:assert/strict';\ntest('valid entry, invalid boundaries, saved entry',async()=>{\n for(const minutes of [0,181,-2,1.5]){\n  const r=await fetch('http://127.0.0.1:3000/entries',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({minutes})});assert.equal(r.status,400);\n }\n const r=await fetch('http://127.0.0.1:3000/entries',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({minutes:25})});assert.equal(r.status,201);\n const saved=await (await fetch('http://127.0.0.1:3000/entries')).json();assert.ok(saved.some(e=>e.minutes===25));\n});\n"
+      }
+    ],
+    "externalNotes": "The in-app checks run your request decision function. Express runs in Node.js on your computer. Also run npm test against the local server to verify real routes and responses."
+  },
+  {
+    "id": "backend-02",
+    "title": "A durable practice API",
+    "summary": "Connect the API to a practice database and save entries.",
+    "explanation": [
+      "Durable storage keeps data after a process stops. A JavaScript array is in memory and disappears on restart. A SQLite database opened with a file name stores records on disk. An adapter gives your code small methods such as save and load so callers can ask for storage without depending on its internal details. An adapter can be memory-only or durable; the method names alone do not prove persistence.",
+      "This complete standalone JavaScript adapter is memory-only practice:\n```javascript\nconst store = {\n  rows: [],\n  save(row) { this.rows.push({ ...row }); },\n  load() { return this.rows.map(row => ({ ...row })); }\n};\nfunction saveNote(row) {\n  store.save(row);\n}\nfunction loadNotes() {\n  return store.load();\n}\nsaveNote({ id: 'x', minutes: 35 });\nsaveNote({ id: 'y', minutes: 12 });\nconsole.log(loadNotes());\n```\nIt returns both rows. this means the store object inside its methods. {...row} copies the flat record, and map returns a new array of copied records. Saving the second row appends rather than replacing the first.",
+      "A prepared statement separates fixed SQL structure from the values supplied later. Placeholders such as ? stand for values, in order. The database handles their representation so a string value is not interpreted as extra SQL commands. Do not construct a query by concatenating untrusted input into its SQL text. Prepared statements address SQL input handling; range validation and ownership checks are still separate responsibilities.",
+      "Save this complete example as storage.mjs and run it with Node.js 22.13 or newer, whose node:sqlite module is available in this lesson's required environment:\n```javascript\nimport { DatabaseSync } from 'node:sqlite';\nconst db = new DatabaseSync('demo-practice.sqlite');\ndb.exec('CREATE TABLE IF NOT EXISTS notes(id TEXT PRIMARY KEY, minutes INTEGER NOT NULL)');\nconst insert = db.prepare('INSERT INTO notes(id, minutes) VALUES(?, ?)');\ninsert.run('x', 35);\ninsert.run('y', 12);\nconst saved = db.prepare('SELECT id, minutes FROM notes ORDER BY id').all();\nconsole.log(saved);\ndb.close();\n```\nA first run in a folder without that file prints x/35 and y/12 and leaves a database file. db.prepare builds a statement; run executes the insert with two values; all returns the query's rows. This demonstration should be inserted only once: rerunning those same primary keys causes a duplicate-key error.",
+      "To verify persistence, use a separate reader after the first script has exited:\n```javascript\nimport { DatabaseSync } from 'node:sqlite';\nconst db = new DatabaseSync('demo-practice.sqlite');\nconsole.log(db.prepare('SELECT id, minutes FROM notes ORDER BY id').all());\ndb.close();\n```\nSave as read-storage.mjs in the same folder and run it. The same rows still exist because the file outlived the first process. A different working folder can open a different file with the same relative name, so check your location when testing persistence.",
+      "Set membership helps compare ids. Suppose saved ids are {x, y} and requested ids are {x, z}. Their overlap is {x}, because only x occurs in both. z is requested but missing, and y is stored but not requested. Positions do not decide membership. A JavaScript Set stores distinct values and has(id) checks whether a particular id is present.",
+      "For the browser exercise, saveEntry must call store.save and loadEntries must call store.load. The supplied a and b rows must survive a later c addition. The browser adapter makes copied rows but does not write a disk file. The downloaded server uses practice.sqlite and prepared statements with the same storage idea. Save a record, stop and restart that local server in the same folder, and read it again; only that actual restart test establishes its durability."
+    ],
+    "analogy": {
+      "familiar": "A notebook compared with remembering a number",
+      "connection": "The notebook remains after you leave. A database record remains after the server stops.",
+      "limit": "A database can still lose data if its file is deleted or its storage is temporary."
+    },
+    "steps": [
+      "Use the supplied store object. Make saveEntry call store.save and loadEntries call store.load.",
+      "Save {id:\"a\",minutes:25} and {id:\"b\",minutes:10}. Keep earlier entries when saving a new one.",
+      "Download the local files and install Node.js 22.13 or newer.",
+      "Open their folder in a terminal. Run npm install, then npm start.",
+      "Add an entry, then stop the server with Control-C.",
+      "Restart the server and check that GET /entries still shows that entry.",
+      "Keep practice.sqlite in the same folder so the server can read its saved data.",
+      "From the requested IDs a and c, list the IDs that are also in the saved set a and b."
+    ],
+    "starter": "const store={rows:[],save(row){this.rows.push({...row});},load(){return this.rows.map(row=>({...row}));}};\nfunction saveEntry(row){/* TODO: save through store */}\nfunction loadEntries(){return [];}\nsaveEntry({id:'a',minutes:25});saveEntry({id:'b',minutes:10});console.log(loadEntries());",
+    "solution": "const store={rows:[],save(row){this.rows.push({...row});},load(){return this.rows.map(row=>({...row}));}};\nfunction saveEntry(row){store.save(row);}\nfunction loadEntries(){return store.load();}\nsaveEntry({id:'a',minutes:25});saveEntry({id:'b',minutes:10});console.log(loadEntries());",
+    "runtime": "javascript",
+    "checks": [
+      {
+        "label": "Saved entries can be read through the adapter",
+        "expression": "loadEntries().some(r=>r.id==='a'&&r.minutes===25)&&loadEntries().some(r=>r.id==='b'&&r.minutes===10)"
+      },
+      {
+        "label": "Adding a record preserves earlier records",
+        "expression": "(()=>{saveEntry({id:'c',minutes:5});return loadEntries().length===3})()"
+      }
+    ],
+    "quiz": {
+      "question": "Which keeps a saved entry after a server restart?",
+      "choices": [
+        "A variable in server memory",
+        "A durable SQLite file",
+        "A console message"
+      ],
+      "answer": 1,
+      "explanation": "A file-backed database stores records outside the current running process."
+    },
+    "hints": [
+      "The store already has save(row) and load() methods.",
+      "Call store.save(row) inside saveEntry.",
+      "Return store.load() from loadEntries; do not replace the store when saving."
+    ],
+    "math": {
+      "explanation": "Compare two sets by membership, not by position. Stored IDs are {a,b}; requested IDs are {a,c}.",
+      "question": "What is the overlap?",
+      "choices": [
+        "{a}",
+        "{b,c}",
+        "{a,b,c}"
+      ],
+      "answer": 0,
+      "feedback": "Only a is in both sets. Requested ID c is missing from storage."
+    },
+    "filename": "main.js",
+    "estimatedMinutes": 28,
+    "extraFiles": [
+      {
+        "name": "package.json",
+        "code": "{\n  \"name\": \"practice-api\",\n  \"type\": \"module\",\n  \"scripts\": {\n    \"start\": \"node server.mjs\",\n    \"test\": \"node --test test.mjs\"\n  },\n  \"dependencies\": {\n    \"express\": \"5.1.0\"\n  }\n}"
+      },
+      {
+        "name": "server.mjs",
+        "code": "import express from 'express';\nconst app = express();\napp.use(express.json({limit:'20kb'}));\nconst { DatabaseSync } = await import('node:sqlite');\nconst db=new DatabaseSync('practice.sqlite');\ndb.exec('CREATE TABLE IF NOT EXISTS entries(id TEXT PRIMARY KEY,minutes INTEGER NOT NULL)');\napp.get('/entries', (req,res)=>res.json(db.prepare(\"SELECT * FROM entries ORDER BY rowid\").all()));\napp.post('/entries', (req,res)=>{\n  const {minutes} = req.body;\n  if (!Number.isInteger(minutes) || minutes < 1 || minutes > 180)\n    return res.status(400).json({error:'Minutes must be a whole number from 1 to 180.'});\n  const entry = {id:crypto.randomUUID(),minutes};\n  db.prepare(\"INSERT INTO entries(id,minutes) VALUES(?,?)\").run(entry.id,entry.minutes);\n  res.status(201).json(entry);\n});\napp.listen(3000,'127.0.0.1',()=>console.log('Open http://127.0.0.1:3000/entries'));\n"
+      },
+      {
+        "name": "test.mjs",
+        "code": "import test from 'node:test';\nimport assert from 'node:assert/strict';\ntest('valid entry, invalid boundaries, saved entry',async()=>{\n for(const minutes of [0,181,-2,1.5]){\n  const r=await fetch('http://127.0.0.1:3000/entries',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({minutes})});assert.equal(r.status,400);\n }\n const r=await fetch('http://127.0.0.1:3000/entries',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({minutes:25})});assert.equal(r.status,201);\n const saved=await (await fetch('http://127.0.0.1:3000/entries')).json();assert.ok(saved.some(e=>e.minutes===25));\n});\n"
+      }
+    ],
+    "externalNotes": "The browser adapter is memory-only practice. The downloaded Node server uses a real SQLite file. Verify persistence by stopping and restarting that server; the browser check cannot prove disk durability."
+  },
+  {
+    "id": "backend-04",
+    "title": "A protected practice API",
+    "summary": "Add request validation, authorization, middleware, and failure handling.",
+    "explanation": [
+      "Authentication asks who is signed in. Authorization asks whether that person may act on a particular record. Validation asks whether the proposed values are acceptable. A protected update needs all three. Being signed in does not grant access to someone else's record, and owning a record does not make an invalid duration acceptable.",
+      "This complete standalone JavaScript example uses a verified-session fixture, not an actual sign-in system:\n```javascript\nfunction update(session, entry, minutes) {\n  if (!session) return { status: 401 };\n  if (session.userId !== entry.ownerId) return { status: 403 };\n  if (!Number.isInteger(minutes) || minutes < 1 || minutes > 180) {\n    return { status: 400 };\n  }\n  entry.minutes = minutes;\n  return { status: 200, entry };\n}\nconst entry = { id: 9, ownerId: 'nora', minutes: 40 };\nconsole.log(update(null, entry, 50));\nconsole.log(update({ userId: 'luis' }, entry, 50));\nconsole.log(entry.minutes);\n```\nThe statuses are 401 and 403; minutes remains 40. 401 asks for valid sign-in, 403 denies this authenticated user's permission, and 400 rejects bad input.",
+      "The order makes the write safe. Return before assignment whenever a requirement fails. A request body can claim ownerId: 'nora', but anyone can submit that text. The trusted identity must come from a server-verified session, then be compared with the record's stored owner. The permission helper accepts that verified result; it must not be treated as proof that an arbitrary supplied object really represents a signed-in person.",
+      "Continue after the update helper with these separate record copies:\n```javascript\nconst original = { id: 9, ownerId: 'nora', minutes: 40 };\nconst invalid = { ...original };\nconst allowed = { ...original };\nconsole.log(update({ userId: 'nora' }, invalid, 0).status);\nconsole.log(invalid.minutes);\nconsole.log(update({ userId: 'nora' }, allowed, 50).status);\nconsole.log(allowed.minutes);\nconsole.log(original.minutes);\n```\nThe outputs are 400, 40, 200, 50, 40. {...original} copies these flat fields, letting us verify a rejected update without changing the baseline. A successful assignment changes only the allowed copy.",
+      "A session is a server-recognized sign-in state. In a real flow, the server verifies credentials, issues an unpredictable token, and checks that token and its expiry on later requests. A cookie can carry the token. The browser's claim to be a user is not trusted without that verification. Middleware runs before the route, validates the session, and attaches a trusted identity such as req.user; the route then performs record-specific authorization.",
+      "An Express middleware function typically receives req, res, and next. It either sends an error response and returns, or calls next() to continue to the route. Validation middleware can reject a malformed body before writing. A final error handler can report a useful failure without exposing private records, passwords, or internal credentials. Responses and logs must not reveal another user's data just to explain permission denial.",
+      "For the exercise, authorizeUpdate receives verified-session fixtures and mutates entry.minutes only after all checks pass. Null session returns 401; mismatched ownership returns 403; invalid minutes returns 400; a valid owner update returns 200 with entry. True AND false AND true is false: valid sign-in and input cannot overcome failed ownership. To finish actual protection locally, connect real session verification before using this helper; the next full-stack project supplies a localhost sign-in flow."
+    ],
+    "analogy": {
+      "familiar": "A shared notebook with a named page",
+      "connection": "Being allowed into the room does not mean you may change everyone else’s page. Ownership needs its own check.",
+      "limit": "A submitted name is not proof of identity; the server verifies the session."
+    },
+    "steps": [
+      "Use sessions {userId:\"a\"} and {userId:\"b\"}, and record {id:1,ownerId:\"a\",minutes:25}.",
+      "Write authorizeUpdate. Return 401 when there is no session.",
+      "Return 403 when the signed-in user does not own the record.",
+      "Return 400 unless minutes is a whole number from 1 to 180. Return 200 when the update is allowed.",
+      "If an update is refused, leave the original record unchanged.",
+      "Optional follow-on after the next full-stack lesson: in your local Express route, verify the session before running this permission check.",
+      "Never use req.body.ownerId as proof of who the user is.",
+      "Optional follow-on with that local app: test no session, the wrong owner, boundary values, and a valid owner update. The current browser exercise tests the permission helper with verified-session fixtures."
+    ],
+    "starter": "const record={id:1,ownerId:'a',minutes:25};\nfunction authorizeUpdate(session,entry,minutes){return {status:200};}\nconsole.log(authorizeUpdate(null,record,30));",
+    "solution": "const record={id:1,ownerId:'a',minutes:25};\nfunction authorizeUpdate(session,entry,minutes){if(!session)return {status:401};if(session.userId!==entry.ownerId)return {status:403};if(!Number.isInteger(minutes)||minutes<1||minutes>180)return {status:400};entry.minutes=minutes;return {status:200,entry};}\nconsole.log(authorizeUpdate(null,record,30));",
+    "runtime": "javascript",
+    "checks": [
+      {
+        "label": "Missing session is rejected",
+        "expression": "authorizeUpdate(null,record,30).status===401"
+      },
+      {
+        "label": "Another user cannot change the record",
+        "expression": "(()=>{const copy={...record};return authorizeUpdate({userId:'b'},copy,30).status===403&&copy.minutes===25})()"
+      },
+      {
+        "label": "Owner can change valid input but not invalid input",
+        "expression": "authorizeUpdate({userId:'a'},{...record},0).status===400&&authorizeUpdate({userId:'a'},{...record},30).status===200"
+      }
+    ],
+    "quiz": {
+      "question": "Which source should a protected route trust to learn who the user is?",
+      "choices": [
+        "ownerId from the request body",
+        "user ID from a verified server session",
+        "the first record in the database"
+      ],
+      "answer": 1,
+      "explanation": "The server must verify the session and then compare that identity with record ownership."
+    },
+    "hints": [
+      "Check for a session before reading session.userId.",
+      "Compare session.userId with entry.ownerId before changing entry.",
+      "Return immediately on every failed check, then update only the permitted record."
+    ],
+    "math": {
+      "explanation": "An update is allowed only when three conditions are true: signed in, correct owner, valid input. One failed condition is enough to deny it.",
+      "question": "A user is signed in and input is valid, but the record belongs to another user. Is an update allowed?",
+      "choices": [
+        "Yes, sign-in is enough",
+        "No, ownership is false",
+        "Only if minutes is below 30"
+      ],
+      "answer": 1,
+      "feedback": "The combined condition uses AND. True AND false AND true is false."
+    },
+    "filename": "main.js",
+    "estimatedMinutes": 43,
+    "extraFiles": [
+      {
+        "name": "authorization.mjs",
+        "code": "export function authorizeUpdate(session,entry,minutes){if(!session)return 401;if(session.userId!==entry.ownerId)return 403;if(!Number.isInteger(minutes)||minutes<1||minutes>180)return 400;return 200;}\n"
+      }
+    ],
+    "externalNotes": "This project checks permission logic with verified-session fixtures. In your local server, provide real sign-in and session validation before using it. The next full-stack project supplies a local sign-in flow; fixtures are not authentication."
+  },
+  {
+    "id": "backend-06",
+    "title": "Return one page of entries",
+    "summary": "Complete pageEntries(entries, query). Use the provided parsePage helper. Invalid pages return status 400. Valid pages return status 200 and entries ordered by numeric id, skipping offset entries and taking at most limit. Do not reorder the supplied array.",
+    "explanation": [
+      "A page of results is a slice of a longer list. limit is how many results to return at most; offset is how many to skip.",
+      "In /entries?limit=2&offset=1, the query values arrive as text. They are not trusted numbers yet.",
+      "The supplied parsePage helper accepts digit-only text, converts it with Number, and checks Number.isSafeInteger.",
+      "The small pattern /^\\d+$/ means one or more digits and nothing else. The helper rejects arrays, objects, negative signs, decimal points, and blank text before conversion.",
+      "This exercise permits limits from 1 through 20 and offsets from 0 upward. Missing values default to a limit of 5 and an offset of 0.",
+      "When parsing fails, return an error before selecting data. A 400 response asks the caller to fix the request.",
+      "The list must have a predictable order before choosing its page. Sort a copied array so the original order remains untouched.\n```javascript\nconst items = [{id: 8}, {id: 2}, {id: 5}];\nconst ordered = [...items].sort((a, b) => a.id - b.id);\nconsole.log(ordered.map(item => item.id));\n```",
+      "The sorted IDs are 2, 5, and 8. The original items array still begins with 8.",
+      "slice(start, end) includes start but stops before end. For offset 1 and limit 2, use end 3.\n```javascript\nconst names = [\"A\", \"B\", \"C\", \"D\"];\nconsole.log(names.slice(1, 3));\n```",
+      "The result is B and C. An offset past the end produces an empty list, not an error.",
+      "In a real Express route, req.query supplies the query object. Pass it to the same validated helper and use its status for the response.",
+      "These browser checks run the pagination function, not a network server. Offset pages can shift when records are inserted between requests; stable cursor pagination is a separate design."
+    ],
+    "analogy": {
+      "familiar": "Follow a small change from its starting state to its result.",
+      "connection": "Each instruction changes what the next instruction receives.",
+      "limit": "Use the actual code and checks rather than relying on the comparison."
+    },
+    "steps": [
+      "Read the requirement.",
+      "Make one change to the starter.",
+      "Run the checks.",
+      "Explain why a changed input produces its result."
+    ],
+    "starter": "function parsePage(query = {}) {\n  const read = (value, fallback) => {\n    if (value === undefined) return fallback;\n    if (typeof value !== \"string\" || !/^\\d+$/.test(value)) return null;\n    const number = Number(value);\n    return Number.isSafeInteger(number) ? number : null;\n  };\n  const limit = read(query.limit, 5);\n  const offset = read(query.offset, 0);\n  if (limit === null || offset === null || limit < 1 || limit > 20 || offset < 0) return null;\n  return {limit, offset};\n}\nfunction pageEntries(entries, query = {}) {\n  // TODO: validate, copy/sort, and return the requested page.\n  return {status: 200, body: []};\n}\nconsole.log(pageEntries([{id: 3}, {id: 1}, {id: 2}], {limit: \"2\", offset: \"1\"}));",
+    "solution": "function parsePage(query = {}) {\n  const read = (value, fallback) => {\n    if (value === undefined) return fallback;\n    if (typeof value !== \"string\" || !/^\\d+$/.test(value)) return null;\n    const number = Number(value);\n    return Number.isSafeInteger(number) ? number : null;\n  };\n  const limit = read(query.limit, 5);\n  const offset = read(query.offset, 0);\n  if (limit === null || offset === null || limit < 1 || limit > 20 || offset < 0) return null;\n  return {limit, offset};\n}\nfunction pageEntries(entries, query = {}) {\n  const page = parsePage(query);\n  if (page === null) return {status: 400, body: {error: \"Invalid page\"}};\n  const ordered = [...entries].sort((a, b) => a.id - b.id);\n  return {status: 200, body: ordered.slice(page.offset, page.offset + page.limit)};\n}",
+    "runtime": "javascript",
+    "checks": [
+      {
+        "label": "Sort first, then select the requested page",
+        "expression": "JSON.stringify(pageEntries([{id:4},{id:1},{id:3},{id:2}],{limit:'2',offset:'1'}).body.map(x=>x.id))==='[2,3]'"
+      },
+      {
+        "label": "An offset beyond the end is a successful empty page",
+        "expression": "pageEntries([{id:1}],{limit:'1',offset:'8'}).status===200 && pageEntries([{id:1}],{limit:'1',offset:'8'}).body.length===0"
+      },
+      {
+        "label": "Invalid query shapes and ranges are rejected",
+        "expression": "[{limit:'0'},{limit:'21'},{limit:'1.5'},{offset:'-1'},{limit:''},{limit:['2']},{offset:{}},{limit:'9007199254740993'}].every(q=>pageEntries([],q).status===400)"
+      },
+      {
+        "label": "Missing values have explicit defaults",
+        "expression": "pageEntries(Array.from({length:8},(_,i)=>({id:i})),{}).body.length===5"
+      },
+      {
+        "label": "Source order is preserved",
+        "expression": "(()=>{const x=[{id:3},{id:1},{id:2}];pageEntries(x,{limit:'1'});return JSON.stringify(x.map(e=>e.id))==='[3,1,2]';})()"
+      }
+    ],
+    "quiz": {
+      "question": "Sorted IDs are [2, 4, 6, 8, 10]. With offset 2 and limit 2, which IDs belong to the page?",
+      "choices": [
+        "[2, 4]",
+        "[6, 8]",
+        "[4, 6, 8]"
+      ],
+      "answer": 1,
+      "explanation": "Offset 2 skips the first two entries, 2 and 4. Limit 2 then takes exactly the next two, 6 and 8; the end index is offset + limit."
+    },
+    "hints": [
+      "Return status 400 when parsePage gives null.",
+      "Copy with spread before sort; sorting the original would change its order.",
+      "The end passed to slice is offset plus limit, not limit alone."
+    ],
+    "math": null,
+    "filename": "main.js",
+    "estimatedMinutes": 16,
+    "extraFiles": [
+      {
+        "name": "package.json",
+        "code": "{\n  \"name\": \"page-practice\",\n  \"private\": true,\n  \"type\": \"module\",\n  \"scripts\": {\n    \"start\": \"node server.mjs\"\n  },\n  \"dependencies\": {\n    \"express\": \"5.1.0\"\n  }\n}"
+      },
+      {
+        "name": "server.mjs",
+        "code": "import express from 'express';\nimport {pageEntries} from './pagination.mjs';\nconst app = express();\nconst entries = [{id: 3}, {id: 1}, {id: 2}];\napp.get('/entries', (req, res) => {\n  const result = pageEntries(entries, req.query);\n  res.status(result.status).json(result.body);\n});\napp.listen(3000, '127.0.0.1', () => console.log('Local practice on port 3000'));\n"
+      },
+      {
+        "name": "pagination.mjs",
+        "code": "function parsePage(query = {}) {\n  const read = (value, fallback) => {\n    if (value === undefined) return fallback;\n    if (typeof value !== \"string\" || !/^\\d+$/.test(value)) return null;\n    const number = Number(value);\n    return Number.isSafeInteger(number) ? number : null;\n  };\n  const limit = read(query.limit, 5);\n  const offset = read(query.offset, 0);\n  if (limit === null || offset === null || limit < 1 || limit > 20 || offset < 0) return null;\n  return {limit, offset};\n}\nexport function pageEntries(entries, query = {}) {\n  // Replace this stub with your tested browser implementation.\n  return {status: 501, body: {error: \"Not implemented\"}};\n}"
+      }
+    ],
+    "externalNotes": "Browser checks verify a pure pagination function, not Express. Download the files, replace the pagination.mjs stub, install dependencies, and run npm start locally; then inspect /entries?limit=1&offset=1 and invalid pages. Binding is loopback-only. IDs are distinct finite numbers in the exercise input."
+  },
+  {
+    "id": "backend-08",
+    "title": "Stop invalid requests before the route",
+    "summary": "Complete requireLabel(req, res, next). Accept a body.label that is a nonblank string; trim it into req.cleanLabel and call next exactly once. Otherwise send status 400 with {error:\"Label required\"} and do not call next.",
+    "explanation": [
+      "Middleware runs between receiving a request and finishing its response.",
+      "Calling next() passes control onward. Sending a response without calling next ends this middleware path.",
+      "Order matters: body parsing must happen before middleware that reads the parsed body.",
+      "This route order gives validation a chance to stop the request.\n```javascript\napp.use(express.json());\napp.post(\"/labels\", requireLabel, (req, res) => {\n  res.status(201).json({label: req.cleanLabel});\n});\n```",
+      "The route uses cleanLabel only after the validation middleware calls next.",
+      "If validation sends a 400 response, return from the function. Continuing into next could let later code try to send another response.",
+      "Check that the value is a string before calling trim. trim removes spaces at both ends while preserving spaces inside.",
+      "The practice passes small request and response test objects. It checks control flow, not a live HTTP server.",
+      "On success, attach the cleaned value to the request and call the supplied callback once. Do not send a response on that path."
+    ],
+    "analogy": {
+      "familiar": "Follow a small change from its starting state to its result.",
+      "connection": "Each instruction changes what the next instruction receives.",
+      "limit": "Use the actual code and checks rather than relying on the comparison."
+    },
+    "steps": [
+      "Read the requirement.",
+      "Make one change to the starter.",
+      "Run the checks.",
+      "Explain why a changed input produces its result."
+    ],
+    "starter": "function requireLabel(req, res, next) {\n  // TODO: validate, trim, and either end or continue.\n  next();\n}",
+    "solution": "function requireLabel(req, res, next) {\n  const label = req.body && req.body.label;\n  if (typeof label !== \"string\" || label.trim() === \"\") {\n    return res.status(400).json({error: \"Label required\"});\n  }\n  req.cleanLabel = label.trim();\n  next();\n}",
+    "runtime": "javascript",
+    "checks": [
+      {
+        "label": "Valid text is cleaned and continues once",
+        "expression": "(()=>{const req={body:{label:'  Moon notes  '}};let calls=0;const res={status(){throw Error('unexpected response')}};requireLabel(req,res,()=>calls++);return req.cleanLabel==='Moon notes'&&calls===1;})()"
+      },
+      {
+        "label": "Invalid input ends without calling next",
+        "expression": "[undefined,{}, {label:4},{label:''},{label:'   '}].every(body=>{let calls=0,status,reply;const req={body};const res={status(n){status=n;return this},json(x){reply=x;return this}};requireLabel(req,res,()=>calls++);return calls===0&&status===400&&reply.error==='Label required';})"
+      },
+      {
+        "label": "Internal spaces remain unchanged",
+        "expression": "(()=>{const req={body:{label:' A  B '}};requireLabel(req,{status(){throw Error('response')}},()=>{});return req.cleanLabel==='A  B';})()"
+      }
+    ],
+    "quiz": {
+      "question": "Invalid middleware sends a 400 response but then also calls next. Why is that wrong for this route?",
+      "choices": [
+        "The later route may continue and try to create a label or send another response.",
+        "next automatically changes 400 to 200 safely.",
+        "Validation must always call next twice."
+      ],
+      "answer": 0,
+      "explanation": "The rejection path should stop. Passing control onward defeats the guard and can cause side effects or a second response attempt."
+    },
+    "hints": [
+      "Check the type before trimming.",
+      "Return the error response on the invalid path.",
+      "Call next only after attaching cleanLabel."
+    ],
+    "math": null,
+    "filename": "main.js",
+    "estimatedMinutes": 16,
+    "externalNotes": "In-app checks use request/response doubles to test flow. Real Express parsing and routing must be tested in a local server; this lesson does not claim a network request occurred."
+  },
+  {
+    "id": "backend-11",
+    "title": "Do not create the same note twice",
+    "summary": "Complete createOnce(cache, key, title). For a new key, save and return {status:201,id:cache.size+1,title}. Repeating the key with the same title returns the saved result without another entry. Reusing it with a different title returns {status:409}. Keys and titles are valid strings supplied by the caller.",
+    "explanation": [
+      "A client may retry because it did not receive a response, even though the server already completed the operation.",
+      "An idempotency key identifies retries of one intended operation. It is not a new key for every network attempt.",
+      "Store the original request’s meaningful parameters and its result under that key.",
+      "If the same key arrives with matching parameters, return the saved result rather than creating a second record.",
+      "If the key arrives with different parameters, reject the conflicting reuse. Otherwise an old result might be attached to a different requested operation.",
+      "This exercise uses a Map in one process. Map.has(key) checks presence; get reads the record; set stores it.\n\nKeep the stored response separate from the object returned to a caller. Return a fresh shallow copy of the result on both a new request and a retry, so a caller changing a top-level returned field cannot overwrite the saved response. Object spread, {...savedResult}, copies top-level fields; it would still share nested objects, so this exercise uses flat result fields.",
+      "A real server needs durable, atomic storage and a key scope tied to the authorized caller or operation. A simple in-memory Map does not solve concurrent requests across servers.",
+      "The practice contains no payment or live API call. Test one new request, its retry, a conflicting retry, and a different key."
+    ],
+    "analogy": {
+      "familiar": "Follow a small change from its starting state to its result.",
+      "connection": "Each instruction changes what the next instruction receives.",
+      "limit": "Use the actual code and checks rather than relying on the comparison."
+    },
+    "steps": [
+      "Read the requirement.",
+      "Return a separate copy of each result, so caller changes cannot overwrite the saved response.",
+      "Make one change to the starter.",
+      "Run the checks.",
+      "Explain why a changed input produces its result."
+    ],
+    "starter": "function createOnce(cache, key, title) {\n  // TODO: replay matching requests; reject conflicting key reuse.\n  return {status: 201, id: 0, title};\n}",
+    "solution": "function createOnce(cache, key, title) {\n  if (cache.has(key)) {\n    const saved = cache.get(key);\n    return saved.title === title ? {...saved.result} : {status: 409};\n  }\n  const result = {status: 201, id: cache.size + 1, title};\n  cache.set(key, {title, result});\n  return {...result};\n}",
+    "runtime": "javascript",
+    "checks": [
+      {
+        "label": "Retry returns the same identity without another creation",
+        "expression": "(()=>{const c=new Map();const a=createOnce(c,'k1','Moon');const b=createOnce(c,'k1','Moon');return a.status===201&&a.id===1&&b.id===1&&c.size===1;})()"
+      },
+      {
+        "label": "Conflicting reuse is rejected without replacing the result",
+        "expression": "(()=>{const c=new Map();createOnce(c,'k1','Moon');const bad=createOnce(c,'k1','Sun');return bad.status===409&&createOnce(c,'k1','Moon').title==='Moon'&&c.size===1;})()"
+      },
+      {
+        "label": "A different key creates a separate operation",
+        "expression": "(()=>{const c=new Map();createOnce(c,'k1','Moon');return createOnce(c,'k2','Moon').id===2&&c.size===2;})()"
+      },
+      {
+        "label": "Returned object changes do not rewrite stored response fields",
+        "expression": "(()=>{const c=new Map();const a=createOnce(c,'x','A');a.id=99;return createOnce(c,'x','A').id===1;})()"
+      }
+    ],
+    "quiz": {
+      "question": "The server created a note, but the reply was lost. The client retries the same operation with the same key and title. What should this design do?",
+      "choices": [
+        "Create another note because the client did not see the reply.",
+        "Return the saved result without repeating the creation.",
+        "Treat the key as a new random identifier on every retry."
+      ],
+      "answer": 1,
+      "explanation": "A retry is not necessarily a new operation. Matching key and parameters let the server return the already completed result."
+    },
+    "hints": [
+      "Check cache.has before creating.",
+      "Compare the saved title when a key already exists.",
+      "Store the result once and return a copy of its flat fields."
+    ],
+    "math": null,
+    "filename": "main.js",
+    "estimatedMinutes": 16,
+    "externalNotes": "Original simplified note-creation model inspired by documented idempotency patterns, not an implementation of a specific external API. No live requests occur. Durable uniqueness, concurrency, auth scope, expiration and crash recovery need separate production design."
+  },
+  {
+    "id": "backend-13",
+    "title": "Check the restored content, not just a file name",
+    "summary": "Complete restoreMatches(expected, restored). Both inputs have version and notes arrays of {id,title}. Expected IDs are unique. Return true only when versions and every ID/title pair match, ignoring row order. Both inputs are well-formed records under this contract.",
+    "explanation": [
+      "A backup file existing is not proof that it can restore the required data.",
+      "A restore drill opens the saved copy in an isolated environment and checks meaningful records and schema expectations.",
+      "Comparing only row counts can miss changed or replaced data. Two different sets of notes can have the same count.",
+      "Compare stable IDs and their values. Database query order is not guaranteed unless requested, so sort copies before comparing.",
+      "This practice checks a simplified restored snapshot. Version must match, and every note ID/title pair must match.",
+      "Use copied arrays when sorting so verification does not rearrange the caller’s records.\n\nFor numeric IDs, [...rows].sort((left, right) => left.id - right.id) orders a copy from smallest ID to largest. After checking equal lengths, compare each corresponding pair's ID and title. every((row, index) => condition) returns true only if the condition holds for every row; index identifies the matching position in the other array.",
+      "The supplied Python companion creates a disposable SQLite backup, closes the source, reopens the backup, and checks integrity plus known rows.",
+      "It never reads or overwrites your real files. Production recovery also needs retention, access controls, encryption where appropriate, and a tested recovery process."
+    ],
+    "analogy": {
+      "familiar": "Follow a small change from its starting state to its result.",
+      "connection": "Each instruction changes what the next instruction receives.",
+      "limit": "Use the actual code and checks rather than relying on the comparison."
+    },
+    "steps": [
+      "Read the requirement.",
+      "Make one change to the starter.",
+      "Run the checks.",
+      "Explain why a changed input produces its result."
+    ],
+    "starter": "function restoreMatches(expected, restored) {\n  // TODO: compare version and every note, independent of row order.\n  return expected.notes.length === restored.notes.length;\n}",
+    "solution": "function restoreMatches(expected, restored) {\n  if (expected.version !== restored.version || expected.notes.length !== restored.notes.length) return false;\n  const a = [...expected.notes].sort((x,y)=>x.id-y.id);\n  const b = [...restored.notes].sort((x,y)=>x.id-y.id);\n  return a.every((note,index)=>note.id===b[index].id && note.title===b[index].title);\n}",
+    "runtime": "javascript",
+    "checks": [
+      {
+        "label": "Order differences do not imply data loss",
+        "expression": "restoreMatches({version:2,notes:[{id:1,title:'A'},{id:2,title:'B'}]},{version:2,notes:[{id:2,title:'B'},{id:1,title:'A'}]})"
+      },
+      {
+        "label": "Equal counts with changed content fail",
+        "expression": "!restoreMatches({version:2,notes:[{id:1,title:'A'}]},{version:2,notes:[{id:1,title:'Changed'}]})"
+      },
+      {
+        "label": "Version or identity mismatch fails",
+        "expression": "!restoreMatches({version:2,notes:[]},{version:1,notes:[]}) && !restoreMatches({version:2,notes:[{id:1,title:'A'}]},{version:2,notes:[{id:9,title:'A'}]})"
+      },
+      {
+        "label": "Duplicate restored rows cannot replace a missing note",
+        "expression": "!restoreMatches({version:2,notes:[{id:1,title:'A'},{id:2,title:'B'}]},{version:2,notes:[{id:1,title:'A'},{id:1,title:'A'}]})"
+      },
+      {
+        "label": "Matching empty snapshots are valid",
+        "expression": "restoreMatches({version:2,notes:[]},{version:2,notes:[]})"
+      }
+    ],
+    "quiz": {
+      "question": "The restored database has the expected two rows, but one note title is wrong. Is comparing only the row count enough evidence of a correct restore?",
+      "choices": [
+        "Yes; equal counts prove equal data.",
+        "No; verify important identities and values as well.",
+        "Yes; a backup extension guarantees its contents."
+      ],
+      "answer": 1,
+      "explanation": "Counts cannot distinguish different content of the same size. A restore check should test the data the application depends on."
+    },
+    "hints": [
+      "Compare version before accepting the data.",
+      "Sort copies by stable ID.",
+      "Check each ID and its associated title, not just length."
+    ],
+    "math": null,
+    "filename": "main.js",
+    "estimatedMinutes": 16,
+    "extraFiles": [
+      {
+        "name": "backup-demo.py",
+        "code": "import sqlite3, tempfile\nfrom pathlib import Path\nwith tempfile.TemporaryDirectory() as folder:\n    backup_path = Path(folder) / \"backup.sqlite\"\n    source = sqlite3.connect(\":memory:\")\n    source.executescript(\"CREATE TABLE notes(id INTEGER PRIMARY KEY,title TEXT); INSERT INTO notes VALUES(1,'Moon'),(2,'Ocean');\")\n    source.commit()\n    with sqlite3.connect(backup_path) as saved:\n        source.backup(saved)\n    source.close()\n    with sqlite3.connect(backup_path) as restored:\n        assert restored.execute(\"PRAGMA integrity_check\").fetchone()[0] == \"ok\"\n        assert restored.execute(\"SELECT id,title FROM notes ORDER BY id\").fetchall() == [(1,\"Moon\"),(2,\"Ocean\")]\n    print(\"Disposable backup reopened and verified\")\n"
+      }
+    ],
+    "externalNotes": "The browser verifies supplied snapshot data only. The companion Python script separately demonstrates a real disposable SQLite backup/reopen; neither step proves a production backup has been made or that all possible corruption is detected."
+  },
+  {
+    "id": "developer-toolkit-05",
+    "title": "A reproducible project",
+    "summary": "Declare dependencies and write instructions for running the project.",
+    "explanation": [
+      "A reproducible project can be started from a clean copy using written instructions. A dependency is a package the code uses. package.json describes the project, needed packages, and runnable scripts. A lockfile, usually package-lock.json for npm, records the exact resolved package versions. Those are different jobs: a version range allows choices; the lockfile records the choices actually made.",
+      "Here is a complete package.json for a small Node-only project:\n```json\n{\n  \"name\": \"repro-demo\",\n  \"version\": \"1.0.0\",\n  \"scripts\": {\n    \"start\": \"node main.js\"\n  },\n  \"engines\": {\n    \"node\": \">=22.13.0\"\n  },\n  \"dependencies\": {}\n}\n```\nstart says how to launch; engines documents the required Node version. >= means this version or newer. The empty dependencies object is accurate because this greeting uses only Node's built-in features. engines is normally a compatibility declaration, not an automatic installation of the runtime.",
+      "Create main.js in the same disposable repro-demo folder with console.log('Clean start works');. Use these commands from the folder:\n```bash\nnode --version\nnpm install\nnpm start\nnpm ci\nnpm start\n```\nThe version check reports your runtime. install reads the manifest and creates or updates the lockfile when needed. start prints Clean start works. Once a matching lockfile exists, ci performs a clean installation using its recorded dependency versions, then the second start should work too. ci replaces node_modules, so use a clean practice copy for this walkthrough.",
+      "npm install and npm ci are not interchangeable in every situation. ci needs an existing lockfile that agrees with package.json; it fails instead of silently changing an inconsistent lockfile. Keep the manifest and lockfile in project history. node_modules contains installed package files and can usually be recreated. A lockfile improves consistency but does not promise identical behavior across every operating system or runtime version.",
+      "A README should tell another person the runtime requirement, setup command, launch command, and expected behavior. Here is plain example content, not a program:\n```text\nRepro demo\nRequires Node.js 22.13 or newer.\nInitial setup: npm install\nKeep the generated package-lock.json.\nClean-copy setup with that lockfile: npm ci\nLaunch: npm start\nExpected output: Clean start works\nThird-party runtime dependencies: none\n```\nTest these instructions on a fresh copy so missing steps become visible. A screenshot of a successful run cannot replace the saved dependency information.",
+      "The browser exercise represents package settings in a JavaScript object named project. Set scripts.start to node main.js and engines.node to >=22.13.0. Keep dependencies empty because no third-party runtime package is used. Object.keys(project.dependencies) gives an array of its property names; length 0 establishes there are no declared dependencies. A JavaScript object literal may use single quotes, but a real JSON file requires double quotes.",
+      "After the declaration passes, download the supplied files and follow the README locally. Confirm both the initial install and a clean-copy install with its saved lockfile, then start the program. The browser checks the declaration, not package installation. Read scripts before running someone else's project, and declare only packages it actually needs; invented dependencies create extra setup and review work without helping this program."
+    ],
+    "analogy": {
+      "familiar": "A recipe’s ingredient list and instructions",
+      "connection": "The package file lists what the project needs, and the README explains how to put it together.",
+      "limit": "A package may run installation scripts; use a trusted registry and review what you add."
+    },
+    "steps": [
+      "Complete project.scripts.start as node main.js and set project.engines.node to >=22.13.0.",
+      "Keep dependencies empty. This project only uses tools already included with Node.js.",
+      "Download the supplied package.json, README.md, and main.js to a new folder.",
+      "Run npm install to create package-lock.json, the file that records exact dependency versions.",
+      "Copy the project files and package-lock.json into a clean new folder.",
+      "In that folder, run npm ci, then npm start.",
+      "Check that the README alone explains every step and the printed output matches it."
+    ],
+    "starter": "const project={name:'hello-project',scripts:{start:''},engines:{node:''},dependencies:{}};\nconsole.log(project);",
+    "solution": "const project={name:'hello-project',scripts:{start:'node main.js'},engines:{node:'>=22.13.0'},dependencies:{}};\nconsole.log(project);",
+    "runtime": "javascript",
+    "checks": [
+      {
+        "label": "Start command and runtime are declared",
+        "expression": "project.scripts.start==='node main.js'&&project.engines.node==='>=22.13.0'"
+      },
+      {
+        "label": "Only required dependencies are declared",
+        "expression": "Object.keys(project.dependencies).length===0"
+      }
+    ],
+    "quiz": {
+      "question": "Two computers install the same project. Why include its lockfile rather than rely only on version ranges?",
+      "choices": [
+        "To guarantee the dependencies can never have bugs",
+        "To reproduce the resolved dependency versions",
+        "To avoid needing the runtime on the second computer"
+      ],
+      "answer": 1,
+      "explanation": "A lockfile records the resolved dependency versions. It improves reproducibility, not runtime installation or proof of correctness."
+    },
+    "hints": [
+      "The entry point is main.js, run by Node.",
+      "The start script is node main.js.",
+      "Put >=22.13.0 in the Node engine field."
+    ],
+    "math": null,
+    "filename": "main.js",
+    "estimatedMinutes": 28,
+    "extraFiles": [
+      {
+        "name": "package.json",
+        "code": "{\n  \"name\": \"hello-project\",\n  \"version\": \"1.0.0\",\n  \"scripts\": {\n    \"start\": \"node main.js\"\n  },\n  \"engines\": {\n    \"node\": \">=22.13.0\"\n  },\n  \"dependencies\": {}\n}"
+      },
+      {
+        "name": "main.js",
+        "code": "console.log('A reproducible hello');\n"
+      },
+      {
+        "name": "README.md",
+        "code": "# Reproducible hello\n\nRequires Node.js 22.13 or newer. First install: npm install. Keep package-lock.json. Clean install: npm ci. Start: npm start. Expected output: A reproducible hello. No runtime secrets or third-party runtime dependencies.\n"
+      }
+    ],
+    "externalNotes": "The browser checks the project declaration. A clean local install and start are separate checks; run them in a new folder using the README."
+  },
+  {
+    "id": "developer-toolkit-07",
+    "title": "A tested feature",
+    "summary": "Check normal, empty, boundary, failure, and concurrency cases where applicable.",
+    "explanation": [
+      "A useful test checks promised behavior by comparing actual and expected results. It should fail when that behavior breaks. For clamping, a valid number below the range becomes the lower limit, one above becomes the upper limit, and one already inside stays unchanged. First reject the wrong kind of input; then apply the boundaries.",
+      "Here is a complete small module for a separate range of 0 through 10. Save it as level.mjs for the next example:\n```javascript\nexport function clampLevel(value) {\n  if (!Number.isInteger(value)) return null;\n  return Math.max(0, Math.min(10, value));\n}\nconsole.log(clampLevel(6));\nconsole.log(clampLevel(12));\nconsole.log(clampLevel(-3));\nconsole.log(clampLevel(2.5));\n```\nIt prints 6, 10, 0, null. Number.isInteger rejects fractions, undefined, NaN, and Infinity. Math.min(10, value) applies the upper limit; Math.max(0, ...) then applies the lower limit.",
+      "An assertion compares an actual result with a specified expectation and reports a failure when they differ. This complete Node test file imports the module from the previous page; save it as test-level.mjs in the same folder:\n```javascript\nimport test from 'node:test';\nimport assert from 'node:assert/strict';\nimport { clampLevel } from './level.mjs';\ntest('keeps values and clamps both limits', () => {\n  for (const [input, expected] of [[6, 6], [0, 0], [10, 10], [-3, 0], [12, 10]]) {\n    assert.equal(clampLevel(input), expected);\n  }\n});\ntest('rejects invalid values', () => {\n  for (const input of [undefined, NaN, Infinity, 2.5]) {\n    assert.equal(clampLevel(input), null);\n  }\n});\n```\nEach test callback runs its assertions. The first loop unpacks an input/expected pair; the second visits invalid values. Imports from node: use Node's built-in library, not third-party packages.",
+      "Run the test locally with Node installed:\n```bash\nnode --test test-level.mjs\n```\nPassing assertions produce a passing test report. The module's demonstration console logs may also appear because importing evaluates that module. Temporarily replace the clamp with return value and rerun: outside-range assertions should fail. Restore the working code afterward. A test that only confirms the function exists would not catch that broken behavior.",
+      "Choose cases from the feature's requirements. Normal input verifies ordinary use; boundaries verify the exact included endpoints; just-outside values verify the transition; invalid input verifies rejection. Empty input can mean undefined here rather than a zero-length list. Concurrency tests are useful for shared balance updates, but this pure calculation has no shared mutable state, so concurrency is not a relevant risk for it.",
+      "For clampScore, use the exercise's 0-through-100 limits and preserve null for non-integers. Check 42, 0, 100, -5, and 110, plus undefined, NaN, Infinity, and 2.5. The inside result 100 and the just-outside result for 101 are both 100, but for different reasons: the first is already valid; the second must be clamped. Together they test the boundary transition.",
+      "The browser checks your function's behavior. Download score.mjs and test.mjs, replace the supplied score stub with your implementation, and run node --test test.mjs from their folder. A working browser function does not automatically edit that local stub. Break a relevant behavior briefly and confirm the local test fails, then restore and rerun. Passing tests are evidence for their stated cases, not proof of every possible property."
+    ],
+    "analogy": {
+      "familiar": "Trying a door from both sides and checking its latch",
+      "connection": "Several meaningful checks tell you more than looking at the door once.",
+      "limit": "More tests do not guarantee correctness if all tests miss the same important behavior."
+    },
+    "steps": [
+      "Write clampScore. Return null unless the input is a number with no decimal part. Negative integers are allowed; NaN and Infinity are not.",
+      "Return 0 for numbers below 0 and 100 for numbers above 100. Keep numbers from 0 through 100 unchanged.",
+      "Add cases for 42, 0, 100, -5, 110, undefined, NaN, Infinity, and 2.5.",
+      "Download score.mjs and test.mjs. Put your clampScore function in score.mjs.",
+      "From their folder, run node --test test.mjs.",
+      "Temporarily make the function wrong and check that a test catches the mistake.",
+      "Restore the working function and run the tests again."
+    ],
+    "starter": "function clampScore(value){return value;}\nconsole.log(clampScore(110));",
+    "solution": "function clampScore(value){if(!Number.isInteger(value))return null;return Math.max(0,Math.min(100,value));}\nconsole.log(clampScore(110));",
+    "runtime": "javascript",
+    "checks": [
+      {
+        "label": "Normal and boundary cases work",
+        "expression": "clampScore(42)===42&&clampScore(0)===0&&clampScore(100)===100"
+      },
+      {
+        "label": "Outside values clamp to the nearest limit",
+        "expression": "clampScore(-5)===0&&clampScore(110)===100"
+      },
+      {
+        "label": "Invalid input is rejected",
+        "expression": "[undefined,NaN,Infinity,2.5].every(v=>clampScore(v)===null)"
+      }
+    ],
+    "quiz": {
+      "question": "clampScore should reduce integer scores above 100 to 100. A broken version returns those scores unchanged. Which assertion would expose that bug?",
+      "choices": [
+        "clampScore(60) === 60",
+        "clampScore(100) === 100",
+        "clampScore(125) === 100"
+      ],
+      "answer": 2,
+      "explanation": "125 exercises the above-maximum path: the correct result is 100, but the broken version returns 125. The other assertions use already-allowed values and can still pass despite this bug."
+    },
+    "hints": [
+      "Reject non-integers first. Number.isInteger also rejects NaN and Infinity.",
+      "Math.min(100, value) applies the upper limit.",
+      "Wrap the result in Math.max(0, ...) for the lower limit."
+    ],
+    "math": {
+      "explanation": "A correctness claim needs its assumptions. Here the input must be an integer, and the output must fall inside the allowed range.",
+      "question": "Why test both 100 and 101?",
+      "choices": [
+        "To check the included boundary and the value immediately outside it",
+        "Because they should always return different outputs",
+        "Because zero is never a boundary"
+      ],
+      "answer": 0,
+      "feedback": "100 is already valid; 101 must be reduced to 100. Together they check the transition at the upper limit."
+    },
+    "filename": "main.js",
+    "estimatedMinutes": 43,
+    "extraFiles": [
+      {
+        "name": "score.mjs",
+        "code": "export function clampScore(value){return value;}\n"
+      },
+      {
+        "name": "test.mjs",
+        "code": "import test from 'node:test';import assert from 'node:assert/strict';import {clampScore} from './score.mjs';\ntest('normal and limits',()=>{for(const [input,expected] of [[42,42],[0,0],[100,100],[-5,0],[110,100]])assert.equal(clampScore(input),expected);});\ntest('invalid values',()=>{for(const value of [undefined,NaN,Infinity,2.5])assert.equal(clampScore(value),null);});\n"
+      }
+    ],
+    "externalNotes": "Download the test and score.mjs, replace its stub with your solution, and run node --test test.mjs. The browser checks the same behaviors; the local test teaches your development workflow."
+  },
+  {
+    "id": "developer-toolkit-10",
+    "title": "Try a change without moving the main branch",
+    "summary": "Complete branchCode(branches, current). Return the code saved for the selected branch, or null when that branch is missing. Do not change the branch map. This is a browser model; use the supplied disposable-folder walkthrough for actual Git practice.",
+    "explanation": [
+      "A Git branch is a name that points to a commit. Creating a branch does not copy your project into a second folder.",
+      "When you switch branches, Git makes that branch current. Make sure existing changes are saved safely before switching.",
+      "A commit made on a feature branch advances that branch. It does not move main automatically.",
+      "Create greeting.txt containing the single line Hello in a new disposable practice folder first. With Git configured there, create a starting commit:\n```bash\ngit init -b main\ngit add greeting.txt\ngit commit -m \"Add first greeting\"\n```",
+      "Run these commands only in that new practice folder, never in an unrelated repository.",
+      "Create and switch to a feature branch.\n```bash\ngit switch -c friendly-greeting\n```",
+      "Change the file to Hello, explorer and save it. Commit on the current branch.\n```bash\ngit add greeting.txt\ngit commit -m \"Make the greeting friendlier\"\n```",
+      "Switch back to main and inspect greeting.txt. It still contains Hello because main has not moved.\n```bash\ngit switch main\ngit status\n```",
+      "Merge the feature branch into the current main branch.\n```bash\ngit merge friendly-greeting\ngit log --oneline --all --graph\n```",
+      "In this simple history, main moves forward to the feature commit. The file now contains Hello, explorer.",
+      "If both branches edit the same lines differently, Git may ask you to resolve a conflict. Review both intentions, edit the file into the wanted result, test it, then stage and commit the resolution.",
+      "The browser exercise below is only a model of selecting a branch. An object maps branch names to records.\n```javascript\nconst saved = {main: {code: \"Hello\"}, draft: {code: \"Hi\"}};\nconsole.log(saved[\"draft\"].code);\nconsole.log(saved[\"main\"].code);\n```",
+      "This displays Hi then Hello. Reading one saved entry does not replace the other.",
+      "Object.hasOwn(branches, current) checks that the requested branch is an own entry of the map. If not, return null before reading its code.",
+      "Passing this JavaScript check does not prove you created Git branches. Confirm the real walkthrough separately by inspecting the file before and after the merge."
+    ],
+    "analogy": {
+      "familiar": "Follow a small change from its starting state to its result.",
+      "connection": "Each instruction changes what the next instruction receives.",
+      "limit": "Use the actual code and checks rather than relying on the comparison."
+    },
+    "steps": [
+      "Read the requirement.",
+      "Make one change to the starter.",
+      "Run the checks.",
+      "Explain why a changed input produces its result."
+    ],
+    "starter": "function branchCode(branches, current) {\n  // TODO: return the selected branch code, or null if absent.\n  return null;\n}\nconst branches = {main: {code: \"Hello\"}, idea: {code: \"Hello, explorer\"}};\nconsole.log(branchCode(branches, \"idea\"));",
+    "solution": "function branchCode(branches, current) {\n  if (!Object.hasOwn(branches, current)) return null;\n  return branches[current].code;\n}",
+    "runtime": "javascript",
+    "checks": [
+      {
+        "label": "Selecting a feature does not read main",
+        "expression": "branchCode({main:{code:'Original'},feature:{code:'New'}},'feature')==='New'"
+      },
+      {
+        "label": "Main keeps its own saved code",
+        "expression": "branchCode({main:{code:'Original'},feature:{code:'New'}},'main')==='Original'"
+      },
+      {
+        "label": "Unknown branch returns null",
+        "expression": "branchCode({main:{code:'Original'}},'missing')===null && branchCode({},'toString')===null"
+      },
+      {
+        "label": "Reading does not change either entry",
+        "expression": "(()=>{const b={main:{code:'A'},feature:{code:'B'}};const before=JSON.stringify(b);branchCode(b,'feature');return JSON.stringify(b)===before;})()"
+      }
+    ],
+    "quiz": {
+      "question": "You branch from main, commit a new greeting on draft, then switch to main without merging. Which greeting is on main?",
+      "choices": [
+        "The old greeting from main’s commit.",
+        "The new greeting because every commit updates every branch.",
+        "Both greetings are combined automatically."
+      ],
+      "answer": 0,
+      "explanation": "The commit advanced draft, not main. Switching to main selects its earlier commit. A later merge is a separate action."
+    },
+    "hints": [
+      "Choose the record using the current branch name, not a fixed name.",
+      "Check for an own entry before reading its code.",
+      "Return the stored code; do not assign it into another branch."
+    ],
+    "math": null,
+    "filename": "main.js",
+    "estimatedMinutes": 16,
+    "extraFiles": [
+      {
+        "name": "README.md",
+        "code": "# Safe Git branch practice\nUse only a newly created disposable folder. Configure Git identity if Git asks before committing. Create greeting.txt containing Hello. Follow the lesson commands. Verify main remains Hello before merge and changes to Hello, explorer after merge. Browser JavaScript checks are only a conceptual model, not Git execution.\n\nOptional conflict practice in this disposable repo: create a new branch, change the greeting and commit; switch to main, change the same line differently and commit; merge the branch. Inspect conflict markers. Edit to your intended greeting, test it, git add greeting.txt, git commit. git merge --abort cancels an in-progress merge; save any wanted edits first.\n"
+      }
+    ],
+    "externalNotes": "The app runs the JavaScript model only. Real branch/merge practice requires Git in a local terminal. Do not run these commands in an existing personal repository. The conflict extension is optional and uses only the disposable folder."
+  },
+  {
+    "id": "javascript-24",
+    "title": "Read a title from JSON",
+    "summary": "Write readTitle(text): return a record’s string title, or null for malformed JSON or the wrong data shape.",
+    "explanation": [
+      "JSON stores data as text. Parsing converts that text into a JavaScript value.",
+      "JSON object keys and string values use double quotes.\n```javascript\nconst text = '{\"city\":\"Oslo\"}';\nconst place = JSON.parse(text);\nconsole.log(place.city);\n```\nThis prints Oslo.",
+      "Parsing can succeed without giving you the shape you need.\n```javascript\nconsole.log(JSON.parse(\"null\"));\nconsole.log(JSON.parse(\"[2, 5]\"));\n```\nThe first value is null; the second is an array, not a city record.",
+      "Check the value before reading its fields. `typeof value === \"object\"` alone is not enough: null and arrays also have that typeof result.",
+      "A guard can reject those cases before reading a property.\n```javascript\nfunction hasCity(value) {\n  if (value === null || typeof value !== \"object\" || Array.isArray(value)) return false;\n  return typeof value.city === \"string\";\n}\n```",
+      "Malformed JSON throws an error. A catch block can handle it instead of stopping the program.\n```javascript\ntry {\n  JSON.parse(\"not JSON\");\n} catch (error) {\n  console.log(\"Could not read the text\");\n}\n```",
+      "The practice accepts a title even when it is an empty string. It rejects missing or numeric titles; it does not convert them into text.",
+      "`JSON.stringify` goes the other direction for ordinary JSON-compatible data.\n```javascript\nconsole.log(JSON.stringify({ city: \"Oslo\" }));\n```\nIt returns JSON text. Not every JavaScript value can be preserved by JSON."
+    ],
+    "analogy": {
+      "familiar": "",
+      "connection": "",
+      "limit": ""
+    },
+    "steps": [
+      "Write readTitle(text): return a record’s string title, or null for malformed JSON or the wrong data shape.",
+      "Run the checks and inspect the result.",
+      "Change one input or rule and explain what changes."
+    ],
+    "starter": "function readTitle(text) {\n  // Parse the text, check the shape, and return a string title or null.\n}\nconsole.log(readTitle('{\"title\":\"Ocean life\"}'));",
+    "solution": "function readTitle(text) {\n  try {\n    const value = JSON.parse(text);\n    if (value === null || typeof value !== \"object\" || Array.isArray(value)) return null;\n    return typeof value.title === \"string\" ? value.title : null;\n  } catch (error) {\n    return null;\n  }\n}\nconsole.log(readTitle('{\"title\":\"Ocean life\"}'));",
+    "runtime": "javascript",
+    "checks": [
+      {
+        "label": "A changed title is read from the record",
+        "expression": "readTitle('{\"title\":\"Desert plants\",\"pages\":12}')===\"Desert plants\""
+      },
+      {
+        "label": "Empty and Unicode titles stay unchanged",
+        "expression": "readTitle('{\"title\":\"\"}')===\"\" && readTitle('{\"title\":\"Étoiles\"}')===\"Étoiles\""
+      },
+      {
+        "label": "Malformed JSON returns null",
+        "expression": "readTitle(\"broken\")===null && readTitle('{\"title\":}')===null"
+      },
+      {
+        "label": "Valid JSON with the wrong outer shape is rejected",
+        "expression": "[\"null\",\"[]\",\"42\",\"true\",'\"title\"'].every(text=>readTitle(text)===null)"
+      },
+      {
+        "label": "Missing and nonstring titles are rejected",
+        "expression": "[\"{}\",'{\"title\":8}','{\"title\":null}','{\"title\":false}','{\"title\":[]}'].every(text=>readTitle(text)===null)"
+      }
+    ],
+    "quiz": {
+      "question": "JSON.parse('{\"title\":17}') succeeds. Your app needs a text title. What should readTitle return under this lesson’s contract?",
+      "choices": [
+        "17, because parsing succeeded",
+        "\"17\", because JSON converts every field to text",
+        "null, because the parsed title is not a string"
+      ],
+      "answer": 2,
+      "explanation": "Parsing verifies JSON syntax, not the app’s required record shape. The number 17 is valid JSON but fails the string-title requirement."
+    },
+    "hints": [
+      "Wrap parsing in try/catch so malformed text follows the failure path.",
+      "Reject null, arrays, and nonobjects before reading title.",
+      "Check typeof value.title rather than whether title is truthy; empty text is allowed."
+    ],
+    "math": null,
+    "filename": "main.js",
+    "estimatedMinutes": 10
+  },
+  {
+    "id": "javascript-30",
+    "title": "Property lookup through a prototype",
+    "summary": "Create a card that inherits from defaults, then give the card its own title without changing defaults.",
+    "explanation": [
+      "An object can have another object as its prototype. Missing properties can be looked up through that link.",
+      "Object.create(parent) makes an object with parent as its prototype.\n```javascript\nconst defaults = { color: \"teal\" };\nconst badge = Object.create(defaults);\nconsole.log(badge.color);\n```\nThe lookup finds color on defaults.",
+      "An own property belongs directly to the object. An inherited property is found through the prototype chain.",
+      "Writing a normal own data property can shadow an inherited one.\n```javascript\nbadge.color = \"gold\";\nconsole.log(badge.color, defaults.color);\n```\nThese read gold and teal.",
+      "If no own property hides it, a later change on the prototype can be observed through lookup. Inheritance is not a copied snapshot.",
+      "Object.hasOwn(object, key) tests for an own property. The in operator also finds inherited properties.",
+      "This exercise uses ordinary writable data properties. It does not cover accessors or nonwritable descriptors; never modify built-in prototypes to supply application defaults."
+    ],
+    "analogy": {
+      "familiar": "",
+      "connection": "",
+      "limit": ""
+    },
+    "steps": [
+      "Create a card that inherits from defaults, then give the card its own title without changing defaults.",
+      "Run the checks.",
+      "Change one case and explain the result."
+    ],
+    "starter": "function makeCard(defaults, title) {\n  // Create a new inheriting card, then set its own title.\n}",
+    "solution": "function makeCard(defaults, title) {\n  const card = Object.create(defaults);\n  card.title = title;\n  return card;\n}",
+    "runtime": "javascript",
+    "checks": [
+      {
+        "label": "The new card links to defaults",
+        "expression": "(()=>{const d={color:\"teal\"},c=makeCard(d,\"Sky\");return Object.getPrototypeOf(c)===d && c.title===\"Sky\" && Object.hasOwn(c,\"title\")})()"
+      },
+      {
+        "label": "Inherited updates are not frozen copies",
+        "expression": "(()=>{const d={color:\"teal\"},c=makeCard(d,\"Sky\");d.color=\"gold\";return c.color===\"gold\"&&!Object.hasOwn(c,\"color\")})()"
+      },
+      {
+        "label": "Defaults and separate cards stay intact",
+        "expression": "(()=>{const d={title:\"Untitled\"},a=makeCard(d,\"A\"),b=makeCard(d,\"B\");return d.title===\"Untitled\"&&a!==b&&a.title===\"A\"&&b.title===\"B\"})()"
+      }
+    ],
+    "quiz": {
+      "question": "A card inherits color from defaults and has no own color. defaults.color changes from green to blue. What does card.color read next?",
+      "choices": [
+        "Green, because inheritance copied the value",
+        "Blue, because lookup still reaches defaults",
+        "undefined, because the prototype changed"
+      ],
+      "answer": 1,
+      "explanation": "The property is looked up through the prototype link each time. Without an own color shadowing it, the updated default is visible."
+    },
+    "hints": [
+      "Object.create connects a new object to the provided prototype.",
+      "Assign title on the new card, not on defaults."
+    ],
+    "math": null,
+    "filename": "main.js",
+    "estimatedMinutes": 10
+  },
+  {
+    "id": "python-23",
+    "title": "An inventory import report",
+    "summary": "Write read_stock(text). Parse CSV with headers item,quantity. Return {\"totals\": {...}, \"rejected\": n}. Trim item names; accept quantities containing only ASCII digits after trimming, including zero. Reject blank names and invalid or missing quantities. Add repeated valid items. Completely blank lines are ignored.",
+    "explanation": [
+      "CSV means comma-separated values. It stores rows as text, often from a spreadsheet. A comma can also be part of a field, such as \"Pens, blue\", so splitting every line at every comma is unsafe. Python's standard csv module handles quoted fields and escaped quote characters for you.",
+      "csv.DictReader reads the first row as column names and returns dictionaries for following rows. io.StringIO lets a string behave like a text file, so the reader can process supplied text without writing a file. Import both csv and io. The input contract supplies the item and quantity headers and well-formed CSV quoting.",
+      "Here is a complete example with a comma inside a quoted name.\n```python\nimport csv\nimport io\ntext = 'item,quantity\\n\"Pens, blue\",2\\nTape,1\\n'\nfor row in csv.DictReader(io.StringIO(text)):\n    print(row[\"item\"], row[\"quantity\"])\n```\nThe first item is the single string Pens, blue. Quantities are still strings at this stage; the CSV reader does not choose numeric types for you.",
+      "Validation decides whether a row meets the project's requirements before you use it. Trim the item and quantity fields. A quantity must be nonempty and contain only characters from \"0123456789\". Reject -2, 2.5 and two. Leading zeroes such as 003 are accepted and represent 3. Missing fields can be None, so replace None with an empty string before trimming.\n\nIn (row.get(\"item\") or \"\"), or returns the left value if it is true-like; otherwise it returns the right operand. None and empty text are false-like, so this expression supplies empty text before strip is called. It does not necessarily return a Boolean.",
+      "Validate first, then convert to an integer.\n```python\nraw = \" 003 \".strip()\nvalid = bool(raw) and all(char in \"0123456789\" for char in raw)\nif valid:\n    amount = int(raw)\n    print(amount)\n```\nIt prints 3. The explicit character set matches this project's ASCII-digit contract; some broader Unicode digit tests accept characters that int cannot convert.",
+      "Keep totals in a dictionary. totals.get(item, 0) reads the existing amount or starts at zero. Increase rejected for each invalid record and continue to the next record. csv.DictReader ignores completely blank lines; a row such as comma plus a quantity is a real record with a blank name and must be rejected.\n\ndict.get takes a key and an optional default. It returns the stored value when that key exists, or the default when it does not; it does not insert the missing key.\n```python\ntotals = {\"Pens\": 4}\nprint(totals.get(\"Pens\", 0))\nprint(totals.get(\"Tape\", 0))\nprint(\"Tape\" in totals)\n```\nIt prints 4, 0, and False. The dot selects get on totals; the comma separates the key from the fallback value.",
+      "Return both the totals and the rejection count so the caller can see what happened. This exercise rejects individual bad records; malformed CSV syntax and missing headers are outside its stated input contract. Test quoted commas, duplicate names, zero stock, a missing quantity and an empty file with only headers. Do not count the header as a stock row."
+    ],
+    "analogy": {
+      "familiar": "Checking a delivery sheet before adding items to a shelf",
+      "connection": "Each valid row contributes stock; rejected rows are counted for review.",
+      "limit": "The importer follows the written format and cannot decide whether a plausible number was typed incorrectly."
+    },
+    "steps": [
+      "Read the CSV rows with `csv.DictReader` and `io.StringIO`.",
+      "Remove extra spaces from the edges of each field.",
+      "Reject a row if its item name is blank.",
+      "Reject a quantity unless all its characters are digits from 0 to 9.",
+      "Convert valid quantities to `int`.",
+      "Add each quantity to the total for that item name.",
+      "Return `totals` and `rejected`.",
+      "Test a name that has a comma inside quotes."
+    ],
+    "starter": "import csv\nimport io\n\ndef read_stock(text):\n    # TODO: read, validate and total each record.\n    return {\"totals\": {}, \"rejected\": 0}",
+    "solution": "import csv\nimport io\n\ndef read_stock(text):\n    totals = {}\n    rejected = 0\n    for row in csv.DictReader(io.StringIO(text)):\n        item = (row.get(\"item\") or \"\").strip()\n        raw = (row.get(\"quantity\") or \"\").strip()\n        if not item or not raw or not all(char in \"0123456789\" for char in raw):\n            rejected += 1\n            continue\n        totals[item] = totals.get(item, 0) + int(raw)\n    return {\"totals\": totals, \"rejected\": rejected}",
+    "runtime": "python",
+    "checks": [
+      {
+        "label": "Quoted commas and duplicate names total correctly",
+        "expression": "read_stock('item,quantity\\n\"Pens, blue\",2\\nTape,1\\n\"Pens, blue\",3\\n') == {\"totals\": {\"Pens, blue\": 5, \"Tape\": 1}, \"rejected\": 0}"
+      },
+      {
+        "label": "Bad quantities, missing fields and blank names are rejected",
+        "expression": "read_stock(\"item,quantity\\nA,-1\\nB,2.5\\nC,two\\n,4\\nD\\nE,²\\n\") == {\"totals\": {}, \"rejected\": 6}"
+      },
+      {
+        "label": "Zero, padded digits and blank lines work",
+        "expression": "read_stock(\"item,quantity\\n\\n Pen , 003 \\nEmpty,0\\nPen,2\\n\") == {\"totals\": {\"Pen\": 5, \"Empty\": 0}, \"rejected\": 0} and read_stock(\"item,quantity\\n\") == {\"totals\": {}, \"rejected\": 0}"
+      }
+    ],
+    "quiz": {
+      "question": "Why use csv.DictReader instead of splitting each row on commas?",
+      "choices": [
+        "It automatically fixes every invalid quantity",
+        "Quoted fields can contain commas that are part of a value",
+        "It removes the need for headers"
+      ],
+      "answer": 1,
+      "explanation": "The CSV reader understands quoting, so a comma inside a quoted item name does not split that item into two columns."
+    },
+    "hints": [
+      "Use (row.get(\"quantity\") or \"\").strip() for missing values.",
+      "Check raw is nonempty before all(char in \"0123456789\" for char in raw).",
+      "Increase totals[item] using totals.get(item, 0), and count invalid records separately."
+    ],
+    "math": null,
+    "filename": "main.py",
+    "estimatedMinutes": 25
+  },
+  {
+    "id": "python-36",
+    "title": "Create independent counters",
+    "summary": "Complete make_counter(start). Return a function that increases its own saved count by 1 and returns it each time it is called. Separate counters must keep independent counts.",
+    "explanation": [
+      "A closure is a function that keeps access to names from its enclosing function scope.",
+      "Returning a nested function lets the caller use it after the outer call has finished.",
+      "This example remembers a fixed prefix.\n```python\ndef make_label(prefix):\n    def label(text):\n        return prefix + text\n    return label\n\nstar_label = make_label(\"Star: \")\nprint(star_label(\"Sirius\"))\n```",
+      "The nested label still reads prefix when called later.",
+      "To rebind a saved enclosing name, declare it nonlocal inside the nested function. Without that declaration, an assignment would make the name local to the nested call.",
+      "This separate example increases saved points by two.\n```python\ndef make_points():\n    points = 0\n    def add_two():\n        nonlocal points\n        points = points + 2\n        return points\n    return add_two\n```",
+      "Each call to make_points creates a new enclosing scope. Two returned add_two functions from different calls do not share points.",
+      "For your counter, begin at the supplied start and increase by one per call. Return the function itself, not the result of calling it immediately.",
+      "This is in-memory state. It does not survive restarting the program."
+    ],
+    "analogy": {
+      "familiar": "Follow a small change from its starting state to its result.",
+      "connection": "Each instruction changes what the next instruction receives.",
+      "limit": "Use the actual code and checks rather than relying on the comparison."
+    },
+    "steps": [
+      "Read the requirement.",
+      "Make one change to the starter.",
+      "Run the checks.",
+      "Explain why a changed input produces its result."
+    ],
+    "starter": "def make_counter(start):\n    # TODO: return a function with its own saved count.\n    def increment():\n        return start\n    return increment",
+    "solution": "def make_counter(start):\n    count = start\n    def increment():\n        nonlocal count\n        count = count + 1\n        return count\n    return increment",
+    "runtime": "python",
+    "checks": [
+      {
+        "label": "Repeated calls advance the same saved state",
+        "expression": "(lambda c: [c(), c(), c()] == [5,6,7])(make_counter(4))"
+      },
+      {
+        "label": "Separate counters remain independent",
+        "expression": "(lambda a,b: [a(),a(),b(),a(),b()] == [1,2,11,3,12])(make_counter(0),make_counter(10))"
+      },
+      {
+        "label": "Negative starts also increment",
+        "expression": "make_counter(-2)() == -1"
+      }
+    ],
+    "quiz": {
+      "question": "Two counters are created by separate calls to make_counter(0). After calling the first three times, what does the second return on its first call?",
+      "choices": [
+        "4, because all closures share one counter.",
+        "1, because it has its own enclosing state.",
+        "0, because closures cannot update state."
+      ],
+      "answer": 1,
+      "explanation": "Each outer call created a different saved count. The first counter’s updates do not change the second counter’s scope."
+    },
+    "hints": [
+      "Keep count in the outer function.",
+      "Use nonlocal before rebinding it inside increment.",
+      "Return increment without parentheses."
+    ],
+    "math": null,
+    "filename": "main.py",
+    "estimatedMinutes": 16
+  },
+  {
+    "id": "python-39",
+    "title": "Describe a path without touching the file",
+    "summary": "Complete describe_note(path_text). Return a dictionary with name, stem, suffix, and markdown (the path with its final suffix changed to .md, as text). Only inspect the path: do not read, write, rename, or check whether a file exists. Inputs describe a filename, optionally inside folders.",
+    "explanation": [
+      "pathlib represents filesystem paths as objects. from pathlib import Path imports the Path class from Python’s standard library.",
+      "Path(\"notes/sky.txt\") constructs a path description. Constructing it does not create a folder or a file.",
+      "For that path, .name is \"sky.txt\", .stem is \"sky\", and .suffix is \".txt\". These properties describe the final filename, not the parent folders. A leading-dot name such as .draft has no suffix by itself.",
+      "```python\nfrom pathlib import Path\np = Path(\"drafts/sea.log\")\nprint(p.name)\nprint(p.with_suffix(\".md\"))\n```\nThe path ending in sea.md is a new path description; the original p still ends in sea.log.",
+      "with_suffix replaces only the last suffix. For archive.tar.gz, replacing it with .md gives archive.tar.md. A name with no suffix gains .md.",
+      "str(path) converts a path object to text. Use dictionary keys name, stem, suffix, and markdown for this exercise. Operating systems can display path separators differently; the checks use the same Path rules as your function.",
+      "Path methods such as read_text and write_text perform real file operations, unlike this exercise. Do not call them here."
+    ],
+    "analogy": {
+      "familiar": "Follow a small change from its starting state to its result.",
+      "connection": "Each instruction changes what the next instruction receives.",
+      "limit": "Use the actual code and checks rather than relying on the comparison."
+    },
+    "steps": [
+      "Read the requirement.",
+      "Make one change to the starter.",
+      "Run the checks.",
+      "Explain why a changed input produces its result."
+    ],
+    "starter": "from pathlib import Path\n\ndef describe_note(path_text):\n    # TODO: inspect the path and return the four requested fields.\n    return {}",
+    "solution": "from pathlib import Path\n\ndef describe_note(path_text):\n    p = Path(path_text)\n    return {\"name\": p.name, \"stem\": p.stem, \"suffix\": p.suffix, \"markdown\": str(p.with_suffix(\".md\"))}",
+    "runtime": "python",
+    "checks": [
+      {
+        "label": "Parent folders are kept",
+        "expression": "describe_note(\"notes/sky.txt\") == {\"name\":\"sky.txt\",\"stem\":\"sky\",\"suffix\":\".txt\",\"markdown\":str(Path(\"notes/sky.md\"))}"
+      },
+      {
+        "label": "A missing suffix is added",
+        "expression": "describe_note(\"draft\") == {\"name\":\"draft\",\"stem\":\"draft\",\"suffix\":\"\",\"markdown\":\"draft.md\"}"
+      },
+      {
+        "label": "Only the last suffix is replaced",
+        "expression": "describe_note(\"archive.tar.gz\")[\"markdown\"] == \"archive.tar.md\""
+      },
+      {
+        "label": "A leading-dot name is not treated as a txt suffix",
+        "expression": "describe_note(\".draft\")[\"suffix\"] == \"\" and describe_note(\".draft\")[\"markdown\"] == \".draft.md\""
+      }
+    ],
+    "quiz": {
+      "question": "You call p.with_suffix(\".md\") on Path(\"sky.txt\"). Has the file on disk been renamed?",
+      "choices": [
+        "Yes; every path calculation edits the filesystem.",
+        "No; it returns a new path description without renaming a file.",
+        "Yes; it also converts the file contents to Markdown."
+      ],
+      "answer": 1,
+      "explanation": "Path construction and suffix replacement describe locations; filesystem changes require separate operations."
+    },
+    "hints": [
+      "Trace a changed input using the main explanation, then run the checks."
+    ],
+    "math": null,
+    "filename": "main.py",
+    "estimatedMinutes": 16,
+    "externalNotes": "Standard-library exercise, no package installation or network access. Any filesystem examples only construct paths; no real user files are read or changed."
+  },
+  {
+    "id": "python-42",
+    "title": "Give each category its own list",
+    "summary": "Complete group_titles(rows). Each row is a (category, title) pair of strings. Return an ordinary dictionary of category lists, preserving the order and duplicates of titles within each category. Empty input returns {}. Do not change rows.",
+    "explanation": [
+      "from collections import defaultdict imports a dictionary that can create a value when a missing key is accessed with brackets.",
+      "defaultdict(list) uses list as a factory: it calls list() to create a fresh empty list for each new key. Pass list, not list().",
+      "```python\nfrom collections import defaultdict\ngroups = defaultdict(list)\ngroups[\"art\"].append(\"Sketch\")\ngroups[\"music\"].append(\"Sing\")\nprint(dict(groups))\n```\nThe two categories own different lists. Adding to art does not add to music.",
+      "For category, title in rows unpacks each pair into two names. Append each title to groups[category] as you visit it; append preserves order and duplicates.",
+      "dict(groups) returns an ordinary dictionary containing the built lists. Calling groups.get(\"missing\") does not invoke the default factory; the bracket lookup is the behavior practiced here.",
+      "Build the groups inside the function so separate calls do not share saved lists."
+    ],
+    "analogy": {
+      "familiar": "Follow a small change from its starting state to its result.",
+      "connection": "Each instruction changes what the next instruction receives.",
+      "limit": "Use the actual code and checks rather than relying on the comparison."
+    },
+    "steps": [
+      "Read the requirement.",
+      "Make one change to the starter.",
+      "Run the checks.",
+      "Explain why a changed input produces its result."
+    ],
+    "starter": "from collections import defaultdict\n\ndef group_titles(rows):\n    # TODO: build separate lists for the supplied categories.\n    return {}",
+    "solution": "from collections import defaultdict\n\ndef group_titles(rows):\n    groups = defaultdict(list)\n    for category, title in rows:\n        groups[category].append(title)\n    return dict(groups)",
+    "runtime": "python",
+    "checks": [
+      {
+        "label": "Group interleaved rows in original order",
+        "expression": "group_titles([(\"A\",\"first\"),(\"B\",\"other\"),(\"A\",\"second\")]) == {\"A\":[\"first\",\"second\"],\"B\":[\"other\"]}"
+      },
+      {
+        "label": "Keep duplicate titles",
+        "expression": "group_titles([(\"A\",\"same\"),(\"A\",\"same\")]) == {\"A\":[\"same\",\"same\"]}"
+      },
+      {
+        "label": "Empty produces ordinary dictionary",
+        "expression": "type(group_titles([])) is dict and group_titles([]) == {}"
+      },
+      {
+        "label": "Separate calls do not share lists",
+        "expression": "group_titles([(\"A\",\"one\")]) == {\"A\":[\"one\"]} and group_titles([(\"A\",\"two\")]) == {\"A\":[\"two\"]}"
+      },
+      {
+        "label": "Rows unchanged",
+        "expression": "(lambda rows: group_titles(rows) == {\"A\":[\"x\"]} and rows == [(\"A\",\"x\")])([(\"A\",\"x\")])"
+      }
+    ],
+    "quiz": {
+      "question": "You append a title to a newly accessed category in defaultdict(list). Why does another category not receive that title?",
+      "choices": [
+        "Every category is a different name for one shared list.",
+        "The factory creates a different list for each missing key.",
+        "append silently sorts and copies every dictionary."
+      ],
+      "answer": 1,
+      "explanation": "Using list as the factory gives each missing category its own list."
+    },
+    "hints": [
+      "Trace a changed input using the main explanation, then run the checks."
+    ],
+    "math": null,
+    "filename": "main.py",
+    "estimatedMinutes": 16,
+    "externalNotes": "Standard-library exercise, no package installation or network access. Any filesystem examples only construct paths; no real user files are read or changed."
+  },
+  {
+    "id": "python-48",
+    "title": "Keep named options explicit",
+    "summary": "Complete make_label(title, *, uppercase=False, **extras). The only permitted extra option is prefix, defaulting to empty text. Return prefix followed by title, uppercasing title only when uppercase is True. Unknown extra names raise ValueError. Inputs have the stated text/Boolean types; preserve prefix exactly.",
+    "explanation": [
+      "A bare * in a function definition marks following named parameters as keyword-only. Callers must spell the option name instead of supplying its value by position.",
+      "```python\ndef caption(text, *, loud=False):\n    return text.upper() if loud else text\n\nprint(caption(\"Hello\", loud=True))\n```\nThis returns HELLO. caption(\"Hello\", True) is rejected because loud must be named. upper returns uppercase text.",
+      "**extras in a definition collects additional keyword arguments into a dictionary. It is different from *items, which collects positional arguments into a tuple.",
+      "For example, a call with prefix=\"Note: \" stores that value under the key \"prefix\" in extras. extras.get(\"prefix\", \"\") reads it or returns the supplied empty-text default when absent.",
+      "Accepting arbitrary extra names can hide spelling mistakes. In this exercise, loop over extras and raise ValueError if a key is not \"prefix\". The loop reads dictionary keys.",
+      "The task uppercases only title, not prefix. Choose the transformed title, then join prefix and that title with +. Do not add an extra separator: any desired space belongs to prefix.",
+      "Keyword-only arguments clarify call sites. They do not automatically validate the kinds of values, so this exercise states its accepted types.",
+      "The supplied __check_error helper is test infrastructure: it reports whether a sample call raises the expected error. Leave it unchanged; your task is make_label."
+    ],
+    "analogy": {
+      "familiar": "Follow a small change from its starting state to its result.",
+      "connection": "Each instruction changes what the next instruction receives.",
+      "limit": "Use the actual code and checks rather than relying on the comparison."
+    },
+    "steps": [
+      "Read the requirement.",
+      "Make one change to the starter.",
+      "Run the checks.",
+      "Explain why a changed input produces its result."
+    ],
+    "starter": "def __check_error(error_type, expression):\n    try:\n        eval(expression)\n    except error_type:\n        return True\n    return False\n\ndef make_label(title, *, uppercase=False, **extras):\n    # TODO: reject unknown extras and build the requested text.\n    return title",
+    "solution": "def __check_error(error_type, expression):\n    try:\n        eval(expression)\n    except error_type:\n        return True\n    return False\n\ndef make_label(title, *, uppercase=False, **extras):\n    for key in extras:\n        if key != \"prefix\":\n            raise ValueError(\"Unknown option\")\n    text = title.upper() if uppercase else title\n    return extras.get(\"prefix\", \"\") + text",
+    "runtime": "python",
+    "checks": [
+      {
+        "label": "Default options",
+        "expression": "make_label(\"Moon\") == \"Moon\""
+      },
+      {
+        "label": "Prefix preserved while title changes",
+        "expression": "make_label(\"Moon\", uppercase=True, prefix=\"Note: \") == \"Note: MOON\""
+      },
+      {
+        "label": "Empty title preserves prefix",
+        "expression": "make_label(\"\", prefix=\"x\") == \"x\""
+      },
+      {
+        "label": "Unknown option raises",
+        "expression": "__check_error(ValueError, 'make_label(\"Moon\", uprcase=True)')"
+      },
+      {
+        "label": "Keyword-only option rejects positional value",
+        "expression": "__check_error(TypeError, 'make_label(\"Moon\", True)')"
+      }
+    ],
+    "quiz": {
+      "question": "The function accepts **extras, but a caller types uprcase=True. Why reject that unknown name instead of silently ignoring it?",
+      "choices": [
+        "Every keyword dictionary is automatically a syntax error.",
+        "It likely hides an intended option, leaving behavior different from the caller’s expectation.",
+        "Ignoring a spelling mistake always enables the intended option."
+      ],
+      "answer": 1,
+      "explanation": "Collecting keywords does not validate their names. Explicit checking can expose a mistaken option."
+    },
+    "hints": [
+      "Trace the changed case using the primary lesson before editing."
+    ],
+    "math": null,
+    "filename": "main.py",
+    "estimatedMinutes": 16
+  },
+  {
+    "id": "react-13",
+    "title": "Contain a render failure",
+    "summary": "Show a useful fallback for a failed panel without losing the surrounding dashboard.",
+    "explanation": [
+      "An error boundary handles rendering failures in components below it and can replace that subtree with fallback UI.",
+      "React 18 uses a class component for a boundary. The supplied class extends React.Component; render returns its UI and this.props.children is the content placed inside it.",
+      "getDerivedStateFromError returns a state update after a descendant render fails. render can then choose fallback content instead of the failed children.",
+      "```react\nclass SmallBoundary extends React.Component {\n  constructor(props) { super(props); this.state = {failed:false}; }\n  static getDerivedStateFromError() { return {failed:true}; }\n  render() { return this.state.failed ? <p>Try again later</p> : this.props.children; }\n}\n```",
+      "Place the boundary around the area that can fail, not around unrelated controls that should stay usable.",
+      "A boundary does not generally catch errors thrown directly by an event handler or a timer callback. Handle those where they occur; this exercise button changes state and the child then fails during render.",
+      "For the exercise, complete PanelBoundary's fallback behavior. Break panel should show \"Panel unavailable\" while Dashboard remains. Reset panel fixes the input and changes the boundary key to create fresh boundary state."
+    ],
+    "analogy": {
+      "familiar": "",
+      "connection": "",
+      "limit": ""
+    },
+    "steps": [
+      "Set failed state when a descendant render throws.",
+      "Render the fallback only for the failed subtree."
+    ],
+    "starter": "class PanelBoundary extends React.Component {\n constructor(props) { super(props); this.state = {failed:false}; }\n static getDerivedStateFromError() { return {failed:false}; }\n render() { if (this.state.failed) return <p role=\"alert\">Panel unavailable</p>; return this.props.children; }\n}\nfunction RiskyPanel({broken}) { if(broken) throw new Error(\"Practice render failure\"); return <p>Panel ready</p>; }\nfunction App() {\n const [broken,setBroken] = React.useState(false);\n const [version,setVersion] = React.useState(0);\n return <main><h1>Dashboard</h1><button onClick={()=>setBroken(true)}>Break panel</button><button onClick={()=>{setBroken(false);setVersion(v=>v+1);}}>Reset panel</button>\n <PanelBoundary key={version}><RiskyPanel broken={broken}/></PanelBoundary></main>;\n}",
+    "solution": "class PanelBoundary extends React.Component {\n constructor(props) { super(props); this.state = {failed:false}; }\n static getDerivedStateFromError() { return {failed:true}; }\n render() { if (this.state.failed) return <p role=\"alert\">Panel unavailable</p>; return this.props.children; }\n}\nfunction RiskyPanel({broken}) { if(broken) throw new Error(\"Practice render failure\"); return <p>Panel ready</p>; }\nfunction App() {\n const [broken,setBroken] = React.useState(false);\n const [version,setVersion] = React.useState(0);\n return <main><h1>Dashboard</h1><button onClick={()=>setBroken(true)}>Break panel</button><button onClick={()=>{setBroken(false);setVersion(v=>v+1);}}>Reset panel</button>\n <PanelBoundary key={version}><RiskyPanel broken={broken}/></PanelBoundary></main>;\n}",
+    "runtime": "react",
+    "checks": [
+      {
+        "label": "Failure fallback and explicit reset work",
+        "expression": "(async()=>{const click=t=>[...document.querySelectorAll(\"button\")].find(b=>b.textContent===t)?.click();click(\"Break panel\");await new Promise(r=>setTimeout(r,40));if(document.querySelector('[role=\"alert\"]')?.textContent!==\"Panel unavailable\"||document.querySelector(\"h1\")?.textContent!==\"Dashboard\")return false;click(\"Reset panel\");await new Promise(r=>setTimeout(r,40));return !document.querySelector('[role=\"alert\"]')&&document.body.textContent.includes(\"Panel ready\");})()"
+      }
+    ],
+    "quiz": {
+      "question": "An event handler directly throws an error before scheduling a render. Should this render boundary be your error-handling plan for it?",
+      "choices": [
+        "No; handle that event failure explicitly",
+        "Yes; boundaries catch every JavaScript error anywhere",
+        "Yes; adding a key makes all errors disappear"
+      ],
+      "answer": 0,
+      "explanation": "Boundaries protect descendant rendering/lifecycle work, not arbitrary event-handler or asynchronous callback failures. Handle those errors at their source."
+    },
+    "hints": [
+      "Set failed state when a descendant render throws.",
+      "Render the fallback only for the failed subtree."
+    ],
+    "math": null,
+    "filename": "App.jsx",
+    "estimatedMinutes": 12,
+    "externalNotes": "Targets React18.3.1 supported class boundary API. Intentional test failure logs are expected. Broken starter can unmount the root by failing to show fallback; validation must treat this as expected failure, not a successful test. No claim of catching server rendering or all async failures."
+  },
+  {
+    "id": "react-15",
+    "title": "Show a fallback while a component loads",
+    "summary": "Wrap a lazy report in a Suspense boundary and observe pending, ready, and reused states.",
+    "explanation": [
+      "React.lazy(load) declares a component whose loader runs when React first tries to render it. Declare the lazy component outside App so normal App renders reuse the same declaration.",
+      "The loader returns a Promise: an object representing a result that may arrive later. A pending Promise has no result yet. Resolving it supplies a result; rejecting it supplies an error.",
+      "For lazy, the resolved result must be an object whose default property contains a component. For example, React.lazy(() => Promise.resolve({ default: Greeting })) makes Greeting the loaded component. Promise.resolve creates an already-resolved Promise, so that small example need not visibly wait.",
+      "A Suspense boundary surrounds children that can suspend while waiting. Its fallback is the replacement UI shown while the lazy child is pending. Once the child is ready, React renders it instead of the fallback.\n```react\n<React.Suspense fallback={<p>Preparing greeting</p>}>\n  <LazyGreeting />\n</React.Suspense>\n```",
+      "React caches the loader Promise and its resolved component for that lazy declaration. Hiding and showing it again does not reload the component code. This does not preserve the child's local state after unmounting, and it is not a general data cache.",
+      "If loading rejects, the nearest Error Boundary handles the error; Suspense is for waiting, not a replacement for error handling. Ordinary fetching inside useEffect does not automatically activate Suspense.",
+      "This exercise controls a Promise manually so you can inspect waiting without relying on network timing. new Promise(resolve => { ... }) immediately provides a resolve function; finishLoading saves a callback that resolves it with { default: Report }. The Report code is already present: this simulates a pending module and does not split or download a real file.",
+      "The supplied Toggle report button shows or hides the child. Finish simulated load settles the Promise. Replace the TODO paragraph with a Suspense boundary whose fallback is <p role=\"status\">Loading report</p>, and put <LazyReport /> inside. role=\"status\" identifies a status message for assistive technology and our check.",
+      "In a real bundler-supported app, React.lazy(() => import(\"./Report.js\")) can load a separate module whose default export is the component. That dynamic import is not run by this single-file exercise. Reset the runner to get a fresh pending Promise."
+    ],
+    "analogy": {
+      "familiar": "",
+      "connection": "",
+      "limit": ""
+    },
+    "steps": [
+      "Replace the TODO with a Suspense boundary around LazyReport.",
+      "Use the required status fallback.",
+      "Run the checks and trace pending, ready, and reused states."
+    ],
+    "starter": "let finishLoading;\nlet loaderCalls = 0;\nconst reportModule = new Promise(resolve => {\n  finishLoading = () => resolve({ default: Report });\n});\nfunction Report() { return <p data-report>Report ready</p>; }\nconst LazyReport = React.lazy(() => {\n  loaderCalls += 1;\n  return reportModule;\n});\nfunction App() {\n  const [show, setShow] = React.useState(false);\n  return <main>\n    <button onClick={() => setShow(value => !value)}>Toggle report</button>\n    <button onClick={() => finishLoading()}>Finish simulated load</button>\n    {show && <p>TODO: wrap LazyReport in Suspense with a Loading report status</p>}\n  </main>;\n}\n",
+    "solution": "let finishLoading;\nlet loaderCalls = 0;\nconst reportModule = new Promise(resolve => {\n  finishLoading = () => resolve({ default: Report });\n});\nfunction Report() { return <p data-report>Report ready</p>; }\nconst LazyReport = React.lazy(() => {\n  loaderCalls += 1;\n  return reportModule;\n});\nfunction App() {\n  const [show, setShow] = React.useState(false);\n  return <main>\n    <button onClick={() => setShow(value => !value)}>Toggle report</button>\n    <button onClick={() => finishLoading()}>Finish simulated load</button>\n    {show && <React.Suspense fallback={<p role=\"status\">Loading report</p>}><LazyReport /></React.Suspense>}\n  </main>;\n}\n",
+    "runtime": "react",
+    "checks": [
+      {
+        "label": "The pending report shows its fallback before completion",
+        "expression": "(async()=>{const wait=()=>new Promise(r=>setTimeout(r,40));if(loaderCalls!==0)return false;[...document.querySelectorAll(\"button\")].find(b=>b.textContent===\"Toggle report\").click();await wait();return loaderCalls===1&&document.querySelector(\"[role=status]\")?.textContent===\"Loading report\"&&!document.querySelector(\"[data-report]\");})()"
+      },
+      {
+        "label": "Resolving reveals the report and re-showing reuses the loader",
+        "expression": "(async()=>{const wait=()=>new Promise(r=>setTimeout(r,40));const click=t=>[...document.querySelectorAll(\"button\")].find(b=>b.textContent===t).click();click(\"Finish simulated load\");await wait();if(document.querySelector(\"[data-report]\")?.textContent!==\"Report ready\"||document.querySelector(\"[role=status]\"))return false;click(\"Toggle report\");await wait();if(document.querySelector(\"[data-report]\"))return false;click(\"Toggle report\");await wait();return loaderCalls===1&&document.querySelector(\"[data-report]\")?.textContent===\"Report ready\"&&!document.querySelector(\"[role=status]\");})()"
+      }
+    ],
+    "quiz": {
+      "question": "A lazily loaded HelpPanel finishes loading successfully. You hide it, then show it again using the same lazy declaration. What should you expect?",
+      "choices": [
+        "React calls the loader again every time because the panel was hidden.",
+        "React reuses the loaded component; its code need not load again.",
+        "The panel can never appear again after it has been hidden."
+      ],
+      "answer": 1,
+      "explanation": "The Promise and loaded component are cached for that lazy declaration. Reusing its code does not guarantee preservation of a previously unmounted component's local state."
+    },
+    "hints": [
+      "Compare the changed situation with the rule, not just the spelling."
+    ],
+    "math": null,
+    "filename": "App.jsx",
+    "estimatedMinutes": 12,
+    "externalNotes": "Actual React18.3.1 controlled-Promise fixture. Exercises waiting/reveal/cache semantics, not real network code splitting or React19 APIs. The supplied loader controls are instructional scaffolding."
+  },
+  {
+    "id": "swift-06",
+    "title": "Build a reusable converter",
+    "summary": "Write small functions that convert values with a supplied factor.",
+    "explanation": [
+      "A function packages a named job so you can repeat it with different input. Parameters are the named input slots in its definition. Arguments are the actual values you pass when calling it. The return value is the result the call gives back. A conversion function can accept a distance and a conversion factor, multiply them, and return a new distance. Calling it twice does not require copying its calculation twice. It does not automatically choose units or a factor; the caller supplies the values with the intended meaning.",
+      "This complete example scales a length for a model.\n\n```swift\nfunc scaledLength(_ length: Double, factor: Double) -> Double {\n    return length * factor\n}\nlet shortPiece = scaledLength(3, factor: 0.5)\nlet longPiece = scaledLength(9, factor: 0.5)\nprint(shortPiece)\nprint(longPiece)\n```\n\nThe results are 1.5 and 4.5. func starts the definition. Both parameter types are Double, which can represent fractional values. -> Double promises a numeric result. The braces contain the function body. return sends the product back to the caller, which stores it using let.",
+      "Swift can use an outside argument label and an inside parameter name. In _ length: Double, the underscore suppresses the outside label, so the first argument is written simply as 3. In factor: Double, factor is both the outside label and inside name. The caller writes factor: 0.5. Labels help a call communicate each input's purpose. Parentheses surround inputs, and a comma separates them. Putting the right number in the wrong position can change an answer even if the types still match, so read the call as well as the formula.",
+      "A function's promised return type applies to all paths. This one has a single expression, length * factor, so Swift can also infer its return without the return word in a single-expression function body. The explicit version is useful while learning because the result's job is visible. Returning a number differs from printing it: a return allows later calculations, while print writes output. A function can do both, but the conversion exercise needs a returned Double so the checks and stored results can use it.",
+      "This second complete program reuses a function result in another calculation.\n\n```swift\nfunc cupsNeeded(_ batches: Double, cupsPerBatch: Double) -> Double {\n    batches * cupsPerBatch\n}\nlet cups = cupsNeeded(4, cupsPerBatch: 3)\nlet extraCups = cups + 1\nprint(cups)\nprint(extraCups)\n```\n\nFour batches times three cups per batch gives 12 cups. Adding one spare cup gives 13. This uses Swift's single-expression return for cupsNeeded. The numeric literals are accepted as Double inputs here because the function requires that type. Units are part of the meaning you give the numbers, not separate automatic labels in Double.",
+      "Multiplication applies a supplied rate or factor. Three cups per batch × four batches = twelve cups, because you need three for each of four groups. For distance using 1.6 kilometers per mile, two miles gives 3.2 kilometers and five gives 8. Floating-point values such as Double can approximate some decimal fractions, so compare an expected decimal using a small tolerance when appropriate. abs(actual - expected) measures how far apart they are without keeping a negative sign. It is different from rounding an incorrect answer until it looks right.",
+      "For the converter, define convert(_ value: Double, factor: Double) -> Double and return value times factor. Store shortTrip from convert(2, factor: 1.6) and longTrip from convert(5, factor: 1.6). The checks expect 3.2 and 8, including the stored names. The function should also work with other reasonable input values because the parameters drive its calculation. Explain what value, factor, and -> Double mean before the exercise, then predict a new call using the same multiplication."
+    ],
+    "analogy": {
+      "familiar": "A measuring cup",
+      "connection": "A converter applies the same measuring step to each new value.",
+      "limit": "The factor only works when the input and output units match the factor’s meaning."
+    },
+    "steps": [
+      "Create convert with two inputs named value and factor.",
+      "Multiply value by factor and return the result.",
+      "Save the result of convert(2, factor: 1.6) in shortTrip. Expect 3.2.",
+      "Save the result of convert(5, factor: 1.6) in longTrip. Expect 8."
+    ],
+    "starter": "func convert(_ value: Double, factor: Double) -> Double {\n    // TODO: return the converted value\n    return 0\n}\nlet shortTrip = convert(2, factor: 1.6)\nlet longTrip = convert(5, factor: 1.6)",
+    "solution": "func convert(_ value: Double, factor: Double) -> Double {\n    value * factor\n}\nlet shortTrip = convert(2, factor: 1.6)\nlet longTrip = convert(5, factor: 1.6)",
+    "runtime": "swift",
+    "checks": [
+      {
+        "label": "First conversion",
+        "expression": "abs(convert(2, factor: 1.6) - 3.2) < 0.0001"
+      },
+      {
+        "label": "Second conversion",
+        "expression": "convert(5, factor: 1.6) == 8"
+      },
+      {
+        "label": "Results are stored",
+        "expression": "abs(shortTrip - 3.2) < 0.0001 && longTrip == 8"
+      }
+    ],
+    "quiz": {
+      "question": "convert returns value * factor. What does convert(3, factor: 2) return?",
+      "choices": [
+        "6",
+        "5",
+        "3"
+      ],
+      "answer": 0,
+      "explanation": "The arguments supply value=3 and factor=2 to the same reusable calculation. Multiplication gives 6, rather than adding them or ignoring the factor."
+    },
+    "hints": [
+      "The result should scale when either number changes.",
+      "Use multiplication for a supplied conversion factor.",
+      "Return `value * factor` and try both catalog examples."
+    ],
+    "math": {
+      "explanation": "Units and multiplication: Apply the supplied conversion factor to small whole-number examples.",
+      "question": "A recipe uses 3 cups per batch. How many cups for 4 batches?",
+      "choices": [
+        "7",
+        "12",
+        "1"
+      ],
+      "answer": 1,
+      "feedback": "Multiply 3 cups per batch by 4 batches to get 12 cups."
+    },
+    "filename": "main.swift",
+    "estimatedMinutes": 16
+  },
+  {
+    "id": "swift-10",
+    "title": "Load data with cancellation",
+    "summary": "Use an actor for shared entries and a cancellable task so older results cannot replace newer ones.",
+    "explanation": [
+      "Asynchronous work can pause while waiting and resume later. async marks a Swift function that may suspend. await marks a call where your code can suspend while that work completes. Suspension lets other work make progress; it does not promise a particular thread or completion order. If one request starts first but takes longer, it may finish after a newer request. A loader therefore needs a deliberate policy: only the still-current request may change the visible result. Merely adding a longer delay cannot establish that policy.",
+      "This is a complete top-level asynchronous Swift program for a compatible modern Swift toolchain. It demonstrates waiting and an error path without a user interface.\n\n```swift\nenum SampleError: Error {\n    case unavailable\n}\n\nfunc loadNames(_ request: Int) async throws -> [String] {\n    try await Task.sleep(for: .milliseconds(20))\n    try Task.checkCancellation()\n    if request == 0 {\n        throw SampleError.unavailable\n    }\n    return [\"name-\\(request)\"]\n}\n\ndo {\n    let names = try await loadNames(7)\n    print(names)\n} catch is CancellationError {\n    print(\"Cancelled\")\n} catch {\n    print(\"Could not load names\")\n}\n```\n\nThe ordinary successful result is [\"name-7\"]. throws says the function can fail by throwing an Error. try marks calls that may throw, and do/catch handles the result. Cancellation has its own catch so it can be described differently from a failed load. enum defines a type with named cases; here unavailable is one possible error value. The colon in : Error declares that the type meets Swift's error requirements. A function parameter names an input, while -> [String] promises an array of text as its successful result.",
+      "Task represents asynchronous work. Task { ... } starts a task with a closure containing its instructions. A stored Task<Void, Never>? means an optional task whose successful result is Void, no useful returned value, and whose exposed failure type is Never, meaning it does not throw an error out to its caller. The closure can still perform throwing work if it handles the error internally. task?.cancel() uses optional chaining: call cancel only if a task exists. Cancellation is cooperative. It signals that the work should stop; code must check or reach a cancellation-aware operation. Task.checkCancellation() throws if cancellation has been requested, and Task.isCancelled reads that state as a Bool.",
+      "Assign every request an increasing number. Increase requestID when starting new work and capture its value in a constant such as thisRequest. A helper accepts(request:current:) should return request == current, a Bool asking whether that request is still the latest one. If request 8 starts, then request 9 starts, only 9 remains current. If 9 finishes first, its result may be displayed; the late 8 result must be ignored. Cancellation alone is not enough because a task could finish before noticing the signal. Check both cancellation and the request ID after every await before updating protected data. In a guard with comma-separated conditions, every condition must succeed. !Task.isCancelled means cancellation has not been requested. += 1 increases the ID by one. In the supplied delay expression, condition ? first : second chooses one of two values, so request 1 gets the slower delay.",
+      "An actor protects its stored state through isolation: outside code must use its allowed access paths rather than changing the storage freely. actor PracticeStore can own its entries and accepted request number. Calls across the actor boundary use await because access may require waiting for that actor. Within its replacement method, guard request >= requestID else { return } rejects a response older than the last one stored. >= means greater than or equal to. That comparison accepts a newer replacement or a repeat of the same request. The loader's stricter equality check establishes which request is current; the store's number check separately prevents an old replacement from overwriting newer stored data.",
+      "@MainActor isolates the loader's state and methods to the main actor, the executor normally used for UI work. It does not make every operation inside an async method run without interruption. While an await suspends a method, other actor work may run and change its state. That is why a guard before await store.replace is not a substitute for another guard after it. private(set) allows reading a property outside its setting scope while keeping updates controlled. A method cancel should signal the task, increase requestID so old work is stale, and set an understandable message. It should preserve existing useful results unless the design deliberately says otherwise.",
+      "This separate complete top-level async program demonstrates actor storage rejecting an older replacement. It can run with a compatible Swift toolchain; it has no SwiftUI screen.\n\n```swift\nfunc accepts(request: Int, current: Int) -> Bool {\n    request == current\n}\n\nactor MessageStore {\n    private var values: [String] = []\n    private var requestID = 0\n\n    func replace(with newValues: [String], request: Int) {\n        guard request >= requestID else { return }\n        requestID = request\n        values = newValues\n    }\n\n    func snapshot() -> [String] {\n        values\n    }\n}\n\nlet store = MessageStore()\nawait store.replace(with: [\"new result\"], request: 9)\nawait store.replace(with: [\"old result\"], request: 8)\nlet saved = await store.snapshot()\nprint(saved)\nprint(accepts(request: 8, current: 9))\n```\n\nThe output is [\"new result\"] and false. The first call establishes request 9. The request-8 guard exits without changing values. snapshot returns the isolated array through the actor's method. This small example tests the ordering rule; it does not simulate concurrent completion by itself.",
+      "Model the loader's states in ordinary words: Ready before a request, Loading during it, Loaded with entries after success, Could not load after failure, or Load cancelled after cancellation. An outdated task should not change either the result or the current message. catch is CancellationError recognizes that error type; a following catch handles other errors. if accepts(...) inside those catches prevents a stale task from replacing a newer message. The supplied driver uses MainActor.run to read or construct main-actor state from its async context. It also stores two values in a tuple, accessed as .0 and .1, to inspect the result and message together.",
+      "For the exercise, use the supplied real async driver: slow request 1 followed by faster request 2 should leave session-2 in both the loader and actor store. Request 0 should produce Could not load practice data. Explicit cancellation of request 1 should preserve session-2 and show Load cancelled. Store and cancel the Task, capture each new ID, and guard after awaits; do not depend on delays alone. In the math scenario, request A with ID 4 remains stale once B with ID 5 is current, so B stays visible even if A finishes last. Compile and run with the compatible Mac companion or Apple toolchain, then test in Xcode when attaching a real interface. The browser cannot execute this Swift concurrency or prove its scheduling behavior."
+    ],
+    "analogy": {
+      "familiar": "A deli ticket",
+      "connection": "A request ID works like a ticket number: only the currently served ticket may update the display.",
+      "limit": "Cancellation does not instantly erase work; the operation must reach a cancellation check or support cancellation itself."
+    },
+    "steps": [
+      "Make accepts return true only when the request ID matches the current request ID.",
+      "In PracticeStore, ignore data sent with an ID older than the one already stored.",
+      "In Loader.start, cancel the previous task and save a new request ID.",
+      "After each await, check that the task has not been cancelled and that its request ID is still current.",
+      "Start slow request 1, then fast request 2.",
+      "Next, try request 0, which fails.",
+      "Finally, start request 1 and cancel it yourself.",
+      "After the two competing requests, both result and PracticeStore should contain session-2.",
+      "After failure, show \"Could not load practice data\".",
+      "After you cancel, show \"Load cancelled\"."
+    ],
+    "starter": "func accepts(request: Int, current: Int) -> Bool { false // TODO: compare the identifiers }\nenum LoadError: Error { case unavailable }\nactor PracticeStore {\n    private var entries: [String] = []\n    private var requestID = 0\n    func replace(with newEntries: [String], request: Int) {\n        guard request >= requestID else { return }\n        requestID = request\n        // TODO: replace entries\n    }\n    func snapshot() -> [String] { entries }\n}\nfunc loadPractice(_ id: Int) async throws -> [String] {\n    try await Task.sleep(for: .milliseconds(id == 1 ? 80 : 10))\n    try Task.checkCancellation()\n    if id == 0 { throw LoadError.unavailable }\n    return [\"session-\\(id)\"]\n}\n@MainActor final class Loader {\n    private(set) var result: [String] = []\n    private(set) var message = \"Ready\"\n    let store = PracticeStore()\n    private var task: Task<Void, Never>?\n    private var requestID = 0\n    func start(_ id: Int) {\n        task?.cancel()\n        requestID += 1\n        let thisRequest = requestID\n        message = \"Loading\"\n        task = Task {\n            do {\n                let values = try await loadPractice(id)\n                guard !Task.isCancelled, accepts(request: thisRequest, current: requestID) else { return }\n                await store.replace(with: values, request: thisRequest)\n                guard !Task.isCancelled, accepts(request: thisRequest, current: requestID) else { return }\n                // TODO: apply the latest result\n                message = \"Loaded \\(values.count) entries\"\n            } catch is CancellationError {\n                if accepts(request: thisRequest, current: requestID) { message = \"TODO\" }\n            } catch {\n                if accepts(request: thisRequest, current: requestID) { message = \"TODO\" }\n            }\n        }\n    }\n    func cancel() {\n        task?.cancel()\n        requestID += 1\n        message = \"TODO\"\n    }\n}\nlet loader = await MainActor.run { Loader() }\nawait loader.start(1)\nawait loader.start(2)\ntry await Task.sleep(for: .milliseconds(140))\nlet afterRace = await MainActor.run { loader.result }\nlet storedAfterRace = await loader.store.snapshot()\nawait loader.start(0)\ntry await Task.sleep(for: .milliseconds(50))\nlet afterFailure = await MainActor.run { loader.message }\nawait loader.start(1)\nawait loader.cancel()\ntry await Task.sleep(for: .milliseconds(100))\nlet afterCancellation = await MainActor.run { (loader.result, loader.message) }\nprint(\"Latest data: \\(afterRace); failure: \\(afterFailure); cancellation: \\(afterCancellation.1)\")",
+    "solution": "func accepts(request: Int, current: Int) -> Bool { request == current }\nenum LoadError: Error { case unavailable }\nactor PracticeStore {\n    private var entries: [String] = []\n    private var requestID = 0\n    func replace(with newEntries: [String], request: Int) {\n        guard request >= requestID else { return }\n        requestID = request\n        entries = newEntries\n    }\n    func snapshot() -> [String] { entries }\n}\nfunc loadPractice(_ id: Int) async throws -> [String] {\n    try await Task.sleep(for: .milliseconds(id == 1 ? 80 : 10))\n    try Task.checkCancellation()\n    if id == 0 { throw LoadError.unavailable }\n    return [\"session-\\(id)\"]\n}\n@MainActor final class Loader {\n    private(set) var result: [String] = []\n    private(set) var message = \"Ready\"\n    let store = PracticeStore()\n    private var task: Task<Void, Never>?\n    private var requestID = 0\n    func start(_ id: Int) {\n        task?.cancel()\n        requestID += 1\n        let thisRequest = requestID\n        message = \"Loading\"\n        task = Task {\n            do {\n                let values = try await loadPractice(id)\n                guard !Task.isCancelled, accepts(request: thisRequest, current: requestID) else { return }\n                await store.replace(with: values, request: thisRequest)\n                guard !Task.isCancelled, accepts(request: thisRequest, current: requestID) else { return }\n                result = values\n                message = \"Loaded \\(values.count) entries\"\n            } catch is CancellationError {\n                if accepts(request: thisRequest, current: requestID) { message = \"Load cancelled\" }\n            } catch {\n                if accepts(request: thisRequest, current: requestID) { message = \"Could not load practice data\" }\n            }\n        }\n    }\n    func cancel() {\n        task?.cancel()\n        requestID += 1\n        message = \"Load cancelled\"\n    }\n}\nlet loader = await MainActor.run { Loader() }\nawait loader.start(1)\nawait loader.start(2)\ntry await Task.sleep(for: .milliseconds(140))\nlet afterRace = await MainActor.run { loader.result }\nlet storedAfterRace = await loader.store.snapshot()\nawait loader.start(0)\ntry await Task.sleep(for: .milliseconds(50))\nlet afterFailure = await MainActor.run { loader.message }\nawait loader.start(1)\nawait loader.cancel()\ntry await Task.sleep(for: .milliseconds(100))\nlet afterCancellation = await MainActor.run { (loader.result, loader.message) }\nprint(\"Latest data: \\(afterRace); failure: \\(afterFailure); cancellation: \\(afterCancellation.1)\")",
+    "runtime": "swift",
+    "checks": [
+      {
+        "label": "Latest async request wins in display and actor",
+        "expression": "afterRace == [\"session-2\"] && storedAfterRace == [\"session-2\"]"
+      },
+      {
+        "label": "Failure is explained",
+        "expression": "afterFailure == \"Could not load practice data\""
+      },
+      {
+        "label": "Cancellation preserves current data",
+        "expression": "afterCancellation.0 == [\"session-2\"] && afterCancellation.1 == \"Load cancelled\""
+      }
+    ],
+    "quiz": {
+      "question": "What prevents an older response from replacing the newest result?",
+      "choices": [
+        "Checking that its request ID is still current",
+        "Using a longer delay",
+        "Storing the response in a String"
+      ],
+      "answer": 0,
+      "explanation": "The request ID ties each response to the request that is still active."
+    },
+    "hints": [
+      "Keep a monotonically increasing request ID.",
+      "Cancel the old task and capture the new ID before starting the Task.",
+      "After awaiting, check cancellation and confirm the captured ID still matches before changing visible data."
+    ],
+    "math": {
+      "explanation": "State transitions and event ordering: List valid transitions and reason about two possible orders of asynchronous events.",
+      "question": "Two requests start in order: A has ID 4, B has ID 5. B completes, then A. Which value should remain visible, and why?",
+      "choices": [
+        "A, because it started first",
+        "B, because only ID 5 is current",
+        "A and B should alternate"
+      ],
+      "answer": 1,
+      "feedback": "Keep B. Once ID 5 is current, the late ID 4 result fails the current-request check."
+    },
+    "filename": "main.swift",
+    "estimatedMinutes": 31,
+    "externalNotes": "Uses actual top-level async Swift, Task scheduling, actor storage, and supplied race/failure/cancellation scenarios. The Mac companion must compile and run this code using a compatible Apple toolchain. Run it in Xcode as well when attaching a real interface; browser execution cannot replace that Apple environment."
+  },
+  {
+    "id": "swift-11",
+    "title": "Save a durable practice log",
+    "summary": "Separate the practice model from storage, save entries as JSON, and recover safely from bad data.",
+    "explanation": [
+      "Persistence means keeping information outside the running program so it can be loaded later. A variable in memory normally disappears when the process ends. A file can remain on disk, but only if you write it to an appropriate location and keep that file. Separate the model, which describes an entry's information, from storage functions, which encode, write, read, and decode it. The screen can then use the result without being responsible for every file operation. This separation also makes success and recovery easier to inspect.",
+      "This complete Swift program encodes and decodes entries in memory using Foundation, Apple's general-purpose library module.\n\n```swift\nimport Foundation\n\nstruct ReadingEntry: Codable, Equatable {\n    let title: String\n    let minutes: Int\n}\n\nlet original = [ReadingEntry(title: \"History\", minutes: 15)]\ndo {\n    let bytes = try JSONEncoder().encode(original)\n    let restored = try JSONDecoder().decode([ReadingEntry].self, from: bytes)\n    print(restored == original)\n} catch {\n    print(\"Entry data could not be read or written\")\n}\n```\n\nThe usual result is true. Codable supplies encoding and decoding abilities for this model. Equatable allows equality comparisons. JSON is a text-based data format; encoded Data stores bytes. This example checks an in-memory round trip, not disk persistence.",
+      "Codable combines Encodable and Decodable. Swift can generate their behavior for a struct whose stored properties also support them. JSONEncoder().encode(original) constructs an encoder and asks it to turn the array into Data. JSONDecoder().decode([ReadingEntry].self, from: bytes) names the exact expected type and converts bytes back. .self here refers to the type itself as an argument; it is not an array instance. The brackets in [ReadingEntry] mean an array of that model. If the bytes have a different shape or wrong field types, decoding can throw rather than producing valid entries.",
+      "throws on a function announces that it can fail. try marks the possibly failing operation. do groups operations whose errors you want to handle, and catch runs when one throws. Return a clear result in both success and failure paths. A LoadResult can contain an entries array and a message. On damaged input, returning an empty collection plus a message containing could not be read makes recovery visible without crashing. Do not use try! for this case: it assumes success and would turn a decoding failure into a crash. A controlled fallback should not silently overwrite the damaged file before a real app's recovery policy is decided.",
+      "This separate complete Swift program writes valid JSON to a temporary file, reads it back, and handles failure.\n\n```swift\nimport Foundation\n\nstruct ReadingEntry: Codable, Equatable {\n    let title: String\n    let minutes: Int\n}\n\nlet entries = [ReadingEntry(title: \"Geography\", minutes: 25)]\nlet url = FileManager.default.temporaryDirectory\n    .appendingPathComponent(\"reading-example.json\")\n\ndo {\n    let data = try JSONEncoder().encode(entries)\n    try data.write(to: url, options: .atomic)\n    let storedData = try Data(contentsOf: url)\n    let restored = try JSONDecoder().decode([ReadingEntry].self, from: storedData)\n    print(restored == entries)\n    print(FileManager.default.fileExists(atPath: url.path))\n} catch {\n    print(\"Saved entries could not be read or written\")\n}\n```\n\nOn success, both outputs are true. URL describes a file location. appendingPathComponent adds a filename to the directory URL. path gives a filesystem path for the existence check. This example writes a real temporary file.",
+      "options: .atomic asks Data to write through an auxiliary file and replace the destination on success, reducing the risk of exposing a partly written destination. Atomic means one indivisible update at that file-replacement level; it does not turn several separate files or read-modify-write operations into a transaction. Two writers can still overwrite each other's changes without coordination. A consistency invariant is something that should stay true through valid operations. Moving three of twelve entries from planned to done should keep twelve total. A crash after deleting them but before inserting them elsewhere can violate that total if the change is split into unrelated writes.",
+      "Overloading means functions can share a name when their input signatures differ. loadEntries(_ data: Data) loads supplied bytes; loadEntries(from url: URL) reads the file and then reuses the byte decoder. The underscore lets the Data call omit a label, while from is the URL call's label. Data(\"broken\".utf8) makes bytes from the letters of broken using UTF-8 text encoding. Those bytes are not valid JSON for [PracticeEntry], so they should exercise the catch path. A file-read failure and a decode failure are different causes, but both need an understandable outcome.",
+      "For the exercise, use Codable PracticeEntry values, encode the supplied Swift/20 entry, save atomically at the supplied temporary file URL, and load it through the URL function. Return an empty collection and a could not be read message for the broken-byte fixture. The checks establish file round-tripping and controlled malformed-data recovery within one run. The companion removes its sandbox after runs, so this does not demonstrate survival across app restarts. In a real Xcode app, use an appropriate persistent application-support location and test stop/relaunch separately; old file formats may also need migrations, meaning deliberate conversion to a new format. Foundation compilation must succeed on the compatible Apple toolchain, and the fixture's documented cold compile limit may still prevent verification in that companion."
+    ],
+    "analogy": {
+      "familiar": "A labeled archive box",
+      "connection": "Persistence is like putting a labeled box on a shelf and opening it the next day.",
+      "limit": "A shelf can contain a damaged label or an old format, so loading still needs an error path."
+    },
+    "steps": [
+      "Define PracticeEntry with Codable so it can be converted to saved data and read back.",
+      "Encode [PracticeEntry(title: \"Swift\", minutes: 20)] as data for saving.",
+      "Write it to the supplied temporary file URL using .atomic, so a failed write does not leave a partly written file.",
+      "Read the saved file with loadEntries(from:).",
+      "Pass Data(\"broken\".utf8) to loadEntries(_:) to try reading invalid saved data.",
+      "Return an empty list and a message containing \"could not be read\"."
+    ],
+    "starter": "import Foundation\nstruct PracticeEntry: Codable, Equatable {\n    let title: String\n    let minutes: Int\n}\nstruct LoadResult { let entries: [PracticeEntry]; let message: String }\nfunc encodeEntries(_ entries: [PracticeEntry]) throws -> Data {\n    // TODO: encode with JSONEncoder\n    Data()\n}\nfunc loadEntries(_ data: Data) -> LoadResult {\n    // TODO: decode, or recover from invalid bytes\n    LoadResult(entries: [], message: \"TODO\")\n}",
+    "solution": "import Foundation\nstruct PracticeEntry: Codable, Equatable {\n    let title: String\n    let minutes: Int\n}\nstruct LoadResult { let entries: [PracticeEntry]; let message: String }\nfunc encodeEntries(_ entries: [PracticeEntry]) throws -> Data {\n    try JSONEncoder().encode(entries)\n}\nfunc saveEntries(_ entries: [PracticeEntry], to url: URL) throws {\n    try encodeEntries(entries).write(to: url, options: .atomic)\n}\nfunc loadEntries(from url: URL) -> LoadResult {\n    do { return loadEntries(try Data(contentsOf: url)) }\n    catch { return LoadResult(entries: [], message: \"Saved file could not be read; starting with an empty list.\") }\n}\nfunc loadEntries(_ data: Data) -> LoadResult {\n    do {\n        let entries = try JSONDecoder().decode([PracticeEntry].self, from: data)\n        return LoadResult(entries: entries, message: \"Loaded \\(entries.count) entries\")\n    } catch {\n        return LoadResult(entries: [], message: \"Saved data could not be read; starting with an empty list.\")\n    }\n}\nlet original = [PracticeEntry(title: \"Swift\", minutes: 20)]\nlet fileURL = FileManager.default.temporaryDirectory.appendingPathComponent(\"practice-entries.json\")\ntry saveEntries(original, to: fileURL)\nlet restored = loadEntries(from: fileURL)\nlet recovered = loadEntries(Data(\"broken\".utf8))",
+    "runtime": "swift",
+    "checks": [
+      {
+        "label": "Valid data round trips",
+        "expression": "restored.entries == original && FileManager.default.fileExists(atPath: fileURL.path)"
+      },
+      {
+        "label": "Invalid data recovers empty",
+        "expression": "recovered.entries.isEmpty"
+      },
+      {
+        "label": "Recovery is explained",
+        "expression": "recovered.message.contains(\"could not be read\")"
+      }
+    ],
+    "quiz": {
+      "question": "Why put decoding, which reads saved data, inside `do`/`catch`?",
+      "choices": [
+        "Saved bytes may be malformed or incompatible",
+        "JSON always contains a number",
+        "Codable prevents errors"
+      ],
+      "answer": 0,
+      "explanation": "Decoding can throw, so the app should handle a failed load deliberately."
+    },
+    "hints": [
+      "Make the entry Codable so JSONEncoder and JSONDecoder can work with it.",
+      "Return a LoadResult in both the success and catch paths.",
+      "Try `JSONDecoder().decode([PracticeEntry].self, from: data)` and use `Data(\"broken\".utf8)` to exercise recovery."
+    ],
+    "math": {
+      "explanation": "Consistency invariants: Prove the conserved total for a valid update and check interrupted and concurrent cases.",
+      "question": "A tracker has 12 saved entries. One valid operation moves 3 entries from the “planned” group to “done.” How many total entries should exist afterward, and what failure case could break the invariant?",
+      "choices": [
+        "9; deleting planned entries is always expected",
+        "12; a crash between delete and insert could break it",
+        "15; the move duplicates entries"
+      ],
+      "answer": 1,
+      "feedback": "A move preserves the total at 12. If the two writes are not atomic, interruption between them can lose or duplicate entries."
+    },
+    "filename": "main.swift",
+    "estimatedMinutes": 29,
+    "externalNotes": "The companion deletes its sandbox directory after each run, so this exercise checks atomic disk round-tripping and malformed-data recovery within one run. To verify survival across app restarts, inject an application-support URL in an Xcode app, save an entry, stop the app, and launch again. Plan versioning/migration separately; the temporary companion fixture does not establish persistent iOS storage. This Foundation-dependent lesson may hit the companion's 30-second cold compile limit on the development toolchain; compilation and execution have not yet been verified there."
+  },
+  {
+    "id": "swift-20",
+    "title": "Avoid a closure ownership cycle",
+    "summary": "Let a saved callback stop referring to its owner after the owner is released.",
+    "explanation": [
+      "Automatic Reference Counting keeps a class instance alive while strong references own it.",
+      "A closure can capture an instance strongly. If the instance also stores that closure, the two can keep each other alive.",
+      "Use a weak capture when the callback should not keep the owner alive. A weak reference becomes nil after the instance is released.",
+      "```swift\nfinal class LabelOwner {\n    let text: String\n    init(text: String) { self.text = text }\n    func makeReader() -> () -> String {\n        return { [weak self] in self?.text ?? \"Released\" }\n    }\n}\n```\nThe returned closure can outlive the owner without owning it.",
+      "self? safely reads through the optional weak reference. A fallback handles the owner no longer existing; force unwrapping would defeat that safety.",
+      "For the exercise, Reader stores its own callback. Implement install so the callback reads the current owner name while it exists and returns \"Released\" afterwards."
+    ],
+    "analogy": {
+      "familiar": "",
+      "connection": "",
+      "limit": ""
+    },
+    "steps": [
+      "Use a weak self capture in the stored callback.",
+      "Handle the missing owner without force unwrapping."
+    ],
+    "starter": "final class Reader {\n let name: String\n var callback: (() -> String)?\n init(name: String) { self.name = name }\n func install() { callback = { \"TODO\" } }\n}",
+    "solution": "final class Reader {\n let name: String\n var callback: (() -> String)?\n init(name: String) { self.name = name }\n func install() { callback = { [weak self] in self?.name ?? \"Released\" } }\n}",
+    "runtime": "swift",
+    "checks": [
+      {
+        "label": "Live owner is readable",
+        "expression": "{ () -> Bool in let owner = Reader(name:\"Ari\"); owner.install(); return owner.callback?() == \"Ari\" }()"
+      },
+      {
+        "label": "Callback does not retain released owner",
+        "expression": "{ () -> Bool in var owner: Reader? = Reader(name:\"Bea\"); owner?.install(); let saved = owner?.callback; weak var observed = owner; owner = nil; return observed == nil && saved?() == \"Released\" }()"
+      }
+    ],
+    "quiz": {
+      "question": "The owner stores its callback, and that callback strongly captures the owner. Why may setting the outside owner variable to nil fail to release it?",
+      "choices": [
+        "The owner and callback still own each other through strong references",
+        "nil always means an empty string",
+        "Every closure is kept forever by Swift"
+      ],
+      "answer": 0,
+      "explanation": "Removing one outside reference does not break an internal strong cycle. A suitable weak capture avoids making the callback another owner."
+    },
+    "hints": [
+      "Use a weak self capture in the stored callback.",
+      "Handle the missing owner without force unwrapping."
+    ],
+    "math": null,
+    "filename": "main.swift",
+    "estimatedMinutes": 12,
+    "externalNotes": "Swift runtime unavailable: static review only. ARC applies to class instances; weak is not a universal fix and is appropriate only when the callback must not own the instance. No lifetime execution claim."
+  },
+  {
+    "id": "swift-21",
+    "title": "Send a value across an isolation boundary",
+    "summary": "Return an immutable snapshot rather than sharing mutable actor-owned state.",
+    "explanation": [
+      "An actor isolates its mutable state. Code outside it normally uses await to call its isolated methods.",
+      "Sendable describes values that can safely cross concurrency boundaries. It is a compiler-checked promise, not a lock added at runtime.",
+      "An immutable value-type snapshot containing Sendable fields is a simple way to communicate state without exposing a shared mutable object.",
+      "```swift\nstruct LabelSnapshot: Sendable { let text: String }\nactor LabelStore {\n    private var text = \"Ready\"\n    func snapshot() -> LabelSnapshot { LabelSnapshot(text: text) }\n}\n```\nString is Sendable. The returned struct contains a value, not direct access to the actor's stored property.",
+      "After await, other work may have changed an actor. A snapshot describes the state when it was made; it is not a live view.",
+      "For the exercise, snapshot returns CountSnapshot(total: total). The first result remains 3 after the store changes to 7; the second reports 7.",
+      "Do not add @unchecked Sendable just to silence a diagnostic. It bypasses compiler verification and requires a separate safety argument."
+    ],
+    "analogy": {
+      "familiar": "",
+      "connection": "",
+      "limit": ""
+    },
+    "steps": [
+      "Build the snapshot from the actor's current total.",
+      "Read both stored snapshot values after the two updates."
+    ],
+    "starter": "struct CountSnapshot: Sendable { let total: Int }\nactor CounterStore {\n private var total = 0\n func add(_ amount: Int) { total += amount }\n func snapshot() -> CountSnapshot { return CountSnapshot(total: 0) }\n}\nlet store = CounterStore()\nawait store.add(3)\nlet firstSnapshot = await store.snapshot()\nawait store.add(4)\nlet secondSnapshot = await store.snapshot()\n",
+    "solution": "struct CountSnapshot: Sendable { let total: Int }\nactor CounterStore {\n private var total = 0\n func add(_ amount: Int) { total += amount }\n func snapshot() -> CountSnapshot { return CountSnapshot(total: total) }\n}\nlet store = CounterStore()\nawait store.add(3)\nlet firstSnapshot = await store.snapshot()\nawait store.add(4)\nlet secondSnapshot = await store.snapshot()\n",
+    "runtime": "swift",
+    "checks": [
+      {
+        "label": "First snapshot records earlier state",
+        "expression": "firstSnapshot.total == 3"
+      },
+      {
+        "label": "Second snapshot records new state",
+        "expression": "secondSnapshot.total == 7"
+      },
+      {
+        "label": "Earlier value is not a live reference",
+        "expression": "firstSnapshot.total != secondSnapshot.total"
+      }
+    ],
+    "quiz": {
+      "question": "A Sendable snapshot was returned with total 3. The actor later changes its total to 7. What should the old immutable value show?",
+      "choices": [
+        "3; it is a snapshot, not shared mutable actor storage",
+        "7; Sendable makes every value a live view",
+        "A compiler error because values cannot cross actors"
+      ],
+      "answer": 0,
+      "explanation": "The immutable struct carries a value copied out of the actor. Sendable permits safe transfer; it does not turn it into a live subscription."
+    },
+    "hints": [
+      "Build the snapshot from the actor's current total.",
+      "Read both stored snapshot values after the two updates."
+    ],
+    "math": null,
+    "filename": "main.swift",
+    "estimatedMinutes": 12,
+    "externalNotes": "Static review only: Swift compiler unavailable. Requires a compatible Swift concurrency toolchain and strict Swift 6 concurrency compilation review before claiming checked Sendable behavior. Top-level await follows the existing async lesson driver pattern. Swift 6 isolation defaults/settings can affect diagnostics; no @unchecked Sendable escape hatch."
+  },
+  {
+    "id": "typescript-12",
+    "title": "Make missing cases a compiler error",
+    "summary": "Handle every notice variant and leave no forgotten branch.",
+    "explanation": [
+      "A discriminated union has a shared field whose literal value identifies each variant.",
+      "After a branch handles one variant, TypeScript can narrow the remaining possibilities.",
+      "```typescript\ntype Signal = {kind:\"on\"} | {kind:\"off\"};\nfunction signalText(signal: Signal): string {\n  switch (signal.kind) {\n    case \"on\": return \"Enabled\";\n    case \"off\": return \"Disabled\";\n  }\n}\n```",
+      "never means no value can remain at that point under the declared type. Passing a remaining variant to a function expecting never produces a compiler error.",
+      "An assertNever helper can also throw if invalid data unexpectedly reaches that branch at runtime. It does not replace validation of outside data.",
+      "For the exercise, return \"Waiting\", \"Ready: title\", or \"Failed: reason\". Finish the switch with assertNever(notice). If a new variant is added later, the compiler should point to the missing handling."
+    ],
+    "analogy": {
+      "familiar": "",
+      "connection": "",
+      "limit": ""
+    },
+    "steps": [
+      "Return a result for each discriminant.",
+      "Keep the final never check rather than hiding the missing case with a cast."
+    ],
+    "starter": "type Notice = {kind:\"waiting\"} | {kind:\"ready\"; title:string} | {kind:\"failed\"; reason:string};\nfunction assertNever(value: never): never { throw new Error(\"Unhandled notice\"); }\nfunction noticeText(notice: Notice): string {\n    switch (notice.kind) {\n        case \"waiting\": return \"Waiting\";\n        // TODO: handle ready and failed\n        default: return assertNever(notice);\n    }\n}",
+    "solution": "type Notice = {kind:\"waiting\"} | {kind:\"ready\"; title:string} | {kind:\"failed\"; reason:string};\nfunction assertNever(value: never): never { throw new Error(\"Unhandled notice\"); }\nfunction noticeText(notice: Notice): string {\n    switch (notice.kind) {\n        case \"waiting\": return \"Waiting\";\n        case \"ready\": return \"Ready: \" + notice.title;\n        case \"failed\": return \"Failed: \" + notice.reason;\n        default: return assertNever(notice);\n    }\n}",
+    "runtime": "typescript",
+    "checks": [
+      {
+        "label": "Waiting case",
+        "expression": "noticeText({kind:\"waiting\"}) === \"Waiting\""
+      },
+      {
+        "label": "Ready carries its own data",
+        "expression": "noticeText({kind:\"ready\",title:\"Forest\"}) === \"Ready: Forest\""
+      },
+      {
+        "label": "Failure carries its own data",
+        "expression": "noticeText({kind:\"failed\",reason:\"Offline\"}) === \"Failed: Offline\""
+      },
+      {
+        "label": "Empty payload remains explicit",
+        "expression": "noticeText({kind:\"ready\",title:\"\"}) === \"Ready: \""
+      }
+    ],
+    "quiz": {
+      "question": "A new {kind:\"cancelled\"} variant is added to Notice but not to the switch. Why should assertNever(notice) fail compilation?",
+      "choices": [
+        "notice can still be cancelled there, so it is not never",
+        "never automatically adds a cancelled branch",
+        "The compiler runs the network request and sees cancellation"
+      ],
+      "answer": 0,
+      "explanation": "The unhandled variant remains possible at the end. That value cannot be passed to a never parameter, revealing the missing case before execution."
+    },
+    "hints": [
+      "Return a result for each discriminant.",
+      "Keep the final never check rather than hiding the missing case with a cast."
+    ],
+    "math": null,
+    "filename": "main.ts",
+    "estimatedMinutes": 12,
+    "externalNotes": "Deepens previously brief never usage with compile-negative changed-union verification. Starter intentionally fails strict compilation until missing cases are handled. No as never escape hatch; runtime checks alone cannot prove exhaustiveness."
+  }
+]

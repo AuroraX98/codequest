@@ -49,7 +49,7 @@ for (const lesson of lessons) {
   assert.equal(empty.readCompleted, 0);
   assert.equal(empty.readTotal, expectedReadTotal);
   assert.equal(empty.completed, 0);
-  assert.equal(empty.total, expectedReadTotal + 2);
+  assert.equal(empty.total, expectedReadTotal + (lesson.learningMode === "concept" ? 1 : 2));
   assert.equal(empty.percent, 0);
   assert.equal(empty.isComplete, false);
   assert.equal(empty.legacyReadingUnknown, false);
@@ -100,13 +100,13 @@ for (const lesson of lessons) {
     0,
     "Never backfill read marks from completedAt.",
   );
-  assert.equal(legacy.completed, 2);
+  assert.equal(legacy.completed, lesson.learningMode === "concept" ? 1 : 2);
   assert.equal(
     legacy.projectCompleted,
-    true,
+    lesson.learningMode !== "concept",
     "Preserve existing project completion.",
   );
-  assert.equal(legacy.legacyReadingUnknown, true);
+  assert.equal(legacy.legacyReadingUnknown, lesson.learningMode !== "concept");
   assert.equal(legacy.isComplete, false);
   const other = getLessonCompletion(
     lesson,

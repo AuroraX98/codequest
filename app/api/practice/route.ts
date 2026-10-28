@@ -81,6 +81,8 @@ export async function POST(req: Request) {
         { error: "Choose a known course topic first." },
         { status: 400 },
       );
+    if (base.learningMode === "concept")
+      return Response.json({error:"This topic teaches concepts without a supported coding runtime. Choose a coding topic for generated practice."},{status:400});
     const connection = await aiConnection(user, p);
     if (!connection)
       return Response.json(

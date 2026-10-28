@@ -1,0 +1,947 @@
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
++ actual - expected
+... Skipped lines
+
+  [
+    {
+      analogy: {
+        connection: 'The name helps you refer to the current number.',
+        familiar: 'A labeled place on a score sheet',
+...
+        },
++       {
++         expression: 'convert(3, factor: 2) == 6 && convert(0, factor: 7) == 0',
++         label: 'Changed factor and zero'
++       }
+      ],
+      estimatedMinutes: 16,
+      explanation: [
+        'A function packages a named job so you can repeat it with different input. Parameters are the named input slots in its definition. Arguments are the actual values you pass when calling it. The return value is the result the call gives back. A conversion function can accept a distance and a conversion factor, multiply them, and return a new distance. Calling it twice does not require copying its calculation twice. It does not automatically choose units or a factor; the caller supplies the values with the intended meaning.',
+        'This complete example scales a length for a model.\n' +
+...
+        },
++       {
++         expression: '{ let trip = Trip(destination: "Corvallis", note: ""); let text = tripSummary(trip, by: Bicycle()); return text.contains("Corvallis") && text.contains("Bicycle") && !text.contains("No extra note") }()',
++         label: 'Changed trip and empty present note'
++       }
+      ],
+      estimatedMinutes: 22,
+      explanation: [
+        'Some information can be missing. An optional type explicitly allows either a value or no value. String? means an optional String; nil means it currently has no String. nil is not the empty String "": an empty String exists but contains no characters. Do not assume an optional always has a value. The nil-coalescing operator ?? chooses a fallback when the optional is nil. That makes a missing trip note explainable instead of forcing a value and risking a crash.',
+        'This complete program safely displays optional notes.\n' +
+...
+        'let trip = Trip(destination: "Salem", note: nil)\n' +
++       'let summary = tripSummary(trip, by: Train())\n' +
++       'let bikeSummary = tripSummary(Trip(destination: "Eugene", note: "Pack a light"), by: Bicycle())',
+-       'let summary = tripSummary(trip, by: Train())',
+      steps: [
+        'Define a Transport protocol that requires a description property.',
+        'Create Train and Bicycle structs that follow Transport by supplying a description.',
+        'Create a Trip struct with a destination and a note that can be missing.',
+        'For summary, use a trip to Salem with Train and no note (nil).',
+...
+          '```\n' +
++         'In a top-level async program this prints Ready. MainActor.run receives a synchronous closure, executes it on the main actor and returns its value through the awaited call. It does not make an entire async operation uninterrupted. The supplied start method returns its Task<Void, Never> handle as well as storing it for cancellation. The driver awaits each handle’s value before reading results, including the superseded and cancelled tasks. This observes completion instead of assuming that a chosen sleep interval is long enough. For the cancellation demonstration, one synchronous MainActor.run closure starts and cancels the task before its inherited MainActor body can execute; then the driver awaits completion. This controlled ordering does not undo work that already completed before a later cancellation. The simulated loader still uses a cancellable delay to represent work; it does not promise a scheduling order.',
++       'For the exercise, use the supplied real async driver: slow request 1 followed by faster request 2 should leave session-2 in both the loader and actor store. Request 0 should produce Could not load practice data. Explicit cancellation of request 1 should preserve session-2 and show Load cancelled. Store and cancel the Task, capture each new ID, and guard after awaits; do not depend on delays alone. In the math scenario, request A with ID 4 remains stale once B with ID 5 is current, so B stays visible even if A finishes last. Compile and run with Swift 6 language mode using the configured Mac companion or a compatible local toolchain; test in Xcode when attaching a real Apple interface. The browser cannot execute this Swift concurrency or prove its scheduling behavior.'
+-         'In a top-level async program this prints Ready. MainActor.run receives a synchronous closure, executes it on the main actor and returns its value through the awaited call. It does not make an entire async operation uninterrupted.',
+-       'For the exercise, use the supplied real async driver: slow request 1 followed by faster request 2 should leave session-2 in both the loader and actor store. Request 0 should produce Could not load practice data. Explicit cancellation of request 1 should preserve session-2 and show Load cancelled. Store and cancel the Task, capture each new ID, and guard after awaits; do not depend on delays alone. In the math scenario, request A with ID 4 remains stale once B with ID 5 is current, so B stays visible even if A finishes last. Compile and run with the compatible Mac companion or Apple toolchain, then test in Xcode when attaching a real interface. The browser cannot execute this Swift concurrency or prove its scheduling behavior.'
+      ],
++     externalNotes: 'The driver awaits the actual Task handles; no fixed observation sleep proves completion. Loader guards the currently visible request. PracticeStore separately rejects a replacement older than its last stored request; it is not notified whenever a new request starts or is cancelled. Native Linux validation does not establish Mac sandbox or Apple UI behavior.',
+-     externalNotes: 'Uses actual top-level async Swift, Task scheduling, actor storage, and supplied race/failure/cancellation scenarios. The Mac companion must compile and run this code using a compatible Apple toolchain. Run it in Xcode as well when attaching a real interface; browser execution cannot replace that Apple environment.',
+      filename: 'main.swift',
+      hints: [
+        'Keep a monotonically increasing request ID.',
+        'Cancel the old task and capture the new ID before starting the Task.',
+        'After awaiting, check cancellation and confirm the captured ID still matches before changing visible data.'
+...
+        'actor PracticeStore {\n' +
++       '  private var entries: [String] = []\n' +
++       '  private var requestID = 0\n' +
++       '  func replace(with newEntries: [String], request: Int) {\n' +
++       '    guard request >= requestID else { return }\n' +
++       '    requestID = request\n' +
++       '    entries = newEntries\n' +
++       '  }\n' +
++       '  func snapshot() -> [String] { entries }\n' +
+-       '    private var entries: [String] = []\n' +
+-       '    private var requestID = 0\n' +
+-       '    func replace(with newEntries: [String], request: Int) {\n' +
+-       '        guard request >= requestID else { return }\n' +
+-       '        requestID = request\n' +
+-       '        entries = newEntries\n' +
+-       '    }\n' +
+-       '    func snapshot() -> [String] { entries }\n' +
+        '}\n' +
+        'func loadPractice(_ id: Int) async throws -> [String] {\n' +
++       '  try await Task.sleep(for: .milliseconds(id == 1 ? 80 : 10))\n' +
++       '  try Task.checkCancellation()\n' +
++       '  if id == 0 { throw LoadError.unavailable }\n' +
++       '  return ["session-\\(id)"]\n' +
+-       '    try await Task.sleep(for: .milliseconds(id == 1 ? 80 : 10))\n' +
+-       '    try Task.checkCancellation()\n' +
+-       '    if id == 0 { throw LoadError.unavailable }\n' +
+-       '    return ["session-\\(id)"]\n' +
+        '}\n' +
+        '@MainActor final class Loader {\n' +
++       '  private(set) var result: [String] = []\n' +
++       '  private(set) var message = "Ready"\n' +
++       '  let store = PracticeStore()\n' +
++       '  private var task: Task<Void, Never>?\n' +
++       '  private var requestID = 0\n' +
++       '  func start(_ id: Int) -> Task<Void, Never> {\n' +
++       '    task?.cancel()\n' +
++       '    requestID += 1\n' +
++       '    let thisRequest = requestID\n' +
++       '    message = "Loading"\n' +
++       '    let started = Task {\n' +
++       '      do {\n' +
++       '        let values = try await loadPractice(id)\n' +
++       '        guard !Task.isCancelled, accepts(request: thisRequest, current: requestID) else { return }\n' +
++       '        await store.replace(with: values, request: thisRequest)\n' +
++       '        guard !Task.isCancelled, accepts(request: thisRequest, current: requestID) else { return }\n' +
++       '        result = values\n' +
++       '        message = "Loaded \\(values.count) entries"\n' +
++       '      } catch is CancellationError {\n' +
++       '        if accepts(request: thisRequest, current: requestID) { message = "Load cancelled" }\n' +
++       '      } catch {\n' +
++       '        if accepts(request: thisRequest, current: requestID) {\n' +
++       '          message = "Could not load practice data"\n' +
+-       '    private(set) var result: [String] = []\n' +
+-       '    private(set) var message = "Ready"\n' +
+-       '    let store = PracticeStore()\n' +
+-       '    private var task: Task<Void, Never>?\n' +
+-       '    private var requestID = 0\n' +
+-       '    func start(_ id: Int) {\n' +
+-       '        task?.cancel()\n' +
+-       '        requestID += 1\n' +
+-       '        let thisRequest = requestID\n' +
+-       '        message = "Loading"\n' +
+-       '        task = Task {\n' +
+-       '            do {\n' +
+-       '                let values = try await loadPractice(id)\n' +
+-       '                guard !Task.isCancelled, accepts(request: thisRequest, current: requestID) else { return }\n' +
+-       '                await store.replace(with: values, request: thisRequest)\n' +
+-       '                guard !Task.isCancelled, accepts(request: thisRequest, current: requestID) else { return }\n' +
+-       '                result = values\n' +
+-       '                message = "Loaded \\(values.count) entries"\n' +
+-       '            } catch is CancellationError {\n' +
+-       '                if accepts(request: thisRequest, current: requestID) { message = "Load cancelled" }\n' +
+-       '            } catch {\n' +
+-       '                if accepts(request: thisRequest, current: requestID) { message = "Could not load practice data" }\n' +
+-       '            }\n' +
+        '        }\n' +
++       '      }\n' +
+        '    }\n' +
++       '    task = started\n' +
++       '    return started\n' +
++       '  }\n' +
++       '  func cancel() {\n' +
++       '    task?.cancel()\n' +
++       '    requestID += 1\n' +
++       '    message = "Load cancelled"\n' +
++       '  }\n' +
+-       '    func cancel() {\n' +
+-       '        task?.cancel()\n' +
+-       '        requestID += 1\n' +
+-       '        message = "Load cancelled"\n' +
+-       '    }\n' +
+        '}\n' +
+        'let loader = await MainActor.run { Loader() }\n' +
++       'let earlier = await loader.start(1)\n' +
++       'let current = await loader.start(2)\n' +
++       'await earlier.value\n' +
++       'await current.value\n' +
+-       'await loader.start(1)\n' +
+-       'await loader.start(2)\n' +
+-       'try await Task.sleep(for: .milliseconds(140))\n' +
+        'let afterRace = await MainActor.run { loader.result }\n' +
+        'let storedAfterRace = await loader.store.snapshot()\n' +
++       'let failed = await loader.start(0)\n' +
++       'await failed.value\n' +
+-       'await loader.start(0)\n' +
+-       'try await Task.sleep(for: .milliseconds(50))\n' +
+        'let afterFailure = await MainActor.run { loader.message }\n' +
++       'let cancelled = await MainActor.run {\n' +
++       '  let handle = loader.start(1)\n' +
++       '  loader.cancel()\n' +
++       '  return handle\n' +
++       '}\n' +
++       'await cancelled.value\n' +
+-       'await loader.start(1)\n' +
+-       'await loader.cancel()\n' +
+-       'try await Task.sleep(for: .milliseconds(100))\n' +
+        'let afterCancellation = await MainActor.run { (loader.result, loader.message) }\n' +
++       'print("Latest data: \\(afterRace); failure: \\(afterFailure); cancellation: \\(afterCancellation.1)")\n',
++     starter: 'func accepts(request: Int, current: Int) -> Bool {\n' +
++       '  // TODO: compare the identifiers\n' +
++       '  return false\n' +
++       '}\n' +
+-       'print("Latest data: \\(afterRace); failure: \\(afterFailure); cancellation: \\(afterCancellation.1)")',
+-     starter: 'func accepts(request: Int, current: Int) -> Bool { false // TODO: compare the identifiers }\n' +
+        'enum LoadError: Error { case unavailable }\n' +
+        'actor PracticeStore {\n' +
++       '  private var entries: [String] = []\n' +
++       '  private var requestID = 0\n' +
++       '  func replace(with newEntries: [String], request: Int) {\n' +
++       '    guard request >= requestID else { return }\n' +
++       '    requestID = request\n' +
++       '    // TODO: replace entries\n' +
++       '  }\n' +
++       '  func snapshot() -> [String] { entries }\n' +
+-       '    private var entries: [String] = []\n' +
+-       '    private var requestID = 0\n' +
+-       '    func replace(with newEntries: [String], request: Int) {\n' +
+-       '        guard request >= requestID else { return }\n' +
+-       '        requestID = request\n' +
+-       '        // TODO: replace entries\n' +
+-       '    }\n' +
+-       '    func snapshot() -> [String] { entries }\n' +
+        '}\n' +
+        'func loadPractice(_ id: Int) async throws -> [String] {\n' +
++       '  try await Task.sleep(for: .milliseconds(id == 1 ? 80 : 10))\n' +
++       '  try Task.checkCancellation()\n' +
++       '  if id == 0 { throw LoadError.unavailable }\n' +
++       '  return ["session-\\(id)"]\n' +
+-       '    try await Task.sleep(for: .milliseconds(id == 1 ? 80 : 10))\n' +
+-       '    try Task.checkCancellation()\n' +
+-       '    if id == 0 { throw LoadError.unavailable }\n' +
+-       '    return ["session-\\(id)"]\n' +
+        '}\n' +
+        '@MainActor final class Loader {\n' +
++       '  private(set) var result: [String] = []\n' +
++       '  private(set) var message = "Ready"\n' +
++       '  let store = PracticeStore()\n' +
++       '  private var task: Task<Void, Never>?\n' +
++       '  private var requestID = 0\n' +
++       '  func start(_ id: Int) -> Task<Void, Never> {\n' +
++       '    task?.cancel()\n' +
++       '    requestID += 1\n' +
++       '    let thisRequest = requestID\n' +
++       '    message = "Loading"\n' +
++       '    let started = Task {\n' +
++       '      do {\n' +
++       '        let values = try await loadPractice(id)\n' +
++       '        guard !Task.isCancelled, accepts(request: thisRequest, current: requestID) else { return }\n' +
++       '        await store.replace(with: values, request: thisRequest)\n' +
++       '        guard !Task.isCancelled, accepts(request: thisRequest, current: requestID) else { return }\n' +
++       '        // TODO: apply the latest result\n' +
++       '        message = "Loaded \\(values.count) entries"\n' +
++       '      } catch is CancellationError {\n' +
++       '        if accepts(request: thisRequest, current: requestID) { message = "TODO" }\n' +
++       '      } catch {\n' +
++       '        if accepts(request: thisRequest, current: requestID) { message = "TODO" }\n' +
++       '      }\n' +
+-       '    private(set) var result: [String] = []\n' +
+-       '    private(set) var message = "Ready"\n' +
+-       '    let store = PracticeStore()\n' +
+-       '    private var task: Task<Void, Never>?\n' +
+-       '    private var requestID = 0\n' +
+-       '    func start(_ id: Int) {\n' +
+-       '        task?.cancel()\n' +
+-       '        requestID += 1\n' +
+-       '        let thisRequest = requestID\n' +
+-       '        message = "Loading"\n' +
+-       '        task = Task {\n' +
+-       '            do {\n' +
+-       '                let values = try await loadPractice(id)\n' +
+-       '                guard !Task.isCancelled, accepts(request: thisRequest, current: requestID) else { return }\n' +
+-       '                await store.replace(with: values, request: thisRequest)\n' +
+-       '                guard !Task.isCancelled, accepts(request: thisRequest, current: requestID) else { return }\n' +
+-       '                // TODO: apply the latest result\n' +
+-       '                message = "Loaded \\(values.count) entries"\n' +
+-       '            } catch is CancellationError {\n' +
+-       '                if accepts(request: thisRequest, current: requestID) { message = "TODO" }\n' +
+-       '            } catch {\n' +
+-       '                if accepts(request: thisRequest, current: requestID) { message = "TODO" }\n' +
+-       '            }\n' +
+-       '        }\n' +
+        '    }\n' +
++       '    task = started\n' +
++       '    return started\n' +
++       '  }\n' +
++       '  func cancel() {\n' +
++       '    task?.cancel()\n' +
++       '    requestID += 1\n' +
++       '    message = "TODO"\n' +
++       '  }\n' +
+-       '    func cancel() {\n' +
+-       '        task?.cancel()\n' +
+-       '        requestID += 1\n' +
+-       '        message = "TODO"\n' +
+-       '    }\n' +
+        '}\n' +
+        'let loader = await MainActor.run { Loader() }\n' +
++       'let earlier = await loader.start(1)\n' +
++       'let current = await loader.start(2)\n' +
++       'await earlier.value\n' +
++       'await current.value\n' +
+-       'await loader.start(1)\n' +
+-       'await loader.start(2)\n' +
+-       'try await Task.sleep(for: .milliseconds(140))\n' +
+        'let afterRace = await MainActor.run { loader.result }\n' +
+        'let storedAfterRace = await loader.store.snapshot()\n' +
++       'let failed = await loader.start(0)\n' +
++       'await failed.value\n' +
+-       'await loader.start(0)\n' +
+-       'try await Task.sleep(for: .milliseconds(50))\n' +
+        'let afterFailure = await MainActor.run { loader.message }\n' +
++       'let cancelled = await MainActor.run {\n' +
++       '  let handle = loader.start(1)\n' +
++       '  loader.cancel()\n' +
++       '  return handle\n' +
++       '}\n' +
++       'await cancelled.value\n' +
+-       'await loader.start(1)\n' +
+-       'await loader.cancel()\n' +
+-       'try await Task.sleep(for: .milliseconds(100))\n' +
+        'let afterCancellation = await MainActor.run { (loader.result, loader.message) }\n' +
++       'print("Latest data: \\(afterRace); failure: \\(afterFailure); cancellation: \\(afterCancellation.1)")\n',
+-       'print("Latest data: \\(afterRace); failure: \\(afterFailure); cancellation: \\(afterCancellation.1)")',
+      steps: [
+        'Make accepts return true only when the request ID matches the current request ID.',
+        'In PracticeStore, ignore data sent with an ID older than the one already stored.',
+        'In Loader.start, cancel the previous task and save a new request ID.',
+        'After each await, check that the task has not been cancelled and that its request ID is still current.',
+...
+      ],
++     externalNotes: 'The companion deletes its sandbox directory after each run, so this exercise checks atomic disk round-tripping and malformed-data recovery within one run. To verify survival across app restarts, inject an application-support URL in an Xcode app, save an entry, stop the app, and launch again. Plan versioning/migration separately; the temporary companion fixture does not establish persistent iOS storage. Native Linux execution and Apple SDK/companion execution are separate evidence; a cold Mac compile may still reach the companion time limit.',
+-     externalNotes: "The companion deletes its sandbox directory after each run, so this exercise checks atomic disk round-tripping and malformed-data recovery within one run. To verify survival across app restarts, inject an application-support URL in an Xcode app, save an entry, stop the app, and launch again. Plan versioning/migration separately; the temporary companion fixture does not establish persistent iOS storage. This Foundation-dependent lesson may hit the companion's 30-second cold compile limit on the development toolchain; compilation and execution have not yet been verified there.",
+      filename: 'main.swift',
+      hints: [
+        'Make the entry Codable so JSONEncoder and JSONDecoder can work with it.',
+        'Return a LoadResult in both the success and catch paths.',
+        'Try `JSONDecoder().decode([PracticeEntry].self, from: data)` and use `Data("broken".utf8)` to exercise recovery.'
+...
+        '    LoadResult(entries: [], message: "TODO")\n' +
++       '}\n' +
++       'func saveEntries(_ entries: [PracticeEntry], to url: URL) throws {\n' +
++       '    try encodeEntries(entries).write(to: url, options: .atomic)\n' +
++       '}\n' +
++       'func loadEntries(from url: URL) -> LoadResult {\n' +
++       '    do { return loadEntries(try Data(contentsOf: url)) }\n' +
++       '    catch { return LoadResult(entries: [], message: "Saved file could not be read; starting with an empty list.") }\n' +
++       '}\n' +
++       'let original = [PracticeEntry(title: "Swift", minutes: 20)]\n' +
++       'let fileURL = FileManager.default.temporaryDirectory.appendingPathComponent("practice-entries.json")\n' +
++       'try saveEntries(original, to: fileURL)\n' +
++       'let restored = loadEntries(from: fileURL)\n' +
++       'let recovered = loadEntries(Data("broken".utf8))',
+-       '}',
+      steps: [
+        'Define PracticeEntry with Codable so it can be converted to saved data and read back.',
+        'Encode [PracticeEntry(title: "Swift", minutes: 20)] as data for saving.',
+        'Write it to the supplied temporary file URL using .atomic, so a failed write does not leave a partly written file.',
+        'Read the saved file with loadEntries(from:).',
+...
+        },
++       {
++         expression: 'find(4, in: []).index == nil && find(4, in: []).comparisons == 0 && find(4, in: [4, 4]).index == 0 && find(4, in: [4, 4]).comparisons == 1',
++         label: 'Empty and repeated target'
++       }
+      ],
+      estimatedMinutes: 29,
+      explanation: [
+        'A test compares an observable result with an expected one. Good search tests ask more than “did one name show up?” Test an item at the beginning, one at the end, and a value that is absent. These cases make the search do different amounts of work and catch different mistakes. A linear search checks entries one after another until it finds a match or reaches the end. Linear describes how its worst-case work grows with the number of entries. Count comparisons so you can explain the work, rather than relying on one stopwatch result.',
+        'This complete Swift example returns both the found position and a work count.\n' +
+...
+        'let smallRun = find(99, in: sample)\n' +
++       'let largeRun = find(199, in: Array(0..<200))\n' +
++       'let missingRun = find(-1, in: sample)',
+-       'let largeRun = find(199, in: Array(0..<200))',
+      steps: [
+        'Write a search function that returns the item’s position and the number of values it checked.',
+        'In Array(0..<100), search for 0, then 99, then -1.',
+        'Expect positions 0 and 99 for the first two searches, and nil when -1 is not found.',
+        'Save the search for 99 in 100 entries as smallRun. Expect 100 comparisons.',
+...
+      ],
++     externalNotes: 'This standard Swift enum exercise does not require SwiftUI.',
+-     externalNotes: 'Prerequisites: swift-03 switch branches and swift-06 functions; string interpolation from swift-01. Authored and statically reviewed; Swift compiler was unavailable in the authoring environment. These execution checks require a compatible Swift runner. This lesson does not require SwiftUI.',
+      filename: 'main.swift',
+      hints: [
+        'Match the case before choosing its message.',
+        'A let pattern can give the associated number a local name.'
+      ],
+...
+      ],
++     externalNotes: "String keys here meet Set's Hashable requirement. No locale-aware sorting or case normalization is implied.",
+-     externalNotes: "Static review only: Swift compiler unavailable in authoring environment; execution checks require a compatible Swift runner. String keys here meet Set's Hashable requirement. No locale-aware sorting or case normalization is implied.",
+      filename: 'main.swift',
+      hints: [
+        'Create a set from the supplied array.',
+        'Return a sorted array without changing the input.'
+      ],
+...
+      ],
++     externalNotes: '',
+-     externalNotes: 'Static review only: Swift compiler unavailable. Exercises require compatible Swift execution. The quiz explains $0 shorthand; lesson examples use named arguments to avoid introducing unexplained punctuation.',
+      filename: 'main.swift',
+      hints: [
+        'Select values with a Boolean condition.',
+        'Transform only the selected values into text.'
+      ],
+...
+      ],
++     externalNotes: 'defer does not guarantee cleanup after process termination or a scope that never reaches it.',
+-     externalNotes: 'Expands error mechanics beyond swift-11 file IO; no file IO duplicated. Static review only: no Swift compiler available. defer does not guarantee cleanup after process termination or a scope that never reaches it.',
+      filename: 'main.swift',
+      hints: [
+        'Register cleanup before the operation that may throw.',
+        'Throw the error for negative input and return valid input unchanged.'
+      ],
+...
+      ],
++     externalNotes: '',
+-     externalNotes: 'Swift compiler unavailable: statically reviewed, not execution verified. Uses struct and computed-property foundations from swift-08.',
+      filename: 'main.swift',
+      hints: [
+        'Read existing properties inside the computed property.',
+        'Choose the status text from done.'
+      ],
+...
+      ],
++     externalNotes: 'Local compiler practice: assign firstOr([1, 2], fallback: 0) to a String and inspect the type error. This intentionally rejected program is separate from the normally compiling project and its behavior checks.',
+-     externalNotes: 'Swift compiler unavailable: static review only. No claim of verified generic type diagnostics. Compile-negative local practice: assign firstOr([1,2],fallback:0) to a String.',
+      filename: 'main.swift',
+      hints: [
+        "Use the array's optional first value.",
+        'Keep the same type for the fallback and result.'
+      ],
+...
+      ],
++     externalNotes: 'This narrow exercise directly initializes a property in its own class; it does not cover inheritance or observer reentrancy.',
+-     externalNotes: 'Swift compiler unavailable: static review only. This narrow exercise uses a directly initialized property in its own class, not inheritance or observer reentrancy.',
+      filename: 'main.swift',
+      hints: [
+        'Read oldValue and the newly stored value.',
+        'Append one trace entry without changing value again.'
+      ],
+...
+      ],
++     externalNotes: 'ARC applies to class instances. weak is appropriate here because the callback must not own the instance; it is not a universal ownership fix.',
+-     externalNotes: 'Swift runtime unavailable: static review only. ARC applies to class instances; weak is not a universal fix and is appropriate only when the callback must not own the instance. No lifetime execution claim.',
+      filename: 'main.swift',
+      hints: [
+        'Use a weak self capture in the stored callback.',
+        'Handle the missing owner without force unwrapping.'
+      ],
+...
+      ],
++     externalNotes: 'Use Swift 6 language mode for the stated Sendable checking. Compiler version, language mode and an Xcode project’s isolation defaults are distinct settings. Do not add @unchecked Sendable to bypass the contract.',
+-     externalNotes: 'Static review only: Swift compiler unavailable. Requires a compatible Swift concurrency toolchain and strict Swift 6 concurrency compilation review before claiming checked Sendable behavior. Top-level await follows the existing async lesson driver pattern. Swift 6 isolation defaults/settings can affect diagnostics; no @unchecked Sendable escape hatch.',
+      filename: 'main.swift',
+      hints: [
+        "Build the snapshot from the actor's current total.",
+        'Read both stored snapshot values after the two updates.'
+      ],
+
+    at file:///workspace/scratch/9b4623a0f2f8/codequest-inspect/tests/typescript-core.mjs:5:95
+    at ModuleJob.run (node:internal/modules/esm/module_job:561:25)
+    at async node:internal/modules/esm/loader:647:26
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {
+  generatedMessage: true,
+  code: 'ERR_ASSERTION',
+  actual: [
+    {
+      id: 'javascript-01',
+      title: 'A game coin balance',
+      summary: 'Store 20 starting coins and 7 spent coins. Calculate and print the coins left.',
+      explanation: [
+        'A program is a list of instructions the computer follows. A value is one piece of information, such as the number 30 or the text "coins". Numbers have no quotation marks here. Quotation marks tell JavaScript that the characters inside are text, also called a string. This project uses numbers so it can subtract an amount spent from an amount available.',
+        'A variable gives a value a name. In `const savedCoins = 30;`, `const` creates a name that cannot later be assigned a different value. `savedCoins` is the name, and the single equals sign `=` assigns the value on its right. A name cannot contain spaces or begin with a digit. JavaScript distinguishes capital and small letters: `savedCoins` and `savedcoins` are different names. The semicolon ends this instruction.',
+        'Read this example from top to bottom. A calculation such as `savedCoins - paidCoins` is an expression: code that produces a value.\n' +
+          '```javascript\n' +
+          'const savedCoins = 30;\n' +
+          'const paidCoins = 8;\n' +
+          'const coinsLeft = savedCoins - paidCoins;\n' +
+          'console.log(coinsLeft);\n' +
+          '```\n' +
+          'The first two lines name the input numbers. The third reads those numbers, subtracts 8 from 30, and assigns 22 to `coinsLeft`. The final line displays 22. It does not subtract again or change the stored values.',
+        '`console.log()` is a function used to display information. A function is a reusable action; calling it asks it to run. The dot in `console.log` selects the `log` action belonging to `console`. Parentheses `()` contain the value you want to display. Put the variable name inside, without quotes, to display its value. `console.log("coinsLeft")` instead displays the literal word coinsLeft because the quotes make it text.',
+        'Try another complete program with different inputs.\n' +
+          '```javascript\n' +
+          'const savedCoins = 30;\n' +
+          'const paidCoins = 4;\n' +
+          'const coinsLeft = savedCoins - paidCoins;\n' +
+          'console.log(coinsLeft);\n' +
+          'console.log(savedCoins);\n' +
+          '```\n' +
+          'It displays 26, then 30 on a new line. Changing the spending changes the calculated balance. The calculation leaves `savedCoins` alone. Editing a declaration before rerunning is allowed; trying to reassign a `const` name while the program runs causes an error.',
+        'Assignment and comparison ask different things. `const balance = 22;` assigns a value. `balance === 22` asks whether the value is exactly equal to 22 and produces `true` or `false`. Those are Boolean values, the two possible answers to a yes-or-no question. The minus sign subtracts; the plus sign adds numbers; the star `*` multiplies numbers. Choose the sign that matches the action you mean.',
+        'For your project, calculate with the supplied variable names so the calculation follows their values. The supplied amounts give 20 minus 7, which is 13. A second run with spending changed to 5 gives 15. Trace each line: which two values go into the expression, what number comes out, and which name is printed? Storing a number and displaying it are separate steps, and the checks look at both.'
+      ],
+      analogy: {
+        familiar: 'A labeled place on a score sheet',
+        connection: 'The name helps you refer to the current number.',
+        limit: 'A variable is not always a separate box in computer memory. Objects can be shared through names, and const prevents reassignment of the name but does not freeze every object value.'
+      },
+      steps: [
+        'Use the supplied values: startingCoins is 20 and spentCoins is 7.',
+        'Replace the TODO value with startingCoins minus spentCoins.',
+        'Print remainingCoins with console.log.',
+        'Run the checks, then change spentCoins to 5 and predict the new output.'
+      ],
+      starter: 'const startingCoins = 20;\n' +
+        'const spentCoins = 7;\n' +
+        '// TODO: subtract spentCoins from startingCoins\n' +
+        'const remainingCoins = 0;\n' +
+        'console.log(remainingCoins);',
+      solution: 'const startingCoins = 20;\n' +
+        'const spentCoins = 7;\n' +
+        'const remainingCoins = startingCoins - spentCoins;\n' +
+        'console.log(remainingCoins);',
+      runtime: 'javascript',
+      checks: [
+        {
+          label: 'The first run prints 13.',
+          expression: '__output[0] === "13"'
+        },
+        {
+          label: 'The named values produce the correct balance.',
+          expression: 'remainingCoins === 13'
+        }
+      ],
+      quiz: {
+        question: 'What does this code print?\n' +
+          '\n' +
+          '```javascript\n' +
+          'const balance = 18 - 6;\n' +
+          'console.log(balance);\n' +
+          '```',
+        choices: [ '12', '24', '18' ],
+        answer: 0,
+        explanation: 'The minus sign subtracts 6 from 18. console.log displays the calculated balance, 12.'
+      },
+      hints: [
+        'Find the TODO and name the two values the calculation needs.',
+        'The balance is the starting amount with the spent amount taken away.',
+        'Write startingCoins - spentCoins, then print the variable that stores the result.'
+      ],
+      math: {
+        explanation: 'Subtraction finds how much remains after some coins are spent.',
+        question: 'You start with 20 coins and spend 7. How many remain?',
+        choices: [ '13', '27', '7' ],
+        answer: 0,
+        feedback: '20 - 7 = 13.'
+      },
+      filename: 'main.js',
+      estimatedMinutes: 11
+    },
+    {
+      id: 'html-01',
+      title: 'A page about your favorite place',
+      summary: 'Add a heading, a short paragraph, a link, and an image.',
+      explanation: [
+        "A web page starts with content: words, pictures, and actions. HTML means HyperText Markup Language. “Markup” means adding labels around content so a browser knows what each part means. A browser is the program that opens a website. An HTML element is a whole piece, such as a heading together with its tags. In <p>Hello!</p>, <p> starts a paragraph, Hello! is the content, and </p> ends it. The slash means “this element ends here.” HTML names meaning and structure; colors and spacing are usually CSS's job.",
+        'This is a complete small HTML document. Save it as index.html and open it in a browser.\n' +
+          '\n' +
+          '```html\n' +
+          '<!doctype html>\n' +
+          '<html lang="en">\n' +
+          '  <head>\n' +
+          '    <meta charset="utf-8">\n' +
+          '    <title>Mountain lookout</title>\n' +
+          '  </head>\n' +
+          '  <body>\n' +
+          '    <h1>Mountain lookout</h1>\n' +
+          '    <p>I like watching the clouds drift past.</p>\n' +
+          '  </body>\n' +
+          '</html>\n' +
+          '```\n' +
+          '\n' +
+          'The first line asks for modern HTML behavior. html wraps the document; lang="en" says its language is English, which helps tools read it aloud. head holds information about the page. title names the browser tab. body holds the visible content. h1 gives the main heading, and p gives the paragraph. meta provides a document setting. charset="utf-8" tells the browser to interpret the file using UTF-8, a character encoding that can represent letters and symbols from many languages.',
+        `The angle brackets < and > mark tags. An attribute is an extra setting inside an opening tag. In lang="en", lang is the attribute name and "en" is its value. The equals sign connects them; quotes mark where the value starts and ends. Nesting means putting one element inside another. In the example, h1 and p are inside body. Close the inside element before closing its parent: <body><p>Text</p></body>. Indenting each nested level makes this relationship easier to see. Indentation helps people; it does not choose the tag's meaning.`,
+        'An anchor, written a, makes a link. Its href attribute holds the destination address. The visible words between <a> and </a> tell readers what they will open. These jobs are different: changing the words does not change the address. Use useful words such as “Read the park guide,” rather than “Click here.” A full address such as https://example.org/lookout includes a scheme, https, and a site name. A local filename can also be a destination. The destination still needs to exist; making a link does not create the other page.',
+        'These two elements can go inside body, after the paragraph in the first example.\n' +
+          '\n' +
+          '```html\n' +
+          '<a href="https://example.org/lookout">\n' +
+          '  Read the lookout guide\n' +
+          '</a>\n' +
+          '<img\n' +
+          '  src="lookout.jpg"\n' +
+          '  alt="Clouds above a rocky mountain viewpoint"\n' +
+          '>\n' +
+          '```\n' +
+          '\n' +
+          "Clicking the link asks the browser to open the href address. src means the image's source: the file or address from which to load it. This example needs a real lookout.jpg file beside index.html. img is a void element, meaning it has no content between opening and closing tags, so it needs no </img>. The attributes still belong to its opening tag even when they use separate lines.",
+        `Alt text is a written replacement for an image's useful information. It can help when the picture fails to load or when someone uses a screen reader, a tool that speaks or presents page content in another way. Describe the information that matters here, rather than writing “image” or repeating a filename. A decorative image that adds no information normally gets alt="". This project's image is informative, so give it a useful description. A long description can pass a length check while still being unhelpful; read your own words and ask what a person would learn from them.`,
+        'Before the project, predict what happens if you change href but keep the link words: the destination changes while the words stay the same. Now predict changing alt: the image file stays the same, while its written description changes. For the exercise, keep a main heading and add a short p, an a whose href is exactly https://example.org/trail, and an img with descriptive alt text. Check that all four parts exist, then actually follow the link and inspect the picture. The automatic checks can find the elements and address; they cannot judge whether your description matches the real image.'
+      ],
+      analogy: {
+        familiar: 'A small poster with title, note, directions and picture',
+        connection: 'Tags label the job of each page part',
+        limit: 'A label does not make a link useful unless its destination is correct.'
+      },
+      steps: [
+        'Add one main heading with h1 and a short paragraph with p.',
+        'Link to https://example.org/trail with clear link words.',
+        'Add an image. Use its alt text to describe what the picture shows.',
+        'Run the checks, then change the heading.'
+      ],
+      starter: '<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Willow Beach</title></head><body><h1>Willow Beach</h1><!-- TODO: add paragraph, link and described image --></body></html>',
+      solution: '<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Willow Beach</title></head><body><h1>Willow Beach</h1><p>I like the quiet path beside the water.</p><a href="https://example.org/trail">See the trail guide</a><img src="beach.jpg" alt="A sandy beach beside calm water"></body></html>',
+      runtime: 'html',
+      checks: [
+        {
+          label: 'Heading and paragraph appear',
+          expression: '!!document.querySelector("h1") && !!document.querySelector("p")'
+        },
+        {
+          label: 'Link has intended target',
+          expression: 'document.querySelector("a")?.getAttribute("href")==="https://example.org/trail"'
+        },
+        {
+          label: 'Image has descriptive alt text',
+          expression: 'document.querySelector("img")?.alt.trim().length>5'
+        }
+      ],
+      quiz: {
+        question: 'A link reads “Park guide” and has href="park.html". You change only its words to “Trail map”. Where does it lead?',
+        choices: [
+          'trail.html',
+          'Nowhere until the words match the filename',
+          'park.html'
+        ],
+        answer: 2,
+        explanation: 'href chooses the destination. Changing the visible words changes the label, not the address.'
+      },
+      hints: [
+        'h1 names the page. p contains the short note.',
+        'Put the destination in href and description in alt.',
+        'Add p, a with the required destination, and img with useful alt.'
+      ],
+      math: null,
+      filename: 'index.html',
+      estimatedMinutes: 15
+    },
+    {
+      id: 'html-02',
+      title: 'A two-page hobby guide',
+      summary: 'Create a home page and a supplies page with a list. Link the pages to each other.',
+      explanation: [
+        "A website can contain several HTML documents. Each document is a separate file, even when the pages look similar. A link joins them by giving the browser a path. A path tells it where to look for a file. index.html is often the name of the starting page; it is still an ordinary HTML file. Putting another filename in a paragraph only shows those words. To make navigation, put the filename in an a element's href. The destination file must exist at that location, and the spelling must match.",
+        'Save this example as index.html. It is a complete home page for a different hobby.\n' +
+          '\n' +
+          '```html\n' +
+          '<!doctype html>\n' +
+          '<html lang="en">\n' +
+          '  <head>\n' +
+          '    <meta charset="utf-8">\n' +
+          '    <title>Paper models</title>\n' +
+          '  </head>\n' +
+          '  <body>\n' +
+          '    <h1>Paper models</h1>\n' +
+          '    <p>Build small houses from paper.</p>\n' +
+          '    <a href="materials.html">See the materials list</a>\n' +
+          '  </body>\n' +
+          '</html>\n' +
+          '```\n' +
+          '\n' +
+          `The h1 names the visible page. p adds an ordinary paragraph. a wraps the useful link words, and href="materials.html" asks for a file beside this page. The address is relative: the browser works it out using the current page's location.`,
+        "A relative path starts from a known location instead of naming a whole website. materials.html means “look in the same folder.” images/fold.jpg means “open the images folder, then find fold.jpg.” ../index.html means “move up one folder, then find index.html.” A full address such as https://example.org/models starts with a scheme and site name. File names can be case sensitive on a web server: Materials.html and materials.html may differ. Spaces and accidentally changed extensions also cause broken links. Follow the actual file names, rather than guessing from the page's heading.",
+        'A list groups related items. ul means unordered list: the order is not meant to be a sequence of steps, and browsers usually show bullets. ol means ordered list: the order matters, and browsers usually show numbers. Each list entry goes inside li, meaning list item. Put li elements inside ul or ol, then close each li before starting another. Do not use paragraphs with typed bullet characters when you mean a real list. List elements let browsers and assistive tools recognize how many entries belong together.',
+        'Save this second complete document as materials.html beside index.html.\n' +
+          '\n' +
+          '```html\n' +
+          '<!doctype html>\n' +
+          '<html lang="en">\n' +
+          '  <head>\n' +
+          '    <meta charset="utf-8">\n' +
+          '    <title>Model materials</title>\n' +
+          '  </head>\n' +
+          '  <body>\n' +
+          '    <main>\n' +
+          '      <h1>Materials</h1>\n' +
+          '      <ul>\n' +
+          '        <li>Thick paper</li>\n' +
+          '        <li>Glue stick</li>\n' +
+          '      </ul>\n' +
+          '      <a href="index.html">Back to paper models</a>\n' +
+          '    </main>\n' +
+          '  </body>\n' +
+          '</html>\n' +
+          '```\n' +
+          '\n' +
+          'main identifies the main content. ul contains two li children. The return link points to the first file, so navigation works in both directions. Both links need their destination files; neither link creates a document.',
+        "HTML is nested. The second page's list is inside main, and its items are inside ul. Closing </ul> ends the list, so the following a is outside that list. Most of these elements use opening and closing tags. The slash closes an element; it is not part of a file path here. Attributes go in opening tags, and their values go in quotes. Read this code from the outside inward if you lose your place: html contains body, body contains main, and main contains the heading, list, and link.",
+        'For the project, keep the home heading exactly Garden journal and keep its paragraph. Add a useful link whose href is supplies.html. The supplied supplies.html already has its list and its link back to index.html; inspect it so you can explain both directions. Open the home page, follow the supplies link, and follow the return link. A check can confirm that the home anchor exists and has words, but that alone does not prove both files open. If navigation fails, compare the href with the actual filename and folder first.'
+      ],
+      analogy: {
+        familiar: 'Two pages in a small guide',
+        connection: 'A link gives the browser a path between files',
+        limit: 'The second file must exist in the project.'
+      },
+      steps: [
+        'Keep the home page heading and paragraph.',
+        'Add a link with an a element. Set its href to "supplies.html".',
+        'Open the supplied supplies.html file. Find its list and its link back to the home page.',
+        'Try both links to check that you can move between the two pages.'
+      ],
+      starter: '<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Garden journal</title></head><body><h1>Garden journal</h1><p>Notes from a balcony garden.</p><!-- TODO: add link to supplies.html --></body></html>',
+      solution: '<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Garden journal</title></head><body><h1>Garden journal</h1><p>Notes from a balcony garden.</p><a href="supplies.html">See the supplies list</a></body></html>',
+      runtime: 'html',
+      checks: [
+        {
+          label: 'Home links to the supplied page',
+          expression: 'Array.from(document.querySelectorAll("a")).some(a=>a.getAttribute("href")==="supplies.html")'
+        },
+        {
+          label: 'Link has a useful name',
+          expression: 'document.querySelector("a")?.textContent.trim().length>0'
+        },
+        {
+          label: 'Home heading is present',
+          expression: 'document.querySelector("h1")?.textContent==="Garden journal"'
+        }
+      ],
+      quiz: {
+        question: 'What makes supplies.html open from this page?',
+        choices: [
+          'The file exists and href gives its path',
+          'Its filename appears in a paragraph',
+          'The page has two headings'
+        ],
+        answer: 0,
+        explanation: 'The browser follows href to a file. Both files must be included in the project.'
+      },
+      hints: [
+        'A second page is a separate file.',
+        'Use an anchor whose href is supplies.html.',
+        'The supplied second file contains the list and links back to index.html.'
+      ],
+      math: null,
+      filename: 'index.html',
+      estimatedMinutes: 14,
+      extraFiles: [
+        {
+          name: 'supplies.html',
+          code: '<!doctype html><html lang="en"><body><main><h1>Supplies</h1><ul><li>Potting soil</li><li>Watering can</li></ul><a href="index.html">Back to garden journal</a></main></body></html>'
+        }
+      ],
+      externalNotes: 'Open both supplied files in the finished preview to verify navigation.'
+    },
+    {
+      id: 'html-03',
+      title: 'A clear event page',
+      summary: 'Use meaningful sections for the title, navigation, main content, and footer.',
+      explanation: [
+        'Semantic HTML uses element names to say what content is for. Semantic means “about meaning.” A header introduces a page or section. nav holds a group of navigation links. main identifies the central content of the page. footer holds closing or supporting information. These names help someone understand the page without relying on how it looks. A browser may not visibly style them differently. Their meaning remains useful to assistive tools and to people reading your code. Choose them for their job, then use CSS later to choose appearance.',
+        'This complete page gives an event clear regions.\n' +
+          '\n' +
+          '```html\n' +
+          '<!doctype html>\n' +
+          '<html lang="en">\n' +
+          '  <head>\n' +
+          '    <meta charset="utf-8">\n' +
+          '    <title>Science afternoon</title>\n' +
+          '  </head>\n' +
+          '  <body>\n' +
+          '    <header>\n' +
+          '      <h1>Science afternoon</h1>\n' +
+          '    </header>\n' +
+          '    <nav aria-label="Event sections">\n' +
+          '      <a href="#experiments">Experiments</a>\n' +
+          '    </nav>\n' +
+          '    <main>\n' +
+          '      <p>Sunday at the community center.</p>\n' +
+          '      <section id="experiments">\n' +
+          '        <h2>Experiments</h2>\n' +
+          '        <p>Try making a paper helicopter.</p>\n' +
+          '      </section>\n' +
+          '    </main>\n' +
+          '    <footer>\n' +
+          '      <p>Adults and children are welcome.</p>\n' +
+          '    </footer>\n' +
+          '  </body>\n' +
+          '</html>\n' +
+          '```\n' +
+          '\n' +
+          'header contains the event title. nav gives a shortcut to a section. One main holds the event details, and footer finishes the page.',
+        "A landmark is a page region that assistive tools can help people find quickly. main and nav provide meaningful landmarks. For this ordinary page, use one visible main content region. Put the site's repeated navigation outside it so “go to main content” leads to the details, rather than repeated links. aria-label adds a short accessible name to a region or control. Here “Event sections” helps explain the navigation's purpose; it does not add a visible heading. Keep the visible link words clear as well. Native semantic elements usually provide the role without extra role attributes.",
+        "Headings describe an outline. h1 names this page's main subject. h2 names a section within that subject; h3 can name a subsection inside an h2 section. Choose levels for the relationship between ideas, rather than for the text size you want. In this event, an h1 followed by an h2 makes that relationship simple. A section groups related content and usually has a heading. A div is a general container with no special meaning; use it when you need grouping without claiming a more specific role.",
+        'This fragment belongs inside a main element. A link elsewhere on the page can use href="#tickets" to reach it.\n' +
+          '\n' +
+          '```html\n' +
+          '<section id="tickets">\n' +
+          '  <h2>Tickets</h2>\n' +
+          '  <p>Admission is free.</p>\n' +
+          '  <section>\n' +
+          '    <h3>Group visits</h3>\n' +
+          '    <p>Tell the organizer how many people are coming.</p>\n' +
+          '  </section>\n' +
+          '</section>\n' +
+          '```\n' +
+          '\n' +
+          'id="tickets" gives the outer section a unique identifier. The # in a link destination means an in-page fragment, a named place inside the current document. h3 is nested beneath the Tickets topic. Close the inner section before the outer section. Indentation makes the hierarchy visible, while tags define the real structure.',
+        `An anchor's href and a target's id must match exactly. href="#experiments" finds id="experiments"; a heading with the same visible word but no matching id is not that target. IDs should be unique within a document. Links need useful words, and the link should lead to relevant content. A correct landmark does not repair confusing writing or a broken target. Review the page's reading order from top to bottom, because that order is also important when someone listens to the page or moves through it with a keyboard.`,
+        `For the exercise, put the event's h1 inside header, name nav with aria-label, put the Schedule link in it, and use one main for details. Put an h2 in the schedule section and give the section id="schedule" so href="#schedule" works. Finish with footer. The checks look for these regions and heading levels; they do not prove the whole outline or reading order is sensible. Ask yourself what someone would learn by reading only the headings, then follow the Schedule link and check that its destination exists.`
+      ],
+      analogy: {
+        familiar: 'A flyer with named areas',
+        connection: 'Semantic elements identify what each region is for',
+        limit: 'Good structure alone does not make writing clear.'
+      },
+      steps: [
+        'Put the event title inside a header element.',
+        'Put the Schedule link inside a nav element. Give nav a name with aria-label.',
+        'Put the event details inside one main element.',
+        'Put the closing information inside a footer element.',
+        'Use h1 for the page title and h2 for the section title. Run the checks.'
+      ],
+      starter: '<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Neighborhood art day</title></head><body><h1>Art day</h1><p>Saturday at the library.</p><a href="#schedule">Schedule</a><h2 id="schedule">Schedule</h2><!-- TODO: wrap parts in header/nav/main/footer --></body></html>',
+      solution: '<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Neighborhood art day</title></head><body><header><h1>Neighborhood art day</h1></header><nav aria-label="Event navigation"><a href="#schedule">Schedule</a></nav><main><p>Saturday at the library.</p><section id="schedule"><h2>Schedule</h2><p>Make a collage.</p></section></main><footer><p>Supplies are provided.</p></footer></body></html>',
+      runtime: 'html',
+      checks: [
+        {
+          label: 'One main region exists',
+          expression: 'document.querySelectorAll("main").length===1'
+        },
+        {
+          label: 'Named regions are present',
+          expression: '!!document.querySelector("header h1")&&!!document.querySelector("nav[aria-label]")&&!!document.querySelector("footer")'
+        },
+        {
+          label: 'h1 and h2 give a heading order',
+          expression: '!!document.querySelector("h1")&&!!document.querySelector("h2")'
+        },
+        {
+          label: 'Schedule navigation targets its real section',
+          expression: `!!document.querySelector('nav a[href="#schedule"]')&&!!document.querySelector('main section#schedule')`
+        }
+      ],
+      quiz: {
+        question: 'You replace a generic div around the event details with main, without changing CSS. What has improved?',
+        choices: [
+          'The details now have a main-content landmark',
+          'The details automatically use larger text',
+          'The navigation links now lead to the details'
+        ],
+        answer: 0,
+        explanation: 'main gives the region meaning for navigation and assistive tools. It does not set text size or create link targets.'
+      },
+      hints: [
+        'Use elements named for page regions.',
+        'Place nav outside main; put the event details inside main.',
+        'There should be one main and nav should have an aria-label.'
+      ],
+      math: null,
+      filename: 'index.html',
+      estimatedMinutes: 14
+    },
+    {
+      id: 'html-04',
+      title: 'A page usable without a mouse',
+      summary: 'Give images useful descriptions and controls clear names. Check every action with the keyboard.',
+      explanation: [
+        'Accessibility means making content and actions usable by people with different ways of seeing, hearing, moving, and understanding. Someone might use a keyboard, a screen reader, a touch screen, or a large zoom setting. Your HTML should still tell them what is there and what each control does. Start with built-in elements that already have useful behavior. A button is an action control; an a with href is a navigation link. Their meaning helps a browser and assistive tools offer the right interaction.',
+        'This is a complete example with an informative image and a named control.\n' +
+          '\n' +
+          '```html\n' +
+          '<!doctype html>\n' +
+          '<html lang="en">\n' +
+          '  <head>\n' +
+          '    <meta charset="utf-8">\n' +
+          '    <title>Bike repair day</title>\n' +
+          '  </head>\n' +
+          '  <body>\n' +
+          '    <main>\n' +
+          '      <h1>Bike repair day</h1>\n' +
+          '      <img\n' +
+          '        src="repair.jpg"\n' +
+          '        alt="A volunteer helping a child fix a bicycle tire"\n' +
+          '      >\n' +
+          '      <button type="button">View repair times</button>\n' +
+          '    </main>\n' +
+          '  </body>\n' +
+          '</html>\n' +
+          '```\n' +
+          '\n' +
+          'The image requires a repair.jpg file. alt describes its useful information. The button has visible words that explain its purpose. This HTML creates the control; it does not yet supply code to open repair times.',
+        `An image's src tells the browser which picture to load. alt gives a text replacement. Imagine someone cannot see this picture: what information would they miss? Write that information in ordinary words. You usually do not need “picture of,” because the tool can already announce that it is an image. Decorative pictures that add no information normally have alt="". Do not leave alt out and assume that is the same: some tools may announce the file name. img has no closing tag because it is a void element, with no content inside it.`,
+        `A control's accessible name is the name assistive tools use to identify it. For an ordinary button, its visible text supplies that name. Clear visible text helps everyone. Prefer “View repair times” to “Go” when the action would otherwise be unclear. type="button" makes it a plain button; inside a form, this avoids accidentally submitting the form. A native button can receive keyboard focus and can be activated using normal keyboard controls. A div with button-like styling does not automatically gain those behaviors.`,
+        'This fragment belongs inside body and demonstrates navigation beside an action control.\n' +
+          '\n' +
+          '```html\n' +
+          '<a href="directions.html">Read directions to the workshop</a>\n' +
+          '<button type="button">Show workshop checklist</button>\n' +
+          '<img src="small-dot.svg" alt="">\n' +
+          '```\n' +
+          '\n' +
+          "The link needs a directions.html page and navigates to it. The button needs behavior added later if it should show a checklist. The small dot is decorative, so its empty alt lets assistive tools skip it. These choices depend on each element's purpose, not on its color or shape. Do not copy empty alt onto a picture that teaches useful information.",
+        `Keyboard focus marks the control that will receive a keyboard action. Press Tab to move forward through focusable controls and Shift+Tab to move backward. Check that you can see where focus is. A focused button should be usable with Enter or Space; a link normally activates with Enter. tabindex="-1" removes an element from normal Tab navigation, so it is not a way to make this exercise's button easy to reach. Keep the source order sensible and keep visible focus styling. These are useful checks, but they do not cover every accessibility need.`,
+        'For the picnic exercise, add alt text that describes the informative image and give the native button the exact visible name View picnic details. Keep it keyboard focusable. Tab to it, check its name, and inspect focus. The automated checks verify text and basic focusability; the starter does not add the actual details-opening behavior. A button passing the naming check can still do nothing when activated. To judge a finished interactive page, test the real action, review images in context, and use a screen reader as well as the keyboard.'
+      ],
+      analogy: {
+        familiar: 'A door people need to find and open',
+        connection: 'Clear names and keyboard focus make controls easier to use',
+        limit: 'A keyboard check is not a complete accessibility test.'
+      },
+      steps: [
+        'Describe the picnic image in alt text.',
+        'Give the button a name that says what it does.',
+        'Keep the button as a button element, not a link or a div.',
+        'Press Tab until you reach the button. Check that you can see which button is selected.'
+      ],
+      starter: '<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Community picnic</title></head><body><main><h1>Community picnic</h1><img src="picnic.jpg"><!-- TODO: describe image and name button --><button></button></main></body></html>',
+      solution: '<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Community picnic</title></head><body><main><h1>Community picnic</h1><img src="picnic.jpg" alt="Neighbors sharing food at a park picnic table"><button type="button">View picnic details</button></main></body></html>',
+      runtime: 'html',
+      checks: [
+        {
+          label: 'Image has a description',
+          expression: 'document.querySelector("img")?.alt.trim().length>8'
+        },
+        {
+          label: 'Button has a clear name',
+          expression: 'document.querySelector("button")?.textContent.trim()==="View picnic details"'
+        },
+        {
+          label: 'Native button is keyboard focusable',
+          expression: 'document.querySelector("button")?.tabIndex>=0'
+        }
+      ],
+      quiz: {
+        question: 'What is a useful first keyboard check?',
+        choices: [
+          'Tab to the button and confirm its name',
+          'Change its color',
+          'Set tabindex=-1'
+        ],
+        answer: 0,
+        explanation: 'A keyboard user should be able to reach the button and understand its purpose.'
+      },
+      hints: [
+        'Describe what is informative in the image.',
+        'A native button can be reached by pressing Tab.',
+        'Add nonempty alt and a visible button name.'
+      ],
+      math: null,
+      filename: 'index.html',
+      estimatedMinutes: 14,
+      externalNotes: 'Automated checks do not prove full screen-reader accessibility.'
+    },
+    {
+      id: 'html-05',
+      title: 'An activity signup form',
+      summary: 'Add labeled name, email, and activity fields with a submit button.',
+      explanation: [
+        'A form collects related choices or information. The form element groups its controls. An input is a single entry field; a select offers choices; a button can submit the form. A label tells a person what a control asks for. Controls need meaningful names even before someone types anything. A placeholder inside a field disappears while typing and should not replace its label. HTML can ask the browser to catch simple missing or malformed values, but saving information needs additional behavior and another system to receive it.',
+        'This form fragment belongs inside body. It demonstrates a labeled required field.\n' +
+          '\n' +
+          '```html\n' +
+          '<form>\n' +
+          '  <label for="visitor">Visitor name</label>\n' +
+          '  <input id="visitor" name="visitor" type="text" required>\n' +
+          '\n' +
+          '  <label for="contact">Contact email</label>\n' +
+          '  <input id="contact" name="contact" type="email" required>\n' +
+          '\n' +
+          '  <button type="submit">Request information</button>\n' +
+          '</form>\n' +
+          '```\n' +
+          '\n' +
+          `The label's for value matches the input's id exactly

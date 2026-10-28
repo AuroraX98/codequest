@@ -1,0 +1,614 @@
+[
+  {
+    "kind": "lesson",
+    "id": "sql-01",
+    "field": "explanation.5",
+    "before": "The exercise wants a temporary answer table. CREATE TEMP TABLE answer AS followed by SELECT saves that query's result in a table named answer for this database session. AS here connects the table to the query that fills it. The starter has WHERE 0: zero is false, so it creates an empty answer table. Replace that false condition with the actual status test, and select just title.",
+    "after": "The exercise wants a temporary answer table. CREATE TEMP TABLE answer AS followed by SELECT saves that query's result in a table named answer for this database session. AS here connects the table to the query that fills it. The starter has WHERE 0: zero is false, so it creates an empty answer table. Replace that false condition with the actual status test, and select just title. Saving rows in a table does not give that table an inherent display order. After creating answer, use SELECT title FROM answer ORDER BY title to display it."
+  },
+  {
+    "kind": "lesson",
+    "id": "sql-01",
+    "field": "explanation.6",
+    "before": "Before running your exercise, inspect setup.sql. River Notes and Small Atlas are unread; Moon Garden and Quiet Room are read. Keep only the unread rows and sort by title, so River Notes comes first. Use single quotes for SQL text in your own queries; the supplied SQLite examples also accept their double-quoted text, but single quotes are the portable convention. A query can choose the right books and still fail an ordering check if you leave out ORDER BY.",
+    "after": "Before running your exercise, inspect setup.sql. River Notes and Small Atlas are unread; Moon Garden and Quiet Room are read. Keep only the unread rows. In your final display query, ORDER BY title puts River Notes first. Use single quotes for text values. The checks verify saved result membership, not a table's physical row order; inspect the explicitly ordered display separately."
+  },
+  {
+    "kind": "lesson",
+    "id": "sql-01",
+    "field": "checks",
+    "before": [
+      {
+        "label": "Only unread book titles, ordered",
+        "expression": "SELECT CASE WHEN (SELECT group_concat(title, \"|\") FROM answer) = \"River Notes|Small Atlas\" THEN 1 ELSE 0 END"
+      }
+    ],
+    "after": [
+      {
+        "label": "Exact answer rows and multiplicities",
+        "expression": "WITH expected(\"title\") AS (VALUES ('River Notes'),('Small Atlas')), actual AS (SELECT \"title\",COUNT(*) AS multiplicity FROM \"answer\" GROUP BY \"title\"), wanted AS (SELECT \"title\",COUNT(*) AS multiplicity FROM expected GROUP BY \"title\") SELECT NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+      },
+      {
+        "label": "Exact books rows and multiplicities",
+        "expression": "WITH expected(\"id\",\"title\",\"status\") AS (VALUES (1,'Moon Garden','read'),(2,'River Notes','unread'),(3,'Small Atlas','unread'),(4,'Quiet Room','read')), actual AS (SELECT \"id\",\"title\",\"status\",COUNT(*) AS multiplicity FROM \"books\" GROUP BY \"id\",\"title\",\"status\"), wanted AS (SELECT \"id\",\"title\",\"status\",COUNT(*) AS multiplicity FROM expected GROUP BY \"id\",\"title\",\"status\") SELECT NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+      }
+    ]
+  },
+  {
+    "kind": "lesson",
+    "id": "sql-01",
+    "field": "solution",
+    "before": "CREATE TEMP TABLE answer AS SELECT title FROM books WHERE status = \"unread\" ORDER BY title;",
+    "after": "CREATE TEMP TABLE answer AS\nSELECT title\nFROM books\nWHERE status='unread';\nSELECT title\nFROM answer\nORDER BY title;"
+  },
+  {
+    "kind": "lesson",
+    "id": "sql-03",
+    "field": "explanation.6",
+    "before": "Read the supplied fixture before predicting the result. Tiny quiz takes 5 minutes and Word puzzle takes 10, so both pass. Code maze and Logic grid do not pass the combined tests. ORDER BY name puts Tiny quiz before Word puzzle. Keeping the query column as name matters because the check reads that column from answer.",
+    "after": "Read the supplied fixture before predicting the result. Tiny quiz takes 5 minutes and Word puzzle takes 10, so both pass. Code maze and Logic grid do not pass the combined tests. ORDER BY name puts Tiny quiz before Word puzzle. Keeping the query column as name matters because the check reads that column from answer. A saved table has no inherent display order. Use SELECT name FROM answer ORDER BY name for display; these checks verify membership rather than table scan order."
+  },
+  {
+    "kind": "lesson",
+    "id": "sql-03",
+    "field": "checks",
+    "before": [
+      {
+        "label": "Only easy activities of ten minutes or less",
+        "expression": "SELECT CASE WHEN (SELECT group_concat(name,\"|\") FROM answer)=\"Tiny quiz|Word puzzle\" THEN 1 ELSE 0 END"
+      }
+    ],
+    "after": [
+      {
+        "label": "Exact answer rows and multiplicities",
+        "expression": "WITH expected(\"name\") AS (VALUES ('Tiny quiz'),('Word puzzle')), actual AS (SELECT \"name\",COUNT(*) AS multiplicity FROM \"answer\" GROUP BY \"name\"), wanted AS (SELECT \"name\",COUNT(*) AS multiplicity FROM expected GROUP BY \"name\") SELECT NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+      }
+    ]
+  },
+  {
+    "kind": "lesson",
+    "id": "sql-03",
+    "field": "solution",
+    "before": "CREATE TEMP TABLE answer AS SELECT name FROM activities WHERE difficulty = \"easy\" AND minutes <= 10 ORDER BY name;",
+    "after": "CREATE TEMP TABLE answer AS\nSELECT name\nFROM activities\nWHERE difficulty='easy' AND minutes<=10;\nSELECT name\nFROM answer\nORDER BY name;"
+  },
+  {
+    "kind": "lesson",
+    "id": "sql-04",
+    "field": "checks",
+    "before": [
+      {
+        "label": "Counts, totals, averages and NULL handling",
+        "expression": "SELECT CASE WHEN (SELECT session_count FROM answer WHERE subject=\"Math\")=2 AND (SELECT total_minutes FROM answer WHERE subject=\"Math\")=60 AND (SELECT average_minutes FROM answer WHERE subject=\"Math\")=30 AND (SELECT session_count FROM answer WHERE subject=\"Spanish\")=1 THEN 1 ELSE 0 END"
+      }
+    ],
+    "after": [
+      {
+        "label": "Exact answer rows and multiplicities",
+        "expression": "WITH expected(\"subject\",\"session_count\",\"total_minutes\",\"average_minutes\") AS (VALUES ('Math',2,60,30),('Spanish',1,30,30),('Coding',1,50,50)), actual AS (SELECT \"subject\",\"session_count\",\"total_minutes\",\"average_minutes\",COUNT(*) AS multiplicity FROM \"answer\" GROUP BY \"subject\",\"session_count\",\"total_minutes\",\"average_minutes\"), wanted AS (SELECT \"subject\",\"session_count\",\"total_minutes\",\"average_minutes\",COUNT(*) AS multiplicity FROM expected GROUP BY \"subject\",\"session_count\",\"total_minutes\",\"average_minutes\") SELECT NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+      }
+    ]
+  },
+  {
+    "kind": "lesson",
+    "id": "sql-05",
+    "field": "checks",
+    "before": [
+      {
+        "label": "All books and bookless author remain",
+        "expression": "SELECT CASE WHEN (SELECT count(*) FROM answer)=4 AND (SELECT count(*) FROM answer WHERE author=\"Casey North\" AND title IS NULL)=1 AND (SELECT count(*) FROM answer WHERE author=\"Ari Vale\")=2 THEN 1 ELSE 0 END"
+      }
+    ],
+    "after": [
+      {
+        "label": "Exact answer rows and multiplicities",
+        "expression": "WITH expected(\"author\",\"title\") AS (VALUES ('Ari Vale','Blue Window'),('Ari Vale','First Light'),('Bo Lin','Paper Roads'),('Casey North',NULL)), actual AS (SELECT \"author\",\"title\",COUNT(*) AS multiplicity FROM \"answer\" GROUP BY \"author\",\"title\"), wanted AS (SELECT \"author\",\"title\",COUNT(*) AS multiplicity FROM expected GROUP BY \"author\",\"title\") SELECT NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+      }
+    ]
+  },
+  {
+    "kind": "lesson",
+    "id": "sql-07",
+    "field": "explanation.6",
+    "before": "The supplied Math durations are 20, 30, 30: chronological running totals 20, 50, 80. The two 30-minute entries tie at duration rank 1. Spanish starts again at 15 and then totals 40. Check the last Math total and both tied ranks; these check different window rules. A correct final total does not prove the intermediate running totals or ranks are right.",
+    "after": "The supplied Math durations are 20, 30, 30: chronological running totals 20, 50, 80. The two 30-minute entries tie at duration rank 1. Spanish starts again at 15 and then totals 40. The checks now compare every fixture row's running total and rank, including both partitions. They test these results, not every possible input or one required SQL spelling."
+  },
+  {
+    "kind": "lesson",
+    "id": "sql-07",
+    "field": "checks",
+    "before": [
+      {
+        "label": "Running totals and tied ranks",
+        "expression": "SELECT CASE WHEN (SELECT running_total FROM answer WHERE subject=\"Math\" AND day=\"2026-09-03\")=80 AND (SELECT duration_rank FROM answer WHERE subject=\"Math\" AND day=\"2026-09-02\")=1 AND (SELECT duration_rank FROM answer WHERE subject=\"Math\" AND day=\"2026-09-03\")=1 THEN 1 ELSE 0 END"
+      }
+    ],
+    "after": [
+      {
+        "label": "Exact answer rows and multiplicities",
+        "expression": "WITH expected(\"subject\",\"day\",\"minutes\",\"running_total\",\"duration_rank\") AS (VALUES ('Math','2026-09-01',20,20,3),('Math','2026-09-02',30,50,1),('Math','2026-09-03',30,80,1),('Spanish','2026-09-01',15,15,2),('Spanish','2026-09-02',25,40,1)), actual AS (SELECT \"subject\",\"day\",\"minutes\",\"running_total\",\"duration_rank\",COUNT(*) AS multiplicity FROM \"answer\" GROUP BY \"subject\",\"day\",\"minutes\",\"running_total\",\"duration_rank\"), wanted AS (SELECT \"subject\",\"day\",\"minutes\",\"running_total\",\"duration_rank\",COUNT(*) AS multiplicity FROM expected GROUP BY \"subject\",\"day\",\"minutes\",\"running_total\",\"duration_rank\") SELECT NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+      }
+    ]
+  },
+  {
+    "kind": "lesson",
+    "id": "sql-08",
+    "field": "explanation.6",
+    "before": "Create the specifically named idx_books_genre_title on books(genre, title), then save the first five history titles in answer with ORDER BY title LIMIT 5. These titles sort as text, so Book 100 appears before Book 20; title ordering does not sort their numeric suffixes as numbers. Inspect EXPLAIN QUERY PLAN before and after locally. The browser check establishes that the index exists and the result has five plausible titles; it does not prove a speed gain or every row's genre.",
+    "after": "Create the specifically named idx_books_genre_title on books(genre, title), then save the first five history titles in answer with ORDER BY title LIMIT 5. Titles sort as text: Book 100 appears before Book 20. The checks compare the index's key-column metadata and exact selected title membership. Display answer with an explicit ORDER BY title. Inspect the demonstrated EXPLAIN QUERY PLAN before and after; neither these checks nor a particular plan proves a speed gain."
+  },
+  {
+    "kind": "lesson",
+    "id": "sql-08",
+    "field": "checks",
+    "before": [
+      {
+        "label": "Index exists and result has five matching rows",
+        "expression": "SELECT CASE WHEN EXISTS(SELECT 1 FROM sqlite_master WHERE type=\"index\" AND name=\"idx_books_genre_title\") AND (SELECT count(*) FROM answer)=5 AND NOT EXISTS(SELECT 1 FROM answer WHERE title NOT LIKE \"Book %\") THEN 1 ELSE 0 END"
+      }
+    ],
+    "after": [
+      {
+        "label": "Index has the requested key columns",
+        "expression": "SELECT (SELECT count(*) FROM pragma_index_info('idx_books_genre_title'))=2 AND EXISTS(SELECT 1 FROM pragma_index_info('idx_books_genre_title') WHERE seqno=0 AND name='genre') AND EXISTS(SELECT 1 FROM pragma_index_info('idx_books_genre_title') WHERE seqno=1 AND name='title')"
+      },
+      {
+        "label": "Exact answer rows and multiplicities",
+        "expression": "WITH expected(\"title\") AS (VALUES ('Book 10'),('Book 100'),('Book 1000'),('Book 105'),('Book 110')), actual AS (SELECT \"title\",COUNT(*) AS multiplicity FROM \"answer\" GROUP BY \"title\"), wanted AS (SELECT \"title\",COUNT(*) AS multiplicity FROM expected GROUP BY \"title\") SELECT NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+      }
+    ]
+  },
+  {
+    "kind": "lesson",
+    "id": "sql-08",
+    "field": "solution",
+    "before": "CREATE INDEX idx_books_genre_title ON books(genre, title);\nCREATE TEMP TABLE answer AS SELECT title FROM books WHERE genre=\"history\" ORDER BY title LIMIT 5;",
+    "after": "CREATE INDEX idx_books_genre_title ON books(genre, title);\nCREATE TEMP TABLE answer AS\nSELECT title\nFROM books\nWHERE genre=\"history\"\nORDER BY title\nLIMIT 5;\nSELECT title\nFROM answer\nORDER BY title;"
+  },
+  {
+    "kind": "lesson",
+    "id": "sql-09",
+    "field": "checks",
+    "before": [
+      {
+        "label": "Valid transfer conserves the combined total",
+        "expression": "SELECT CASE WHEN (SELECT quantity FROM inventory WHERE id=\"A\")=7 AND (SELECT quantity FROM inventory WHERE id=\"B\")=7 AND (SELECT sum(quantity) FROM inventory)=14 THEN 1 ELSE 0 END"
+      },
+      {
+        "label": "Rejected transfer leaves both rows unchanged",
+        "expression": "SELECT CASE WHEN (SELECT count(*) FROM before_failed b JOIN inventory i USING(id) WHERE b.quantity<>i.quantity)=0 THEN 1 ELSE 0 END"
+      }
+    ],
+    "after": [
+      {
+        "label": "Exact inventory rows and multiplicities",
+        "expression": "WITH expected(\"id\",\"quantity\") AS (VALUES ('A',7),('B',7)), actual AS (SELECT \"id\",\"quantity\",COUNT(*) AS multiplicity FROM \"inventory\" GROUP BY \"id\",\"quantity\"), wanted AS (SELECT \"id\",\"quantity\",COUNT(*) AS multiplicity FROM expected GROUP BY \"id\",\"quantity\") SELECT NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+      },
+      {
+        "label": "Exact before_failed rows and multiplicities",
+        "expression": "WITH expected(\"id\",\"quantity\") AS (VALUES ('A',7),('B',7)), actual AS (SELECT \"id\",\"quantity\",COUNT(*) AS multiplicity FROM \"before_failed\" GROUP BY \"id\",\"quantity\"), wanted AS (SELECT \"id\",\"quantity\",COUNT(*) AS multiplicity FROM expected GROUP BY \"id\",\"quantity\") SELECT NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+      }
+    ]
+  },
+  {
+    "kind": "lesson",
+    "id": "sql-09",
+    "field": "quiz",
+    "before": {
+      "question": "Move 3 items from a quantity of 10 to a quantity of 4. What is the combined total afterward?",
+      "choices": [
+        "14",
+        "11",
+        "17"
+      ],
+      "answer": 0,
+      "explanation": "The source falls to 7 and destination rises to 7; their total remains 14."
+    },
+    "after": {
+      "question": "The source UPDATE matches zero rows because stock is insufficient. The immediately following destination UPDATE is guarded by changes()=1. What does it do?",
+      "choices": [
+        "Adds the requested amount anyway.",
+        "Changes no destination row.",
+        "Automatically rolls back every earlier transaction."
+      ],
+      "answer": 1,
+      "explanation": "changes() reports zero for that source write, so the destination guard is false. This no-op path is not a promise of automatic transaction rollback."
+    }
+  },
+  {
+    "kind": "lesson",
+    "id": "sql-11",
+    "field": "checks",
+    "before": [
+      {
+        "label": "Email is preferred and outside spaces are removed",
+        "expression": "SELECT count(*) = 1 FROM contact_choices WHERE id=1 AND name='Mira' AND contact='mira@example.org'"
+      },
+      {
+        "label": "Phone fallback preserves internal spaces",
+        "expression": "SELECT count(*) = 2 FROM contact_choices WHERE (id=2 AND contact='555 0102') OR (id=4 AND contact='555 0104')"
+      },
+      {
+        "label": "Every person remains, including a fully missing contact",
+        "expression": "SELECT (SELECT count(*) FROM contact_choices)=4 AND (SELECT contact FROM contact_choices WHERE id=3)='No contact yet'"
+      },
+      {
+        "label": "Display formatting does not edit stored data",
+        "expression": "SELECT email='  mira@example.org  ' FROM contacts WHERE id=1"
+      }
+    ],
+    "after": [
+      {
+        "label": "Display formatting does not edit stored data",
+        "expression": "SELECT email='  mira@example.org  ' FROM contacts WHERE id=1"
+      },
+      {
+        "label": "Exact contact_choices rows and multiplicities",
+        "expression": "WITH expected(\"id\",\"name\",\"contact\") AS (VALUES (1,'Mira','mira@example.org'),(2,'Sam','555 0102'),(3,'Lee','No contact yet'),(4,'Jo','555 0104')), actual AS (SELECT \"id\",\"name\",\"contact\",COUNT(*) AS multiplicity FROM \"contact_choices\" GROUP BY \"id\",\"name\",\"contact\"), wanted AS (SELECT \"id\",\"name\",\"contact\",COUNT(*) AS multiplicity FROM expected GROUP BY \"id\",\"name\",\"contact\") SELECT NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+      }
+    ]
+  },
+  {
+    "kind": "lesson",
+    "id": "sql-15",
+    "field": "explanation.9",
+    "before": "An attempt to use author 99 should fail instead of creating an orphan note. A missing author_id should fail because NOT NULL is also required.",
+    "after": "An attempt to use author 99 should fail instead of creating an orphan note. A missing author_id should fail because NOT NULL is also required. The project checks inspect connection/schema metadata and the accepted row. They do not execute expected failing writes as learner checks. The separate local constraint demonstrations in the later row-rule and relationship lessons show those errors; do not insert a deliberate failure into this normal solution."
+  },
+  {
+    "kind": "lesson",
+    "id": "sql-17",
+    "field": "explanation.5",
+    "before": "Use two compatible one-column queries.\n```sql\nSELECT name FROM morning\nINTERSECT\nSELECT name FROM evening;\n```",
+    "after": "This complete example supplies both tables before comparing their rows.\n```sql\nCREATE TABLE morning(name TEXT);\nCREATE TABLE evening(name TEXT);\nINSERT INTO morning VALUES('Ari'),('Bo'),('Bo');\nINSERT INTO evening VALUES('Bo'),('Cy');\nSELECT name\nFROM morning\nINTERSECT\nSELECT name\nFROM evening\nORDER BY name;\nSELECT name\nFROM morning\nEXCEPT\nSELECT name\nFROM evening\nORDER BY name;\n```\nThe intersection returns Bo. The second result returns Ari: it starts with morning and removes shared names."
+  },
+  {
+    "kind": "lesson",
+    "id": "sql-17",
+    "field": "checks",
+    "before": [
+      {
+        "label": "Only shared names join",
+        "expression": "SELECT count(*)=1 AND min(name)='Bo' FROM joined"
+      },
+      {
+        "label": "Invited but absent names wait",
+        "expression": "SELECT count(*)=2 AND sum(name IN ('Ari','Dee'))=2 FROM waiting"
+      },
+      {
+        "label": "An uninvited attendee is not waiting",
+        "expression": "SELECT count(*)=0 FROM waiting WHERE name='Cy'"
+      },
+      {
+        "label": "Sources remain unchanged",
+        "expression": "SELECT (SELECT count(*) FROM invited)=4 AND (SELECT count(*) FROM attending)=2"
+      }
+    ],
+    "after": [
+      {
+        "label": "Sources remain unchanged",
+        "expression": "SELECT (SELECT count(*) FROM invited)=4 AND (SELECT count(*) FROM attending)=2"
+      },
+      {
+        "label": "Exact joined rows and multiplicities",
+        "expression": "WITH expected(\"name\") AS (VALUES ('Bo')), actual AS (SELECT \"name\",COUNT(*) AS multiplicity FROM \"joined\" GROUP BY \"name\"), wanted AS (SELECT \"name\",COUNT(*) AS multiplicity FROM expected GROUP BY \"name\") SELECT NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+      },
+      {
+        "label": "Exact waiting rows and multiplicities",
+        "expression": "WITH expected(\"name\") AS (VALUES ('Ari'),('Dee')), actual AS (SELECT \"name\",COUNT(*) AS multiplicity FROM \"waiting\" GROUP BY \"name\"), wanted AS (SELECT \"name\",COUNT(*) AS multiplicity FROM expected GROUP BY \"name\") SELECT NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+      }
+    ]
+  },
+  {
+    "kind": "lesson",
+    "id": "sql-18",
+    "field": "explanation.5",
+    "before": "INSERT INTO ... SELECT can populate a table from query results.\n```sql\nINSERT INTO categories(id, name)\nSELECT DISTINCT category_id, category_name FROM raw_items;\n```",
+    "after": "INSERT INTO ... SELECT can populate a table from query results. This complete independent example copies distinct ID/name pairs.\n```sql\nCREATE TABLE raw_items(category_id INTEGER,category_name TEXT);\nCREATE TABLE categories(id INTEGER PRIMARY KEY,name TEXT);\nINSERT INTO raw_items VALUES(10,'paper'),(10,'paper'),(20,'tools');\nINSERT INTO categories(id,name)\nSELECT DISTINCT category_id,category_name\nFROM raw_items;\nSELECT id,name\nFROM categories\nORDER BY id;\n```\nThe result is 10/paper and 20/tools; the repeated source pair becomes one category."
+  },
+  {
+    "kind": "lesson",
+    "id": "sql-18",
+    "field": "checks",
+    "before": [
+      {
+        "label": "Repeated author records become one row each",
+        "expression": "SELECT count(*)=2 FROM authors"
+      },
+      {
+        "label": "All note identities are retained",
+        "expression": "SELECT count(*)=3 AND sum(id)=6 FROM notes"
+      },
+      {
+        "label": "Different authors sharing a name remain distinct",
+        "expression": "SELECT count(*)=2 AND sum(id)=30 FROM authors WHERE name='Sam'"
+      },
+      {
+        "label": "The relationship preserves the right author",
+        "expression": "SELECT count(*)=2 FROM notes WHERE author_id=10"
+      },
+      {
+        "label": "Original data is preserved",
+        "expression": "SELECT count(*)=3 FROM raw_notes"
+      }
+    ],
+    "after": [
+      {
+        "label": "Exact authors rows and multiplicities",
+        "expression": "WITH expected(\"id\",\"name\") AS (VALUES (10,'Sam'),(20,'Sam')), actual AS (SELECT \"id\",\"name\",COUNT(*) AS multiplicity FROM \"authors\" GROUP BY \"id\",\"name\"), wanted AS (SELECT \"id\",\"name\",COUNT(*) AS multiplicity FROM expected GROUP BY \"id\",\"name\") SELECT NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+      },
+      {
+        "label": "Exact notes rows and multiplicities",
+        "expression": "WITH expected(\"id\",\"author_id\",\"title\") AS (VALUES (1,10,'Moon'),(2,10,'Sun'),(3,20,'Sea')), actual AS (SELECT \"id\",\"author_id\",\"title\",COUNT(*) AS multiplicity FROM \"notes\" GROUP BY \"id\",\"author_id\",\"title\"), wanted AS (SELECT \"id\",\"author_id\",\"title\",COUNT(*) AS multiplicity FROM expected GROUP BY \"id\",\"author_id\",\"title\") SELECT NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+      },
+      {
+        "label": "Exact raw_notes rows and multiplicities",
+        "expression": "WITH expected(\"note_id\",\"author_id\",\"author_name\",\"title\") AS (VALUES (1,10,'Sam','Moon'),(2,10,'Sam','Sun'),(3,20,'Sam','Sea')), actual AS (SELECT \"note_id\",\"author_id\",\"author_name\",\"title\",COUNT(*) AS multiplicity FROM \"raw_notes\" GROUP BY \"note_id\",\"author_id\",\"author_name\",\"title\"), wanted AS (SELECT \"note_id\",\"author_id\",\"author_name\",\"title\",COUNT(*) AS multiplicity FROM expected GROUP BY \"note_id\",\"author_id\",\"author_name\",\"title\") SELECT NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+      }
+    ]
+  },
+  {
+    "kind": "lesson",
+    "id": "sql-19",
+    "field": "explanation.2",
+    "before": "A correlated subquery refers to the current outer row.\n```sql\nSELECT a.id FROM authors AS a\nWHERE EXISTS (\n  SELECT 1 FROM books AS b WHERE b.author_id = a.id\n);\n```",
+    "after": "A correlated subquery refers to the current outer row. Run this complete example in a fresh database.\n```sql\nCREATE TABLE authors(id INTEGER PRIMARY KEY);\nCREATE TABLE books(id INTEGER PRIMARY KEY,author_id INTEGER);\nINSERT INTO authors VALUES(1),(2);\nINSERT INTO books VALUES(10,1),(11,1);\nSELECT a.id\nFROM authors AS a\nWHERE EXISTS(\nSELECT 1\nFROM books AS b\nWHERE b.author_id=a.id)\nORDER BY a.id;\nSELECT a.id\nFROM authors AS a\nWHERE NOT EXISTS(\nSELECT 1\nFROM books AS b\nWHERE b.author_id=a.id)\nORDER BY a.id;\n```\nThe first result contains ID 1 once, despite two matching books. The NOT EXISTS result contains ID 2."
+  },
+  {
+    "kind": "lesson",
+    "id": "sql-20",
+    "field": "explanation.2",
+    "before": "This example names a filtered result before summing it.\n```sql\nWITH positive AS (SELECT amount FROM demo WHERE amount > 0)\nSELECT SUM(amount) FROM positive;\n```",
+    "after": "This complete example names a filtered result before summing it. The first named row set supplies the input values.\n```sql\nWITH demo(amount) AS(VALUES(-2),(3),(4)),\npositive AS(\nSELECT amount\nFROM demo\nWHERE amount>0)\nSELECT SUM(amount) AS total\nFROM positive;\n```\nThe total is 7: only 3 and 4 contribute."
+  },
+  {
+    "kind": "lesson",
+    "id": "sql-21",
+    "field": "explanation.2",
+    "before": "This example replaces the value for one known key.\n```sql\nINSERT INTO demo_settings(key, value) VALUES ('sound', 'off')\nON CONFLICT(key) DO UPDATE SET value=excluded.value;\n```",
+    "after": "This complete example updates an existing key and inserts a missing one without removing the unrelated preference.\n```sql\nCREATE TABLE demo_settings(key TEXT PRIMARY KEY NOT NULL,value TEXT NOT NULL);\nINSERT INTO demo_settings VALUES('sound','on'),('font','large');\nINSERT INTO demo_settings(key,value) VALUES('sound','off') ON CONFLICT(key) DO UPDATE SET value=excluded.value;\nINSERT INTO demo_settings(key,value) VALUES('alerts','on') ON CONFLICT(key) DO UPDATE SET value=excluded.value;\nSELECT key,value\nFROM demo_settings\nORDER BY key;\n```\nThe rows are alerts/on, font/large and sound/off."
+  },
+  {
+    "kind": "lesson",
+    "id": "sql-22",
+    "field": "explanation.3",
+    "before": "This outline marks a temporary section.\n```sql\nBEGIN;\n-- approved change\nSAVEPOINT trial;\n-- tentative change\nROLLBACK TO trial;\nRELEASE trial;\nCOMMIT;\n```",
+    "after": "This complete example makes both changes visible before choosing which part to undo.\n```sql\nCREATE TABLE demo_accounts(id INTEGER PRIMARY KEY,balance INTEGER);\nINSERT INTO demo_accounts VALUES(1,10),(2,20);\nBEGIN;\nUPDATE demo_accounts SET balance=15\nWHERE id=1;\nSAVEPOINT trial;\nUPDATE demo_accounts SET balance=99\nWHERE id=2;\nROLLBACK TO trial;\nRELEASE trial;\nCOMMIT;\nSELECT id,balance\nFROM demo_accounts\nORDER BY id;\n```\nThe final rows are 1/15 and 2/20: the first change survives, the later trial change does not."
+  },
+  {
+    "kind": "lesson",
+    "id": "sql-24",
+    "field": "explanation.3",
+    "before": "```sql\nCREATE TRIGGER log_label\nAFTER UPDATE OF label ON demo\nWHEN NEW.label <> OLD.label\nBEGIN\n  INSERT INTO demo_log(old_label,new_label) VALUES(OLD.label,NEW.label);\nEND;\n```\nThis syntax example assumes demo and demo_log tables exist. It is not a separate setup to paste into the notes exercise.",
+    "after": "Run this complete trigger example in a fresh database, separate from the notes project.\n```sql\nCREATE TABLE demo(id INTEGER PRIMARY KEY,label TEXT NOT NULL);\nCREATE TABLE demo_log(old_label TEXT,new_label TEXT);\nINSERT INTO demo VALUES(1,'Draft');\nCREATE TRIGGER log_label AFTER UPDATE OF label ON demo\nWHEN NEW.label <> OLD.label\nBEGIN\n INSERT INTO demo_log(old_label,new_label) VALUES(OLD.label,NEW.label);\nEND;\nUPDATE demo SET label='Ready'\nWHERE id=1;\nUPDATE demo SET label='Ready'\nWHERE id=1;\nSELECT old_label,new_label\nFROM demo_log;\n```\nOnly Draft/Ready is logged. The second assignment triggers the event but fails the WHEN condition."
+  },
+  {
+    "kind": "lesson",
+    "id": "sql-24",
+    "field": "explanation.6",
+    "before": "The supplied operations change note1 from Moon to Moon draft, leave note2 at Sea, then change note1 to Moon final. The audit should contain exactly the two actual changes, in their recorded order.",
+    "after": "The supplied operations change note 1 from Moon to Moon draft, leave note 2 at Sea, then change note 1 to Moon final. The audit should contain exactly the two actual changes, in their recorded order."
+  },
+  {
+    "kind": "lesson",
+    "id": "sql-24",
+    "field": "checks",
+    "before": [
+      {
+        "label": "Exactly two changed rows audited",
+        "expression": "SELECT count(*)=2 FROM note_audit"
+      },
+      {
+        "label": "Original to first new title",
+        "expression": "SELECT count(*)=1 FROM note_audit WHERE note_id=1 AND old_title='Moon' AND new_title='Moon draft'"
+      },
+      {
+        "label": "Second real change",
+        "expression": "SELECT count(*)=1 FROM note_audit WHERE note_id=1 AND old_title='Moon draft' AND new_title='Moon final'"
+      },
+      {
+        "label": "Unchanged note not audited",
+        "expression": "SELECT count(*)=0 FROM note_audit WHERE note_id=2"
+      },
+      {
+        "label": "Current data retained",
+        "expression": "SELECT count(*)=2 AND sum(title IN ('Moon final','Sea'))=2 FROM notes"
+      }
+    ],
+    "after": [
+      {
+        "label": "Exactly two changed rows audited",
+        "expression": "SELECT count(*)=2 FROM note_audit"
+      },
+      {
+        "label": "Original to first new title",
+        "expression": "SELECT count(*)=1 FROM note_audit WHERE note_id=1 AND old_title='Moon' AND new_title='Moon draft'"
+      },
+      {
+        "label": "Second real change",
+        "expression": "SELECT count(*)=1 FROM note_audit WHERE note_id=1 AND old_title='Moon draft' AND new_title='Moon final'"
+      },
+      {
+        "label": "Unchanged note not audited",
+        "expression": "SELECT count(*)=0 FROM note_audit WHERE note_id=2"
+      },
+      {
+        "label": "Exact notes rows and multiplicities",
+        "expression": "WITH expected(\"id\",\"title\") AS (VALUES (1,'Moon final'),(2,'Sea')), actual AS (SELECT \"id\",\"title\",COUNT(*) AS multiplicity FROM \"notes\" GROUP BY \"id\",\"title\"), wanted AS (SELECT \"id\",\"title\",COUNT(*) AS multiplicity FROM expected GROUP BY \"id\",\"title\") SELECT NOT EXISTS(SELECT * FROM actual EXCEPT SELECT * FROM wanted) AND NOT EXISTS(SELECT * FROM wanted EXCEPT SELECT * FROM actual)"
+      }
+    ]
+  },
+  {
+    "kind": "unit",
+    "id": "sql-01",
+    "field": "prerequisite_ids",
+    "before": null,
+    "after": []
+  },
+  {
+    "kind": "unit",
+    "id": "sql-02",
+    "field": "prerequisite_ids",
+    "before": null,
+    "after": [
+      "sql-01",
+      "sql-25"
+    ]
+  },
+  {
+    "kind": "unit",
+    "id": "sql-03",
+    "field": "prerequisite_ids",
+    "before": null,
+    "after": [
+      "sql-01",
+      "sql-25"
+    ]
+  },
+  {
+    "kind": "unit",
+    "id": "sql-04",
+    "field": "prerequisite_ids",
+    "before": null,
+    "after": [
+      "sql-03",
+      "sql-26"
+    ]
+  },
+  {
+    "kind": "unit",
+    "id": "sql-05",
+    "field": "prerequisite_ids",
+    "before": null,
+    "after": [
+      "sql-02",
+      "sql-03",
+      "sql-26"
+    ]
+  },
+  {
+    "kind": "unit",
+    "id": "sql-06",
+    "field": "prerequisite_ids",
+    "before": null,
+    "after": [
+      "sql-04",
+      "sql-05"
+    ]
+  },
+  {
+    "kind": "unit",
+    "id": "sql-07",
+    "field": "prerequisite_ids",
+    "before": null,
+    "after": [
+      "sql-04",
+      "sql-42"
+    ]
+  },
+  {
+    "kind": "unit",
+    "id": "sql-08",
+    "field": "prerequisite_ids",
+    "before": null,
+    "after": [
+      "sql-03",
+      "sql-42"
+    ]
+  },
+  {
+    "kind": "unit",
+    "id": "sql-09",
+    "field": "prerequisite_ids",
+    "before": null,
+    "after": [
+      "sql-02",
+      "sql-36"
+    ]
+  },
+  {
+    "kind": "unit",
+    "id": "sql-10",
+    "field": "prerequisite_ids",
+    "before": null,
+    "after": [
+      "sql-01",
+      "sql-03",
+      "sql-26"
+    ]
+  },
+  {
+    "kind": "unit",
+    "id": "sql-11",
+    "field": "prerequisite_ids",
+    "before": null,
+    "after": [
+      "sql-25",
+      "sql-26",
+      "sql-10"
+    ]
+  },
+  {
+    "kind": "unit",
+    "id": "sql-12",
+    "field": "prerequisite_ids",
+    "before": null,
+    "after": [
+      "sql-04",
+      "sql-05",
+      "sql-30",
+      "sql-10"
+    ]
+  },
+  {
+    "kind": "unit",
+    "id": "sql-13",
+    "field": "prerequisite_ids",
+    "before": null,
+    "after": [
+      "sql-20",
+      "sql-40"
+    ]
+  },
+  {
+    "kind": "unit",
+    "id": "sql-14",
+    "field": "prerequisite_ids",
+    "before": [
+      "sql-03",
+      "sql-04"
+    ],
+    "after": [
+      "sql-03",
+      "sql-04",
+      "sql-10"
+    ]
+  },
+  {
+    "kind": "unit",
+    "id": "sql-15",
+    "field": "prerequisite_ids",
+    "before": [
+      "sql-02",
+      "sql-05"
+    ],
+    "after": [
+      "sql-02",
+      "sql-05",
+      "sql-35"
+    ]
+  },
+  {
+    "kind": "unit",
+    "id": "sql-21",
+    "field": "prerequisite_ids",
+    "before": [
+      "sql-02",
+      "sql-15"
+    ],
+    "after": [
+      "sql-02",
+      "sql-37"
+    ]
+  }
+]

@@ -1,0 +1,137 @@
+{
+  "fixtureSourceSha256": "5ffd3e8797cb688c3388bae1e463ab145f2704bc2268c1b76f9125c2c801dc6c",
+  "job": {
+    "lessonId": "sql-48",
+    "id": "sql-48-default-refusal",
+    "paragraph": 3,
+    "setup": "PRAGMA foreign_keys=ON;\nCREATE TABLE folders(id INTEGER PRIMARY KEY);\nCREATE TABLE notes(id INTEGER PRIMARY KEY, folder_id INTEGER NOT NULL REFERENCES folders(id));\nINSERT INTO folders VALUES (1),(2);\nINSERT INTO notes VALUES (10,1),(11,1),(12,2);",
+    "code": "DELETE\nFROM folders\nWHERE id=1;",
+    "outcome": "expected-error",
+    "errorContains": "FOREIGN KEY constraint failed",
+    "postChecks": [
+      {
+        "label": "Parents preserved",
+        "expression": "SELECT ((SELECT COUNT(*) FROM folders)=2 AND (SELECT COUNT(*) FROM folders WHERE id IS 1)=1 AND (SELECT COUNT(*) FROM folders WHERE id IS 2)=1)"
+      },
+      {
+        "label": "Children preserved",
+        "expression": "SELECT ((SELECT COUNT(*) FROM notes)=3 AND (SELECT COUNT(*) FROM notes WHERE id IS 10 AND folder_id IS 1)=1 AND (SELECT COUNT(*) FROM notes WHERE id IS 11 AND folder_id IS 1)=1 AND (SELECT COUNT(*) FROM notes WHERE id IS 12 AND folder_id IS 2)=1)"
+      }
+    ],
+    "supplemental": true,
+    "gradingScope": "Author-validated rejection fixture; not current learner SELECT-check capability.",
+    "postCode": "SELECT id\nFROM folders\nORDER BY id;\nSELECT id,folder_id\nFROM notes\nORDER BY id;",
+    "expectedPostResults": [
+      {
+        "columns": [
+          "id"
+        ],
+        "values": [
+          [
+            1
+          ],
+          [
+            2
+          ]
+        ]
+      },
+      {
+        "columns": [
+          "id",
+          "folder_id"
+        ],
+        "values": [
+          [
+            10,
+            1
+          ],
+          [
+            11,
+            1
+          ],
+          [
+            12,
+            2
+          ]
+        ]
+      }
+    ]
+  },
+  "result": {
+    "id": "sql-48-default-refusal",
+    "output": [],
+    "error": "FOREIGN KEY constraint failed",
+    "postOutput": [
+      {
+        "columns": [
+          "id"
+        ],
+        "values": [
+          [
+            1
+          ],
+          [
+            2
+          ]
+        ]
+      },
+      {
+        "columns": [
+          "id",
+          "folder_id"
+        ],
+        "values": [
+          [
+            10,
+            1
+          ],
+          [
+            11,
+            1
+          ],
+          [
+            12,
+            2
+          ]
+        ]
+      }
+    ],
+    "postError": null,
+    "checks": [
+      {
+        "label": "Parents preserved",
+        "passed": true,
+        "actual": [
+          {
+            "columns": [
+              "((SELECT COUNT(*) FROM folders)=2 AND (SELECT COUNT(*) FROM folders WHERE id IS 1)=1 AND (SELECT COUNT(*) FROM folders WHERE id IS 2)=1)"
+            ],
+            "values": [
+              [
+                1
+              ]
+            ]
+          }
+        ]
+      },
+      {
+        "label": "Children preserved",
+        "passed": true,
+        "actual": [
+          {
+            "columns": [
+              "((SELECT COUNT(*) FROM notes)=3 AND (SELECT COUNT(*) FROM notes WHERE id IS 10 AND folder_id IS 1)=1 AND (SELECT COUNT(*) FROM notes WHERE id IS 11 AND folder_id IS 1)=1 AND (SELECT COUNT(*) FROM notes WHERE id IS 12 AND folder_id IS 2)=1)"
+            ],
+            "values": [
+              [
+                1
+              ]
+            ]
+          }
+        ]
+      }
+    ],
+    "passed": true
+  },
+  "exitCode": 0
+}

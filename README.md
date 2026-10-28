@@ -1,104 +1,45 @@
 # CodeQuest
 
-A coding-learning app with 142 authored lessons across HTML, CSS, JavaScript, Python, SQL, Swift, TypeScript, React, backend development, and developer tools. Each track has beginner, intermediate, and advanced work, with topic-linked coding projects.
+CodeQuest is a coding-learning app for people who want small, explained steps, worked examples and understanding checks. The current release contains **1,221 lessons across 21 courses** and **1,029 terminology entries**. Backend has 43 lessons, Developer Toolkit 24 and AI 32. This is a bounded curriculum, not a claim to cover every API or certify mastery.
 
-The charcoal and purple interface includes in-depth theory in small steps, familiar analogies, practice questions, a real code editor, project checks, a portfolio, XP, streaks, goals, and calm mode. Signed-in work and preferences save in D1. Device drafts belong to the current account; saved history keeps the previous 30 versions per topic. Backups export learning records and restore project files; completion records remain tied to checked lessons.
+## Online through ChatGPT / Sites
 
-## Simple learning view
+Open https://codequest-personal-learning.aurorax.chatgpt.site and sign in with ChatGPT when prompted. Public Site access permits visitors; individual learning records still belong to the signed-in account. A ChatGPT subscription does not supply third-party API credits.
 
-The learning screen now presents one short thought at a time, followed by a labeled code example and a small practice check where suitable. Canonical explanations and examples appear in the step sequence. Optional detail shows only distinct clarification or illustrations, not a duplicate of current or upcoming steps. Notes, progress and all 142 lessons are preserved. See [single-idea learning](docs/single-idea-learning.md) for behavior and verification limits.
+Lessons, code examples and projects are built into the app. Coding Buddy is optional and needs internet plus your own supported provider API key; provider charges may apply. Keep keys out of this repository. See [API key removal](docs/api-key-removal.md).
 
-## Lesson explanations
+## Offline after an initial online setup
 
-The curriculum contains 142 lessons and 1,044 written sections, including a dedicated input() microsequence. Each introduces required vocabulary and symbols, explains how the code works, gives expected results and changed-input cases, and covers the quiz/project requirements before practice. The separate Math tab has been removed; historical Math records are retained and no longer gate completion. Examples use explicit language fences, exact whitespace and indentation, syntax colors for supported editor languages, horizontal scrolling, and raw-code copying. HTML examples render as text. Inline code terms are visually distinct. Paired ** markers display bold prose while literal asterisks in code stay unchanged. Back/Next focuses the start of the new theory page. Swift and terminal snippets preserve their source as plain monospace code.
+1. Open the hosted app online in a personal browser profile and let your account load.
+2. In Settings, download the offline learning pack and wait for verification to finish.
+3. Reopen CodeQuest in that same browser while disconnected. Cached lessons and supported browser code runtimes are available; local drafts and supported queued changes remain on that device.
+4. Reconnect and check synchronization. Export backups before clearing browser data.
 
-The SQL subquery project correlates each score with its own subject and includes a discriminating fixture. Python streaming work processes a one-shot input once and performs shallow-size comparison in a separate helper. CSS positioning checks use actual geometry and numeric transform/pivot values, including border-box layout. Real browser verification passed the intended CSS layout and rejected the wrong rotation.
+The pack is approximately 39 MB in this release. It is a browser download, **not a standalone HTML file or a fresh offline account installer**. The offline shell requires an account snapshot previously saved in the same browser. Browsers can evict caches. Anyone using that browser profile may access downloaded work.
 
-Validation: `node tests/lesson-display.mjs` checks exact source/indentation, syntax spans, inline terms, and escaped HTML; `python3 tests/theory-examples.py` checks all theory fences and Python/JavaScript/JSON syntax. Additional TypeScript/JSX and Swift syntax checks passed; all 20 SQL example blocks executed in their lesson setups. Selected Python and JavaScript worked outputs were executed and matched the text. Syntax checks are not universal runtime verification. Existing lesson solutions, offline behavior and provider routing checks passed; CSS layout/motion requires a browser, and SwiftUI/local-server/deployment work retains its stated manual steps.
+Internet remains necessary for initial sign-in/download, account sync, Coding Buddy, API-key changes and external links. Concept-lesson completion and reading confirmations require the online account service; offline support is not identical to every online feature. Swift/native frameworks and real server/deployment exercises require their stated external tools. Python includes the bundled standard library, not arbitrary packages.
 
-## Tutor
+## Run the source locally
 
-To provide your own key through an optional local JSON file, see [Connect an API key from a file](docs/api-key-file.md) and the [blank file template](public/api-key-file-template.json). In **API key file (optional)**, turn on **Allow this device to read my API key file**, then select **Choose JSON file** and grant permission if requested. Keep filled copies outside the repository. A key file contains plaintext, while the connected account key remains encrypted on the server. Supported browsers can reread the chosen file on app open or reconnect when online, AI is enabled, and permission is already granted; they store the handle and preferences, not the key itself. Safari uses selection for each read and manual blank-file replacement where direct file access is unsupported. Disabling file reading or **Forget file** does not disconnect the server key; an edited or emptied local value takes effect only after rereading. **Clear key and disconnect** disables automatic reading and disconnects the server key, but Safari users must replace the original filled file with the downloaded blank version themselves.
-
-Need to remove a saved key? See [API key storage and removal](docs/api-key-removal.md) for the steps in CodeQuest, how to revoke a key through your AI provider, and what to do if a key was accidentally uploaded to GitHub.
-
-In Settings, choose DeepSeek, OpenAI (ChatGPT), or Claude (Anthropic) and save a key from that provider’s developer account. Only the connected assistant is then visible; **Change provider** opens the choices again, and Cancel keeps the existing connection. A successful switch replaces provider and credential atomically. Each account must connect its own key; there is no shared server-key fallback. Keys are saved on the server, encrypted using `AI_KEY_ENCRYPTION_KEY`, with account/provider-bound authenticated encryption, and excluded from offline storage and backups. Existing bare encrypted DeepSeek keys remain compatible. The server routes from saved metadata to fixed official endpoints and never falls back to a different provider. The adapters use `deepseek-flash`, OpenAI Responses with `gpt-6.1-sol`, and Anthropic Messages with `claude-sonnet-4-6`, including the lesson, level, code, and recent conversation. It supports plain explanations, hints, small steps, and code review. Tutor requests are unlimited in CodeQuest for new and existing accounts. Legacy saved caps are ignored; the atomic daily counter records usage only. External provider limits and API billing still apply. Highlight lesson prose or a static code example to open a quoted-passage popup. Explain this sends that exact passage to the connected provider with lesson context; selection alone sends nothing. The popup explains unavailable AI/offline states and excludes editable project fields. Alt + Enter focuses its action, and Escape dismisses it. A live tutor reply and a selected-text clarification reply were verified through a connected DeepSeek account. Live OpenAI and Claude were not supplied; their transport checks use synthetic responses.
-
-## Extra AI practice
-
-Use your connected provider to create extra projects for a course topic at beginner, intermediate, or advanced difficulty. Generation needs internet and uses your own account key. Generated teaching pages are requested to explain needed concepts and include worked examples before the exercise. The app checks the returned structure and tests supported browser reference solutions in its isolated runner; these checks do not guarantee that every AI explanation or test is correct. Practice stays separate from the authored course and awards no official course XP. See [AI practice projects](docs/ai-practice-projects.md) for editing, saved projects, backups, and offline limits.
-
-
-## Running projects
-
-JavaScript, HTML, CSS, React, TypeScript, Python, and SQL run in isolated browser previews. TypeScript uses its real compiler; Python uses Pyodide; SQL uses SQLite through sql.js. Open Settings online and choose **Download offline pack** once on each device. The current static pack is about 33.5 MB and contains the full app, all 142 lessons, and pinned Python, SQLite, TypeScript, and React runtimes. JavaScript, HTML, CSS, Python, SQL, TypeScript, and React browser projects then run offline. Swift still uses the Mac companion, and external packages, live websites, or deployment steps may need a connection. The preview cannot access the signed-in app's storage or APIs. JavaScript, Python, TypeScript and SQL computations run in workers, with a stop action and time limits. DOM/React previews use a separate opaque-origin frame.
-
-Swift uses the downloadable macOS companion in Settings. It runs actual Swift compilation and checked programs in Apple's sandbox. SwiftUI interaction requires Xcode and manual confirmation. See the companion README for supported toolchains, browser local-network restrictions, and current Foundation compile limitations.
-
-Backend and development-tool projects include additional editable files, downloads, and concrete instructions for local servers, Git, package managers, testing, and deployment. Local or Xcode steps have a separate explicit confirmation; browser checks alone do not certify those steps.
-
-## Run on your own computer without ChatGPT sign-in
-
-Install Node.js 22.13 or newer, download this repository using **Code → Download ZIP**, extract it, and open a terminal in the extracted folder. Run:
+Use Node.js 22.13 or newer, then:
 
 ```sh
-npm install
+npm ci
 npm run local
 ```
 
-Open **http://127.0.0.1:5173** and leave the terminal running. Stop with Ctrl+C. Run `npm run local` again next time. This mode opens directly with one local learner and needs no ChatGPT account or hosting account. It is a development server for personal use on your computer; it refuses network access from other devices. The existing hosted app still uses ChatGPT sign-in.
+Open the printed loopback URL (normally http://127.0.0.1:5173). Local mode has its own database and generated encryption key, requires no ChatGPT sign-in, and does not import hosted account data. Keep .codequest-local private. Installation and the first runtime preparation require internet; later operation still depends on installed tooling and the feature limits above. The current Windows test machine could not start the Workers runtime (native access violation), so this release does not claim a verified standalone Windows installation.
 
-The first run downloads and verifies the coding runtimes, creates the learning database, applies migrations, and generates a private encryption key. Later runs reuse those files and apply only new migrations. Progress, history, settings, chat history, and encrypted AI credentials are stored in the ignored `.codequest-local/` folder. Browser drafts and AI practice projects also remain in this browser profile. Keep the same folder and browser address to keep using your saves. Download learning and practice backups before moving your work.
+For a separate hosted deployment, register a new Sites project and set its returned project ID. The public source manifest deliberately omits the existing Site identity. Configure your own AI_KEY_ENCRYPTION_KEY server secret if enabling encrypted provider-key storage. Never commit secrets or learner databases.
 
-AI is optional. In **Settings**, choose DeepSeek, OpenAI, or Claude and enter your own provider API key. Local mode encrypts it in the database on your computer. Questions, code, and lesson context are sent to that provider when you ask for help or generate a project. Provider API access needs internet and is billed by the provider. **Disconnect assistant** removes the saved connection; the optional key-file controls can separately clear a file you have allowed the app to edit. Never put a filled key file or `.codequest-local/` in GitHub.
+## Verification and provenance
 
-After the initial setup, lessons and the supported browser coding runtimes work without internet while the local server is running. AI and the first dependency/runtime downloads need internet. Offline learning downloads can also keep the learning interface available when the local server stops. Swift and projects that need a local server or Xcode retain their setup requirements.
+Source is synchronized from hosted version 75 (commit 108f73fc5b297017deb3aeec73ab7d6f49db407d), with public documentation and deployment-identity sanitization. Authenticated live samples verified headings, navigation and server recovery. Phone checks are partial; not every layout or interaction has been tested.
 
-There is one local learner for each app folder. People sharing that computer/app folder share its server-side learning data, even in different browsers. Use separate operating-system accounts and separate app copies for separate learners. Local mode is not a public hosting or multiuser sign-in system. The encryption key protects credentials at rest; someone with access to both the private database and key can decrypt them. Keep your computer account and private backups secure. Do not delete the encryption key on its own: existing saved credentials would need reconnecting. Deleting the whole `.codequest-local/` folder resets local server data; browser drafts/practice are separate and can be removed through browser site-data controls.
+The offline artifact test verifies all 57 file hashes, HTML transports and dependencies. Cache tests cover verified download, failed-update preservation, API/auth exclusion and offline navigation. These checks do not substitute for a fresh disconnected-device browser acceptance test. Historical tests referring to private Sites commit hashes need that original history and cannot run unchanged from this source snapshot.
 
-If port 5173 is already occupied, stop the other server and retry. If you see a database migration or damaged-key error, keep your private files and fix/restore them before continuing; startup stops rather than silently discarding learning data or replacing the encryption key.
+## Licensing
 
-Validation: `node tests/local-mode.mjs` checks local request boundaries, spoofed identity removal, and private runtime initialization. The local server was also checked without sign-in for saved progress, quizzes, settings, backups, key disconnect, and restart persistence. Live AI replies require the user's own valid provider key.
+No blanket open-source license has been granted for CodeQuest's original application code or authored curriculum in this repository. Public visibility is not an MIT license or permission to redistribute/relicense those works. No MusicQuest license applies here. Existing file-specific licenses remain in force.
 
-## Development
-
-This repository is a clean source snapshot. It is currently private while updates are in progress. It contains no API keys, user database, or private deployment history. The existing hosted app keeps its own access settings. To publish your own copy with Sites, register it as a new project; the included `.openai/hosting.json` contains generic database bindings and no live project ID. API key storage requires your deployment's own `AI_KEY_ENCRYPTION_KEY` server secret. Never commit that secret or a user's key.
-
-Use Node 22.13 or newer and `npm install`, then `npm run dev`. The first dev/build run downloads the pinned third-party runtimes listed in `public/vendor/manifest.json` and verifies their sizes and SHA-256 checksums. Later runs reuse verified local copies. These generated copies are excluded from Git. Preserve the Sites Worker setup and `.openai/hosting.json`. Database migrations are in `drizzle/`; runtime tables are not created by requests. `.dev.vars`, local runtime state, credentials, and test databases are excluded from source publication.
-
-Validation scripts in `tests/` check original lesson solutions, real Python/SQL fixtures, local backend servers, account checks, history, usage/key setup, and completion conflicts. Browser fixtures are disposable local data and are never published to production D1.
-
-See the [browser verification report](docs/browser-test-report.md) for confirmed browser results and remaining gaps. All 103 topic links opened; live DeepSeek and selected browser/offline tools were exercised. Swift/Xcode, live OpenAI/Claude, native file permissions and unobserved conditional controls retain their documented verification limits.
-
-## Offline learning and settings
-
-AI is enabled by default and can be disabled in Settings. The server rejects tutor requests while it is disabled, before reading the key, counting requests, or contacting any AI provider. Live AI requires internet and a user-provided key; written hints and simpler lesson explanations work offline.
-
-Settings also control lesson hints, familiar examples, XP/streak/badge visibility, larger reading text, calm mode, light/dark appearance, daily goals and automatic sync. Hiding rewards keeps earned progress.
-
-IndexedDB keeps account-scoped learning state, an immutable pending-write queue, and code history. Offline answers, code, preferences, and completions survive reload. Replay verifies account identity and sends a scope guard checked on every server mutation. Saves compare their original code with the current account copy; conflicts preserve both versions, including newer local edits, for a deliberate choice. Replays never duplicate completion XP. Completion dates retain the offline learning date in UTC. Automatic sync runs while the app is open; Sync now is available when automatic sync is off.
-
-The service worker caches only an approved static shell and verified public runtime assets. It excludes API routes, authentication responses, private account HTML, and secrets. The signed-in account is checked online; offline access uses the account last saved on this browser. Downloaded work is available to anyone using the same browser profile, so use a personal device. Removing downloads leaves local work intact. Browsers may evict cached files; Settings verifies that all pack files remain present. Back up work using Download backup.
-
-The offline runner loads trusted public runtime bytes in the parent and passes them into the opaque sandbox. User code cannot access app cookies, storage, or APIs; workers run without external network fetches. Python supports the bundled standard library, not every third-party package.
-
-Validation: `node tests/offline-client.mjs`, `node tests/offline-cache.mjs`, and authenticated local `python3 tests/offline-server.py`; real browser verification additionally disconnects the local app server, reloads from the downloaded shell, executes supported runtimes, and checks reconnect synchronization.
-
-
-Provider validation: `node tests/ai-providers.mjs` covers provider/account-bound encryption, legacy key compatibility, fixed routing, two-turn history, response parsing, truncation, and sanitized errors without fallback. `python3 tests/ai-providers-server.py` uses disposable local credentials to verify atomic saves, reloads, invalid replacement preservation, identity guards, AI-off/provider-change gates before usage counting, and disconnect. Provider HTTP responses are mocked; a live response requires a valid user key. ChatGPT and Claude subscriptions do not include API billing.
-
-Official API references: [OpenAI Responses/text](https://developers.openai.com/api/docs/guides/text), [OpenAI conversation state](https://developers.openai.com/api/docs/guides/conversation-state), [Anthropic Messages](https://platform.claude.com/docs/en/api/messages/create), [Claude stop reasons](https://platform.claude.com/docs/en/build-with-claude/handling-stop-reasons), and [DeepSeek quick start](https://api-docs.deepseek.com/quick_start/).
-
-Tutor and key validation: `node tests/unlimited-tutor.mjs` checks retired-cap boundaries across all providers, concurrent counts, availability guards and external rate-limit propagation. `node tests/selection-clarifier.mjs` checks exact quote snapshots, keyboard use, unavailable states, excluded selections and dismissal. `node tests/account-keys.mjs` checks each account uses its own encrypted key, rejects decryption with another account and ignores a shared environment key. These use synthetic credentials and mocked provider responses.
-
-## October 2026 usability and practice update
-
-Charcoal surfaces now carry the existing purple accents, including native fields, code syntax, status messages and explanation popups. Appearance offers Charcoal and Deep charcoal; existing saved light/dark preference values remain compatible. Search results keep each topic's course position. AI practice explains its empty state, announces run outcomes and asks before capacity replacement removes older practice. Download a practice backup before replacing older work.
-
-Historical October 14 milestone: twelve authored JavaScript, Python and SQL projects brought the course to 115 projects, 818 explanation pages and 249 worked examples. They use the same quiz, hints, runner and progress system and require no AI key. See [new projects](docs/new-practice-projects.md), [navigation review](docs/navigation-audit-2026-10-13.md), [quality review](docs/quality-audit-2026-10-13.md) and [current verification](docs/review-verification-2026-10-14.md). These reviews distinguish source checks, local browser fixtures, deployment and unmeasured learner outcomes.
-
-## Current topic projects and verification
-
-Python Basics offers ten small topic-bound projects using covered values, names, assignment and output. The original course project retains course completion; extra scenarios record device-local practice without extra course XP. Study links show quoted canonical titles. Reading marks record activities, not mastery. Project drafts, selected scenario and step progress persist on the current device/account; they are not cross-device synced.
-
-The current 142-lesson release adds sixteen foundation bridges without changing existing lesson IDs or saved progress. Python/SQLite reference solutions, strict TypeScript checks, and React DOM lifecycle tests were executed. CSS focus/scroll checks require a real browser, and Swift requires the Mac compiler; those new runtime checks remain unverified here. Current layout spacing changes are source-tested but fresh browser verification was blocked by preview bootstrap/authentication availability. Earlier ten-project responsive browser QA passed before these bounded CSS adjustments.
+Preserve [third-party notices](public/third-party/README.txt), vendor license files and source links when using covered components. [Notice scope](docs/third-party-notice-scope.md) records remaining attribution questions; this release does not assert legal clearance or complete dependency-license closure.

@@ -88,6 +88,7 @@ try {
   );
   for (const file of [
     "components/PracticeStudio.tsx",
+    "lib/course-order.ts",
     "lib/practice-storage.ts",
     "lib/practice-project.ts",
     "lib/device-db.ts",
@@ -371,6 +372,18 @@ try {
   assert.equal(afterConfirmed.drafts.length, storage.maxPracticeProjects);
   assert.ok(afterConfirmed.drafts.some((item) => item.project.id === generated.id));
   assert.ok(!afterConfirmed.drafts.some((item) => item.project.id === full.drafts[0].project.id));
+  // A stale concept-course selection cannot masquerade as a JavaScript runtime.
+  const realLessons=JSON.parse(await readFile('content/lessons.json','utf8'));
+  const realUnits=JSON.parse(await readFile('content/catalog.json','utf8')).units;
+  const savedBeforeCourseSwitch=await storage.loadPractices(scope);
+  props={...props,activeId:'csharp-01',units:realUnits,lessons:realLessons};
+  await act(async()=>root.render(React.createElement(Studio,{...props,key:'course-fallback'})));await flush();
+  const selector=document.querySelector('select[aria-label="Practice course topic"]');
+  assert.equal(selector.value,realUnits.find(u=>realLessons.find(l=>l.id===u.id)?.learningMode!=='concept').id);assert.match(document.body.textContent,/concept lessons, not an in-browser coding project/);
+  for(const option of selector.options)assert.notEqual(realLessons.find(l=>l.id===option.value).learningMode,'concept');
+  const groupLabels=[...selector.querySelectorAll('optgroup')].map(g=>g.label);
+  assert.deepEqual(groupLabels,[...groupLabels].sort((a,b)=>a.localeCompare(b,'en',{sensitivity:'base',ignorePunctuation:false})));
+  assert.deepEqual((await storage.loadPractices(scope)).drafts,savedBeforeCourseSwitch.drafts,'sorting/fallback never deletes saved drafts');
   console.log(
     "Passed practice difficulty/provider gating, reference/starter validation before adoption, theory-first editing, explicit solution reveal, source-bound completion without course XP, history-preserving reset, stale generation rejection, saved state across navigation, accessible result summary, and capacity cancellation/confirmed generation.",
   );

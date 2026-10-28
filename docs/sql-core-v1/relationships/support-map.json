@@ -1,0 +1,309 @@
+[
+  {
+    "id": "sql-35",
+    "quizTarget": "In a fresh table with status DEFAULT queued, insert one row without status and another with explicit NULL. What is stored?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "DEFAULT supplies a value when an INSERT does not provide that column. It is an insertion rule, not a query that keeps repairing missing data. A text literal uses single quotes. NULL represents missing information and is different from omitting a column."
+      },
+      {
+        "paragraph": 1,
+        "fact": "The column list in INSERT INTO reminders(id,title) leaves status out, so its declared default is used. INSERT with all three values explicitly supplies NULL instead; this nullable column stores NULL. NOT NULL is a separate constraint: adding it would reject an explicit NULL with ordinary INSERT, rather than silently using the default. The project checks successful rows; the local error example below separately demonstrates the rejected write."
+      },
+      {
+        "paragraph": 2,
+        "fact": "\n```sql\nCREATE TABLE reminders(id INTEGER PRIMARY KEY, title TEXT NOT NULL, status TEXT DEFAULT 'open');\nINSERT INTO reminders(id,title) VALUES(1,'Read');\nINSERT INTO reminders VALUES(2,'Walk',NULL);\nSELECT id,title,status\nFROM reminders\nORDER BY id;\n```\nRow 1 has status open. Row 2 has NULL, not open. The final ORDER BY id states the display order."
+      },
+      {
+        "paragraph": 3,
+        "fact": "\n```sql\nCREATE TABLE reminders(id INTEGER PRIMARY KEY, title TEXT NOT NULL, status TEXT DEFAULT 'open');\nINSERT INTO reminders(id,title) VALUES(1,'Read');\nINSERT INTO reminders VALUES(2,'Walk','done');\nSELECT id,title,status\nFROM reminders\nORDER BY id;\n```\nRow 2 now stores done because the supplied value wins. Row 1 still uses open."
+      },
+      {
+        "paragraph": 4,
+        "fact": "Optional practice: change the declared default to queued in a fresh database. Predict which of the two inserts changes."
+      },
+      {
+        "paragraph": 5,
+        "fact": "Local rejection demonstration, not the normal project solution: run each following block in its own fresh SQLite database. The final INSERT intentionally fails. The app’s current SELECT checks do not catch expected errors; this is a separately verified boundary, not a successful Run checks script.\n```sql\nCREATE TABLE strict_note(title TEXT NOT NULL DEFAULT 'New');\nINSERT INTO strict_note VALUES(NULL);\n```\nExpected diagnostic: NOT NULL constraint failed: strict_note.title. The failing statement adds no row; previously accepted rows remain."
+      }
+    ],
+    "reasoning": "Only the omitted column invokes its default. An explicit NULL remains NULL in a nullable column.",
+    "source": "https://www.sqlite.org/lang_createtable.html",
+    "prerequisites": [
+      "sql-02",
+      "sql-26"
+    ]
+  },
+  {
+    "id": "sql-36",
+    "quizTarget": "A nullable column has CHECK(seats BETWEEN 1 AND 4). Which proposed value is rejected by that CHECK: NULL, 4, or 5?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "A CHECK constraint tests an expression when a row is inserted or changed. In SQLite a result of zero rejects the row; a nonzero result or NULL accepts this check. BETWEEN 1 AND 4 includes both endpoints."
+      },
+      {
+        "paragraph": 1,
+        "fact": "For a missing seats value, seats BETWEEN 1 AND 4 evaluates to NULL, not zero. CHECK alone therefore allows that row. Use NOT NULL as well when missing values are forbidden. With ordinary INSERT, seats=5 fails this CHECK and the rejected statement inserts no row. The project checks successful rows; the local error example below separately demonstrates the rejected write."
+      },
+      {
+        "paragraph": 2,
+        "fact": "\n```sql\nCREATE TABLE bookings(id INTEGER PRIMARY KEY, seats INTEGER CHECK(seats BETWEEN 1 AND 4));\nINSERT INTO bookings VALUES(1,3);\nSELECT id,seats\nFROM bookings\nORDER BY id;\n```\nThe stored seats value is 3, inside the inclusive range."
+      },
+      {
+        "paragraph": 3,
+        "fact": "\n```sql\nCREATE TABLE bookings(id INTEGER PRIMARY KEY, seats INTEGER CHECK(seats BETWEEN 1 AND 4));\nINSERT INTO bookings VALUES(1,NULL);\nSELECT id,seats\nFROM bookings\nORDER BY id;\n```\nThe stored seats value is NULL. The CHECK result is NULL, which SQLite accepts; this does not mean NULL is between the numbers."
+      },
+      {
+        "paragraph": 4,
+        "fact": "Optional practice: add NOT NULL to seats in a fresh table. Explain why the missing-value insert now fails for a different reason."
+      },
+      {
+        "paragraph": 5,
+        "fact": "Local rejection demonstration, not the normal project solution: run each following block in its own fresh SQLite database. The final INSERT intentionally fails. The app’s current SELECT checks do not catch expected errors; this is a separately verified boundary, not a successful Run checks script.\n```sql\nCREATE TABLE bookings(id INTEGER PRIMARY KEY, seats INTEGER CHECK(seats BETWEEN 1 AND 4));\nINSERT INTO bookings VALUES(1,5);\n```\nExpected diagnostic: CHECK constraint failed: seats BETWEEN 1 AND 4. The failing statement adds no row; previously accepted rows remain.\n```sql\nCREATE TABLE bookings(id INTEGER PRIMARY KEY, seats INTEGER NOT NULL CHECK(seats BETWEEN 1 AND 4));\nINSERT INTO bookings VALUES(1,NULL);\n```\nExpected diagnostic: NOT NULL constraint failed: bookings.seats. The failing statement adds no row; previously accepted rows remain."
+      }
+    ],
+    "reasoning": "5 makes the expression zero. NULL passes the CHECK; 4 is an included endpoint.",
+    "source": "https://www.sqlite.org/lang_createtable.html",
+    "prerequisites": [
+      "sql-02",
+      "sql-26",
+      "sql-35"
+    ]
+  },
+  {
+    "id": "sql-37",
+    "quizTarget": "After storing Mira/Mon and Mira/Tue, which new pair violates the required composite key?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "A composite key identifies a row by a combination. PRIMARY KEY(person,day) lets Mira appear on different days and lets different people share Monday. Only the whole pair must be unique. Explicit NOT NULL on both columns also rules out incomplete identities."
+      },
+      {
+        "paragraph": 1,
+        "fact": "UNIQUE(person,day) likewise forbids repeating a complete non-NULL pair, but SQLite treats NULLs as distinct for uniqueness. Ordinary rowid tables have a legacy exception: a non-INTEGER PRIMARY KEY may also allow NULL unless NOT NULL is declared. STRICT tables and WITHOUT ROWID tables make primary-key columns required. In a rowid table, INTEGER PRIMARY KEY is special: supplying NULL allocates an integer key instead of storing NULL. That autoallocation does not apply to WITHOUT ROWID. These are distinctions, not a recommendation to use nullable identities. The project checks successful rows; the local error example below separately demonstrates the rejected write."
+      },
+      {
+        "paragraph": 2,
+        "fact": "\n```sql\nCREATE TABLE slots(person TEXT NOT NULL, day TEXT NOT NULL, PRIMARY KEY(person,day));\nINSERT INTO slots VALUES('Mira','Mon'),('Mira','Tue'),('Oren','Mon');\nSELECT person,day\nFROM slots\nORDER BY person,day;\n```\nAll three pairs are distinct, so all three rows are accepted."
+      },
+      {
+        "paragraph": 3,
+        "fact": "\n```sql\nCREATE TABLE nullable_pair(person TEXT, day TEXT, UNIQUE(person,day));\nINSERT INTO nullable_pair VALUES('Mira',NULL),('Mira',NULL);\nSELECT person,day\nFROM nullable_pair\nORDER BY rowid;\n```\nBoth rows are accepted. UNIQUE does not treat the two missing day values as the same known value. rowid is SQLite’s internal integer row identifier for this ordinary table; it supplies a deterministic display order here."
+      },
+      {
+        "paragraph": 4,
+        "fact": "Optional practice: attempt to add Mira/Mon a second time to the first table. Identify both column names in the reported uniqueness failure."
+      },
+      {
+        "paragraph": 5,
+        "fact": "Local rejection demonstration, not the normal project solution: run each following block in its own fresh SQLite database. The final INSERT intentionally fails. The app’s current SELECT checks do not catch expected errors; this is a separately verified boundary, not a successful Run checks script.\n```sql\nCREATE TABLE slots(person TEXT NOT NULL, day TEXT NOT NULL, PRIMARY KEY(person,day));\nINSERT INTO slots VALUES('Mira','Mon');\nINSERT INTO slots VALUES('Mira','Mon');\n```\nExpected diagnostic: UNIQUE constraint failed: slots.person, slots.day. The failing statement adds no row; previously accepted rows remain."
+      }
+    ],
+    "reasoning": "The complete pair repeats. Reusing only a person or only a day is allowed.",
+    "source": "https://www.sqlite.org/lang_createtable.html",
+    "prerequisites": [
+      "sql-02",
+      "sql-35"
+    ]
+  },
+  {
+    "id": "sql-38",
+    "quizTarget": "If Oren joins Music too, which table needs the new relationship row?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "A person can join several clubs, and a club can contain several people. Store each person and club once. A junction table stores one row for each relationship instead of a comma-separated list inside one cell."
+      },
+      {
+        "paragraph": 1,
+        "fact": "membership has two required IDs. Each REFERENCES clause points to a parent primary key; the composite key forbids the same relationship twice. PRAGMA foreign_keys=ON enables enforcement on this SQLite connection before writes. The two JOIN operations follow the stored IDs to readable names; aliases p, c and m name each role. The project checks successful rows; the local error example below separately demonstrates the rejected write."
+      },
+      {
+        "paragraph": 2,
+        "fact": "\n```sql\nPRAGMA foreign_keys=ON;\nCREATE TABLE people(id INTEGER PRIMARY KEY,name TEXT NOT NULL);\nCREATE TABLE clubs(id INTEGER PRIMARY KEY,title TEXT NOT NULL);\nINSERT INTO people VALUES(1,'Mira'),(2,'Oren');\nINSERT INTO clubs VALUES(10,'Art'),(20,'Music');\nCREATE TABLE membership(person_id INTEGER NOT NULL REFERENCES people(id), club_id INTEGER NOT NULL REFERENCES clubs(id), PRIMARY KEY(person_id,club_id));\nINSERT INTO membership VALUES(1,10),(1,20),(2,10);\nSELECT p.name,c.title\nFROM membership AS m\nJOIN people AS p ON p.id=m.person_id\nJOIN clubs AS c ON c.id=m.club_id\nORDER BY p.name,c.title;\n```\nThe ordered pairs are Mira/Art, Mira/Music and Oren/Art. Mira is stored only once in people."
+      },
+      {
+        "paragraph": 3,
+        "fact": "\n```sql\nPRAGMA foreign_keys=ON;\nCREATE TABLE people(id INTEGER PRIMARY KEY,name TEXT NOT NULL);\nCREATE TABLE clubs(id INTEGER PRIMARY KEY,title TEXT NOT NULL);\nINSERT INTO people VALUES(1,'Mira'),(2,'Oren');\nINSERT INTO clubs VALUES(10,'Art'),(20,'Music');\nCREATE TABLE membership(person_id INTEGER NOT NULL REFERENCES people(id), club_id INTEGER NOT NULL REFERENCES clubs(id), PRIMARY KEY(person_id,club_id));\nINSERT INTO membership VALUES(1,10),(1,20),(2,10),(2,20);\nSELECT p.name,c.title\nFROM membership AS m\nJOIN people AS p ON p.id=m.person_id\nJOIN clubs AS c ON c.id=m.club_id\nORDER BY p.name,c.title;\n```\nOren/Music is added without adding another person or club. Four membership rows describe four relationships."
+      },
+      {
+        "paragraph": 4,
+        "fact": "Optional practice: add a new club parent, then connect one existing person to its ID. Explain why an unknown club ID is not a valid relationship."
+      },
+      {
+        "paragraph": 5,
+        "fact": "Local rejection demonstration, not the normal project solution: run each following block in its own fresh SQLite database. The final INSERT intentionally fails. The app’s current SELECT checks do not catch expected errors; this is a separately verified boundary, not a successful Run checks script.\n```sql\nPRAGMA foreign_keys=ON;\nCREATE TABLE people(id INTEGER PRIMARY KEY,name TEXT NOT NULL);\nCREATE TABLE clubs(id INTEGER PRIMARY KEY,title TEXT NOT NULL);\nINSERT INTO people VALUES(1,'Mira'),(2,'Oren');\nINSERT INTO clubs VALUES(10,'Art'),(20,'Music');\nCREATE TABLE membership(person_id INTEGER NOT NULL REFERENCES people(id), club_id INTEGER NOT NULL REFERENCES clubs(id), PRIMARY KEY(person_id,club_id));\nINSERT INTO membership VALUES(1,99);\n```\nExpected diagnostic: FOREIGN KEY constraint failed. The failing statement adds no row; previously accepted rows remain."
+      }
+    ],
+    "reasoning": "The two existing parent identities stay the same. The new pair belongs in the junction table.",
+    "source": "https://www.sqlite.org/foreignkeys.html",
+    "prerequisites": [
+      "sql-05",
+      "sql-15",
+      "sql-18",
+      "sql-37"
+    ]
+  },
+  {
+    "id": "sql-39",
+    "quizTarget": "blocked contains only NULL; candidates contains 7. Which condition selects 7?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "WHERE keeps true conditions, not false or NULL. With a blocked list containing 2 and NULL, 1 NOT IN that list is NULL: the missing entry might match. A matching value 2 gives false. These are different reasons for excluding a row."
+      },
+      {
+        "paragraph": 1,
+        "fact": "NOT EXISTS asks whether the inner query finds any matching row. The correlated condition b.id=c.id refers to the current outer candidate. SELECT 1 supplies an irrelevant constant because EXISTS cares about row existence, not its selected value. With ordinary equality, NULL never equals NULL; therefore a missing candidate has no matching row and passes NOT EXISTS. Add c.id IS NOT NULL when your policy forbids missing candidate IDs. These operators express different questions, not interchangeable spellings."
+      },
+      {
+        "paragraph": 2,
+        "fact": "\n```sql\nCREATE TABLE candidates(id INTEGER);\nCREATE TABLE blocked(id INTEGER);\nINSERT INTO candidates VALUES(1),(2),(NULL);\nINSERT INTO blocked VALUES(2),(NULL);\nSELECT c.id\nFROM candidates AS c\nWHERE NOT EXISTS (SELECT 1 FROM blocked AS b WHERE b.id=c.id)\nORDER BY c.id;\n```\nThe result contains NULL and 1, ordered with NULL first in SQLite’s ascending order. Candidate 2 has a match and is excluded."
+      },
+      {
+        "paragraph": 3,
+        "fact": "\n```sql\nCREATE TABLE candidates(id INTEGER);\nCREATE TABLE blocked(id INTEGER);\nINSERT INTO candidates VALUES(1),(2),(NULL);\nINSERT INTO blocked VALUES(2),(NULL);\nSELECT id\nFROM candidates\nWHERE id NOT IN (SELECT id FROM blocked)\nORDER BY id;\n```\nThere are no result rows. Neither 1 nor NULL produces true, and 2 is a known blocked value."
+      },
+      {
+        "paragraph": 4,
+        "fact": "Optional practice: remove the NULL from blocked in a fresh setup. Predict the NOT IN result, then separately decide whether missing candidate IDs should ever be returned."
+      }
+    ],
+    "reasoning": "No equality match exists, so NOT EXISTS is true. NOT IN is unknown because its list contains NULL.",
+    "source": "https://www.sqlite.org/lang_expr.html",
+    "prerequisites": [
+      "sql-26",
+      "sql-28",
+      "sql-19"
+    ]
+  },
+  {
+    "id": "sql-40",
+    "quizTarget": "If Dee’s manager_id becomes NULL, how does the LEFT JOIN report change?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "A self-join reads the same table in two roles. child is the worker row; parent is the row whose ID equals that worker’s manager_id. Aliases do not copy or change stored rows. Qualifying each column makes the roles clear."
+      },
+      {
+        "paragraph": 1,
+        "fact": "LEFT JOIN keeps every child row. If no parent matches, selected parent columns are NULL. Here Ari has no manager. An ordinary inner JOIN drops that unmatched child. This query follows one management edge; it is not a recursive traversal of every ancestor."
+      },
+      {
+        "paragraph": 2,
+        "fact": "\n```sql\nCREATE TABLE staff(id INTEGER PRIMARY KEY,name TEXT NOT NULL,manager_id INTEGER);\nINSERT INTO staff VALUES(1,'Ari',NULL),(2,'Bo',1),(3,'Cy',1),(4,'Dee',2);\nSELECT child.name AS worker,parent.name AS manager\nFROM staff AS child\nLEFT JOIN staff AS parent ON parent.id=child.manager_id\nORDER BY child.id;\n```\nThe pairs are Ari/NULL, Bo/Ari, Cy/Ari and Dee/Bo."
+      },
+      {
+        "paragraph": 3,
+        "fact": "\n```sql\nCREATE TABLE staff(id INTEGER PRIMARY KEY,name TEXT NOT NULL,manager_id INTEGER);\nINSERT INTO staff VALUES(1,'Ari',NULL),(2,'Bo',1),(3,'Cy',1),(4,'Dee',2);\nSELECT child.name AS worker,parent.name AS manager\nFROM staff AS child\nJOIN staff AS parent ON parent.id=child.manager_id\nORDER BY child.id;\n```\nAri disappears; the other three pairs remain. The source table still has four rows."
+      },
+      {
+        "paragraph": 4,
+        "fact": "Optional practice: change Dee’s manager_id to 1 in a fresh setup. Predict the one changed report value."
+      }
+    ],
+    "reasoning": "The left row is retained even when its manager reference has no equality match.",
+    "source": "https://www.sqlite.org/lang_select.html",
+    "prerequisites": [
+      "sql-05"
+    ]
+  },
+  {
+    "id": "sql-41",
+    "quizTarget": "A fourth project has only finished tasks. With done=0 in LEFT JOIN ON, what happens?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "To show every project alongside its unfinished tasks, put t.done=0 inside the LEFT JOIN’s ON condition. That condition decides which right-side rows count as matches. If none qualify, the project still gets a row with NULL right-side columns."
+      },
+      {
+        "paragraph": 1,
+        "fact": "Moving t.done=0 to WHERE changes the question. It filters rows after the join. A finished matched task fails; a NULL-extended task produces NULL rather than true. Both are removed, so projects without an unfinished task disappear. A project with several unfinished tasks can legitimately produce several rows."
+      },
+      {
+        "paragraph": 2,
+        "fact": "\n```sql\nCREATE TABLE projects(id INTEGER PRIMARY KEY,title TEXT);\nCREATE TABLE tasks(id INTEGER PRIMARY KEY,project_id INTEGER,done INTEGER);\nINSERT INTO projects VALUES(1,'Map'),(2,'Song'),(3,'Garden');\nINSERT INTO tasks VALUES(10,1,1),(11,1,0),(12,2,1);\nSELECT p.id AS project_id,t.id AS task_id\nFROM projects AS p\nLEFT JOIN tasks AS t ON t.project_id=p.id AND t.done=0\nORDER BY p.id,t.id;\n```\nResults are (1,11), (2,NULL), (3,NULL). Song has only a finished task; Garden has none. Both projects remain."
+      },
+      {
+        "paragraph": 3,
+        "fact": "\n```sql\nCREATE TABLE projects(id INTEGER PRIMARY KEY,title TEXT);\nCREATE TABLE tasks(id INTEGER PRIMARY KEY,project_id INTEGER,done INTEGER);\nINSERT INTO projects VALUES(1,'Map'),(2,'Song'),(3,'Garden');\nINSERT INTO tasks VALUES(10,1,1),(11,1,0),(12,2,1);\nSELECT p.id AS project_id,t.id AS task_id\nFROM projects AS p\nLEFT JOIN tasks AS t ON t.project_id=p.id\nWHERE t.done=0\nORDER BY p.id,t.id;\n```\nOnly (1,11) remains. Even the project with no task is lost because NULL=0 is not true."
+      },
+      {
+        "paragraph": 4,
+        "fact": "Optional practice: add a second unfinished task to Map. Predict why it produces another row instead of replacing task 11."
+      }
+    ],
+    "reasoning": "No right row qualifies, so LEFT JOIN supplies a NULL-extended row for that parent.",
+    "source": "https://www.sqlite.org/lang_select.html",
+    "prerequisites": [
+      "sql-05",
+      "sql-26"
+    ]
+  },
+  {
+    "id": "sql-42",
+    "quizTarget": "On the unchanged five-row dataset, LIMIT 2 OFFSET 5 returns how many rows?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "LIMIT 2 returns at most two rows. OFFSET 2 skips the first two rows of the ordered result before taking that limit. Neither clause creates a meaningful order by itself. OFFSET counts rows, not page numbers."
+      },
+      {
+        "paragraph": 1,
+        "fact": "ORDER BY score DESC,id ASC sorts higher scores first, then uses the unique ID for tied scores. Without the ID tie-breaker, the database is not required to return tied rows in a fixed order. This example assumes one fixed dataset. Concurrent inserts, deletes or score changes can shift offsets between separate page requests; deterministic ordering alone does not create a snapshot."
+      },
+      {
+        "paragraph": 2,
+        "fact": "\n```sql\nCREATE TABLE notes(id INTEGER PRIMARY KEY,score INTEGER);\nINSERT INTO notes VALUES(1,10),(2,10),(3,8),(4,8),(5,5);\nSELECT id,score\nFROM notes\nORDER BY score DESC,id ASC\nLIMIT 2\nOFFSET 2;\n```\nThe full ID order is 1,2,3,4,5. Skipping two and taking two returns IDs 3 and 4."
+      },
+      {
+        "paragraph": 3,
+        "fact": "\n```sql\nCREATE TABLE notes(id INTEGER PRIMARY KEY,score INTEGER);\nINSERT INTO notes VALUES(1,10),(2,10),(3,8),(4,8),(5,5);\nSELECT id,score\nFROM notes\nORDER BY score DESC,id ASC\nLIMIT 2\nOFFSET 4;\n```\nSkipping four leaves only ID 5. LIMIT is a maximum, not a requirement to fill every page."
+      },
+      {
+        "paragraph": 4,
+        "fact": "Optional practice: insert ID 6 with score 20 between two page requests. Explain why later offsets may repeat or skip items compared with the earlier dataset."
+      }
+    ],
+    "reasoning": "Five rows are skipped and none remain. LIMIT does not manufacture rows.",
+    "source": "https://www.sqlite.org/lang_select.html",
+    "prerequisites": [
+      "sql-01",
+      "sql-03"
+    ]
+  },
+  {
+    "id": "sql-43",
+    "quizTarget": "For scores 8,8,3 ordered high to low, what does DENSE_RANK over score alone return?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "ROW_NUMBER() OVER (ORDER BY score DESC,id) returns an integer starting at 1 for each row in that window order. Its empty parentheses take no ordinary arguments; OVER supplies the ordered input rows. The unique ID breaks score ties so the two tied rows get predictable positions."
+      },
+      {
+        "paragraph": 1,
+        "fact": "DENSE_RANK() OVER (ORDER BY score DESC) gives equal ranks to equal ordered score values, then moves to the next integer without gaps. Do not add ID to this ranking order if equal scores must tie: ID would make each ordering tuple different. Unlike RANK, dense rank does not skip the next rank after ties. Neither window order guarantees final display order; the outer ORDER BY does that."
+      },
+      {
+        "paragraph": 2,
+        "fact": "\n```sql\nCREATE TABLE results(id INTEGER PRIMARY KEY,name TEXT,score INTEGER);\nINSERT INTO results VALUES(1,'Mira',9),(2,'Oren',9),(3,'Paz',7),(4,'Rin',5);\nSELECT id,name,score,ROW_NUMBER() OVER (ORDER BY score DESC,id) AS position,DENSE_RANK() OVER (ORDER BY score DESC) AS level\nFROM results\nORDER BY score DESC,id;\n```\nPositions are 1,2,3,4. Dense ranks are 1,1,2,3: the two scores of 9 share rank 1."
+      },
+      {
+        "paragraph": 3,
+        "fact": "\n```sql\nCREATE TABLE results(id INTEGER PRIMARY KEY,name TEXT,score INTEGER);\nINSERT INTO results VALUES(1,'Mira',9),(2,'Oren',9),(3,'Paz',7),(4,'Rin',5);\nSELECT id,name,score,ROW_NUMBER() OVER (ORDER BY score DESC,id) AS position,DENSE_RANK() OVER (ORDER BY score DESC,id) AS level\nFROM results\nORDER BY score DESC,id;\n```\nDense ranks become 1,2,3,4 because every (score,id) pair differs. The row numbers stay 1,2,3,4."
+      },
+      {
+        "paragraph": 4,
+        "fact": "Optional practice: change Rin’s score to 7 in a fresh setup. Predict positions 1,2,3,4 and dense ranks 1,1,2,2 before running."
+      }
+    ],
+    "reasoning": "Equal scores share a peer-group rank. The next distinct score gets the next integer, with no gap.",
+    "source": "https://www.sqlite.org/windowfunctions.html",
+    "prerequisites": [
+      "sql-07",
+      "sql-42"
+    ]
+  }
+]

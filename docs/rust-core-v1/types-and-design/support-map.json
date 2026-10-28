@@ -1,0 +1,382 @@
+[
+  {
+    "id": "rust-27",
+    "quizTarget": "If the input becomes \"many\", what prints?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "On a Result, ? extracts the Ok value or returns early with the Err, converting its error type if needed. The enclosing function must have a compatible return type; ? is not a panic or an instruction to ignore errors."
+      },
+      {
+        "paragraph": 1,
+        "fact": "text.parse::<u32>() requests an unsigned32-bit integer. The ::<...> syntax supplies a type argument explicitly. ParseIntError is the parser\u2019s error type. use std::num::ParseIntError brings that standard-library name into this scope; it does not download a dependency. Here both layers use that same type, so failure propagates directly."
+      }
+    ],
+    "reasoning": "The parse error returns from minutes immediately and main selects its Err branch.",
+    "source": "https://doc.rust-lang.org/book/ch09-02-recoverable-errors-with-result.html",
+    "prerequisites": [
+      "rust-26"
+    ]
+  },
+  {
+    "id": "rust-28",
+    "quizTarget": "If the print tries session.topic instead of topic after the move, what happens?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "A struct groups named fields. A field of type String owns its string data; assigning that field to another binding moves it unless it is explicitly borrowed or cloned."
+      },
+      {
+        "paragraph": 1,
+        "fact": "After moving one non-Copy field, that field cannot be used through the original value. Other independent Copy fields can still be used when the type has no custom Drop implementation. Do not describe every struct assignment as a deep copy."
+      }
+    ],
+    "reasoning": "Moving session.topic transfers ownership; the original field is no longer available to read.",
+    "source": "https://doc.rust-lang.org/book/ch05-01-defining-structs.html",
+    "prerequisites": [
+      "rust-27"
+    ]
+  },
+  {
+    "id": "rust-29",
+    "quizTarget": "If mut is removed from the counter binding, what happens?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "Methods are defined in impl Type. &self borrows shared access, &mut self borrows exclusive mutable access, and self takes ownership of the receiver unless its type is Copy. Method-call syntax handles ordinary borrowing automatically."
+      },
+      {
+        "paragraph": 1,
+        "fact": "The inc method changes n through &mut self. The caller must permit a mutable borrow of its Counter. read uses &self and does not consume it. The small counts avoid arithmetic overflow."
+      }
+    ],
+    "reasoning": "The method requires exclusive mutable access, but the binding no longer allows that borrow.",
+    "source": "https://doc.rust-lang.org/book/ch05-03-method-syntax.html",
+    "prerequisites": [
+      "rust-28"
+    ]
+  },
+  {
+    "id": "rust-30",
+    "quizTarget": "If label receives State::Waiting, what prints?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "An enum names alternatives, and each alternative may carry a payload. State::Ready(String) contains text while State::Waiting contains none. Construct a variant with its path; it is not a separate unrelated type."
+      },
+      {
+        "paragraph": 1,
+        "fact": "match chooses a branch and can return a value. Matching Ready(text) binds its owned String payload here. A match over the enum must cover all possible cases; a missing variant cannot simply be ignored."
+      }
+    ],
+    "reasoning": "The no-payload Waiting alternative has its own branch returning waiting.",
+    "source": "https://doc.rust-lang.org/book/ch06-01-defining-an-enum.html",
+    "prerequisites": [
+      "rust-29"
+    ]
+  },
+  {
+    "id": "rust-31",
+    "quizTarget": "If the input becomes Some(0), what prints?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "A match guard adds if condition after a pattern. Some(n) if n > 0 handles only present positive values; the following Some(_) still handles other present values. _ ignores a matched value."
+      },
+      {
+        "paragraph": 1,
+        "fact": "Match selects the first matching arm whose guard succeeds. A guard is not a replacement for covering remaining cases. This classification keeps None distinct from a present zero. The returned string literals have type &'static str: their text is available for the entire program, not allocated inside the function."
+      }
+    ],
+    "reasoning": "The Some pattern matches but its positive guard fails, so the later Some arm handles the value.",
+    "source": "https://doc.rust-lang.org/book/ch19-03-pattern-syntax.html",
+    "prerequisites": [
+      "rust-30"
+    ]
+  },
+  {
+    "id": "rust-32",
+    "quizTarget": "If Topic stores \"Maps\", what prints?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "A trait specifies behavior a type can implement. impl Label for Topic supplies the method required by Label. The &self receiver borrows the object rather than consuming it. struct Topic(String) declares a tuple struct with one unnamed String field; Topic(...) constructs it and .0 selects that field."
+      },
+      {
+        "paragraph": 1,
+        "fact": "The trait method returns a borrowed string slice tied to the borrow of self by lifetime elision. &self.0 borrows the first field of this tuple struct; String can be viewed as &str. This is not class inheritance."
+      }
+    ],
+    "reasoning": "The implementation returns a slice of this Topic\u2019s stored String, so its contents determine the output.",
+    "source": "https://doc.rust-lang.org/book/ch10-02-traits.html",
+    "prerequisites": [
+      "rust-31"
+    ]
+  },
+  {
+    "id": "rust-33",
+    "quizTarget": "If b.x becomes 3, what prints?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "#[derive(...)] requests generated implementations when every field supports the necessary behavior. Debug supports {:?} formatting; PartialEq supports ==. Deriving does not bypass a field\u2019s trait requirements."
+      },
+      {
+        "paragraph": 1,
+        "fact": "Clone explicitly duplicates a value according to its implementation. Copy permits implicit bitwise value copying and requires Clone; it cannot be derived for a struct containing String. An all-u32 record can derive both, but owning String data needs ownership-aware treatment."
+      }
+    ],
+    "reasoning": "The generated PartialEq compares the corresponding x values, which are now different.",
+    "source": "https://doc.rust-lang.org/book/appendix-03-derivable-traits.html",
+    "prerequisites": [
+      "rust-32"
+    ]
+  },
+  {
+    "id": "rust-34",
+    "quizTarget": "If second becomes String::from(\"three\"), what happens?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "A type parameter in Pair<T> lets the fields share a type chosen by each use. T is not an untyped box; the compiler still checks each concrete instantiation."
+      },
+      {
+        "paragraph": 1,
+        "fact": "Pair { first: 2, second: 3 } can infer one integer type for both fields. Mixing a String with a u32 cannot satisfy one T. If the fields need unrelated types, declare two type parameters deliberately."
+      }
+    ],
+    "reasoning": "The first field fixes T to u32, but the changed second field supplies String.",
+    "source": "https://doc.rust-lang.org/book/ch10-01-syntax.html",
+    "prerequisites": [
+      "rust-33"
+    ]
+  },
+  {
+    "id": "rust-35",
+    "quizTarget": "If the impl Label for Topic block is removed, can the two calls still compile?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "T: Label constrains a generic type to implement Label. A generic function can call label because the bound promises it. Rust normally monomorphizes such generic uses into concrete code; the bound is not a runtime search for a missing method. struct Topic; is a unit-like struct with no fields; the expression Topic creates its value without constructor parentheses."
+      },
+      {
+        "paragraph": 1,
+        "fact": "&dyn Label is a borrowed trait object using runtime method dispatch. The trait must support dynamic use; not every trait does. Here the same contract supports a generic borrowed call and a dynamic borrowed call without transferring ownership."
+      }
+    ],
+    "reasoning": "The generic bound and conversion to the trait object both require Topic to implement Label; neither dispatch mechanism removes that contract.",
+    "source": "https://doc.rust-lang.org/book/ch18-02-trait-objects.html",
+    "prerequisites": [
+      "rust-34"
+    ]
+  },
+  {
+    "id": "rust-36",
+    "quizTarget": "If use_left is false, what prints while both strings remain alive?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "A lifetime parameter such as 'a relates borrowed inputs to a borrowed output. It does not extend any object\u2019s life or choose how long memory physically exists."
+      },
+      {
+        "paragraph": 1,
+        "fact": "Both arguments and the returned slice use 'a below because either input may be returned. The caller must keep whichever reference the contract permits valid for the result\u2019s use. Annotations describe the guarantee; they do not make a local String live forever."
+      }
+    ],
+    "reasoning": "The Boolean selects the second borrowed input; the lifetime annotation expresses validity rather than which branch executes.",
+    "source": "https://doc.rust-lang.org/book/ch10-03-lifetime-syntax.html",
+    "prerequisites": [
+      "rust-35"
+    ]
+  },
+  {
+    "id": "rust-37",
+    "quizTarget": "If view creates a local String and returns &local instead, what happens?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "Returning &str borrowed from an input can be valid because the caller owns the underlying String. With one input reference, lifetime elision relates that input to the returned reference."
+      },
+      {
+        "paragraph": 1,
+        "fact": "A String created inside a function is dropped when that function returns unless ownership leaves the function. Returning a slice into that local would dangle, so safe Rust rejects it. Adding a lifetime label cannot repair the owner\u2019s early destruction; return an owned String instead when appropriate."
+      }
+    ],
+    "reasoning": "The local String would be destroyed before the caller could use its slice; returning ownership would be a different valid design.",
+    "source": "https://doc.rust-lang.org/book/ch10-03-lifetime-syntax.html",
+    "prerequisites": [
+      "rust-36"
+    ]
+  },
+  {
+    "id": "rust-38",
+    "quizTarget": "If the first next() call is removed, what does the remaining call print?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "An iterator produces items through next. map transforms items lazily: constructing it does not eagerly build a vector. A closure uses |argument| expression syntax; here it doubles each integer when requested."
+      },
+      {
+        "paragraph": 1,
+        "fact": "into_iter on the vector takes ownership of its elements. next needs a mutable iterator binding and returns Option: Some(item) when available, None when exhausted. Each call advances; it does not restart the source."
+      }
+    ],
+    "reasoning": "Without the first consumption, the iterator still points at its first mapped item.",
+    "source": "https://doc.rust-lang.org/book/ch13-02-iterators.html",
+    "prerequisites": [
+      "rust-37"
+    ]
+  },
+  {
+    "id": "rust-39",
+    "quizTarget": "If a println!(\"{count}\") is inserted between the two increment calls, what happens?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "A closure can borrow captured variables. || denotes a closure with no explicit parameters. A closure that increments count needs a mutable borrow of count and a mutable closure binding when called."
+      },
+      {
+        "paragraph": 1,
+        "fact": "While the closure will still be used, the captured mutable borrow prevents conflicting reads or writes of count. After its last use, non-lexical lifetime analysis can let the outer code access count again. This is not a separate copied counter."
+      }
+    ],
+    "reasoning": "The later closure call keeps its mutable capture live across the inserted shared read.",
+    "source": "https://doc.rust-lang.org/book/ch13-01-closures.html",
+    "prerequisites": [
+      "rust-38"
+    ]
+  },
+  {
+    "id": "rust-40",
+    "quizTarget": "If main prints text after constructing length and before calling it, what happens?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "move makes a closure capture values by value. Capturing a String transfers ownership into the closure, so the original binding can no longer use it. Capturing a Copy value instead copies it."
+      },
+      {
+        "paragraph": 1,
+        "fact": "A move closure is not automatically callable only once. This closure merely borrows its owned String to read len, so it can be called repeatedly. A closure that moves its captured String out would instead consume that capture when called."
+      }
+    ],
+    "reasoning": "move transferred the String at closure creation even though each later call only borrows the captured value.",
+    "source": "https://doc.rust-lang.org/book/ch13-01-closures.html",
+    "prerequisites": [
+      "rust-39"
+    ]
+  },
+  {
+    "id": "rust-41",
+    "quizTarget": "If the second string becomes \"bad\", what prints?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "collect consumes an iterator into a destination determined by a type annotation or explicit type argument. Iterating Result<T,E> items can collect into Result<Vec<T>,E>, rather than merely a vector of Results. The _ in the destination error-type position asks the compiler to infer that type from the parser."
+      },
+      {
+        "paragraph": 1,
+        "fact": "Collecting into Result succeeds only when every item succeeds; the first Err ends collection and becomes the result. This does not invent a default value for bad input or promise that later items were processed."
+      }
+    ],
+    "reasoning": "The destination is one Result wrapping the vector, so a parse failure makes the entire collection an Err.",
+    "source": "https://doc.rust-lang.org/std/iter/trait.Iterator.html",
+    "prerequisites": [
+      "rust-40"
+    ]
+  },
+  {
+    "id": "rust-42",
+    "quizTarget": "If the range changes to 0..1, what prints on the second line?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "String and str are UTF-8 text. len reports bytes, while chars iterates Unicode scalar values. A scalar value is not always a whole user-perceived character; grapheme segmentation needs additional rules."
+      },
+      {
+        "paragraph": 1,
+        "fact": "str.get(range) returns Option<&str> and rejects out-of-range indices or non-character-boundary byte positions. Direct indexing with an invalid range can panic. In \"\u00e9a\", \u00e9 occupies two bytes, so 0..2 selects it but 0..1 splits its encoding."
+      }
+    ],
+    "reasoning": "The ending byte offset is inside the two-byte UTF-8 encoding, so the checked get returns None.",
+    "source": "https://doc.rust-lang.org/book/ch08-02-strings.html",
+    "prerequisites": [
+      "rust-41"
+    ]
+  },
+  {
+    "id": "rust-43",
+    "quizTarget": "If the second word becomes \"write\", what is the read count?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "HashMap<String, u32> owns its String keys. insert moves an owned key into the map; borrowing a key for lookup is a different operation. Hash-map iteration order is not a stable presentation order."
+      },
+      {
+        "paragraph": 1,
+        "fact": "entry(key).or_insert(0) obtains mutable access to the existing value or inserts zero first. *count dereferences that mutable reference so += 1 updates the stored number. Repeating the same key updates one entry rather than making duplicates. get returns Option<&u32>; copied turns a present borrowed integer into its Copy value, and unwrap_or(0) supplies zero only when the Option is None."
+      }
+    ],
+    "reasoning": "Only the first iteration now updates the read entry; the other creates a separate write entry.",
+    "source": "https://doc.rust-lang.org/book/ch08-03-hash-maps.html",
+    "prerequisites": [
+      "rust-42"
+    ]
+  },
+  {
+    "id": "rust-44",
+    "quizTarget": "If the second insertion is \"Go\", what prints?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "HashSet stores distinct values according to equality and hashing. insert reports true for a newly added value and false when an equal value was already present. It does not preserve insertion order for iteration."
+      },
+      {
+        "paragraph": 1,
+        "fact": "len counts unique stored values; contains tests membership without removing anything. This example prints scalar facts instead of asserting a random hash iteration order. String slices here refer to static literal text."
+      }
+    ],
+    "reasoning": "The second distinct value increases cardinality, while Rust remains a member.",
+    "source": "https://doc.rust-lang.org/std/collections/struct.HashSet.html",
+    "prerequisites": [
+      "rust-43"
+    ]
+  },
+  {
+    "id": "rust-45",
+    "quizTarget": "If pub is removed from label, what happens?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "mod creates a module. Public visibility is opt-in with pub; a private function inside a child module is not accessible from its parent. A path such as helper::label names an item through its module."
+      },
+      {
+        "paragraph": 1,
+        "fact": "use brings a name into scope; it does not fetch a dependency. crate:: starts at the current crate root. This inline-module example needs only one main.rs file and the standard library."
+      }
+    ],
+    "reasoning": "A path does not bypass visibility; the parent cannot import the private child-module item.",
+    "source": "https://doc.rust-lang.org/book/ch07-03-paths-for-referring-to-an-item-in-the-module-tree.html",
+    "prerequisites": [
+      "rust-44"
+    ]
+  },
+  {
+    "id": "rust-46",
+    "quizTarget": "If the local library returns n * 3, what prints after rebuilding?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "A Cargo package has a manifest and one or more targets such as a binary or library crate. Edition selects language rules; it is not the compiler version. This fixture explicitly chooses edition2024 and only a local library dependency."
+      },
+      {
+        "paragraph": 1,
+        "fact": "Save the files below, put the complete main example in src/main.rs, then run cargo run --offline --quiet from the package directory. path points to supplied local source rather than a registry. Offline does not conjure missing dependencies: all required sources must already be present.\n```toml\n# Cargo.toml\n[package]\nname = \"lesson_app\"\nversion = \"0.1.0\"\nedition = \"2024\"\n[dependencies]\nlesson_math = { path = \"localmath\" }\n```\n```toml\n# localmath/Cargo.toml\n[package]\nname = \"lesson_math\"\nversion = \"0.1.0\"\nedition = \"2024\"\n```\n```rust\n// localmath/src/lib.rs\npub fn double(n: u32) -> u32 { n * 2 }\n```"
+      }
+    ],
+    "reasoning": "Cargo builds the supplied changed local dependency; the same call now returns three times six.",
+    "source": "https://doc.rust-lang.org/cargo/reference/specifying-dependencies.html",
+    "prerequisites": [
+      "rust-45"
+    ]
+  }
+]

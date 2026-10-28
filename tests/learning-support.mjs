@@ -1,0 +1,26 @@
+import assert from 'node:assert/strict';
+import {readFile} from 'node:fs/promises';
+const read = p => readFile(new URL(p,import.meta.url),'utf8');
+const lessons=JSON.parse(await read('../content/lessons.json'));
+const old=JSON.parse(await read('../docs/learning-support/original116.json'));
+const added=JSON.parse(await read('../docs/learning-support/new85.json'));
+const rows=[...old.lessons,...added.lessons];
+const ids=rows.map(r=>r.id??r.lesson_id);
+assert.equal(ids.length,201);assert.equal(new Set(ids).size,201);
+assert.deepEqual(ids.sort(),lessons.filter(l=>ids.includes(l.id)).map(l=>l.id).sort());
+const patches=JSON.parse(await read('./learning-support-reviewed-changes.json'));
+for(const p of patches){const l=lessons.find(x=>x.id===p.id);for(const [k,v]of Object.entries(p.fields))assert.deepEqual(l[k],v.after);if(p.fields.explanation)assert.equal(p.fields.explanation.before.length,p.fields.explanation.after.length,'Preserve paragraph reading IDs');}
+const l=id=>lessons.find(x=>x.id===id);
+assert.match(l('python-25').explanation[5],/immediate caller/);
+assert.match(l('typescript-14').explanation[0],/Record<Keys, Value>/);
+assert.match(l('backend-11').explanation[5],/both a new request and a retry/);
+for(const id of ['sql-18','sql-19','sql-20'])assert.match(l(id).explanation[0],/supplied practice database contains/);
+assert.match(l('backend-05').explanation[4],/\$env:ALICE_PASSWORD/);
+assert.match(l('backend-05').explanation[4],/export ALICE_PASSWORD/);
+assert.match(l('sql-05').steps[2],/do not filter out/);
+const tools=await read('../components/PythonTools.tsx');assert.match(tools,/<article key=\{item.id\}/);assert.match(tools,/type="button" className="secondary python-tool-link project-study-button"/);
+const css=await read('../app/globals.css');assert.match(css,/overflow-wrap:anywhere/);assert.match(css,/min-height:44px/);
+const app=await read('../components/CodeQuest.tsx'),catalog=await read('../content/catalog.json');assert.doesNotMatch(app+catalog,/mimo/i);
+assert.doesNotMatch(app, /<LessonNotes\b/, 'My notes is removed only from shared course views');
+assert.match(await read('../components/LessonNotes.tsx'), /My notes/, 'Notes component and data capabilities retained');
+console.log('201 exact semantic support records; reviewed bridges, stable reading paragraph positions, concrete Study button semantics and source wrap regressions pass. Source evidence, not a browser claim.');

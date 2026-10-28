@@ -1,0 +1,1259 @@
+[
+  {
+    "id": "python-71",
+    "title": "Bounded exhaustive search",
+    "summary": "Implement find_square for nonnegative integer target and limit. Include zero and the limit. Return an integer match or None; do not return the last candidate just because the loop ended.",
+    "explanation": [
+      "A search tries candidates against a condition. Here target and limit are nonnegative integers. We try every integer from 0 through limit, including both ends. Finding no match means no candidate in this bounded space matched; it does not prove there is no answer outside it.",
+      "find_square(target, limit) returns the first candidate whose square equals target, or None after all candidates fail. range(limit + 1) supplies the candidate integers because its stop is excluded. Multiplication tests a candidate without changing the target. return inside the loop stops at a match; the final return is outside the loop.",
+      "Imagine choosing a square garden whose area must match a requested number of tiles. A maximum side length bounds the work. For target 16 and limit 3, the function must report None rather than silently search beyond the allowed space.",
+      "```python\ndef find_square(target, limit):\n    for candidate in range(limit + 1):\n        if candidate * candidate == target:\n            return candidate\n    return None\nprint(find_square(9, 5))\nprint(find_square(9, 2))\n```\nThe outputs are 3 and None: the second bound excludes the matching side length.",
+      "Implement find_square for nonnegative integer target and limit. Include zero and the limit. Return an integer match or None; do not return the last candidate just because the loop ended."
+    ],
+    "analogy": {
+      "familiar": "Follow a small change from its starting state to its result.",
+      "connection": "Each instruction changes what the next instruction receives.",
+      "limit": "Use the actual code and checks rather than relying on the comparison."
+    },
+    "steps": [
+      "Read the requirement.",
+      "Make one change to the starter.",
+      "Run the checks.",
+      "Explain why a changed input produces its result."
+    ],
+    "starter": "def find_square(target, limit):\n    return None",
+    "solution": "def find_square(target, limit):\n    for candidate in range(limit + 1):\n        if candidate * candidate == target:\n            return candidate\n    return None",
+    "runtime": "python",
+    "checks": [
+      {
+        "label": "Zero and endpoint",
+        "expression": "find_square(0, 0) == 0 and find_square(16, 4) == 4"
+      },
+      {
+        "label": "Bounded miss",
+        "expression": "find_square(16, 3) is None and find_square(7, 5) is None"
+      },
+      {
+        "label": "Ordinary hit",
+        "expression": "find_square(25, 8) == 5"
+      }
+    ],
+    "quiz": {
+      "question": "What does find_square(25, 4) establish when it returns None?",
+      "choices": [
+        "The function must return 4 because it reached the limit.",
+        "No side length from 0 through 4 has square 25.",
+        "25 has no integer square root."
+      ],
+      "answer": 1,
+      "explanation": "The search exhausted only its stated finite candidate space. The valid side length 5 lies outside that space."
+    },
+    "hints": [
+      "Trace the visible worked calls before changing the starter."
+    ],
+    "math": null,
+    "filename": "main.py",
+    "estimatedMinutes": 12,
+    "externalNotes": "Supported baseline: native Python3.12.14 and bundled Pyodide0.27.7/Python3.12.7. No network or third-party dependency. Runtime evidence is separate from reading completion."
+  },
+  {
+    "id": "python-72",
+    "title": "Bisection and a shrinking bracket",
+    "summary": "Implement bisect_sqrt with the shown bracket, width criterion and finite budget. The supported numeric domain is finite 0..1,000,000. Reject negative values, nonpositive width or a negative budget. Do not return an unfinished midpoint as success.",
+    "explanation": [
+      "Bisection repeatedly halves an interval known to contain an answer. This example accepts finite values from 0 through 1,000,000, a positive finite width, and a nonnegative integer step budget. The square root lies between 0 and max(1, value). Using 1 as the minimum upper bound matters when value is below 1.",
+      "Compute the midpoint. If its square is below value, the root is above that midpoint, so replace low. Otherwise replace high. The interval still contains the root. max(1.0, value) returns the larger argument; it does not mutate either number.",
+      "Return the midpoint when high - low is at most width. Its distance from the true root is then at most half that interval width in exact arithmetic; floating-point rounding still exists. A finite step budget prevents endless work when the requested width is too small to achieve. Return None when the budget ends without the width condition. Reject negative values or invalid bounds with ValueError.",
+      "abs(number) returns its nonnegative magnitude. abs(answer - expected) measures an absolute difference. This is a bounded approximation, not a symbolic exact square root and not a guarantee about arbitrary huge or non-finite floats.",
+      "```python\ndef bisect_sqrt(value, width=0.001, max_steps=100):\n    if value < 0 or width <= 0 or max_steps < 0:\n        raise ValueError(\"invalid bounds\")\n    low = 0.0\n    high = max(1.0, value)\n    for _ in range(max_steps):\n        if high - low <= width:\n            return (low + high) / 2\n        middle = (low + high) / 2\n        if middle * middle < value:\n            low = middle\n        else:\n            high = middle\n    if high - low <= width:\n        return (low + high) / 2\n    return None\nanswer = bisect_sqrt(0.25)\nprint(abs(answer - 0.5) <= 0.001)\nprint(bisect_sqrt(9, max_steps=0))\n```\nThe first call is close enough to 0.5, so its check prints True. The zero-budget call prints None.",
+      "Implement bisect_sqrt with the shown bracket, width criterion and finite budget. The supported numeric domain is finite 0..1,000,000. Reject negative values, nonpositive width or a negative budget. Do not return an unfinished midpoint as success. The supplied __invalid_bounds_rejected helper is test infrastructure: it checks three invalid inputs raise ValueError. Leave this helper unchanged; the task is bisect_sqrt."
+    ],
+    "analogy": {
+      "familiar": "Follow a small change from its starting state to its result.",
+      "connection": "Each instruction changes what the next instruction receives.",
+      "limit": "Use the actual code and checks rather than relying on the comparison."
+    },
+    "steps": [
+      "Read the requirement.",
+      "Make one change to the starter.",
+      "Run the checks.",
+      "Explain why a changed input produces its result."
+    ],
+    "starter": "def bisect_sqrt(value, width=0.001, max_steps=100):\n    return None\n\ndef __invalid_bounds_rejected():\n    for args in [(-1, 0.01, 10), (1, 0, 10), (1, 0.01, -1)]:\n        try:\n            bisect_sqrt(*args)\n        except ValueError:\n            continue\n        return False\n    return True",
+    "solution": "def bisect_sqrt(value, width=0.001, max_steps=100):\n    if value < 0 or width <= 0 or max_steps < 0:\n        raise ValueError(\"invalid bounds\")\n    low = 0.0\n    high = max(1.0, value)\n    for _ in range(max_steps):\n        if high - low <= width:\n            return (low + high) / 2\n        middle = (low + high) / 2\n        if middle * middle < value:\n            low = middle\n        else:\n            high = middle\n    if high - low <= width:\n        return (low + high) / 2\n    return None\n\ndef __invalid_bounds_rejected():\n    for args in [(-1, 0.01, 10), (1, 0, 10), (1, 0.01, -1)]:\n        try:\n            bisect_sqrt(*args)\n        except ValueError:\n            continue\n        return False\n    return True",
+    "runtime": "python",
+    "checks": [
+      {
+        "label": "Below one and ordinary root",
+        "expression": "abs(bisect_sqrt(0.25) - 0.5) <= 0.001 and abs(bisect_sqrt(9) - 3) <= 0.001"
+      },
+      {
+        "label": "Zero and budget",
+        "expression": "abs(bisect_sqrt(0)) <= 0.001 and bisect_sqrt(9, max_steps=0) is None"
+      },
+      {
+        "label": "One update may suffice",
+        "expression": "abs(bisect_sqrt(1, width=0.5, max_steps=1) - 1) <= 0.5"
+      },
+      {
+        "label": "Reject invalid bounds",
+        "expression": "__invalid_bounds_rejected()"
+      }
+    ],
+    "quiz": {
+      "question": "Why would high = value be an unsafe initial upper bound when value is 0.25?",
+      "choices": [
+        "Bisection works only on integers.",
+        "A smaller upper bound always makes the result more accurate.",
+        "Its square root is 0.5, outside the proposed interval."
+      ],
+      "answer": 2,
+      "explanation": "Bisection requires a bracket containing the answer before it starts. Faster shrinking cannot repair an invalid starting invariant."
+    },
+    "hints": [
+      "Trace the visible worked calls before changing the starter."
+    ],
+    "math": null,
+    "filename": "main.py",
+    "estimatedMinutes": 12,
+    "externalNotes": "Supported baseline: native Python3.12.14 and bundled Pyodide0.27.7/Python3.12.7. No network or third-party dependency. Runtime evidence is separate from reading completion."
+  },
+  {
+    "id": "python-73",
+    "title": "Choosing tests from a specification",
+    "summary": "Correct entry_allowed for integer ages and implement first_disagreement using the three ordered boundary tests. Return the first failing age or None. Keep the specification independent of the candidate implementation.",
+    "explanation": [
+      "Suppose a venue admits an integer age of 18 or older. Its threshold splits inputs into below, exactly at, and above the boundary. A useful test set represents these partitions rather than choosing three unrelated adult ages.",
+      "Testing age 19 cannot distinguish age > 18 from age >= 18: both return True. Age 18 distinguishes them. Code-path coverage alone does not show that a boundary follows its specification.",
+      "first_disagreement receives a function, calls it on three supplied age values, and returns the first age whose Boolean result differs from the specification. It returns None if these tests agree. That does not prove correctness for every possible input. Tuple unpacking gives each test its age and expected result.",
+      "```python\ndef entry_allowed(age):\n    return age >= 18\n\ndef first_disagreement(candidate):\n    for age, expected in [(17, False), (18, True), (19, True)]:\n        if candidate(age) != expected:\n            return age\n    return None\ndef wrong_rule(age):\n    return age > 18\n\nprint(first_disagreement(wrong_rule))\nprint(first_disagreement(entry_allowed))\nprint(entry_allowed(18))\n```\nIt prints 18 for the strict rule, None for the corrected rule, then True for the direct threshold call.",
+      "Correct entry_allowed for integer ages and implement first_disagreement using the three ordered boundary tests. Return the first failing age or None. Keep the specification independent of the candidate implementation."
+    ],
+    "analogy": {
+      "familiar": "Follow a small change from its starting state to its result.",
+      "connection": "Each instruction changes what the next instruction receives.",
+      "limit": "Use the actual code and checks rather than relying on the comparison."
+    },
+    "steps": [
+      "Read the requirement.",
+      "Make one change to the starter.",
+      "Run the checks.",
+      "Explain why a changed input produces its result."
+    ],
+    "starter": "def entry_allowed(age):\n    return age > 18\n\ndef first_disagreement(candidate):\n    return None",
+    "solution": "def entry_allowed(age):\n    return age >= 18\n\ndef first_disagreement(candidate):\n    for age, expected in [(17, False), (18, True), (19, True)]:\n        if candidate(age) != expected:\n            return age\n    return None",
+    "runtime": "python",
+    "checks": [
+      {
+        "label": "Threshold",
+        "expression": "entry_allowed(17) is False and entry_allowed(18) is True and entry_allowed(19) is True"
+      },
+      {
+        "label": "Detect strict comparison",
+        "expression": "first_disagreement(lambda age: age > 18) == 18"
+      },
+      {
+        "label": "Detect always true and accept correct",
+        "expression": "first_disagreement(lambda age: True) == 17 and first_disagreement(entry_allowed) is None"
+      }
+    ],
+    "quiz": {
+      "question": "Which test distinguishes age >= 18 from the incorrect age > 18?",
+      "choices": [
+        "Age 30",
+        "Age 18",
+        "Age 19"
+      ],
+      "answer": 1,
+      "explanation": "The two expressions disagree only at the threshold among these choices. A passing adult case does not test inclusion of the boundary."
+    },
+    "hints": [
+      "Trace the visible worked calls before changing the starter."
+    ],
+    "math": null,
+    "filename": "main.py",
+    "estimatedMinutes": 12,
+    "externalNotes": "Supported baseline: native Python3.12.14 and bundled Pyodide0.27.7/Python3.12.7. No network or third-party dependency. Runtime evidence is separate from reading completion."
+  },
+  {
+    "id": "python-74",
+    "title": "Localizing a defect",
+    "summary": "Repair total_prefix for a list of numbers and a valid count. Sum exactly the first count values, preserve the input, and handle zero without indexing. The caller supplies a count within 0..len(values).",
+    "explanation": [
+      "The contract is to sum exactly count leading items, with 0 <= count <= len(values). A result of 20 for values [4, 7, 9] and count 2 is wrong: the expected result is 11. First write this mismatch clearly instead of changing several lines at once.",
+      "For values [4] and count 0, the expected result is 0. A faulty range(count + 1) still visits index 0 and adds 4. This tiny case identifies the extra visit without distraction from other values.",
+      "Before the loop, total = 0 is correct. The next action should be no iteration when count is zero. Seeing index 0 means the iteration range, not addition, first violates the contract. Replace range(count + 1) with range(count), then keep the zero-count case as a regression test.",
+      "Subtracting the last value after the loop would hide one symptom and could still index past the list. Fix the number of visits. The supplied starter is intentionally wrong; the worked implementation below is the repair.",
+      "```python\ndef total_prefix(values, count):\n    total = 0\n    for index in range(count):\n        total += values[index]\n    return total\nprint(total_prefix([4, 7, 9], 2))\nprint(total_prefix([4], 0))\n```\nThe repaired calls print 11 and 0.",
+      "Repair total_prefix for a list of numbers and a valid count. Sum exactly the first count values, preserve the input, and handle zero without indexing. The caller supplies a count within 0..len(values)."
+    ],
+    "analogy": {
+      "familiar": "Follow a small change from its starting state to its result.",
+      "connection": "Each instruction changes what the next instruction receives.",
+      "limit": "Use the actual code and checks rather than relying on the comparison."
+    },
+    "steps": [
+      "Read the requirement.",
+      "Make one change to the starter.",
+      "Run the checks.",
+      "Explain why a changed input produces its result."
+    ],
+    "starter": "def total_prefix(values, count):\n    total = 0\n    for index in range(count + 1):\n        total += values[index]\n    return total",
+    "solution": "def total_prefix(values, count):\n    total = 0\n    for index in range(count):\n        total += values[index]\n    return total",
+    "runtime": "python",
+    "checks": [
+      {
+        "label": "Minimal regression",
+        "expression": "total_prefix([4], 0) == 0 and total_prefix([], 0) == 0"
+      },
+      {
+        "label": "Exact prefix",
+        "expression": "total_prefix([4, 7, 9], 2) == 11"
+      },
+      {
+        "label": "All values",
+        "expression": "total_prefix([4, 7, 9], 3) == 20"
+      },
+      {
+        "label": "Preserve input values",
+        "expression": "(lambda x: (total_prefix(x, 2), x))([2, 8, 5]) == (10, [2, 8, 5])"
+      }
+    ],
+    "quiz": {
+      "question": "Why is ([4], 0) useful for diagnosing the faulty range(count + 1)?",
+      "choices": [
+        "It proves addition is broken.",
+        "It shows one visit occurs when the contract requires none.",
+        "It proves every possible list is handled correctly."
+      ],
+      "answer": 1,
+      "explanation": "The minimal failing case isolates the first unwanted loop iteration. Fixing it still needs regression tests for other supported inputs."
+    },
+    "hints": [
+      "Trace the visible worked calls before changing the starter."
+    ],
+    "math": null,
+    "filename": "main.py",
+    "estimatedMinutes": 12,
+    "externalNotes": "Supported baseline: native Python3.12.14 and bundled Pyodide0.27.7/Python3.12.7. No network or third-party dependency. Runtime evidence is separate from reading completion."
+  },
+  {
+    "id": "python-75",
+    "title": "Recursive calls and returning results",
+    "summary": "Implement recursive_total for a short numeric list using the empty-list base case and the returned result of the shorter-list call. Preserve the original list. Explain the call and return sequence for two items.",
+    "explanation": [
+      "Recursion means a function calls itself. This example sums a short list. The empty list is the base case: it returns 0 without another call. Each nonempty call passes a shorter slice, so progress toward that base case is visible.",
+      "For [2, 5], the outer call remembers first = 2 while it waits for recursive_total([5]). That inner call remembers first = 5 while it waits for recursive_total([]). These local names belong to different calls; the inner first does not overwrite the outer first.",
+      "The empty call returns 0. The [5] call returns 5 + 0, which is 5. The [2, 5] call then returns 2 + 5, which is 7. Calling the function without using its returned value would lose the partial result.",
+      "values[1:] creates a shorter list copy. This makes the trace clear but adds copying work and memory. Python also limits recursion depth. Use this function for small lists in the exercise, not as a recommended replacement for a loop or sum on large data.",
+      "```python\ndef recursive_total(values):\n    if not values:\n        return 0\n    first = values[0]\n    rest_total = recursive_total(values[1:])\n    return first + rest_total\nprint(recursive_total([2, 5]))\nprint(recursive_total([]))\n```\nThe outputs are 7 and 0; the empty case ends the chain.",
+      "Implement recursive_total for a short numeric list using the empty-list base case and the returned result of the shorter-list call. Preserve the original list. Explain the call and return sequence for two items."
+    ],
+    "analogy": {
+      "familiar": "Follow a small change from its starting state to its result.",
+      "connection": "Each instruction changes what the next instruction receives.",
+      "limit": "Use the actual code and checks rather than relying on the comparison."
+    },
+    "steps": [
+      "Read the requirement.",
+      "Make one change to the starter.",
+      "Run the checks.",
+      "Explain why a changed input produces its result."
+    ],
+    "starter": "def recursive_total(values):\n    return 0",
+    "solution": "def recursive_total(values):\n    if not values:\n        return 0\n    first = values[0]\n    rest_total = recursive_total(values[1:])\n    return first + rest_total",
+    "runtime": "python",
+    "checks": [
+      {
+        "label": "Base and singleton",
+        "expression": "recursive_total([]) == 0 and recursive_total([7]) == 7"
+      },
+      {
+        "label": "Several calls",
+        "expression": "recursive_total([2, 5, -1]) == 6"
+      },
+      {
+        "label": "No mutation",
+        "expression": "(lambda x: (recursive_total(x), x))([3, 4]) == (7, [3, 4])"
+      }
+    ],
+    "quiz": {
+      "question": "For recursive_total([3, 4]), what value does the [4] call return to its caller?",
+      "choices": [
+        "4",
+        "7",
+        "0"
+      ],
+      "answer": 0,
+      "explanation": "The [4] call adds its own first value to the empty call\u2019s 0. Only the outer call then adds 3 to obtain 7."
+    },
+    "hints": [
+      "Trace the visible worked calls before changing the starter."
+    ],
+    "math": null,
+    "filename": "main.py",
+    "estimatedMinutes": 12,
+    "externalNotes": "Supported baseline: native Python3.12.14 and bundled Pyodide0.27.7/Python3.12.7. No network or third-party dependency. Runtime evidence is separate from reading completion."
+  },
+  {
+    "id": "python-76",
+    "title": "Readable object representations",
+    "summary": "Implement Label so str(instance) returns its text and repr(instance) returns Label(...) containing repr(text). Treat text as a string. Return strings without printing inside either special method.",
+    "explanation": [
+      "str(value) asks for a readable string, often for display. repr(value) asks for a developer-oriented representation. A class can define __str__ and __repr__ to control these operations. Both methods must return strings; printing inside them is not a substitute for returning.",
+      "Label stores a supplied string. __str__ returns that text. __repr__ returns a class-like label containing the represented text. In an f-string, !r applies repr to the embedded value, preserving visible quotes or escapes that plain display can hide.",
+      "The calls str(item) and repr(item) invoke the corresponding special methods. print(item) normally uses the readable string too. A representation can be useful for debugging without being a safe expression to execute; never eval an untrusted representation.",
+      "```python\nclass Label:\n    def __init__(self, text):\n        self.text = text\n\n    def __str__(self):\n        return self.text\n\n    def __repr__(self):\n        return f\"Label({self.text!r})\"\nitem = Label(\"Moon\")\nprint(str(item))\nprint(repr(item))\n```\nIt prints Moon, then Label('Moon'). The latter makes the stored string\u2019s quotes visible.",
+      "Implement Label so str(instance) returns its text and repr(instance) returns Label(...) containing repr(text). Treat text as a string. Return strings without printing inside either special method."
+    ],
+    "analogy": {
+      "familiar": "Follow a small change from its starting state to its result.",
+      "connection": "Each instruction changes what the next instruction receives.",
+      "limit": "Use the actual code and checks rather than relying on the comparison."
+    },
+    "steps": [
+      "Read the requirement.",
+      "Make one change to the starter.",
+      "Run the checks.",
+      "Explain why a changed input produces its result."
+    ],
+    "starter": "class Label:\n    def __init__(self, text):\n        self.text = text\n\n    # TODO: define readable string representations.",
+    "solution": "class Label:\n    def __init__(self, text):\n        self.text = text\n\n    def __str__(self):\n        return self.text\n\n    def __repr__(self):\n        return f\"Label({self.text!r})\"",
+    "runtime": "python",
+    "checks": [
+      {
+        "label": "Display and representation",
+        "expression": "str(Label(\"Moon\")) == \"Moon\" and repr(Label(\"Moon\")) == \"Label('Moon')\""
+      },
+      {
+        "label": "Escaped input",
+        "expression": "repr(Label(\"a\\nb\")) == \"Label(\" + repr(\"a\\nb\") + \")\""
+      },
+      {
+        "label": "Empty value",
+        "expression": "str(Label(\"\")) == \"\" and repr(Label(\"\")) == \"Label('')\""
+      }
+    ],
+    "quiz": {
+      "question": "If __str__ prints the text but returns None, does str(item) meet its contract?",
+      "choices": [
+        "No; __str__ must return a string.",
+        "Yes; None is automatically converted to the printed text.",
+        "Yes; printed output is the returned string."
+      ],
+      "answer": 0,
+      "explanation": "A protocol method\u2019s return value matters. Producing a side effect does not supply the required string result."
+    },
+    "hints": [
+      "Trace the visible worked calls before changing the starter."
+    ],
+    "math": null,
+    "filename": "main.py",
+    "estimatedMinutes": 12,
+    "externalNotes": "Supported baseline: native Python3.12.14 and bundled Pyodide0.27.7/Python3.12.7. No network or third-party dependency. Runtime evidence is separate from reading completion."
+  },
+  {
+    "id": "python-77",
+    "title": "Value equality and unsupported comparisons",
+    "summary": "Implement Tag value equality for Tag instances by text. Return NotImplemented from a direct __eq__ call with an unsupported type. Preserve identity semantics and do not claim all objects with a text attribute are Tags.",
+    "explanation": [
+      "Two separate objects can represent the same value. Tag equality compares their text fields. The == operator can ask __eq__ for this rule; is still asks whether two names refer to the same object. Defining equality does not change identity.",
+      "__eq__(self, other) receives the other operand. isinstance(other, Tag) checks whether this rule supports it. Return the special singleton NotImplemented for an unsupported type, rather than raising NotImplementedError or pretending the type was understood. This lets Python try the other operand\u2019s comparison behavior.",
+      "If neither operand supports equality with the other, == falls back to identity comparison. In this example a Tag and a string are distinct objects, so they compare False even if their displayed text matches. Do not treat NotImplemented as a Boolean result in your own if statement.",
+      "A custom equality rule also matters when values are compared in collections. It does not automatically make the object a safe dictionary key. The next hash-contract lesson addresses that separately; do not add an arbitrary hash just to suppress an error.",
+      "```python\nclass Tag:\n    def __init__(self, text):\n        self.text = text\n\n    def __eq__(self, other):\n        if not isinstance(other, Tag):\n            return NotImplemented\n        return self.text == other.text\nleft = Tag(\"music\")\nright = Tag(\"music\")\nprint(left == right)\nprint(left is right)\nprint(left == \"music\")\n```\nEqual text prints True, separate identity prints False, and the unsupported string comparison ultimately prints False.",
+      "Implement Tag value equality for Tag instances by text. Return NotImplemented from a direct __eq__ call with an unsupported type. Preserve identity semantics and do not claim all objects with a text attribute are Tags."
+    ],
+    "analogy": {
+      "familiar": "Follow a small change from its starting state to its result.",
+      "connection": "Each instruction changes what the next instruction receives.",
+      "limit": "Use the actual code and checks rather than relying on the comparison."
+    },
+    "steps": [
+      "Read the requirement.",
+      "Make one change to the starter.",
+      "Run the checks.",
+      "Explain why a changed input produces its result."
+    ],
+    "starter": "class Tag:\n    def __init__(self, text):\n        self.text = text\n\n    def __eq__(self, other):\n        return False",
+    "solution": "class Tag:\n    def __init__(self, text):\n        self.text = text\n\n    def __eq__(self, other):\n        if not isinstance(other, Tag):\n            return NotImplemented\n        return self.text == other.text",
+    "runtime": "python",
+    "checks": [
+      {
+        "label": "Equal distinct values",
+        "expression": "Tag(\"a\") == Tag(\"a\") and not (Tag(\"a\") == Tag(\"b\"))"
+      },
+      {
+        "label": "Unsupported protocol",
+        "expression": "Tag(\"a\").__eq__(\"a\") is NotImplemented and (Tag(\"a\") == \"a\") is False"
+      },
+      {
+        "label": "Identity stays separate",
+        "expression": "(lambda a,b: a == b and a is not b)(Tag(\"x\"), Tag(\"x\"))"
+      }
+    ],
+    "quiz": {
+      "question": "Why return NotImplemented rather than False when this __eq__ receives an unsupported type?",
+      "choices": [
+        "It lets Python try the other operand\u2019s comparison rule.",
+        "It makes every unsupported comparison True.",
+        "It automatically raises NotImplementedError."
+      ],
+      "answer": 0,
+      "explanation": "NotImplemented signals that this method does not define the pair\u2019s comparison. It is different from a completed comparison returning False."
+    },
+    "hints": [
+      "Trace the visible worked calls before changing the starter."
+    ],
+    "math": null,
+    "filename": "main.py",
+    "estimatedMinutes": 12,
+    "externalNotes": "Supported baseline: native Python3.12.14 and bundled Pyodide0.27.7/Python3.12.7. No network or third-party dependency. Runtime evidence is separate from reading completion."
+  },
+  {
+    "id": "python-78",
+    "title": "Equality and hash consistency",
+    "summary": "Return the tuple (task.title, task.category) for a Task whose fields are strings. Do not mutate task or add a hash to Task. The returned key must retain its original values if task fields are later reassigned.",
+    "explanation": [
+      "A hash is an integer used to help organize dictionary keys and set members. Equal hashable values must have equal hashes. The reverse is not required: different values can share a hash, so a hash is not a unique ID. A key must not change its equality-relevant value while stored in a hashed collection.",
+      "This Task compares its two string fields. Defining __eq__ without __hash__ makes instances unhashable automatically. Do not add a field-based hash to this mutable class: changing title could leave a stored key in the wrong place. Task(title, category) constructs a task; __init__ stores the two supplied strings. The equality hook receives self and the other value, returns a Boolean for Tasks, and returns NotImplemented for unsupported types. isinstance(other, Task) tests the supported type; it does not convert the value.\n```python\nclass Task:\n    def __init__(self, title, category):\n        self.title = title\n        self.category = category\n\n    def __eq__(self, other):\n        if not isinstance(other, Task):\n            return NotImplemented\n        return (self.title, self.category) == (other.title, other.category)\n```",
+      "snapshot_key receives a Task with string fields and returns a tuple containing those field values. The comma-separated values inside parentheses form the tuple. Both its components are immutable strings, so this tuple is a safe value key. hash(key) receives a hashable value and returns an integer; we compare hashes rather than depend on exact numbers, which can differ across processes.\n```python\nclass Task:\n    def __init__(self, title, category):\n        self.title = title\n        self.category = category\n\n    def __eq__(self, other):\n        if not isinstance(other, Task):\n            return NotImplemented\n        return (self.title, self.category) == (other.title, other.category)\n\ndef snapshot_key(task):\n    return (task.title, task.category)\nfirst = Task(\"read\", \"study\")\nsecond = Task(\"read\", \"study\")\na = snapshot_key(first)\nb = snapshot_key(second)\nprint(first == second)\nprint(a == b, hash(a) == hash(b))\ntry:\n    hash(first)\nexcept TypeError:\n    print(\"unhashable task\")\n```\nIt prints True; True True; unhashable task. Calling hash on the Task raises TypeError rather than returning a usable hash.",
+      "Reassigning a task field does not rewrite an earlier tuple of its string values.\n```python\nclass Task:\n    def __init__(self, title, category):\n        self.title = title\n        self.category = category\n\n    def __eq__(self, other):\n        if not isinstance(other, Task):\n            return NotImplemented\n        return (self.title, self.category) == (other.title, other.category)\n\ndef snapshot_key(task):\n    return (task.title, task.category)\ntask = Task(\"read\", \"study\")\nold_key = snapshot_key(task)\ntask.title = \"write\"\nprint(old_key)\nprint(old_key == snapshot_key(task))\n```\nIt prints ('read', 'study') and False. Build a new snapshot when you want a key for the new values; do not silently change a key already in a collection.",
+      "Complete snapshot_key(task) using the provided Task class. Keep exact string values, including spaces and case. Optional local practice: use two equal snapshots as dictionary keys and explain why the second assignment replaces one entry rather than creating two. The supplied __snapshot_preserved helper is test infrastructure: it checks the stated preservation contract. Leave it unchanged; the learning task is the main function, not writing this helper."
+    ],
+    "analogy": {
+      "familiar": "Follow a small change from its starting state to its result.",
+      "connection": "Each instruction changes what the next instruction receives.",
+      "limit": "Use the actual code and checks rather than relying on the comparison."
+    },
+    "steps": [
+      "Read the requirement.",
+      "Make one change to the starter.",
+      "Run the checks.",
+      "Explain why a changed input produces its result."
+    ],
+    "starter": "class Task:\n    def __init__(self, title, category):\n        self.title = title\n        self.category = category\n\n    def __eq__(self, other):\n        if not isinstance(other, Task):\n            return NotImplemented\n        return (self.title, self.category) == (other.title, other.category)\n\ndef snapshot_key(task):\n    return ()\n\ndef __snapshot_preserved():\n    task = Task(\"read\", \"study\")\n    key = snapshot_key(task)\n    task.title = \"write\"\n    return key == (\"read\", \"study\") and snapshot_key(task) == (\"write\", \"study\")",
+    "solution": "class Task:\n    def __init__(self, title, category):\n        self.title = title\n        self.category = category\n\n    def __eq__(self, other):\n        if not isinstance(other, Task):\n            return NotImplemented\n        return (self.title, self.category) == (other.title, other.category)\n\ndef snapshot_key(task):\n    return (task.title, task.category)\n\ndef __snapshot_preserved():\n    task = Task(\"read\", \"study\")\n    key = snapshot_key(task)\n    task.title = \"write\"\n    return key == (\"read\", \"study\") and snapshot_key(task) == (\"write\", \"study\")",
+    "runtime": "python",
+    "checks": [
+      {
+        "label": "Exact field tuple",
+        "expression": "snapshot_key(Task(\"Read\", \"my notes\")) == (\"Read\", \"my notes\")"
+      },
+      {
+        "label": "Equal keys have equal hashes",
+        "expression": "hash(snapshot_key(Task(\"read\", \"study\"))) == hash(snapshot_key(Task(\"read\", \"study\")))"
+      },
+      {
+        "label": "Empty strings preserved",
+        "expression": "snapshot_key(Task(\"\", \"\")) == (\"\", \"\")"
+      },
+      {
+        "label": "Preserve the stated snapshot/copy contract",
+        "expression": "__snapshot_preserved()"
+      }
+    ],
+    "quiz": {
+      "question": "After making old_key from Task(\"draw\", \"art\"), you reassign its category to \"work\". Which value does old_key retain?",
+      "choices": [
+        "(\"draw\", \"work\")",
+        "It becomes unhashable automatically.",
+        "(\"draw\", \"art\")"
+      ],
+      "answer": 2,
+      "explanation": "The tuple keeps the original immutable string values; reassigning a Task attribute does not edit that tuple."
+    },
+    "hints": [
+      "Trace the visible worked calls before changing the starter."
+    ],
+    "math": null,
+    "filename": "main.py",
+    "estimatedMinutes": 12,
+    "externalNotes": "Supported baseline: native Python3.12.14 and bundled Pyodide0.27.7/Python3.12.7. No network or third-party dependency. Runtime evidence is separate from reading completion."
+  },
+  {
+    "id": "python-79",
+    "title": "Counting work instead of guessing speed",
+    "summary": "Return (first matching index, equality-test count), or (None, count) when absent. Count exactly one value == target test per examined element. Accept integer lists, preserve input, and handle an empty list.",
+    "explanation": [
+      "Input size n is the number of list elements. We will count only evaluations of value == target, not assignments, loop bookkeeping, or elapsed seconds. An operation count is meaningful only after specifying what counts. Small integers keep comparison cost simple in these examples.",
+      "counted_find accepts a list of integers and an integer target. It returns (first_index, comparisons), or (None, comparisons) if missing, without changing the list. enumerate(values) supplies each zero-based index together with its value. comparisons += 1 adds one before each equality test; a successful test returns immediately.\n```python\ndef counted_find(values, target):\n    comparisons = 0\n    for index, value in enumerate(values):\n        comparisons += 1\n        if value == target:\n            return index, comparisons\n    return None, comparisons\nprint(counted_find([7, 2, 7], 7))\nprint(counted_find([7, 2, 7], 9))\n```\nIt prints (0, 1) and (None, 3). A first-position match is not a zero-comparison search: it still tests that value.",
+      "An empty list performs zero equality tests. A missing target examines all n values. Finding a target near the beginning stops earlier. For this algorithm the best nonempty case uses one test; the worst uses n. That is a description of input cases, not a claim that every call costs n tests.",
+      "Implement counted_find with the exact first-match contract. Do not sort the input, since sorting could change the returned position and add uncounted work. Optional local practice: keep the list fixed, move the target from first to last position, and explain each count."
+    ],
+    "analogy": {
+      "familiar": "Follow a small change from its starting state to its result.",
+      "connection": "Each instruction changes what the next instruction receives.",
+      "limit": "Use the actual code and checks rather than relying on the comparison."
+    },
+    "steps": [
+      "Read the requirement.",
+      "Make one change to the starter.",
+      "Run the checks.",
+      "Explain why a changed input produces its result."
+    ],
+    "starter": "def counted_find(values, target):\n    return None, 0",
+    "solution": "def counted_find(values, target):\n    comparisons = 0\n    for index, value in enumerate(values):\n        comparisons += 1\n        if value == target:\n            return index, comparisons\n    return None, comparisons",
+    "runtime": "python",
+    "checks": [
+      {
+        "label": "First and later match",
+        "expression": "counted_find([4, 8, 4], 4) == (0, 1) and counted_find([4, 8, 4], 8) == (1, 2)"
+      },
+      {
+        "label": "Missing and empty",
+        "expression": "counted_find([4, 8], 7) == (None, 2) and counted_find([], 7) == (None, 0)"
+      },
+      {
+        "label": "Last position",
+        "expression": "counted_find([1, 2, 3, 4], 4) == (3, 4)"
+      }
+    ],
+    "quiz": {
+      "question": "What does counted_find([3, 8, 8, 2], 8) return?",
+      "choices": [
+        "(1, 4)",
+        "(2, 3)",
+        "(1, 2)"
+      ],
+      "answer": 2,
+      "explanation": "The first comparison rejects 3; the second finds 8 at index 1 and returns before the later duplicate."
+    },
+    "hints": [
+      "Trace the visible worked calls before changing the starter."
+    ],
+    "math": null,
+    "filename": "main.py",
+    "estimatedMinutes": 12,
+    "externalNotes": "Supported baseline: native Python3.12.14 and bundled Pyodide0.27.7/Python3.12.7. No network or third-party dependency. Runtime evidence is separate from reading completion."
+  },
+  {
+    "id": "python-80",
+    "title": "Growth rates and logarithmic halving",
+    "summary": "For integer n in 0..64, return (1, n, n*n, halvings), computing halvings by repeated floor division by 2 while the current value is greater than 1. Zero and one take0 halvings. Use counters to make the work visible.",
+    "explanation": [
+      "An asymptotic bound describes how work scales as input size grows, ignoring fixed constant factors and smaller-order terms. O(n) is an upper-bound growth class, not an exact count or a timing promise. A tight bound, written \u0398(n), also rules out a smaller growth order under the chosen model. We will count simple loop-body events, treating bounded integer operations as unit cost.",
+      "A loop visiting n items counts n events. Nesting a full n-item loop inside another gives n*n ordered pairs, including pairs with equal indices. Doubling n doubles the first count but multiplies the pair count by four. This differs from a nested loop whose inner limit changes with the outer index.",
+      "Repeated integer halving reaches one in about log2(n) steps. Logarithmic growth means one extra halving when a positive power-of-two size doubles. //= 2 replaces remaining by its floor-divided-by-two integer value. This is not ordinary /, which returns a float. We define zero and one to need no halvings.",
+      "growth_counts accepts a nonnegative integer n and returns (fixed, linear, pairs, halvings). range(n) supplies integers from zero through n-1, so it creates n loop visits and is empty for zero. The fixed marker counts one chosen setup event, not all setup instructions.\n```python\ndef growth_counts(n):\n    fixed = 1\n    linear = 0\n    pairs = 0\n    for i in range(n):\n        linear += 1\n        for j in range(n):\n            pairs += 1\n    halvings = 0\n    remaining = n\n    while remaining > 1:\n        remaining //= 2\n        halvings += 1\n    return fixed, linear, pairs, halvings\nprint(growth_counts(4))\nprint(growth_counts(8))\n```\nIt prints (1, 4, 16, 2) and (1, 8, 64, 3). For positive n, the halving count is floor(log2(n)); no logarithm function is needed to compute it.",
+      "Implement the four counters for inputs 0 through 64. Their tight growth classes for large positive n are constant, linear, quadratic, and logarithmic. Bounds describe algorithms beyond these small practice inputs; actual timings also depend on representation, implementation, and environment. Optional local practice: compare n=7 and n=8 to explain why the halving count changes at a power of two."
+    ],
+    "analogy": {
+      "familiar": "Follow a small change from its starting state to its result.",
+      "connection": "Each instruction changes what the next instruction receives.",
+      "limit": "Use the actual code and checks rather than relying on the comparison."
+    },
+    "steps": [
+      "Read the requirement.",
+      "Make one change to the starter.",
+      "Run the checks.",
+      "Explain why a changed input produces its result."
+    ],
+    "starter": "def growth_counts(n):\n    return 1, 0, 0, 0",
+    "solution": "def growth_counts(n):\n    fixed = 1\n    linear = 0\n    pairs = 0\n    for i in range(n):\n        linear += 1\n        for j in range(n):\n            pairs += 1\n    halvings = 0\n    remaining = n\n    while remaining > 1:\n        remaining //= 2\n        halvings += 1\n    return fixed, linear, pairs, halvings",
+    "runtime": "python",
+    "checks": [
+      {
+        "label": "Zero and one",
+        "expression": "growth_counts(0) == (1, 0, 0, 0) and growth_counts(1) == (1, 1, 1, 0)"
+      },
+      {
+        "label": "Non-power and power",
+        "expression": "growth_counts(7) == (1, 7, 49, 2) and growth_counts(8) == (1, 8, 64, 3)"
+      },
+      {
+        "label": "Bounded large input",
+        "expression": "growth_counts(64) == (1, 64, 4096, 6)"
+      }
+    ],
+    "quiz": {
+      "question": "When n grows from 8 to 16, how do the pair count and halving count change?",
+      "choices": [
+        "64\u2192256 pairs; 3\u21924 halvings",
+        "64\u2192256 pairs; 3\u21926 halvings",
+        "64\u2192128 pairs; 3\u21926 halvings"
+      ],
+      "answer": 0,
+      "explanation": "Both nested loops double their visit counts, multiplying pairs by 4. One more division by 2 handles the doubled power-of-two size."
+    },
+    "hints": [
+      "Trace the visible worked calls before changing the starter."
+    ],
+    "math": null,
+    "filename": "main.py",
+    "estimatedMinutes": 12,
+    "externalNotes": "Supported baseline: native Python3.12.14 and bundled Pyodide0.27.7/Python3.12.7. No network or third-party dependency. Runtime evidence is separate from reading completion."
+  },
+  {
+    "id": "python-81",
+    "title": "Binary search in a sorted sequence",
+    "summary": "Return (index, probes) using the shown inclusive-interval binary search on an ascending sorted integer list. Use mid=(low+high)//2. Return (None, probes) if absent. Any matching duplicate index is valid; leave input unchanged.",
+    "explanation": [
+      "Binary search assumes ascending sorted data. It keeps an inclusive candidate interval from low to high. If the target exists, some matching position must remain in that interval. Sorting is a separate operation with its own cost; this function neither sorts nor validates the entire list.",
+      "mid = (low + high) // 2 selects the middle index using integer floor division. If that item equals the target, return it. If it is smaller, sorted order rules out every position through mid, so move low to mid+1. Otherwise move high to mid-1. Excluding mid makes progress; keeping mid again can cause an infinite loop.",
+      "binary_find receives an ascending sorted integer list and an integer target. It returns (matching_index, probes), or (None, probes). A probe means one inspected middle position, not one comparison: the code may use both == and < for that position. len(values) supplies the element count; high is the last valid index.\n```python\ndef binary_find(values, target):\n    low = 0\n    high = len(values) - 1\n    probes = 0\n    while low <= high:\n        mid = (low + high) // 2\n        probes += 1\n        if values[mid] == target:\n            return mid, probes\n        if values[mid] < target:\n            low = mid + 1\n        else:\n            high = mid - 1\n    return None, probes\nprint(binary_find([2, 4, 6, 8, 10], 8))\nprint(binary_find([], 8))\n```\nIt prints (3, 2) and (None, 0). For the first call, index 2 contains6; the remaining interval is indices 3..4, whose middle is3. The empty list starts with high=-1 and never indexes it.",
+      "With duplicates, any matching index is acceptable; this is not a first-match search. Each unsuccessful probe removes at least about half the candidate positions, so worst-case probes grow logarithmically. This uses indices rather than copying slices. Unsorted input breaks the reasoning, even if one particular search accidentally succeeds.",
+      "Complete the same low/high algorithm. Check empty, absent, boundary, and duplicate targets. Optional local practice: compare its probe count with counted_find from lesson79 on an already sorted list. Those counters measure different events, so do not equate them with seconds or call one a universal speed winner."
+    ],
+    "analogy": {
+      "familiar": "Follow a small change from its starting state to its result.",
+      "connection": "Each instruction changes what the next instruction receives.",
+      "limit": "Use the actual code and checks rather than relying on the comparison."
+    },
+    "steps": [
+      "Read the requirement.",
+      "Make one change to the starter.",
+      "Run the checks.",
+      "Explain why a changed input produces its result."
+    ],
+    "starter": "def binary_find(values, target):\n    return None, 0",
+    "solution": "def binary_find(values, target):\n    low = 0\n    high = len(values) - 1\n    probes = 0\n    while low <= high:\n        mid = (low + high) // 2\n        probes += 1\n        if values[mid] == target:\n            return mid, probes\n        if values[mid] < target:\n            low = mid + 1\n        else:\n            high = mid - 1\n    return None, probes",
+    "runtime": "python",
+    "checks": [
+      {
+        "label": "Middle and empty",
+        "expression": "binary_find([2, 4, 6, 8, 10], 6) == (2, 1) and binary_find([], 3) == (None, 0)"
+      },
+      {
+        "label": "Right boundary and missing",
+        "expression": "binary_find([2, 4, 6, 8, 10], 10) == (4, 3) and binary_find([2, 4, 6, 8, 10], 7) == (None, 2)"
+      },
+      {
+        "label": "Duplicate match",
+        "expression": "binary_find([1, 2, 2, 2, 5], 2)[0] in (1, 2, 3)"
+      },
+      {
+        "label": "Single item",
+        "expression": "binary_find([9], 9) == (0, 1) and binary_find([9], 8) == (None, 1)"
+      }
+    ],
+    "quiz": {
+      "question": "Using the shown algorithm, what happens when searching [1, 3, 5, 7] for4?",
+      "choices": [
+        "(None, 2): inspect3, then5, then the interval is empty.",
+        "(2, 2): choose the nearest larger value.",
+        "(None, 4): every item must be inspected."
+      ],
+      "answer": 0,
+      "explanation": "The first middle is index 1 (3), so low becomes2. The next is index 2 (5), so high becomes1. low>high proves absence in this sorted list."
+    },
+    "hints": [
+      "Trace the visible worked calls before changing the starter."
+    ],
+    "math": null,
+    "filename": "main.py",
+    "estimatedMinutes": 12,
+    "externalNotes": "Supported baseline: native Python3.12.14 and bundled Pyodide0.27.7/Python3.12.7. No network or third-party dependency. Runtime evidence is separate from reading completion."
+  },
+  {
+    "id": "python-82",
+    "title": "Insertion sort and a sorted prefix",
+    "summary": "Return (sorted_copy, shifts) for records containing (integer_priority, string_label) tuples. Sort by priority only, preserve equal-priority order, and leave the source list untouched. Count only moves of earlier records one position right.",
+    "explanation": [
+      "Insertion sort keeps the positions before i sorted, then inserts the next item into that prefix. Our records are (integer_priority, text_label) tuples. Only priority decides order; the label lets us see which equal-priority item was originally first. result[j][0] reads the priority from the record at index j.",
+      "Save the current item, shift earlier records with strictly larger priorities one place right, then fill the gap. The guard j>=0 is tested before indexing, because and short-circuits. Using > rather than >= leaves an earlier equal-priority record before the new one. That property is called stability.",
+      "insertion_sort accepts a list of these tuples and returns (new_sorted_list, shifts). records.copy() returns a shallow new list: rearranging it does not reorder the source. A shift counts one assignment that moves an earlier record right; final placement is not counted. len(result) returns the copied list\u2019s element count. range(1, len(result)) visits index 1 through the final index; the one-item prefix needs no work.\n```python\ndef insertion_sort(records):\n    result = records.copy()\n    shifts = 0\n    for i in range(1, len(result)):\n        item = result[i]\n        j = i - 1\n        while j >= 0 and result[j][0] > item[0]:\n            result[j + 1] = result[j]\n            shifts += 1\n            j -= 1\n        result[j + 1] = item\n    return result, shifts\nsource = [(2, \"A\"), (1, \"B\"), (2, \"C\")]\nprint(insertion_sort(source))\nprint(source)\n```\nIt prints ([(1, 'B'), (2, 'A'), (2, 'C')], 1), then the original list. The equal-priority A and C retain their order.",
+      "An already sorted input needs zero shifts but still checks its prefixes. A reverse-sorted list with distinct priorities needs 1+2+...+(n-1) shifts, which grows quadratically. This count does not include the initial copy or all comparisons. The input-copy design uses extra storage; it is not an in-place sort of the caller\u2019s list.",
+      "Implement the sorted-prefix algorithm with the strict priority comparison. Empty input returns ([],0). Optional local practice: change the labels on equal-priority records without changing their priorities; explain why their order must stay the same. The supplied __insertion_preserved helper is test infrastructure: it checks the stated preservation contract. Leave it unchanged; the learning task is the main function, not writing this helper."
+    ],
+    "analogy": {
+      "familiar": "Follow a small change from its starting state to its result.",
+      "connection": "Each instruction changes what the next instruction receives.",
+      "limit": "Use the actual code and checks rather than relying on the comparison."
+    },
+    "steps": [
+      "Read the requirement.",
+      "Make one change to the starter.",
+      "Run the checks.",
+      "Explain why a changed input produces its result."
+    ],
+    "starter": "def insertion_sort(records):\n    return records.copy(), 0\n\ndef __insertion_preserved():\n    source = [(2, \"A\"), (1, \"B\"), (1, \"C\")]\n    before = source.copy()\n    result, shifts = insertion_sort(source)\n    empty = []\n    empty_result, empty_shifts = insertion_sort(empty)\n    return source == before and result is not source and result == [(1, \"B\"), (1, \"C\"), (2, \"A\")] and empty_result == [] and empty_result is not empty",
+    "solution": "def insertion_sort(records):\n    result = records.copy()\n    shifts = 0\n    for i in range(1, len(result)):\n        item = result[i]\n        j = i - 1\n        while j >= 0 and result[j][0] > item[0]:\n            result[j + 1] = result[j]\n            shifts += 1\n            j -= 1\n        result[j + 1] = item\n    return result, shifts\n\ndef __insertion_preserved():\n    source = [(2, \"A\"), (1, \"B\"), (1, \"C\")]\n    before = source.copy()\n    result, shifts = insertion_sort(source)\n    empty = []\n    empty_result, empty_shifts = insertion_sort(empty)\n    return source == before and result is not source and result == [(1, \"B\"), (1, \"C\"), (2, \"A\")] and empty_result == [] and empty_result is not empty",
+    "runtime": "python",
+    "checks": [
+      {
+        "label": "Stable equal keys",
+        "expression": "insertion_sort([(2, \"A\"), (1, \"B\"), (2, \"C\")]) == ([(1, \"B\"), (2, \"A\"), (2, \"C\")], 1)"
+      },
+      {
+        "label": "Reverse order",
+        "expression": "insertion_sort([(3, \"C\"), (2, \"B\"), (1, \"A\")]) == ([(1, \"A\"), (2, \"B\"), (3, \"C\")], 3)"
+      },
+      {
+        "label": "Empty and sorted",
+        "expression": "insertion_sort([]) == ([], 0) and insertion_sort([(1, \"A\"), (1, \"B\")]) == ([(1, \"A\"), (1, \"B\")], 0)"
+      },
+      {
+        "label": "Preserve the stated snapshot/copy contract",
+        "expression": "__insertion_preserved()"
+      }
+    ],
+    "quiz": {
+      "question": "What does insertion_sort([(1, \"Z\"), (1, \"A\"), (0, \"B\")]) return?",
+      "choices": [
+        "([(0, \"B\"), (1, \"Z\"), (1, \"A\")], 3)",
+        "([(0, \"B\"), (1, \"A\"), (1, \"Z\")], 2)",
+        "([(0, \"B\"), (1, \"Z\"), (1, \"A\")], 2)"
+      ],
+      "answer": 2,
+      "explanation": "B moves past the two larger priorities, causing two shifts. Equal-priority Z and A are not compared by label and retain their order."
+    },
+    "hints": [
+      "Trace the visible worked calls before changing the starter."
+    ],
+    "math": null,
+    "filename": "main.py",
+    "estimatedMinutes": 12,
+    "externalNotes": "Supported baseline: native Python3.12.14 and bundled Pyodide0.27.7/Python3.12.7. No network or third-party dependency. Runtime evidence is separate from reading completion."
+  },
+  {
+    "id": "python-83",
+    "title": "Merging two sorted sequences",
+    "summary": "Return a new ascending list containing every value from already sorted integer lists left and right, preserving duplicates and both sources. Use two forward indices, choose left on equal fronts, then append the unconsumed tail.",
+    "explanation": [
+      "Merging combines two already ascending sorted lists into one sorted list. It is not concatenation followed by a sort. Compare the next unconsumed value from each list, append the smaller, and advance only that list\u2019s position. Duplicates are preserved rather than removed.",
+      "On equal front values, choose the left one first using <=. Each iteration consumes exactly one value, so neither index goes backward. Once either side is exhausted, the other side\u2019s remaining values are already sorted and can be appended without more value comparisons.",
+      "merge takes two ascending sorted integer lists and returns a new list, changing neither input. append(value) adds one value to result and returns None. extend(iterable) adds every supplied element and returns None; we use it as a statement, not as a new list value. left[i:] is a slice from i through the end, and is empty if i equals its length. len supplies the bounds.\n```python\ndef merge(left, right):\n    result = []\n    i = 0\n    j = 0\n    while i < len(left) and j < len(right):\n        if left[i] <= right[j]:\n            result.append(left[i])\n            i += 1\n        else:\n            result.append(right[j])\n            j += 1\n    result.extend(left[i:])\n    result.extend(right[j:])\n    return result\nprint(merge([1, 4, 4], [2, 4, 8]))\nprint(merge([], [3, 5]))\n```\nIt prints [1, 2, 4, 4, 4, 8] and [3, 5]. Each input occurrence appears exactly once in the output.",
+      "If the lengths are a and b, all a+b values must be copied to the result. The comparison loop makes at most a+b-1 value comparisons when both inputs are nonempty; an empty side needs none. The whole merge has linear work in a+b under constant-cost integer comparisons. The slices also copy remaining references; do not call this a zero-allocation merge.",
+      "Implement the two-index algorithm with the stated sorted-input precondition. Do not modify, pop from, or sort either source. Optional local practice: trace the indices when one list finishes much earlier than the other. The supplied __merge_preserved helper is test infrastructure: it checks the stated preservation contract. Leave it unchanged; the learning task is the main function, not writing this helper."
+    ],
+    "analogy": {
+      "familiar": "Follow a small change from its starting state to its result.",
+      "connection": "Each instruction changes what the next instruction receives.",
+      "limit": "Use the actual code and checks rather than relying on the comparison."
+    },
+    "steps": [
+      "Read the requirement.",
+      "Make one change to the starter.",
+      "Run the checks.",
+      "Explain why a changed input produces its result."
+    ],
+    "starter": "def merge(left, right):\n    return []\n\ndef __merge_preserved():\n    left = [1, 4]\n    right = [2, 3]\n    result = merge(left, right)\n    empty = []\n    tail = merge(empty, right)\n    return left == [1, 4] and right == [2, 3] and result == [1, 2, 3, 4] and result is not left and result is not right and tail == [2, 3] and tail is not right and tail is not empty",
+    "solution": "def merge(left, right):\n    result = []\n    i = 0\n    j = 0\n    while i < len(left) and j < len(right):\n        if left[i] <= right[j]:\n            result.append(left[i])\n            i += 1\n        else:\n            result.append(right[j])\n            j += 1\n    result.extend(left[i:])\n    result.extend(right[j:])\n    return result\n\ndef __merge_preserved():\n    left = [1, 4]\n    right = [2, 3]\n    result = merge(left, right)\n    empty = []\n    tail = merge(empty, right)\n    return left == [1, 4] and right == [2, 3] and result == [1, 2, 3, 4] and result is not left and result is not right and tail == [2, 3] and tail is not right and tail is not empty",
+    "runtime": "python",
+    "checks": [
+      {
+        "label": "Interleaved and duplicate values",
+        "expression": "merge([1, 4, 4], [2, 4, 8]) == [1, 2, 4, 4, 4, 8]"
+      },
+      {
+        "label": "Empty sides",
+        "expression": "merge([], [3, 5]) == [3, 5] and merge([1], []) == [1] and merge([], []) == []"
+      },
+      {
+        "label": "Uneven lengths",
+        "expression": "merge([0], [1, 2, 3, 4]) == [0, 1, 2, 3, 4]"
+      },
+      {
+        "label": "Preserve the stated snapshot/copy contract",
+        "expression": "__merge_preserved()"
+      }
+    ],
+    "quiz": {
+      "question": "What does merge([1, 3], [1, 1, 2]) return?",
+      "choices": [
+        "[1, 1, 1, 2, 3]",
+        "[1, 3, 1, 1, 2]",
+        "[1, 2, 3]"
+      ],
+      "answer": 0,
+      "explanation": "Equal values are not removed. After selecting the left 1, the right 1s and 2 are consumed before appending the remaining left 3."
+    },
+    "hints": [
+      "Trace the visible worked calls before changing the starter."
+    ],
+    "math": null,
+    "filename": "main.py",
+    "estimatedMinutes": 12,
+    "externalNotes": "Supported baseline: native Python3.12.14 and bundled Pyodide0.27.7/Python3.12.7. No network or third-party dependency. Runtime evidence is separate from reading completion."
+  },
+  {
+    "id": "python-84",
+    "title": "Merge sort and divide-and-conquer",
+    "summary": "Using the supplied merge_counted helper, return (sorted_copy, total_merge_comparisons) for an integer list. Split at len(values)//2, recurse on each half, and add the two child counts to the final merge count. Empty/single input returns a new list and count 0; preserve the original.",
+    "explanation": [
+      "Merge sort splits a list into two smaller lists, sorts each recursively, then merges their sorted results. A list with zero or one element is already sorted: that is the base case. Every longer list splits into strictly smaller parts, so these bounded inputs eventually reach that base case.",
+      "merge_counted uses the previous lesson\u2019s merge algorithm, adding one counter event for each left[i] <= right[j] test. It takes two sorted integer lists and returns (new_merged_list, comparisons); no tests are counted when copying the remaining tail. append adds one element; extend copies a suffix into the result, and both return None.\n```python\ndef merge_counted(left, right):\n    result = []\n    i = 0\n    j = 0\n    comparisons = 0\n    while i < len(left) and j < len(right):\n        comparisons += 1\n        if left[i] <= right[j]:\n            result.append(left[i])\n            i += 1\n        else:\n            result.append(right[j])\n            j += 1\n    result.extend(left[i:])\n    result.extend(right[j:])\n    return result, comparisons\n```\nFor example, this explicit call prints ([1, 2, 3], 1):\n```python\nprint(merge_counted([1], [2, 3]))\n```",
+      "merge_sort takes an integer list and returns (new_sorted_list, total_value_comparisons). values[:mid] and values[mid:] copy the two halves. Each recursive call returns a pair; tuple unpacking assigns the sorted list and its count to separate names. Add both child counts and the final merge count. The base-case copy avoids returning the caller\u2019s list itself.\n```python\ndef merge_sort(values):\n    if len(values) <= 1:\n        return values.copy(), 0\n    mid = len(values) // 2\n    left, left_count = merge_sort(values[:mid])\n    right, right_count = merge_sort(values[mid:])\n    result, merge_count = merge_counted(left, right)\n    return result, left_count + right_count + merge_count\nprint(merge_sort([4, 1, 3, 2]))\nprint(merge_sort([]))\n```\nWith merge_counted defined above, it prints ([1, 2, 3, 4], 5) and ([], 0). The two length-two halves each need one comparison; the final merge needs three.",
+      "For a power-of-two size n, repeated splitting creates log2(n) merge levels. Across one level the merged lengths total n, so combining levels gives O(n log n) work under constant-cost comparisons. The exact comparison count still depends on value order. This implementation also copies slices and builds lists; it does not use constant extra space. Small input timings can differ from these growth classes.",
+      "Keep merge_counted as supplied and implement merge_sort with its base case, smaller recursive calls and count sum. Inputs may be empty, duplicated, already sorted or reversed. Optional local practice: trace the two halves of a five-item list, then compare comparison counts for two different orders of the same values without making a stopwatch claim. The supplied __sort_preserved helper is test infrastructure: it checks the stated preservation contract. Leave it unchanged; the learning task is the main function, not writing this helper."
+    ],
+    "analogy": {
+      "familiar": "Follow a small change from its starting state to its result.",
+      "connection": "Each instruction changes what the next instruction receives.",
+      "limit": "Use the actual code and checks rather than relying on the comparison."
+    },
+    "steps": [
+      "Read the requirement.",
+      "Make one change to the starter.",
+      "Run the checks.",
+      "Explain why a changed input produces its result."
+    ],
+    "starter": "def merge_counted(left, right):\n    result = []\n    i = 0\n    j = 0\n    comparisons = 0\n    while i < len(left) and j < len(right):\n        comparisons += 1\n        if left[i] <= right[j]:\n            result.append(left[i])\n            i += 1\n        else:\n            result.append(right[j])\n            j += 1\n    result.extend(left[i:])\n    result.extend(right[j:])\n    return result, comparisons\n\ndef merge_sort(values):\n    return values.copy(), 0\n\ndef __sort_preserved():\n    for source in ([], [7], [3, 1, 2]):\n        before = source.copy()\n        result, count = merge_sort(source)\n        if source != before or result is source:\n            return False\n    return True",
+    "solution": "def merge_counted(left, right):\n    result = []\n    i = 0\n    j = 0\n    comparisons = 0\n    while i < len(left) and j < len(right):\n        comparisons += 1\n        if left[i] <= right[j]:\n            result.append(left[i])\n            i += 1\n        else:\n            result.append(right[j])\n            j += 1\n    result.extend(left[i:])\n    result.extend(right[j:])\n    return result, comparisons\n\ndef merge_sort(values):\n    if len(values) <= 1:\n        return values.copy(), 0\n    mid = len(values) // 2\n    left, left_count = merge_sort(values[:mid])\n    right, right_count = merge_sort(values[mid:])\n    result, merge_count = merge_counted(left, right)\n    return result, left_count + right_count + merge_count\n\ndef __sort_preserved():\n    for source in ([], [7], [3, 1, 2]):\n        before = source.copy()\n        result, count = merge_sort(source)\n        if source != before or result is source:\n            return False\n    return True",
+    "runtime": "python",
+    "checks": [
+      {
+        "label": "Unsorted input and exact count",
+        "expression": "merge_sort([4, 1, 3, 2]) == ([1, 2, 3, 4], 5)"
+      },
+      {
+        "label": "Base cases",
+        "expression": "merge_sort([]) == ([], 0) and merge_sort([7]) == ([7], 0)"
+      },
+      {
+        "label": "Duplicates and ordered values",
+        "expression": "merge_sort([2, 2, 1]) == ([1, 2, 2], 3) and merge_sort([1, 2, 3, 4]) == ([1, 2, 3, 4], 4)"
+      },
+      {
+        "label": "Preserve the stated snapshot/copy contract",
+        "expression": "__sort_preserved()"
+      }
+    ],
+    "quiz": {
+      "question": "How many counted value comparisons does merge_sort([1, 2, 3, 4]) perform?",
+      "choices": [
+        "4: one in each small merge, then two in the final merge.",
+        "5: every four-item input has the same exact count.",
+        "2: only the final merge counts."
+      ],
+      "answer": 0,
+      "explanation": "Each sorted half needs one comparison. The final merge exhausts [1,2] after two comparisons, then appends [3,4] without further value tests. Child work is included."
+    },
+    "hints": [
+      "Trace the visible worked calls before changing the starter."
+    ],
+    "math": null,
+    "filename": "main.py",
+    "estimatedMinutes": 12,
+    "externalNotes": "Supported baseline: native Python3.12.14 and bundled Pyodide0.27.7/Python3.12.7. No network or third-party dependency. Runtime evidence is separate from reading completion."
+  },
+  {
+    "id": "python-85",
+    "title": "Handling grouped failures",
+    "summary": "Complete route_errors(errors, handled): for a flat list of Exception instances, append ValueError messages to handled, preserve input order, and allow all other failures to propagate as a group. Empty input does nothing. Leave observe unchanged.",
+    "explanation": [
+      "ExceptionGroup(message, exceptions) constructs one exception containing a nonempty sequence of ordinary exceptions. ValueError(\"bad minutes\") and TypeError(\"wrong shape\") construct failures with diagnostic messages; construction alone does not raise them. This lesson uses a flat group so its direct exceptions are individual failures, not nested groups.",
+      "except* ValueError selects only matching failures from the group. group.exceptions is their tuple; str(error) returns each message. route_errors(errors, handled) appends those messages to the supplied list and returns None when nothing remains. Unmatched failures propagate as an ExceptionGroup; they are not converted into success. A plain except ExceptionGroup around the call can observe that remaining group. Do not mix except and except* clauses on the same try, and do not return from an except* block.",
+      "observe(errors) calls the router with a fresh list and returns (handled_messages, remaining_type_names). type(error).__name__ reads a diagnostic class name; it is not used to decide which failures to handle. The outer handler records the unmatched TypeError rather than hiding it.\n```python\ndef route_errors(errors, handled):\n    if not errors:\n        return\n    try:\n        raise ExceptionGroup(\"batch\", errors)\n    except* ValueError as group:\n        for error in group.exceptions:\n            handled.append(str(error))\ndef observe(errors):\n    handled = []\n    remaining = []\n    try:\n        route_errors(errors, handled)\n    except ExceptionGroup as group:\n        remaining = [type(error).__name__ for error in group.exceptions]\n    return handled, remaining\nprint(observe([ValueError(\"bad minutes\"), TypeError(\"wrong shape\")]))\n```\nOutput: (['bad minutes'], ['TypeError']).",
+      "If both failures are ValueError, both messages reach handled and no exception remains. With an empty input, return before constructing a group because an empty ExceptionGroup is invalid. The observe helper is supplied test scaffolding; implement route_errors, not a catch-all. Optional practice: replace one ValueError with RuntimeError and explain why it must still propagate."
+    ],
+    "analogy": {
+      "familiar": "Follow a small change from its starting state to its result.",
+      "connection": "Each instruction changes what the next instruction receives.",
+      "limit": "Use the actual code and checks rather than relying on the comparison."
+    },
+    "steps": [
+      "Read the requirement.",
+      "Make one change to the starter.",
+      "Run the checks.",
+      "Explain why a changed input produces its result."
+    ],
+    "starter": "def route_errors(errors, handled):\n    if not errors:\n        return\n    # TODO: handle only the ValueError subgroup.\n    raise ExceptionGroup(\"batch\", errors)\n\ndef observe(errors):\n    handled = []\n    remaining = []\n    try:\n        route_errors(errors, handled)\n    except ExceptionGroup as group:\n        remaining = [type(error).__name__ for error in group.exceptions]\n    return handled, remaining\n",
+    "solution": "def route_errors(errors, handled):\n    if not errors:\n        return\n    try:\n        raise ExceptionGroup(\"batch\", errors)\n    except* ValueError as group:\n        for error in group.exceptions:\n            handled.append(str(error))\n\ndef observe(errors):\n    handled = []\n    remaining = []\n    try:\n        route_errors(errors, handled)\n    except ExceptionGroup as group:\n        remaining = [type(error).__name__ for error in group.exceptions]\n    return handled, remaining\n",
+    "runtime": "python",
+    "checks": [
+      {
+        "label": "All handled",
+        "expression": "observe([ValueError('a'), ValueError('b')]) == (['a', 'b'], [])"
+      },
+      {
+        "label": "Mixed failures retain remainder",
+        "expression": "observe([ValueError('a'), TypeError('shape')]) == (['a'], ['TypeError'])"
+      },
+      {
+        "label": "No matching failure",
+        "expression": "observe([RuntimeError('offline')]) == ([], ['RuntimeError'])"
+      },
+      {
+        "label": "Empty input",
+        "expression": "observe([]) == ([], [])"
+      }
+    ],
+    "quiz": {
+      "question": "If ValueError and RuntimeError are grouped but only except* ValueError handles them, what happens to RuntimeError?",
+      "choices": [
+        "It is silently handled because one subgroup matched.",
+        "It becomes a ValueError automatically.",
+        "It remains in a propagated ExceptionGroup after the matching subgroup is handled."
+      ],
+      "answer": 2,
+      "explanation": "except* selects failures by their exception type. Handling the ValueError subgroup does not discharge a different failure in the same batch."
+    },
+    "hints": [
+      "Trace the visible worked calls before changing the starter."
+    ],
+    "math": null,
+    "filename": "main.py",
+    "estimatedMinutes": 12,
+    "externalNotes": "Supported baseline: native Python3.12.14 and bundled Pyodide0.27.7/Python3.12.7. No network or third-party dependency. Runtime evidence is separate from reading completion."
+  },
+  {
+    "id": "python-86",
+    "title": "TaskGroup failure and cleanup",
+    "summary": "Complete the finally cleanup in run_pair(label). Keep the two Event signals, TaskGroup, and matching ValueError handler. Return cleanup, the supplied label, then done only after all children have finished.",
+    "explanation": [
+      "async with asyncio.TaskGroup() creates and enters a task group. group.create_task(coroutine) schedules that coroutine as a child and returns its Task. Exiting the context waits for the children. A child failure other than cancellation requests cancellation of siblings and is reported after their cleanup as grouped failures.",
+      "asyncio.Event() constructs an initially unset signal. ready.set() sets it and wakes waiters; await ready.wait() pauses until set and then returns True. blocked is never set: its wait is deliberately ended by sibling cancellation. The failing child waits for ready, ensuring the waiting child has entered its try/finally before failure. These are coroutine signals, not thread locks.",
+      "run_pair(label) returns the recorded event list after the group exits. waiting() and failing() create child coroutines; create_task schedules them. asyncio.run(run_pair()) runs the top-level coroutine and returns its list in this course runner. finally records cleanup without swallowing CancelledError; the matching except* runs only after the group has finished its children.\n```python\nimport asyncio\n\nasync def run_pair(label=\"handled\"):\n    events = []\n    ready = asyncio.Event()\n    blocked = asyncio.Event()\n    async def waiting():\n        try:\n            ready.set()\n            await blocked.wait()\n        finally:\n            events.append(\"cleanup\")\n    async def failing():\n        await ready.wait()\n        raise ValueError(\"worker failed\")\n    try:\n        async with asyncio.TaskGroup() as group:\n            group.create_task(waiting())\n            group.create_task(failing())\n    except* ValueError:\n        events.append(label)\n    events.append(\"done\")\n    return events\nprint(asyncio.run(run_pair()))\n```\nOutput: ['cleanup', 'handled', 'done'].",
+      "Replacing the handler with except* TypeError leaves the ValueError group unhandled, so the final done append is skipped. No sleep or scheduler speed establishes this ordering; the Event and group lifetime do. Optional practice: change the cleanup label and trace why it still appears before the handler. On a normal already-running async loop, await run_pair() rather than nesting asyncio.run; the course worker adapts its top-level execution boundary."
+    ],
+    "analogy": {
+      "familiar": "Follow a small change from its starting state to its result.",
+      "connection": "Each instruction changes what the next instruction receives.",
+      "limit": "Use the actual code and checks rather than relying on the comparison."
+    },
+    "steps": [
+      "Read the requirement.",
+      "Make one change to the starter.",
+      "Run the checks.",
+      "Explain why a changed input produces its result."
+    ],
+    "starter": "import asyncio\n\nasync def run_pair(label=\"handled\"):\n    events = []\n    ready = asyncio.Event()\n    blocked = asyncio.Event()\n    async def waiting():\n        try:\n            ready.set()\n            await blocked.wait()\n        finally:\n            # TODO: record cleanup without swallowing cancellation.\n            pass\n    async def failing():\n        await ready.wait()\n        raise ValueError(\"worker failed\")\n    try:\n        async with asyncio.TaskGroup() as group:\n            group.create_task(waiting())\n            group.create_task(failing())\n    except* ValueError:\n        events.append(label)\n    events.append(\"done\")\n    return events\n",
+    "solution": "import asyncio\n\nasync def run_pair(label=\"handled\"):\n    events = []\n    ready = asyncio.Event()\n    blocked = asyncio.Event()\n    async def waiting():\n        try:\n            ready.set()\n            await blocked.wait()\n        finally:\n            events.append(\"cleanup\")\n    async def failing():\n        await ready.wait()\n        raise ValueError(\"worker failed\")\n    try:\n        async with asyncio.TaskGroup() as group:\n            group.create_task(waiting())\n            group.create_task(failing())\n    except* ValueError:\n        events.append(label)\n    events.append(\"done\")\n    return events\n",
+    "runtime": "python",
+    "checks": [
+      {
+        "label": "Default completion order",
+        "expression": "asyncio.run(run_pair()) == ['cleanup', 'handled', 'done']"
+      },
+      {
+        "label": "Changed label",
+        "expression": "asyncio.run(run_pair('reported')) == ['cleanup', 'reported', 'done']"
+      },
+      {
+        "label": "Fresh state on repeated calls",
+        "expression": "asyncio.run(run_pair('again')) == ['cleanup', 'again', 'done']"
+      }
+    ],
+    "quiz": {
+      "question": "If the handler changes to except* TypeError, does the final done append run after the ValueError child fails?",
+      "choices": [
+        "No cleanup runs because cancellation forcibly kills the thread.",
+        "Yes. TaskGroup converts every child failure into success.",
+        "No. Cleanup runs, but the unmatched ValueError group propagates before done."
+      ],
+      "answer": 2,
+      "explanation": "TaskGroup waits for cancellation cleanup, then raises the failure group. A handler for the wrong subgroup type does not recover normal flow."
+    },
+    "hints": [
+      "Trace the visible worked calls before changing the starter."
+    ],
+    "math": null,
+    "filename": "main.py",
+    "estimatedMinutes": 12,
+    "externalNotes": "Supported baseline: native Python3.12.14 and bundled Pyodide0.27.7/Python3.12.7. No network or third-party dependency. Runtime evidence is separate from reading completion."
+  },
+  {
+    "id": "python-87",
+    "title": "Replacing a dependency in a test",
+    "summary": "Complete load_topic(fetch, key): call fetch once with the supplied key, return Topic: followed by the returned text, and return Missing only for KeyError. Keep the supplied check_fetch and check_other_error test helpers unchanged.",
+    "explanation": [
+      "load_topic(fetch, key) calls the supplied fetch callable once with key. It formats the returned topic String, or returns Missing for KeyError. Supplying a dependency makes this boundary testable without a network, database or global patch. Other exception types are not swallowed.",
+      "Mock(return_value=\"Stars\") constructs a callable test double. Calling fake(key) records the arguments and returns Stars. Mock(side_effect=KeyError(\"absent\")) instead raises that exception when called. assert_called_once_with(expected_key) takes the Mock receiver and expected arguments, returns None on a match, and raises AssertionError for the wrong call count or arguments.",
+      "The function\u2019s result alone would not prove it fetched the correct key. Verify both the returned text and the dependency call.\n```python\nfrom unittest.mock import Mock\n\ndef load_topic(fetch, key):\n    try:\n        topic = fetch(key)\n    except KeyError:\n        return \"Missing\"\n    return \"Topic: \" + topic\nfake = Mock(return_value=\"Stars\")\nprint(load_topic(fake, \"topic-7\"))\nfake.assert_called_once_with(\"topic-7\")\nprint(\"call verified\")\n```\nOutput: Topic: Stars then call verified.",
+      "Here the dependency fails with a known KeyError; the application returns its chosen fallback, and the attempted call is still recorded.\n```python\nfrom unittest.mock import Mock\n\ndef load_topic(fetch, key):\n    try:\n        topic = fetch(key)\n    except KeyError:\n        return \"Missing\"\n    return \"Topic: \" + topic\nfake = Mock(side_effect=KeyError(\"absent\"))\nprint(load_topic(fake, \"topic-7\"))\nfake.assert_called_once_with(\"topic-7\")\n```\nOutput: Missing. Optional practice: use a different returned topic and key. A mock proves the authored interaction, not compatibility with a real service. Module patching and its lookup-location rules are not used or claimed in this injected-callable exercise."
+    ],
+    "analogy": {
+      "familiar": "Follow a small change from its starting state to its result.",
+      "connection": "Each instruction changes what the next instruction receives.",
+      "limit": "Use the actual code and checks rather than relying on the comparison."
+    },
+    "steps": [
+      "Read the requirement.",
+      "Make one change to the starter.",
+      "Run the checks.",
+      "Explain why a changed input produces its result."
+    ],
+    "starter": "from unittest.mock import Mock\n\ndef load_topic(fetch, key):\n    # TODO: call the dependency and handle only KeyError.\n    return \"Missing\"\n\ndef check_fetch(key, missing=False):\n    fake = Mock(side_effect=KeyError(\"absent\")) if missing else Mock(return_value=\"Maps\")\n    result = load_topic(fake, key)\n    fake.assert_called_once_with(key)\n    return result\n\ndef check_other_error():\n    fake = Mock(side_effect=RuntimeError(\"offline\"))\n    try:\n        load_topic(fake, \"id\")\n    except RuntimeError:\n        fake.assert_called_once_with(\"id\")\n        return True\n    return False\n",
+    "solution": "from unittest.mock import Mock\n\ndef load_topic(fetch, key):\n    try:\n        topic = fetch(key)\n    except KeyError:\n        return \"Missing\"\n    return \"Topic: \" + topic\n\ndef check_fetch(key, missing=False):\n    fake = Mock(side_effect=KeyError(\"absent\")) if missing else Mock(return_value=\"Maps\")\n    result = load_topic(fake, key)\n    fake.assert_called_once_with(key)\n    return result\n\ndef check_other_error():\n    fake = Mock(side_effect=RuntimeError(\"offline\"))\n    try:\n        load_topic(fake, \"id\")\n    except RuntimeError:\n        fake.assert_called_once_with(\"id\")\n        return True\n    return False\n",
+    "runtime": "python",
+    "checks": [
+      {
+        "label": "Returned value and exact key",
+        "expression": "check_fetch('alpha') == 'Topic: Maps'"
+      },
+      {
+        "label": "Changed key still forwarded once",
+        "expression": "check_fetch('beta') == 'Topic: Maps'"
+      },
+      {
+        "label": "Dependency failure is handled",
+        "expression": "check_fetch('absent', missing=True) == 'Missing'"
+      },
+      {
+        "label": "Different topic",
+        "expression": "load_topic(Mock(return_value='Ocean'), 'id') == 'Topic: Ocean'"
+      },
+      {
+        "label": "Other failure is not swallowed",
+        "expression": "check_other_error()"
+      }
+    ],
+    "quiz": {
+      "question": "If load_topic fetches topic-7 but assert_called_once_with expects wrong-key, what should happen?",
+      "choices": [
+        "The mock rewrites the past call to match the assertion.",
+        "Verification succeeds because only the return value matters.",
+        "AssertionError reports the incorrect expected interaction, even if the returned topic text looks correct."
+      ],
+      "answer": 2,
+      "explanation": "The assertion compares recorded calls, not just returned output. A plausible result cannot excuse using the wrong dependency argument."
+    },
+    "hints": [
+      "Trace the visible worked calls before changing the starter."
+    ],
+    "math": null,
+    "filename": "main.py",
+    "estimatedMinutes": 12,
+    "externalNotes": "Supported baseline: native Python3.12.14 and bundled Pyodide0.27.7/Python3.12.7. No network or third-party dependency. Runtime evidence is separate from reading completion."
+  },
+  {
+    "id": "python-88",
+    "title": "Useful logs without leaking data",
+    "summary": "Complete the log message in capture_status: log only status=ok or status=failed, never the token. Keep the isolated logger, requested level, formatter and finally cleanup. Return the captured text.",
+    "explanation": [
+      "A log should describe an event without copying credentials or arbitrary request text. capture_status(ok, token, level) accepts a Boolean status and a synthetic secret token, but deliberately logs only a fixed status word. This is data minimization at this call site, not a universal redaction filter or proof that an entire application is safe.",
+      "logging.Logger(name, level=...) constructs a local logger for this isolated exercise, rather than modifying the root logger or a shared registered logger. StreamHandler(stream) sends records to the supplied text stream. Formatter(pattern) defines the text shape; setFormatter attaches it and addHandler connects the handler. %(levelname)s and %(message)s insert a record\u2019s severity and formatted message. propagate=False prevents forwarding.",
+      "debug(message) and info(format, argument) submit records at their respective levels; the logger\u2019s threshold filters lower severities. Here INFO excludes DEBUG. The %s placeholder receives only ok or failed, never token. These logging methods return None. StringIO holds text in memory; getvalue returns its accumulated String. removeHandler detaches this handler in finally, and close releases handler resources without taking ownership of this supplied StringIO.\n```python\nimport logging\nfrom io import StringIO\n\ndef capture_status(ok, token, level=logging.INFO):\n    stream = StringIO()\n    logger = logging.Logger(\"lesson-local\", level=level)\n    logger.propagate = False\n    handler = logging.StreamHandler(stream)\n    handler.setFormatter(logging.Formatter(\"%(levelname)s:%(message)s\"))\n    logger.addHandler(handler)\n    try:\n        logger.debug(\"diagnostic\")\n        logger.info(\"status=%s\", \"ok\" if ok else \"failed\")\n        return stream.getvalue()\n    finally:\n        logger.removeHandler(handler)\n        handler.close()\nprint(capture_status(True, \"synthetic-secret\"), end=\"\")\n```\nOutput: INFO:status=ok.",
+      "At level DEBUG, both records are included; INFO still appears after DEBUG. Repeated calls create independent logger/stream objects and detach their handlers, so records do not multiply. Optional practice: use WARNING as the threshold and explain why these DEBUG/INFO records are omitted. This demonstrates only selected synthetic messages; never use a real secret in a lesson fixture."
+    ],
+    "analogy": {
+      "familiar": "Follow a small change from its starting state to its result.",
+      "connection": "Each instruction changes what the next instruction receives.",
+      "limit": "Use the actual code and checks rather than relying on the comparison."
+    },
+    "steps": [
+      "Read the requirement.",
+      "Make one change to the starter.",
+      "Run the checks.",
+      "Explain why a changed input produces its result."
+    ],
+    "starter": "import logging\nfrom io import StringIO\n\ndef capture_status(ok, token, level=logging.INFO):\n    stream = StringIO()\n    logger = logging.Logger(\"lesson-local\", level=level)\n    logger.propagate = False\n    handler = logging.StreamHandler(stream)\n    handler.setFormatter(logging.Formatter(\"%(levelname)s:%(message)s\"))\n    logger.addHandler(handler)\n    try:\n        logger.debug(\"diagnostic\")\n        # TODO: record a safe status message at INFO.\n        logger.info(\"token=%s\", token)\n        return stream.getvalue()\n    finally:\n        logger.removeHandler(handler)\n        handler.close()\n",
+    "solution": "import logging\nfrom io import StringIO\n\ndef capture_status(ok, token, level=logging.INFO):\n    stream = StringIO()\n    logger = logging.Logger(\"lesson-local\", level=level)\n    logger.propagate = False\n    handler = logging.StreamHandler(stream)\n    handler.setFormatter(logging.Formatter(\"%(levelname)s:%(message)s\"))\n    logger.addHandler(handler)\n    try:\n        logger.debug(\"diagnostic\")\n        logger.info(\"status=%s\", \"ok\" if ok else \"failed\")\n        return stream.getvalue()\n    finally:\n        logger.removeHandler(handler)\n        handler.close()\n",
+    "runtime": "python",
+    "checks": [
+      {
+        "label": "INFO filters debug",
+        "expression": "capture_status(True, 'secret') == 'INFO:status=ok\\n'"
+      },
+      {
+        "label": "Changed status and DEBUG",
+        "expression": "capture_status(False, 'hidden', logging.DEBUG) == 'DEBUG:diagnostic\\nINFO:status=failed\\n'"
+      },
+      {
+        "label": "Never include the supplied token",
+        "expression": "'DO-NOT-LOG' not in capture_status(True, 'DO-NOT-LOG')"
+      },
+      {
+        "label": "Higher threshold omits both",
+        "expression": "capture_status(True, 'secret', logging.WARNING) == ''"
+      },
+      {
+        "label": "Fresh handler state",
+        "expression": "capture_status(True, 'x') == capture_status(True, 'y') == 'INFO:status=ok\\n'"
+      }
+    ],
+    "quiz": {
+      "question": "If the threshold is DEBUG and ok is False, which text is captured?",
+      "choices": [
+        "The token is automatically logged by the logger constructor.",
+        "DEBUG:diagnostic followed by INFO:status=failed; the token is still absent.",
+        "Only INFO appears because DEBUG can never be enabled."
+      ],
+      "answer": 1,
+      "explanation": "The lower threshold accepts both severities, but changing the threshold does not alter the authored message arguments or introduce the omitted token."
+    },
+    "hints": [
+      "Trace the visible worked calls before changing the starter."
+    ],
+    "math": null,
+    "filename": "main.py",
+    "estimatedMinutes": 12,
+    "externalNotes": "Supported baseline: native Python3.12.14 and bundled Pyodide0.27.7/Python3.12.7. No network or third-party dependency. Runtime evidence is separate from reading completion."
+  },
+  {
+    "id": "python-89",
+    "title": "Function and collection type contracts",
+    "summary": "Complete first_title(groups, key) with the given annotations: return the first String in the keyed list, or None for a missing key or empty list. Inputs follow the annotated types. Keep identity_count as the visible non-enforcement demonstration.",
+    "explanation": [
+      "dict[str, list[str]] describes a dictionary with String keys and lists of Strings as values. key: str describes the second parameter. -> str | None describes either a String result or no title. These annotations communicate intended types; they do not loop through incoming data and validate it at runtime.",
+      "first_title(groups, key) reads the named list using get(key, []), which returns the stored list or the supplied empty-list default. It returns the first title, or None when the list is empty/missing. The data lookup and branch enforce that behavior; the annotations do not implement it. identity_count(value: int) -> int simply returns its argument.\n```python\ndef first_title(groups: dict[str, list[str]], key: str) -> str | None:\n    titles = groups.get(key, [])\n    return titles[0] if titles else None\n\ndef identity_count(value: int) -> int:\n    return value\nprint(first_title({\"today\": [\"Read\", \"Draw\"]}, \"today\"))\nprint(first_title({\"today\": []}, \"today\"))\nprint(identity_count(\"text\"))\n```\nOutput: Read, None, text on separate lines. The final call deliberately violates the annotation yet Python still returns its String.",
+      "A static type checker analyzes annotated code and can reject the String argument to identity_count without executing that call. Python execution is a different check: annotations alone are not an input validator. This lesson\u2019s runnable checks verify behavior, not a checker\u2019s result. No third-party checker is installed or run by the browser exercise; any separate native checker evidence must be reported explicitly.",
+      "For the practice function, inputs follow the annotated dictionary/list/String types. A real external-data boundary would need explicit shape checks before calling it. Optional practice: write down the expected type of groups[\"today\"] and the two possible return types; do not use a successful runtime call as proof of a static contract."
+    ],
+    "analogy": {
+      "familiar": "Follow a small change from its starting state to its result.",
+      "connection": "Each instruction changes what the next instruction receives.",
+      "limit": "Use the actual code and checks rather than relying on the comparison."
+    },
+    "steps": [
+      "Read the requirement.",
+      "Make one change to the starter.",
+      "Run the checks.",
+      "Explain why a changed input produces its result."
+    ],
+    "starter": "def first_title(groups: dict[str, list[str]], key: str) -> str | None:\n    # TODO: implement lookup and empty/missing policy.\n    return None\n\ndef identity_count(value: int) -> int:\n    return value\n",
+    "solution": "def first_title(groups: dict[str, list[str]], key: str) -> str | None:\n    titles = groups.get(key, [])\n    return titles[0] if titles else None\n\ndef identity_count(value: int) -> int:\n    return value\n",
+    "runtime": "python",
+    "checks": [
+      {
+        "label": "First title",
+        "expression": "first_title({'today': ['Read', 'Draw']}, 'today') == 'Read'"
+      },
+      {
+        "label": "Changed key",
+        "expression": "first_title({'later': ['Explore']}, 'later') == 'Explore'"
+      },
+      {
+        "label": "Empty list",
+        "expression": "first_title({'today': []}, 'today') is None"
+      },
+      {
+        "label": "Missing key",
+        "expression": "first_title({}, 'today') is None"
+      },
+      {
+        "label": "Annotations do not enforce execution",
+        "expression": "identity_count('text') == 'text'"
+      }
+    ],
+    "quiz": {
+      "question": "Why does identity_count(\"text\") still return \"text\" despite its int annotation?",
+      "choices": [
+        "Annotations are ignored by every static analysis tool.",
+        "Python automatically converts text into an integer.",
+        "The annotation states a static contract but the function body returns the value without runtime validation."
+      ],
+      "answer": 2,
+      "explanation": "A checker can flag the mismatched call, while ordinary Python execution still follows the body. These are distinct kinds of evidence."
+    },
+    "hints": [
+      "Trace the visible worked calls before changing the starter."
+    ],
+    "math": null,
+    "filename": "main.py",
+    "estimatedMinutes": 12,
+    "externalNotes": "Supported baseline: native Python3.12.14 and bundled Pyodide0.27.7/Python3.12.7. No network or third-party dependency. Runtime evidence is separate from reading completion."
+  },
+  {
+    "id": "python-90",
+    "title": "Measuring a small operation with timeit",
+    "summary": "Complete measure(operation, repeats=2, number=3): reject counts below one with ValueError, then return Timer(operation).repeat with the supplied repeat and number values. Use small positive integer counts. Leave counted_measure and rejects_count test scaffolding unchanged.",
+    "explanation": [
+      "Prepare the tiny input list before measuring. operation() sums that list and returns its result; the measurement includes calling the function and summing, not constructing the list. A measured function with side effects will repeat them: the timer does not reset application state automatically.",
+      "timeit.Timer(operation) receives the callable itself, not operation(), and constructs a timer without running the operation yet. timer.repeat(repeat=2, number=3) runs three calls per measurement and returns a list of two elapsed totals in seconds. It does not return the operation\u2019s values. By default timeit temporarily disables garbage collection during timing; that policy may differ from a real workload.",
+      "measure(operation, repeats, number) rejects nonpositive counts, constructs the timer, and returns its samples. all(value >= 0 for value in samples) checks every elapsed result without demanding a particular speed.\n```python\nimport timeit\n\ndef measure(operation, repeats=2, number=3):\n    if repeats < 1 or number < 1:\n        raise ValueError(\"positive repetition counts required\")\n    timer = timeit.Timer(operation)\n    return timer.repeat(repeat=repeats, number=number)\nvalues = [1, 2, 3]\ndef operation():\n    return sum(values)\nsamples = measure(operation, repeats=2, number=3)\nprint(len(samples), all(value >= 0 for value in samples))\n```\nOutput: 2 True. Exact elapsed values vary, may be zero at clock resolution, and are deliberately not printed or asserted.",
+      "A sample total covers number calls; dividing by number gives an average per call for that sample, not a universal performance guarantee. Repeat measurements to observe noise, but do not infer asymptotic complexity or real-user latency from this tiny case. Optional practice: change repeat to three and predict list length before running. Keep repetitions small in the browser. The supplied counted_measure test helper checks that the operation really ran six times; rejects_count checks the documented invalid-count boundary."
+    ],
+    "analogy": {
+      "familiar": "Follow a small change from its starting state to its result.",
+      "connection": "Each instruction changes what the next instruction receives.",
+      "limit": "Use the actual code and checks rather than relying on the comparison."
+    },
+    "steps": [
+      "Read the requirement.",
+      "Make one change to the starter.",
+      "Run the checks.",
+      "Explain why a changed input produces its result."
+    ],
+    "starter": "import timeit\n\ndef measure(operation, repeats=2, number=3):\n    if repeats < 1 or number < 1:\n        raise ValueError(\"positive repetition counts required\")\n    # TODO: construct and run the timer with both counts.\n    return []\n\ndef counted_measure():\n    calls = []\n    def operation():\n        calls.append(1)\n    samples = measure(operation, repeats=2, number=3)\n    return len(samples), len(calls), all(value >= 0 for value in samples)\n\ndef rejects_count(repeats, number):\n    try:\n        measure(lambda: 1, repeats=repeats, number=number)\n    except ValueError:\n        return True\n    return False\n",
+    "solution": "import timeit\n\ndef measure(operation, repeats=2, number=3):\n    if repeats < 1 or number < 1:\n        raise ValueError(\"positive repetition counts required\")\n    timer = timeit.Timer(operation)\n    return timer.repeat(repeat=repeats, number=number)\n\ndef counted_measure():\n    calls = []\n    def operation():\n        calls.append(1)\n    samples = measure(operation, repeats=2, number=3)\n    return len(samples), len(calls), all(value >= 0 for value in samples)\n\ndef rejects_count(repeats, number):\n    try:\n        measure(lambda: 1, repeats=repeats, number=number)\n    except ValueError:\n        return True\n    return False\n",
+    "runtime": "python",
+    "checks": [
+      {
+        "label": "Requested count and actual calls",
+        "expression": "counted_measure() == (2, 6, True)"
+      },
+      {
+        "label": "Changed repeat count",
+        "expression": "len(measure(lambda: 1, repeats=3, number=2)) == 3"
+      },
+      {
+        "label": "Nonnegative elapsed samples",
+        "expression": "all(value >= 0 for value in measure(lambda: 1, repeats=1, number=1))"
+      },
+      {
+        "label": "Reject nonpositive counts",
+        "expression": "rejects_count(0, 1) and rejects_count(1, 0) and rejects_count(-1, 1)"
+      }
+    ],
+    "quiz": {
+      "question": "For repeat=3 and number=2, how many elapsed totals and operation calls are requested?",
+      "choices": [
+        "Two totals, each covering three calls.",
+        "Six returned operation values, with no elapsed measurements.",
+        "Three elapsed totals, each covering two calls: six calls altogether."
+      ],
+      "answer": 2,
+      "explanation": "repeat controls the number of measurements; number controls calls inside each measurement. Their product counts operation invocations, not returned timing entries."
+    },
+    "hints": [
+      "Trace the visible worked calls before changing the starter."
+    ],
+    "math": null,
+    "filename": "main.py",
+    "estimatedMinutes": 12,
+    "externalNotes": "Supported baseline: native Python3.12.14 and bundled Pyodide0.27.7/Python3.12.7. No network or third-party dependency. Runtime evidence is separate from reading completion."
+  },
+  {
+    "id": "python-91",
+    "title": "Finding work with a profiler",
+    "summary": "Complete profile_work(count): profile workload(count), inspect the collected stats, and return the result plus the total calls to the known square helper. Missing square entry means zero calls. Keep square and workload unchanged; use small nonnegative integer counts.",
+    "explanation": [
+      "square(value) returns value multiplied by itself. workload(count) calls square for integers from zero up to count-1 and returns their total. Keep count a small nonnegative integer. A profiler records calls and measured time during a run; it does not establish a growth-rate proof or remove measurement overhead.",
+      "cProfile.Profile() creates a profiler. profiler.runcall(workload, count) profiles that call, returns workload\u2019s result and stops profiling afterward. pstats.Stats(profiler) reads the collected statistics. This lesson inspects its stats mapping instead of depending on a machine-specific formatted timing table.",
+      "Each stats key is (filename, line_number, function_name). Its value is (primitive_calls, total_calls, own_time, cumulative_time, callers). own_time excludes subcalls; cumulative_time includes them. We select the known local name square and read entry[1], the total call count. The dictionary items() method supplies each key/value pair. The filter is scoped to this tiny workload, not a unique identifier for arbitrary large programs.\n```python\nimport cProfile\nimport pstats\n\ndef square(value):\n    return value * value\n\ndef workload(count):\n    total = 0\n    for value in range(count):\n        total += square(value)\n    return total\n\ndef profile_work(count):\n    profiler = cProfile.Profile()\n    result = profiler.runcall(workload, count)\n    stats = pstats.Stats(profiler)\n    calls = 0\n    for key, entry in stats.stats.items():\n        if key[2] == \"square\":\n            calls += entry[1]\n    return result, calls\nprint(profile_work(3))\n```\nOutput: (5, 3): the result is 0+1+4 and square ran three times.",
+      "The function returns (result, square_calls). Empty work has no square entry, so its initialized count remains zero. More calls do not automatically mean a function is the bottleneck; inspect accumulated time with workload context, and use timeit for focused timing. Optional practice: predict the result and count for four inputs before running. Do not assert exact own_time or cumulative_time values in either runtime."
+    ],
+    "analogy": {
+      "familiar": "Follow a small change from its starting state to its result.",
+      "connection": "Each instruction changes what the next instruction receives.",
+      "limit": "Use the actual code and checks rather than relying on the comparison."
+    },
+    "steps": [
+      "Read the requirement.",
+      "Make one change to the starter.",
+      "Run the checks.",
+      "Explain why a changed input produces its result."
+    ],
+    "starter": "import cProfile\nimport pstats\n\ndef square(value):\n    return value * value\n\ndef workload(count):\n    total = 0\n    for value in range(count):\n        total += square(value)\n    return total\n\ndef profile_work(count):\n    profiler = cProfile.Profile()\n    result = profiler.runcall(workload, count)\n    stats = pstats.Stats(profiler)\n    calls = 0\n    # TODO: find the known square helper and total its call count.\n    return result, calls\n",
+    "solution": "import cProfile\nimport pstats\n\ndef square(value):\n    return value * value\n\ndef workload(count):\n    total = 0\n    for value in range(count):\n        total += square(value)\n    return total\n\ndef profile_work(count):\n    profiler = cProfile.Profile()\n    result = profiler.runcall(workload, count)\n    stats = pstats.Stats(profiler)\n    calls = 0\n    for key, entry in stats.stats.items():\n        if key[2] == \"square\":\n            calls += entry[1]\n    return result, calls\n",
+    "runtime": "python",
+    "checks": [
+      {
+        "label": "Three inputs",
+        "expression": "profile_work(3) == (5, 3)"
+      },
+      {
+        "label": "Changed count",
+        "expression": "profile_work(4) == (14, 4)"
+      },
+      {
+        "label": "Empty workload",
+        "expression": "profile_work(0) == (0, 0)"
+      },
+      {
+        "label": "One call still matters",
+        "expression": "profile_work(1) == (0, 1)"
+      }
+    ],
+    "quiz": {
+      "question": "If count is four, what result and square call count should be observed?",
+      "choices": [
+        "(14, 3): the profiler ignores the zero-valued call.",
+        "A fixed elapsed time that must match every machine.",
+        "(14, 4): four helper calls compute 0+1+4+9."
+      ],
+      "answer": 2,
+      "explanation": "Call counts record execution even when a call returns zero. The changed workload adds one square call and its value nine; timing remains environment-dependent."
+    },
+    "hints": [
+      "Trace the visible worked calls before changing the starter."
+    ],
+    "math": null,
+    "filename": "main.py",
+    "estimatedMinutes": 12,
+    "externalNotes": "Supported baseline: native Python3.12.14 and bundled Pyodide0.27.7/Python3.12.7. No network or third-party dependency. Runtime evidence is separate from reading completion."
+  }
+]

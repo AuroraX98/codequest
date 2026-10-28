@@ -1,0 +1,15 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+const source=fs.readFileSync('components/CodeQuest.tsx','utf8');
+const start=source.indexOf('<div className="lesson-heading">');
+const end=source.indexOf('{view === "quest" && [',start);
+const heading=source.slice(start,end);
+assert.match(heading,/view === "studio" && studioMode === "course" \? "Current lesson · "/);
+assert.equal((heading.match(/<h1>\{lesson.title\}<\/h1>/g)||[]).length,1,'Uses the selected lesson title once, not a copied project title');
+assert.match(heading,/These projects are for this lesson\. Choose a different lesson to see its projects\./);
+assert.match(heading,/view === "studio" && studioMode === "course" &&/);
+assert.ok(start<source.indexOf('phase === "build" && isConcept'),'Shared heading precedes local/concept/AI branch');
+assert.ok(start<source.indexOf('phase === "build" && !isConcept && selectedProject'),'Shared heading precedes Python project choices');
+assert.ok(start<source.indexOf('phase === "build" && !isConcept && !selectedProject'),'Shared heading precedes all ordinary runnable projects');
+assert.ok(!heading.includes('onClick')&&!heading.includes('setState'),'Context adds no selection or progress mutation');
+console.log('PASS shared current-lesson project context for all course branches; practice workspace excluded');

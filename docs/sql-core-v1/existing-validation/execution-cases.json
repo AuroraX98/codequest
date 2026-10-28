@@ -1,0 +1,1111 @@
+[
+  {
+    "id": "sql-01-visible-sequence",
+    "lessonId": "sql-01",
+    "code": "CREATE TABLE demo_books (\n  id INTEGER PRIMARY KEY,\n  title TEXT,\n  status TEXT\n);\nINSERT INTO demo_books VALUES\n  (1, 'Ocean Map', 'unread'),\n  (2, 'Apple Tree', 'read'),\n  (3, 'Cloud Diary', 'unread');\nSELECT title, status\nFROM demo_books;\n\nSELECT title\nFROM demo_books\nWHERE status = 'unread'\nORDER BY title ASC;\n",
+    "checks": [
+      {
+        "label": "Completed the exact output comparison",
+        "expression": "SELECT 1"
+      }
+    ],
+    "outcome": "success",
+    "expectedResults": [
+      {
+        "columns": [
+          "title",
+          "status"
+        ],
+        "values": [
+          [
+            "Ocean Map",
+            "unread"
+          ],
+          [
+            "Apple Tree",
+            "read"
+          ],
+          [
+            "Cloud Diary",
+            "unread"
+          ]
+        ]
+      },
+      {
+        "columns": [
+          "title"
+        ],
+        "values": [
+          [
+            "Cloud Diary"
+          ],
+          [
+            "Ocean Map"
+          ]
+        ]
+      }
+    ],
+    "paragraphs": [
+      1,
+      3
+    ],
+    "outputScope": "Exact pinned engine fixture output; do not infer table scan order or stable EXPLAIN plan across versions."
+  },
+  {
+    "id": "sql-02-visible-sequence",
+    "lessonId": "sql-02",
+    "code": "CREATE TABLE demo_collection (\n  id INTEGER PRIMARY KEY,\n  name TEXT,\n  count INTEGER CHECK(count >= 0)\n);\nINSERT INTO demo_collection (id, name, count)\nVALUES\n  (1, 'Stones', 6),\n  (2, 'Tickets', 2),\n  (3, 'Ribbons', 4);\nSELECT id, name, count\nFROM demo_collection\nORDER BY id;\n\nINSERT INTO demo_collection (id, name, count)\nVALUES (4, 'Pins', 3);\nUPDATE demo_collection\nSET count = count + 1\nWHERE id = 1;\nUPDATE demo_collection\nSET name = 'Train tickets'\nWHERE id = 2;\nDELETE FROM demo_collection\nWHERE id = 3;\nSELECT name, count\nFROM demo_collection\nORDER BY id;\n",
+    "checks": [
+      {
+        "label": "Completed the exact output comparison",
+        "expression": "SELECT 1"
+      }
+    ],
+    "outcome": "success",
+    "expectedResults": [
+      {
+        "columns": [
+          "id",
+          "name",
+          "count"
+        ],
+        "values": [
+          [
+            1,
+            "Stones",
+            6
+          ],
+          [
+            2,
+            "Tickets",
+            2
+          ],
+          [
+            3,
+            "Ribbons",
+            4
+          ]
+        ]
+      },
+      {
+        "columns": [
+          "name",
+          "count"
+        ],
+        "values": [
+          [
+            "Stones",
+            7
+          ],
+          [
+            "Train tickets",
+            2
+          ],
+          [
+            "Pins",
+            3
+          ]
+        ]
+      }
+    ],
+    "paragraphs": [
+      1,
+      3
+    ],
+    "outputScope": "Exact pinned engine fixture output; do not infer table scan order or stable EXPLAIN plan across versions."
+  },
+  {
+    "id": "sql-03-visible-sequence",
+    "lessonId": "sql-03",
+    "code": "CREATE TABLE demo_activities (\n  id INTEGER PRIMARY KEY,\n  name TEXT,\n  difficulty TEXT,\n  minutes INTEGER\n);\nINSERT INTO demo_activities VALUES\n  (1, 'Draw a leaf', 'easy', 8),\n  (2, 'Build a bridge', 'hard', 8),\n  (3, 'Read a chapter', 'easy', 18);\nSELECT name, minutes\nFROM demo_activities\nWHERE minutes <= 8;\n\nSELECT name\nFROM demo_activities\nWHERE difficulty = 'easy'\n  AND minutes <= 8\nORDER BY name;\n",
+    "checks": [
+      {
+        "label": "Completed the exact output comparison",
+        "expression": "SELECT 1"
+      }
+    ],
+    "outcome": "success",
+    "expectedResults": [
+      {
+        "columns": [
+          "name",
+          "minutes"
+        ],
+        "values": [
+          [
+            "Draw a leaf",
+            8
+          ],
+          [
+            "Build a bridge",
+            8
+          ]
+        ]
+      },
+      {
+        "columns": [
+          "name"
+        ],
+        "values": [
+          [
+            "Draw a leaf"
+          ]
+        ]
+      }
+    ],
+    "paragraphs": [
+      1,
+      3
+    ],
+    "outputScope": "Exact pinned engine fixture output; do not infer table scan order or stable EXPLAIN plan across versions."
+  },
+  {
+    "id": "sql-04-visible-sequence",
+    "lessonId": "sql-04",
+    "code": "CREATE TABLE demo_sessions (\n  id INTEGER PRIMARY KEY,\n  subject TEXT,\n  minutes INTEGER\n);\nINSERT INTO demo_sessions VALUES\n  (1, 'Art', 12),\n  (2, 'Art', 24),\n  (3, 'Music', 18),\n  (4, 'Music', NULL);\nSELECT COUNT(*) AS rows,\n       COUNT(minutes) AS known_minutes\nFROM demo_sessions;\n\nSELECT subject,\n       COUNT(minutes) AS session_count,\n       SUM(minutes) AS total_minutes,\n       AVG(minutes) AS average_minutes\nFROM demo_sessions\nGROUP BY subject\nORDER BY subject;\n",
+    "checks": [
+      {
+        "label": "Completed the exact output comparison",
+        "expression": "SELECT 1"
+      }
+    ],
+    "outcome": "success",
+    "expectedResults": [
+      {
+        "columns": [
+          "rows",
+          "known_minutes"
+        ],
+        "values": [
+          [
+            4,
+            3
+          ]
+        ]
+      },
+      {
+        "columns": [
+          "subject",
+          "session_count",
+          "total_minutes",
+          "average_minutes"
+        ],
+        "values": [
+          [
+            "Art",
+            2,
+            36,
+            18
+          ],
+          [
+            "Music",
+            1,
+            18,
+            18
+          ]
+        ]
+      }
+    ],
+    "paragraphs": [
+      1,
+      3
+    ],
+    "outputScope": "Exact pinned engine fixture output; do not infer table scan order or stable EXPLAIN plan across versions."
+  },
+  {
+    "id": "sql-05-visible-sequence",
+    "lessonId": "sql-05",
+    "code": "CREATE TABLE demo_authors (\n  id INTEGER PRIMARY KEY,\n  name TEXT\n);\nCREATE TABLE demo_books (\n  id INTEGER PRIMARY KEY,\n  author_id INTEGER REFERENCES demo_authors(id),\n  title TEXT\n);\nINSERT INTO demo_authors VALUES\n  (1, 'Nora'), (2, 'Luis'), (3, 'Imani');\nINSERT INTO demo_books VALUES\n  (1, 1, 'Sea Path'),\n  (2, 1, 'Garden Gate'),\n  (3, 2, 'Sky Notes');\nSELECT a.name, b.title\nFROM demo_authors AS a\nINNER JOIN demo_books AS b ON b.author_id = a.id;\n\nSELECT a.name AS author, b.title\nFROM demo_authors AS a\nLEFT JOIN demo_books AS b\n  ON b.author_id = a.id\nORDER BY a.id, b.title;\n\nSELECT COUNT(*) AS joined_rows, COUNT(b.title) AS known_titles\nFROM demo_authors AS a\nLEFT JOIN demo_books AS b ON b.author_id = a.id;\n",
+    "checks": [
+      {
+        "label": "Completed the exact output comparison",
+        "expression": "SELECT 1"
+      }
+    ],
+    "outcome": "success",
+    "expectedResults": [
+      {
+        "columns": [
+          "name",
+          "title"
+        ],
+        "values": [
+          [
+            "Nora",
+            "Sea Path"
+          ],
+          [
+            "Nora",
+            "Garden Gate"
+          ],
+          [
+            "Luis",
+            "Sky Notes"
+          ]
+        ]
+      },
+      {
+        "columns": [
+          "author",
+          "title"
+        ],
+        "values": [
+          [
+            "Nora",
+            "Garden Gate"
+          ],
+          [
+            "Nora",
+            "Sea Path"
+          ],
+          [
+            "Luis",
+            "Sky Notes"
+          ],
+          [
+            "Imani",
+            null
+          ]
+        ]
+      },
+      {
+        "columns": [
+          "joined_rows",
+          "known_titles"
+        ],
+        "values": [
+          [
+            4,
+            3
+          ]
+        ]
+      }
+    ],
+    "paragraphs": [
+      1,
+      3,
+      4
+    ],
+    "outputScope": "Exact pinned engine fixture output; do not infer table scan order or stable EXPLAIN plan across versions."
+  },
+  {
+    "id": "sql-06-visible-sequence",
+    "lessonId": "sql-06",
+    "code": "CREATE TABLE demo_scores (\n  id INTEGER PRIMARY KEY,\n  learner TEXT,\n  subject TEXT,\n  score INTEGER\n);\nINSERT INTO demo_scores VALUES\n  (1, 'Nia', 'Art', 50),\n  (2, 'Leo', 'Art', 70),\n  (3, 'Uma', 'Art', 60),\n  (4, 'Nia', 'Music', 100),\n  (5, 'Leo', 'Music', 80);\nSELECT learner, subject, score\nFROM demo_scores\nWHERE score > (SELECT AVG(score) FROM demo_scores);\n\nSELECT outer_score.learner,\n       outer_score.subject,\n       outer_score.score\nFROM demo_scores AS outer_score\nWHERE outer_score.score > (\n  SELECT AVG(inner_score.score)\n  FROM demo_scores AS inner_score\n  WHERE inner_score.subject = outer_score.subject\n);\n",
+    "checks": [
+      {
+        "label": "Completed the exact output comparison",
+        "expression": "SELECT 1"
+      }
+    ],
+    "outcome": "success",
+    "expectedResults": [
+      {
+        "columns": [
+          "learner",
+          "subject",
+          "score"
+        ],
+        "values": [
+          [
+            "Nia",
+            "Music",
+            100
+          ],
+          [
+            "Leo",
+            "Music",
+            80
+          ]
+        ]
+      },
+      {
+        "columns": [
+          "learner",
+          "subject",
+          "score"
+        ],
+        "values": [
+          [
+            "Leo",
+            "Art",
+            70
+          ],
+          [
+            "Nia",
+            "Music",
+            100
+          ]
+        ]
+      }
+    ],
+    "paragraphs": [
+      1,
+      3
+    ],
+    "outputScope": "Exact pinned engine fixture output; do not infer table scan order or stable EXPLAIN plan across versions."
+  },
+  {
+    "id": "sql-07-visible-sequence",
+    "lessonId": "sql-07",
+    "code": "CREATE TABLE demo_practice (\n  id INTEGER PRIMARY KEY,\n  subject TEXT,\n  day TEXT,\n  minutes INTEGER\n);\nINSERT INTO demo_practice VALUES\n  (1, 'Art', '2026-01-01', 10),\n  (2, 'Art', '2026-01-02', 25),\n  (3, 'Art', '2026-01-03', 25),\n  (4, 'Music', '2026-01-01', 8);\nSELECT subject, day, minutes,\n  SUM(minutes) OVER (\n    PARTITION BY subject\n    ORDER BY day, id\n    ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW\n  ) AS running_total\nFROM demo_practice\nORDER BY subject, day, id;\n\nSELECT subject, day, minutes,\n  RANK() OVER (\n    PARTITION BY subject\n    ORDER BY minutes DESC\n  ) AS duration_rank\nFROM demo_practice\nORDER BY subject, day, id;\n",
+    "checks": [
+      {
+        "label": "Completed the exact output comparison",
+        "expression": "SELECT 1"
+      }
+    ],
+    "outcome": "success",
+    "expectedResults": [
+      {
+        "columns": [
+          "subject",
+          "day",
+          "minutes",
+          "running_total"
+        ],
+        "values": [
+          [
+            "Art",
+            "2026-01-01",
+            10,
+            10
+          ],
+          [
+            "Art",
+            "2026-01-02",
+            25,
+            35
+          ],
+          [
+            "Art",
+            "2026-01-03",
+            25,
+            60
+          ],
+          [
+            "Music",
+            "2026-01-01",
+            8,
+            8
+          ]
+        ]
+      },
+      {
+        "columns": [
+          "subject",
+          "day",
+          "minutes",
+          "duration_rank"
+        ],
+        "values": [
+          [
+            "Art",
+            "2026-01-01",
+            10,
+            3
+          ],
+          [
+            "Art",
+            "2026-01-02",
+            25,
+            1
+          ],
+          [
+            "Art",
+            "2026-01-03",
+            25,
+            1
+          ],
+          [
+            "Music",
+            "2026-01-01",
+            8,
+            1
+          ]
+        ]
+      }
+    ],
+    "paragraphs": [
+      1,
+      3
+    ],
+    "outputScope": "Exact pinned engine fixture output; do not infer table scan order or stable EXPLAIN plan across versions."
+  },
+  {
+    "id": "sql-08-visible-sequence",
+    "lessonId": "sql-08",
+    "code": "CREATE TABLE demo_books (\n  id INTEGER PRIMARY KEY,\n  title TEXT,\n  genre TEXT\n);\nINSERT INTO demo_books VALUES\n  (1, 'Stone Cities', 'history'),\n  (2, 'Cloud Tales', 'fiction'),\n  (3, 'Ancient Roads', 'history'),\n  (4, 'Trade Routes', 'history');\nEXPLAIN QUERY PLAN\nSELECT title\nFROM demo_books\nWHERE genre = 'history'\nORDER BY title\nLIMIT 2;\n\nCREATE INDEX demo_genre_title\nON demo_books (genre, title);\nEXPLAIN QUERY PLAN\nSELECT title\nFROM demo_books\nWHERE genre = 'history'\nORDER BY title\nLIMIT 2;\nSELECT title\nFROM demo_books\nWHERE genre = 'history'\nORDER BY title\nLIMIT 2;\n",
+    "checks": [
+      {
+        "label": "Completed the exact output comparison",
+        "expression": "SELECT 1"
+      }
+    ],
+    "outcome": "success",
+    "expectedResults": [
+      {
+        "columns": [
+          "id",
+          "parent",
+          "notused",
+          "detail"
+        ],
+        "values": [
+          [
+            4,
+            0,
+            216,
+            "SCAN demo_books"
+          ],
+          [
+            17,
+            0,
+            0,
+            "USE TEMP B-TREE FOR ORDER BY"
+          ]
+        ]
+      },
+      {
+        "columns": [
+          "id",
+          "parent",
+          "notused",
+          "detail"
+        ],
+        "values": [
+          [
+            4,
+            0,
+            56,
+            "SEARCH demo_books USING COVERING INDEX demo_genre_title (genre=?)"
+          ]
+        ]
+      },
+      {
+        "columns": [
+          "title"
+        ],
+        "values": [
+          [
+            "Ancient Roads"
+          ],
+          [
+            "Stone Cities"
+          ]
+        ]
+      }
+    ],
+    "paragraphs": [
+      1,
+      3
+    ],
+    "outputScope": "Exact pinned engine fixture output; do not infer table scan order or stable EXPLAIN plan across versions."
+  },
+  {
+    "id": "sql-09-visible-sequence",
+    "lessonId": "sql-09",
+    "code": "CREATE TABLE demo_inventory (\n  id TEXT PRIMARY KEY,\n  quantity INTEGER NOT NULL CHECK(quantity >= 0)\n);\nINSERT INTO demo_inventory VALUES ('X', 12), ('Y', 5);\nBEGIN;\nUPDATE demo_inventory\nSET quantity = quantity - 4\nWHERE id = 'X' AND quantity >= 4;\nUPDATE demo_inventory\nSET quantity = quantity + 4\nWHERE id = 'Y' AND changes() = 1;\nCOMMIT;\nSELECT id, quantity FROM demo_inventory ORDER BY id;\n\nBEGIN;\nUPDATE demo_inventory\nSET quantity = quantity - 2\nWHERE id = 'X';\nUPDATE demo_inventory\nSET quantity = quantity + 2\nWHERE id = 'Y';\nROLLBACK;\nSELECT id, quantity FROM demo_inventory ORDER BY id;\n",
+    "checks": [
+      {
+        "label": "Completed the exact output comparison",
+        "expression": "SELECT 1"
+      }
+    ],
+    "outcome": "success",
+    "expectedResults": [
+      {
+        "columns": [
+          "id",
+          "quantity"
+        ],
+        "values": [
+          [
+            "X",
+            8
+          ],
+          [
+            "Y",
+            9
+          ]
+        ]
+      },
+      {
+        "columns": [
+          "id",
+          "quantity"
+        ],
+        "values": [
+          [
+            "X",
+            8
+          ],
+          [
+            "Y",
+            9
+          ]
+        ]
+      }
+    ],
+    "paragraphs": [
+      1,
+      3
+    ],
+    "outputScope": "Exact pinned engine fixture output; do not infer table scan order or stable EXPLAIN plan across versions."
+  },
+  {
+    "id": "sql-10-visible-sequence",
+    "lessonId": "sql-10",
+    "code": "WITH supplies(category) AS (\n  VALUES ('paper'), ('tools'), ('paper')\n)\nSELECT DISTINCT category\nFROM supplies\nORDER BY category;\n\nWITH labels(name) AS (VALUES ('A'), (NULL), (''), ('A'), ('B'))\nSELECT DISTINCT name\nFROM labels\nWHERE name IS NOT NULL AND name <> ''\nORDER BY name;\n",
+    "checks": [
+      {
+        "label": "Completed the exact output comparison",
+        "expression": "SELECT 1"
+      }
+    ],
+    "outcome": "success",
+    "expectedResults": [
+      {
+        "columns": [
+          "category"
+        ],
+        "values": [
+          [
+            "paper"
+          ],
+          [
+            "tools"
+          ]
+        ]
+      },
+      {
+        "columns": [
+          "name"
+        ],
+        "values": [
+          [
+            "A"
+          ],
+          [
+            "B"
+          ]
+        ]
+      }
+    ],
+    "paragraphs": [
+      2,
+      4
+    ],
+    "outputScope": "Exact pinned engine fixture output; do not infer table scan order or stable EXPLAIN plan across versions."
+  },
+  {
+    "id": "sql-11-visible-sequence",
+    "lessonId": "sql-11",
+    "code": "WITH data(email) AS (VALUES ('  a@example.org  '), (''), ('   '), (NULL))\nSELECT NULLIF(TRIM(email), '') AS cleaned\nFROM data;\n\nWITH people(email, phone) AS (VALUES ('   ', ' 555 0100 '))\nSELECT COALESCE(\n  NULLIF(TRIM(email), ''),\n  NULLIF(TRIM(phone), ''),\n  'No contact yet'\n) AS contact\nFROM people;\n",
+    "checks": [
+      {
+        "label": "Completed the exact output comparison",
+        "expression": "SELECT 1"
+      }
+    ],
+    "outcome": "success",
+    "expectedResults": [
+      {
+        "columns": [
+          "cleaned"
+        ],
+        "values": [
+          [
+            "a@example.org"
+          ],
+          [
+            null
+          ],
+          [
+            null
+          ],
+          [
+            null
+          ]
+        ]
+      },
+      {
+        "columns": [
+          "contact"
+        ],
+        "values": [
+          [
+            "555 0100"
+          ]
+        ]
+      }
+    ],
+    "paragraphs": [
+      2,
+      4
+    ],
+    "outputScope": "Exact pinned engine fixture output; do not infer table scan order or stable EXPLAIN plan across versions."
+  },
+  {
+    "id": "sql-12-visible-sequence",
+    "lessonId": "sql-12",
+    "code": "WITH orders(status, cents) AS (VALUES ('paid', 300), ('pending', 500), ('paid', 200))\nSELECT SUM(CASE WHEN status = 'paid' THEN 1 ELSE 0 END) AS paid_orders,\n       SUM(CASE WHEN status = 'paid' THEN cents ELSE 0 END) AS paid_cents\nFROM orders;\n\nWITH customers(id) AS (VALUES (1), (2)),\norders(id, customer_id) AS (VALUES (10, 1))\nSELECT c.id, COUNT(o.id) AS total_orders\nFROM customers AS c LEFT JOIN orders AS o ON o.customer_id = c.id\nGROUP BY c.id\nORDER BY c.id;\n",
+    "checks": [
+      {
+        "label": "Completed the exact output comparison",
+        "expression": "SELECT 1"
+      }
+    ],
+    "outcome": "success",
+    "expectedResults": [
+      {
+        "columns": [
+          "paid_orders",
+          "paid_cents"
+        ],
+        "values": [
+          [
+            2,
+            500
+          ]
+        ]
+      },
+      {
+        "columns": [
+          "id",
+          "total_orders"
+        ],
+        "values": [
+          [
+            1,
+            1
+          ],
+          [
+            2,
+            0
+          ]
+        ]
+      }
+    ],
+    "paragraphs": [
+      2,
+      4
+    ],
+    "outputScope": "Exact pinned engine fixture output; do not infer table scan order or stable EXPLAIN plan across versions."
+  },
+  {
+    "id": "sql-13-visible-sequence",
+    "lessonId": "sql-13",
+    "code": "WITH RECURSIVE numbers(n) AS (\n  SELECT 0\n  UNION ALL\n  SELECT n + 1 FROM numbers WHERE n < 3\n)\nSELECT n FROM numbers ORDER BY n;\n\nWITH parent(id, path, depth) AS (VALUES (1, 'Home', 0)),\nchild(id, name, parent_id) AS (VALUES (2, 'Notes', 1))\nSELECT child.id, parent.path || '/' || child.name AS path, parent.depth + 1 AS depth\nFROM child JOIN parent ON child.parent_id = parent.id;\n",
+    "checks": [
+      {
+        "label": "Completed the exact output comparison",
+        "expression": "SELECT 1"
+      }
+    ],
+    "outcome": "success",
+    "expectedResults": [
+      {
+        "columns": [
+          "n"
+        ],
+        "values": [
+          [
+            0
+          ],
+          [
+            1
+          ],
+          [
+            2
+          ],
+          [
+            3
+          ]
+        ]
+      },
+      {
+        "columns": [
+          "id",
+          "path",
+          "depth"
+        ],
+        "values": [
+          [
+            2,
+            "Home/Notes",
+            1
+          ]
+        ]
+      }
+    ],
+    "paragraphs": [
+      2,
+      4
+    ],
+    "outputScope": "Exact pinned engine fixture output; do not infer table scan order or stable EXPLAIN plan across versions."
+  },
+  {
+    "id": "sql-14-visible-sequence",
+    "lessonId": "sql-14",
+    "code": "WITH practice(subject, minutes) AS (\n  VALUES ('Drawing', 8), ('Drawing', 14), ('Singing', 15)\n)\nSELECT subject, SUM(minutes) AS total_minutes\nFROM practice\nGROUP BY subject\nHAVING SUM(minutes) >= 20\nORDER BY subject;\n",
+    "checks": [
+      {
+        "label": "Completed the exact output comparison",
+        "expression": "SELECT 1"
+      }
+    ],
+    "outcome": "success",
+    "expectedResults": [
+      {
+        "columns": [
+          "subject",
+          "total_minutes"
+        ],
+        "values": [
+          [
+            "Drawing",
+            22
+          ]
+        ]
+      }
+    ],
+    "paragraphs": [
+      3
+    ],
+    "outputScope": "Exact pinned engine fixture output; do not infer table scan order or stable EXPLAIN plan across versions."
+  },
+  {
+    "id": "sql-15-visible-sequence",
+    "lessonId": "sql-15",
+    "code": "PRAGMA foreign_keys = ON;\n\nCREATE TABLE teams (id INTEGER PRIMARY KEY);\nCREATE TABLE players (\n  id INTEGER PRIMARY KEY,\n  team_id INTEGER NOT NULL REFERENCES teams(id)\n);\n\nINSERT INTO teams VALUES (8);\nINSERT INTO players VALUES (1, 8);\n",
+    "checks": [
+      {
+        "label": "Parent and accepted child exist",
+        "expression": "SELECT (SELECT count(*) FROM teams WHERE id=8)=1 AND (SELECT count(*) FROM players WHERE id=1 AND team_id=8)=1"
+      },
+      {
+        "label": "Foreign-key enforcement enabled",
+        "expression": "PRAGMA foreign_keys"
+      }
+    ],
+    "outcome": "success",
+    "expectedResults": [],
+    "paragraphs": [
+      3,
+      4,
+      6
+    ],
+    "outputScope": "Exact pinned engine fixture output; do not infer table scan order or stable EXPLAIN plan across versions."
+  },
+  {
+    "id": "sql-16-visible-sequence",
+    "lessonId": "sql-16",
+    "code": "SELECT 'Ari' AS name\nUNION\nSELECT 'Ari' AS name;\n\nSELECT 'Ari' AS name\nUNION ALL\nSELECT 'Ari' AS name;\n",
+    "checks": [
+      {
+        "label": "Completed the exact output comparison",
+        "expression": "SELECT 1"
+      }
+    ],
+    "outcome": "success",
+    "expectedResults": [
+      {
+        "columns": [
+          "name"
+        ],
+        "values": [
+          [
+            "Ari"
+          ]
+        ]
+      },
+      {
+        "columns": [
+          "name"
+        ],
+        "values": [
+          [
+            "Ari"
+          ],
+          [
+            "Ari"
+          ]
+        ]
+      }
+    ],
+    "paragraphs": [
+      2,
+      4
+    ],
+    "outputScope": "Exact pinned engine fixture output; do not infer table scan order or stable EXPLAIN plan across versions."
+  },
+  {
+    "id": "sql-17-visible-sequence",
+    "lessonId": "sql-17",
+    "code": "CREATE TABLE morning(name TEXT);\nCREATE TABLE evening(name TEXT);\nINSERT INTO morning VALUES('Ari'),('Bo'),('Bo');\nINSERT INTO evening VALUES('Bo'),('Cy');\nSELECT name\nFROM morning\nINTERSECT\nSELECT name\nFROM evening\nORDER BY name;\nSELECT name\nFROM morning\nEXCEPT\nSELECT name\nFROM evening\nORDER BY name;\n",
+    "checks": [
+      {
+        "label": "Completed the exact output comparison",
+        "expression": "SELECT 1"
+      }
+    ],
+    "outcome": "success",
+    "expectedResults": [
+      {
+        "columns": [
+          "name"
+        ],
+        "values": [
+          [
+            "Bo"
+          ]
+        ]
+      },
+      {
+        "columns": [
+          "name"
+        ],
+        "values": [
+          [
+            "Ari"
+          ]
+        ]
+      }
+    ],
+    "paragraphs": [
+      5
+    ],
+    "outputScope": "Exact pinned engine fixture output; do not infer table scan order or stable EXPLAIN plan across versions."
+  },
+  {
+    "id": "sql-18-visible-sequence",
+    "lessonId": "sql-18",
+    "code": "CREATE TABLE raw_items(category_id INTEGER,category_name TEXT);\nCREATE TABLE categories(id INTEGER PRIMARY KEY,name TEXT);\nINSERT INTO raw_items VALUES(10,'paper'),(10,'paper'),(20,'tools');\nINSERT INTO categories(id,name)\nSELECT DISTINCT category_id,category_name\nFROM raw_items;\nSELECT id,name\nFROM categories\nORDER BY id;\n",
+    "checks": [
+      {
+        "label": "Completed the exact output comparison",
+        "expression": "SELECT 1"
+      }
+    ],
+    "outcome": "success",
+    "expectedResults": [
+      {
+        "columns": [
+          "id",
+          "name"
+        ],
+        "values": [
+          [
+            10,
+            "paper"
+          ],
+          [
+            20,
+            "tools"
+          ]
+        ]
+      }
+    ],
+    "paragraphs": [
+      5
+    ],
+    "outputScope": "Exact pinned engine fixture output; do not infer table scan order or stable EXPLAIN plan across versions."
+  },
+  {
+    "id": "sql-19-visible-sequence",
+    "lessonId": "sql-19",
+    "code": "CREATE TABLE authors(id INTEGER PRIMARY KEY);\nCREATE TABLE books(id INTEGER PRIMARY KEY,author_id INTEGER);\nINSERT INTO authors VALUES(1),(2);\nINSERT INTO books VALUES(10,1),(11,1);\nSELECT a.id\nFROM authors AS a\nWHERE EXISTS(\nSELECT 1\nFROM books AS b\nWHERE b.author_id=a.id)\nORDER BY a.id;\nSELECT a.id\nFROM authors AS a\nWHERE NOT EXISTS(\nSELECT 1\nFROM books AS b\nWHERE b.author_id=a.id)\nORDER BY a.id;\n",
+    "checks": [
+      {
+        "label": "Completed the exact output comparison",
+        "expression": "SELECT 1"
+      }
+    ],
+    "outcome": "success",
+    "expectedResults": [
+      {
+        "columns": [
+          "id"
+        ],
+        "values": [
+          [
+            1
+          ]
+        ]
+      },
+      {
+        "columns": [
+          "id"
+        ],
+        "values": [
+          [
+            2
+          ]
+        ]
+      }
+    ],
+    "paragraphs": [
+      2
+    ],
+    "outputScope": "Exact pinned engine fixture output; do not infer table scan order or stable EXPLAIN plan across versions."
+  },
+  {
+    "id": "sql-20-visible-sequence",
+    "lessonId": "sql-20",
+    "code": "WITH demo(amount) AS(VALUES(-2),(3),(4)),\npositive AS(\nSELECT amount\nFROM demo\nWHERE amount>0)\nSELECT SUM(amount) AS total\nFROM positive;\n",
+    "checks": [
+      {
+        "label": "Completed the exact output comparison",
+        "expression": "SELECT 1"
+      }
+    ],
+    "outcome": "success",
+    "expectedResults": [
+      {
+        "columns": [
+          "total"
+        ],
+        "values": [
+          [
+            7
+          ]
+        ]
+      }
+    ],
+    "paragraphs": [
+      2
+    ],
+    "outputScope": "Exact pinned engine fixture output; do not infer table scan order or stable EXPLAIN plan across versions."
+  },
+  {
+    "id": "sql-21-visible-sequence",
+    "lessonId": "sql-21",
+    "code": "CREATE TABLE demo_settings(key TEXT PRIMARY KEY NOT NULL,value TEXT NOT NULL);\nINSERT INTO demo_settings VALUES('sound','on'),('font','large');\nINSERT INTO demo_settings(key,value) VALUES('sound','off') ON CONFLICT(key) DO UPDATE SET value=excluded.value;\nINSERT INTO demo_settings(key,value) VALUES('alerts','on') ON CONFLICT(key) DO UPDATE SET value=excluded.value;\nSELECT key,value\nFROM demo_settings\nORDER BY key;\n",
+    "checks": [
+      {
+        "label": "Completed the exact output comparison",
+        "expression": "SELECT 1"
+      }
+    ],
+    "outcome": "success",
+    "expectedResults": [
+      {
+        "columns": [
+          "key",
+          "value"
+        ],
+        "values": [
+          [
+            "alerts",
+            "on"
+          ],
+          [
+            "font",
+            "large"
+          ],
+          [
+            "sound",
+            "off"
+          ]
+        ]
+      }
+    ],
+    "paragraphs": [
+      2
+    ],
+    "outputScope": "Exact pinned engine fixture output; do not infer table scan order or stable EXPLAIN plan across versions."
+  },
+  {
+    "id": "sql-22-visible-sequence",
+    "lessonId": "sql-22",
+    "code": "CREATE TABLE demo_accounts(id INTEGER PRIMARY KEY,balance INTEGER);\nINSERT INTO demo_accounts VALUES(1,10),(2,20);\nBEGIN;\nUPDATE demo_accounts SET balance=15\nWHERE id=1;\nSAVEPOINT trial;\nUPDATE demo_accounts SET balance=99\nWHERE id=2;\nROLLBACK TO trial;\nRELEASE trial;\nCOMMIT;\nSELECT id,balance\nFROM demo_accounts\nORDER BY id;\n",
+    "checks": [
+      {
+        "label": "Completed the exact output comparison",
+        "expression": "SELECT 1"
+      }
+    ],
+    "outcome": "success",
+    "expectedResults": [
+      {
+        "columns": [
+          "id",
+          "balance"
+        ],
+        "values": [
+          [
+            1,
+            15
+          ],
+          [
+            2,
+            20
+          ]
+        ]
+      }
+    ],
+    "paragraphs": [
+      3
+    ],
+    "outputScope": "Exact pinned engine fixture output; do not infer table scan order or stable EXPLAIN plan across versions."
+  },
+  {
+    "id": "sql-23-visible-sequence",
+    "lessonId": "sql-23",
+    "code": "SELECT date('2026-04-30', '+1 day');\n",
+    "checks": [
+      {
+        "label": "Completed the exact output comparison",
+        "expression": "SELECT 1"
+      }
+    ],
+    "outcome": "success",
+    "expectedResults": [
+      {
+        "columns": [
+          "date('2026-04-30', '+1 day')"
+        ],
+        "values": [
+          [
+            "2026-05-01"
+          ]
+        ]
+      }
+    ],
+    "paragraphs": [
+      2
+    ],
+    "outputScope": "Exact pinned engine fixture output; do not infer table scan order or stable EXPLAIN plan across versions."
+  },
+  {
+    "id": "sql-24-visible-sequence",
+    "lessonId": "sql-24",
+    "code": "CREATE TABLE demo(id INTEGER PRIMARY KEY,label TEXT NOT NULL);\nCREATE TABLE demo_log(old_label TEXT,new_label TEXT);\nINSERT INTO demo VALUES(1,'Draft');\nCREATE TRIGGER log_label AFTER UPDATE OF label ON demo\nWHEN NEW.label <> OLD.label\nBEGIN\n INSERT INTO demo_log(old_label,new_label) VALUES(OLD.label,NEW.label);\nEND;\nUPDATE demo SET label='Ready'\nWHERE id=1;\nUPDATE demo SET label='Ready'\nWHERE id=1;\nSELECT old_label,new_label\nFROM demo_log;\n",
+    "checks": [
+      {
+        "label": "Completed the exact output comparison",
+        "expression": "SELECT 1"
+      }
+    ],
+    "outcome": "success",
+    "expectedResults": [
+      {
+        "columns": [
+          "old_label",
+          "new_label"
+        ],
+        "values": [
+          [
+            "Draft",
+            "Ready"
+          ]
+        ]
+      }
+    ],
+    "paragraphs": [
+      3
+    ],
+    "outputScope": "Exact pinned engine fixture output; do not infer table scan order or stable EXPLAIN plan across versions."
+  }
+]

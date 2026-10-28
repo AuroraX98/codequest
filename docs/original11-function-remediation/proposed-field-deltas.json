@@ -1,0 +1,353 @@
+{
+  "snapshotSourceSha256": "4f00eaccd89789bf80eff765834fa3e112fd34f6402ec6cb2229a1fe3dff2f22",
+  "proposalOnly": true,
+  "changes": [
+    {
+      "lessonId": "backend-01",
+      "field": "explanation[3]",
+      "old": "Express is a package for writing HTTP routes in Node.js, which runs JavaScript outside the browser. Save this complete separate example as server.mjs in a local project with the supplied Express dependency installed:\n```javascript\nimport express from 'express';\nconst app = express();\napp.use(express.json({ limit: '20kb' }));\nconst visits = [];\napp.get('/visits', (req, res) => res.json(visits));\napp.post('/visits', (req, res) => {\n  const minutes = req.body?.minutes;\n  if (!Number.isInteger(minutes) || minutes < 1 || minutes > 180) {\n    return res.status(400).json({ error: 'Use 1 to 180 whole minutes' });\n  }\n  const visit = { id: crypto.randomUUID(), minutes };\n  visits.push(visit);\n  res.status(201).json(visit);\n});\napp.listen(3000, '127.0.0.1', () => console.log('Local server ready'));\n```\nRun with Node.js 22.13 or newer. The callback receives req for request information and res for the response. listen starts the local server on port 3000.",
+      "new": "Express is a package for writing HTTP routes in Node.js, which runs JavaScript outside the browser. Save this complete separate example as server.mjs in a local project with the supplied Express dependency installed:\n```javascript\nimport express from 'express';\nconst app = express();\napp.use(express.json({ limit: '20kb' }));\nconst visits = [];\napp.get('/visits', (req, res) => res.json(visits));\napp.post('/visits', (req, res) => {\n  const minutes = req.body?.minutes;\n  if (!Number.isInteger(minutes) || minutes < 1 || minutes > 180) {\n    return res.status(400).json({ error: 'Use 1 to 180 whole minutes' });\n  }\n  const visit = { id: crypto.randomUUID(), minutes };\n  visits.push(visit);\n  res.status(201).json(visit);\n});\napp.listen(3000, '127.0.0.1', () => console.log('Local server ready'));\n```\nRun with Node.js 22.13 or newer. The callback receives req for request information and res for the response. listen starts the local server on port 3000.\n\nHere, express() takes no arguments and returns the application object used to register routes. crypto.randomUUID() also takes no arguments; each call returns a UUID string for an identifier, not a numeric sequence. The example stores that returned string in visit.id. These calls do not themselves verify the caller or save data durably.",
+      "targets": [
+        "express",
+        "crypto.randomUUID"
+      ],
+      "paragraphCountUnchanged": true,
+      "quizAndChecksUnchanged": true,
+      "runtimePlan": "Actual Node runtime; local server callbacks mocked only where explicitly described, no network claim",
+      "status": "proposed, not approved or executed"
+    },
+    {
+      "lessonId": "backend-02",
+      "field": "explanation[5]",
+      "old": "Set membership helps compare ids. Suppose saved ids are {x, y} and requested ids are {x, z}. Their overlap is {x}, because only x occurs in both. z is requested but missing, and y is stored but not requested. Positions do not decide membership. A JavaScript Set stores distinct values and has(id) checks whether a particular id is present.",
+      "new": "Set membership helps compare ids. Suppose saved ids are {x, y} and requested ids are {x, z}. Their overlap is {x}, because only x occurs in both. z is requested but missing, and y is stored but not requested. Positions do not decide membership. A JavaScript Set stores distinct values and has(id) checks whether a particular id is present.\n\n```javascript\nconst savedIds = new Set([\"x\", \"y\"]);\nconsole.log(savedIds.has(\"x\"));\nconsole.log(savedIds.has(\"z\"));\n```\nThis prints true, then false. has receives one candidate value, returns a Boolean and does not change the set.",
+      "targets": [
+        "Set.has"
+      ],
+      "paragraphCountUnchanged": true,
+      "quizAndChecksUnchanged": true,
+      "runtimePlan": "Actual Node runtime; local server callbacks mocked only where explicitly described, no network claim",
+      "status": "proposed, not approved or executed"
+    },
+    {
+      "lessonId": "backend-04",
+      "field": "explanation[5]",
+      "old": "An Express middleware function typically receives req, res, and next. It either sends an error response and returns, or calls next() to continue to the route. Validation middleware can reject a malformed body before writing. A final error handler can report a useful failure without exposing private records, passwords, or internal credentials. Responses and logs must not reveal another user's data just to explain permission denial.",
+      "new": "An Express middleware function typically receives req, res, and next. It either sends an error response and returns, or calls next() to continue to the route. Validation middleware can reject a malformed body before writing. A final error handler can report a useful failure without exposing private records, passwords, or internal credentials. Responses and logs must not reveal another user's data just to explain permission denial.\n\nA minimal continuation callback example is:\n```javascript\nfunction requireSession(req, res, next) {\n  if (!req.session) return res.status(401).json({error: \"Sign in\"});\n  next();\n}\n```\nExpress supplies next; calling it without an argument continues to later middleware. The missing-session branch returns before that call. This fragment requires an Express route and verified-session middleware; it is not a sign-in implementation.\n\nCalling requireSession({session:{}}, {}, () => console.log(\"Continue\")) prints Continue through the supplied callback. This local call demonstrates continuation only; the verified-session fixture is not authentication.",
+      "targets": [
+        "next"
+      ],
+      "paragraphCountUnchanged": true,
+      "quizAndChecksUnchanged": true,
+      "runtimePlan": "Actual Node runtime; local server callbacks mocked only where explicitly described, no network claim",
+      "status": "proposed, not approved or executed"
+    },
+    {
+      "lessonId": "backend-06",
+      "field": "explanation[2]",
+      "old": "The supplied parsePage helper accepts digit-only text, converts it with Number, and checks Number.isSafeInteger.",
+      "new": "The supplied parsePage helper accepts digit-only text, converts it with Number, and checks Number.isSafeInteger.\n\n```javascript\nconsole.log(Number(\"12\"));\nconsole.log(Number.isSafeInteger(12));\nconsole.log(Number.isSafeInteger(1.5));\nconsole.log(Number.isSafeInteger(9007199254740992));\n```\nThe outputs are 12, true, false, false. Number converts the supplied text to a number. Number.isSafeInteger receives a value and returns whether it is an integer within JavaScript’s safely representable integer range. It does not convert quoted text or validate the allowed page range; those remain separate rules.",
+      "targets": [
+        "Number",
+        "Number.isSafeInteger"
+      ],
+      "paragraphCountUnchanged": true,
+      "quizAndChecksUnchanged": true,
+      "runtimePlan": "Actual Node runtime; local server callbacks mocked only where explicitly described, no network claim",
+      "status": "proposed, not approved or executed"
+    },
+    {
+      "lessonId": "backend-08",
+      "field": "explanation[3]",
+      "old": "This route order gives validation a chance to stop the request.\n```javascript\napp.use(express.json());\napp.post(\"/labels\", requireLabel, (req, res) => {\n  res.status(201).json({label: req.cleanLabel});\n});\n```",
+      "new": "This route order gives validation a chance to stop the request.\n```javascript\napp.use(express.json());\napp.post(\"/labels\", requireLabel, (req, res) => {\n  res.status(201).json({label: req.cleanLabel});\n});\n```\n\nFor example, this middleware supplies that validated field:\n```javascript\nfunction requireLabel(req, res, next) {\n  if (typeof req.body?.label !== \"string\") return res.status(400).json({error:\"Label required\"});\n  const clean = req.body.label.trim();\n  if (!clean) return res.status(400).json({error:\"Label required\"});\n  req.cleanLabel = clean;\n  next();\n}\n```\ntrim takes no arguments and returns text with outer whitespace removed. A label \"  Sky  \" becomes \"Sky\". Valid input reaches next once; rejected input sends the response and returns. The fragment belongs after the earlier Express setup.",
+      "targets": [
+        "next",
+        "trim"
+      ],
+      "paragraphCountUnchanged": true,
+      "quizAndChecksUnchanged": true,
+      "runtimePlan": "Actual Node runtime; local server callbacks mocked only where explicitly described, no network claim",
+      "status": "proposed, not approved or executed"
+    },
+    {
+      "lessonId": "backend-11",
+      "field": "explanation[5]",
+      "old": "This exercise uses a Map in one process. Map.has(key) checks presence; get reads the record; set stores it.\n\nKeep the stored response separate from the object returned to a caller. Return a fresh shallow copy of the result on both a new request and a retry, so a caller changing a top-level returned field cannot overwrite the saved response. Object spread, {...savedResult}, copies top-level fields; it would still share nested objects, so this exercise uses flat result fields.",
+      "new": "This exercise uses a Map in one process. Map.has(key) checks presence; get reads the record; set stores it.\n\nKeep the stored response separate from the object returned to a caller. Return a fresh shallow copy of the result on both a new request and a retry, so a caller changing a top-level returned field cannot overwrite the saved response. Object spread, {...savedResult}, copies top-level fields; it would still share nested objects, so this exercise uses flat result fields.\n\n```javascript\nconst saved = new Map();\nsaved.set(\"req-a\", {status:201});\nconsole.log(saved.has(\"req-a\"));\nconsole.log(saved.get(\"req-a\").status);\nconsole.log(saved.has(\"req-b\"));\nconsole.log(saved.get(\"req-b\"));\n```\nThe outputs are true, 201, false, undefined. set receives a key/value, stores the entry and returns the Map; has returns presence; get returns the value or undefined. Reading a stored object does not copy it, so the response-copy rule above still matters.",
+      "targets": [
+        "Map.has",
+        "Map.get",
+        "Map.set"
+      ],
+      "paragraphCountUnchanged": true,
+      "quizAndChecksUnchanged": true,
+      "runtimePlan": "Actual Node runtime; local server callbacks mocked only where explicitly described, no network claim",
+      "status": "proposed, not approved or executed"
+    },
+    {
+      "lessonId": "backend-13",
+      "field": "explanation[4]",
+      "old": "This practice checks a simplified restored snapshot. Version must match, and every note ID/title pair must match.",
+      "new": "This practice checks a simplified restored snapshot. Version must match, and every note ID/title pair must match.\n\n```javascript\nconst rows = [{id:1}, {id:2}];\nconsole.log(rows.every(row => row.id > 0));\nconsole.log(rows.every(row => row.id === 1));\n```\nThis prints true, then false. every receives a predicate called on successive entries and returns whether all tested entries pass, stopping on the first failure. An empty array returns true; it has no failing entry. It does not validate a backup version by itself.",
+      "targets": [
+        "every"
+      ],
+      "paragraphCountUnchanged": true,
+      "quizAndChecksUnchanged": true,
+      "runtimePlan": "Actual Node runtime; local server callbacks mocked only where explicitly described, no network claim",
+      "status": "proposed, not approved or executed"
+    },
+    {
+      "lessonId": "typescript-12",
+      "field": "explanation[4]",
+      "old": "An assertNever helper can also throw if invalid data unexpectedly reaches that branch at runtime. It does not replace validation of outside data.",
+      "new": "An assertNever helper can also throw if invalid data unexpectedly reaches that branch at runtime. It does not replace validation of outside data.\n\nA complete helper definition is:\n```typescript\nfunction assertNever(value: never): never {\n  throw new Error(\"Unexpected variant\");\n}\n```\nIt accepts only a value already narrowed to never and never returns normally. Add `default: return assertNever(signal);` to the earlier switch. Both existing variants return their labels. Extending Signal with `{kind:\"pause\"}` without handling it makes the default call a type error; this is the intended compile-time check, not an ordinary call with a legal value.\n\nAfter adding the default branch, console.log(signalText({kind:\"on\"})) prints Enabled. A valid handled variant never calls assertNever.",
+      "targets": [
+        "assertNever"
+      ],
+      "paragraphCountUnchanged": true,
+      "quizAndChecksUnchanged": true,
+      "runtimePlan": "Actual TypeScript compile; include expected diagnostic when applicable",
+      "status": "proposed, not approved or executed"
+    },
+    {
+      "lessonId": "developer-toolkit-05",
+      "field": "explanation[5]",
+      "old": "The browser exercise represents package settings in a JavaScript object named project. Set scripts.start to node main.js and engines.node to >=22.13.0. Keep dependencies empty because no third-party runtime package is used. Object.keys(project.dependencies) gives an array of its property names; length 0 establishes there are no declared dependencies. A JavaScript object literal may use single quotes, but a real JSON file requires double quotes.",
+      "new": "The browser exercise represents package settings in a JavaScript object named project. Set scripts.start to node main.js and engines.node to >=22.13.0. Keep dependencies empty because no third-party runtime package is used. Object.keys(project.dependencies) gives an array of its property names; length 0 establishes there are no declared dependencies. A JavaScript object literal may use single quotes, but a real JSON file requires double quotes.\n\n```javascript\nconsole.log(Object.keys({}));\nconsole.log(Object.keys({start:\"node main.js\"}));\n```\nThis prints [] and [\"start\"]. Object.keys receives an object and returns an array of its own enumerable string-keyed property names; it does not change the object.",
+      "targets": [
+        "Object.keys"
+      ],
+      "paragraphCountUnchanged": true,
+      "quizAndChecksUnchanged": true,
+      "runtimePlan": "Actual Node runtime; local server callbacks mocked only where explicitly described, no network claim",
+      "status": "proposed, not approved or executed"
+    },
+    {
+      "lessonId": "developer-toolkit-07",
+      "field": "explanation[2]",
+      "old": "An assertion compares an actual result with a specified expectation and reports a failure when they differ. This complete Node test file imports the module from the previous page; save it as test-level.mjs in the same folder:\n```javascript\nimport test from 'node:test';\nimport assert from 'node:assert/strict';\nimport { clampLevel } from './level.mjs';\ntest('keeps values and clamps both limits', () => {\n  for (const [input, expected] of [[6, 6], [0, 0], [10, 10], [-3, 0], [12, 10]]) {\n    assert.equal(clampLevel(input), expected);\n  }\n});\ntest('rejects invalid values', () => {\n  for (const input of [undefined, NaN, Infinity, 2.5]) {\n    assert.equal(clampLevel(input), null);\n  }\n});\n```\nEach test callback runs its assertions. The first loop unpacks an input/expected pair; the second visits invalid values. Imports from node: use Node's built-in library, not third-party packages.",
+      "new": "An assertion compares an actual result with a specified expectation and reports a failure when they differ. This complete Node test file imports the module from the previous page; save it as test-level.mjs in the same folder:\n```javascript\nimport test from 'node:test';\nimport assert from 'node:assert/strict';\nimport { clampLevel } from './level.mjs';\ntest('keeps values and clamps both limits', () => {\n  for (const [input, expected] of [[6, 6], [0, 0], [10, 10], [-3, 0], [12, 10]]) {\n    assert.equal(clampLevel(input), expected);\n  }\n});\ntest('rejects invalid values', () => {\n  for (const input of [undefined, NaN, Infinity, 2.5]) {\n    assert.equal(clampLevel(input), null);\n  }\n});\n```\nEach test callback runs its assertions. The first loop unpacks an input/expected pair; the second visits invalid values. Imports from node: use Node's built-in library, not third-party packages.\n\nIn assert.equal(actual, expected), the first argument is the observed value and the second is its expected value. This file imports node:assert/strict, so assert.equal uses strict equality: 6 and \"6\" do not pass as equal. A mismatch throws an AssertionError that the test runner records as a failed test; a successful assertion returns normally without printing a success message of its own.",
+      "targets": [
+        "assert.equal"
+      ],
+      "paragraphCountUnchanged": true,
+      "quizAndChecksUnchanged": true,
+      "runtimePlan": "Actual Node runtime; local server callbacks mocked only where explicitly described, no network claim",
+      "status": "proposed, not approved or executed"
+    },
+    {
+      "lessonId": "developer-toolkit-10",
+      "field": "explanation[13]",
+      "old": "Object.hasOwn(branches, current) checks that the requested branch is an own entry of the map. If not, return null before reading its code.",
+      "new": "Object.hasOwn(branches, current) checks that the requested branch is an own entry of the map. If not, return null before reading its code.\n\n```javascript\nconst branches = {main: \"working code\"};\nconsole.log(Object.hasOwn(branches, \"main\"));\nconsole.log(Object.hasOwn(branches, \"draft\"));\n```\nThis prints true, then false. The function receives an object and property key and reports only its own properties, without modifying the map.",
+      "targets": [
+        "Object.hasOwn"
+      ],
+      "paragraphCountUnchanged": true,
+      "quizAndChecksUnchanged": true,
+      "runtimePlan": "Actual Node runtime; local server callbacks mocked only where explicitly described, no network claim",
+      "status": "proposed, not approved or executed"
+    },
+    {
+      "lessonId": "react-13",
+      "field": "explanation[3]",
+      "old": "```react\nclass SmallBoundary extends React.Component {\n  constructor(props) { super(props); this.state = {failed:false}; }\n  static getDerivedStateFromError() { return {failed:true}; }\n  render() { return this.state.failed ? <p>Try again later</p> : this.props.children; }\n}\n```",
+      "new": "```react\nclass SmallBoundary extends React.Component {\n  constructor(props) { super(props); this.state = {failed:false}; }\n  static getDerivedStateFromError() { return {failed:true}; }\n  render() { return this.state.failed ? <p>Try again later</p> : this.props.children; }\n}\n```\n\nTo exercise the boundary, render it around a child that fails:\n```react\nfunction BrokenPanel() { throw new Error(\"Demo failure\"); }\nfunction App() {\n  return <SmallBoundary><BrokenPanel /></SmallBoundary>;\n}\n```\nWith SmallBoundary defined above, rendering App shows Try again later. React calls the static error method with the thrown error; this example does not use that parameter. The method returns a state update. React then calls render, which takes no explicit arguments and returns fallback UI. The framework invokes these methods; do not call them yourself to simulate handling.",
+      "targets": [
+        "getDerivedStateFromError",
+        "render"
+      ],
+      "paragraphCountUnchanged": true,
+      "quizAndChecksUnchanged": true,
+      "runtimePlan": "Actual React18 vendor fixture, real error/pending transition",
+      "status": "proposed, not approved or executed"
+    },
+    {
+      "lessonId": "react-15",
+      "field": "explanation[6]",
+      "old": "This exercise controls a Promise manually so you can inspect waiting without relying on network timing. new Promise(resolve => { ... }) immediately provides a resolve function; finishLoading saves a callback that resolves it with { default: Report }. The Report code is already present: this simulates a pending module and does not split or download a real file.",
+      "new": "This exercise controls a Promise manually so you can inspect waiting without relying on network timing. new Promise(resolve => { ... }) immediately provides a resolve function; finishLoading saves a callback that resolves it with { default: Report }. The Report code is already present: this simulates a pending module and does not split or download a real file.\n\nThis smaller Promise example exposes the callback and its effect:\n```javascript\nlet finish;\nconst pending = new Promise(resolve => { finish = resolve; });\npending.then(value => console.log(value));\nfinish(\"Ready\");\n```\nThe constructor takes an executor callback and returns a pending Promise. It immediately gives the callback a resolve function, stored here as finish. Calling finish supplies the eventual result, so the reaction later prints Ready. No network request or downloaded module is involved.",
+      "targets": [
+        "Promise constructor"
+      ],
+      "paragraphCountUnchanged": true,
+      "quizAndChecksUnchanged": true,
+      "runtimePlan": "Actual React18 vendor fixture, real error/pending transition",
+      "status": "proposed, not approved or executed"
+    },
+    {
+      "lessonId": "swift-06",
+      "field": "explanation[2]",
+      "old": "Swift can use an outside argument label and an inside parameter name. In _ length: Double, the underscore suppresses the outside label, so the first argument is written simply as 3. In factor: Double, factor is both the outside label and inside name. The caller writes factor: 0.5. Labels help a call communicate each input's purpose. Parentheses surround inputs, and a comma separates them. Putting the right number in the wrong position can change an answer even if the types still match, so read the call as well as the formula.",
+      "new": "Swift can use an outside argument label and an inside parameter name. In _ length: Double, the underscore suppresses the outside label, so the first argument is written simply as 3. In factor: Double, factor is both the outside label and inside name. The caller writes factor: 0.5. Labels help a call communicate each input's purpose. Parentheses surround inputs, and a comma separates them. Putting the right number in the wrong position can change an answer even if the types still match, so read the call as well as the formula.\n\n```swift\nprint(abs(-0.25))\nprint(abs(0.25))\n```\nBoth print 0.25. abs receives a numeric value and returns its magnitude; it does not modify the supplied value. That is why abs(actual - expected) measures an unsigned difference.",
+      "targets": [
+        "abs"
+      ],
+      "paragraphCountUnchanged": true,
+      "quizAndChecksUnchanged": true,
+      "runtimePlan": "Actual compatible Swift compiler/run, no browser execution claim",
+      "status": "proposed, not approved or executed"
+    },
+    {
+      "lessonId": "swift-10",
+      "field": "explanation[2]",
+      "old": "Task represents asynchronous work. Task { ... } starts a task with a closure containing its instructions. A stored Task<Void, Never>? means an optional task whose successful result is Void, no useful returned value, and whose exposed failure type is Never, meaning it does not throw an error out to its caller. The closure can still perform throwing work if it handles the error internally. task?.cancel() uses optional chaining: call cancel only if a task exists. Cancellation is cooperative. It signals that the work should stop; code must check or reach a cancellation-aware operation. Task.checkCancellation() throws if cancellation has been requested, and Task.isCancelled reads that state as a Bool.",
+      "new": "Task represents asynchronous work. Task { ... } starts a task with a closure containing its instructions. A stored Task<Void, Never>? means an optional task whose successful result is Void, no useful returned value, and whose exposed failure type is Never, meaning it does not throw an error out to its caller. The closure can still perform throwing work if it handles the error internally. task?.cancel() uses optional chaining: call cancel only if a task exists. Cancellation is cooperative. It signals that the work should stop; code must check or reach a cancellation-aware operation. Task.checkCancellation() throws if cancellation has been requested, and Task.isCancelled reads that state as a Bool.\n\nTask.sleep suspends the current task for the requested duration without promising an exact resume time; cancellation can make it throw. This complete top-level async fragment makes a task and observes cancellation:\n```swift\nlet work = Task {\n    try await Task.sleep(for: .seconds(10))\n    return \"Finished\"\n}\nwork.cancel()\ndo { print(try await work.value) }\ncatch is CancellationError { print(\"Cancelled\") }\n```\nTask receives the work closure and returns a task handle. cancel requests cooperative cancellation, not a successful work result. Awaiting value observes the result or error; this example prints Cancelled rather than waiting ten seconds.",
+      "targets": [
+        "Task.sleep",
+        "Task.cancel",
+        "Task constructor"
+      ],
+      "paragraphCountUnchanged": true,
+      "quizAndChecksUnchanged": true,
+      "runtimePlan": "Actual compatible Swift compiler/run, no browser execution claim",
+      "status": "proposed, not approved or executed"
+    },
+    {
+      "lessonId": "swift-10",
+      "field": "explanation[7]",
+      "old": "Model the loader's states in ordinary words: Ready before a request, Loading during it, Loaded with entries after success, Could not load after failure, or Load cancelled after cancellation. An outdated task should not change either the result or the current message. catch is CancellationError recognizes that error type; a following catch handles other errors. if accepts(...) inside those catches prevents a stale task from replacing a newer message. The supplied driver uses MainActor.run to read or construct main-actor state from its async context. It also stores two values in a tuple, accessed as .0 and .1, to inspect the result and message together.",
+      "new": "Model the loader's states in ordinary words: Ready before a request, Loading during it, Loaded with entries after success, Could not load after failure, or Load cancelled after cancellation. An outdated task should not change either the result or the current message. catch is CancellationError recognizes that error type; a following catch handles other errors. if accepts(...) inside those catches prevents a stale task from replacing a newer message. The supplied driver uses MainActor.run to read or construct main-actor state from its async context. It also stores two values in a tuple, accessed as .0 and .1, to inspect the result and message together.\n\n```swift\nlet label = await MainActor.run { \"Ready\" }\nprint(label)\n```\nIn a top-level async program this prints Ready. MainActor.run receives a synchronous closure, executes it on the main actor and returns its value through the awaited call. It does not make an entire async operation uninterrupted.",
+      "targets": [
+        "MainActor.run"
+      ],
+      "paragraphCountUnchanged": true,
+      "quizAndChecksUnchanged": true,
+      "runtimePlan": "Actual compatible Swift compiler/run, no browser execution claim",
+      "status": "proposed, not approved or executed"
+    },
+    {
+      "lessonId": "swift-11",
+      "field": "explanation[6]",
+      "old": "Overloading means functions can share a name when their input signatures differ. loadEntries(_ data: Data) loads supplied bytes; loadEntries(from url: URL) reads the file and then reuses the byte decoder. The underscore lets the Data call omit a label, while from is the URL call's label. Data(\"broken\".utf8) makes bytes from the letters of broken using UTF-8 text encoding. Those bytes are not valid JSON for [PracticeEntry], so they should exercise the catch path. A file-read failure and a decode failure are different causes, but both need an understandable outcome.",
+      "new": "Overloading means functions can share a name when their input signatures differ. loadEntries(_ data: Data) loads supplied bytes; loadEntries(from url: URL) reads the file and then reuses the byte decoder. The underscore lets the Data call omit a label, while from is the URL call's label. Data(\"broken\".utf8) makes bytes from the letters of broken using UTF-8 text encoding. Those bytes are not valid JSON for [PracticeEntry], so they should exercise the catch path. A file-read failure and a decode failure are different causes, but both need an understandable outcome.\n\nThis small overload pair uses the same two input shapes without hiding the file read:\n```swift\nimport Foundation\nfunc loadLabels(_ bytes: Data) throws -> [String] {\n    try JSONDecoder().decode([String].self, from: bytes)\n}\nfunc loadLabels(from url: URL) throws -> [String] {\n    try loadLabels(Data(contentsOf: url))\n}\nprint(try loadLabels(Data(\"[\\\"Map\\\"]\".utf8)))\n```\nIt prints [\"Map\"]. The first function accepts bytes and returns decoded strings or throws. The labeled overload accepts a file URL, reads bytes, and delegates to the first. To exercise it, use the earlier temporary-file write pattern with these JSON bytes and call try loadLabels(from: url); a missing file throws. The local companion test must verify both forms; this text does not claim browser file access.",
+      "targets": [
+        "loadEntries overloads"
+      ],
+      "paragraphCountUnchanged": true,
+      "quizAndChecksUnchanged": true,
+      "runtimePlan": "Actual compatible Swift compiler/run, no browser execution claim",
+      "status": "proposed, not approved or executed"
+    },
+    {
+      "lessonId": "swift-20",
+      "field": "explanation[3]",
+      "old": "```swift\nfinal class LabelOwner {\n    let text: String\n    init(text: String) { self.text = text }\n    func makeReader() -> () -> String {\n        return { [weak self] in self?.text ?? \"Released\" }\n    }\n}\n```\nThe returned closure can outlive the owner without owning it.",
+      "new": "```swift\nfinal class LabelOwner {\n    let text: String\n    init(text: String) { self.text = text }\n    func makeReader() -> () -> String {\n        return { [weak self] in self?.text ?? \"Released\" }\n    }\n}\n```\nThe returned closure can outlive the owner without owning it.\n\nAfter that class definition:\n```swift\nvar owner: LabelOwner? = LabelOwner(text: \"Map\")\nlet read = owner!.makeReader()\nprint(read())\nowner = nil\nprint(read())\n```\nThis prints Map, then Released. The initializer creates a known non-nil owner, so the one unwrap here precedes release. makeReader takes no explicit arguments and returns a zero-argument closure; calling that closure reads the owner if still alive. The callback does not keep it alive.",
+      "targets": [
+        "makeReader"
+      ],
+      "paragraphCountUnchanged": true,
+      "quizAndChecksUnchanged": true,
+      "runtimePlan": "Actual compatible Swift compiler/run, no browser execution claim",
+      "status": "proposed, not approved or executed"
+    },
+    {
+      "lessonId": "swift-21",
+      "field": "explanation[3]",
+      "old": "```swift\nstruct LabelSnapshot: Sendable { let text: String }\nactor LabelStore {\n    private var text = \"Ready\"\n    func snapshot() -> LabelSnapshot { LabelSnapshot(text: text) }\n}\n```\nString is Sendable. The returned struct contains a value, not direct access to the actor's stored property.",
+      "new": "```swift\nstruct LabelSnapshot: Sendable { let text: String }\nactor LabelStore {\n    private var text = \"Ready\"\n    func snapshot() -> LabelSnapshot { LabelSnapshot(text: text) }\n}\n```\nString is Sendable. The returned struct contains a value, not direct access to the actor's stored property.\n\nIn a compatible top-level async program, follow the definitions with:\n```swift\nlet store = LabelStore()\nlet saved = await store.snapshot()\nprint(saved.text)\n```\nThis prints Ready. snapshot takes no explicit arguments and returns a LabelSnapshot value through the awaited call. Reading saved.text does not directly read actor storage. The exercise’s separate before/after values extend this same snapshot contract.",
+      "targets": [
+        "LabelStore.snapshot"
+      ],
+      "paragraphCountUnchanged": true,
+      "quizAndChecksUnchanged": true,
+      "runtimePlan": "Actual compatible Swift compiler/run, no browser execution claim",
+      "status": "proposed, not approved or executed"
+    },
+    {
+      "lessonId": "javascript-24",
+      "field": "explanation[4]",
+      "old": "A guard can reject those cases before reading a property.\n```javascript\nfunction hasCity(value) {\n  if (value === null || typeof value !== \"object\" || Array.isArray(value)) return false;\n  return typeof value.city === \"string\";\n}\n```",
+      "new": "A guard can reject those cases before reading a property.\n```javascript\nfunction hasCity(value) {\n  if (value === null || typeof value !== \"object\" || Array.isArray(value)) return false;\n  return typeof value.city === \"string\";\n}\n```\n\nAfter defining hasCity, inspect both paths directly:\n```javascript\nconsole.log(hasCity({city:\"Oslo\"}));\nconsole.log(hasCity(null));\nconsole.log(hasCity([]));\n```\nThe results are true, false, false. The helper receives an unknown value and returns whether it is a non-array record with a string city; it does not parse JSON or change the input.",
+      "targets": [
+        "hasCity"
+      ],
+      "paragraphCountUnchanged": true,
+      "quizAndChecksUnchanged": true,
+      "runtimePlan": "Actual Node runtime; local server callbacks mocked only where explicitly described, no network claim",
+      "status": "proposed, not approved or executed"
+    },
+    {
+      "lessonId": "javascript-30",
+      "field": "explanation[5]",
+      "old": "Object.hasOwn(object, key) tests for an own property. The in operator also finds inherited properties.",
+      "new": "Object.hasOwn(object, key) tests for an own property. The in operator also finds inherited properties.\n\n```javascript\nconst base = {badge:\"Explorer\"};\nconst item = Object.create(base);\nconsole.log(Object.hasOwn(item, \"badge\"));\nconsole.log(\"badge\" in item);\nitem.badge = \"Researcher\";\nconsole.log(Object.hasOwn(item, \"badge\"));\n```\nThe outputs are false, true, true. Object.hasOwn receives the object and property key and returns a Boolean without changing it. Assigning item.badge creates the own property in this example.",
+      "targets": [
+        "Object.hasOwn"
+      ],
+      "paragraphCountUnchanged": true,
+      "quizAndChecksUnchanged": true,
+      "runtimePlan": "Actual Node runtime; local server callbacks mocked only where explicitly described, no network claim",
+      "status": "proposed, not approved or executed"
+    },
+    {
+      "lessonId": "python-23",
+      "field": "explanation[4]",
+      "old": "Validate first, then convert to an integer.\n```python\nraw = \" 003 \".strip()\nvalid = bool(raw) and all(char in \"0123456789\" for char in raw)\nif valid:\n    amount = int(raw)\n    print(amount)\n```\nIt prints 3. The explicit character set matches this project's ASCII-digit contract; some broader Unicode digit tests accept characters that int cannot convert.",
+      "new": "Validate first, then convert to an integer.\n```python\nraw = \" 003 \".strip()\nvalid = bool(raw) and all(char in \"0123456789\" for char in raw)\nif valid:\n    amount = int(raw)\n    print(amount)\n```\nIt prints 3. The explicit character set matches this project's ASCII-digit contract; some broader Unicode digit tests accept characters that int cannot convert.\n\nbool(raw) converts the supplied value to its truth value: bool(\"\") is False, while bool(\"0\") is True because the text is nonempty. This does not validate that text as an integer; the separate character checks do that.",
+      "targets": [
+        "bool"
+      ],
+      "paragraphCountUnchanged": true,
+      "quizAndChecksUnchanged": true,
+      "runtimePlan": "Isolated native Python and Pyodide check",
+      "status": "proposed, not approved or executed"
+    },
+    {
+      "lessonId": "python-36",
+      "field": "explanation[5]",
+      "old": "This separate example increases saved points by two.\n```python\ndef make_points():\n    points = 0\n    def add_two():\n        nonlocal points\n        points = points + 2\n        return points\n    return add_two\n```",
+      "new": "This separate example increases saved points by two.\n```python\ndef make_points():\n    points = 0\n    def add_two():\n        nonlocal points\n        points = points + 2\n        return points\n    return add_two\n```\n\nAfter the make_points definition:\n```python\nfirst = make_points()\nsecond = make_points()\nprint(first())\nprint(first())\nprint(second())\n```\nThis prints 2, 4, 2. make_points takes no arguments and returns a fresh zero-argument closure. Each returned add_two call changes its own saved points and returns the new number.",
+      "targets": [
+        "make_points",
+        "add_two closure"
+      ],
+      "paragraphCountUnchanged": true,
+      "quizAndChecksUnchanged": true,
+      "runtimePlan": "Isolated native Python and Pyodide check",
+      "status": "proposed, not approved or executed"
+    },
+    {
+      "lessonId": "python-39",
+      "field": "explanation[5]",
+      "old": "str(path) converts a path object to text. Use dictionary keys name, stem, suffix, and markdown for this exercise. Operating systems can display path separators differently; the checks use the same Path rules as your function.",
+      "new": "str(path) converts a path object to text. Use dictionary keys name, stem, suffix, and markdown for this exercise. Operating systems can display path separators differently; the checks use the same Path rules as your function.\n\n```python\nfrom pathlib import Path\nprint(str(Path(\"note.txt\")))\n```\nThis prints note.txt. str receives the path object and returns its text representation; it does not create or read the file. A single filename avoids platform-dependent separators in this example.",
+      "targets": [
+        "str path conversion"
+      ],
+      "paragraphCountUnchanged": true,
+      "quizAndChecksUnchanged": true,
+      "runtimePlan": "Isolated native Python and Pyodide check",
+      "status": "proposed, not approved or executed"
+    },
+    {
+      "lessonId": "python-42",
+      "field": "explanation[4]",
+      "old": "dict(groups) returns an ordinary dictionary containing the built lists. Calling groups.get(\"missing\") does not invoke the default factory; the bracket lookup is the behavior practiced here.",
+      "new": "dict(groups) returns an ordinary dictionary containing the built lists. Calling groups.get(\"missing\") does not invoke the default factory; the bracket lookup is the behavior practiced here.\n\n```python\nfrom collections import defaultdict\ngroups = defaultdict(list)\nprint(groups.get(\"missing\"))\nprint(dict(groups))\n```\nThis prints None and {}. get receives the key and, with no supplied default, returns None when absent. Unlike bracket access, it does not call the factory or insert a key.",
+      "targets": [
+        "dict.get factory bypass"
+      ],
+      "paragraphCountUnchanged": true,
+      "quizAndChecksUnchanged": true,
+      "runtimePlan": "Isolated native Python and Pyodide check",
+      "status": "proposed, not approved or executed"
+    },
+    {
+      "lessonId": "python-48",
+      "field": "explanation[3]",
+      "old": "For example, a call with prefix=\"Note: \" stores that value under the key \"prefix\" in extras. extras.get(\"prefix\", \"\") reads it or returns the supplied empty-text default when absent.",
+      "new": "For example, a call with prefix=\"Note: \" stores that value under the key \"prefix\" in extras. extras.get(\"prefix\", \"\") reads it or returns the supplied empty-text default when absent.\n\nA small complete option-reader is:\n```python\ndef prefix_for(**extras):\n    return extras.get(\"prefix\", \"\")\nprint(prefix_for(prefix=\"Note: \"))\nprint(repr(prefix_for()))\n```\nThis prints Note: followed by a space, then ''. get receives a key and default, returning the stored value or the default without changing extras. repr makes the empty returned string visible.",
+      "targets": [
+        "dict.get keyword options"
+      ],
+      "paragraphCountUnchanged": true,
+      "quizAndChecksUnchanged": true,
+      "runtimePlan": "Isolated native Python and Pyodide check",
+      "status": "proposed, not approved or executed"
+    }
+  ]
+}

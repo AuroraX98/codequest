@@ -1,0 +1,17 @@
+[
+  {
+    "id": "php-64-worked",
+    "lessonId": "php-64",
+    "code": "<?php\ndeclare(strict_types=1);\nif (!extension_loaded(\"session\")) { throw new RuntimeException(\"session required\"); }\n$directory = __DIR__ . \"/session-files\";\nif (!is_dir($directory) && !mkdir($directory, 0700)) { throw new RuntimeException(\"directory failed\"); }\nini_set(\"session.use_cookies\", \"0\");\nini_set(\"session.cache_limiter\", \"\");\nini_set(\"session.use_strict_mode\", \"1\");\nsession_save_path($directory);\nif (!session_start()) { throw new RuntimeException(\"start failed\"); }\n$id = session_id();\n$_SESSION[\"minutes\"] = 15;\nif (!session_write_close()) { throw new RuntimeException(\"save failed\"); }\n$_SESSION = [];\nsession_id($id);\nif (!session_start()) { throw new RuntimeException(\"reload failed\"); }\n$value = $_SESSION[\"minutes\"] ?? \"missing\";\nif (!session_destroy()) { throw new RuntimeException(\"destroy failed\"); }\necho $value, \"\\n\";\n",
+    "stdin": "",
+    "expected": "15",
+    "outcome": "success"
+  },
+  {
+    "lessonId": "php-64",
+    "id": "php-64-changed",
+    "code": "<?php\ndeclare(strict_types=1);\nif (!extension_loaded(\"session\")) { throw new RuntimeException(\"session required\"); }\n$directory = __DIR__ . \"/session-files\";\nif (!is_dir($directory) && !mkdir($directory, 0700)) { throw new RuntimeException(\"directory failed\"); }\nini_set(\"session.use_cookies\", \"0\");\nini_set(\"session.cache_limiter\", \"\");\nini_set(\"session.use_strict_mode\", \"1\");\nsession_save_path($directory);\nif (!session_start()) { throw new RuntimeException(\"start failed\"); }\n$id = session_id();\n$_SESSION[\"minutes\"] = 15;\nunset($_SESSION[\"minutes\"]);\nif (!session_write_close()) { throw new RuntimeException(\"save failed\"); }\n$_SESSION = [];\nsession_id($id);\nif (!session_start()) { throw new RuntimeException(\"reload failed\"); }\n$value = $_SESSION[\"minutes\"] ?? \"missing\";\nif (!session_destroy()) { throw new RuntimeException(\"destroy failed\"); }\necho $value, \"\\n\";\n",
+    "expected": "missing",
+    "outcome": "success"
+  }
+]

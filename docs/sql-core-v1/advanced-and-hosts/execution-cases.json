@@ -1,0 +1,520 @@
+[
+  {
+    "lessonId": "sql-44",
+    "id": "sql-44-worked",
+    "paragraph": 1,
+    "code": "CREATE TABLE readings(id INTEGER PRIMARY KEY, room TEXT, tick INTEGER, value INTEGER);\nINSERT INTO readings VALUES (1,'east',1,8),(2,'east',2,NULL),(3,'east',3,12),(4,'west',1,5);\nSELECT id, LAG(value,1,-1) OVER (PARTITION BY room ORDER BY tick,id) AS previous\nFROM readings\nORDER BY id;",
+    "checks": [
+      {
+        "label": "Four observations remain",
+        "expression": "SELECT CASE WHEN (SELECT COUNT(*) FROM readings)=4 THEN 1 ELSE 0 END"
+      }
+    ],
+    "expectedResults": [
+      {
+        "columns": [
+          "id",
+          "previous"
+        ],
+        "values": [
+          [
+            1,
+            -1
+          ],
+          [
+            2,
+            8
+          ],
+          [
+            3,
+            null
+          ],
+          [
+            4,
+            -1
+          ]
+        ]
+      }
+    ],
+    "outcome": "success"
+  },
+  {
+    "lessonId": "sql-44",
+    "id": "sql-44-changed",
+    "paragraph": 2,
+    "code": "CREATE TABLE readings(id INTEGER PRIMARY KEY, room TEXT, tick INTEGER, value INTEGER);\nINSERT INTO readings VALUES (1,'east',1,8),(2,'east',2,9),(3,'east',3,12),(4,'west',1,5);\nSELECT id, LAG(value,1,-1) OVER (PARTITION BY room ORDER BY tick,id) AS previous\nFROM readings\nORDER BY id;",
+    "checks": [],
+    "expectedResults": [
+      {
+        "columns": [
+          "id",
+          "previous"
+        ],
+        "values": [
+          [
+            1,
+            -1
+          ],
+          [
+            2,
+            8
+          ],
+          [
+            3,
+            9
+          ],
+          [
+            4,
+            -1
+          ]
+        ]
+      }
+    ],
+    "outcome": "success"
+  },
+  {
+    "lessonId": "sql-45",
+    "id": "sql-45-worked",
+    "paragraph": 1,
+    "code": "CREATE TABLE moves(id INTEGER PRIMARY KEY, tick INTEGER, amount INTEGER);\nINSERT INTO moves VALUES (1,1,4),(2,1,7),(3,2,3);\nSELECT id, SUM(amount) OVER (ORDER BY tick RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS peers_total, SUM(amount) OVER (ORDER BY tick,id ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS row_total\nFROM moves\nORDER BY id;",
+    "checks": [],
+    "expectedResults": [
+      {
+        "columns": [
+          "id",
+          "peers_total",
+          "row_total"
+        ],
+        "values": [
+          [
+            1,
+            11,
+            4
+          ],
+          [
+            2,
+            11,
+            11
+          ],
+          [
+            3,
+            14,
+            14
+          ]
+        ]
+      }
+    ],
+    "outcome": "success"
+  },
+  {
+    "lessonId": "sql-45",
+    "id": "sql-45-changed",
+    "paragraph": 2,
+    "code": "CREATE TABLE moves(id INTEGER PRIMARY KEY, tick INTEGER, amount INTEGER);\nINSERT INTO moves VALUES (1,1,4),(2,3,7),(3,2,3);\nSELECT id, SUM(amount) OVER (ORDER BY tick RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS peers_total, SUM(amount) OVER (ORDER BY tick,id ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS row_total\nFROM moves\nORDER BY id;",
+    "checks": [],
+    "expectedResults": [
+      {
+        "columns": [
+          "id",
+          "peers_total",
+          "row_total"
+        ],
+        "values": [
+          [
+            1,
+            4,
+            4
+          ],
+          [
+            2,
+            14,
+            14
+          ],
+          [
+            3,
+            7,
+            7
+          ]
+        ]
+      }
+    ],
+    "outcome": "success"
+  },
+  {
+    "lessonId": "sql-46",
+    "id": "sql-46-worked",
+    "paragraph": 1,
+    "code": "CREATE TABLE sessions(id INTEGER PRIMARY KEY, team TEXT, done INTEGER, minutes INTEGER);\nINSERT INTO sessions VALUES (1,'fern',1,10),(2,'fern',0,20),(3,'moss',0,7);\nSELECT team, COUNT(*) AS all_rows, COUNT(*) FILTER (WHERE done=1) AS done_rows, SUM(minutes) FILTER (WHERE done=1) AS done_minutes\nFROM sessions\nGROUP BY team\nORDER BY team;",
+    "checks": [],
+    "expectedResults": [
+      {
+        "columns": [
+          "team",
+          "all_rows",
+          "done_rows",
+          "done_minutes"
+        ],
+        "values": [
+          [
+            "fern",
+            2,
+            1,
+            10
+          ],
+          [
+            "moss",
+            1,
+            0,
+            null
+          ]
+        ]
+      }
+    ],
+    "outcome": "success"
+  },
+  {
+    "lessonId": "sql-46",
+    "id": "sql-46-changed",
+    "paragraph": 2,
+    "code": "CREATE TABLE sessions(id INTEGER PRIMARY KEY, team TEXT, done INTEGER, minutes INTEGER);\nINSERT INTO sessions VALUES (1,'fern',1,10),(2,'fern',0,20),(3,'moss',1,7);\nSELECT team, COUNT(*) AS all_rows, COUNT(*) FILTER (WHERE done=1) AS done_rows, SUM(minutes) FILTER (WHERE done=1) AS done_minutes\nFROM sessions\nGROUP BY team\nORDER BY team;",
+    "checks": [],
+    "expectedResults": [
+      {
+        "columns": [
+          "team",
+          "all_rows",
+          "done_rows",
+          "done_minutes"
+        ],
+        "values": [
+          [
+            "fern",
+            2,
+            1,
+            10
+          ],
+          [
+            "moss",
+            1,
+            1,
+            7
+          ]
+        ]
+      }
+    ],
+    "outcome": "success"
+  },
+  {
+    "lessonId": "sql-47",
+    "id": "sql-47-worked",
+    "paragraph": 1,
+    "code": "CREATE TABLE plans(id INTEGER PRIMARY KEY, title TEXT);\nINSERT INTO plans VALUES (1,'Map'),(2,'Sketch');\nBEGIN;\nALTER TABLE plans ADD COLUMN status TEXT NOT NULL DEFAULT 'draft';\nALTER TABLE plans RENAME COLUMN title TO label;\nCOMMIT;\nSELECT id,label,status\nFROM plans\nORDER BY id;",
+    "checks": [],
+    "expectedResults": [
+      {
+        "columns": [
+          "id",
+          "label",
+          "status"
+        ],
+        "values": [
+          [
+            1,
+            "Map",
+            "draft"
+          ],
+          [
+            2,
+            "Sketch",
+            "draft"
+          ]
+        ]
+      }
+    ],
+    "outcome": "success"
+  },
+  {
+    "lessonId": "sql-47",
+    "id": "sql-47-changed",
+    "paragraph": 2,
+    "code": "CREATE TABLE plans(id INTEGER PRIMARY KEY, title TEXT);\nINSERT INTO plans VALUES (1,'Map'),(2,'Sketch');\nBEGIN;\nALTER TABLE plans ADD COLUMN status TEXT NOT NULL DEFAULT 'draft';\nALTER TABLE plans RENAME COLUMN title TO label;\nROLLBACK;\nSELECT id,title\nFROM plans\nORDER BY id;",
+    "checks": [],
+    "expectedResults": [
+      {
+        "columns": [
+          "id",
+          "title"
+        ],
+        "values": [
+          [
+            1,
+            "Map"
+          ],
+          [
+            2,
+            "Sketch"
+          ]
+        ]
+      }
+    ],
+    "outcome": "success"
+  },
+  {
+    "lessonId": "sql-47",
+    "id": "sql-47-missing-default",
+    "paragraph": 3,
+    "setup": "CREATE TABLE plans(id INTEGER PRIMARY KEY, title TEXT);\nINSERT INTO plans VALUES (1,'Map'),(2,'Sketch');",
+    "code": "ALTER TABLE plans ADD COLUMN status TEXT NOT NULL;",
+    "outcome": "expected-error",
+    "errorContains": "Cannot add a NOT NULL column with default value NULL",
+    "postChecks": [
+      {
+        "label": "Rows intact",
+        "expression": "SELECT CASE WHEN (SELECT COUNT(*) FROM plans)=2 THEN 1 ELSE 0 END"
+      },
+      {
+        "label": "Column not added",
+        "expression": "SELECT COUNT(*)=0 FROM pragma_table_info('plans') WHERE name='status'"
+      }
+    ],
+    "supplemental": true,
+    "gradingScope": "Author-validated rejection fixture; not current learner SELECT-check capability."
+  },
+  {
+    "lessonId": "sql-48",
+    "id": "sql-48-worked",
+    "paragraph": 1,
+    "code": "PRAGMA foreign_keys=ON;\nCREATE TABLE folders(id INTEGER PRIMARY KEY);\nCREATE TABLE notes(id INTEGER PRIMARY KEY, folder_id INTEGER NOT NULL REFERENCES folders(id) ON DELETE CASCADE);\nINSERT INTO folders VALUES (1),(2);\nINSERT INTO notes VALUES (10,1),(11,1),(12,2);\nDELETE\nFROM folders\nWHERE id=1;\nSELECT id,folder_id\nFROM notes\nORDER BY id;",
+    "checks": [],
+    "expectedResults": [
+      {
+        "columns": [
+          "id",
+          "folder_id"
+        ],
+        "values": [
+          [
+            12,
+            2
+          ]
+        ]
+      }
+    ],
+    "outcome": "success"
+  },
+  {
+    "lessonId": "sql-48",
+    "id": "sql-48-changed",
+    "paragraph": 2,
+    "code": "PRAGMA foreign_keys=ON;\nCREATE TABLE folders(id INTEGER PRIMARY KEY);\nCREATE TABLE notes(id INTEGER PRIMARY KEY, folder_id INTEGER NOT NULL REFERENCES folders(id) ON DELETE CASCADE);\nINSERT INTO folders VALUES (1),(2);\nINSERT INTO notes VALUES (10,1),(11,1),(12,2);\nDELETE\nFROM folders\nWHERE id=2;\nSELECT id,folder_id\nFROM notes\nORDER BY id;",
+    "checks": [],
+    "expectedResults": [
+      {
+        "columns": [
+          "id",
+          "folder_id"
+        ],
+        "values": [
+          [
+            10,
+            1
+          ],
+          [
+            11,
+            1
+          ]
+        ]
+      }
+    ],
+    "outcome": "success"
+  },
+  {
+    "lessonId": "sql-48",
+    "id": "sql-48-default-refusal",
+    "paragraph": 3,
+    "setup": "PRAGMA foreign_keys=ON;\nCREATE TABLE folders(id INTEGER PRIMARY KEY);\nCREATE TABLE notes(id INTEGER PRIMARY KEY, folder_id INTEGER NOT NULL REFERENCES folders(id));\nINSERT INTO folders VALUES (1),(2);\nINSERT INTO notes VALUES (10,1),(11,1),(12,2);",
+    "code": "DELETE\nFROM folders\nWHERE id=1;",
+    "outcome": "expected-error",
+    "errorContains": "FOREIGN KEY constraint failed",
+    "postChecks": [
+      {
+        "label": "Parents preserved",
+        "expression": "SELECT ((SELECT COUNT(*) FROM folders)=2 AND (SELECT COUNT(*) FROM folders WHERE id IS 1)=1 AND (SELECT COUNT(*) FROM folders WHERE id IS 2)=1)"
+      },
+      {
+        "label": "Children preserved",
+        "expression": "SELECT ((SELECT COUNT(*) FROM notes)=3 AND (SELECT COUNT(*) FROM notes WHERE id IS 10 AND folder_id IS 1)=1 AND (SELECT COUNT(*) FROM notes WHERE id IS 11 AND folder_id IS 1)=1 AND (SELECT COUNT(*) FROM notes WHERE id IS 12 AND folder_id IS 2)=1)"
+      }
+    ],
+    "supplemental": true,
+    "gradingScope": "Author-validated rejection fixture; not current learner SELECT-check capability.",
+    "postCode": "SELECT id\nFROM folders\nORDER BY id;\nSELECT id,folder_id\nFROM notes\nORDER BY id;",
+    "expectedPostResults": [
+      {
+        "columns": [
+          "id"
+        ],
+        "values": [
+          [
+            1
+          ],
+          [
+            2
+          ]
+        ]
+      },
+      {
+        "columns": [
+          "id",
+          "folder_id"
+        ],
+        "values": [
+          [
+            10,
+            1
+          ],
+          [
+            11,
+            1
+          ],
+          [
+            12,
+            2
+          ]
+        ]
+      }
+    ]
+  },
+  {
+    "lessonId": "sql-49",
+    "id": "sql-49-worked",
+    "paragraph": 1,
+    "code": "CREATE TABLE tickets(id INTEGER PRIMARY KEY, label TEXT, status TEXT DEFAULT 'new');\nINSERT INTO tickets(label) VALUES ('Atlas')\nRETURNING id,label,status;",
+    "checks": [],
+    "expectedResults": [
+      {
+        "columns": [
+          "id",
+          "label",
+          "status"
+        ],
+        "values": [
+          [
+            1,
+            "Atlas",
+            "new"
+          ]
+        ]
+      }
+    ],
+    "outcome": "success"
+  },
+  {
+    "lessonId": "sql-49",
+    "id": "sql-49-changed",
+    "paragraph": 2,
+    "code": "CREATE TABLE tickets(id INTEGER PRIMARY KEY, label TEXT, status TEXT DEFAULT 'new');\nINSERT INTO tickets(label) VALUES ('Atlas');\nBEGIN;\nUPDATE tickets SET status='done'\nWHERE id=1\nRETURNING id,status;\nROLLBACK;\nSELECT id,status\nFROM tickets\nORDER BY id;",
+    "checks": [],
+    "expectedResults": [
+      {
+        "columns": [
+          "id",
+          "status"
+        ],
+        "values": [
+          [
+            1,
+            "done"
+          ]
+        ]
+      },
+      {
+        "columns": [
+          "id",
+          "status"
+        ],
+        "values": [
+          [
+            1,
+            "new"
+          ]
+        ]
+      }
+    ],
+    "outcome": "success"
+  },
+  {
+    "lessonId": "sql-50",
+    "id": "sql-50-worked",
+    "paragraph": 1,
+    "code": "CREATE TABLE jobs(id INTEGER PRIMARY KEY, status TEXT, priority INTEGER);\nINSERT INTO jobs VALUES (1,'open',2),(2,'closed',1),(3,'open',1),(4,NULL,0);\nCREATE INDEX open_priority ON jobs(priority,id)\nWHERE status='open';\nSELECT id,priority\nFROM jobs\nWHERE status='open'\nORDER BY priority,id;",
+    "checks": [],
+    "expectedResults": [
+      {
+        "columns": [
+          "id",
+          "priority"
+        ],
+        "values": [
+          [
+            3,
+            1
+          ],
+          [
+            1,
+            2
+          ]
+        ]
+      }
+    ],
+    "outcome": "success"
+  },
+  {
+    "lessonId": "sql-50",
+    "id": "sql-50-changed",
+    "paragraph": 2,
+    "code": "CREATE TABLE jobs(id INTEGER PRIMARY KEY, status TEXT, priority INTEGER);\nINSERT INTO jobs VALUES (1,'open',2),(2,'closed',1),(3,'open',1),(4,NULL,0);\nCREATE INDEX open_priority ON jobs(priority,id)\nWHERE status='open';\nSELECT id,priority\nFROM jobs\nWHERE status='closed'\nORDER BY priority,id;",
+    "checks": [],
+    "expectedResults": [
+      {
+        "columns": [
+          "id",
+          "priority"
+        ],
+        "values": [
+          [
+            2,
+            1
+          ]
+        ]
+      }
+    ],
+    "outcome": "success"
+  },
+  {
+    "lessonId": "sql-50",
+    "id": "sql-50-plan-diagnostic",
+    "paragraph": 3,
+    "code": "CREATE TABLE jobs(id INTEGER PRIMARY KEY, status TEXT, priority INTEGER);\nINSERT INTO jobs VALUES (1,'open',2),(2,'closed',1),(3,'open',1),(4,NULL,0);\nCREATE INDEX open_priority ON jobs(priority,id)\nWHERE status='open';\nEXPLAIN QUERY PLAN\nSELECT id,priority\nFROM jobs\nWHERE status='open'\nORDER BY priority,id;",
+    "checks": [],
+    "expectedResults": [
+      {
+        "columns": [
+          "id",
+          "parent",
+          "notused",
+          "detail"
+        ],
+        "values": [
+          [
+            3,
+            0,
+            202,
+            "SCAN jobs USING COVERING INDEX open_priority"
+          ]
+        ]
+      }
+    ],
+    "outcome": "success"
+  }
+]

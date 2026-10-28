@@ -1,0 +1,14 @@
+[
+  {
+    "id": "python-78-exact-snapshot-visible",
+    "lessonId": "python-78",
+    "code": "class Task:\n    def __init__(self, title, category):\n        self.title = title\n        self.category = category\n\n    def __eq__(self, other):\n        if not isinstance(other, Task):\n            return NotImplemented\n        return (self.title, self.category) == (other.title, other.category)\n\ndef snapshot_key(task):\n    return (task.title, task.category)\ntask = Task(\"read\", \"study\")\nold_key = snapshot_key(task)\ntask.title = \"write\"\nprint(old_key)\nprint(old_key == snapshot_key(task))",
+    "expected": "('read', 'study')\nFalse"
+  },
+  {
+    "id": "python-86-repeat-cleanup",
+    "lessonId": "python-86",
+    "code": "import asyncio\n\nasync def run_pair(label=\"handled\"):\n    events = []\n    ready = asyncio.Event()\n    blocked = asyncio.Event()\n    async def waiting():\n        try:\n            ready.set()\n            await blocked.wait()\n        finally:\n            events.append(\"cleanup\")\n    async def failing():\n        await ready.wait()\n        raise ValueError(\"worker failed\")\n    try:\n        async with asyncio.TaskGroup() as group:\n            group.create_task(waiting())\n            group.create_task(failing())\n    except* ValueError:\n        events.append(label)\n    events.append(\"done\")\n    return events\n\nprint(all(asyncio.run(run_pair()) == [\"cleanup\", \"handled\", \"done\"] for _ in range(20)))",
+    "expected": "True"
+  }
+]

@@ -2,6 +2,9 @@
 import { getLessonVisual } from "../lib/lesson-visuals";
 import LessonDiagram from "./LessonDiagram";
 import PythonLessonScene, { getPythonLessonScene } from "./PythonLessonScene";
+export function hasLessonVisual(unitId: string, paragraph: number): boolean {
+  return !!(getLessonVisual(unitId, paragraph) || getPythonLessonScene(unitId, paragraph));
+}
 export default function LessonVisual({
   unitId,
   paragraph,

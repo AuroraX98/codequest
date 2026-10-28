@@ -1,0 +1,53 @@
+[
+  {
+    "id": "javascript-50-frozen-status",
+    "paragraph": 2,
+    "code": "function makeSettings() {\n  const settings = {theme: {dark: false}};\n  Object.defineProperty(settings, \"version\", {\n    value: 1, writable: false, enumerable: true, configurable: false\n  });\n  return Object.freeze(settings);\n}\nconst settings=makeSettings();\nconsole.log(Object.isFrozen(settings), Object.isFrozen(settings.theme));",
+    "expected": "true false",
+    "outcome": "success",
+    "lessonId": "javascript-50",
+    "lesson": {
+      "id": "javascript-50",
+      "title": "Property descriptors and shallow freeze",
+      "summary": "Return a frozen outer object with own version=1 (enumerable, non-writable, non-configurable) and theme={dark:false}. The nested theme remains mutable. No deep-freeze claim.",
+      "explanation": [
+        "Object.defineProperty(object,name,descriptor) defines an own property and returns that same object. A data descriptor supplies value plus writable, enumerable and configurable flags. Here version is visible to ordinary own-key enumeration, but cannot be assigned a new value or deleted/reconfigured. Omitted flags default to false for a newly defined property.",
+        "Object.freeze(object) returns that same object after preventing new own properties and making its own data properties non-writable and non-configurable. It does not recursively freeze a nested object. In this lesson theme still refers to a mutable inner object. A const binding alone would not apply these property restrictions.",
+        "makeSettings takes no arguments and returns the outer frozen object. Object.getOwnPropertyDescriptor reads one own property\u2019s descriptor, or undefined if missing; its writable flag reports the rule. The \"use strict\" directive makes assigning the read-only version throw TypeError instead of silently doing nothing.\n```javascript\n\"use strict\";\nfunction makeSettings() {\n  const settings = {theme: {dark: false}};\n  Object.defineProperty(settings, \"version\", {\n    value: 1, writable: false, enumerable: true, configurable: false\n  });\n  return Object.freeze(settings);\n}\nconst settings = makeSettings();\nconsole.log(Object.getOwnPropertyDescriptor(settings, \"version\").writable);\ntry { settings.version = 2; }\ncatch (error) { console.log(error instanceof TypeError); }\nsettings.theme.dark = true;\nconsole.log(settings.version, settings.theme.dark);\n```\nOutput: false; true; 1 true. The nested dark assignment still succeeds. Object.isFrozen(object) returns whether that object is frozen, without changing it. With settings above, this call prints true false:\n```javascript\nconsole.log(Object.isFrozen(settings), Object.isFrozen(settings.theme));\n```",
+        "Implement the outer frozen settings object while keeping the nested theme object unfrozen. Optional practice: explain why replacing settings.theme and editing settings.theme.dark are different operations."
+      ],
+      "analogy": {
+        "familiar": "Follow a small change from its starting state to its result.",
+        "connection": "Each instruction changes what the next instruction receives.",
+        "limit": "Use the actual code and checks rather than relying on the comparison."
+      },
+      "steps": [
+        "Read the requirement.",
+        "Make one change to the starter.",
+        "Run the checks.",
+        "Explain why a changed input produces its result."
+      ],
+      "starter": "function makeSettings() { return {version:1, theme:{dark:false}}; }",
+      "solution": "function makeSettings() {\n  const settings = {theme: {dark: false}};\n  Object.defineProperty(settings, \"version\", {\n    value: 1, writable: false, enumerable: true, configurable: false\n  });\n  return Object.freeze(settings);\n}",
+      "runtime": "javascript",
+      "checks": [],
+      "quiz": {
+        "question": "Which operation can still succeed on the returned object?",
+        "choices": [
+          "settings.theme.dark = true",
+          "settings.theme = {} replaces the frozen outer property",
+          "settings.version = 2 changes version"
+        ],
+        "answer": 0,
+        "explanation": "Freezing the outer object protects its own property bindings, not the properties of the referenced nested theme."
+      },
+      "hints": [
+        "Trace the visible worked calls before changing the starter."
+      ],
+      "math": null,
+      "filename": "main.js",
+      "estimatedMinutes": 12,
+      "externalNotes": "ECMAScript 2026 core; native Node24 and current app worker/DOM harness evidence are recorded separately. No external service or real-browser claim follows from a local fixture."
+    }
+  }
+]

@@ -1,0 +1,200 @@
+[
+  {
+    "lessonId": "swift-47",
+    "id": "swift-47-worked",
+    "paragraph": 2,
+    "code": "func sameEnds<T>(_ values: [T]) -> Bool where T: Equatable {\n    guard let first = values.first, let last = values.last else {\n        return false\n    }\n    return first == last\n}\nprint(sameEnds([4, 9, 4]))\nprint(sameEnds([\"oak\", \"elm\"]))",
+    "outcome": "success",
+    "expectedStdout": "true\nfalse",
+    "checks": []
+  },
+  {
+    "lessonId": "swift-47",
+    "id": "swift-47-changed",
+    "paragraph": 3,
+    "code": "func sameEnds<T>(_ values: [T]) -> Bool where T: Equatable {\n    guard let first = values.first, let last = values.last else {\n        return false\n    }\n    return first == last\n}\nprint(sameEnds([Int]()))\nprint(sameEnds([\"ash\"]))",
+    "outcome": "success",
+    "expectedStdout": "false\ntrue",
+    "checks": []
+  },
+  {
+    "lessonId": "swift-47",
+    "id": "swift-47-rejection",
+    "paragraph": 4,
+    "code": "func sameEnds<T>(_ values: [T]) -> Bool where T: Equatable {\n    guard let first = values.first, let last = values.last else {\n        return false\n    }\n    return first == last\n}\nstruct Marker { let code: Int }\nprint(sameEnds([Marker(code: 1)]))",
+    "outcome": "compile-rejection",
+    "diagnosticContains": "requires that 'Marker' conform to 'Equatable'",
+    "gradingScope": "Author-validated local compiler rejection, not an extra learner runtime check."
+  },
+  {
+    "lessonId": "swift-48",
+    "id": "swift-48-worked",
+    "paragraph": 2,
+    "code": "protocol ItemSource {\n    associatedtype Item\n    var item: Item { get }\n}\nstruct Box<Value>: ItemSource {\n    let item: Value\n}\nstruct CountSource: ItemSource {\n    let item: Int\n}\nfunc pair<A: ItemSource, B: ItemSource>(_ a: A, _ b: B) -> [A.Item]\nwhere A.Item == B.Item {\n    return [a.item, b.item]\n}\nprint(pair(Box(item: 3), Box(item: 8)))\nprint(pair(Box(item: \"east\"), Box(item: \"west\")))",
+    "outcome": "success",
+    "expectedStdout": "[3, 8]\n[\"east\", \"west\"]",
+    "checks": []
+  },
+  {
+    "lessonId": "swift-48",
+    "id": "swift-48-changed",
+    "paragraph": 3,
+    "code": "protocol ItemSource {\n    associatedtype Item\n    var item: Item { get }\n}\nstruct Box<Value>: ItemSource {\n    let item: Value\n}\nstruct CountSource: ItemSource {\n    let item: Int\n}\nfunc pair<A: ItemSource, B: ItemSource>(_ a: A, _ b: B) -> [A.Item]\nwhere A.Item == B.Item {\n    return [a.item, b.item]\n}\nprint(pair(Box(item: 6), CountSource(item: 9)))",
+    "outcome": "success",
+    "expectedStdout": "[6, 9]",
+    "checks": []
+  },
+  {
+    "lessonId": "swift-48",
+    "id": "swift-48-rejection",
+    "paragraph": 4,
+    "code": "protocol ItemSource {\n    associatedtype Item\n    var item: Item { get }\n}\nstruct Box<Value>: ItemSource {\n    let item: Value\n}\nstruct CountSource: ItemSource {\n    let item: Int\n}\nfunc pair<A: ItemSource, B: ItemSource>(_ a: A, _ b: B) -> [A.Item]\nwhere A.Item == B.Item {\n    return [a.item, b.item]\n}\nprint(pair(Box(item: 4), Box(item: \"4\")))",
+    "outcome": "compile-rejection",
+    "diagnosticContains": "conflicting arguments to generic parameter 'Value' ('Int' vs. 'String')",
+    "gradingScope": "Author-validated local compiler rejection, not an extra learner runtime check."
+  },
+  {
+    "lessonId": "swift-49",
+    "id": "swift-49-worked",
+    "paragraph": 2,
+    "code": "protocol Captioned {\n    func caption() -> String\n}\nstruct Trail: Captioned {\n    func caption() -> String { return \"trail\" }\n}\nstruct Harbor: Captioned {\n    func caption() -> String { return \"harbor\" }\n}\nfunc makeTrail() -> some Captioned {\n    return Trail()\n}\nfunc chooseCaption(_ water: Bool) -> any Captioned {\n    if water { return Harbor() }\n    return Trail()\n}\nprint(makeTrail().caption())\nprint(chooseCaption(true).caption())",
+    "outcome": "success",
+    "expectedStdout": "trail\nharbor",
+    "checks": []
+  },
+  {
+    "lessonId": "swift-49",
+    "id": "swift-49-changed",
+    "paragraph": 3,
+    "code": "protocol Captioned {\n    func caption() -> String\n}\nstruct Trail: Captioned {\n    func caption() -> String { return \"trail\" }\n}\nstruct Harbor: Captioned {\n    func caption() -> String { return \"harbor\" }\n}\nfunc makeTrail() -> some Captioned {\n    return Trail()\n}\nfunc chooseCaption(_ water: Bool) -> any Captioned {\n    if water { return Harbor() }\n    return Trail()\n}\nprint(chooseCaption(false).caption())",
+    "outcome": "success",
+    "expectedStdout": "trail",
+    "checks": []
+  },
+  {
+    "lessonId": "swift-49",
+    "id": "swift-49-rejection",
+    "paragraph": 4,
+    "code": "protocol Captioned {\n    func caption() -> String\n}\nstruct Trail: Captioned {\n    func caption() -> String { return \"trail\" }\n}\nstruct Harbor: Captioned {\n    func caption() -> String { return \"harbor\" }\n}\nfunc makeTrail() -> some Captioned {\n    return Trail()\n}\nfunc chooseCaption(_ water: Bool) -> some Captioned {\n    if water { return Harbor() }\n    return Trail()\n}\nprint(chooseCaption(true).caption())",
+    "outcome": "compile-rejection",
+    "diagnosticContains": "do not have matching underlying types",
+    "gradingScope": "Author-validated local compiler rejection, not an extra learner runtime check."
+  },
+  {
+    "lessonId": "swift-50",
+    "id": "swift-50-worked",
+    "paragraph": 2,
+    "code": "func parsedNumbers(_ texts: [String]) -> [Int] {\n    return texts.compactMap { text in\n        Int(text)\n    }\n}\nlet source = [\"8\", \"bad\", \"0\", \"8\"]\nprint(parsedNumbers(source))\nprint(source)",
+    "outcome": "success",
+    "expectedStdout": "[8, 0, 8]\n[\"8\", \"bad\", \"0\", \"8\"]",
+    "checks": []
+  },
+  {
+    "lessonId": "swift-50",
+    "id": "swift-50-changed",
+    "paragraph": 3,
+    "code": "func parsedNumbers(_ texts: [String]) -> [Int] {\n    return texts.compactMap { text in\n        Int(text)\n    }\n}\nprint(parsedNumbers([\"-3\", \"no\", \"2\"]))\nprint(parsedNumbers([]))",
+    "outcome": "success",
+    "expectedStdout": "[-3, 2]\n[]",
+    "checks": []
+  },
+  {
+    "lessonId": "swift-51",
+    "id": "swift-51-worked",
+    "paragraph": 2,
+    "code": "func joinedLabels(_ labels: [String], startingWith prefix: String) -> String {\n    return labels.reduce(prefix) { accumulated, label in\n        accumulated + \"[\" + label + \"]\"\n    }\n}\nprint(joinedLabels([\"map\", \"notes\"], startingWith: \"Trip:\"))",
+    "outcome": "success",
+    "expectedStdout": "Trip:[map][notes]",
+    "checks": []
+  },
+  {
+    "lessonId": "swift-51",
+    "id": "swift-51-changed",
+    "paragraph": 3,
+    "code": "func joinedLabels(_ labels: [String], startingWith prefix: String) -> String {\n    return labels.reduce(prefix) { accumulated, label in\n        accumulated + \"[\" + label + \"]\"\n    }\n}\nprint(joinedLabels([], startingWith: \"Ready\"))\nprint(joinedLabels([\"A\", \"A\"], startingWith: \"\"))",
+    "outcome": "success",
+    "expectedStdout": "Ready\n[A][A]",
+    "checks": []
+  },
+  {
+    "lessonId": "swift-52",
+    "id": "swift-52-worked",
+    "paragraph": 2,
+    "code": "enum EntryProblem: Error {\n    case missing\n    case tooLong\n}\nfunc checkedName(_ text: String) -> Result<String, EntryProblem> {\n    if text.isEmpty { return .failure(.missing) }\n    if text.count > 5 { return .failure(.tooLong) }\n    return .success(text)\n}\nfunc describe(_ result: Result<String, EntryProblem>) -> String {\n    switch result {\n    case .success(let name):\n        return \"saved:\" + name\n    case .failure(.missing):\n        return \"missing\"\n    case .failure(.tooLong):\n        return \"too long\"\n    }\n}\nprint(describe(checkedName(\"fern\")))\nprint(describe(checkedName(\"\")))",
+    "outcome": "success",
+    "expectedStdout": "saved:fern\nmissing",
+    "checks": []
+  },
+  {
+    "lessonId": "swift-52",
+    "id": "swift-52-changed",
+    "paragraph": 3,
+    "code": "enum EntryProblem: Error {\n    case missing\n    case tooLong\n}\nfunc checkedName(_ text: String) -> Result<String, EntryProblem> {\n    if text.isEmpty { return .failure(.missing) }\n    if text.count > 5 { return .failure(.tooLong) }\n    return .success(text)\n}\nfunc describe(_ result: Result<String, EntryProblem>) -> String {\n    switch result {\n    case .success(let name):\n        return \"saved:\" + name\n    case .failure(.missing):\n        return \"missing\"\n    case .failure(.tooLong):\n        return \"too long\"\n    }\n}\nprint(describe(checkedName(\"longer\")))\nprint(describe(checkedName(\"five!\")))",
+    "outcome": "success",
+    "expectedStdout": "too long\nsaved:five!",
+    "checks": []
+  },
+  {
+    "lessonId": "swift-53",
+    "id": "swift-53-worked",
+    "paragraph": 2,
+    "code": "enum WorkProblem: Error { case rejected }\nactor CompletionLog {\n    private var finished = 0\n    func item(_ value: Int, fail: Bool) throws -> Int {\n        defer { finished += 1 }\n        if fail { throw WorkProblem.rejected }\n        return value\n    }\n    func count() -> Int { return finished }\n}\nfunc compute(_ log: CompletionLog, fail: Bool) async throws -> Int {\n    async let left = log.item(3, fail: fail)\n    async let right = log.item(4, fail: false)\n    return try await left + right\n}\nfunc joined(_ fail: Bool) async -> (value: Int?, completed: Int) {\n    let log = CompletionLog()\n    do {\n        let value = try await compute(log, fail: fail)\n        return (value, await log.count())\n    } catch {\n        return (nil, await log.count())\n    }\n}\nlet success = await joined(false)\nprint(success.value ?? -1)\nprint(success.completed)",
+    "outcome": "success",
+    "expectedStdout": "7\n2",
+    "checks": []
+  },
+  {
+    "lessonId": "swift-53",
+    "id": "swift-53-changed",
+    "paragraph": 3,
+    "code": "enum WorkProblem: Error { case rejected }\nactor CompletionLog {\n    private var finished = 0\n    func item(_ value: Int, fail: Bool) throws -> Int {\n        defer { finished += 1 }\n        if fail { throw WorkProblem.rejected }\n        return value\n    }\n    func count() -> Int { return finished }\n}\nfunc compute(_ log: CompletionLog, fail: Bool) async throws -> Int {\n    async let left = log.item(3, fail: fail)\n    async let right = log.item(4, fail: false)\n    return try await left + right\n}\nfunc joined(_ fail: Bool) async -> (value: Int?, completed: Int) {\n    let log = CompletionLog()\n    do {\n        let value = try await compute(log, fail: fail)\n        return (value, await log.count())\n    } catch {\n        return (nil, await log.count())\n    }\n}\nlet failure = await joined(true)\nprint(failure.value == nil)\nprint(failure.completed)",
+    "outcome": "success",
+    "expectedStdout": "true\n2",
+    "checks": []
+  },
+  {
+    "lessonId": "swift-54",
+    "id": "swift-54-worked",
+    "paragraph": 2,
+    "code": "func collectedLengths(_ words: [String]) async -> [Int] {\n    return await withTaskGroup(of: Int.self, returning: [Int].self) { group in\n        for word in words {\n            group.addTask {\n                word.count\n            }\n        }\n        var lengths: [Int] = []\n        for await length in group {\n            lengths.append(length)\n        }\n        return lengths.sorted()\n    }\n}\nprint(await collectedLengths([\"map\", \"a\", \"sun\"]))",
+    "outcome": "success",
+    "expectedStdout": "[1, 3, 3]",
+    "checks": []
+  },
+  {
+    "lessonId": "swift-54",
+    "id": "swift-54-changed",
+    "paragraph": 3,
+    "code": "func collectedLengths(_ words: [String]) async -> [Int] {\n    return await withTaskGroup(of: Int.self, returning: [Int].self) { group in\n        for word in words {\n            group.addTask {\n                word.count\n            }\n        }\n        var lengths: [Int] = []\n        for await length in group {\n            lengths.append(length)\n        }\n        return lengths.sorted()\n    }\n}\nprint(await collectedLengths([\"\", \"ab\", \"ab\"]))\nprint(await collectedLengths([]))",
+    "outcome": "success",
+    "expectedStdout": "[0, 2, 2]\n[]",
+    "checks": []
+  },
+  {
+    "lessonId": "swift-58",
+    "id": "swift-58-worked",
+    "paragraph": 2,
+    "code": "func isWithin(_ value: Int, lower: Int, upper: Int) -> Bool {\n    return value >= lower && value <= upper\n}\nprint(isWithin(5, lower: 2, upper: 8))\nprint(isWithin(2, lower: 2, upper: 8))",
+    "outcome": "success",
+    "expectedStdout": "true\ntrue",
+    "checks": []
+  },
+  {
+    "lessonId": "swift-58",
+    "id": "swift-58-changed",
+    "paragraph": 3,
+    "code": "func isWithin(_ value: Int, lower: Int, upper: Int) -> Bool {\n    return value >= lower && value <= upper\n}\nprint(isWithin(9, lower: 2, upper: 8))\nprint(isWithin(5, lower: 8, upper: 2))",
+    "outcome": "success",
+    "expectedStdout": "false\nfalse",
+    "checks": []
+  },
+  {
+    "lessonId": "swift-58",
+    "id": "swift-58-rejection",
+    "paragraph": 4,
+    "code": "func isWithin(_ value: Int, lower: Int, upper: Int) -> Bool {\n    return value >= lower && value <= upper\n}\nprint(isWithin(\"5\", lower: 2, upper: 8))",
+    "outcome": "compile-rejection",
+    "diagnosticContains": "cannot convert value of type 'String' to expected argument type 'Int'",
+    "gradingScope": "Author-validated local compiler rejection, not an extra learner runtime check."
+  }
+]

@@ -22,6 +22,7 @@ const install = (name, value) => {
 };
 const passed = [], failures = [], externalCalls = [], progressWrites = [];
 const check = async (name, run) => {
+  process.stderr.write('RUN ' + name + '\n');
   try { await run(); passed.push(name); }
   catch (error) { failures.push({ name, error }); }
 };
@@ -130,7 +131,7 @@ try {
     for (let index = 0; index < total; index++) {
       assert.equal(Number(flow().dataset.stepIndex), index);
       assert.equal(document.querySelectorAll('[data-step-kind]').length, 1, 'One current microstep panel, not stacked steps');
-      assert.equal(document.querySelector('[data-lesson-reference]').open, false);
+      assert.equal(document.querySelector('[data-lesson-reference]'), null, 'Removed explanation disclosure stays absent');
       assert.equal(primary().type, 'button');
       assert.equal(back().type, 'button');
       assert.equal(primary().tabIndex, 0);
@@ -166,12 +167,13 @@ try {
     }
   };
 
-  await check('All 116 lessons, 10 tracks, 26 Python lessons, and 822 written sections remain available', () => {
-    assert.equal(lessons.length, 116);
-    assert.equal(catalog.units.length, 116);
-    assert.equal(new Set(catalog.units.map(unit => unit.track)).size, 10);
-    assert.equal(lessons.filter(lesson => lesson.runtime === 'python').length, 26);
-    assert.equal(lessons.reduce((total, lesson) => total + lesson.explanation.length, 0), 822);
+  await check('Every catalog lesson and authored section remains available', () => {
+    assert.equal(lessons.length, catalog.units.length);
+    assert.equal(new Set(lessons.map(lesson => lesson.id)).size, lessons.length);
+    assert.ok(lessons.length >= 116, 'Original curriculum is retained alongside additions');
+    assert.ok(new Set(catalog.units.map(unit => unit.track)).size >= 10);
+    assert.ok(lessons.filter(lesson => lesson.runtime === 'python').length >= 26);
+    assert.ok(lessons.every(lesson => lesson.explanation.length > 0));
     assert.deepEqual(new Set(lessons.map(lesson => lesson.id)), new Set(catalog.units.map(unit => unit.id)));
     for (const lesson of lessons) assert.equal(getLessonHeadings(lesson.id).length, lesson.explanation.length, lesson.id);
   });
@@ -183,14 +185,15 @@ try {
     }
     assert.equal(lessonIdeas(sample).join(' '), sample);
     assert.ok(lessonIdeas(sample).every(idea => (idea.match(/`/g)?.length ?? 0) % 2 === 0));
+    for (const lesson of lessons) {
     const doc = new JSDOM('').window.document;
-    for (const lesson of lessons) for (const text of lesson.explanation) {
+    for (const text of lesson.explanation) {
       doc.body.innerHTML = renderToStaticMarkup(React.createElement(Content, { text, runtime: lesson.runtime }));
       const originalWords = [...doc.querySelectorAll('.lesson-content p')].map(node => node.textContent).join(' ').replace(/\s+/g, ' ').trim();
       const originalCode = [...doc.querySelectorAll('.code-example pre code')].map(node => node.textContent);
       const normalize = text => text.replace(/\s+/g, ' ').trim();
       const proseSource = lessonBlocks(text, lesson.runtime).filter(block => block.kind === 'prose').map(block => block.text).join(' ');
-      const stepSource = buildLessonSteps(text, lesson.runtime).filter(step => step.kind === 'explain').map(step => step.text).join(' ');
+      const stepSource = buildLessonSteps(text, lesson.runtime).filter(step => step.kind === 'explain' && step.purpose !== 'exercise-preparation').map(step => step.text).join(' ');
       assert.equal(normalize(stepSource), normalize(proseSource), lesson.id + ': microsteps retain the original prose, markup, and punctuation adjacency');
       doc.body.innerHTML = renderToStaticMarkup(React.createElement(Content, { text, runtime: lesson.runtime, bulletPoints: true }));
       const bulletWords = [...doc.querySelectorAll('.reading-ideas > p, .idea-bullets > li')].map(node => node.textContent).join(' ').replace(/\s+/g, ' ').trim();
@@ -200,6 +203,8 @@ try {
       assert.equal(doc.querySelectorAll('script, iframe, img, [onclick], [onerror]').length, 0);
     }
     doc.defaultView.close();
+    global.gc?.();
+    }
   });
 
   await check('Simple code examples show one breakdown while exact source and copy remain behind a closed disclosure', async () => {
@@ -231,7 +236,7 @@ try {
     assert.deepEqual(externalCalls, []);
   });
 
-  await check('Simple written reading mounts one current idea and a closed native All ideas disclosure', async () => {
+  await check('Simple written reading mounts one current idea; unit TOC replaces the retired All ideas disclosure', async () => {
     const lesson = lessons.find(item => item.id === 'python-02');
     const selections = [];
     let index = 0;
@@ -245,18 +250,12 @@ try {
     const region = document.querySelector('.simple-reader [role="region"]');
     assert.equal(document.getElementById(region.getAttribute('aria-labelledby')).textContent, getLessonHeadings(lesson.id)[0]);
     assert.equal(region.dataset.annotationSection, 'text:0');
-    assert.equal(document.querySelector('.reader-index').open, false);
-    const summary = document.querySelector('.reader-index > summary');
-    assert.equal(summary.textContent, 'All ideas');
-    await click(summary);
-    assert.equal(document.querySelector('.reader-index').open, true);
-    const buttons = [...document.querySelectorAll('.reader-index nav button')];
-    assert.equal(buttons.length, lesson.explanation.length);
-    for (const button of buttons) { assert.equal(button.type, 'button'); assert.equal(button.tabIndex, 0); }
-    assert.equal(buttons[0].getAttribute('aria-current'), 'step');
-    await click(buttons.at(-1));
-    assert.deepEqual(selections, [lesson.explanation.length - 1]);
-    assert.equal(document.querySelector('.reader-index').open, false, 'Selecting a new idea closes the index');
+    assert.equal(document.querySelector('.reader-index'), null, 'Retired All ideas menu is absent');
+    assert.ok(nodes.some(node => tag(node) === 'UnitTableOfContents'), 'The app owns one unit-level contents drawer');
+    // Emulate its controlled index prop; the real drawer click is covered in unit-toc.mjs.
+    index = lesson.explanation.length - 1;
+    await render(view());
+    assert.deepEqual(selections, [], 'Changing a controlled index does not auto-select or save');
     assert.equal(document.querySelectorAll('.simple-reader [role="region"]').length, 1);
     assert.equal(document.querySelector('.simple-reader [role="region"]').dataset.annotationSection, 'text:' + (lesson.explanation.length - 1));
     assert.equal(document.querySelector('.simple-reader h3').textContent, getLessonHeadings(lesson.id).at(-1));
@@ -288,7 +287,7 @@ try {
       assert.equal(document.querySelector('.simple-concept-reader h3').textContent, concept.title);
       assert.equal(document.querySelectorAll('.simple-concept-reader > [data-annotation-section]').length, 1);
       assert.equal(document.querySelector('.simple-concept-reader > [data-annotation-section]').dataset.annotationSection, 'concept:' + concept.id);
-      assert.equal(document.querySelector('.reader-index').open, false);
+      assert.equal(document.querySelector('.reader-index'), null, 'Retired per-reader index stays absent');
       for (const details of document.querySelectorAll('details.simple-more')) assert.equal(details.open, false);
       assert.equal(back().disabled, index === 0);
       assert.ok(contexts.at(-1).explanation.includes(concept.short));
@@ -302,10 +301,10 @@ try {
     await click(back());
     assert.equal(document.querySelector('.simple-concept-reader h3').textContent, pythonConcepts.at(-2).title);
     assert.equal(Number(flow().dataset.stepIndex), Number(flow().dataset.stepTotal) - 1, 'Back across a concept boundary opens the previous final microstep');
-    await click(document.querySelector('.reader-index > summary'));
-    await click(document.querySelector('.reader-index nav button'));
+    for (let guard = 0; document.querySelector('.simple-concept-reader h3').textContent !== pythonConcepts[0].title && guard < 200; guard++) await click(back());
+    while (Number(flow().dataset.stepIndex) > 0) await click(back());
     assert.equal(document.querySelector('.simple-concept-reader h3').textContent, pythonConcepts[0].title);
-    assert.equal(document.querySelector('.reader-index').open, false);
+    assert.equal(document.querySelector('.reader-index'), null, 'Retired per-reader index stays absent');
     assert.equal(back().disabled, true);
     assert.deepEqual(progressWrites, []);
     assert.deepEqual(externalCalls, []);
@@ -366,8 +365,8 @@ try {
     await click(back());
     assert.equal(document.querySelector('[data-page]').textContent, String(lesson.explanation.length - 2));
     assert.equal(Number(flow().dataset.stepIndex), Number(flow().dataset.stepTotal) - 1, 'Written Back crosses into the previous final microstep');
-    await click(document.querySelector('.reader-index > summary'));
-    await click(document.querySelector('.reader-index nav button'));
+    for (let guard = 0; Number(document.querySelector('[data-page]').textContent) > 0 && guard < 300; guard++) await click(back());
+    while (Number(flow().dataset.stepIndex) > 0) await click(back());
     assert.equal(JSON.parse(document.querySelector('[data-note-context]').textContent).sectionKey, 'text:0');
     assert.deepEqual(progressWrites, []);
     assert.equal(visibleMarks().length, 0);
@@ -408,7 +407,8 @@ try {
     for (const name of ['analogy', 'project-preview']) {
       assert.ok(!nodes.some(node => tag(node) === 'details' && hasClass(node, name)), name + ': redundant panel remains removed');
     }
-    assert.ok(nodes.some(node => tag(node) === 'LessonNotes'), 'Original notes component remains mounted in app integration');
+    assert.ok(!nodes.some(node => tag(node) === 'LessonNotes'), 'Requested My notes UI removal remains in effect');
+    assert.ok((await readFile(path.join(cwd, 'components/LessonNotes.tsx'), 'utf8')).includes('export default'), 'Notes component/data implementation is retained, not deleted');
     assert.ok(!nodes.some(node => tag(node) === 'AskChatGPT'), 'Requested ChatGPT handoff removal remains in effect');
   });
 

@@ -1,0 +1,401 @@
+[
+  {
+    "id": "go-45",
+    "quizTarget": "If the above row expects 11 instead of 10, what happens?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "A table-driven test stores named inputs and expected results in a slice of struct values. Here []struct declares a slice whose element type is an anonymous structure; each row fills name, input and want in order. The same assertion runs for every row."
+      },
+      {
+        "paragraph": 1,
+        "fact": "Save this complete example as main_test.go in a local module and run go test -run TestClamp -v. t.Run names each subtest; its callback receives that subtest\u2019s *testing.T. t.Fatalf reports the actual and wanted values and ends the failing subtest. PASS and timing lines come from the test runner, not a hardcoded program print."
+      }
+    ],
+    "reasoning": "The changed expectation disagrees with the unchanged upper-bound behavior; the failure is localized by its subtest name.",
+    "source": "https://pkg.go.dev/testing#T.Run",
+    "prerequisites": [
+      "go-44"
+    ]
+  },
+  {
+    "id": "go-46",
+    "quizTarget": "If the implementation caps at 11 instead of 10, what does seed 11 reveal?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "This fuzz target checks that clamp always returns a value from zero through ten. f.Add records seed inputs, and f.Fuzz supplies the function exercised by the testing engine. A property can be incomplete: a function that always returns zero passes this range invariant while still being a wrong clamp."
+      },
+      {
+        "paragraph": 1,
+        "fact": "Save as main_test.go and run go test -run FuzzClamp -v to execute only the seed corpus. An active search needs an explicit command such as go test -fuzz FuzzClamp -fuzztime 2s and has different resource costs. The lesson\u2019s deterministic verification runs seeds only; it does not claim a long fuzzing campaign or proof for all integers."
+      }
+    ],
+    "reasoning": "The existing seed reaches the changed bad boundary and produces eleven, which the invariant rejects.",
+    "source": "https://pkg.go.dev/testing#hdr-Fuzzing",
+    "prerequisites": [
+      "go-45"
+    ]
+  },
+  {
+    "id": "go-47",
+    "quizTarget": "If the join separator becomes \"-\" but the expected result stays \"ab\", what happens?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "BenchmarkJoin accepts *testing.B. strings.Join(parts, separator) combines the strings with that separator between neighboring items. The b.N loop repeats the operation a count chosen by the runner; a package variable sink keeps the result observable. Benchmarks are not automatically a realistic application workload, and allocation patterns and machine conditions affect measurements."
+      },
+      {
+        "paragraph": 1,
+        "fact": "Save as main_test.go and run go test -run ^$ -bench BenchmarkJoin -benchtime=1x. The anchored empty test pattern skips ordinary tests; 1x requests one measured iteration, useful as a smoke check, not a stable performance comparison. Timing output varies. A correctness guard still rejects an unexpected joined string."
+      }
+    ],
+    "reasoning": "The new result is a-b, so the unchanged correctness condition fails; a timing number cannot repair wrong behavior.",
+    "source": "https://pkg.go.dev/testing#hdr-Benchmarks",
+    "prerequisites": [
+      "go-46"
+    ]
+  },
+  {
+    "id": "go-48",
+    "quizTarget": "If the source text becomes \"go\", what prints?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "io.Reader fills a supplied byte slice and returns a byte count plus an error. A reader may return data and an error together, so process n bytes before deciding what the error means. io.Writer must report how much it accepted; a short write requires an error."
+      },
+      {
+        "paragraph": 1,
+        "fact": "io.Copy transfers until EOF or another failure and returns the total bytes written plus an error. strings.NewReader supplies text bytes and bytes.Buffer collects them, so this example uses no files or network. Normal source exhaustion is not returned as an io.Copy error."
+      }
+    ],
+    "reasoning": "The two source bytes are copied successfully; normal EOF finishes io.Copy without an error.",
+    "source": "https://pkg.go.dev/io#Copy",
+    "prerequisites": [
+      "go-47"
+    ]
+  },
+  {
+    "id": "go-49",
+    "quizTarget": "If the path names a file inside a nonexistent directory in this fixture, what prints?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "os.Create creates or truncates a file. Run this sample only in a disposable directory because it replaces notes.txt. Check the returned error before using the *os.File; a failed creation does not provide a usable file."
+      },
+      {
+        "paragraph": 1,
+        "fact": "WriteString can fail, and Close can report a final failure. This helper closes explicitly after attempting the write, then prioritizes the write error while still observing the close result. A bare deferred Close would run but its error would be ignored unless handled deliberately."
+      }
+    ],
+    "reasoning": "Creation fails and the helper returns that error before trying to write.",
+    "source": "https://pkg.go.dev/os#File.Close",
+    "prerequisites": [
+      "go-48"
+    ]
+  },
+  {
+    "id": "go-50",
+    "quizTarget": "If the input is a twenty-character line, what happens under this configured limit?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "bufio.Scanner splits input into tokens; its default split is lines with line endings removed. Scanner has a maximum token size, so it is not an unlimited line reader. Buffer configures the starting buffer and maximum before scanning starts."
+      },
+      {
+        "paragraph": 1,
+        "fact": "Scan returning false can mean end-of-input or a failure. Always inspect Err after the loop. This fixture chooses a tiny maximum of eight bytes and prints a stable label rather than depending on the exact error text. A larger configured limit still needs an application size policy."
+      }
+    ],
+    "reasoning": "The token exceeds the small configured maximum, and Err distinguishes that failure from normal exhaustion.",
+    "source": "https://pkg.go.dev/bufio#Scanner",
+    "prerequisites": [
+      "go-49"
+    ]
+  },
+  {
+    "id": "go-51",
+    "quizTarget": "If the JSON minutes value is 0, what prints?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "encoding/json.Unmarshal decodes into exported fields. The backtick tag `json:\"minutes\"` maps the field to a JSON key; a raw Go string literal uses backticks to hold JSON without escaping its quotes. Successful decoding does not enforce application ranges."
+      },
+      {
+        "paragraph": 1,
+        "fact": "The Session struct holds an integer minute count, and the separate check allows only 1 through 60. A missing field becomes the zero value and is rejected by this policy. Unmarshal ignores unknown fields by default; stricter schemas need an explicit decoder policy."
+      }
+    ],
+    "reasoning": "Zero is valid JSON and decodes as an int, but the application\u2019s range check rejects it.",
+    "source": "https://pkg.go.dev/encoding/json#Unmarshal",
+    "prerequisites": [
+      "go-50"
+    ]
+  },
+  {
+    "id": "go-52",
+    "quizTarget": "If the text changes to \"90\" without a unit, what happens?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "time.Duration represents a signed nanosecond count. time.ParseDuration accepts unit-marked text such as 1m30s and returns a duration plus an error. A bare number without a unit is not interpreted as minutes."
+      },
+      {
+        "paragraph": 1,
+        "fact": "This example converts a fixed duration to seconds using Seconds, which returns float64. It does not call time.Now or sleep. For calendar events, location and date rules are separate concerns; duration arithmetic alone does not model daylight-saving transitions."
+      }
+    ],
+    "reasoning": "The duration grammar requires a unit for this nonzero number; the checked error path handles rejection.",
+    "source": "https://pkg.go.dev/time#ParseDuration",
+    "prerequisites": [
+      "go-51"
+    ]
+  },
+  {
+    "id": "go-53",
+    "quizTarget": "If cancel is called twice before waiting, what prints?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "context.WithCancel derives a cancellable context and returns a CancelFunc. The notation <-ctx.Done() receives from that channel, waiting until cancellation closes it; channel operations are developed in the following lessons. Calling cancel closes the context\u2019s Done channel; it does not forcibly terminate arbitrary code. Operations must observe cancellation and stop cooperatively."
+      },
+      {
+        "paragraph": 1,
+        "fact": "Defer cancel even when another branch may cancel earlier; repeated calls are safe. After cancellation, Err reports context.Canceled. Background has no deadline and is a root context, not an automatic timeout. This fixture cancels immediately without waiting for a timer."
+      }
+    ],
+    "reasoning": "Cancellation remains in effect and repeated CancelFunc calls do not undo it.",
+    "source": "https://pkg.go.dev/context#WithCancel",
+    "prerequisites": [
+      "go-52"
+    ]
+  },
+  {
+    "id": "go-54",
+    "quizTarget": "If the worker assigns 11, what prints after receiving from done?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "go invokes a function concurrently with its caller. The func() { ... }() form declares and immediately invokes an anonymous function; go changes that invocation into a goroutine. main does not automatically wait for every goroutine before the program exits."
+      },
+      {
+        "paragraph": 1,
+        "fact": "make(chan struct{}) creates an unbuffered channel carrying empty-struct signals. The worker writes result and closes done. Receiving from the closed channel unblocks main; that synchronization orders the preceding write before the read. Only the worker owns closing done, and no sleep guesses are involved."
+      }
+    ],
+    "reasoning": "The completion receive occurs after the worker\u2019s write and close, so the later read observes eleven.",
+    "source": "https://go.dev/ref/mem",
+    "prerequisites": [
+      "go-53"
+    ]
+  },
+  {
+    "id": "go-55",
+    "quizTarget": "If the worker sends 8 instead, what prints?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "make(chan int) creates an unbuffered channel. A send ch <- value and a receive <-ch rendezvous; the sender cannot finish the send until a receiver is ready. Channels communicate typed values, not arbitrary shared memory transactions."
+      },
+      {
+        "paragraph": 1,
+        "fact": "The worker sends one integer, then closes a separate completion channel. main receives the value and waits for done so the worker\u2019s lifetime is complete before returning. Closing the data channel is unnecessary when the receiver knows exactly one value is expected."
+      }
+    ],
+    "reasoning": "The receiver obtains eight and the unchanged calculation doubles it.",
+    "source": "https://go.dev/ref/spec#Channel_types",
+    "prerequisites": [
+      "go-54"
+    ]
+  },
+  {
+    "id": "go-56",
+    "quizTarget": "If the second queued value becomes 9, what is the drained total?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "make(chan int, 2) creates a channel with room for two queued integers. These two sends can complete without a receiver. Buffering does not make an unlimited queue or guarantee that another goroutine has finished processing a value."
+      },
+      {
+        "paragraph": 1,
+        "fact": "Closing announces that no more values will be sent; it does not discard queued values. range drains the buffered values and stops after the closed channel is empty. Sending after close or closing twice panics; this example performs neither invalid operation."
+      }
+    ],
+    "reasoning": "Both queued integers remain available after close, so range sums three and nine.",
+    "source": "https://go.dev/ref/spec#Close",
+    "prerequisites": [
+      "go-55"
+    ]
+  },
+  {
+    "id": "go-57",
+    "quizTarget": "If the initial send is removed, which branch runs?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "select waits until a communication case can proceed; if several are ready, it chooses among them rather than honoring source-order priority. A default branch runs only when no communication can proceed immediately."
+      },
+      {
+        "paragraph": 1,
+        "fact": "This fixture places one value in a buffered channel before select, so the receive is ready and default cannot run. The changed fixture leaves the channel empty with no sender, so default runs instead. No time.Sleep or scheduler-order assertion is needed."
+      }
+    ],
+    "reasoning": "An open empty channel has no immediately available value and no sender, so default is selected.",
+    "source": "https://go.dev/ref/spec#Select_statements",
+    "prerequisites": [
+      "go-56"
+    ]
+  },
+  {
+    "id": "go-58",
+    "quizTarget": "If the worker stores 11, what prints after Wait?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "sync.WaitGroup tracks outstanding tasks. Add(1) runs before launching the goroutine; the worker defers Done so its task count decreases when it returns. Wait blocks until the count reaches zero. Do not copy a WaitGroup after first use."
+      },
+      {
+        "paragraph": 1,
+        "fact": "WaitGroup coordinates lifetime, not arbitrary simultaneous writes. This example has one worker writing result and main reads only after Wait, so there is no competing access. Adding concurrent writers would require a separate synchronization policy."
+      }
+    ],
+    "reasoning": "The registered worker completes its write before Done lets Wait return.",
+    "source": "https://pkg.go.dev/sync#WaitGroup",
+    "prerequisites": [
+      "go-57"
+    ]
+  },
+  {
+    "id": "go-59",
+    "quizTarget": "If each worker increments 25 times, what is the final count?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "count++ is not atomic. Every concurrent update here locks the same sync.Mutex, changes count and unlocks it. A mutex\u2019s zero value is usable; never copy it after use. Different mutex objects would not protect this one shared counter."
+      },
+      {
+        "paragraph": 1,
+        "fact": "Two workers each make 100 protected increments. WaitGroup counts both before launch and each worker defers Done. After Wait, neither worker accesses count again, so the final observation is safe. The fixture does not run an intentionally racy unlocked variant."
+      }
+    ],
+    "reasoning": "Both workers contribute twenty-five serialized updates before the final read.",
+    "source": "https://pkg.go.dev/sync#Mutex",
+    "prerequisites": [
+      "go-58"
+    ]
+  },
+  {
+    "id": "go-60",
+    "quizTarget": "If each update adds 2 instead of 1, what prints?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "atomic.Int64 provides Add and Load operations on an integer. Its zero value starts at zero, and Add returns the new value. Do not copy an atomic object after first use. Atomic operations have sequentially consistent ordering, not a promise about a particular implementation speed."
+      },
+      {
+        "paragraph": 1,
+        "fact": "Two workers update the same typed atomic and finish before Load. This avoids lost increments for the one counter. Combining several separate Load and Store calls would not automatically make an entire algorithm atomic or preserve an invariant involving other fields."
+      }
+    ],
+    "reasoning": "There are two hundred atomic additions of two, yielding four hundred.",
+    "source": "https://pkg.go.dev/sync/atomic#Int64",
+    "prerequisites": [
+      "go-59"
+    ]
+  },
+  {
+    "id": "go-61",
+    "quizTarget": "If cancellation happens before starting the goroutine instead, what prints after done?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "Cancellation alone does not wait for a goroutine to exit. This owner supplies a context, cancels it and then waits for a separate done channel. The worker owns closing done using defer, so main returns only after cleanup and result assignment."
+      },
+      {
+        "paragraph": 1,
+        "fact": "The worker receives from ctx.Done; if cancellation already happened, that receive is immediately ready. This handles both cancellation before start and cancellation while waiting without a timing assumption. A worker doing other blocking work would also need cancellation-aware operations at those boundaries."
+      }
+    ],
+    "reasoning": "Context cancellation is a persistent signal; the later receiver does not need to have been waiting at the instant of cancellation.",
+    "source": "https://pkg.go.dev/context#Context",
+    "prerequisites": [
+      "go-60"
+    ]
+  },
+  {
+    "id": "go-62",
+    "quizTarget": "If the request method becomes POST, what status and body result?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "An HTTP handler receives an http.ResponseWriter and *http.Request. Set headers before WriteHeader or the first body write; the first body write would otherwise imply status 200. Once headers are committed, later header edits generally cannot change the response already sent."
+      },
+      {
+        "paragraph": 1,
+        "fact": "httptest.NewRequest constructs an in-memory incoming request, and NewRecorder records handler output. Calling handler directly performs no HTTP network request. This example accepts GET and returns a 405 rejection with an Allow: GET header for other methods; fmt.Fprint\u2019s write error is checked, although the in-memory recorder does not simulate a broken network connection."
+      }
+    ],
+    "reasoning": "The method guard writes the 405 error and returns before the success path.",
+    "source": "https://pkg.go.dev/net/http#Handler",
+    "prerequisites": [
+      "go-61"
+    ]
+  },
+  {
+    "id": "go-63",
+    "quizTarget": "If the requested path changes to /missing, what fails first?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "ResponseRecorder implements ResponseWriter, so a test can invoke the handler directly and inspect the recorded status and body. This isolates handler behavior; it does not test a real listener, TLS, socket failures or deployment configuration."
+      },
+      {
+        "paragraph": 1,
+        "fact": "Save as main_test.go and run go test -run TestHandler -v. This test expects status 200 and exactly ready. The missing path branch uses http.NotFound, so changing the request path should fail the unchanged success expectation with a precise status diagnostic."
+      }
+    ],
+    "reasoning": "The handler\u2019s path guard writes NotFound and returns; the test then detects the non-200 status.",
+    "source": "https://pkg.go.dev/net/http/httptest#ResponseRecorder",
+    "prerequisites": [
+      "go-62"
+    ]
+  },
+  {
+    "id": "go-64",
+    "quizTarget": "If the context deadline is already in the past, what does this fake transaction report?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "http.Client delegates a single transaction to its RoundTripper. This fake transport returns an in-memory response and never calls the default transport, DNS, a listener or a socket. io.NopCloser wraps the strings.Reader with a Close method that does nothing; it does not acquire or release an external resource. Its RoundTrip checks the request context. Real custom transports must also honor cancellation during their actual blocking work."
+      },
+      {
+        "paragraph": 1,
+        "fact": "NewRequestWithContext attaches the context; a one-hour timeout here is a bound, not a timing assertion. Defer cancel releases context resources. On successful Do, close the response body even when reading fails. A received HTTP error status is not automatically a Do transport error; inspect StatusCode separately. The fixture reads only its known tiny in-memory body."
+      }
+    ],
+    "reasoning": "The expired context yields DeadlineExceeded; errors.Is recognizes it even through the client\u2019s wrapping error.",
+    "source": "https://pkg.go.dev/net/http#RoundTripper",
+    "prerequisites": [
+      "go-63"
+    ]
+  },
+  {
+    "id": "go-65",
+    "quizTarget": "If the first input changes from 15 to 70, what is the total?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "This producer considers a fixed list of minute counts. It sends only values 1 through 60, choosing to skip invalid inputs rather than convert them to zero. The send-only chan<- int parameter documents that the producer sends and closes but does not receive."
+      },
+      {
+        "paragraph": 1,
+        "fact": "The producer defers closing the values channel and a completion channel. The consumer ranges until values is closed, then waits for done before printing its total. A fixed source bounds this exercise; a consumer that exits early would need a cancellation-aware send so the producer cannot remain blocked. No early-exit consumer is used here."
+      }
+    ],
+    "reasoning": "Seventy fails the upper-bound check, negative one and zero also fail, and twenty is the only accepted value.",
+    "source": "https://go.dev/ref/spec#Channel_types",
+    "prerequisites": [
+      "go-64"
+    ]
+  }
+]

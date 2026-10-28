@@ -1,0 +1,420 @@
+[
+  {
+    "id": "php-47",
+    "quizTarget": "If the predicate keeps odd values, which keys and values print?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "array_filter with an explicit callback keeps entries whose values satisfy that callback. It preserves the original keys rather than rebuilding zero-based indexes. Without a callback its truthiness policy can drop zero, so name the rule deliberately."
+      },
+      {
+        "paragraph": 1,
+        "fact": "array_values returns the values under consecutive integer keys. PHP arrays support both maps and lists; preserving keys matters when preparing a JSON list or indexing by position. array_keys returns the key list, and implode joins a list of values using the supplied separator. These functions return results without changing the original variable."
+      }
+    ],
+    "reasoning": "Only the entry at key twenty is odd, and filtering retains that key.",
+    "source": "https://www.php.net/manual/en/function.array-filter.php",
+    "prerequisites": [
+      "php-46"
+    ]
+  },
+  {
+    "id": "php-48",
+    "quizTarget": "If asort is replaced by sort, what keys print?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "sort orders array values in place and replaces keys with consecutive integers. asort orders values while keeping each key attached. Both mutate the supplied array."
+      },
+      {
+        "paragraph": 1,
+        "fact": "SORT_NUMERIC requests numeric comparison for these integer values. Mixed types and other flags can imply different ordering policies. The example prints key order after sorting, not just the sorted values."
+      }
+    ],
+    "reasoning": "sort reindexes the values and discards the associative key names.",
+    "source": "https://www.php.net/manual/en/function.asort.php",
+    "prerequisites": [
+      "php-47"
+    ]
+  },
+  {
+    "id": "php-49",
+    "quizTarget": "If the text becomes ASCII A, what do both functions report?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "strlen counts bytes, not Unicode characters. The UTF-8 literal \u00e9 occupies two bytes. Encoding-aware operations need an encoding; byte slicing can split a multibyte character."
+      },
+      {
+        "paragraph": 1,
+        "fact": "mb_strlen from the mbstring extension counts UTF-8 characters here and returns one. This is not universally the number of user-perceived grapheme clusters: combining sequences and emoji can contain several code points. This fixture requires mbstring instead of silently substituting a byte count."
+      }
+    ],
+    "reasoning": "ASCII A is one UTF-8 byte and one character.",
+    "source": "https://www.php.net/manual/en/function.mb-strlen.php",
+    "prerequisites": [
+      "php-48"
+    ]
+  },
+  {
+    "id": "php-50",
+    "quizTarget": "If the input is 12 without x, what prints?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "preg_match returns 1 for a match, 0 for no match, or false for an error. Compare strictly with === so no match is not confused with failure. The fixture uses a known valid pattern."
+      },
+      {
+        "paragraph": 1,
+        "fact": "The slashes delimit the pattern. \\A marks its start, \\z its end, [0-9] selects an ASCII digit and + requires at least one. Matching digits does not prove the value fits an integer or an application range."
+      }
+    ],
+    "reasoning": "The entire changed input satisfies the anchored digit pattern.",
+    "source": "https://www.php.net/manual/en/function.preg-match.php",
+    "prerequisites": [
+      "php-49"
+    ]
+  },
+  {
+    "id": "php-51",
+    "quizTarget": "If the input text is only {, what happens?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "JSON_THROW_ON_ERROR makes malformed JSON raise JsonException. Passing true as the second json_decode argument requests associative arrays for objects; the third argument, 512, sets the maximum decoding depth. Valid JSON can also be a scalar or null; successful decoding is not a shape guarantee."
+      },
+      {
+        "paragraph": 1,
+        "fact": "Require an array with an integer minutes field before using it. The null-coalescing lookup handles a missing key. json_encode serializes the accepted structure with the same throw policy. An application range remains a separate check."
+      }
+    ],
+    "reasoning": "The throw flag converts the malformed syntax into the caught exception.",
+    "source": "https://www.php.net/manual/en/function.json-decode.php",
+    "prerequisites": [
+      "php-50"
+    ]
+  },
+  {
+    "id": "php-52",
+    "quizTarget": "If the UTC time is 12:30, which dates print?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "DateTimeImmutable does not mutate the original when modified. DateTimeZone supplies explicit zone rules. Fixed input instead of now makes the example reproducible."
+      },
+      {
+        "paragraph": 1,
+        "fact": "setTimezone changes the local representation, not the instant. At 00:30 UTC on January 1, New York is still on December 31. format(\"Y-m-d\") prints only the local date, not a complete global timestamp."
+      }
+    ],
+    "reasoning": "The later instant is January 1 in both zones, and the immutable UTC object remains unchanged.",
+    "source": "https://www.php.net/manual/en/class.datetimeimmutable.php",
+    "prerequisites": [
+      "php-51"
+    ]
+  },
+  {
+    "id": "php-53",
+    "quizTarget": "If the written text is empty, what prints?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "file_put_contents returns a byte count or false; file_get_contents returns a String or false. Use === false so zero bytes and an empty String are not mistaken for failure."
+      },
+      {
+        "paragraph": 1,
+        "fact": "Run only in a disposable directory: the fixture creates or replaces notes.txt. These helpers can also emit warnings. A warning is not automatically an exception, so reporting and recovery require a deliberate policy."
+      }
+    ],
+    "reasoning": "Replacing the file with empty content succeeds with zero bytes; strict false checks retain this valid result.",
+    "source": "https://www.php.net/manual/en/function.file-put-contents.php",
+    "prerequisites": [
+      "php-52"
+    ]
+  },
+  {
+    "id": "php-54",
+    "quizTarget": "If rewind is omitted, what length is read at the current end position?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "fopen returns a resource or false. php://memory is an in-memory stream wrapper, not a network address. Mode w+ permits reads and writes. Check acquisition before use."
+      },
+      {
+        "paragraph": 1,
+        "fact": "Writing advances the position; rewind returns it to the beginning. try/finally closes the stream on normal and exceptional exits. Check write length, rewind, read and close results; in larger code decide how to preserve an earlier failure if cleanup also fails."
+      }
+    ],
+    "reasoning": "The successful read starts at the end and returns an empty String; finally still closes the stream.",
+    "source": "https://www.php.net/manual/en/function.rewind.php",
+    "prerequisites": [
+      "php-53"
+    ]
+  },
+  {
+    "id": "php-55",
+    "quizTarget": "If the user argument is 0, what prints?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "$argv contains the script name followed by user arguments; $argc counts all entries. Run php main.php 15 for the worked output. Check the count before reading a user argument."
+      },
+      {
+        "paragraph": 1,
+        "fact": "FILTER_VALIDATE_INT checks an integer representation, and options restrict it to 1 through 60. Check false strictly. This requires the filter extension; strict_types does not automatically validate command-line text."
+      }
+    ],
+    "reasoning": "Zero violates the configured minimum and validation returns false.",
+    "source": "https://www.php.net/manual/en/filter.constants.php",
+    "prerequisites": [
+      "php-54"
+    ]
+  },
+  {
+    "id": "php-56",
+    "quizTarget": "If trigger_error is removed, what prints?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "Traditional PHP warnings are reported through the error system and can allow continuation. catch handles thrown Throwable objects, not every warning merely because its message describes an error."
+      },
+      {
+        "paragraph": 1,
+        "fact": "The temporary handler converts only E_USER_WARNING to ErrorException and returns false for other severities so normal handling continues. trigger_error creates a synthetic warning. restore_error_handler in finally prevents this example from changing later policy."
+      }
+    ],
+    "reasoning": "Without a warning, normal execution reaches continued; finally still restores the handler.",
+    "source": "https://www.php.net/manual/en/function.set-error-handler.php",
+    "prerequisites": [
+      "php-55"
+    ]
+  },
+  {
+    "id": "php-57",
+    "quizTarget": "If the upper expectation becomes 11, what happens?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "An explicit if throwing RuntimeException runs independently of assertion configuration. PHP assert may be configured away, so do not use it as the only required validation or the only evidence a test ran."
+      },
+      {
+        "paragraph": 1,
+        "fact": "max and min clamp to 0 through 10. checkSame compares actual and expected integers and names a failed case. The final success message is reached only if all checks pass."
+      }
+    ],
+    "reasoning": "The actual value is ten and the explicit strict comparison rejects eleven.",
+    "source": "https://www.php.net/manual/en/function.assert.php",
+    "prerequisites": [
+      "php-56"
+    ]
+  },
+  {
+    "id": "php-58",
+    "quizTarget": "If the name is deliberately nonexistent, what prints?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "Extensions can be enabled, disabled or built separately. extension_loaded observes the current process. CLI and a web server may use different binaries and configuration; CLI availability does not prove deployment availability."
+      },
+      {
+        "paragraph": 1,
+        "fact": "Composer packages and native PHP extensions are different dependency kinds. Record their requirements instead of assuming a class name fetches code. This fixture only checks availability and downloads nothing."
+      }
+    ],
+    "reasoning": "The function inspects loaded extensions, not a package repository.",
+    "source": "https://www.php.net/manual/en/function.extension-loaded.php",
+    "prerequisites": [
+      "php-57"
+    ]
+  },
+  {
+    "id": "php-59",
+    "quizTarget": "If the text is A&B, what is the escaped HTML text?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "htmlspecialchars converts HTML-significant characters for HTML text and suitably quoted attribute values. The bitwise | operator combines flag bits; it is not logical ||. ENT_QUOTES escapes both quote kinds; ENT_SUBSTITUTE replaces invalid encoding sequences, and UTF-8 states the intended encoding. This is output encoding, not general input validation."
+      },
+      {
+        "paragraph": 1,
+        "fact": "The result here is a String verified in CLI, not a rendered browser security test. JavaScript, CSS and URL contexts have different rules. Escaping an attribute does not make a dangerous URL scheme safe; choose and validate the destination context separately."
+      }
+    ],
+    "reasoning": "The ampersand becomes an HTML entity; percent-encoding belongs to a different context.",
+    "source": "https://www.php.net/manual/en/function.htmlspecialchars.php",
+    "prerequisites": [
+      "php-58"
+    ]
+  },
+  {
+    "id": "php-60",
+    "quizTarget": "If rawurlencode is replaced by urlencode, what changes?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "rawurlencode percent-encodes a URL component using RFC3986-style encoding. A slash inside a data component becomes %2F rather than a path separator. Structural separators in the surrounding URL should be assembled deliberately."
+      },
+      {
+        "paragraph": 1,
+        "fact": "urlencode uses form-style encoding, representing a space as +. rawurlencode uses %20. Which representation is appropriate depends on the receiving format; encoding does not validate a destination or make an arbitrary URL scheme trustworthy."
+      }
+    ],
+    "reasoning": "The form-style function uses + for a space while still escaping the slash.",
+    "source": "https://www.php.net/manual/en/function.rawurlencode.php",
+    "prerequisites": [
+      "php-59"
+    ]
+  },
+  {
+    "id": "php-61",
+    "quizTarget": "If the candidate becomes wrong-passphrase while the stored hash is unchanged, what prints?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "password_hash creates a salted password hash using the selected algorithm; password_verify checks a candidate against the stored hash. The generated salt makes exact hash text nondeterministic, so tests should verify behavior rather than a fixed hash string."
+      },
+      {
+        "paragraph": 1,
+        "fact": "PASSWORD_DEFAULT can evolve over PHP releases. Real storage must accommodate future hash lengths and use password_needs_rehash when policy changes. This synthetic fixture is not a complete login system: rate limiting, account isolation and transport security remain separate requirements."
+      }
+    ],
+    "reasoning": "Verification checks the supplied candidate against the hash parameters and rejects a different password.",
+    "source": "https://www.php.net/manual/en/function.password-verify.php",
+    "prerequisites": [
+      "php-60"
+    ]
+  },
+  {
+    "id": "php-62",
+    "quizTarget": "If the candidate has ! appended, what prints?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "random_bytes obtains cryptographically secure random bytes or throws if it cannot do so. bin2hex represents each byte with two printable hexadecimal characters. Sixteen bytes therefore produce thirty-two hex characters; the fixture never prints the secret token itself."
+      },
+      {
+        "paragraph": 1,
+        "fact": "hash_equals compares strings in a timing-safe manner for equal-length inputs; differing lengths can be rejected immediately. Pass the known secret first and untrusted candidate second. Token storage, expiry, binding to a session and CSRF or authorization policy are not supplied by this function."
+      }
+    ],
+    "reasoning": "Only the candidate changes; the known token stays thirty-two characters and the comparison rejects the unequal strings.",
+    "source": "https://www.php.net/manual/en/function.hash-equals.php",
+    "prerequisites": [
+      "php-61"
+    ]
+  },
+  {
+    "id": "php-63",
+    "quizTarget": "If the request field is the string 0, what contract is produced?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "Actual request fields may be absent or arrays rather than strings. This pure function first checks the minutes field is a String, then validates an integer from 1 through 60 using the filter extension. Treating all request values as trustworthy scalars can cause type errors or bypass intended rules."
+      },
+      {
+        "paragraph": 1,
+        "fact": "The return value explicitly contains status, headers and body. The CLI fixture inspects that contract only: it does not call header(), emit a browser response or verify a server adapter. A web adapter must apply status and headers before body output; authentication and CSRF checks are additional concerns."
+      }
+    ],
+    "reasoning": "The value fails the minimum and the pure response function chooses its explicit validation-error contract.",
+    "source": "https://www.php.net/manual/en/function.filter-var.php",
+    "prerequisites": [
+      "php-62"
+    ]
+  },
+  {
+    "id": "php-64",
+    "quizTarget": "If minutes is unset before saving, what is read after reopening?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "The session extension persists server-side data associated with an identifier; the cookie normally carries that identifier, not the entire session array. The $_SESSION superglobal array holds the active session data; unset($_SESSION[\"minutes\"]) removes that key. session_start acquires state, and session_write_close saves it and releases the lock. Avoid retaining a session lock while unrelated slow work runs."
+      },
+      {
+        "paragraph": 1,
+        "fact": "This isolated CLI fixture disables cookie emission, uses a private disposable file directory, writes state, closes and reopens the same session, then destroys it. Cookie settings are discussed separately, not applied to this cookie-disabled CLI session or browser-verified. In a web integration with cookies enabled, configure session_set_cookie_params with secure=true, httponly=true and the chosen samesite value before session_start; verify its actual Set-Cookie and browser behavior. Real HTTPS deployments must choose Secure, HttpOnly, SameSite, strict-mode and identifier-regeneration policy, prevent fixation and protect state-changing requests; SameSite alone is not a complete CSRF defense."
+      }
+    ],
+    "reasoning": "The deletion is saved; reopening the same session finds no minutes key and uses the fallback.",
+    "source": "https://www.php.net/manual/en/function.session-start.php",
+    "prerequisites": [
+      "php-63"
+    ]
+  },
+  {
+    "id": "php-65",
+    "quizTarget": "If the topic contains SQL-looking text with a quote and DROP TABLE, what does the bound insertion do?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "PDO prepared statements separate SQL structure from parameter data. A placeholder represents a value, not a table name, column identifier or arbitrary SQL fragment. Dynamic identifiers require a separate trusted allowlist. Parameter binding does not replace domain validation or database permissions."
+      },
+      {
+        "paragraph": 1,
+        "fact": "in_array with its third argument true uses strict matching in the driver availability check. This fixture requires PDO plus pdo_sqlite and uses a real SQLite in-memory database, not a pretend query result or external service. Exception mode exposes database failures. Here exec creates the known table, prepare fixes the INSERT template, execute supplies its bound values, query runs SELECT to read data, and fetchColumn retrieves the first column from a result row. The stored value is read back exactly, and a second query confirms the table still exists. This does not establish compatibility with a production MySQL or PostgreSQL deployment."
+      }
+    ],
+    "reasoning": "The placeholder is bound as a data value, so SQL-looking characters do not become new statement structure.",
+    "source": "https://www.php.net/manual/en/pdo.prepared-statements.php",
+    "prerequisites": [
+      "php-64"
+    ]
+  },
+  {
+    "id": "php-66",
+    "quizTarget": "If resume supplies next instead of ok, what is the final return value?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "Fiber receives a callback. start begins it and returns the value passed to Fiber::suspend; resume continues execution and supplies a value back to that suspension point. This is explicit cooperative control transfer, not parallel execution."
+      },
+      {
+        "paragraph": 1,
+        "fact": "After the callback terminates, getReturn obtains its return value. resume itself does not return that final callback value in this example. Fibers do not make blocking file or network calls nonblocking and do not install an asynchronous runtime automatically."
+      }
+    ],
+    "reasoning": "The resume argument becomes the value of the suspended expression, so the callback returns done:next.",
+    "source": "https://www.php.net/manual/en/language.fibers.php",
+    "prerequisites": [
+      "php-65"
+    ]
+  },
+  {
+    "id": "php-67",
+    "quizTarget": "If minutes is a JSON string rather than a JSON number, what happens?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "unserialize can instantiate objects and invoke magic-method behavior. Do not pass untrusted input to it; restricting allowed_classes is not a general validation or security solution. A serialized PHP object graph is not an interchangeable safe data format."
+      },
+      {
+        "paragraph": 1,
+        "fact": "This example uses JSON with exceptions and requires a minutes integer in 1 through 60. JSON avoids PHP object-instantiation behavior but does not remove the need for size limits, depth policy and schema validation. The fixture uses one tiny literal, not arbitrary unbounded input."
+      }
+    ],
+    "reasoning": "The associative decoded field is a String, so the required integer schema rejects it.",
+    "source": "https://www.php.net/manual/en/function.unserialize.php",
+    "prerequisites": [
+      "php-66"
+    ]
+  },
+  {
+    "id": "php-68",
+    "quizTarget": "If the first text becomes 70, what is collected and summed?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "This fixed list contains four strings. FILTER_VALIDATE_INT checks representability and the 1-through-60 range, with false checked strictly. Invalid inputs are deliberately skipped rather than turned into legitimate zero-minute records."
+      },
+      {
+        "paragraph": 1,
+        "fact": "continue skips the rest of the current iteration, while break exits the loop. The loop stops after two accepted values. Appending with [] creates consecutive keys, so JSON encodes a list. The total is at most 120. This is an in-memory study-log exercise, not durable storage or a production reporting policy for rejected input."
+      }
+    ],
+    "reasoning": "Seventy fails the maximum, bad fails integer validation and zero fails the minimum, leaving twenty.",
+    "source": "https://www.php.net/manual/en/function.filter-var.php",
+    "prerequisites": [
+      "php-67"
+    ]
+  }
+]

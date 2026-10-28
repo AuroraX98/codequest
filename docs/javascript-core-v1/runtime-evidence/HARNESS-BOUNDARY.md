@@ -1,0 +1,5 @@
+# Harness-only host globals
+
+The copied frame harness keeps the production frame source unchanged. Its emulated worker VM exposes Node24 web-compatible globals Response/Request/Headers, AbortController/AbortSignal, URL/URLSearchParams in addition to the previously provided timer/text APIs. These exist as native Node host implementations in this test; no claim that Node/JSDOM proves a specific browser or CSP policy. Blob ESM remains unverified and lesson46 stays native-only. No application runtime or CSP source was modified.
+
+The Node host Response implementation rejects JSON/body promises with errors from its host realm. A bare VM global injection makes VM instanceof SyntaxError/TypeError incorrectly fail despite the intended error category. A test-only Response subclass delegates to the real Node json() implementation and reconstructs those two error categories in the VM realm. Initial mismatch logs are retained. This adapter is not application code, does not simulate successful parsing, and is not a browser validation claim.

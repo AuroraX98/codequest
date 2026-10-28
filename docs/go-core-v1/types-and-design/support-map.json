@@ -1,0 +1,344 @@
+[
+  {
+    "id": "go-27",
+    "quizTarget": "If b.X is assigned 7 rather than 9, what prints?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "A struct groups named fields. A keyed composite literal such as Point{X: 2} names the fields it initializes; omitted fields receive their zero values. Use a dot to access a field."
+      },
+      {
+        "paragraph": 1,
+        "fact": "Assigning a struct copies its fields. Two copies with int fields can change independently. This is not a universal deep copy: a copied slice or map field still refers to shared underlying data."
+      }
+    ],
+    "reasoning": "Only the copied struct b is changed; a retains its original X field.",
+    "source": "https://go.dev/ref/spec",
+    "prerequisites": [
+      "go-26"
+    ]
+  },
+  {
+    "id": "go-28",
+    "quizTarget": "If c initially contains 8, what prints?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "A method declaration adds a receiver before the function name: func (c Counter) Next(). That receiver identifies the value on which the method is called."
+      },
+      {
+        "paragraph": 1,
+        "fact": "A value receiver copies the receiver value. Changing its int field does not change the caller\u2019s Counter. A returned value can still report the calculation. Copying a receiver with map or slice fields would not deep-copy referenced data."
+      }
+    ],
+    "reasoning": "Next increments its copied receiver and returns nine; the original remains eight.",
+    "source": "https://go.dev/ref/spec",
+    "prerequisites": [
+      "go-27"
+    ]
+  },
+  {
+    "id": "go-29",
+    "quizTarget": "If c.Add() is called twice before printing, what prints?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "*Counter is a pointer type; &c obtains a pointer to c. *p dereferences a pointer to access its target. Field access through a struct pointer can use p.N directly. A nil pointer must not be dereferenced."
+      },
+      {
+        "paragraph": 1,
+        "fact": "func (c *Counter) Add() receives a pointer copy that still refers to the caller\u2019s object. For an addressable variable c, Go permits c.Add() as shorthand for (&c).Add(). This convenience does not make Counter and *Counter have identical method sets."
+      }
+    ],
+    "reasoning": "Each pointer-receiver call updates the same original field rather than a copied struct.",
+    "source": "https://go.dev/ref/spec",
+    "prerequisites": [
+      "go-28"
+    ]
+  },
+  {
+    "id": "go-30",
+    "quizTarget": "If the embedded Address uses City: \"Oslo\", what prints?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "An embedded field uses a type name without a separate field name, such as Address inside Person. The outer value contains that field. Its accessible fields and methods can be promoted for convenient selection."
+      },
+      {
+        "paragraph": 1,
+        "fact": "p.City below means p.Address.City. Person is not automatically an Address subtype. Composite literals still initialize the embedded field explicitly; promoted names are not direct keys in Person{...}."
+      }
+    ],
+    "reasoning": "The promoted selector still reads the City field inside the embedded Address.",
+    "source": "https://go.dev/ref/spec",
+    "prerequisites": [
+      "go-29"
+    ]
+  },
+  {
+    "id": "go-31",
+    "quizTarget": "If show receives c instead of &c, what happens?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "An interface names required methods. A type implements it by having the necessary method set; there is no implements declaration. Interfaces describe behavior, not a requirement to share a base struct."
+      },
+      {
+        "paragraph": 1,
+        "fact": "For a defined type Counter, methods with value receivers belong to both Counter and *Counter. A method declared on *Counter is not in Counter\u2019s method set. The shorthand call on an addressable value does not change interface satisfaction."
+      }
+    ],
+    "reasoning": "Automatic shorthand for a direct method call does not add pointer-receiver methods to Counter\u2019s interface method set.",
+    "source": "https://go.dev/ref/spec",
+    "prerequisites": [
+      "go-30"
+    ]
+  },
+  {
+    "id": "go-32",
+    "quizTarget": "If value is initialized to nil instead of p, what prints?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "An interface value conceptually holds a dynamic type and a dynamic value. Its zero value is nil: neither is present. any is an alias for the empty interface, which can hold values of any type."
+      },
+      {
+        "paragraph": 1,
+        "fact": "A nil *Counter pointer stored in any still supplies the dynamic type *Counter. The interface is therefore not equal to nil, even though its contained pointer is nil. This example only compares; it never dereferences the nil pointer."
+      }
+    ],
+    "reasoning": "The interface now has no dynamic type or value; p is still a nil pointer separately.",
+    "source": "https://go.dev/ref/spec",
+    "prerequisites": [
+      "go-31"
+    ]
+  },
+  {
+    "id": "go-33",
+    "quizTarget": "If value contains 7 instead, what prints?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "value.(string) asserts that an interface contains a string. The two-result form text, ok := value.(string) reports false instead of panicking on a mismatch; text then receives the string zero value."
+      },
+      {
+        "paragraph": 1,
+        "fact": "A type switch uses switch v := value.(type) with cases such as string and int. Inside a single-type case v has that type. Use this when several dynamic types need distinct handling, not as a replacement for a well-chosen interface."
+      }
+    ],
+    "reasoning": "The dynamic type is int, so the checked assertion reports false and supplies the empty string.",
+    "source": "https://go.dev/ref/spec",
+    "prerequisites": [
+      "go-32"
+    ]
+  },
+  {
+    "id": "go-34",
+    "quizTarget": "If minutes receives -1, what prints?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "The built-in error interface has Error() string. A function can return a useful value and an error; nil error conventionally means success. errors.New creates an error with a message."
+      },
+      {
+        "paragraph": 1,
+        "fact": "Here negative minutes return zero plus an error. The caller must inspect err before treating the numeric result as valid. A failure zero is not automatically an accepted zero-minute session."
+      }
+    ],
+    "reasoning": "The non-nil error selects the early-return branch, so the invalid numeric result is not used.",
+    "source": "https://pkg.go.dev/errors",
+    "prerequisites": [
+      "go-33"
+    ]
+  },
+  {
+    "id": "go-35",
+    "quizTarget": "If %w changes to %v, what prints?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "fmt.Errorf(\"load: %w\", err) wraps an error with context. The %w verb preserves a chain that inspection helpers can traverse; %v only formats the error as text."
+      },
+      {
+        "paragraph": 1,
+        "fact": "errors.Is tests whether an error matches a target, including through wrapping. Comparing strings is brittle. errors.As instead finds a matching error type in a chain; it is useful when callers need typed details, not just a sentinel identity."
+      }
+    ],
+    "reasoning": "Text formatting does not retain missing as a wrapped cause, so errors.Is cannot find that target.",
+    "source": "https://pkg.go.dev/errors",
+    "prerequisites": [
+      "go-34"
+    ]
+  },
+  {
+    "id": "go-36",
+    "quizTarget": "If n becomes 3 instead of 2, what is printed?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "defer schedules a call for when the surrounding function returns, including during panic unwinding. Arguments to the deferred call are evaluated when defer executes, not later."
+      },
+      {
+        "paragraph": 1,
+        "fact": "Multiple deferred calls run in reverse scheduling order. This makes defer useful for cleanup, but a defer inside a long loop still waits for the whole function to return. Close errors may need explicit handling; defer is not proof that cleanup succeeded."
+      }
+    ],
+    "reasoning": "The first defer already captured one; the second captures three and executes before the first during return.",
+    "source": "https://go.dev/ref/spec",
+    "prerequisites": [
+      "go-35"
+    ]
+  },
+  {
+    "id": "go-37",
+    "quizTarget": "If panic(\"broken\") is replaced by fmt.Println(\"normal\"), what prints?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "panic stops normal execution and unwinds the current goroutine, running deferred calls. Prefer returned errors for expected failures. recover can stop a panic only when called directly in a deferred function in that panicking goroutine."
+      },
+      {
+        "paragraph": 1,
+        "fact": "After recovery, the panicking function does not resume at the panic statement. It returns to its caller once deferred work finishes. With no active panic, recover returns nil. This small boundary prints a recovery message and lets main continue; it is not a policy of hiding arbitrary faults."
+      }
+    ],
+    "reasoning": "Without an active panic, recover returns nil and the deferred handler prints nothing.",
+    "source": "https://go.dev/ref/spec",
+    "prerequisites": [
+      "go-36"
+    ]
+  },
+  {
+    "id": "go-38",
+    "quizTarget": "If First receives []int{}, what prints?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "A type parameter appears in square brackets after the function name. First[T any] permits any element type and returns a T. The compiler can infer T from a typed slice argument."
+      },
+      {
+        "paragraph": 1,
+        "fact": "A generic function still needs ordinary bounds checks. var zero T declares T\u2019s zero value. Returning (zero, false) on an empty slice avoids indexing it; the Boolean tells the caller whether an element existed."
+      }
+    ],
+    "reasoning": "The length guard returns int\u2019s zero value with false before indexing the empty slice.",
+    "source": "https://go.dev/ref/spec",
+    "prerequisites": [
+      "go-37"
+    ]
+  },
+  {
+    "id": "go-39",
+    "quizTarget": "If Add is called with two float64 values, what happens?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "An interface used as a constraint may specify a type set. The union ~int | ~int64 permits types whose underlying type is int or int64. ~ includes defined types with that underlying type; plain int alone would not include a distinct defined type. An interface with these type-set terms is used as a constraint, not as an ordinary variable type."
+      },
+      {
+        "paragraph": 1,
+        "fact": "The compiler permits + because every allowed type supports it. type Count int defines a distinct type with underlying int, so Count satisfies this constraint. These small values avoid overflow; the constraint does not provide checked arithmetic."
+      }
+    ],
+    "reasoning": "The permitted set contains only types with underlying int or int64, not floating types.",
+    "source": "https://go.dev/ref/spec",
+    "prerequisites": [
+      "go-38"
+    ]
+  },
+  {
+    "id": "go-40",
+    "quizTarget": "If Same is called with []int{1} and []int{1} instead, what happens?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "comparable is a predeclared constraint usable for map-key type parameters. Concrete int and string keys fit; slices, maps and functions cannot be ordinary comparable map keys."
+      },
+      {
+        "paragraph": 1,
+        "fact": "Interface values can be comparable as types while a comparison of a particular dynamic non-comparable value can panic. Keep this example to concrete string keys; a comparable constraint does not validate every possible dynamic value hidden inside an interface."
+      }
+    ],
+    "reasoning": "The generic equality function requires comparable arguments, but slice equality is not supported.",
+    "source": "https://go.dev/ref/spec",
+    "prerequisites": [
+      "go-39"
+    ]
+  },
+  {
+    "id": "go-41",
+    "quizTarget": "If Label is renamed label in both helper.go and the caller, what happens?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "Files in a directory normally belong to one package. An identifier beginning with an uppercase letter is exported from its package. Lowercase names are not accessible through an import from another package."
+      },
+      {
+        "paragraph": 1,
+        "fact": "Save these separate files.\n```text\n// go.mod\nmodule example.test/lesson\ngo 1.27.0\n```\n```go\n// helper/helper.go\npackage helper\nfunc Label() string { return \"review\" }\n```\nFrom the root, go run . builds the main package and this local helper; the import path is the module path plus /helper, not a download request in this fixture."
+      }
+    ],
+    "reasoning": "Sharing a module does not bypass package export rules; the caller is in package main rather than helper.",
+    "source": "https://go.dev/ref/spec",
+    "prerequisites": [
+      "go-40"
+    ]
+  },
+  {
+    "id": "go-42",
+    "quizTarget": "If Double is implemented as n * 3 instead, what prints after rebuilding?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "go.mod records the module path and Go language requirement. Imports use module paths, while package names are identifiers used in source. A module can contain several packages."
+      },
+      {
+        "paragraph": 1,
+        "fact": "A require records a dependency version; replace can redirect that module to a local directory. Save the files below and run go run . with GOTOOLCHAIN=local and GOPROXY=off to prevent toolchain or dependency downloads. A replacement needs the local module\u2019s own go.mod; it is not copied into the main module automatically.\n```text\n// go.mod\nmodule example.test/app\ngo 1.27.0\nrequire example.test/math v0.0.0\nreplace example.test/math => ./localmath\n// localmath/go.mod\nmodule example.test/math\ngo 1.27.0\n// localmath/math.go (Go source)\npackage math\nfunc Double(n int) int { return n * 2 }\n```"
+      }
+    ],
+    "reasoning": "The import resolves to the supplied local module source, so rebuilding uses its changed implementation.",
+    "source": "https://go.dev/doc/modules/gomod-ref",
+    "prerequisites": [
+      "go-41"
+    ]
+  },
+  {
+    "id": "go-43",
+    "quizTarget": "If the argument becomes \"seven\" while %d stays, what should go vet report?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "gofmt applies standard Go layout; gofmt -w main.go rewrites that file. Formatting is not a correctness check and should not be confused with compiling or testing."
+      },
+      {
+        "paragraph": 1,
+        "fact": "go vet inspects suspicious code that can still compile, including a Printf format verb incompatible with an argument. %d expects an integer-like value; %s formats a string. Vet is useful evidence, not proof of absence of bugs. Run go vet main.go on this standalone example."
+      }
+    ],
+    "reasoning": "The literal format demands an integer-like argument but the supplied value is a string; vet checks this mismatch.",
+    "source": "https://pkg.go.dev/cmd/vet",
+    "prerequisites": [
+      "go-42"
+    ]
+  },
+  {
+    "id": "go-44",
+    "quizTarget": "If Twice returns n + 2 instead, what happens when the test runs?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "A file ending _test.go can contain tests named TestXxx(t *testing.T). The testing package supplies t; t.Fatalf records failure, formats a message and stops that test. go test runs tests; go run does not."
+      },
+      {
+        "paragraph": 1,
+        "fact": "Save the visible helper/main as main.go and the test below as main_test.go in a module. Run go test -count=1 to avoid using a cached test result. The if initializer got := Twice(3) binds got for the condition and body of that if. The comparison asks whether Twice(3) actually returns six; the successful main print alone is not the test.\n```go\npackage main\nimport \"testing\"\nfunc TestTwice(t *testing.T) {\n if got := Twice(3); got != 6 { t.Fatalf(\"got %d, want 6\", got) }\n}\n```"
+      }
+    ],
+    "reasoning": "The recorded expectation remains six while the changed implementation computes five, so the assertion exposes the regression.",
+    "source": "https://pkg.go.dev/testing",
+    "prerequisites": [
+      "go-43"
+    ]
+  }
+]

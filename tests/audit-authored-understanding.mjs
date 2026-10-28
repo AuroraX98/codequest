@@ -155,8 +155,17 @@ const lessons = JSON.parse(await readFile(new URL('../content/lessons.json', imp
 const canonical = x => Array.isArray(x) ? x.map(canonical) : x && typeof x === 'object'
   ? Object.fromEntries(Object.keys(x).sort().map(k => [k, canonical(x[k])])) : x;
 const baselineIds = new Set([...audit.changedQuiz, ...audit.retainedQuiz]);
-const invariant = lessons.filter(l => baselineIds.has(l.id) && l.id !== "python-01").map(({quiz, ...l}) => ({...l, ...(l.math ? {math: Object.fromEntries(Object.entries(l.math).filter(([k]) => !['question','choices','answer','feedback'].includes(k)))} : {})}));
-assert.equal(createHash('sha256').update(JSON.stringify(canonical(invariant))).digest('hex'), '16352a12b4165539e9e62fec637ac1698f396c748b3215a38ef468200776f59b', 'Original audited lesson source remains unchanged except deliberately revised Python Basics; 26 additive lessons validated below');
+const reviewedChanges = JSON.parse(await readFile(new URL('./learning-support-reviewed-changes.json', import.meta.url), 'utf8'));
+const restored = structuredClone(lessons);
+for (const change of reviewedChanges) {
+  const current = lessons.find(l => l.id === change.id), original = restored.find(l => l.id === change.id);
+  for (const [field, {before, after}] of Object.entries(change.fields)) {
+    assert.deepEqual(current[field], after, change.id + ': reviewed teaching/transfer edit stays exact');
+    original[field] = before;
+  }
+}
+const invariant = restored.filter(l => baselineIds.has(l.id) && l.id !== "python-01").map(({quiz, ...l}) => ({...l, ...(l.math ? {math: Object.fromEntries(Object.entries(l.math).filter(([k]) => !['question','choices','answer','feedback'].includes(k)))} : {})}));
+assert.equal(createHash('sha256').update(JSON.stringify(canonical(invariant))).digest('hex'), '16352a12b4165539e9e62fec637ac1698f396c748b3215a38ef468200776f59b', 'Original source remains unchanged outside explicitly reviewed teaching/transfer patches and prior Python Basics');
 assert.deepEqual([...audit.changedQuiz, ...audit.retainedQuiz].sort(), lessons.filter(l => baselineIds.has(l.id)).map(l => l.id).sort());
 let mathCount = 0;
 for (const lesson of lessons) {
@@ -170,7 +179,7 @@ for (const lesson of lessons) {
     assert.ok((kind === 'quiz' ? check.explanation : check.feedback).trim(), lesson.id + ': why feedback');
   }
 }
-assert.equal(lessons.length, 142);
+assert.equal(lessons.length, 243);
 assert.equal(new Set(lessons.map(l => l.id)).size, lessons.length);
 assert.equal(mathCount, 84);
 const quiz = id => lessons.find(l => l.id === id).quiz;
@@ -185,4 +194,4 @@ assert.equal(answer('backend-03'), String((10+30)/2));
 assert.equal(answer('typescript-01').startsWith('A type mismatch'), true);
 assert.equal(answer('html-01'), 'park.html');
 assert.equal(answer('javascript-12').startsWith('Nothing visible'), true);
-console.log('142 quiz + 84 retained math records validated; original 115 unaffected lesson source invariant preserved, revised Python Basics and 26 additive lessons covered by dedicated project/batch checks.');
+console.log('243 quiz + 84 retained math records validated; original source invariant preserved after reversing explicitly reviewed teaching/transfer patches; 201 support records separately checked.');

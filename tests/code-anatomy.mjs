@@ -32,6 +32,84 @@ try {
   const token = (code, text, language = 'python') => tokens(code, language).find(item => item.text === text);
   const markup = (code, language = 'python') => renderToStaticMarkup(React.createElement(CodeAnatomy, { code, language }));
 
+  await check('JavaScript and TypeScript BigInt literals remain distinct from Number', () => {
+    for (const language of ['javascript','typescript','react']) for (const text of ['2n','0n','0x10n','123_456n','0b10n','0o7n']) {
+      assert.equal(token(text,text,language).label,'BigInt');
+      assert.match(token(text,text,language).explanation,/distinct from the Number/);
+      assert.equal(codeAnatomy(text,language).source,text);
+    }
+    assert.equal(token('2','2','javascript').label,'Number');
+    assert.equal(token('"2n"','"2n"','javascript').label,'Text');
+  });
+  await check('R quotes are strings, backticks are names and hash comments are notes', () => {
+    const source = "\`total cost\` <- 'Ada' # note";
+    assert.equal(codeAnatomy(source,'r').source,source);
+    assert.equal(token(source,"'Ada'",'r').label,'Text');
+    assert.equal(token(source,'\`total cost\`','r').label,'Name');
+    assert.equal(token(source,'# note','r').label,'Comment');
+    assert.equal(token('"Hi ${name}"','"Hi ${name}"','r').label,'Text');
+  });
+  await check('Ruby quote styles are strings and double quotes permit interpolation', () => {
+    const source="name = 'Ada'; message = \"Hi #{name}\"; literal = '#{name}'";
+    assert.equal(codeAnatomy(source,'ruby').source,source);
+    assert.equal(token(source,"'Ada'",'ruby').label,'Text');
+    assert.equal(token(source,'"Hi #{name}"','ruby').label,'Text template');
+    assert.equal(token(source,"'#{name}'",'ruby').label,'Text');
+    const escaped = String.raw`literal = "Hi \#{name}"`;
+    assert.equal(token(escaped,String.raw`"Hi \#{name}"`,'ruby').label,'Text');
+  });
+  await check('PHP single and double quotes stay strings, not char literals', () => {
+    const source="$name = 'Ada'; $message = \"Hello\"; $object->name; ['name' => $name];";
+    assert.equal(codeAnatomy(source,'php').source,source);
+    assert.equal(token(source,"'Ada'",'php').label,'Text');
+    assert.equal(token(source,'"Hello"','php').label,'Text');
+    assert.ok(tokens(source,'php').some(t=>t.text==='$name'));
+    assert.equal(tokens(source,'php').some(t=>['Character','Rune','Lifetime / label'].includes(t.label)),false);
+  });
+  await check('Rust lifetime notation stays distinct from Unicode scalar literals', () => {
+    const source="fn borrow<'a>(x: &'a str) -> &'a str { x } let c = '🦀'; let s: &'static str = \"Hi\";";
+    assert.equal(codeAnatomy(source,'rust').source,source);
+    assert.equal(token(source,"'a",'rust').label,'Lifetime / label');
+    assert.equal(token(source,"'static",'rust').label,'Lifetime / label');
+    assert.equal(token(source,"'🦀'",'rust').label,'Character');
+    assert.match(token(source,"'🦀'",'rust').explanation,/Unicode scalar value/);
+    assert.equal(token(source,'"Hi"','rust').label,'Text');
+    assert.equal(token("let x = '\\n';","'\\n'",'rust').label,'Character');
+  });
+  await check('Go single quotes are rune constants, not strings', () => {
+    const source="letter := 'é'; word := \"Hello\"";
+    assert.equal(codeAnatomy(source,'go').source,source);
+    assert.equal(token(source,"'é'",'go').label,'Rune');
+    assert.match(token(source,"'é'",'go').explanation,/Unicode code point/);
+    assert.equal(token(source,'"Hello"','go').label,'Text');
+  });
+  await check('Kotlin Char literals are not Strings', () => {
+    const source="val initial = 'A'; val word = \"Hello\"";
+    assert.equal(codeAnatomy(source,'kotlin').source,source);
+    assert.match(token(source,"'A'",'kotlin').explanation,/Kotlin Char literal: one UTF-16 code unit/);
+    assert.equal(token(source,'"Hello"','kotlin').label,'Text');
+  });
+  await check('C ordinary character constants have int type, unlike C++ char', () => {
+    assert.match(token("int x = 'A';","'A'",'c').explanation,/type is int, not char/);
+    assert.match(token("char x = 'A';","'A'",'cpp').explanation,/has type char/);
+  });
+  await check('Java char literals are UTF-16 code units, not Strings', () => {
+    const source="char initial = 'A'; String word = \"Hello\";";
+    assert.equal(codeAnatomy(source,'java').source,source);
+    assert.equal(token(source,"'A'",'java').label,'Character');
+    assert.match(token(source,"'A'",'java').explanation,/UTF-16 code unit/);
+    assert.equal(token(source,'"Hello"','java').label,'Text');
+  });
+  await check('C/C++ single quotes are characters, not strings', () => {
+    for (const language of ['c','cpp']) {
+      const source = "char grade = 'A'; char newline = '\\n'; const char* word = \"Hello\";";
+      assert.equal(codeAnatomy(source,language).source,source);
+      assert.equal(token(source,"'A'",language).label,'Character');
+      assert.equal(token(source,"'\\n'",language).label,'Character');
+      assert.equal(token(source,'"Hello"',language).label,'Text');
+    }
+    assert.equal(token("name = 'A'","'A'",'python').label,'Text');
+  });
   await check('reference print call has four matching labeled parts', () => {
     assert.deepEqual(labels('print("Hello")', 'python'), [['print', 'Function'], ['(', 'Open'], ['"Hello"', 'Text'], [')', 'Close']]);
     const document = new JSDOM(markup('print("Hello")')).window.document;
@@ -165,9 +243,12 @@ try {
           assert.ok(36 + page.reduce((sum, t) => sum + anatomyTokenWidth(t), 0) <= 740);
         }
       }
-      const document = new JSDOM(markup(code, language)).window.document;
+      const sampleDOM = new JSDOM(markup(code, language));
+      const document = sampleDOM.window.document;
       assert.equal(document.querySelectorAll('script,iframe,img,foreignObject').length, 0);
       assert.ok(document.querySelector('[data-code-anatomy]'));
+      sampleDOM.window.close();
+      await new Promise(resolve => setImmediate(resolve));
     }
     assert.ok(fenceCount >= 249, `Expected at least the original 249 fences, found ${fenceCount}`);
   });

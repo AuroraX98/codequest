@@ -1,0 +1,382 @@
+[
+  {
+    "id": "c-43",
+    "quizTarget": "If score.c is omitted from this fresh build, what happens?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "A header lets callers and the implementation agree on a function prototype. The #ifndef/#define/#endif guard makes repeated inclusion harmless. These preprocessing directives select text before C compilation; the guard is not a runtime if."
+      },
+      {
+        "paragraph": 1,
+        "fact": "Save score.h with the guarded declaration and score.c with its definition below. Each .c file plus included headers forms a translation unit. Compile gcc -std=c17 -Wall -Wextra -Wpedantic -Werror main.c score.c -o app, then run ./app. A declaration alone does not provide the linked function body.\n```c\n#ifndef SCORE_H\n#define SCORE_H\nint score(int value);\n#endif\n\n/* score.c */\n#include \"score.h\"\nint score(int value) { return value * 2; }\n```"
+      }
+    ],
+    "reasoning": "The prototype permits compiling the call, but the linker still needs a definition.",
+    "source": "https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf",
+    "prerequisites": [
+      "c-42"
+    ]
+  },
+  {
+    "id": "c-44",
+    "quizTarget": "If main declares and calls helper instead, can it link to value.c\u2019s static helper?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "A file-scope function declared static has internal linkage: code in another translation unit cannot link to that name. This is not C++ class privacy and does not mean a helper runs only once."
+      },
+      {
+        "paragraph": 1,
+        "fact": "value.h declares public_value, which calls a private helper in value.c. Other source files use the public operation rather than relying on the hidden helper.\n```c\n/* value.h */\nint public_value(void);\n/* value.c */\nstatic int helper(void) { return 9; }\nint public_value(void) { return helper(); }\n```"
+      }
+    ],
+    "reasoning": "The external declaration in main cannot expose the separate internal-linkage definition.",
+    "source": "https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf",
+    "prerequisites": [
+      "c-43"
+    ]
+  },
+  {
+    "id": "c-45",
+    "quizTarget": "If the macro becomes x * x without parentheses, what prints for 2 + 1?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "A function-like macro is expanded before compilation; it is not a function call. Parenthesize each parameter and the whole expression to preserve precedence when substituting compound arguments."
+      },
+      {
+        "paragraph": 1,
+        "fact": "SQUARE uses x twice. Passing i++ would introduce unsequenced modifications and undefined behavior; do not run that experiment. A real function evaluates its argument once. This safe example uses only the expression 2 + 1."
+      }
+    ],
+    "reasoning": "Normal operator precedence makes multiplication bind first; this particular changed expression has no side effects.",
+    "source": "https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf",
+    "prerequisites": [
+      "c-44"
+    ]
+  },
+  {
+    "id": "c-46",
+    "quizTarget": "If VERBOSE is defined as 1, which text prints?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "#if examines integer preprocessing expressions. A -D flag can define a configuration macro; #ifndef supplies a default only when the build did not define it. Code in an excluded branch is not compiled as C."
+      },
+      {
+        "paragraph": 1,
+        "fact": "Use documented feature macros to check optional facilities rather than guessing from an operating-system name. This tiny configuration chooses text; it is not proof that every C23 feature is implemented. The course uses C17 on GCC14.2."
+      }
+    ],
+    "reasoning": "Preprocessing retains only the selected macro definition.",
+    "source": "https://gcc.gnu.org/onlinedocs/gcc-14.2.0/gcc/C-Dialect-Options.html",
+    "prerequisites": [
+      "c-45"
+    ]
+  },
+  {
+    "id": "c-47",
+    "quizTarget": "What prints when 3 changes to 3.0?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "C11 _Generic chooses an associated expression based on the controlling expression\u2019s compatible type. Here int and double select different string literals; default covers other types. This is not function overloading or dynamic object dispatch."
+      },
+      {
+        "paragraph": 1,
+        "fact": "_Generic does not execute its controlling expression. The selected result expression is evaluated normally. All associations still have to satisfy language constraints, so this is not a way to hide arbitrary ill-formed code."
+      }
+    ],
+    "reasoning": "3.0 is a double literal; type, not numeric equality, selects the association.",
+    "source": "https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf",
+    "prerequisites": [
+      "c-46"
+    ]
+  },
+  {
+    "id": "c-48",
+    "quizTarget": "If the filename is inside a nonexistent directory in this isolated fixture, what happens?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "fopen returns a FILE pointer on success and a null pointer on failure. Check it before writing. Mode w creates or truncates a text file, so run this fixture only in a disposable directory: it replaces lesson.txt."
+      },
+      {
+        "paragraph": 1,
+        "fact": "fputs can report EOF on failure; fclose can report a final flush failure. Once fclose has been called, do not reuse the stream pointer, even if closing reports failure. C does not automatically close a local FILE pointer when a block ends."
+      }
+    ],
+    "reasoning": "fopen cannot create missing parent directories; the guarded failure path returns without dereferencing a null stream.",
+    "source": "https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf",
+    "prerequisites": [
+      "c-47"
+    ]
+  },
+  {
+    "id": "c-49",
+    "quizTarget": "For empty input, what count prints?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "fgetc returns an unsigned char converted to int, or the distinct EOF sentinel. Storing that result directly into char can lose the ability to distinguish all byte values from EOF. getchar has the same result convention for stdin."
+      },
+      {
+        "paragraph": 1,
+        "fact": "After the loop, ferror reports a stream error; feof identifies end-of-file. For the worked output, supply exactly the three input characters abc with no trailing newline (for example, printf abc | ./app on the local shell). This fixture counts input characters, including any newline supplied. Empty input should finish normally with count zero, not attempt to process an extra character."
+      }
+    ],
+    "reasoning": "The loop body runs only for a character result; EOF is tested first.",
+    "source": "https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf",
+    "prerequisites": [
+      "c-48"
+    ]
+  },
+  {
+    "id": "c-50",
+    "quizTarget": "If the two encoded bytes are swapped to {2, 1}, what value is decoded?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "Writing sizeof(struct) raw bytes exposes padding, native byte order and representation choices. A portable format specifies each field\u2019s encoding instead. This example decodes two eight-bit octets in high-byte-first order; it requires CHAR_BIT == 8 explicitly. _Static_assert checks this condition during compilation and rejects an unsupported byte width."
+      },
+      {
+        "paragraph": 1,
+        "fact": "unsigned long is guaranteed enough range for this two-octet value. Converting the high octet before shifting avoids signed-int shift overflow on a narrow-int implementation. The bitwise OR combines nonoverlapping fields; it does not perform logical Boolean OR."
+      }
+    ],
+    "reasoning": "The explicit format treats the first octet as units of 256: 2*256+1=513.",
+    "source": "https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf",
+    "prerequisites": [
+      "c-49"
+    ]
+  },
+  {
+    "id": "c-51",
+    "quizTarget": "If text becomes \"12\", what prints?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "errno is an error indicator, not a success Boolean. A successful library call need not clear an earlier value. Set it to zero immediately before a conversion whose contract uses errno, then inspect it together with the return value and end pointer."
+      },
+      {
+        "paragraph": 1,
+        "fact": "strtol reports range failure using ERANGE. A partial parse such as 12x need not set errno; the end pointer reveals the trailing x. The code checks that at least one character was consumed and that no trailing characters remain before accepting a whole-number setting."
+      }
+    ],
+    "reasoning": "The complete valid parse leaves no trailing characters and does not signal range failure.",
+    "source": "https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf",
+    "prerequisites": [
+      "c-50"
+    ]
+  },
+  {
+    "id": "c-52",
+    "quizTarget": "With sufficient memory, what status does prepare(0) return?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "C has no automatic destructor for a local heap pointer. This function initializes its status to failure, then routes a later validation failure through one cleanup label. free(NULL) is harmless, but free on an already freed pointer is not."
+      },
+      {
+        "paragraph": 1,
+        "fact": "goto cleanup transfers control to the labeled statement in the same function. It is not an exception or a jump into another function. The successful path sets status before falling through the same free; the failed path keeps the failure status."
+      }
+    ],
+    "reasoning": "The failure branch skips setting status to zero, but still runs free exactly once.",
+    "source": "https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf",
+    "prerequisites": [
+      "c-51"
+    ]
+  },
+  {
+    "id": "c-53",
+    "quizTarget": "If NDEBUG is defined, does this negative input become accepted?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "assert from assert.h checks an expression unless NDEBUG was defined when the header was processed. Never put required input validation or necessary side effects only inside assert: a build may remove it."
+      },
+      {
+        "paragraph": 1,
+        "fact": "This function rejects negative minutes with an ordinary if, independent of assertion mode. The assertion documents an internal condition after validation. The changed NDEBUG build must still reject the same bad input."
+      }
+    ],
+    "reasoning": "Only the assertion macro is disabled; required validation remains normal C control flow.",
+    "source": "https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf",
+    "prerequisites": [
+      "c-52"
+    ]
+  },
+  {
+    "id": "c-54",
+    "quizTarget": "If the upper comparison changes to n > 11, what happens?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "A regression test records behavior that should remain correct after edits. clamp caps values to 0 through 10. Test below, at, inside and above the range rather than only one ordinary input."
+      },
+      {
+        "paragraph": 1,
+        "fact": "These explicit comparisons return a nonzero process status when any expectation fails. puts announces success only after all checks pass. The changed fixture intentionally weakens the upper cap to expose a boundary regression without running undefined behavior."
+      }
+    ],
+    "reasoning": "The changed function returns 11 for input 11, violating the recorded upper-bound expectation.",
+    "source": "https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf",
+    "prerequisites": [
+      "c-53"
+    ]
+  },
+  {
+    "id": "c-55",
+    "quizTarget": "If an unused local variable is added under this warning policy, what happens?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "Build with -std=c17 -Wall -Wextra -Wpedantic -Werror. These flags enable useful diagnostics and promote warnings to build failures. An unused local is legal C but rejected by this chosen warning policy."
+      },
+      {
+        "paragraph": 1,
+        "fact": "GCC options such as -fsanitize=address,undefined add runtime checks for classes of mistakes. A clean run covers only executed paths; it does not prove memory safety. Run the safe example, not an intentionally undefined access. Sanitizer availability depends on the environment."
+      }
+    ],
+    "reasoning": "The diagnostic is a configured build-policy failure, not an undefined-behavior execution.",
+    "source": "https://gcc.gnu.org/onlinedocs/gcc-14.2.0/gcc/Instrumentation-Options.html",
+    "prerequisites": [
+      "c-54"
+    ]
+  },
+  {
+    "id": "c-56",
+    "quizTarget": "What happens if the final link omits the score implementation?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "A reproducible build specifies source files, headers, compiler version, language mode and flags. The command below lists both implementation files; an IDE having remembered an old object file is not a reliable build specification."
+      },
+      {
+        "paragraph": 1,
+        "fact": "With score.h and score.c from the visible definitions below, compile gcc -std=c17 -Wall -Wextra -Wpedantic -Werror -c main.c score.c, then link gcc main.o score.o -o app. -c stops before linking. Omitting score.o at link time leaves the definition unresolved. A real incremental build must also rebuild affected objects when included headers change.\n```c\n#ifndef SCORE_H\n#define SCORE_H\nint score(int value);\n#endif\n\n/* score.c */\n#include \"score.h\"\nint score(int value) { return value * 2; }\n```"
+      }
+    ],
+    "reasoning": "Separate compilation creates object files; linking must still combine all required definitions.",
+    "source": "https://gcc.gnu.org/onlinedocs/gcc-14.2.0/gcc/Overall-Options.html",
+    "prerequisites": [
+      "c-55"
+    ]
+  },
+  {
+    "id": "c-57",
+    "quizTarget": "With no user argument, what happens?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "In the hosted main form, argc gives the argument count and argv points to strings. argv[argc] is a null pointer, not another argument string. This program requires exactly one user argument. Launch ./app C for the worked output topic=C; this gives argc == 2."
+      },
+      {
+        "paragraph": 1,
+        "fact": "Read argv[1] only after checking the count. Shell quoting decides which text reaches the program as one argument; C itself receives the resulting strings. Numeric options still need explicit parsing and validation, as in the earlier strtol lesson."
+      }
+    ],
+    "reasoning": "The argument-count check prevents a missing argument from being treated as a string.",
+    "source": "https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf",
+    "prerequisites": [
+      "c-56"
+    ]
+  },
+  {
+    "id": "c-58",
+    "quizTarget": "If compute writes 11 instead, what is printed after a successful join?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "C11 introduced threads.h; a C17 implementation may declare it unavailable using __STDC_NO_THREADS__. These fixtures require the facility and were designed for the installed GCC/runtime combination, not every C implementation. On this toolchain use -pthread when compiling and linking."
+      },
+      {
+        "paragraph": 1,
+        "fact": "thrd_create starts a function with signature int worker(void *). The argument points to main\u2019s still-live int; converting void * back to int * recovers its type. thrd_join waits for termination and provides synchronization before main reads the result. It also writes the worker\u2019s return status. If join fails, abort from stdlib.h terminates the program abnormally rather than continuing with a worker whose lifetime is uncertain."
+      }
+    ],
+    "reasoning": "The shared int remains alive through join, and the synchronized read observes the worker write.",
+    "source": "https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf",
+    "prerequisites": [
+      "c-57"
+    ]
+  },
+  {
+    "id": "c-59",
+    "quizTarget": "If both loop bounds change from 1000 to 250, what is the final count?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "The file-scope static int count has static storage duration and is initialized to zero even without a written initializer. count++ reads and writes shared state; a mutex must protect the entire operation. Both main and the worker call increment using the same mtx_t. mtx_plain requests an ordinary nonrecursive mutex. A failed lock must not be ignored before touching shared state."
+      },
+      {
+        "paragraph": 1,
+        "fact": "Initialize the mutex before starting work. Join the worker before reading the final count and destroying the mutex. The cast (void)unused explicitly discards the required callback argument. Checked failures abort rather than continuing unprotected; failed thread creation destroys the initialized mutex."
+      }
+    ],
+    "reasoning": "All 500 increments use the shared mutex, and observation happens after the worker finishes.",
+    "source": "https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf",
+    "prerequisites": [
+      "c-58"
+    ]
+  },
+  {
+    "id": "c-60",
+    "quizTarget": "If the counter starts at 10, what prints after joining?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "atomic_int and atomic_fetch_add come from optional C atomics. atomic_init initializes the counter before any concurrent use. Each fetch-add is one atomic read-modify-write and returns the previous value, which this example intentionally ignores."
+      },
+      {
+        "paragraph": 1,
+        "fact": "The non-explicit atomic operations here use memory_order_seq_cst. This gives the default strong ordering; it is not a promise that operations are lock-free or fast. Atomics do not automatically turn a sequence of separate operations into a transaction. Do not replace them with volatile or introduce relaxed ordering without a separate proof."
+      }
+    ],
+    "reasoning": "The 1000 atomic increments add to the initial ten; join completes the worker before the read.",
+    "source": "https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf",
+    "prerequisites": [
+      "c-59"
+    ]
+  },
+  {
+    "id": "c-61",
+    "quizTarget": "In this single-threaded example, what changes if volatile is removed?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "volatile affects how accesses to a qualified object are treated by the implementation. It does not make count++ atomic, establish inter-thread happens-before, or replace a mutex. Unsynchronized conflicting accesses by threads can cause undefined behavior even when the object is volatile."
+      },
+      {
+        "paragraph": 1,
+        "fact": "This example is deliberately single-threaded. Replacing volatile int by int keeps its observable printed value here. It is not a demonstration that volatile and ordinary objects are identical for device or signal use; those domains need their own platform and language rules. No racy multithreaded variant is run."
+      }
+    ],
+    "reasoning": "The simple sequential computation does not need synchronization; volatile would not supply it for competing threads.",
+    "source": "https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf",
+    "prerequisites": [
+      "c-60"
+    ]
+  },
+  {
+    "id": "c-62",
+    "quizTarget": "If the first request is 0 minutes, what are the three results and final count?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "This in-memory Store has two slots and used counts initialized entries. The constructor-like initializer {{0}, 0} zeroes the array and count. C does not enforce a private constructor; callers must start with a valid store and use the checked operation rather than corrupting fields directly."
+      },
+      {
+        "paragraph": 1,
+        "fact": "add_session accepts minutes 1 through 60 only while used is below capacity. On rejection it changes neither the array nor the count. It checks capacity before indexing, preventing out-of-bounds writes. The example assumes a valid non-null store pointer and is not a file database, concurrent service or complete application."
+      }
+    ],
+    "reasoning": "The invalid first request leaves the store unchanged, so both later valid requests fit.",
+    "source": "https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf",
+    "prerequisites": [
+      "c-61"
+    ]
+  }
+]

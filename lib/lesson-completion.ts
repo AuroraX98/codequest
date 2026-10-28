@@ -8,6 +8,7 @@ export type LessonReadingRecord = {
 };
 
 export type CompletionLesson = {
+  learningMode?: string;
   id: string;
   explanation: readonly string[];
   math?: unknown;
@@ -76,12 +77,13 @@ export function getLessonCompletion(
   ).length;
   const ownProgress = progress?.unitId === lesson.id ? progress : undefined;
   const quizPassed = ownProgress?.quizPassed === 1;
-  const projectCompleted = !!ownProgress?.completedAt;
+  const needsProject = lesson.learningMode !== "concept";
+  const projectCompleted = needsProject && !!ownProgress?.completedAt;
   const completed =
     readCompleted + Number(quizPassed) + Number(projectCompleted);
   // Fixed core denominator: reading, the saved quiz pass, and saved project
   // completion. Turning optional math on/off never moves this goalpost.
-  const total = keys.length + 2;
+  const total = keys.length + 1 + Number(needsProject);
   return {
     readCompleted,
     readTotal: keys.length,

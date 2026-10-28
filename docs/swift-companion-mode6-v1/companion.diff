@@ -1,0 +1,60 @@
+--- /workspace/shared/codequest-planning/swift-companion-mode6-v1/baseline.py	2026-10-27 06:21:50.166279041 -0700
++++ /workspace/shared/codequest-planning/swift-companion-mode6-v1/codequest-swift-runner.py	2026-10-27 06:21:50.166382868 -0700
+@@ -47,6 +47,27 @@
+     DRIVER = None
+ 
+ 
++
++def parse_compiler_version(output):
++    """Recognize the installed Swift driver's version, not arbitrary build digits."""
++    match = re.search(r"(?m)^(?:Apple )?Swift version (\d+)\.(\d+)(?:\.(\d+))?(?:\s|$)", output)
++    return tuple(int(part or 0) for part in match.groups()) if match else None
++
++
++def installed_compiler_version(compiler):
++    if not compiler:
++        return None
++    try:
++        result = subprocess.run([compiler, "--version"], capture_output=True,
++                                timeout=5, check=True, text=True)
++        return parse_compiler_version(result.stdout)
++    except (OSError, subprocess.SubprocessError):
++        return None
++
++
++COMPILER_VERSION = installed_compiler_version(COMPILER)
++
++
+ def quote(value):
+     # Seatbelt strings use the same escaping needed by these JSON strings.
+     return json.dumps(str(value))
+@@ -167,6 +188,11 @@
+         return result_error("sandbox-exec is unavailable. Code execution is disabled.", checks, typecheck)
+     if not COMPILER or not SDK:
+         return result_error("Apple's Swift compiler or SDK is unavailable. Install a matching Xcode or Command Line Tools release.", checks, typecheck)
++    if COMPILER_VERSION is None:
++        return result_error("The installed Swift compiler version could not be verified. CodeQuest requires Swift 6.0 or later with a matching Apple SDK; no code was compiled.", checks, typecheck)
++    if COMPILER_VERSION < (6, 0, 0):
++        found = ".".join(str(part) for part in COMPILER_VERSION)
++        return result_error(f"Swift {found} is too old for these lessons. CodeQuest requires Swift 6.0 or later with a matching Apple SDK and compiles in Swift 6 language mode.", checks, typecheck)
+     marker = "__CODEQUEST_" + secrets.token_hex(16) + "__"
+     with tempfile.TemporaryDirectory(prefix="codequest-swift-") as temporary:
+         folder = Path(temporary).resolve()
+@@ -178,7 +204,7 @@
+         profile = folder / "compile.sb"
+         profile.write_text(sandbox_profile(folder, compiler=True, cache=cache), encoding="utf-8")
+         compiler_command = [DRIVER, "--driver-mode=swiftc"] if DRIVER else [COMPILER]
+-        command = [SANDBOX, "-f", str(profile), *compiler_command, "-sdk", SDK,
++        command = [SANDBOX, "-f", str(profile), *compiler_command, "-swift-version", "6", "-sdk", SDK,
+                    "-module-cache-path", str(cache)]
+         command += ["-typecheck", str(source)] if typecheck else [str(source), "-o", str(binary)]
+         status, out, err, expired = run_limited(command, folder, 30, compile_phase=True, cache=cache)
+@@ -188,7 +214,7 @@
+             diagnostic = (err or out or f"Compiler exited with status {status}.")
+             return result_error("Swift compilation failed. Use a matching Apple SDK/compiler if the diagnostics mention an SDK mismatch.\n" + diagnostic[:12_000], checks, typecheck)
+         if typecheck:
+-            return {"output": ["Swift source passed compiler type checking.", MANUAL], "checks": [], "manual": True}
++            return {"output": ["Swift source passed compiler type checking in Swift 6 language mode.", MANUAL], "checks": [], "manual": True}
+         profile = folder / "runtime.sb"
+         profile.write_text(sandbox_profile(folder, executable=binary), encoding="utf-8")
+         status, out, err, expired = run_limited([SANDBOX, "-f", str(profile), str(binary)], folder, 3)

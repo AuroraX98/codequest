@@ -25,7 +25,7 @@ let downloadBytes = 0;
 for (const file of manifest.files) {
   assert.match(
     file.path,
-    /^\/(?:offline\.html|runner\/frame\.html|offline-assets\/|vendor\/|companion\/|favicon\.svg|manifest\.webmanifest)/,
+    /^\/(?:offline\.html|runner\/frame\.html|offline-assets\/|vendor\/|third-party\/|companion\/|favicon\.svg|manifest\.webmanifest)/,
   );
   const original = await readFile(path.join(publicRoot, file.path.slice(1)));
   assert.equal(original.length, file.size, `Original size: ${file.path}`);

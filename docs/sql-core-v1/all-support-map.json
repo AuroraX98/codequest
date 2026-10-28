@@ -1,0 +1,866 @@
+[
+  {
+    "id": "sql-25",
+    "quizTarget": "What value does SELECT 'A' || (2 + 4) produce?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "Single quotes enclose a text value. To put an apostrophe inside it, write two apostrophes: 'Lena''s notes' is one value, Lena’s notes. Double quotes identify a column or table name when quoting is necessary; they are not the text-value style used here."
+      },
+      {
+        "paragraph": 1,
+        "fact": "SELECT can calculate a value without reading a table. The + operator adds numbers; AS gives a result column a name. The || operator joins text values. Parentheses make the intended arithmetic grouping explicit before text is joined."
+      },
+      {
+        "paragraph": 2,
+        "fact": "Run this complete example in a fresh database.\n```sql\nCREATE TEMP VIEW shown AS\nSELECT 'Lena''s notes' AS title, 3 + 2 AS copies;\nSELECT title,copies\nFROM shown;\n```"
+      },
+      {
+        "paragraph": 3,
+        "fact": "Change the supplied values and trace the result. This is a separate complete example.\n```sql\nCREATE TEMP VIEW shown AS\nSELECT 'Milo''s map' AS title, 4 + 2 AS copies;\nSELECT title,copies\nFROM shown;\n```"
+      },
+      {
+        "paragraph": 4,
+        "fact": "Application: Create labels(id,label) as a view over parcels. Join owner, ': ', and quantity plus one. Preserve parcels. The two labels must be Rin's kit: 3 and Sol: 5."
+      }
+    ],
+    "reasoning": "The parentheses calculate 6 first; || joins A and the text representation of that result.",
+    "source": "https://www.sqlite.org/lang_expr.html",
+    "prerequisites": [
+      "sql-01"
+    ]
+  },
+  {
+    "id": "sql-26",
+    "quizTarget": "What is the result of NOT (NULL = 3)?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "NULL represents a missing or unknown value. A comparison such as NULL = 3 produces NULL, not false. Use IS NULL to ask whether a value is missing; it returns 1 or 0 in SQLite."
+      },
+      {
+        "paragraph": 1,
+        "fact": "WHERE retains rows whose condition is true. It excludes false and unknown conditions. NOT NULL is still unknown. With logical operators, 1 OR NULL is true and 0 AND NULL is false: the known operand already determines those results. This is three-valued logic, not an empty-string rule."
+      },
+      {
+        "paragraph": 2,
+        "fact": "Run this complete example in a fresh database.\n```sql\nCREATE TEMP VIEW shown AS\nSELECT NULL = 3 AS comparison,NULL IS NULL AS missing,1 OR NULL AS either,0 AND NULL AS both;\nSELECT *\nFROM shown;\n```"
+      },
+      {
+        "paragraph": 3,
+        "fact": "Change the supplied values and trace the result. This is a separate complete example.\n```sql\nCREATE TEMP VIEW shown AS\nSELECT NOT NULL AS negated,0 OR NULL AS either,1 AND NULL AS both;\nSELECT *\nFROM shown;\n```"
+      },
+      {
+        "paragraph": 4,
+        "fact": "Application: Create unfinished(id) containing waiting jobs and jobs whose state is missing, but not done jobs. Preserve jobs. Include IDs 2 and 3."
+      }
+    ],
+    "reasoning": "Negating an unknown comparison still leaves it unknown. IS NULL would ask a different, answerable question.",
+    "source": "https://www.sqlite.org/lang_expr.html",
+    "prerequisites": [
+      "sql-03"
+    ]
+  },
+  {
+    "id": "sql-27",
+    "quizTarget": "Does 8 NOT BETWEEN 4 AND 8 evaluate to true?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "BETWEEN tests an inclusive lower and upper boundary. minutes BETWEEN 5 AND 9 includes both 5 and 9. For these non-missing numbers, it asks the same range question as minutes >= 5 AND minutes <= 9."
+      },
+      {
+        "paragraph": 1,
+        "fact": "NOT BETWEEN excludes that inclusive range. It does not swap the endpoints or make them exclusive. Write the lower limit first. A missing comparison input can still produce unknown; this example deliberately uses known integer values."
+      },
+      {
+        "paragraph": 2,
+        "fact": "Run this complete example in a fresh database.\n```sql\nCREATE TABLE visits(minutes INTEGER);\nINSERT INTO visits VALUES(4),(5),(9),(10);\nCREATE TEMP VIEW shown AS\nSELECT minutes\nFROM visits\nWHERE minutes BETWEEN 5 AND 9;\nSELECT *\nFROM shown\nORDER BY minutes;\n```"
+      },
+      {
+        "paragraph": 3,
+        "fact": "Change the supplied values and trace the result. This is a separate complete example.\n```sql\nCREATE TABLE visits(minutes INTEGER);\nINSERT INTO visits VALUES(4),(5),(9),(10);\nCREATE TEMP VIEW shown AS\nSELECT minutes\nFROM visits\nWHERE minutes NOT BETWEEN 5 AND 9;\nSELECT *\nFROM shown\nORDER BY minutes;\n```"
+      },
+      {
+        "paragraph": 4,
+        "fact": "Application: Create selected(id) for entries with score between 4 and 8 inclusive. Preserve all four entries."
+      }
+    ],
+    "reasoning": "BETWEEN includes 8; NOT reverses that true result to false.",
+    "source": "https://www.sqlite.org/lang_expr.html",
+    "prerequisites": [
+      "sql-03"
+    ]
+  },
+  {
+    "id": "sql-28",
+    "quizTarget": "One source row is blue. How many rows does its match against IN ('blue','blue','blue') contribute?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "IN asks whether a value matches a member of a list. colour IN ('blue','gold') expresses the same membership choice as colour = 'blue' OR colour = 'gold' for these non-missing values."
+      },
+      {
+        "paragraph": 1,
+        "fact": "The list contains values, not column names. Repeating a value in the list does not duplicate a matching source row. IN filters each source row; it is not a join that creates a row for each matching list entry. Nullable subqueries need additional care in the later NOT IN lesson."
+      },
+      {
+        "paragraph": 2,
+        "fact": "Run this complete example in a fresh database.\n```sql\nCREATE TABLE tiles(colour TEXT);\nINSERT INTO tiles VALUES('blue'),('red'),('gold');\nCREATE TEMP VIEW shown AS\nSELECT colour\nFROM tiles\nWHERE colour IN('blue','gold');\nSELECT *\nFROM shown\nORDER BY colour;\n```"
+      },
+      {
+        "paragraph": 3,
+        "fact": "Change the supplied values and trace the result. This is a separate complete example.\n```sql\nCREATE TABLE tiles(colour TEXT);\nINSERT INTO tiles VALUES('blue'),('red'),('gold');\nCREATE TEMP VIEW shown AS\nSELECT colour\nFROM tiles\nWHERE colour IN('blue','blue');\nSELECT *\nFROM shown;\n```"
+      },
+      {
+        "paragraph": 4,
+        "fact": "Application: Create chosen(id) for tags with colour green or violet. Preserve tags and retain both separate green rows."
+      }
+    ],
+    "reasoning": "Membership is a condition on that source row, not one output per repeated list item.",
+    "source": "https://www.sqlite.org/lang_expr.html",
+    "prerequisites": [
+      "sql-03"
+    ]
+  },
+  {
+    "id": "sql-29",
+    "quizTarget": "Does 'ab' match the pattern 'a_'?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "LIKE compares text with a pattern. % matches zero or more characters; _ matches exactly one character. To match a literal percent or underscore, choose a one-character ESCAPE marker and put it before that symbol in the pattern."
+      },
+      {
+        "paragraph": 1,
+        "fact": "Here ! is the escape marker: LIKE 'box!_%' ESCAPE '!' means the literal prefix box_ followed by any remaining text. Default SQLite LIKE folds ASCII letter case, but does not provide general Unicode case folding: 'a' LIKE 'A' is true while 'æ' LIKE 'Æ' is false without extra support."
+      },
+      {
+        "paragraph": 2,
+        "fact": "Run this complete example in a fresh database.\n```sql\nCREATE TEMP VIEW shown AS\nSELECT 'box_a' LIKE 'box!_%' ESCAPE '!' AS literal_match,'boxXa' LIKE 'box!_%' ESCAPE '!' AS not_literal;\nSELECT *\nFROM shown;\n```"
+      },
+      {
+        "paragraph": 3,
+        "fact": "Change the supplied values and trace the result. This is a separate complete example.\n```sql\nCREATE TEMP VIEW shown AS\nSELECT 'box_' LIKE 'box!_%' ESCAPE '!' AS empty_tail,'a' LIKE 'A' AS ascii_fold,'æ' LIKE 'Æ' AS unicode_fold;\nSELECT *\nFROM shown;\n```"
+      },
+      {
+        "paragraph": 4,
+        "fact": "Application: Create matches(id) for labels beginning with the literal text box_. A label equal to box_ also qualifies. Preserve all source labels."
+      }
+    ],
+    "reasoning": "Without ESCAPE, _ represents one character, so it matches b.",
+    "source": "https://www.sqlite.org/lang_expr.html",
+    "prerequisites": [
+      "sql-25",
+      "sql-03"
+    ]
+  },
+  {
+    "id": "sql-30",
+    "quizTarget": "If the score>=10 branch comes first, which label does score 30 receive?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "A searched CASE expression checks WHEN conditions in order and returns the THEN value for the first true condition. ELSE supplies the value when none is true; END closes the expression. CASE calculates a value rather than starting a separate statement."
+      },
+      {
+        "paragraph": 1,
+        "fact": "Order overlapping conditions deliberately. Check score >= 20 before score >= 10 if the higher band must win. A missing score does not make either comparison true; a separate WHEN score IS NULL can give that case its own label."
+      },
+      {
+        "paragraph": 2,
+        "fact": "Run this complete example in a fresh database.\n```sql\nCREATE TABLE scores(score INTEGER);\nINSERT INTO scores VALUES(22),(12),(4),(NULL);\nCREATE TEMP VIEW shown AS\nSELECT score,CASE WHEN score IS NULL THEN 'unknown' WHEN score>=20 THEN 'high' WHEN score>=10 THEN 'middle' ELSE 'low' END AS band\nFROM scores;\nSELECT *\nFROM shown\nORDER BY score;\n```"
+      },
+      {
+        "paragraph": 3,
+        "fact": "Change the supplied values and trace the result. This is a separate complete example.\n```sql\nCREATE TEMP VIEW shown AS\nSELECT CASE WHEN 22>=10 THEN 'middle' WHEN 22>=20 THEN 'high' ELSE 'low' END AS band;\nSELECT *\nFROM shown;\n```"
+      },
+      {
+        "paragraph": 4,
+        "fact": "Application: Create bands(id,band) with high for scores at least 20, middle for scores at least 10 but below 20, low for smaller scores, and unknown for NULL. Preserve scores."
+      }
+    ],
+    "reasoning": "The first true WHEN wins; CASE does not continue looking for a more specific later condition.",
+    "source": "https://www.sqlite.org/lang_expr.html",
+    "prerequisites": [
+      "sql-03",
+      "sql-26"
+    ]
+  },
+  {
+    "id": "sql-31",
+    "quizTarget": "What does substr('Orbit',2,2) return?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "length(text) returns the number of Unicode code points before any zero character in ordinary SQLite text, not its rendered width or number of user-perceived graphemes. An empty text has length zero; length(NULL) is NULL. These examples use simple letters without embedded zero characters."
+      },
+      {
+        "paragraph": 1,
+        "fact": "substr(text,start,count) returns a section of text. For a positive start, position 1 is the first character; count says how many characters to take. Asking beyond the end returns an empty text. substr(NULL,...) returns NULL. Parentheses hold the arguments and commas separate them."
+      },
+      {
+        "paragraph": 2,
+        "fact": "Run this complete example in a fresh database.\n```sql\nCREATE TEMP VIEW shown AS\nSELECT length('Lantern') AS size,substr('Lantern',2,3) AS piece;\nSELECT *\nFROM shown;\n```"
+      },
+      {
+        "paragraph": 3,
+        "fact": "Change the supplied values and trace the result. This is a separate complete example.\n```sql\nCREATE TEMP VIEW shown AS\nSELECT length('') AS empty_size,substr('Map',5,2) AS beyond,substr(NULL,1,2) AS missing;\nSELECT *\nFROM shown;\n```"
+      },
+      {
+        "paragraph": 4,
+        "fact": "Application: Create prefixes(id,prefix,size) with the first three characters and length of each name. Keep NULL as NULL, and preserve names."
+      }
+    ],
+    "reasoning": "Positive positions start at 1: O is first, so positions 2 and 3 are r and b.",
+    "source": "https://www.sqlite.org/lang_corefunc.html",
+    "prerequisites": [
+      "sql-25",
+      "sql-26"
+    ]
+  },
+  {
+    "id": "sql-32",
+    "quizTarget": "What does -9 / 2 return when both values are integers?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "In SQLite, division of two integers uses integer arithmetic and truncates the fractional part toward zero. 7 / 2 produces 3, not 3.5. If either operand is real, the result uses real arithmetic. CAST(value AS REAL) explicitly requests a real value."
+      },
+      {
+        "paragraph": 1,
+        "fact": "CAST is language syntax: the value comes before AS and the target type after it. CAST(7 AS REAL) / 2 produces 3.5. SQLite division by zero returns NULL. Binary floating-point values are approximate; converting to REAL is not a guarantee of exact decimal-money arithmetic."
+      },
+      {
+        "paragraph": 2,
+        "fact": "Run this complete example in a fresh database.\n```sql\nCREATE TEMP VIEW shown AS\nSELECT 7/2 AS whole,CAST(7 AS REAL)/2 AS fraction,-7/2 AS negative;\nSELECT *\nFROM shown;\n```"
+      },
+      {
+        "paragraph": 3,
+        "fact": "Change the supplied values and trace the result. This is a separate complete example.\n```sql\nCREATE TEMP VIEW shown AS\nSELECT 5/2 AS whole,5/2.0 AS fraction,5/0 AS missing;\nSELECT *\nFROM shown;\n```"
+      },
+      {
+        "paragraph": 4,
+        "fact": "Application: Create shares(id,average) using real division of total by people. A row with zero people must have NULL average. Preserve supplies."
+      }
+    ],
+    "reasoning": "Integer division truncates toward zero, so the fractional part of -4.5 is removed.",
+    "source": "https://www.sqlite.org/lang_expr.html",
+    "prerequisites": [
+      "sql-25",
+      "sql-26"
+    ]
+  },
+  {
+    "id": "sql-33",
+    "quizTarget": "An ordinary INTEGER-affinity column receives the text cloudy. What can SQLite store without an additional constraint?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "Ordinary SQLite tables use flexible value types. A column declared INTEGER has integer affinity: it tries suitable numeric conversion when storing a value, but its declaration alone does not reject every nonnumeric text. This differs from rigid typing in many other database systems."
+      },
+      {
+        "paragraph": 1,
+        "fact": "typeof(value) returns the stored value's storage-class name, such as integer, real, text, blob or null. It inspects a value, not the column declaration. In an INTEGER-affinity column, '12' can be stored as integer 12, while 'twelve' remains text. Use STRICT or appropriate constraints when that flexibility is not your intended contract."
+      },
+      {
+        "paragraph": 2,
+        "fact": "Run this complete example in a fresh database.\n```sql\nCREATE TABLE readings(id INTEGER PRIMARY KEY,value INTEGER);\nINSERT INTO readings VALUES(1,'12'),(2,'twelve');\nCREATE TEMP VIEW shown AS\nSELECT id,value,typeof(value) AS kind\nFROM readings;\nSELECT *\nFROM shown\nORDER BY id;\n```"
+      },
+      {
+        "paragraph": 3,
+        "fact": "Change the supplied values and trace the result. This is a separate complete example.\n```sql\nCREATE TABLE readings(id INTEGER PRIMARY KEY,value TEXT);\nINSERT INTO readings VALUES(1,12),(2,NULL);\nCREATE TEMP VIEW shown AS\nSELECT id,value,typeof(value) AS kind\nFROM readings;\nSELECT *\nFROM shown\nORDER BY id;\n```"
+      },
+      {
+        "paragraph": 4,
+        "fact": "Application: Create an ordinary table readings(id INTEGER PRIMARY KEY,value INTEGER). Insert ID1 text 17 and ID2 text unknown. Create observed(id,kind) exposing typeof(value). This task deliberately observes flexible affinity rather than rejecting text."
+      }
+    ],
+    "reasoning": "A nonnumeric text that cannot be converted may remain text in an ordinary flexible table.",
+    "source": "https://www.sqlite.org/datatype3.html",
+    "prerequisites": [
+      "sql-02",
+      "sql-32"
+    ]
+  },
+  {
+    "id": "sql-34",
+    "quizTarget": "A STRICT INTEGER column receives the text '18'. Must it reject that value solely because it began as text?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "STRICT after a CREATE TABLE definition asks SQLite to enforce its supported column types. It does not mean every value must arrive with exactly that storage class: a lossless conversion can still be accepted. The text 12 can become integer 12, but the text cloudy cannot be stored in a STRICT INTEGER column."
+      },
+      {
+        "paragraph": 1,
+        "fact": "These examples use INTEGER and TEXT. SQLite restricts the type names permitted in STRICT tables; do not copy arbitrary type names from another database. The project checks inspect the strict-table flag and stored values. The separate rejected-write example demonstrates an error, but this editor’s normal checks do not grade whether your table rejects every invalid input."
+      },
+      {
+        "paragraph": 2,
+        "fact": "Run this complete example in a fresh database.\n```sql\nCREATE TABLE readings(id INTEGER PRIMARY KEY,value INTEGER) STRICT;\nINSERT INTO readings VALUES(1,'12');\nCREATE TEMP VIEW shown AS\nSELECT value,typeof(value) AS kind\nFROM readings;\nSELECT *\nFROM shown;\n```"
+      },
+      {
+        "paragraph": 3,
+        "fact": "Change the supplied values and trace the result. This is a separate complete example.\n```sql\nCREATE TABLE readings(id INTEGER PRIMARY KEY,value INTEGER) STRICT;\nINSERT INTO readings VALUES(1,'06');\nCREATE TEMP VIEW shown AS\nSELECT value,typeof(value) AS kind\nFROM readings;\nSELECT *\nFROM shown;\n```"
+      },
+      {
+        "paragraph": 4,
+        "fact": "Application: Create STRICT table readings(id INTEGER PRIMARY KEY,value INTEGER NOT NULL), then insert ID1 with text 14 and ID2 with integer 9. Both stored values must be integers. Do not include an intentional failure in the normal project submission."
+      },
+      {
+        "paragraph": 5,
+        "fact": "Separate error experiment: run the following complete block in a fresh database, not after the project. The final statement should fail because cloudy cannot become an INTEGER. The earlier row with value 4 remains. Inspect it with SELECT value FROM sample if your local connection stays open after reporting the error. A normal Run checks error is not awarded as a successful project.\n```sql\nCREATE TABLE sample(value INTEGER) STRICT;\nINSERT INTO sample VALUES(4);\nINSERT INTO sample VALUES('cloudy');\n```"
+      }
+    ],
+    "reasoning": "STRICT requires compatibility after permitted lossless conversion, not an exact incoming storage-class match.",
+    "source": "https://www.sqlite.org/stricttables.html",
+    "prerequisites": [
+      "sql-33"
+    ]
+  },
+  {
+    "id": "sql-35",
+    "quizTarget": "In a fresh table with status DEFAULT queued, insert one row without status and another with explicit NULL. What is stored?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "DEFAULT supplies a value when an INSERT does not provide that column. It is an insertion rule, not a query that keeps repairing missing data. A text literal uses single quotes. NULL represents missing information and is different from omitting a column."
+      },
+      {
+        "paragraph": 1,
+        "fact": "The column list in INSERT INTO reminders(id,title) leaves status out, so its declared default is used. INSERT with all three values explicitly supplies NULL instead; this nullable column stores NULL. NOT NULL is a separate constraint: adding it would reject an explicit NULL with ordinary INSERT, rather than silently using the default. The project checks successful rows; the local error example below separately demonstrates the rejected write."
+      },
+      {
+        "paragraph": 2,
+        "fact": "\n```sql\nCREATE TABLE reminders(id INTEGER PRIMARY KEY, title TEXT NOT NULL, status TEXT DEFAULT 'open');\nINSERT INTO reminders(id,title) VALUES(1,'Read');\nINSERT INTO reminders VALUES(2,'Walk',NULL);\nSELECT id,title,status\nFROM reminders\nORDER BY id;\n```\nRow 1 has status open. Row 2 has NULL, not open. The final ORDER BY id states the display order."
+      },
+      {
+        "paragraph": 3,
+        "fact": "\n```sql\nCREATE TABLE reminders(id INTEGER PRIMARY KEY, title TEXT NOT NULL, status TEXT DEFAULT 'open');\nINSERT INTO reminders(id,title) VALUES(1,'Read');\nINSERT INTO reminders VALUES(2,'Walk','done');\nSELECT id,title,status\nFROM reminders\nORDER BY id;\n```\nRow 2 now stores done because the supplied value wins. Row 1 still uses open."
+      },
+      {
+        "paragraph": 4,
+        "fact": "Optional practice: change the declared default to queued in a fresh database. Predict which of the two inserts changes."
+      },
+      {
+        "paragraph": 5,
+        "fact": "Local rejection demonstration, not the normal project solution: run each following block in its own fresh SQLite database. The final INSERT intentionally fails. The app’s current SELECT checks do not catch expected errors; this is a separately verified boundary, not a successful Run checks script.\n```sql\nCREATE TABLE strict_note(title TEXT NOT NULL DEFAULT 'New');\nINSERT INTO strict_note VALUES(NULL);\n```\nExpected diagnostic: NOT NULL constraint failed: strict_note.title. The failing statement adds no row; previously accepted rows remain."
+      }
+    ],
+    "reasoning": "Only the omitted column invokes its default. An explicit NULL remains NULL in a nullable column.",
+    "source": "https://www.sqlite.org/lang_createtable.html",
+    "prerequisites": [
+      "sql-02",
+      "sql-26"
+    ]
+  },
+  {
+    "id": "sql-36",
+    "quizTarget": "A nullable column has CHECK(seats BETWEEN 1 AND 4). Which proposed value is rejected by that CHECK: NULL, 4, or 5?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "A CHECK constraint tests an expression when a row is inserted or changed. In SQLite a result of zero rejects the row; a nonzero result or NULL accepts this check. BETWEEN 1 AND 4 includes both endpoints."
+      },
+      {
+        "paragraph": 1,
+        "fact": "For a missing seats value, seats BETWEEN 1 AND 4 evaluates to NULL, not zero. CHECK alone therefore allows that row. Use NOT NULL as well when missing values are forbidden. With ordinary INSERT, seats=5 fails this CHECK and the rejected statement inserts no row. The project checks successful rows; the local error example below separately demonstrates the rejected write."
+      },
+      {
+        "paragraph": 2,
+        "fact": "\n```sql\nCREATE TABLE bookings(id INTEGER PRIMARY KEY, seats INTEGER CHECK(seats BETWEEN 1 AND 4));\nINSERT INTO bookings VALUES(1,3);\nSELECT id,seats\nFROM bookings\nORDER BY id;\n```\nThe stored seats value is 3, inside the inclusive range."
+      },
+      {
+        "paragraph": 3,
+        "fact": "\n```sql\nCREATE TABLE bookings(id INTEGER PRIMARY KEY, seats INTEGER CHECK(seats BETWEEN 1 AND 4));\nINSERT INTO bookings VALUES(1,NULL);\nSELECT id,seats\nFROM bookings\nORDER BY id;\n```\nThe stored seats value is NULL. The CHECK result is NULL, which SQLite accepts; this does not mean NULL is between the numbers."
+      },
+      {
+        "paragraph": 4,
+        "fact": "Optional practice: add NOT NULL to seats in a fresh table. Explain why the missing-value insert now fails for a different reason."
+      },
+      {
+        "paragraph": 5,
+        "fact": "Local rejection demonstration, not the normal project solution: run each following block in its own fresh SQLite database. The final INSERT intentionally fails. The app’s current SELECT checks do not catch expected errors; this is a separately verified boundary, not a successful Run checks script.\n```sql\nCREATE TABLE bookings(id INTEGER PRIMARY KEY, seats INTEGER CHECK(seats BETWEEN 1 AND 4));\nINSERT INTO bookings VALUES(1,5);\n```\nExpected diagnostic: CHECK constraint failed: seats BETWEEN 1 AND 4. The failing statement adds no row; previously accepted rows remain.\n```sql\nCREATE TABLE bookings(id INTEGER PRIMARY KEY, seats INTEGER NOT NULL CHECK(seats BETWEEN 1 AND 4));\nINSERT INTO bookings VALUES(1,NULL);\n```\nExpected diagnostic: NOT NULL constraint failed: bookings.seats. The failing statement adds no row; previously accepted rows remain."
+      }
+    ],
+    "reasoning": "5 makes the expression zero. NULL passes the CHECK; 4 is an included endpoint.",
+    "source": "https://www.sqlite.org/lang_createtable.html",
+    "prerequisites": [
+      "sql-02",
+      "sql-26",
+      "sql-35"
+    ]
+  },
+  {
+    "id": "sql-37",
+    "quizTarget": "After storing Mira/Mon and Mira/Tue, which new pair violates the required composite key?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "A composite key identifies a row by a combination. PRIMARY KEY(person,day) lets Mira appear on different days and lets different people share Monday. Only the whole pair must be unique. Explicit NOT NULL on both columns also rules out incomplete identities."
+      },
+      {
+        "paragraph": 1,
+        "fact": "UNIQUE(person,day) likewise forbids repeating a complete non-NULL pair, but SQLite treats NULLs as distinct for uniqueness. Ordinary rowid tables have a legacy exception: a non-INTEGER PRIMARY KEY may also allow NULL unless NOT NULL is declared. STRICT tables and WITHOUT ROWID tables make primary-key columns required. In a rowid table, INTEGER PRIMARY KEY is special: supplying NULL allocates an integer key instead of storing NULL. That autoallocation does not apply to WITHOUT ROWID. These are distinctions, not a recommendation to use nullable identities. The project checks successful rows; the local error example below separately demonstrates the rejected write."
+      },
+      {
+        "paragraph": 2,
+        "fact": "\n```sql\nCREATE TABLE slots(person TEXT NOT NULL, day TEXT NOT NULL, PRIMARY KEY(person,day));\nINSERT INTO slots VALUES('Mira','Mon'),('Mira','Tue'),('Oren','Mon');\nSELECT person,day\nFROM slots\nORDER BY person,day;\n```\nAll three pairs are distinct, so all three rows are accepted."
+      },
+      {
+        "paragraph": 3,
+        "fact": "\n```sql\nCREATE TABLE nullable_pair(person TEXT, day TEXT, UNIQUE(person,day));\nINSERT INTO nullable_pair VALUES('Mira',NULL),('Mira',NULL);\nSELECT person,day\nFROM nullable_pair\nORDER BY rowid;\n```\nBoth rows are accepted. UNIQUE does not treat the two missing day values as the same known value. rowid is SQLite’s internal integer row identifier for this ordinary table; it supplies a deterministic display order here."
+      },
+      {
+        "paragraph": 4,
+        "fact": "Optional practice: attempt to add Mira/Mon a second time to the first table. Identify both column names in the reported uniqueness failure."
+      },
+      {
+        "paragraph": 5,
+        "fact": "Local rejection demonstration, not the normal project solution: run each following block in its own fresh SQLite database. The final INSERT intentionally fails. The app’s current SELECT checks do not catch expected errors; this is a separately verified boundary, not a successful Run checks script.\n```sql\nCREATE TABLE slots(person TEXT NOT NULL, day TEXT NOT NULL, PRIMARY KEY(person,day));\nINSERT INTO slots VALUES('Mira','Mon');\nINSERT INTO slots VALUES('Mira','Mon');\n```\nExpected diagnostic: UNIQUE constraint failed: slots.person, slots.day. The failing statement adds no row; previously accepted rows remain."
+      }
+    ],
+    "reasoning": "The complete pair repeats. Reusing only a person or only a day is allowed.",
+    "source": "https://www.sqlite.org/lang_createtable.html",
+    "prerequisites": [
+      "sql-02",
+      "sql-35"
+    ]
+  },
+  {
+    "id": "sql-38",
+    "quizTarget": "If Oren joins Music too, which table needs the new relationship row?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "A person can join several clubs, and a club can contain several people. Store each person and club once. A junction table stores one row for each relationship instead of a comma-separated list inside one cell."
+      },
+      {
+        "paragraph": 1,
+        "fact": "membership has two required IDs. Each REFERENCES clause points to a parent primary key; the composite key forbids the same relationship twice. PRAGMA foreign_keys=ON enables enforcement on this SQLite connection before writes. The two JOIN operations follow the stored IDs to readable names; aliases p, c and m name each role. The project checks successful rows; the local error example below separately demonstrates the rejected write."
+      },
+      {
+        "paragraph": 2,
+        "fact": "\n```sql\nPRAGMA foreign_keys=ON;\nCREATE TABLE people(id INTEGER PRIMARY KEY,name TEXT NOT NULL);\nCREATE TABLE clubs(id INTEGER PRIMARY KEY,title TEXT NOT NULL);\nINSERT INTO people VALUES(1,'Mira'),(2,'Oren');\nINSERT INTO clubs VALUES(10,'Art'),(20,'Music');\nCREATE TABLE membership(person_id INTEGER NOT NULL REFERENCES people(id), club_id INTEGER NOT NULL REFERENCES clubs(id), PRIMARY KEY(person_id,club_id));\nINSERT INTO membership VALUES(1,10),(1,20),(2,10);\nSELECT p.name,c.title\nFROM membership AS m\nJOIN people AS p ON p.id=m.person_id\nJOIN clubs AS c ON c.id=m.club_id\nORDER BY p.name,c.title;\n```\nThe ordered pairs are Mira/Art, Mira/Music and Oren/Art. Mira is stored only once in people."
+      },
+      {
+        "paragraph": 3,
+        "fact": "\n```sql\nPRAGMA foreign_keys=ON;\nCREATE TABLE people(id INTEGER PRIMARY KEY,name TEXT NOT NULL);\nCREATE TABLE clubs(id INTEGER PRIMARY KEY,title TEXT NOT NULL);\nINSERT INTO people VALUES(1,'Mira'),(2,'Oren');\nINSERT INTO clubs VALUES(10,'Art'),(20,'Music');\nCREATE TABLE membership(person_id INTEGER NOT NULL REFERENCES people(id), club_id INTEGER NOT NULL REFERENCES clubs(id), PRIMARY KEY(person_id,club_id));\nINSERT INTO membership VALUES(1,10),(1,20),(2,10),(2,20);\nSELECT p.name,c.title\nFROM membership AS m\nJOIN people AS p ON p.id=m.person_id\nJOIN clubs AS c ON c.id=m.club_id\nORDER BY p.name,c.title;\n```\nOren/Music is added without adding another person or club. Four membership rows describe four relationships."
+      },
+      {
+        "paragraph": 4,
+        "fact": "Optional practice: add a new club parent, then connect one existing person to its ID. Explain why an unknown club ID is not a valid relationship."
+      },
+      {
+        "paragraph": 5,
+        "fact": "Local rejection demonstration, not the normal project solution: run each following block in its own fresh SQLite database. The final INSERT intentionally fails. The app’s current SELECT checks do not catch expected errors; this is a separately verified boundary, not a successful Run checks script.\n```sql\nPRAGMA foreign_keys=ON;\nCREATE TABLE people(id INTEGER PRIMARY KEY,name TEXT NOT NULL);\nCREATE TABLE clubs(id INTEGER PRIMARY KEY,title TEXT NOT NULL);\nINSERT INTO people VALUES(1,'Mira'),(2,'Oren');\nINSERT INTO clubs VALUES(10,'Art'),(20,'Music');\nCREATE TABLE membership(person_id INTEGER NOT NULL REFERENCES people(id), club_id INTEGER NOT NULL REFERENCES clubs(id), PRIMARY KEY(person_id,club_id));\nINSERT INTO membership VALUES(1,99);\n```\nExpected diagnostic: FOREIGN KEY constraint failed. The failing statement adds no row; previously accepted rows remain."
+      }
+    ],
+    "reasoning": "The two existing parent identities stay the same. The new pair belongs in the junction table.",
+    "source": "https://www.sqlite.org/foreignkeys.html",
+    "prerequisites": [
+      "sql-05",
+      "sql-15",
+      "sql-18",
+      "sql-37"
+    ]
+  },
+  {
+    "id": "sql-39",
+    "quizTarget": "blocked contains only NULL; candidates contains 7. Which condition selects 7?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "WHERE keeps true conditions, not false or NULL. With a blocked list containing 2 and NULL, 1 NOT IN that list is NULL: the missing entry might match. A matching value 2 gives false. These are different reasons for excluding a row."
+      },
+      {
+        "paragraph": 1,
+        "fact": "NOT EXISTS asks whether the inner query finds any matching row. The correlated condition b.id=c.id refers to the current outer candidate. SELECT 1 supplies an irrelevant constant because EXISTS cares about row existence, not its selected value. With ordinary equality, NULL never equals NULL; therefore a missing candidate has no matching row and passes NOT EXISTS. Add c.id IS NOT NULL when your policy forbids missing candidate IDs. These operators express different questions, not interchangeable spellings."
+      },
+      {
+        "paragraph": 2,
+        "fact": "\n```sql\nCREATE TABLE candidates(id INTEGER);\nCREATE TABLE blocked(id INTEGER);\nINSERT INTO candidates VALUES(1),(2),(NULL);\nINSERT INTO blocked VALUES(2),(NULL);\nSELECT c.id\nFROM candidates AS c\nWHERE NOT EXISTS (SELECT 1 FROM blocked AS b WHERE b.id=c.id)\nORDER BY c.id;\n```\nThe result contains NULL and 1, ordered with NULL first in SQLite’s ascending order. Candidate 2 has a match and is excluded."
+      },
+      {
+        "paragraph": 3,
+        "fact": "\n```sql\nCREATE TABLE candidates(id INTEGER);\nCREATE TABLE blocked(id INTEGER);\nINSERT INTO candidates VALUES(1),(2),(NULL);\nINSERT INTO blocked VALUES(2),(NULL);\nSELECT id\nFROM candidates\nWHERE id NOT IN (SELECT id FROM blocked)\nORDER BY id;\n```\nThere are no result rows. Neither 1 nor NULL produces true, and 2 is a known blocked value."
+      },
+      {
+        "paragraph": 4,
+        "fact": "Optional practice: remove the NULL from blocked in a fresh setup. Predict the NOT IN result, then separately decide whether missing candidate IDs should ever be returned."
+      }
+    ],
+    "reasoning": "No equality match exists, so NOT EXISTS is true. NOT IN is unknown because its list contains NULL.",
+    "source": "https://www.sqlite.org/lang_expr.html",
+    "prerequisites": [
+      "sql-26",
+      "sql-28",
+      "sql-19"
+    ]
+  },
+  {
+    "id": "sql-40",
+    "quizTarget": "If Dee’s manager_id becomes NULL, how does the LEFT JOIN report change?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "A self-join reads the same table in two roles. child is the worker row; parent is the row whose ID equals that worker’s manager_id. Aliases do not copy or change stored rows. Qualifying each column makes the roles clear."
+      },
+      {
+        "paragraph": 1,
+        "fact": "LEFT JOIN keeps every child row. If no parent matches, selected parent columns are NULL. Here Ari has no manager. An ordinary inner JOIN drops that unmatched child. This query follows one management edge; it is not a recursive traversal of every ancestor."
+      },
+      {
+        "paragraph": 2,
+        "fact": "\n```sql\nCREATE TABLE staff(id INTEGER PRIMARY KEY,name TEXT NOT NULL,manager_id INTEGER);\nINSERT INTO staff VALUES(1,'Ari',NULL),(2,'Bo',1),(3,'Cy',1),(4,'Dee',2);\nSELECT child.name AS worker,parent.name AS manager\nFROM staff AS child\nLEFT JOIN staff AS parent ON parent.id=child.manager_id\nORDER BY child.id;\n```\nThe pairs are Ari/NULL, Bo/Ari, Cy/Ari and Dee/Bo."
+      },
+      {
+        "paragraph": 3,
+        "fact": "\n```sql\nCREATE TABLE staff(id INTEGER PRIMARY KEY,name TEXT NOT NULL,manager_id INTEGER);\nINSERT INTO staff VALUES(1,'Ari',NULL),(2,'Bo',1),(3,'Cy',1),(4,'Dee',2);\nSELECT child.name AS worker,parent.name AS manager\nFROM staff AS child\nJOIN staff AS parent ON parent.id=child.manager_id\nORDER BY child.id;\n```\nAri disappears; the other three pairs remain. The source table still has four rows."
+      },
+      {
+        "paragraph": 4,
+        "fact": "Optional practice: change Dee’s manager_id to 1 in a fresh setup. Predict the one changed report value."
+      }
+    ],
+    "reasoning": "The left row is retained even when its manager reference has no equality match.",
+    "source": "https://www.sqlite.org/lang_select.html",
+    "prerequisites": [
+      "sql-05"
+    ]
+  },
+  {
+    "id": "sql-41",
+    "quizTarget": "A fourth project has only finished tasks. With done=0 in LEFT JOIN ON, what happens?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "To show every project alongside its unfinished tasks, put t.done=0 inside the LEFT JOIN’s ON condition. That condition decides which right-side rows count as matches. If none qualify, the project still gets a row with NULL right-side columns."
+      },
+      {
+        "paragraph": 1,
+        "fact": "Moving t.done=0 to WHERE changes the question. It filters rows after the join. A finished matched task fails; a NULL-extended task produces NULL rather than true. Both are removed, so projects without an unfinished task disappear. A project with several unfinished tasks can legitimately produce several rows."
+      },
+      {
+        "paragraph": 2,
+        "fact": "\n```sql\nCREATE TABLE projects(id INTEGER PRIMARY KEY,title TEXT);\nCREATE TABLE tasks(id INTEGER PRIMARY KEY,project_id INTEGER,done INTEGER);\nINSERT INTO projects VALUES(1,'Map'),(2,'Song'),(3,'Garden');\nINSERT INTO tasks VALUES(10,1,1),(11,1,0),(12,2,1);\nSELECT p.id AS project_id,t.id AS task_id\nFROM projects AS p\nLEFT JOIN tasks AS t ON t.project_id=p.id AND t.done=0\nORDER BY p.id,t.id;\n```\nResults are (1,11), (2,NULL), (3,NULL). Song has only a finished task; Garden has none. Both projects remain."
+      },
+      {
+        "paragraph": 3,
+        "fact": "\n```sql\nCREATE TABLE projects(id INTEGER PRIMARY KEY,title TEXT);\nCREATE TABLE tasks(id INTEGER PRIMARY KEY,project_id INTEGER,done INTEGER);\nINSERT INTO projects VALUES(1,'Map'),(2,'Song'),(3,'Garden');\nINSERT INTO tasks VALUES(10,1,1),(11,1,0),(12,2,1);\nSELECT p.id AS project_id,t.id AS task_id\nFROM projects AS p\nLEFT JOIN tasks AS t ON t.project_id=p.id\nWHERE t.done=0\nORDER BY p.id,t.id;\n```\nOnly (1,11) remains. Even the project with no task is lost because NULL=0 is not true."
+      },
+      {
+        "paragraph": 4,
+        "fact": "Optional practice: add a second unfinished task to Map. Predict why it produces another row instead of replacing task 11."
+      }
+    ],
+    "reasoning": "No right row qualifies, so LEFT JOIN supplies a NULL-extended row for that parent.",
+    "source": "https://www.sqlite.org/lang_select.html",
+    "prerequisites": [
+      "sql-05",
+      "sql-26"
+    ]
+  },
+  {
+    "id": "sql-42",
+    "quizTarget": "On the unchanged five-row dataset, LIMIT 2 OFFSET 5 returns how many rows?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "LIMIT 2 returns at most two rows. OFFSET 2 skips the first two rows of the ordered result before taking that limit. Neither clause creates a meaningful order by itself. OFFSET counts rows, not page numbers."
+      },
+      {
+        "paragraph": 1,
+        "fact": "ORDER BY score DESC,id ASC sorts higher scores first, then uses the unique ID for tied scores. Without the ID tie-breaker, the database is not required to return tied rows in a fixed order. This example assumes one fixed dataset. Concurrent inserts, deletes or score changes can shift offsets between separate page requests; deterministic ordering alone does not create a snapshot."
+      },
+      {
+        "paragraph": 2,
+        "fact": "\n```sql\nCREATE TABLE notes(id INTEGER PRIMARY KEY,score INTEGER);\nINSERT INTO notes VALUES(1,10),(2,10),(3,8),(4,8),(5,5);\nSELECT id,score\nFROM notes\nORDER BY score DESC,id ASC\nLIMIT 2\nOFFSET 2;\n```\nThe full ID order is 1,2,3,4,5. Skipping two and taking two returns IDs 3 and 4."
+      },
+      {
+        "paragraph": 3,
+        "fact": "\n```sql\nCREATE TABLE notes(id INTEGER PRIMARY KEY,score INTEGER);\nINSERT INTO notes VALUES(1,10),(2,10),(3,8),(4,8),(5,5);\nSELECT id,score\nFROM notes\nORDER BY score DESC,id ASC\nLIMIT 2\nOFFSET 4;\n```\nSkipping four leaves only ID 5. LIMIT is a maximum, not a requirement to fill every page."
+      },
+      {
+        "paragraph": 4,
+        "fact": "Optional practice: insert ID 6 with score 20 between two page requests. Explain why later offsets may repeat or skip items compared with the earlier dataset."
+      }
+    ],
+    "reasoning": "Five rows are skipped and none remain. LIMIT does not manufacture rows.",
+    "source": "https://www.sqlite.org/lang_select.html",
+    "prerequisites": [
+      "sql-01",
+      "sql-03"
+    ]
+  },
+  {
+    "id": "sql-43",
+    "quizTarget": "For scores 8,8,3 ordered high to low, what does DENSE_RANK over score alone return?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "ROW_NUMBER() OVER (ORDER BY score DESC,id) returns an integer starting at 1 for each row in that window order. Its empty parentheses take no ordinary arguments; OVER supplies the ordered input rows. The unique ID breaks score ties so the two tied rows get predictable positions."
+      },
+      {
+        "paragraph": 1,
+        "fact": "DENSE_RANK() OVER (ORDER BY score DESC) gives equal ranks to equal ordered score values, then moves to the next integer without gaps. Do not add ID to this ranking order if equal scores must tie: ID would make each ordering tuple different. Unlike RANK, dense rank does not skip the next rank after ties. Neither window order guarantees final display order; the outer ORDER BY does that."
+      },
+      {
+        "paragraph": 2,
+        "fact": "\n```sql\nCREATE TABLE results(id INTEGER PRIMARY KEY,name TEXT,score INTEGER);\nINSERT INTO results VALUES(1,'Mira',9),(2,'Oren',9),(3,'Paz',7),(4,'Rin',5);\nSELECT id,name,score,ROW_NUMBER() OVER (ORDER BY score DESC,id) AS position,DENSE_RANK() OVER (ORDER BY score DESC) AS level\nFROM results\nORDER BY score DESC,id;\n```\nPositions are 1,2,3,4. Dense ranks are 1,1,2,3: the two scores of 9 share rank 1."
+      },
+      {
+        "paragraph": 3,
+        "fact": "\n```sql\nCREATE TABLE results(id INTEGER PRIMARY KEY,name TEXT,score INTEGER);\nINSERT INTO results VALUES(1,'Mira',9),(2,'Oren',9),(3,'Paz',7),(4,'Rin',5);\nSELECT id,name,score,ROW_NUMBER() OVER (ORDER BY score DESC,id) AS position,DENSE_RANK() OVER (ORDER BY score DESC,id) AS level\nFROM results\nORDER BY score DESC,id;\n```\nDense ranks become 1,2,3,4 because every (score,id) pair differs. The row numbers stay 1,2,3,4."
+      },
+      {
+        "paragraph": 4,
+        "fact": "Optional practice: change Rin’s score to 7 in a fresh setup. Predict positions 1,2,3,4 and dense ranks 1,1,2,2 before running."
+      }
+    ],
+    "reasoning": "Equal scores share a peer-group rank. The next distinct score gets the next integer, with no gap.",
+    "source": "https://www.sqlite.org/windowfunctions.html",
+    "prerequisites": [
+      "sql-07",
+      "sql-42"
+    ]
+  },
+  {
+    "id": "sql-44",
+    "quizTarget": "Change the fallback from -1 to 99 without changing the worked data. What does row 3 receive?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "LAG(value,1,-1) reads value from one earlier row in the window order. Its second argument is the row offset, not a time interval; its third is the fallback when no such row exists. PARTITION BY room starts a separate sequence per room. ORDER BY tick,id makes ties in tick deterministic. The outer ORDER BY id controls display, separately from the window order."
+      },
+      {
+        "paragraph": 1,
+        "fact": "\n```sql\nCREATE TABLE readings(id INTEGER PRIMARY KEY, room TEXT, tick INTEGER, value INTEGER);\nINSERT INTO readings VALUES (1,'east',1,8),(2,'east',2,NULL),(3,'east',3,12),(4,'west',1,5);\nSELECT id, LAG(value,1,-1) OVER (PARTITION BY room ORDER BY tick,id) AS previous\nFROM readings\nORDER BY id;\n```\nThe id/previous rows are (1,-1),(2,8),(3,NULL),(4,-1). East row 3 follows an existing row whose value is NULL, so the fallback does not replace it. West starts its own partition and has no previous row. This query reads observations without changing them."
+      },
+      {
+        "paragraph": 2,
+        "fact": "\n```sql\nCREATE TABLE readings(id INTEGER PRIMARY KEY, room TEXT, tick INTEGER, value INTEGER);\nINSERT INTO readings VALUES (1,'east',1,8),(2,'east',2,9),(3,'east',3,12),(4,'west',1,5);\nSELECT id, LAG(value,1,-1) OVER (PARTITION BY room ORDER BY tick,id) AS previous\nFROM readings\nORDER BY id;\n```\nNow row 3 has previous=9; the first row of each room still gets -1. Optional practice: change the offset to 2 and trace which earlier row exists before running it."
+      }
+    ],
+    "reasoning": "The previous row exists and stores NULL. LAG uses its fallback only when the offset row is absent.",
+    "source": "https://www.sqlite.org/windowfunctions.html",
+    "prerequisites": [
+      "sql-07",
+      "sql-26"
+    ]
+  },
+  {
+    "id": "sql-45",
+    "quizTarget": "Add (4,2,5) to the original worked data. What RANGE total do both tick 2 rows receive?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "A window frame selects the rows used by an aggregate for the current result row. RANGE ending at CURRENT ROW includes peers: rows equal on all window ordering expressions. ROWS counts positions instead. For ordered aggregate windows, the default is RANGE from the start through the current peer group. Here we spell both frames out."
+      },
+      {
+        "paragraph": 1,
+        "fact": "\n```sql\nCREATE TABLE moves(id INTEGER PRIMARY KEY, tick INTEGER, amount INTEGER);\nINSERT INTO moves VALUES (1,1,4),(2,1,7),(3,2,3);\nSELECT id, SUM(amount) OVER (ORDER BY tick RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS peers_total, SUM(amount) OVER (ORDER BY tick,id ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS row_total\nFROM moves\nORDER BY id;\n```\nSUM(amount) adds the amounts in each frame. UNBOUNDED PRECEDING starts at the partition beginning. The RANGE order is tick alone, so both tick 1 rows share total 11. The ROWS order tick,id is unique, giving 4 then 11 then 14. Adding id to RANGE would remove those peer ties; it would answer a different ordering question."
+      },
+      {
+        "paragraph": 2,
+        "fact": "\n```sql\nCREATE TABLE moves(id INTEGER PRIMARY KEY, tick INTEGER, amount INTEGER);\nINSERT INTO moves VALUES (1,1,4),(2,3,7),(3,2,3);\nSELECT id, SUM(amount) OVER (ORDER BY tick RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS peers_total, SUM(amount) OVER (ORDER BY tick,id ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS row_total\nFROM moves\nORDER BY id;\n```\nDisplayed by id, the rows become (1,4,4),(2,14,14),(3,7,7). Window calculation order and final display order differ. Optional practice: add another tick 2 row and predict both totals."
+      }
+    ],
+    "reasoning": "RANGE includes the full tick2 peer group and all earlier ticks:4+7+3+5=19.",
+    "source": "https://www.sqlite.org/windowfunctions.html",
+    "prerequisites": [
+      "sql-07",
+      "sql-43"
+    ]
+  },
+  {
+    "id": "sql-46",
+    "quizTarget": "If moss has one done=1 row with minutes=NULL, what are its filtered COUNT(*) and SUM(minutes)?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "FILTER (WHERE done=1) sends only matching rows into the aggregate immediately before it. It does not remove those rows from the whole query. GROUP BY team still forms groups from all sessions. A query-level WHERE done=1 would remove unfinished rows before grouping and would remove moss entirely in this example."
+      },
+      {
+        "paragraph": 1,
+        "fact": "\n```sql\nCREATE TABLE sessions(id INTEGER PRIMARY KEY, team TEXT, done INTEGER, minutes INTEGER);\nINSERT INTO sessions VALUES (1,'fern',1,10),(2,'fern',0,20),(3,'moss',0,7);\nSELECT team, COUNT(*) AS all_rows, COUNT(*) FILTER (WHERE done=1) AS done_rows, SUM(minutes) FILTER (WHERE done=1) AS done_minutes\nFROM sessions\nGROUP BY team\nORDER BY team;\n```\nCOUNT(*) counts input rows, so the filtered count for moss is 0. SUM(minutes) adds non-NULL minute values; with no matching inputs it returns NULL, not 0. Fern has 2 total rows but only 1 completed row and 10 completed minutes. FILTER is a clause, not a function call."
+      },
+      {
+        "paragraph": 2,
+        "fact": "\n```sql\nCREATE TABLE sessions(id INTEGER PRIMARY KEY, team TEXT, done INTEGER, minutes INTEGER);\nINSERT INTO sessions VALUES (1,'fern',1,10),(2,'fern',0,20),(3,'moss',1,7);\nSELECT team, COUNT(*) AS all_rows, COUNT(*) FILTER (WHERE done=1) AS done_rows, SUM(minutes) FILTER (WHERE done=1) AS done_minutes\nFROM sessions\nGROUP BY team\nORDER BY team;\n```\nMoss now has (all_rows,done_rows,done_minutes)=(1,1,7). Fern is unchanged. Optional practice: set that completed row’s minutes to NULL. Its row still counts, but its value contributes nothing to SUM."
+      }
+    ],
+    "reasoning": "COUNT(*) counts the matching row even when minutes is NULL; SUM has no non-NULL values to add.",
+    "source": "https://www.sqlite.org/lang_aggfunc.html",
+    "prerequisites": [
+      "sql-04",
+      "sql-12",
+      "sql-14"
+    ]
+  },
+  {
+    "id": "sql-47",
+    "quizTarget": "After running the changed ROLLBACK example, which columns remain?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "A schema describes table and column definitions. ALTER TABLE plans ADD COLUMN appends a column; RENAME COLUMN changes its name, not its values. We use a disposable database and a transaction so a deliberate ROLLBACK can undo these changes before commit. Real migrations also need backups and application compatibility checks; this is not a production migration recipe."
+      },
+      {
+        "paragraph": 1,
+        "fact": "\n```sql\nCREATE TABLE plans(id INTEGER PRIMARY KEY, title TEXT);\nINSERT INTO plans VALUES (1,'Map'),(2,'Sketch');\nBEGIN;\nALTER TABLE plans ADD COLUMN status TEXT NOT NULL DEFAULT 'draft';\nALTER TABLE plans RENAME COLUMN title TO label;\nCOMMIT;\nSELECT id,label,status\nFROM plans\nORDER BY id;\n```\nThe result is (1,'Map','draft'),(2,'Sketch','draft'). Existing rows read the new default. NOT NULL rejects missing status values, and DEFAULT supplies a value when it is omitted. SQLite 3.49.1 ADD COLUMN has restrictions: on this populated table, adding a NOT NULL column without a non-NULL default fails. Newer ALTER COLUMN features are not taught here."
+      },
+      {
+        "paragraph": 2,
+        "fact": "\n```sql\nCREATE TABLE plans(id INTEGER PRIMARY KEY, title TEXT);\nINSERT INTO plans VALUES (1,'Map'),(2,'Sketch');\nBEGIN;\nALTER TABLE plans ADD COLUMN status TEXT NOT NULL DEFAULT 'draft';\nALTER TABLE plans RENAME COLUMN title TO label;\nROLLBACK;\nSELECT id,title\nFROM plans\nORDER BY id;\n```\nROLLBACK restores the original title column and removes status. The final query returns (1,Map),(2,Sketch). A failed statement is not an automatic substitute for rolling back a whole multi-statement migration. The supplemental failed-add fixture checks its diagnostic and preserved schema; the learner’s SELECT checks do not grade intentional errors."
+      },
+      {
+        "paragraph": 3,
+        "fact": "Author-validated rejection example, separate from the normal successful project. Use a fresh disposable database and run this complete setup plus intentional failing statement:\n```sql\nCREATE TABLE plans(id INTEGER PRIMARY KEY, title TEXT);\nINSERT INTO plans VALUES (1,'Map'),(2,'Sketch');\nALTER TABLE plans ADD COLUMN status TEXT NOT NULL;\n```\nExpected diagnostic in the pinned engine: Cannot add a NOT NULL column with default value NULL. After catching the statement error, run the following separately to inspect preserved data:\n```sql\nSELECT id,title\nFROM plans\nORDER BY id;\n```\nThe original two id/title rows remain and no status column was added. Current learner SELECT grades do not run expected-error assertions; an error in your normal solution is still an error, not a pass."
+      }
+    ],
+    "reasoning": "The transaction’s ADD and RENAME are both undone, returning to the original table definition.",
+    "source": "https://www.sqlite.org/lang_altertable.html",
+    "prerequisites": [
+      "sql-02",
+      "sql-35",
+      "sql-09"
+    ]
+  },
+  {
+    "id": "sql-48",
+    "quizTarget": "Under the same cascade policy, delete folder 2 from the original setup. How many notes remain?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "With foreign-key enforcement enabled, the default deletion action is NO ACTION. For the ordinary immediate constraint used here, deleting a referenced parent fails unless the references are repaired in the statement. ON DELETE CASCADE instead removes dependent child rows automatically. Choose this policy deliberately: deleting a folder will also delete its notes in this small model."
+      },
+      {
+        "paragraph": 1,
+        "fact": "\n```sql\nPRAGMA foreign_keys=ON;\nCREATE TABLE folders(id INTEGER PRIMARY KEY);\nCREATE TABLE notes(id INTEGER PRIMARY KEY, folder_id INTEGER NOT NULL REFERENCES folders(id) ON DELETE CASCADE);\nINSERT INTO folders VALUES (1),(2);\nINSERT INTO notes VALUES (10,1),(11,1),(12,2);\nDELETE\nFROM folders\nWHERE id=1;\nSELECT id,folder_id\nFROM notes\nORDER BY id;\n```\nOnly note 12 in folder 2 remains. PRAGMA foreign_keys=ON must run before opening a transaction; changing it inside a transaction does not enable enforcement. The child REFERENCES clause names folders(id), and ON DELETE CASCADE states the deletion action. No unrelated folder or note is removed."
+      },
+      {
+        "paragraph": 2,
+        "fact": "\n```sql\nPRAGMA foreign_keys=ON;\nCREATE TABLE folders(id INTEGER PRIMARY KEY);\nCREATE TABLE notes(id INTEGER PRIMARY KEY, folder_id INTEGER NOT NULL REFERENCES folders(id) ON DELETE CASCADE);\nINSERT INTO folders VALUES (1),(2);\nINSERT INTO notes VALUES (10,1),(11,1),(12,2);\nDELETE\nFROM folders\nWHERE id=2;\nSELECT id,folder_id\nFROM notes\nORDER BY id;\n```\nNotes 10 and 11 remain, both in folder 1. Optional practice: predict deleting a folder with no notes. If CASCADE is omitted, our separately validated failed DELETE reports FOREIGN KEY constraint failed and preserves all rows. Current learner checks inspect successful state, not expected-error handling. NO ACTION is not interchangeable with RESTRICT for deferred constraints: RESTRICT acts as soon as the key change occurs even if its constraint is deferred; deferred timing is outside this exercise."
+      },
+      {
+        "paragraph": 3,
+        "fact": "Author-validated rejection example, separate from the normal successful project. Use a fresh disposable database and run this complete setup plus intentional failing statement:\n```sql\nPRAGMA foreign_keys=ON;\nCREATE TABLE folders(id INTEGER PRIMARY KEY);\nCREATE TABLE notes(id INTEGER PRIMARY KEY, folder_id INTEGER NOT NULL REFERENCES folders(id));\nINSERT INTO folders VALUES (1),(2);\nINSERT INTO notes VALUES (10,1),(11,1),(12,2);\nDELETE\nFROM folders\nWHERE id=1;\n```\nExpected diagnostic in the pinned engine: FOREIGN KEY constraint failed. After catching the statement error, run the following separately to inspect preserved data:\n```sql\nSELECT id\nFROM folders\nORDER BY id;\nSELECT id,folder_id\nFROM notes\nORDER BY id;\n```\nBoth parents and all three original notes remain. This is the ordinary immediate NO ACTION case, not a deferred RESTRICT demonstration. Current learner SELECT grades do not run expected-error assertions; an error in your normal solution is still an error, not a pass."
+      }
+    ],
+    "reasoning": "Only note12 references folder2, so notes10 and11 remain.",
+    "source": "https://www.sqlite.org/foreignkeys.html",
+    "prerequisites": [
+      "sql-15",
+      "sql-38"
+    ]
+  },
+  {
+    "id": "sql-49",
+    "quizTarget": "An UPDATE returned a row, then its enclosing transaction was rolled back. Is that update necessarily saved?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "RETURNING adds output expressions to a top-level INSERT, UPDATE or DELETE. INSERT and UPDATE report the changed values of each directly affected row; DELETE reports its removed values. The result is returned to the caller, not saved as an answer table. Output row order is not guaranteed. These one-row examples avoid relying on it."
+      },
+      {
+        "paragraph": 1,
+        "fact": "\n```sql\nCREATE TABLE tickets(id INTEGER PRIMARY KEY, label TEXT, status TEXT DEFAULT 'new');\nINSERT INTO tickets(label) VALUES ('Atlas')\nRETURNING id,label,status;\n```\nThe returned row is (1,'Atlas','new'). The table was empty, so this INTEGER PRIMARY KEY receives 1; status uses its default. RETURNING id,label,status selects those three output fields. A normal caller should use the returned key instead of guessing which key was allocated."
+      },
+      {
+        "paragraph": 2,
+        "fact": "\n```sql\nCREATE TABLE tickets(id INTEGER PRIMARY KEY, label TEXT, status TEXT DEFAULT 'new');\nINSERT INTO tickets(label) VALUES ('Atlas');\nBEGIN;\nUPDATE tickets SET status='done'\nWHERE id=1\nRETURNING id,status;\nROLLBACK;\nSELECT id,status\nFROM tickets\nORDER BY id;\n```\nThe UPDATE returns (1,'done'), but the later SELECT returns (1,'new'). Seeing returned data did not force the surrounding transaction to commit. This course’s learner SELECT checks verify final state, not that RETURNING was used or that the caller received rows. The complete worked fixtures separately verify actual write output. Optional practice: change the update to a nonexistent id; no affected row means no RETURNING row."
+      }
+    ],
+    "reasoning": "RETURNING provides statement output; transaction outcome and durable saving are separate matters.",
+    "source": "https://www.sqlite.org/lang_returning.html",
+    "prerequisites": [
+      "sql-02",
+      "sql-35"
+    ]
+  },
+  {
+    "id": "sql-50",
+    "quizTarget": "If job 4 has status=NULL, is it included in this partial index?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "A partial index includes only rows for which its WHERE condition is true. CREATE INDEX open_priority ON jobs(priority,id) WHERE status='open' indexes the two named keys for open rows. Closed rows and NULL statuses remain in the table but are absent from this index. The index changes an access option, not the query’s meaning."
+      },
+      {
+        "paragraph": 1,
+        "fact": "\n```sql\nCREATE TABLE jobs(id INTEGER PRIMARY KEY, status TEXT, priority INTEGER);\nINSERT INTO jobs VALUES (1,'open',2),(2,'closed',1),(3,'open',1),(4,NULL,0);\nCREATE INDEX open_priority ON jobs(priority,id)\nWHERE status='open';\nSELECT id,priority\nFROM jobs\nWHERE status='open'\nORDER BY priority,id;\n```\nThe result is (3,1),(1,2). The query explicitly requires status=open, so it can use the index without losing a required closed row. An index is not a guarantee of speed: the planner chooses using the query and available statistics. EXPLAIN QUERY PLAN followed by the SELECT can display its chosen access strategy; the plan text is diagnostic, not a stable application interface."
+      },
+      {
+        "paragraph": 2,
+        "fact": "\n```sql\nCREATE TABLE jobs(id INTEGER PRIMARY KEY, status TEXT, priority INTEGER);\nINSERT INTO jobs VALUES (1,'open',2),(2,'closed',1),(3,'open',1),(4,NULL,0);\nCREATE INDEX open_priority ON jobs(priority,id)\nWHERE status='open';\nSELECT id,priority\nFROM jobs\nWHERE status='closed'\nORDER BY priority,id;\n```\nThis query returns (2,1), even though that closed row is not in open_priority. SQLite must choose a strategy that can find the required rows. A partial index cannot serve as a complete list of closed jobs. Optional practice: inspect plans for both queries locally; do not infer that a tiny timing difference proves a general speedup. The project checks confirm result rows, source preservation, a partial-index flag and indexed columns. They do not prove the exact index WHERE predicate or a chosen execution plan; inspect that declaration and explain why open rows are eligible."
+      },
+      {
+        "paragraph": 3,
+        "fact": "A complete local plan inspection uses the same fresh setup:\n```sql\nCREATE TABLE jobs(id INTEGER PRIMARY KEY, status TEXT, priority INTEGER);\nINSERT INTO jobs VALUES (1,'open',2),(2,'closed',1),(3,'open',1),(4,NULL,0);\nCREATE INDEX open_priority ON jobs(priority,id)\nWHERE status='open';\nEXPLAIN QUERY PLAN\nSELECT id,priority\nFROM jobs\nWHERE status='open'\nORDER BY priority,id;\n```\nIn the tested SQLite 3.49.1 build the detail is SCAN jobs USING COVERING INDEX open_priority. Covering means this index contains the values needed by this query, so a separate table lookup is unnecessary for those values. The numeric plan fields and detail wording are version-specific diagnostics, not stable output contracts or measured performance. The ordinary SELECT remains the behavior contract."
+      }
+    ],
+    "reasoning": "The predicate status=open is unknown for NULL, not true. Only true-predicate rows enter the partial index.",
+    "source": "https://www.sqlite.org/partialindex.html",
+    "prerequisites": [
+      "sql-08",
+      "sql-03"
+    ]
+  },
+  {
+    "id": "sql-51",
+    "quizTarget": "Can binding $label also choose the table name for FROM $label?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "Local companion only: this page’s SQL editor does not run JavaScript, bind host values or save files. Use an already available Node.js installation and the pinned SQL.js 1.13.0 distribution, containing sql-wasm.js and sql-wasm.wasm. In a fresh disposable directory, make vendor/, copy those two files there, and name the JavaScript copy sql-wasm.cjs so require treats it as CommonJS. Keep the supplied dependency license with these files. No download, package installation, remote server or credentials are part of this lesson. Save the complete program below as main.cjs and run `node main.cjs` from that directory. The validated engine is SQLite 3.49.1, not a claim about every SQL.js version. Basic JavaScript const, arrays, objects, callbacks, promises and try/finally are prerequisites; review those before the optional local exercise. The SQL template fixes the query structure. A placeholder such as $label is a value slot; binding supplies data for that slot without turning its apostrophes or comment-like characters into SQL syntax. It cannot stand in for a table name or ORDER BY direction. For those structural choices, choose from fixed, trusted query alternatives rather than joining untrusted text."
+      },
+      {
+        "paragraph": 1,
+        "fact": "\n```javascript\nconst initSqlJs = require('./vendor/sql-wasm.cjs');\ninitSqlJs({ locateFile: file => __dirname + '/vendor/' + file }).then(SQL => {\n  const db = new SQL.Database();\n  try {\n    db.run(`CREATE TABLE labels(id INTEGER PRIMARY KEY, label TEXT);\nINSERT INTO labels VALUES (1,'Map'),(2,'Map'' OR 1=1 --');`);\n    const input = \"Map' OR 1=1 --\";\n    const stmt = db.prepare('SELECT id,label FROM labels WHERE label=$label ORDER BY id');\n    const rows = [];\n    try {\n      stmt.bind({ $label: input });\n      while (stmt.step()) rows.push(stmt.getAsObject());\n    } finally {\n      stmt.free();\n    }\n    console.log(JSON.stringify(rows));\n    console.log(db.exec('SELECT COUNT(*) FROM labels')[0].values[0][0]);\n  } finally {\n    db.close();\n  }\n}).catch(error => { console.error(error.message); process.exitCode = 1; });\n```\nThe first output is [{\"id\":2,\"label\":\"Map' OR 1=1 --\"}], followed by 2 on the next line. The unusual string matches one saved label, not all labels. The doubled apostrophe in the fixed INSERT is SQL literal escaping; the later host input is bound instead. Do not copy this setup’s fixed INSERT construction as a way to concatenate user input."
+      },
+      {
+        "paragraph": 2,
+        "fact": "require loads the local CommonJS initializer. initSqlJs returns a promise; locateFile tells it where the matching WASM file is. __dirname is the host file’s directory. new SQL.Database() creates an empty in-memory database. db.run executes the fixed setup and returns the database object, not selected rows. db.prepare compiles the fixed SELECT and returns a statement. stmt.bind receives an object mapping the exact $label placeholder to a JavaScript value. stmt.step advances to the next result row and returns true while a row exists. stmt.getAsObject reads that current row as named fields. rows.push appends that object to the result array. finally runs cleanup even when the enclosed work throws: stmt.free releases statement resources, then db.close releases the database. Do not use either object after release. In this host file, backticks enclose a multiline JavaScript string containing SQL. They are not sent as SQL identifier quotes."
+      },
+      {
+        "paragraph": 3,
+        "fact": "\n```javascript\nconst initSqlJs = require('./vendor/sql-wasm.cjs');\ninitSqlJs({ locateFile: file => __dirname + '/vendor/' + file }).then(SQL => {\n  const db = new SQL.Database();\n  try {\n    db.run(`CREATE TABLE labels(id INTEGER PRIMARY KEY, label TEXT);\nINSERT INTO labels VALUES (1,'Map'),(2,'Map'' OR 1=1 --');`);\n    const input = \"Missing\";\n    const stmt = db.prepare('SELECT id,label FROM labels WHERE label=$label ORDER BY id');\n    const rows = [];\n    try {\n      stmt.bind({ $label: input });\n      while (stmt.step()) rows.push(stmt.getAsObject());\n    } finally {\n      stmt.free();\n    }\n    console.log(JSON.stringify(rows));\n    console.log(db.exec('SELECT COUNT(*) FROM labels')[0].values[0][0]);\n  } finally {\n    db.close();\n  }\n}).catch(error => { console.error(error.message); process.exitCode = 1; });\n```\nThe changed input prints [] and then 2. The query returned no rows; the table was not deleted. JSON.stringify turns the result array into display text, console.log prints it, and db.exec returns result sets whose first result’s values[0][0] is the count in this known one-cell query. The final catch reports an error and sets a failing process exit code; it is not database rollback. Optional practice: bind Map and predict the one matching row. These local examples do not prove security for arbitrary SQL assembled elsewhere."
+      }
+    ],
+    "reasoning": "The prepared query’s structure is fixed. Dynamic identifiers require a separate trusted structural choice, not a value parameter.",
+    "source": "https://github.com/sql-js/sql.js/tree/v1.13.0",
+    "prerequisites": [
+      "sql-25",
+      "sql-03"
+    ]
+  },
+  {
+    "id": "sql-52",
+    "quizTarget": "Export bytes, then add a row to the original database without exporting again. Does reopening the first byte array include that row?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "Local companion only: this page’s SQL editor does not run JavaScript, bind host values or save files. Use an already available Node.js installation and the pinned SQL.js 1.13.0 distribution, containing sql-wasm.js and sql-wasm.wasm. In a fresh disposable directory, make vendor/, copy those two files there, and name the JavaScript copy sql-wasm.cjs so require treats it as CommonJS. Keep the supplied dependency license with these files. No download, package installation, remote server or credentials are part of this lesson. Save the complete program below as main.cjs and run `node main.cjs` from that directory. The validated engine is SQLite 3.49.1, not a claim about every SQL.js version. Basic JavaScript const, arrays, objects, callbacks, promises and try/finally are prerequisites; review those before the optional local exercise. This file-writing example creates study.sqlite in the current working directory. Use a fresh directory for each version. It deliberately refuses to overwrite an existing file. A SQL.js database lives in memory until a host explicitly saves its bytes; closing it is not automatic persistence. We export this isolated main database after successful ordinary writes, with no active transaction or concurrent writer."
+      },
+      {
+        "paragraph": 1,
+        "fact": "\n```javascript\nconst initSqlJs = require('./vendor/sql-wasm.cjs');\nconst { writeFileSync, readFileSync } = require('node:fs');\ninitSqlJs({ locateFile: file => __dirname + '/vendor/' + file }).then(SQL => {\n  const db = new SQL.Database();\n  let bytes;\n  try {\n    db.run(`CREATE TABLE notes(id INTEGER PRIMARY KEY, text TEXT);\nINSERT INTO notes VALUES (1,'First');`);\n    bytes = db.export();\n    db.run(`INSERT INTO notes VALUES (2,'Later');`);\n    console.log(db.exec('SELECT COUNT(*) FROM notes')[0].values[0][0]);\n  } finally {\n    db.close();\n  }\n  writeFileSync('study.sqlite', bytes, { flag: 'wx' });\n  const saved = readFileSync('study.sqlite');\n  const reopened = new SQL.Database(saved);\n  try {\n    console.log(JSON.stringify(reopened.exec('SELECT id,text FROM notes ORDER BY id')[0].values));\n  } finally {\n    reopened.close();\n  }\n}).catch(error => { console.error(error.message); process.exitCode = 1; });\n```\nThe output is 2, then [[1,\"First\"]]. The original in-memory database gained a second note after the export, but the exported bytes describe the earlier one-row state. Writing those bytes and reopening them does not retroactively include the later insert. The export is binary database content, not a string of SQL statements."
+      },
+      {
+        "paragraph": 2,
+        "fact": "db.export() returns a Uint 8Array of SQLite bytes. writeFileSync(path,bytes,{flag:\"wx\"}) writes them to a new file synchronously; wx fails if the path already exists, avoiding silent overwrite. A write error is reported rather than called a successful save. readFileSync(path) returns a Buffer of bytes; Buffer is usable as byte input to new SQL.Database(saved). That constructor opens an independent in-memory database from the snapshot. db.exec returns query-result arrays; values contains row arrays. db.close and reopened.close release their respective handles, not the saved file. initSqlJs and locateFile initialize the local pinned engine as in the previous companion. JSON.stringify and console.log display rows; require loads the local library and Node file API. Backticks in db.run delimit the multiline JavaScript SQL string; they are not SQL identifier quotes."
+      },
+      {
+        "paragraph": 3,
+        "fact": "\n```javascript\nconst initSqlJs = require('./vendor/sql-wasm.cjs');\nconst { writeFileSync, readFileSync } = require('node:fs');\ninitSqlJs({ locateFile: file => __dirname + '/vendor/' + file }).then(SQL => {\n  const db = new SQL.Database();\n  let bytes;\n  try {\n    db.run(`CREATE TABLE notes(id INTEGER PRIMARY KEY, text TEXT);\nINSERT INTO notes VALUES (1,'First');`);\n    db.run(`INSERT INTO notes VALUES (2,'Later');`);\n    bytes = db.export();\n    console.log(db.exec('SELECT COUNT(*) FROM notes')[0].values[0][0]);\n  } finally {\n    db.close();\n  }\n  writeFileSync('study.sqlite', bytes, { flag: 'wx' });\n  const saved = readFileSync('study.sqlite');\n  const reopened = new SQL.Database(saved);\n  try {\n    console.log(JSON.stringify(reopened.exec('SELECT id,text FROM notes ORDER BY id')[0].values));\n  } finally {\n    reopened.close();\n  }\n}).catch(error => { console.error(error.message); process.exitCode = 1; });\n```\nNow the output is 2, then [[1,\"First\"],[2,\"Later\"]], because both inserts precede export. Optional practice: reopen the file in another fresh local process with the same pinned library and compare its rows. This is a small isolated snapshot demonstration, not a live-backup algorithm, multi-connection consistency claim, browser-storage feature or guarantee against disk failure. Never overwrite your only copy of valuable data to try an example."
+      }
+    ],
+    "reasoning": "The byte array describes the database when export was called. Later mutations require another deliberate snapshot.",
+    "source": "https://github.com/sql-js/sql.js/tree/v1.13.0",
+    "prerequisites": [
+      "sql-02",
+      "sql-09"
+    ]
+  }
+]

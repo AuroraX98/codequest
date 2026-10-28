@@ -7,6 +7,15 @@ export function lessonBlocks(
   text: string,
   defaultLanguage: string,
 ): LessonBlock[] {
+  // One audited legacy quiz stored source without fences. Keep the saved quiz
+  // and answer untouched; identify this exact prompt, never guess at language
+  // syntax or split arbitrary statements/semicolons. New prompts use fences.
+  const legacyCode = "pet_age = 3\npet_age = pet_age + 1\nprint(pet_age)";
+  const legacyQuestion = "What does this program display, and why?";
+  if (text === legacyCode + "\n\n" + legacyQuestion) {
+    return [{ kind: "code", code: legacyCode, language: "python" },
+      { kind: "prose", text: legacyQuestion }];
+  }
   const blocks: LessonBlock[] = [];
   const fences =
     /^```([a-zA-Z0-9_-]*)[^\S\r\n]*\r?\n([\s\S]*?)^```[^\S\r\n]*(?:\r?\n|$)/gm;

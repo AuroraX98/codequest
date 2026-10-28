@@ -1,0 +1,11 @@
+# Projects access across all courses
+
+Projects navigation is visible for all21 tracks. Concept lessons are no longer redirected out of the project route. Existing browser-supported lessons retain their original editors/runners/checks. The AI-practice backend still rejects concept-only lessons before provider calls; no capabilities were fabricated.
+
+LocalCourseProject uses683 exact authored fenced examples across concept/local-tool lessons, never the inert JavaScript runtime fields. Each code block remains separate. Complete-example labeling requires explicit immediately preceding authored wording; other blocks are labeled snippets/fragments. Java public type names determine filenames when present. Local setup is linked to the exact source paragraph and shown with the original surrounding context; no guessed compiler commands are generated. Copy/download preserve the current source exactly and do not execute it.
+
+Drafts are device-local and scoped by authenticated account, lesson and example/source fingerprint. Draft failures are reported. Source changes cannot silently reuse a different example's draft. No server progress mutations, completion marks or runtime invocation exist in this component. AI's no-code lessons show their actual exploration activity and explain why there is no code editor.
+
+The duplicate 'Cover the building blocks first' panel, missing-mark count and Study-next action are removed. A visible canonical Skills section retains Study links, tells learners the Finish requirements, and leaves the editor available. Existing disabled Finish/read/quiz/server gates remain unchanged.
+
+Tests cover all21 route roundtrips, exact source/language/extension, complete-vs-fragment separation, account/lesson/example draft isolation and restore, copy/download, no-code guidance, course switching, Python content preservation, manual chooser, editor access, backend practice guard, authoritative concept completion, canonical reading and completion. TypeScript and production build checked separately. React/JSDOM/source verification is not actual browser geometry or local compiler execution; original author runtime evidence remains separate. GitHub sync paused; curriculum unchanged.

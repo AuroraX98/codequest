@@ -1,0 +1,245 @@
+[
+  {
+    "id": "python-71",
+    "quizTarget": "What does find_square(25, 4) establish when it returns None?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "A search tries candidates against a condition. Here target and limit are nonnegative integers. We try every integer from 0 through limit, including both ends. Finding no match means no candidate in this bounded space matched; it does not prove there is no answer outside it."
+      },
+      {
+        "paragraph": 1,
+        "fact": "find_square(target, limit) returns the first candidate whose square equals target, or None after all candidates fail. range(limit + 1) supplies the candidate integers because its stop is excluded. Multiplication tests a candidate without changing the target. return inside the loop stops at a match; the final return is outside the loop."
+      },
+      {
+        "paragraph": 2,
+        "fact": "Imagine choosing a square garden whose area must match a requested number of tiles. A maximum side length bounds the work. For target 16 and limit 3, the function must report None rather than silently search beyond the allowed space."
+      },
+      {
+        "paragraph": 3,
+        "fact": "```python\ndef find_square(target, limit):\n    for candidate in range(limit + 1):\n        if candidate * candidate == target:\n            return candidate\n    return None\nprint(find_square(9, 5))\nprint(find_square(9, 2))\n```\nThe outputs are 3 and None: the second bound excludes the matching side length."
+      },
+      {
+        "paragraph": 4,
+        "fact": "Implement find_square for nonnegative integer target and limit. Include zero and the limit. Return an integer match or None; do not return the last candidate just because the loop ended."
+      }
+    ],
+    "reasoning": "The search exhausted only its stated finite candidate space. The valid side length 5 lies outside that space.",
+    "source": "https://ocw.mit.edu/courses/6-100l-introduction-to-cs-and-programming-using-python-fall-2022/mit6_100l_f22_lec04.pdf",
+    "prerequisites": [
+      "python-04",
+      "python-26",
+      "python-69"
+    ]
+  },
+  {
+    "id": "python-72",
+    "quizTarget": "Why would high = value be an unsafe initial upper bound when value is 0.25?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "Bisection repeatedly halves an interval known to contain an answer. This example accepts finite values from 0 through 1,000,000, a positive finite width, and a nonnegative integer step budget. The square root lies between 0 and max(1, value). Using 1 as the minimum upper bound matters when value is below 1."
+      },
+      {
+        "paragraph": 1,
+        "fact": "Compute the midpoint. If its square is below value, the root is above that midpoint, so replace low. Otherwise replace high. The interval still contains the root. max(1.0, value) returns the larger argument; it does not mutate either number."
+      },
+      {
+        "paragraph": 2,
+        "fact": "Return the midpoint when high - low is at most width. Its distance from the true root is then at most half that interval width in exact arithmetic; floating-point rounding still exists. A finite step budget prevents endless work when the requested width is too small to achieve. Return None when the budget ends without the width condition. Reject negative values or invalid bounds with ValueError."
+      },
+      {
+        "paragraph": 3,
+        "fact": "abs(number) returns its nonnegative magnitude. abs(answer - expected) measures an absolute difference. This is a bounded approximation, not a symbolic exact square root and not a guarantee about arbitrary huge or non-finite floats."
+      },
+      {
+        "paragraph": 4,
+        "fact": "```python\ndef bisect_sqrt(value, width=0.001, max_steps=100):\n    if value < 0 or width <= 0 or max_steps < 0:\n        raise ValueError(\"invalid bounds\")\n    low = 0.0\n    high = max(1.0, value)\n    for _ in range(max_steps):\n        if high - low <= width:\n            return (low + high) / 2\n        middle = (low + high) / 2\n        if middle * middle < value:\n            low = middle\n        else:\n            high = middle\n    if high - low <= width:\n        return (low + high) / 2\n    return None\nanswer = bisect_sqrt(0.25)\nprint(abs(answer - 0.5) <= 0.001)\nprint(bisect_sqrt(9, max_steps=0))\n```\nThe first call is close enough to 0.5, so its check prints True. The zero-budget call prints None."
+      },
+      {
+        "paragraph": 5,
+        "fact": "Implement bisect_sqrt with the shown bracket, width criterion and finite budget. The supported numeric domain is finite 0..1,000,000. Reject negative values, nonpositive width or a negative budget. Do not return an unfinished midpoint as success. The supplied __invalid_bounds_rejected helper is test infrastructure: it checks three invalid inputs raise ValueError. Leave this helper unchanged; the task is bisect_sqrt."
+      }
+    ],
+    "reasoning": "Bisection requires a bracket containing the answer before it starts. Faster shrinking cannot repair an invalid starting invariant.",
+    "source": "https://ocw.mit.edu/courses/6-100l-introduction-to-cs-and-programming-using-python-fall-2022/mit6_100l_f22_lec06.pdf",
+    "prerequisites": [
+      "python-26",
+      "python-58",
+      "python-69"
+    ]
+  },
+  {
+    "id": "python-73",
+    "quizTarget": "Which test distinguishes age >= 18 from the incorrect age > 18?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "Suppose a venue admits an integer age of 18 or older. Its threshold splits inputs into below, exactly at, and above the boundary. A useful test set represents these partitions rather than choosing three unrelated adult ages."
+      },
+      {
+        "paragraph": 1,
+        "fact": "Testing age 19 cannot distinguish age > 18 from age >= 18: both return True. Age 18 distinguishes them. Code-path coverage alone does not show that a boundary follows its specification."
+      },
+      {
+        "paragraph": 2,
+        "fact": "first_disagreement receives a function, calls it on three supplied age values, and returns the first age whose Boolean result differs from the specification. It returns None if these tests agree. That does not prove correctness for every possible input. Tuple unpacking gives each test its age and expected result."
+      },
+      {
+        "paragraph": 3,
+        "fact": "```python\ndef entry_allowed(age):\n    return age >= 18\n\ndef first_disagreement(candidate):\n    for age, expected in [(17, False), (18, True), (19, True)]:\n        if candidate(age) != expected:\n            return age\n    return None\ndef wrong_rule(age):\n    return age > 18\n\nprint(first_disagreement(wrong_rule))\nprint(first_disagreement(entry_allowed))\nprint(entry_allowed(18))\n```\nIt prints 18 for the strict rule, None for the corrected rule, then True for the direct threshold call."
+      },
+      {
+        "paragraph": 4,
+        "fact": "Correct entry_allowed for integer ages and implement first_disagreement using the three ordered boundary tests. Return the first failing age or None. Keep the specification independent of the candidate implementation."
+      }
+    ],
+    "reasoning": "The two expressions disagree only at the threshold among these choices. A passing adult case does not test inclusion of the boundary.",
+    "source": "https://ocw.mit.edu/courses/6-100l-introduction-to-cs-and-programming-using-python-fall-2022/mit6_100l_f22_lec12.pdf",
+    "prerequisites": [
+      "python-08",
+      "python-14",
+      "python-17"
+    ]
+  },
+  {
+    "id": "python-74",
+    "quizTarget": "Why is ([4], 0) useful for diagnosing the faulty range(count + 1)?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "The contract is to sum exactly count leading items, with 0 <= count <= len(values). A result of 20 for values [4, 7, 9] and count 2 is wrong: the expected result is 11. First write this mismatch clearly instead of changing several lines at once."
+      },
+      {
+        "paragraph": 1,
+        "fact": "For values [4] and count 0, the expected result is 0. A faulty range(count + 1) still visits index 0 and adds 4. This tiny case identifies the extra visit without distraction from other values."
+      },
+      {
+        "paragraph": 2,
+        "fact": "Before the loop, total = 0 is correct. The next action should be no iteration when count is zero. Seeing index 0 means the iteration range, not addition, first violates the contract. Replace range(count + 1) with range(count), then keep the zero-count case as a regression test."
+      },
+      {
+        "paragraph": 3,
+        "fact": "Subtracting the last value after the loop would hide one symptom and could still index past the list. Fix the number of visits. The supplied starter is intentionally wrong; the worked implementation below is the repair."
+      },
+      {
+        "paragraph": 4,
+        "fact": "```python\ndef total_prefix(values, count):\n    total = 0\n    for index in range(count):\n        total += values[index]\n    return total\nprint(total_prefix([4, 7, 9], 2))\nprint(total_prefix([4], 0))\n```\nThe repaired calls print 11 and 0."
+      },
+      {
+        "paragraph": 5,
+        "fact": "Repair total_prefix for a list of numbers and a valid count. Sum exactly the first count values, preserve the input, and handle zero without indexing. The caller supplies a count within 0..len(values)."
+      }
+    ],
+    "reasoning": "The minimal failing case isolates the first unwanted loop iteration. Fixing it still needs regression tests for other supported inputs.",
+    "source": "https://ocw.mit.edu/courses/6-100l-introduction-to-cs-and-programming-using-python-fall-2022/mit6_100l_f22_lec12.pdf",
+    "prerequisites": [
+      "python-73"
+    ]
+  },
+  {
+    "id": "python-75",
+    "quizTarget": "For recursive_total([3, 4]), what value does the [4] call return to its caller?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "Recursion means a function calls itself. This example sums a short list. The empty list is the base case: it returns 0 without another call. Each nonempty call passes a shorter slice, so progress toward that base case is visible."
+      },
+      {
+        "paragraph": 1,
+        "fact": "For [2, 5], the outer call remembers first = 2 while it waits for recursive_total([5]). That inner call remembers first = 5 while it waits for recursive_total([]). These local names belong to different calls; the inner first does not overwrite the outer first."
+      },
+      {
+        "paragraph": 2,
+        "fact": "The empty call returns 0. The [5] call returns 5 + 0, which is 5. The [2, 5] call then returns 2 + 5, which is 7. Calling the function without using its returned value would lose the partial result."
+      },
+      {
+        "paragraph": 3,
+        "fact": "values[1:] creates a shorter list copy. This makes the trace clear but adds copying work and memory. Python also limits recursion depth. Use this function for small lists in the exercise, not as a recommended replacement for a loop or sum on large data."
+      },
+      {
+        "paragraph": 4,
+        "fact": "```python\ndef recursive_total(values):\n    if not values:\n        return 0\n    first = values[0]\n    rest_total = recursive_total(values[1:])\n    return first + rest_total\nprint(recursive_total([2, 5]))\nprint(recursive_total([]))\n```\nThe outputs are 7 and 0; the empty case ends the chain."
+      },
+      {
+        "paragraph": 5,
+        "fact": "Implement recursive_total for a short numeric list using the empty-list base case and the returned result of the shorter-list call. Preserve the original list. Explain the call and return sequence for two items."
+      }
+    ],
+    "reasoning": "The [4] call adds its own first value to the empty call’s 0. Only the outer call then adds 3 to obtain 7.",
+    "source": "https://ocw.mit.edu/courses/6-100l-introduction-to-cs-and-programming-using-python-fall-2022/mit6_100l_f22_lec15.pdf",
+    "prerequisites": [
+      "python-08",
+      "python-09",
+      "python-31"
+    ]
+  },
+  {
+    "id": "python-76",
+    "quizTarget": "If __str__ prints the text but returns None, does str(item) meet its contract?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "str(value) asks for a readable string, often for display. repr(value) asks for a developer-oriented representation. A class can define __str__ and __repr__ to control these operations. Both methods must return strings; printing inside them is not a substitute for returning."
+      },
+      {
+        "paragraph": 1,
+        "fact": "Label stores a supplied string. __str__ returns that text. __repr__ returns a class-like label containing the represented text. In an f-string, !r applies repr to the embedded value, preserving visible quotes or escapes that plain display can hide."
+      },
+      {
+        "paragraph": 2,
+        "fact": "The calls str(item) and repr(item) invoke the corresponding special methods. print(item) normally uses the readable string too. A representation can be useful for debugging without being a safe expression to execute; never eval an untrusted representation."
+      },
+      {
+        "paragraph": 3,
+        "fact": "```python\nclass Label:\n    def __init__(self, text):\n        self.text = text\n\n    def __str__(self):\n        return self.text\n\n    def __repr__(self):\n        return f\"Label({self.text!r})\"\nitem = Label(\"Moon\")\nprint(str(item))\nprint(repr(item))\n```\nIt prints Moon, then Label('Moon'). The latter makes the stored string’s quotes visible."
+      },
+      {
+        "paragraph": 4,
+        "fact": "Implement Label so str(instance) returns its text and repr(instance) returns Label(...) containing repr(text). Treat text as a string. Return strings without printing inside either special method."
+      }
+    ],
+    "reasoning": "A protocol method’s return value matters. Producing a side effect does not supply the required string result.",
+    "source": "https://docs.python.org/3.12/reference/datamodel.html#special-method-names",
+    "prerequisites": [
+      "python-11",
+      "python-60"
+    ]
+  },
+  {
+    "id": "python-77",
+    "quizTarget": "Why return NotImplemented rather than False when this __eq__ receives an unsupported type?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "Two separate objects can represent the same value. Tag equality compares their text fields. The == operator can ask __eq__ for this rule; is still asks whether two names refer to the same object. Defining equality does not change identity."
+      },
+      {
+        "paragraph": 1,
+        "fact": "__eq__(self, other) receives the other operand. isinstance(other, Tag) checks whether this rule supports it. Return the special singleton NotImplemented for an unsupported type, rather than raising NotImplementedError or pretending the type was understood. This lets Python try the other operand’s comparison behavior."
+      },
+      {
+        "paragraph": 2,
+        "fact": "If neither operand supports equality with the other, == falls back to identity comparison. In this example a Tag and a string are distinct objects, so they compare False even if their displayed text matches. Do not treat NotImplemented as a Boolean result in your own if statement."
+      },
+      {
+        "paragraph": 3,
+        "fact": "A custom equality rule also matters when values are compared in collections. It does not automatically make the object a safe dictionary key. The next hash-contract lesson addresses that separately; do not add an arbitrary hash just to suppress an error."
+      },
+      {
+        "paragraph": 4,
+        "fact": "```python\nclass Tag:\n    def __init__(self, text):\n        self.text = text\n\n    def __eq__(self, other):\n        if not isinstance(other, Tag):\n            return NotImplemented\n        return self.text == other.text\nleft = Tag(\"music\")\nright = Tag(\"music\")\nprint(left == right)\nprint(left is right)\nprint(left == \"music\")\n```\nEqual text prints True, separate identity prints False, and the unsupported string comparison ultimately prints False."
+      },
+      {
+        "paragraph": 5,
+        "fact": "Implement Tag value equality for Tag instances by text. Return NotImplemented from a direct __eq__ call with an unsupported type. Preserve identity semantics and do not claim all objects with a text attribute are Tags."
+      }
+    ],
+    "reasoning": "NotImplemented signals that this method does not define the pair’s comparison. It is different from a completed comparison returning False.",
+    "source": "https://docs.python.org/3.12/reference/datamodel.html#special-method-names",
+    "prerequisites": [
+      "python-51",
+      "python-60"
+    ]
+  }
+]

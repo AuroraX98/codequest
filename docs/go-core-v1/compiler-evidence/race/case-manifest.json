@@ -1,0 +1,59 @@
+[
+  {
+    "id": "go-59-worked-race",
+    "lessonId": "go-59",
+    "code": "package main\n\nimport (\n\"fmt\"\n\"sync\"\n)\n\n\nfunc main() {\n    var mu sync.Mutex\n    var wg sync.WaitGroup\n    count := 0\n    wg.Add(2)\n    for worker := 0; worker < 2; worker++ {\n        go func() {\n            defer wg.Done()\n            for i := 0; i < 100; i++ { mu.Lock(); count++; mu.Unlock() }\n        }()\n    }\n    wg.Wait()\n    fmt.Println(count)\n}",
+    "stdin": "",
+    "expected": "200",
+    "outcome": "success",
+    "race": true,
+    "manifest": "/workspace/shared/codequest-planning/go-core-v1/compiler-evidence/race-cases.json"
+  },
+  {
+    "lessonId": "go-59",
+    "id": "go-59-changed-race",
+    "code": "package main\n\nimport (\n\"fmt\"\n\"sync\"\n)\n\n\nfunc main() {\n    var mu sync.Mutex\n    var wg sync.WaitGroup\n    count := 0\n    wg.Add(2)\n    for worker := 0; worker < 2; worker++ {\n        go func() {\n            defer wg.Done()\n            for i := 0; i < 25; i++ { mu.Lock(); count++; mu.Unlock() }\n        }()\n    }\n    wg.Wait()\n    fmt.Println(count)\n}",
+    "expected": "50",
+    "outcome": "success",
+    "race": true,
+    "manifest": "/workspace/shared/codequest-planning/go-core-v1/compiler-evidence/race-cases.json"
+  },
+  {
+    "id": "go-60-worked-race",
+    "lessonId": "go-60",
+    "code": "package main\n\nimport (\n\"fmt\"\n\"sync\"\n\"sync/atomic\"\n)\n\n\nfunc main() {\n    var count atomic.Int64\n    var wg sync.WaitGroup\n    wg.Add(2)\n    for worker := 0; worker < 2; worker++ {\n        go func() { defer wg.Done(); for i := 0; i < 100; i++ { count.Add(1) } }()\n    }\n    wg.Wait()\n    fmt.Println(count.Load())\n}",
+    "stdin": "",
+    "expected": "200",
+    "outcome": "success",
+    "race": true,
+    "manifest": "/workspace/shared/codequest-planning/go-core-v1/compiler-evidence/race-cases.json"
+  },
+  {
+    "lessonId": "go-60",
+    "id": "go-60-changed-race",
+    "code": "package main\n\nimport (\n\"fmt\"\n\"sync\"\n\"sync/atomic\"\n)\n\n\nfunc main() {\n    var count atomic.Int64\n    var wg sync.WaitGroup\n    wg.Add(2)\n    for worker := 0; worker < 2; worker++ {\n        go func() { defer wg.Done(); for i := 0; i < 100; i++ { count.Add(2) } }()\n    }\n    wg.Wait()\n    fmt.Println(count.Load())\n}",
+    "expected": "400",
+    "outcome": "success",
+    "race": true,
+    "manifest": "/workspace/shared/codequest-planning/go-core-v1/compiler-evidence/race-cases.json"
+  },
+  {
+    "id": "go-61-worked-race",
+    "lessonId": "go-61",
+    "code": "package main\n\nimport (\n\"fmt\"\n\"context\"\n)\n\n\nfunc main() {\n    ctx, cancel := context.WithCancel(context.Background())\n    defer cancel()\n    done := make(chan struct{})\n    result := \"waiting\"\n    go func() {\n        defer close(done)\n        <-ctx.Done()\n        result = \"stopped\"\n    }()\n    cancel()\n    <-done\n    fmt.Println(result)\n}",
+    "stdin": "",
+    "expected": "stopped",
+    "outcome": "success",
+    "race": true,
+    "manifest": "/workspace/shared/codequest-planning/go-core-v1/compiler-evidence/race-cases.json"
+  },
+  {
+    "lessonId": "go-61",
+    "id": "go-61-changed-race",
+    "code": "package main\n\nimport (\n\"fmt\"\n\"context\"\n)\n\n\nfunc main() {\n    ctx, cancel := context.WithCancel(context.Background())\n    defer cancel()\n    done := make(chan struct{})\n    result := \"waiting\"\n    cancel()\n    go func() {\n        defer close(done)\n        <-ctx.Done()\n        result = \"stopped\"\n    }()\n    cancel()\n    <-done\n    fmt.Println(result)\n}",
+    "expected": "stopped",
+    "outcome": "success",
+    "race": true,
+    "manifest": "/workspace/shared/codequest-planning/go-core-v1/compiler-evidence/race-cases.json"
+  }
+]

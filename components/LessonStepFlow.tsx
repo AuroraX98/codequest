@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from "react";
 import { buildLessonSteps, distinctLessonReference, type LessonStep } from "../lib/lesson-step-flow";
+import LessonVisual, { hasLessonVisual } from "./LessonVisual";
 import CodeAnatomy from "./CodeAnatomy";
 import { codeAnatomy } from "../lib/code-anatomy";
 import LessonContent, { CodeExample, InlineCode } from "./LessonContent";
@@ -18,7 +19,7 @@ export type LessonStepFlowProps = {
   text: string;
   runtime: string;
   referenceText?: string;
-  referenceVisual?: ReactNode;
+  referenceVisual?: { unitId: string; paragraph: number };
   resumeKey?: string;
   title?: string;
   onNext: () => void;
@@ -37,6 +38,7 @@ export default function LessonStepFlow(props: LessonStepFlowProps) {
 function StepFlow({ text, runtime, referenceText = text, referenceVisual, resumeKey, title, onNext, onBack, backDisabled, completion, startAtEnd = false, onStageChange }: LessonStepFlowProps) {
   const steps = useMemo(() => buildLessonSteps(text, runtime), [text, runtime]);
   const extraReference = useMemo(() => distinctLessonReference(text, referenceText, runtime), [text, referenceText, runtime]);
+  const showReferenceVisual = !!referenceVisual && hasLessonVisual(referenceVisual.unitId, referenceVisual.paragraph);
   const [index, setIndex] = useState(() => startAtEnd ? steps.length - 1 : 0);
   const [selection, setSelection] = useState<string | null>(null);
   const [result, setResult] = useState<"correct" | "revealed" | null>(null);
@@ -45,7 +47,7 @@ function StepFlow({ text, runtime, referenceText = text, referenceVisual, resume
     if (resumeKey && !startAtEnd) {
       try {
         const saved = JSON.parse(localStorage.getItem(resumeKey) ?? "null");
-        if (saved?.flowVersion === 2 && saved.text === text && saved.runtime === runtime && Number.isInteger(saved.index) && saved.index >= 0 && saved.index < steps.length) {
+        if (saved?.flowVersion === 3 && saved.text === text && saved.runtime === runtime && Number.isInteger(saved.index) && saved.index >= 0 && saved.index < steps.length) {
           setIndex(saved.index);
           const savedStep = steps[saved.index];
           if (savedStep.kind === "practice" && savedStep.options.includes(saved.selection)) {
@@ -60,7 +62,7 @@ function StepFlow({ text, runtime, referenceText = text, referenceVisual, resume
   }, [resumeKey, text, runtime, steps, startAtEnd]);
   useEffect(() => {
     if (!resumeReady || !resumeKey) return;
-    try { localStorage.setItem(resumeKey, JSON.stringify({ flowVersion: 2, text, runtime, index, selection, result })); } catch {}
+    try { localStorage.setItem(resumeKey, JSON.stringify({ flowVersion: 3, text, runtime, index, selection, result })); } catch {}
   }, [resumeReady, resumeKey, text, runtime, index, selection, result]);
   const panel = useRef<HTMLDivElement>(null);
   const previousIndex = useRef(index);
@@ -140,11 +142,11 @@ function StepFlow({ text, runtime, referenceText = text, referenceVisual, resume
         {step.kind === "practice" && !result ? "Check" : isLast || result ? "Continue" : "Next"}
       </button>
     </nav>
-    {(extraReference || referenceVisual) && <details key={`${index}:reference`} className={styles.reference} data-lesson-reference>
+    {(extraReference.trim() || showReferenceVisual) && <details key={`${index}:reference`} className={styles.reference} data-lesson-reference>
       <summary>Tell me more</summary>
       <div className={styles.referenceContent}>
         {extraReference && <LessonContent text={extraReference} runtime={runtime} glossary />}
-        {referenceVisual}
+        {showReferenceVisual && referenceVisual && <LessonVisual {...referenceVisual} />}
       </div>
     </details>}
   </section>;

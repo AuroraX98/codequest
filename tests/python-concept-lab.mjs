@@ -54,7 +54,7 @@ try {
   await mkdir(path.join(temp, 'components'));
   await mkdir(path.join(temp, 'lib'));
   await symlink(path.resolve('node_modules'), path.join(temp, 'node_modules'), process.platform === 'win32' ? 'junction' : 'dir');
-  for (const file of ['components/PythonConceptLab.tsx', 'components/PairedLessonText.tsx', 'components/PythonConceptPicture.tsx', 'components/PythonConceptMetaphor.tsx', 'components/LessonContent.tsx', 'components/LessonStepFlow.tsx', 'lib/lesson-step-flow.ts', 'lib/plain-language.ts', 'lib/plain-beginner-python.ts', 'lib/plain-html-readings.ts', 'lib/plain-css-readings.ts', 'lib/plain-python-foundations.ts', 'lib/plain-python-advanced.ts', 'lib/plain-typescript-readings.ts', 'lib/plain-react-readings.ts', 'lib/plain-backend-readings.ts', 'lib/plain-javascript-readings.ts', 'lib/plain-sql-readings.ts', 'lib/plain-swift-readings.ts', 'lib/plain-developer-readings.ts', 'components/CodeAnatomy.tsx', 'components/LessonGlossary.tsx', 'lib/lesson-glossary.ts', 'lib/code-anatomy.ts', 'lib/lesson-markup.ts', 'lib/lesson-ideas.ts', 'lib/code-language.ts', 'lib/python-concepts.ts']) {
+  for (const file of ['lib/diagram-web-platform.ts', 'lib/diagram-javascript-python.ts', 'lib/diagram-sql-swift-typescript.ts', 'components/LessonVisual.tsx', 'components/LessonDiagram.tsx', 'components/PythonLessonScene.tsx', 'components/PythonControlScenes.tsx', 'components/PythonCollectionScenes.tsx', 'components/PythonGeneratorScene.tsx', 'components/PythonCsvScene.tsx', 'lib/lesson-visuals.ts', 'lib/lesson-diagrams.ts', 'lib/diagram-drawing.ts', 'lib/python-control-scenes.ts', 'lib/python-collection-scenes.ts', 'lib/python-generator-scene.ts', 'lib/python-csv-scene.ts', 'components/PythonConceptLab.tsx', 'components/PairedLessonText.tsx', 'components/PythonConceptPicture.tsx', 'components/PythonConceptMetaphor.tsx', 'components/LessonContent.tsx', 'components/LessonStepFlow.tsx', 'lib/lesson-step-flow.ts', 'lib/understanding-practice.ts', 'lib/plain-language.ts', 'lib/plain-beginner-python.ts', 'lib/plain-html-readings.ts', 'lib/plain-css-readings.ts', 'lib/plain-python-foundations.ts', 'lib/plain-python-advanced.ts', 'lib/plain-typescript-readings.ts', 'lib/plain-react-readings.ts', 'lib/plain-backend-readings.ts', 'lib/plain-javascript-readings.ts', 'lib/plain-sql-readings.ts', 'lib/plain-swift-readings.ts', 'lib/plain-developer-readings.ts', 'components/CodeAnatomy.tsx', 'components/LessonGlossary.tsx', 'lib/lesson-glossary.ts', 'lib/code-anatomy.ts', 'lib/lesson-markup.ts', 'lib/lesson-ideas.ts', 'lib/code-language.ts', 'lib/python-concepts.ts']) {
     const js = ts.transpileModule(await readFile(file, 'utf8'), {
       compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext, jsx: ts.JsxEmit.ReactJSX },
     }).outputText.replace(/from\s+(['"])(\.\.?\/[^'"]+)\1/g, 'from "$2.mjs"');
@@ -463,10 +463,19 @@ print('Verified', len(cases), 'generated Python examples and all intermediate st
   const simpleText = document.getElementById('mount').textContent;
   for (const removed of ['In simple words', 'Words in this step', 'Words in this explanation', 'More ways to explore', 'Explore the full example']) assert.ok(!simpleText.includes(removed), removed + ' removed');
   assert.equal((simpleText.match(/Instructions that Python follows\./g) || []).length, 1);
-  const reference = document.querySelector('[data-lesson-reference]');
-  assert.ok(reference.textContent.includes('A program turns a task you can describe into precise steps the computer can repeat.'));
-  assert.ok(!reference.textContent.includes('Instructions that Python follows.'));
-  assert.equal(reference.querySelector('pre code').textContent.trim(), 'print("Hello")');
+  assert.equal(document.querySelector('[data-lesson-reference]'),null,'Repeated core teaching is not hidden in a duplicate optional panel');
+  let sawWhy=false,sawCode=false;
+  for(let step=0;step<10 && !(sawWhy&&sawCode);step++){
+    const visible=document.querySelector('[data-step-primary]').closest('section');
+    sawWhy ||= visible.textContent.includes('A program turns a task you can describe into precise steps the computer can repeat.');
+    sawCode ||= [...visible.querySelectorAll('pre code')].some(code=>code.textContent.trim()==='print("Hello")');
+    if(sawWhy&&sawCode)break;
+    const next=document.querySelector('[data-step-primary]');
+    assert.equal(next.disabled,false,'Essential explanation precedes required practice');
+    await clickNode(next);
+  }
+  assert.ok(sawWhy,'Program explanation remains in visible sequential teaching');
+  assert.ok(sawCode,'Hello example remains in visible sequential teaching');
   assert.ok(document.querySelector('[data-step-primary]'));
   console.log('Passed all six expandable concept rooms, token explanations, bounded trace navigation, removed cosmetic swaps, removed prediction/deeper panels, example invalidation, actual Python verification, double clicks, stop/unmount/room cancellation, collapse/reopen retention, stale run/copy rejection, error handling, copy/download, and original-project/progress isolation.');
 } finally {

@@ -1,0 +1,321 @@
+[
+  {
+    "id": "sql-25",
+    "quizTarget": "What value does SELECT 'A' || (2 + 4) produce?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "Single quotes enclose a text value. To put an apostrophe inside it, write two apostrophes: 'Lena''s notes' is one value, Lena’s notes. Double quotes identify a column or table name when quoting is necessary; they are not the text-value style used here."
+      },
+      {
+        "paragraph": 1,
+        "fact": "SELECT can calculate a value without reading a table. The + operator adds numbers; AS gives a result column a name. The || operator joins text values. Parentheses make the intended arithmetic grouping explicit before text is joined."
+      },
+      {
+        "paragraph": 2,
+        "fact": "Run this complete example in a fresh database.\n```sql\nCREATE TEMP VIEW shown AS\nSELECT 'Lena''s notes' AS title, 3 + 2 AS copies;\nSELECT title,copies\nFROM shown;\n```"
+      },
+      {
+        "paragraph": 3,
+        "fact": "Change the supplied values and trace the result. This is a separate complete example.\n```sql\nCREATE TEMP VIEW shown AS\nSELECT 'Milo''s map' AS title, 4 + 2 AS copies;\nSELECT title,copies\nFROM shown;\n```"
+      },
+      {
+        "paragraph": 4,
+        "fact": "Application: Create labels(id,label) as a view over parcels. Join owner, ': ', and quantity plus one. Preserve parcels. The two labels must be Rin's kit: 3 and Sol: 5."
+      }
+    ],
+    "reasoning": "The parentheses calculate 6 first; || joins A and the text representation of that result.",
+    "source": "https://www.sqlite.org/lang_expr.html",
+    "prerequisites": [
+      "sql-01"
+    ]
+  },
+  {
+    "id": "sql-26",
+    "quizTarget": "What is the result of NOT (NULL = 3)?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "NULL represents a missing or unknown value. A comparison such as NULL = 3 produces NULL, not false. Use IS NULL to ask whether a value is missing; it returns 1 or 0 in SQLite."
+      },
+      {
+        "paragraph": 1,
+        "fact": "WHERE retains rows whose condition is true. It excludes false and unknown conditions. NOT NULL is still unknown. With logical operators, 1 OR NULL is true and 0 AND NULL is false: the known operand already determines those results. This is three-valued logic, not an empty-string rule."
+      },
+      {
+        "paragraph": 2,
+        "fact": "Run this complete example in a fresh database.\n```sql\nCREATE TEMP VIEW shown AS\nSELECT NULL = 3 AS comparison,NULL IS NULL AS missing,1 OR NULL AS either,0 AND NULL AS both;\nSELECT *\nFROM shown;\n```"
+      },
+      {
+        "paragraph": 3,
+        "fact": "Change the supplied values and trace the result. This is a separate complete example.\n```sql\nCREATE TEMP VIEW shown AS\nSELECT NOT NULL AS negated,0 OR NULL AS either,1 AND NULL AS both;\nSELECT *\nFROM shown;\n```"
+      },
+      {
+        "paragraph": 4,
+        "fact": "Application: Create unfinished(id) containing waiting jobs and jobs whose state is missing, but not done jobs. Preserve jobs. Include IDs 2 and 3."
+      }
+    ],
+    "reasoning": "Negating an unknown comparison still leaves it unknown. IS NULL would ask a different, answerable question.",
+    "source": "https://www.sqlite.org/lang_expr.html",
+    "prerequisites": [
+      "sql-03"
+    ]
+  },
+  {
+    "id": "sql-27",
+    "quizTarget": "Does 8 NOT BETWEEN 4 AND 8 evaluate to true?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "BETWEEN tests an inclusive lower and upper boundary. minutes BETWEEN 5 AND 9 includes both 5 and 9. For these non-missing numbers, it asks the same range question as minutes >= 5 AND minutes <= 9."
+      },
+      {
+        "paragraph": 1,
+        "fact": "NOT BETWEEN excludes that inclusive range. It does not swap the endpoints or make them exclusive. Write the lower limit first. A missing comparison input can still produce unknown; this example deliberately uses known integer values."
+      },
+      {
+        "paragraph": 2,
+        "fact": "Run this complete example in a fresh database.\n```sql\nCREATE TABLE visits(minutes INTEGER);\nINSERT INTO visits VALUES(4),(5),(9),(10);\nCREATE TEMP VIEW shown AS\nSELECT minutes\nFROM visits\nWHERE minutes BETWEEN 5 AND 9;\nSELECT *\nFROM shown\nORDER BY minutes;\n```"
+      },
+      {
+        "paragraph": 3,
+        "fact": "Change the supplied values and trace the result. This is a separate complete example.\n```sql\nCREATE TABLE visits(minutes INTEGER);\nINSERT INTO visits VALUES(4),(5),(9),(10);\nCREATE TEMP VIEW shown AS\nSELECT minutes\nFROM visits\nWHERE minutes NOT BETWEEN 5 AND 9;\nSELECT *\nFROM shown\nORDER BY minutes;\n```"
+      },
+      {
+        "paragraph": 4,
+        "fact": "Application: Create selected(id) for entries with score between 4 and 8 inclusive. Preserve all four entries."
+      }
+    ],
+    "reasoning": "BETWEEN includes 8; NOT reverses that true result to false.",
+    "source": "https://www.sqlite.org/lang_expr.html",
+    "prerequisites": [
+      "sql-03"
+    ]
+  },
+  {
+    "id": "sql-28",
+    "quizTarget": "One source row is blue. How many rows does its match against IN ('blue','blue','blue') contribute?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "IN asks whether a value matches a member of a list. colour IN ('blue','gold') expresses the same membership choice as colour = 'blue' OR colour = 'gold' for these non-missing values."
+      },
+      {
+        "paragraph": 1,
+        "fact": "The list contains values, not column names. Repeating a value in the list does not duplicate a matching source row. IN filters each source row; it is not a join that creates a row for each matching list entry. Nullable subqueries need additional care in the later NOT IN lesson."
+      },
+      {
+        "paragraph": 2,
+        "fact": "Run this complete example in a fresh database.\n```sql\nCREATE TABLE tiles(colour TEXT);\nINSERT INTO tiles VALUES('blue'),('red'),('gold');\nCREATE TEMP VIEW shown AS\nSELECT colour\nFROM tiles\nWHERE colour IN('blue','gold');\nSELECT *\nFROM shown\nORDER BY colour;\n```"
+      },
+      {
+        "paragraph": 3,
+        "fact": "Change the supplied values and trace the result. This is a separate complete example.\n```sql\nCREATE TABLE tiles(colour TEXT);\nINSERT INTO tiles VALUES('blue'),('red'),('gold');\nCREATE TEMP VIEW shown AS\nSELECT colour\nFROM tiles\nWHERE colour IN('blue','blue');\nSELECT *\nFROM shown;\n```"
+      },
+      {
+        "paragraph": 4,
+        "fact": "Application: Create chosen(id) for tags with colour green or violet. Preserve tags and retain both separate green rows."
+      }
+    ],
+    "reasoning": "Membership is a condition on that source row, not one output per repeated list item.",
+    "source": "https://www.sqlite.org/lang_expr.html",
+    "prerequisites": [
+      "sql-03"
+    ]
+  },
+  {
+    "id": "sql-29",
+    "quizTarget": "Does 'ab' match the pattern 'a_'?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "LIKE compares text with a pattern. % matches zero or more characters; _ matches exactly one character. To match a literal percent or underscore, choose a one-character ESCAPE marker and put it before that symbol in the pattern."
+      },
+      {
+        "paragraph": 1,
+        "fact": "Here ! is the escape marker: LIKE 'box!_%' ESCAPE '!' means the literal prefix box_ followed by any remaining text. Default SQLite LIKE folds ASCII letter case, but does not provide general Unicode case folding: 'a' LIKE 'A' is true while 'æ' LIKE 'Æ' is false without extra support."
+      },
+      {
+        "paragraph": 2,
+        "fact": "Run this complete example in a fresh database.\n```sql\nCREATE TEMP VIEW shown AS\nSELECT 'box_a' LIKE 'box!_%' ESCAPE '!' AS literal_match,'boxXa' LIKE 'box!_%' ESCAPE '!' AS not_literal;\nSELECT *\nFROM shown;\n```"
+      },
+      {
+        "paragraph": 3,
+        "fact": "Change the supplied values and trace the result. This is a separate complete example.\n```sql\nCREATE TEMP VIEW shown AS\nSELECT 'box_' LIKE 'box!_%' ESCAPE '!' AS empty_tail,'a' LIKE 'A' AS ascii_fold,'æ' LIKE 'Æ' AS unicode_fold;\nSELECT *\nFROM shown;\n```"
+      },
+      {
+        "paragraph": 4,
+        "fact": "Application: Create matches(id) for labels beginning with the literal text box_. A label equal to box_ also qualifies. Preserve all source labels."
+      }
+    ],
+    "reasoning": "Without ESCAPE, _ represents one character, so it matches b.",
+    "source": "https://www.sqlite.org/lang_expr.html",
+    "prerequisites": [
+      "sql-25",
+      "sql-03"
+    ]
+  },
+  {
+    "id": "sql-30",
+    "quizTarget": "If the score>=10 branch comes first, which label does score 30 receive?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "A searched CASE expression checks WHEN conditions in order and returns the THEN value for the first true condition. ELSE supplies the value when none is true; END closes the expression. CASE calculates a value rather than starting a separate statement."
+      },
+      {
+        "paragraph": 1,
+        "fact": "Order overlapping conditions deliberately. Check score >= 20 before score >= 10 if the higher band must win. A missing score does not make either comparison true; a separate WHEN score IS NULL can give that case its own label."
+      },
+      {
+        "paragraph": 2,
+        "fact": "Run this complete example in a fresh database.\n```sql\nCREATE TABLE scores(score INTEGER);\nINSERT INTO scores VALUES(22),(12),(4),(NULL);\nCREATE TEMP VIEW shown AS\nSELECT score,CASE WHEN score IS NULL THEN 'unknown' WHEN score>=20 THEN 'high' WHEN score>=10 THEN 'middle' ELSE 'low' END AS band\nFROM scores;\nSELECT *\nFROM shown\nORDER BY score;\n```"
+      },
+      {
+        "paragraph": 3,
+        "fact": "Change the supplied values and trace the result. This is a separate complete example.\n```sql\nCREATE TEMP VIEW shown AS\nSELECT CASE WHEN 22>=10 THEN 'middle' WHEN 22>=20 THEN 'high' ELSE 'low' END AS band;\nSELECT *\nFROM shown;\n```"
+      },
+      {
+        "paragraph": 4,
+        "fact": "Application: Create bands(id,band) with high for scores at least 20, middle for scores at least 10 but below 20, low for smaller scores, and unknown for NULL. Preserve scores."
+      }
+    ],
+    "reasoning": "The first true WHEN wins; CASE does not continue looking for a more specific later condition.",
+    "source": "https://www.sqlite.org/lang_expr.html",
+    "prerequisites": [
+      "sql-03",
+      "sql-26"
+    ]
+  },
+  {
+    "id": "sql-31",
+    "quizTarget": "What does substr('Orbit',2,2) return?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "length(text) returns the number of Unicode code points before any zero character in ordinary SQLite text, not its rendered width or number of user-perceived graphemes. An empty text has length zero; length(NULL) is NULL. These examples use simple letters without embedded zero characters."
+      },
+      {
+        "paragraph": 1,
+        "fact": "substr(text,start,count) returns a section of text. For a positive start, position 1 is the first character; count says how many characters to take. Asking beyond the end returns an empty text. substr(NULL,...) returns NULL. Parentheses hold the arguments and commas separate them."
+      },
+      {
+        "paragraph": 2,
+        "fact": "Run this complete example in a fresh database.\n```sql\nCREATE TEMP VIEW shown AS\nSELECT length('Lantern') AS size,substr('Lantern',2,3) AS piece;\nSELECT *\nFROM shown;\n```"
+      },
+      {
+        "paragraph": 3,
+        "fact": "Change the supplied values and trace the result. This is a separate complete example.\n```sql\nCREATE TEMP VIEW shown AS\nSELECT length('') AS empty_size,substr('Map',5,2) AS beyond,substr(NULL,1,2) AS missing;\nSELECT *\nFROM shown;\n```"
+      },
+      {
+        "paragraph": 4,
+        "fact": "Application: Create prefixes(id,prefix,size) with the first three characters and length of each name. Keep NULL as NULL, and preserve names."
+      }
+    ],
+    "reasoning": "Positive positions start at 1: O is first, so positions 2 and 3 are r and b.",
+    "source": "https://www.sqlite.org/lang_corefunc.html",
+    "prerequisites": [
+      "sql-25",
+      "sql-26"
+    ]
+  },
+  {
+    "id": "sql-32",
+    "quizTarget": "What does -9 / 2 return when both values are integers?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "In SQLite, division of two integers uses integer arithmetic and truncates the fractional part toward zero. 7 / 2 produces 3, not 3.5. If either operand is real, the result uses real arithmetic. CAST(value AS REAL) explicitly requests a real value."
+      },
+      {
+        "paragraph": 1,
+        "fact": "CAST is language syntax: the value comes before AS and the target type after it. CAST(7 AS REAL) / 2 produces 3.5. SQLite division by zero returns NULL. Binary floating-point values are approximate; converting to REAL is not a guarantee of exact decimal-money arithmetic."
+      },
+      {
+        "paragraph": 2,
+        "fact": "Run this complete example in a fresh database.\n```sql\nCREATE TEMP VIEW shown AS\nSELECT 7/2 AS whole,CAST(7 AS REAL)/2 AS fraction,-7/2 AS negative;\nSELECT *\nFROM shown;\n```"
+      },
+      {
+        "paragraph": 3,
+        "fact": "Change the supplied values and trace the result. This is a separate complete example.\n```sql\nCREATE TEMP VIEW shown AS\nSELECT 5/2 AS whole,5/2.0 AS fraction,5/0 AS missing;\nSELECT *\nFROM shown;\n```"
+      },
+      {
+        "paragraph": 4,
+        "fact": "Application: Create shares(id,average) using real division of total by people. A row with zero people must have NULL average. Preserve supplies."
+      }
+    ],
+    "reasoning": "Integer division truncates toward zero, so the fractional part of -4.5 is removed.",
+    "source": "https://www.sqlite.org/lang_expr.html",
+    "prerequisites": [
+      "sql-25",
+      "sql-26"
+    ]
+  },
+  {
+    "id": "sql-33",
+    "quizTarget": "An ordinary INTEGER-affinity column receives the text cloudy. What can SQLite store without an additional constraint?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "Ordinary SQLite tables use flexible value types. A column declared INTEGER has integer affinity: it tries suitable numeric conversion when storing a value, but its declaration alone does not reject every nonnumeric text. This differs from rigid typing in many other database systems."
+      },
+      {
+        "paragraph": 1,
+        "fact": "typeof(value) returns the stored value's storage-class name, such as integer, real, text, blob or null. It inspects a value, not the column declaration. In an INTEGER-affinity column, '12' can be stored as integer 12, while 'twelve' remains text. Use STRICT or appropriate constraints when that flexibility is not your intended contract."
+      },
+      {
+        "paragraph": 2,
+        "fact": "Run this complete example in a fresh database.\n```sql\nCREATE TABLE readings(id INTEGER PRIMARY KEY,value INTEGER);\nINSERT INTO readings VALUES(1,'12'),(2,'twelve');\nCREATE TEMP VIEW shown AS\nSELECT id,value,typeof(value) AS kind\nFROM readings;\nSELECT *\nFROM shown\nORDER BY id;\n```"
+      },
+      {
+        "paragraph": 3,
+        "fact": "Change the supplied values and trace the result. This is a separate complete example.\n```sql\nCREATE TABLE readings(id INTEGER PRIMARY KEY,value TEXT);\nINSERT INTO readings VALUES(1,12),(2,NULL);\nCREATE TEMP VIEW shown AS\nSELECT id,value,typeof(value) AS kind\nFROM readings;\nSELECT *\nFROM shown\nORDER BY id;\n```"
+      },
+      {
+        "paragraph": 4,
+        "fact": "Application: Create an ordinary table readings(id INTEGER PRIMARY KEY,value INTEGER). Insert ID1 text 17 and ID2 text unknown. Create observed(id,kind) exposing typeof(value). This task deliberately observes flexible affinity rather than rejecting text."
+      }
+    ],
+    "reasoning": "A nonnumeric text that cannot be converted may remain text in an ordinary flexible table.",
+    "source": "https://www.sqlite.org/datatype3.html",
+    "prerequisites": [
+      "sql-02",
+      "sql-32"
+    ]
+  },
+  {
+    "id": "sql-34",
+    "quizTarget": "A STRICT INTEGER column receives the text '18'. Must it reject that value solely because it began as text?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "STRICT after a CREATE TABLE definition asks SQLite to enforce its supported column types. It does not mean every value must arrive with exactly that storage class: a lossless conversion can still be accepted. The text 12 can become integer 12, but the text cloudy cannot be stored in a STRICT INTEGER column."
+      },
+      {
+        "paragraph": 1,
+        "fact": "These examples use INTEGER and TEXT. SQLite restricts the type names permitted in STRICT tables; do not copy arbitrary type names from another database. The project checks inspect the strict-table flag and stored values. The separate rejected-write example demonstrates an error, but this editor’s normal checks do not grade whether your table rejects every invalid input."
+      },
+      {
+        "paragraph": 2,
+        "fact": "Run this complete example in a fresh database.\n```sql\nCREATE TABLE readings(id INTEGER PRIMARY KEY,value INTEGER) STRICT;\nINSERT INTO readings VALUES(1,'12');\nCREATE TEMP VIEW shown AS\nSELECT value,typeof(value) AS kind\nFROM readings;\nSELECT *\nFROM shown;\n```"
+      },
+      {
+        "paragraph": 3,
+        "fact": "Change the supplied values and trace the result. This is a separate complete example.\n```sql\nCREATE TABLE readings(id INTEGER PRIMARY KEY,value INTEGER) STRICT;\nINSERT INTO readings VALUES(1,'06');\nCREATE TEMP VIEW shown AS\nSELECT value,typeof(value) AS kind\nFROM readings;\nSELECT *\nFROM shown;\n```"
+      },
+      {
+        "paragraph": 4,
+        "fact": "Application: Create STRICT table readings(id INTEGER PRIMARY KEY,value INTEGER NOT NULL), then insert ID1 with text 14 and ID2 with integer 9. Both stored values must be integers. Do not include an intentional failure in the normal project submission."
+      },
+      {
+        "paragraph": 5,
+        "fact": "Separate error experiment: run the following complete block in a fresh database, not after the project. The final statement should fail because cloudy cannot become an INTEGER. The earlier row with value 4 remains. Inspect it with SELECT value FROM sample if your local connection stays open after reporting the error. A normal Run checks error is not awarded as a successful project.\n```sql\nCREATE TABLE sample(value INTEGER) STRICT;\nINSERT INTO sample VALUES(4);\nINSERT INTO sample VALUES('cloudy');\n```"
+      }
+    ],
+    "reasoning": "STRICT requires compatibility after permitted lossless conversion, not an exact incoming storage-class match.",
+    "source": "https://www.sqlite.org/stricttables.html",
+    "prerequisites": [
+      "sql-33"
+    ]
+  }
+]

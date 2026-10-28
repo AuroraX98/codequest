@@ -1,0 +1,515 @@
+[
+  {
+    "id": "java-46",
+    "quizTarget": "What happens if offset is reassigned after the lambda is created?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "A functional interface has one abstract method. IntUnaryOperator accepts one int and returns an int through applyAsInt. In x -> x + offset, x is the input; the expression is the returned result."
+      },
+      {
+        "paragraph": 1,
+        "fact": "A captured local variable must be final or effectively final: not reassigned after initialization. This restriction is on the binding, not a promise that a referenced object is immutable."
+      }
+    ],
+    "reasoning": "A later assignment makes the captured local fail the effectively-final rule even if invocation comes afterward.",
+    "source": "https://docs.oracle.com/javase/specs/jls/se25/html/jls-15.html#jls-15.27",
+    "prerequisites": [
+      "java-45"
+    ]
+  },
+  {
+    "id": "java-47",
+    "quizTarget": "What does applying the reference to \"trail\" return?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "A method reference such as Main::length adapts an existing compatible method to a functional interface. It does not call the method immediately. ToIntFunction<String> has applyAsInt(String)."
+      },
+      {
+        "paragraph": 1,
+        "fact": "The referenced static method takes a String and returns an int, matching the target contract. A lambda text -> length(text) expresses the same delegation here."
+      }
+    ],
+    "reasoning": "The method executes for the supplied argument; trail has five UTF-16 code units.",
+    "source": "https://docs.oracle.com/javase/specs/jls/se25/html/jls-15.html#jls-15.13",
+    "prerequisites": [
+      "java-46"
+    ]
+  },
+  {
+    "id": "java-48",
+    "quizTarget": "If the filter keeps odd values instead, what is the result?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "The local declaration var asks the compiler to infer a fixed static type from its initializer; it is not a dynamically typed variable. filter keeps elements whose predicate is true; map transforms retained elements. Neither changes the source list. toList is a terminal operation that obtains the resulting list."
+      },
+      {
+        "paragraph": 1,
+        "fact": "For 1, 2, 3, 4, keeping even values leaves 2 and 4; multiplying each by ten produces 20 and 40. Stream.toList returns an unmodifiable list, not a promise about its concrete class."
+      }
+    ],
+    "reasoning": "Changing the predicate changes which inputs reach the unchanged multiplication stage.",
+    "source": "https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/stream/Stream.html",
+    "prerequisites": [
+      "java-47"
+    ]
+  },
+  {
+    "id": "java-49",
+    "quizTarget": "What prints if the requested key changes from 3 to 9?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "String::length here is an unbound instance method reference: each incoming String becomes the receiver on which length() is called. Collectors.groupingBy computes a key for each element and collects elements with the same key. The downstream counting collector counts each group rather than storing lists."
+      },
+      {
+        "paragraph": 1,
+        "fact": "The default grouping result has no promised iteration order. Read specific keys to make the output deterministic. getOrDefault supplies zero when no group exists; it does not insert the key."
+      }
+    ],
+    "reasoning": "There is no length-nine group, so getOrDefault returns the supplied zero.",
+    "source": "https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/stream/Collectors.html",
+    "prerequisites": [
+      "java-48"
+    ]
+  },
+  {
+    "id": "java-50",
+    "quizTarget": "How can a second query validly produce [3, 5]?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "Creating a stream pipeline does not traverse its source. A terminal operation requests a result. Avoid relying on side effects in map or peek: implementations may skip work that cannot affect the result."
+      },
+      {
+        "paragraph": 1,
+        "fact": "After a terminal operation, the stream must not be reused. Obtain a new stream from the collection for another query. Implementations may detect reuse with IllegalStateException; this example catches that detected misuse."
+      }
+    ],
+    "reasoning": "A fresh pipeline can be traversed; final does not reset a stream.",
+    "source": "https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/stream/Stream.html",
+    "prerequisites": [
+      "java-49"
+    ]
+  },
+  {
+    "id": "java-51",
+    "quizTarget": "If the second write omits APPEND, what remains?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "The import java.nio.file.* makes public types in that package available by short names; it does not include subpackages or download code. Path.of constructs a path; it does not create a file. Files.writeString creates a missing file or truncates an existing file by default. Run this example only in a disposable working directory: it writes notes.txt."
+      },
+      {
+        "paragraph": 1,
+        "fact": "StandardOpenOption.APPEND extends the existing file instead of replacing its contents. readString obtains the stored text. Files operations can throw IOException; this small main declares it rather than pretending writes cannot fail."
+      }
+    ],
+    "reasoning": "The default write truncates the old contents before writing B.",
+    "source": "https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/nio/file/Files.html",
+    "prerequisites": [
+      "java-50"
+    ]
+  },
+  {
+    "id": "java-52",
+    "quizTarget": "What changes if the text is the ASCII letter A?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "A charset defines the mapping between characters and bytes. UTF-8 represents the character \u00e9 with two bytes, although this particular String has one UTF-16 code unit. Use the same agreed encoding when decoding."
+      },
+      {
+        "paragraph": 1,
+        "fact": "StandardCharsets.UTF_8 avoids a platform-dependent assumption. This in-memory example shows the same boundary that file or network code encounters; it does not access a network."
+      }
+    ],
+    "reasoning": "ASCII A has a one-byte UTF-8 representation; matching decoding reconstructs it.",
+    "source": "https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/nio/charset/StandardCharsets.html",
+    "prerequisites": [
+      "java-51"
+    ]
+  },
+  {
+    "id": "java-53",
+    "quizTarget": "What happens for minutes=0?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "Properties.load reads key/value text. getProperty returns a String or a supplied default; it does not enforce an integer or a range. StringReader makes this sample deterministic without an external file."
+      },
+      {
+        "paragraph": 1,
+        "fact": "parseInt rejects non-integer text with NumberFormatException. A separate range check rejects otherwise valid integers outside 1 through 60. Only a validated value reaches the success output."
+      }
+    ],
+    "reasoning": "The default is only for an absent key; zero parses but fails the range check.",
+    "source": "https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/Properties.html",
+    "prerequisites": [
+      "java-52"
+    ]
+  },
+  {
+    "id": "java-54",
+    "quizTarget": "If the instant is 12:30 UTC the same day, what two dates print?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "Instant represents a point on the time line. A ZoneId supplies rules for presenting that point as a local date and time. LocalDate alone contains no zone or time-of-day."
+      },
+      {
+        "paragraph": 1,
+        "fact": "At 00:30 UTC on January 1, New York is still on December 31. Converting the instant with atZone preserves the instant, not the displayed calendar date. Region zones carry daylight-saving rules; fixed UTC does not shift seasonally."
+      }
+    ],
+    "reasoning": "At that later instant New York has also reached January 1.",
+    "source": "https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/time/Instant.html",
+    "prerequisites": [
+      "java-53"
+    ]
+  },
+  {
+    "id": "java-55",
+    "quizTarget": "If the numerator is 2.00, what prints?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "BigDecimal is immutable. Constructing from \"0.10\" keeps that decimal value; constructing from a binary floating-point double can expose its approximation. Arithmetic returns a new value."
+      },
+      {
+        "paragraph": 1,
+        "fact": "Dividing 1.00 by 3 cannot produce a finite exact decimal. This example asks for two fractional digits and HALF_UP rounding, producing 0.33. HALF_UP chooses the nearest value, with exact halfway ties rounded away from zero. A positive scale specifies the number of digits to the right of the decimal point; it is not the same as a significant-digit precision. Currency rules must be chosen for the actual domain."
+      }
+    ],
+    "reasoning": "The next discarded digit is 6, so HALF_UP rounds the two-place result upward.",
+    "source": "https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/math/BigDecimal.html",
+    "prerequisites": [
+      "java-54"
+    ]
+  },
+  {
+    "id": "java-56",
+    "quizTarget": "What prints when the complete comparator is reversed?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "Comparator.comparingInt(String::length) sorts by length. thenComparing adds a natural String order only when lengths tie. It does not replace the first key."
+      },
+      {
+        "paragraph": 1,
+        "fact": "ArrayList is mutable, so sort can reorder it. List.of is unmodifiable and cannot itself be sorted in place. reversed applied to the complete comparator reverses both primary and tie-break ordering."
+      }
+    ],
+    "reasoning": "Reversing the whole composed comparator reverses both length order and the equal-length tie break.",
+    "source": "https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/Comparator.html",
+    "prerequisites": [
+      "java-55"
+    ]
+  },
+  {
+    "id": "java-57",
+    "quizTarget": "If copyOf is replaced by unmodifiableList, what prints?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "List.copyOf makes an unmodifiable snapshot of the elements. Later structural edits to the original list do not change the snapshot. This is a shallow copy: mutable element objects can still be shared."
+      },
+      {
+        "paragraph": 1,
+        "fact": "Collections.unmodifiableList wraps a live view of the original list. It prevents edits through that view but still reflects edits through the original reference. Neither operation makes arbitrary element objects deeply immutable."
+      }
+    ],
+    "reasoning": "The unmodifiable wrapper is a view backed by original; it sees the later addition.",
+    "source": "https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/List.html#copyOf(java.util.Collection)",
+    "prerequisites": [
+      "java-56"
+    ]
+  },
+  {
+    "id": "java-58",
+    "quizTarget": "What happens if the import says missing.Labels instead?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "The public class Labels belongs to package study, so its qualified name is study.Labels. Keep its source at study/Labels.java. An import lets Main use the shorter name; it does not download or copy code."
+      },
+      {
+        "paragraph": 1,
+        "fact": "Alongside Main.java create study/Labels.java with the code below. Compile with javac --release 25 -d classes Main.java study/Labels.java, then run java -cp classes Main. The class path points to the root above study, not to the study folder.\n```java\npackage study;\npublic class Labels {\n  public static String name() { return \"review\"; }\n}\n```"
+      }
+    ],
+    "reasoning": "Import resolves a qualified type name against available sources or classes; no dependency is fetched.",
+    "source": "https://docs.oracle.com/en/java/javase/25/docs/specs/man/javac.html",
+    "prerequisites": [
+      "java-57"
+    ]
+  },
+  {
+    "id": "java-59",
+    "quizTarget": "If the descriptor and launch module name both change to study.tools, what prints?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "module-info.java declares a named module. This tiny module uses only java.base, which is implicitly required. Module names and package names are separate: study.app contains package study. Main.class is a class literal: a Class metadata object for Main. getModule() obtains its module, and getName() reads that module name."
+      },
+      {
+        "paragraph": 1,
+        "fact": "Save the example as study/Main.java, plus module-info.java containing module study.app {}. Compile javac --release 25 -d classes module-info.java study/Main.java. Run java --module-path classes -m study.app/study.Main. Exports would expose a package to other modules; this launcher needs no exports. Changing the descriptor name changes the launch name too."
+      }
+    ],
+    "reasoning": "getModule().getName reports the declared named module, independent of the package.",
+    "source": "https://docs.oracle.com/javase/specs/jls/se25/html/jls-7.html#jls-7.7",
+    "prerequisites": [
+      "java-58"
+    ]
+  },
+  {
+    "id": "java-60",
+    "quizTarget": "If the helper source and compiled class are both absent, what happens?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "An import names tools.Scale but does not supply it. For this dependency-free demonstration, keep the helper source in tools/Scale.java. Build tools automate class paths, module paths and artifact retrieval; an import is not a package-manager command."
+      },
+      {
+        "paragraph": 1,
+        "fact": "Compile javac --release 25 -d classes Main.java tools/Scale.java; run java -cp classes Main. A real third-party build should record dependency versions and repositories, not rely on an accidental IDE class path. Here the exact helper is:\n```java\npackage tools;\npublic class Scale {\n  public static int doubleIt(int value) { return value * 2; }\n}\n```"
+      }
+    ],
+    "reasoning": "The compiler must resolve Scale from supplied sources or available dependency classes.",
+    "source": "https://docs.oracle.com/en/java/javase/25/docs/specs/man/javac.html",
+    "prerequisites": [
+      "java-59"
+    ]
+  },
+  {
+    "id": "java-61",
+    "quizTarget": "If retention becomes CLASS, what does this runtime query report?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "@interface declares an annotation type, not an ordinary method-bearing interface. The static nested class Tagged belongs inside Main but needs no enclosing Main instance. An annotation is metadata, not executable behavior by itself. @Retention(RetentionPolicy.RUNTIME) makes this custom marker available to reflection. @Target(ElementType.TYPE) limits it to type declarations."
+      },
+      {
+        "paragraph": 1,
+        "fact": "isAnnotationPresent asks whether Mark is visible on Tagged. No private field access or setAccessible override is needed. Reflection does not make encapsulation or module boundaries disappear."
+      }
+    ],
+    "reasoning": "CLASS retains metadata in the class file but does not expose it as a runtime annotation to this query.",
+    "source": "https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/annotation/RetentionPolicy.html",
+    "prerequisites": [
+      "java-60"
+    ]
+  },
+  {
+    "id": "java-62",
+    "quizTarget": "If the first expected result changes to 1, what happens?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "An explicit if throwing AssertionError is active without special JVM flags. Java assert statements are different: they are normally disabled unless assertions are enabled, so they should not validate required input."
+      },
+      {
+        "paragraph": 1,
+        "fact": "Math.min returns the smaller of two values and Math.max the larger. clamp first caps at ten with min, then floors at zero with max, restricting a score to zero through ten. check compares the actual result with a named expectation and throws on failure. Both sample cases must pass before the final success line is reached."
+      }
+    ],
+    "reasoning": "This check is an ordinary executed if; -ea affects assert statements, not explicit throws.",
+    "source": "https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/AssertionError.html",
+    "prerequisites": [
+      "java-61"
+    ]
+  },
+  {
+    "id": "java-63",
+    "quizTarget": "What prints if the input is \"12\" instead?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "Integer.parseInt expects decimal integer text in the accepted range. NumberFormatException identifies a failed parse. In a stack trace, inspect the exception type and first relevant application frame; line numbers change when source changes."
+      },
+      {
+        "paragraph": 1,
+        "fact": "The catch reports a stable message for an expected bad input. It does not claim that every exception has been repaired. Avoid dumping secrets or arbitrary configuration contents into production logs."
+      }
+    ],
+    "reasoning": "The valid parse returns 12 and execution never enters the catch.",
+    "source": "https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Integer.html#parseInt(java.lang.String)",
+    "prerequisites": [
+      "java-62"
+    ]
+  },
+  {
+    "id": "java-64",
+    "quizTarget": "If the worker assigns 11, what prints after join?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "Runnable is a functional interface whose run method takes no arguments and returns no value. The empty () in () -> introduces a zero-argument lambda. Thread.start schedules the Runnable on another thread; run called directly is just an ordinary method call. join waits for the started worker to terminate. The lambda stores into a one-element array because captured local bindings cannot be reassigned."
+      },
+      {
+        "paragraph": 1,
+        "fact": "After a successful join, the worker actions happen-before the following read. Reading before join would lack this guarantee. Sleeping for a guessed duration is not a substitute. main declares InterruptedException instead of ignoring a failed join."
+      }
+    ],
+    "reasoning": "join waits for termination and orders the worker write before the subsequent read.",
+    "source": "https://docs.oracle.com/javase/specs/jls/se25/html/jls-17.html#jls-17.4.5",
+    "prerequisites": [
+      "java-63"
+    ]
+  },
+  {
+    "id": "java-65",
+    "quizTarget": "If each worker loops 250 times, what is the final count?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "count++ reads, adds and writes; it is not one indivisible operation. A synchronized instance method locks that instance monitor for the entire method. Both workers must call increment on the same Counter to coordinate."
+      },
+      {
+        "paragraph": 1,
+        "fact": "Each worker makes 1000 protected increments. Both joins complete before the read, making the finished count visible. The synchronized getter also uses the same monitor; it does not make unrelated locks equivalent."
+      }
+    ],
+    "reasoning": "The shared monitor protects every increment and both workers complete before the read.",
+    "source": "https://docs.oracle.com/javase/specs/jls/se25/html/jls-17.html#jls-17.1",
+    "prerequisites": [
+      "java-64"
+    ]
+  },
+  {
+    "id": "java-66",
+    "quizTarget": "If count starts at 10, what is its final value?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "AtomicInteger.incrementAndGet performs one atomic increment and returns the updated value. Atomic operations avoid a lost update for this single counter; they do not automatically make a sequence of multiple calls one transaction."
+      },
+      {
+        "paragraph": 1,
+        "fact": "Two workers increment the same AtomicInteger. Joins bound the task lifetime before the final get. No ordering of individual worker execution or performance improvement is promised."
+      }
+    ],
+    "reasoning": "The 1000 atomic increments add to the initial ten.",
+    "source": "https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/concurrent/atomic/AtomicInteger.html",
+    "prerequisites": [
+      "java-65"
+    ]
+  },
+  {
+    "id": "java-67",
+    "quizTarget": "If the submitted calculation is 6 + 7, what does get return?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "ExecutorService accepts tasks and manages worker threads. submit of a value-returning lambda produces a Future; get waits and retrieves its result or reports failure via ExecutionException."
+      },
+      {
+        "paragraph": 1,
+        "fact": "The try-with-resources block closes this executor and waits for submitted tasks to terminate. Do not leave executors unmanaged. A two-thread pool is a resource choice, not a guarantee about execution order."
+      }
+    ],
+    "reasoning": "This submitted Callable computes and returns the new integer result.",
+    "source": "https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/concurrent/ExecutorService.html",
+    "prerequisites": [
+      "java-66"
+    ]
+  },
+  {
+    "id": "java-68",
+    "quizTarget": "If this executor is replaced with newFixedThreadPool(1), what prints?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "A virtual thread is scheduled by the Java runtime and can be useful for many tasks that mostly wait, often for I/O. It does not make CPU-bound arithmetic inherently faster. Use one per task rather than pooling virtual threads to limit their number."
+      },
+      {
+        "paragraph": 1,
+        "fact": "newVirtualThreadPerTaskExecutor creates a virtual thread for each task. The task reports its own isVirtual flag. Future.get and executor close give explicit completion; the tiny example proves thread kind, not workload scalability."
+      }
+    ],
+    "reasoning": "The fixed pool uses platform threads; virtual threads are a stable feature and need no preview flag.",
+    "source": "https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Thread.html",
+    "prerequisites": [
+      "java-67"
+    ]
+  },
+  {
+    "id": "java-69",
+    "quizTarget": "If the initial completed value is 5, what prints?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "CompletableFuture.thenApply transforms a successful result; it produces a new future. The non-Async variant does not promise a separate thread. thenCompose is appropriate when the transformation itself returns a future and you want to flatten it."
+      },
+      {
+        "paragraph": 1,
+        "fact": "join obtains the final result and reports exceptional completion through an unchecked CompletionException. Here completedFuture is already complete, isolating composition without scheduling assumptions. Composition can also be attached before completion."
+      }
+    ],
+    "reasoning": "The integer passes through multiplication and then string construction.",
+    "source": "https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/concurrent/CompletableFuture.html",
+    "prerequisites": [
+      "java-68"
+    ]
+  },
+  {
+    "id": "java-70",
+    "quizTarget": "If main opens the gate instead of interrupting, what prints?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "interrupt requests that a thread respond; it is not a forced kill. A blocking interruptible operation such as CountDownLatch.await throws InterruptedException when interrupted, clearing the interrupt status. A worker can clean up and exit; when it cannot propagate the exception, restoring the status preserves the signal."
+      },
+      {
+        "paragraph": 1,
+        "fact": "A CountDownLatch starts with a count; countDown reduces it, and await waits until it reaches zero. The started latch tells main that the worker has reached its setup. The never-opened gate keeps it waiting until interrupted. The worker catches the exception, records cancellation and restores its status before returning. main joins before reading the result; no race with guessed sleep timing is used."
+      }
+    ],
+    "reasoning": "Opening the gate permits await to return normally; main joins before observing finished.",
+    "source": "https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Thread.html#interrupt()",
+    "prerequisites": [
+      "java-69"
+    ]
+  },
+  {
+    "id": "java-71",
+    "quizTarget": "If the body calls use twice, what still happens?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "Garbage collection reclaims memory of objects no longer reachable, at an unspecified time. It is not a reliable way to close files or other external resources. AutoCloseable lets a resource owner release them deterministically with try-with-resources."
+      },
+      {
+        "paragraph": 1,
+        "fact": "This toy resource prints on close so the ownership boundary is visible without opening a real file. close runs on normal or exceptional block exit. A still-reachable reference and a closed resource are separate concepts; closing is not object deletion."
+      }
+    ],
+    "reasoning": "try-with-resources owns closing at block exit, independent of whether use was invoked.",
+    "source": "https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/AutoCloseable.html",
+    "prerequisites": [
+      "java-70"
+    ]
+  },
+  {
+    "id": "java-72",
+    "quizTarget": "With target 3 and the same four commands, what prints?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "A Session record stores completed and target counts. The compact constructor is written Session { ... } without a parameter list. Its component parameters are available inside, and implicit field assignments happen after the body completes normally. It rejects negative completed values, nonpositive targets and completed values above target. The step method returns a new valid Session; it does not mutate an existing record."
+      },
+      {
+        "paragraph": 1,
+        "fact": "A done command increments only below target. Unknown commands leave the state unchanged. The fixed command list makes this a bounded study-session model, not a persistent tracker or concurrent service. Repeated done commands cannot exceed the target; invalid construction fails immediately."
+      }
+    ],
+    "reasoning": "There are three done commands; skip preserves state and the target bounds each transition.",
+    "source": "https://docs.oracle.com/javase/specs/jls/se25/html/jls-8.html#jls-8.10",
+    "prerequisites": [
+      "java-71"
+    ]
+  }
+]

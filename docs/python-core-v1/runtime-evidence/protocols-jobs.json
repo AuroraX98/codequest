@@ -1,0 +1,409 @@
+[
+  {
+    "id": "python-63-solution",
+    "lessonId": "python-63",
+    "mode": "solution",
+    "code": "def countdown(start):\n    remaining = start\n    while remaining > 0:\n        yield remaining\n        remaining -= 1",
+    "checks": [
+      {
+        "label": "Descending values",
+        "expression": "list(countdown(4))==[4,3,2,1]"
+      },
+      {
+        "label": "Zero boundary",
+        "expression": "list(countdown(0))==[]"
+      },
+      {
+        "label": "Single-use position",
+        "expression": "(lambda g: next(g)==3 and list(g)==[2,1] and next(g,None) is None)(countdown(3))"
+      },
+      {
+        "label": "Independent state",
+        "expression": "(lambda a,b: next(a)==2 and next(a)==1 and next(b)==2)(countdown(2),countdown(2))"
+      }
+    ],
+    "extraFiles": []
+  },
+  {
+    "id": "python-64-solution",
+    "lessonId": "python-64",
+    "mode": "solution",
+    "code": "class Countdown:\n    def __init__(self, start):\n        self.remaining = start\n    def __iter__(self):\n        return self\n    def __next__(self):\n        if self.remaining <= 0:\n            raise StopIteration\n        value = self.remaining\n        self.remaining -= 1\n        return value",
+    "checks": [
+      {
+        "label": "Order",
+        "expression": "list(Countdown(3))==[3,2,1]"
+      },
+      {
+        "label": "Identity",
+        "expression": "(lambda c: iter(c) is c)(Countdown(2))"
+      },
+      {
+        "label": "Partial position",
+        "expression": "(lambda c: next(c)==2 and iter(c) is c and list(c)==[1])(Countdown(2))"
+      },
+      {
+        "label": "Stays exhausted",
+        "expression": "(lambda c: list(c)==[1] and list(c)==[] and next(c,\"done\")==\"done\")(Countdown(1))"
+      },
+      {
+        "label": "Zero",
+        "expression": "list(Countdown(0))==[]"
+      }
+    ],
+    "extraFiles": []
+  },
+  {
+    "id": "python-65-solution",
+    "lessonId": "python-65",
+    "mode": "solution",
+    "code": "class MinuteError(ValueError):\n    pass\n\ndef parse_minutes(text):\n    try:\n        value = int(text)\n    except ValueError as error:\n        raise MinuteError(\"whole minutes required\") from error\n    if not 1 <= value <= 60:\n        raise MinuteError(\"minutes outside 1..60\")\n    return value\n\ndef __failure_details(text):\n    try:\n        parse_minutes(text)\n    except MinuteError as error:\n        return (str(error), type(error.__cause__).__name__)\n    return None",
+    "checks": [
+      {
+        "label": "Valid text",
+        "expression": "parse_minutes(\"15\")==15"
+      },
+      {
+        "label": "Bounds",
+        "expression": "parse_minutes(\"1\")==1 and parse_minutes(\"60\")==60"
+      },
+      {
+        "label": "Chained conversion",
+        "expression": "__failure_details(\"bad\")==(\"whole minutes required\",\"ValueError\")"
+      },
+      {
+        "label": "Distinct range failure",
+        "expression": "__failure_details(\"0\")==(\"minutes outside 1..60\",\"NoneType\")"
+      },
+      {
+        "label": "Fractional text",
+        "expression": "__failure_details(\"1.5\")==(\"whole minutes required\",\"ValueError\")"
+      },
+      {
+        "label": "Category",
+        "expression": "issubclass(MinuteError,ValueError)"
+      }
+    ],
+    "extraFiles": []
+  },
+  {
+    "id": "python-66-solution",
+    "lessonId": "python-66",
+    "mode": "solution",
+    "code": "def save_note(path, text, append=False):\n    mode = \"a\" if append else \"w\"\n    with open(path, mode, encoding=\"utf-8\") as handle:\n        return handle.write(text)\n\ndef __read_note(path):\n    with open(path, \"r\", encoding=\"utf-8\") as handle:\n        return handle.read()",
+    "checks": [
+      {
+        "label": "Unicode character count",
+        "expression": "save_note(\"check-write.txt\",\"\u00e9\\n\")==2 and __read_note(\"check-write.txt\")==\"\u00e9\\n\""
+      },
+      {
+        "label": "Replacement",
+        "expression": "save_note(\"check-replace.txt\",\"old\")==3 and save_note(\"check-replace.txt\",\"new\")==3 and __read_note(\"check-replace.txt\")==\"new\""
+      },
+      {
+        "label": "Append",
+        "expression": "save_note(\"check-append.txt\",\"A\")==1 and save_note(\"check-append.txt\",\"B\",append=True)==1 and __read_note(\"check-append.txt\")==\"AB\""
+      },
+      {
+        "label": "Empty replacement",
+        "expression": "save_note(\"check-empty.txt\",\"old\")==3 and save_note(\"check-empty.txt\",\"\")==0 and __read_note(\"check-empty.txt\")==\"\""
+      }
+    ],
+    "extraFiles": []
+  },
+  {
+    "id": "python-67-solution",
+    "lessonId": "python-67",
+    "mode": "solution",
+    "code": "import argparse\n\ndef parse_minutes(arguments):\n    parser = argparse.ArgumentParser(prog=\"study\", add_help=False, allow_abbrev=False)\n    parser.add_argument(\"--minutes\", type=int, default=10, choices=range(1, 61))\n    options = parser.parse_args(arguments)\n    return options.minutes\n\ndef __rejects_arguments(arguments):\n    try:\n        parse_minutes(arguments)\n    except SystemExit as error:\n        return error.code == 2\n    return False",
+    "checks": [
+      {
+        "label": "Default",
+        "expression": "parse_minutes([])==10"
+      },
+      {
+        "label": "Supplied value",
+        "expression": "parse_minutes([\"--minutes\",\"7\"])==7"
+      },
+      {
+        "label": "Bounds",
+        "expression": "parse_minutes([\"--minutes\",\"1\"])==1 and parse_minutes([\"--minutes\",\"60\"])==60"
+      },
+      {
+        "label": "Zero rejected",
+        "expression": "__rejects_arguments([\"--minutes\",\"0\"])"
+      },
+      {
+        "label": "Unknown rejected",
+        "expression": "__rejects_arguments([\"--other\",\"5\"])"
+      },
+      {
+        "label": "Abbreviation rejected",
+        "expression": "__rejects_arguments([\"--min\",\"5\"])"
+      },
+      {
+        "label": "Integer conversion failure",
+        "expression": "__rejects_arguments([\"--minutes\",\"bad\"])"
+      }
+    ],
+    "extraFiles": []
+  },
+  {
+    "id": "python-68-solution",
+    "lessonId": "python-68",
+    "mode": "solution",
+    "code": "import io\nimport unittest\n\ndef run_case(case_class):\n    suite = unittest.TestLoader().loadTestsFromTestCase(case_class)\n    output = io.StringIO()\n    runner = unittest.TextTestRunner(stream=output, verbosity=0)\n    result = runner.run(suite)\n    return (result.testsRun, result.wasSuccessful())\n\nclass __PassingCase(unittest.TestCase):\n    def test_sum(self):\n        self.assertEqual(1 + 1, 2)\nclass __FailingCase(unittest.TestCase):\n    def test_sum(self):\n        self.assertEqual(1 + 1, 3)\nclass __EmptyCase(unittest.TestCase):\n    pass\nclass __TwoCases(unittest.TestCase):\n    def test_a(self):\n        self.assertEqual(2 * 2, 4)\n    def test_b(self):\n        self.assertEqual(3 - 1, 2)",
+    "checks": [
+      {
+        "label": "Named passing test",
+        "expression": "run_case(__PassingCase)==(1,True)"
+      },
+      {
+        "label": "Assertion failure",
+        "expression": "run_case(__FailingCase)==(1,False)"
+      },
+      {
+        "label": "Empty suite count",
+        "expression": "run_case(__EmptyCase)==(0,True)"
+      },
+      {
+        "label": "All selected methods",
+        "expression": "run_case(__TwoCases)==(2,True)"
+      },
+      {
+        "label": "Fresh suite on repeat",
+        "expression": "run_case(__PassingCase)==(1,True) and run_case(__PassingCase)==(1,True)"
+      }
+    ],
+    "extraFiles": []
+  },
+  {
+    "id": "python-63-worked",
+    "lessonId": "python-63",
+    "paragraph": 4,
+    "code": "def countdown(start):\n    remaining = start\n    while remaining > 0:\n        yield remaining\n        remaining -= 1\n\nstream = countdown(3)\nprint(next(stream))\nprint(list(stream))\nprint(next(stream, \"done\"))\nprint(list(countdown(0)))\n",
+    "expected": "3\n[2, 1]\ndone\n[]",
+    "outcome": "success",
+    "filename": "main.py",
+    "stdin": ""
+  },
+  {
+    "id": "python-63-changed",
+    "lessonId": "python-63",
+    "paragraph": 4,
+    "code": "def countdown(start):\n    remaining = start\n    while remaining > 0:\n        yield remaining\n        remaining -= 1\n\nstream = countdown(2)\nprint(next(stream))\nprint(list(stream))\nprint(next(stream, \"done\"))\nprint(list(countdown(0)))\n",
+    "expected": "2\n[1]\ndone\n[]",
+    "outcome": "success",
+    "filename": "main.py",
+    "stdin": ""
+  },
+  {
+    "id": "python-64-worked",
+    "lessonId": "python-64",
+    "paragraph": 4,
+    "code": "class Countdown:\n    def __init__(self, start):\n        self.remaining = start\n    def __iter__(self):\n        return self\n    def __next__(self):\n        if self.remaining <= 0:\n            raise StopIteration\n        value = self.remaining\n        self.remaining -= 1\n        return value\n\ncounter = Countdown(2)\nprint(iter(counter) is counter)\nprint(next(counter))\nprint(list(counter))\nprint(list(counter))\n",
+    "expected": "True\n2\n[1]\n[]",
+    "outcome": "success",
+    "filename": "main.py",
+    "stdin": ""
+  },
+  {
+    "id": "python-64-changed",
+    "lessonId": "python-64",
+    "paragraph": 4,
+    "code": "class Countdown:\n    def __init__(self, start):\n        self.remaining = start\n    def __iter__(self):\n        return self\n    def __next__(self):\n        if self.remaining <= 0:\n            raise StopIteration\n        value = self.remaining\n        self.remaining -= 1\n        return value\n\ncounter = Countdown(2)\nprint(iter(counter) is counter)\nprint(next(counter))\nprint(list(Countdown(2)))\nprint(list(counter))\n",
+    "expected": "True\n2\n[2, 1]\n[1]",
+    "outcome": "success",
+    "filename": "main.py",
+    "stdin": ""
+  },
+  {
+    "id": "python-65-worked",
+    "lessonId": "python-65",
+    "paragraph": 4,
+    "code": "class MinuteError(ValueError):\n    pass\n\ndef parse_minutes(text):\n    try:\n        value = int(text)\n    except ValueError as error:\n        raise MinuteError(\"whole minutes required\") from error\n    if not 1 <= value <= 60:\n        raise MinuteError(\"minutes outside 1..60\")\n    return value\n\nprint(parse_minutes(\"15\"))\ntry:\n    parse_minutes(\"bad\")\nexcept MinuteError as error:\n    print(str(error))\n    print(type(error.__cause__).__name__)\n",
+    "expected": "15\nwhole minutes required\nValueError",
+    "outcome": "success",
+    "filename": "main.py",
+    "stdin": ""
+  },
+  {
+    "id": "python-65-changed",
+    "lessonId": "python-65",
+    "paragraph": 4,
+    "code": "class MinuteError(ValueError):\n    pass\n\ndef parse_minutes(text):\n    try:\n        value = int(text)\n    except ValueError as error:\n        raise MinuteError(\"whole minutes required\") from error\n    if not 1 <= value <= 60:\n        raise MinuteError(\"minutes outside 1..60\")\n    return value\n\nprint(parse_minutes(\"15\"))\ntry:\n    parse_minutes(\"0\")\nexcept MinuteError as error:\n    print(str(error))\n    print(type(error.__cause__).__name__)\n",
+    "expected": "15\nminutes outside 1..60\nNoneType",
+    "outcome": "success",
+    "filename": "main.py",
+    "stdin": ""
+  },
+  {
+    "id": "python-66-worked",
+    "lessonId": "python-66",
+    "paragraph": 4,
+    "code": "def save_note(path, text, append=False):\n    mode = \"a\" if append else \"w\"\n    with open(path, mode, encoding=\"utf-8\") as handle:\n        return handle.write(text)\n\nprint(save_note(\"demo-note.txt\", \"Sky\\n\"))\nprint(save_note(\"demo-note.txt\", \"Moon\\n\", append=True))\nwith open(\"demo-note.txt\", \"r\", encoding=\"utf-8\") as handle:\n    print(repr(handle.read()))\n",
+    "expected": "4\n5\n'Sky\\nMoon\\n'",
+    "outcome": "success",
+    "filename": "main.py",
+    "stdin": ""
+  },
+  {
+    "id": "python-66-changed",
+    "lessonId": "python-66",
+    "paragraph": 4,
+    "code": "def save_note(path, text, append=False):\n    mode = \"a\" if append else \"w\"\n    with open(path, mode, encoding=\"utf-8\") as handle:\n        return handle.write(text)\n\nprint(save_note(\"demo-note.txt\", \"Sky\\n\"))\nprint(save_note(\"demo-note.txt\", \"Moon\\n\", append=False))\nwith open(\"demo-note.txt\", \"r\", encoding=\"utf-8\") as handle:\n    print(repr(handle.read()))\n",
+    "expected": "4\n5\n'Moon\\n'",
+    "outcome": "success",
+    "filename": "main.py",
+    "stdin": ""
+  },
+  {
+    "id": "python-67-worked",
+    "lessonId": "python-67",
+    "paragraph": 4,
+    "code": "import argparse\n\ndef parse_minutes(arguments):\n    parser = argparse.ArgumentParser(prog=\"study\", add_help=False, allow_abbrev=False)\n    parser.add_argument(\"--minutes\", type=int, default=10, choices=range(1, 61))\n    options = parser.parse_args(arguments)\n    return options.minutes\n\nprint(parse_minutes([\"--minutes\", \"4\"]))\nprint(parse_minutes([]))\n",
+    "expected": "4\n10",
+    "outcome": "success",
+    "filename": "main.py",
+    "stdin": ""
+  },
+  {
+    "id": "python-67-changed",
+    "lessonId": "python-67",
+    "paragraph": 4,
+    "code": "import argparse\n\ndef parse_minutes(arguments):\n    parser = argparse.ArgumentParser(prog=\"study\", add_help=False, allow_abbrev=False)\n    parser.add_argument(\"--minutes\", type=int, default=10, choices=range(1, 61))\n    options = parser.parse_args(arguments)\n    return options.minutes\n\nprint(parse_minutes([]))\nprint(parse_minutes([]))\n",
+    "expected": "10\n10",
+    "outcome": "success",
+    "filename": "main.py",
+    "stdin": ""
+  },
+  {
+    "id": "python-68-worked",
+    "lessonId": "python-68",
+    "paragraph": 5,
+    "code": "import io\nimport unittest\n\ndef run_case(case_class):\n    suite = unittest.TestLoader().loadTestsFromTestCase(case_class)\n    output = io.StringIO()\n    runner = unittest.TextTestRunner(stream=output, verbosity=0)\n    result = runner.run(suite)\n    return (result.testsRun, result.wasSuccessful())\n\nclass AdditionTest(unittest.TestCase):\n    def test_total(self):\n        self.assertEqual(2 + 3, 5)\n\nprint(run_case(AdditionTest))\n",
+    "expected": "(1, True)",
+    "outcome": "success",
+    "filename": "main.py",
+    "stdin": ""
+  },
+  {
+    "id": "python-68-changed",
+    "lessonId": "python-68",
+    "paragraph": 5,
+    "code": "import io\nimport unittest\n\ndef run_case(case_class):\n    suite = unittest.TestLoader().loadTestsFromTestCase(case_class)\n    output = io.StringIO()\n    runner = unittest.TextTestRunner(stream=output, verbosity=0)\n    result = runner.run(suite)\n    return (result.testsRun, result.wasSuccessful())\n\nclass AdditionTest(unittest.TestCase):\n    def check_total(self):\n        self.assertEqual(2 + 3, 5)\n\nprint(run_case(AdditionTest))\n",
+    "expected": "(0, True)",
+    "outcome": "success",
+    "filename": "main.py",
+    "stdin": ""
+  },
+  {
+    "id": "python-67-native-valid",
+    "lessonId": "python-67",
+    "nativeOnly": true,
+    "mode": "run",
+    "filename": "study.py",
+    "code": "\nimport argparse\n\ndef parse_minutes(arguments):\n    parser = argparse.ArgumentParser(prog=\"study\", add_help=False, allow_abbrev=False)\n    parser.add_argument(\"--minutes\", type=int, default=10, choices=range(1, 61))\n    options = parser.parse_args(arguments)\n    return options.minutes\n\nimport sys\nif __name__ == \"__main__\":\n    print(parse_minutes(sys.argv[1:]))\n",
+    "args": [
+      "--minutes",
+      "4"
+    ],
+    "expected": "4",
+    "outcome": "success"
+  },
+  {
+    "id": "python-67-native-invalid",
+    "lessonId": "python-67",
+    "nativeOnly": true,
+    "mode": "run",
+    "filename": "study.py",
+    "code": "\nimport argparse\n\ndef parse_minutes(arguments):\n    parser = argparse.ArgumentParser(prog=\"study\", add_help=False, allow_abbrev=False)\n    parser.add_argument(\"--minutes\", type=int, default=10, choices=range(1, 61))\n    options = parser.parse_args(arguments)\n    return options.minutes\n\nimport sys\nif __name__ == \"__main__\":\n    print(parse_minutes(sys.argv[1:]))\n",
+    "args": [
+      "--minutes",
+      "0"
+    ],
+    "outcome": "runtime-failure",
+    "errorContains": "invalid choice: 0"
+  },
+  {
+    "id": "python-68-native-passing",
+    "lessonId": "python-68",
+    "nativeOnly": true,
+    "mode": "unittest-discover",
+    "filename": "main.py",
+    "code": "# Discovery imports test_sample.py\n",
+    "extraFiles": [
+      {
+        "name": "test_sample.py",
+        "code": "import unittest\n\nclass AdditionTest(unittest.TestCase):\n    def test_total(self):\n        self.assertEqual(2 + 3, 5)\n"
+      }
+    ],
+    "args": [
+      "-s",
+      ".",
+      "-p",
+      "test_*.py",
+      "-v"
+    ],
+    "outcome": "success",
+    "outputContains": [
+      "test_total",
+      "Ran 1 test",
+      "OK"
+    ]
+  },
+  {
+    "id": "python-68-native-failing",
+    "lessonId": "python-68",
+    "nativeOnly": true,
+    "mode": "unittest-discover",
+    "filename": "main.py",
+    "code": "# Discovery imports test_sample.py\n",
+    "extraFiles": [
+      {
+        "name": "test_sample.py",
+        "code": "import unittest\n\nclass AdditionTest(unittest.TestCase):\n    def test_total(self):\n        self.assertEqual(2 + 3, 6)\n"
+      }
+    ],
+    "args": [
+      "-s",
+      ".",
+      "-p",
+      "test_*.py",
+      "-v"
+    ],
+    "outcome": "runtime-failure",
+    "outputContains": [
+      "test_total",
+      "Ran 1 test",
+      "FAILED"
+    ],
+    "errorContains": "5 != 6"
+  },
+  {
+    "id": "python-68-native-empty",
+    "lessonId": "python-68",
+    "nativeOnly": true,
+    "mode": "unittest-discover",
+    "filename": "main.py",
+    "code": "# Nonmatching file\n",
+    "extraFiles": [
+      {
+        "name": "sample_check.py",
+        "code": "import unittest\n\nclass AdditionTest(unittest.TestCase):\n    def test_total(self):\n        self.assertEqual(2 + 3, 5)\n"
+      }
+    ],
+    "args": [
+      "-s",
+      ".",
+      "-p",
+      "test_*.py",
+      "-v"
+    ],
+    "outcome": "success",
+    "outputContains": [
+      "Ran 0 tests",
+      "OK"
+    ]
+  }
+]

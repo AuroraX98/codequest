@@ -32,6 +32,17 @@ export function codeLanguage(language: string) {
 }
 export function codeLabel(language: string) {
   const labels: Record<string, string> = {
+    "csharp": "C#",
+    "cpp": "C++",
+    "java": "Java",
+    "c": "C",
+    "kotlin": "Kotlin",
+    "go": "Go",
+    "rust": "Rust",
+    "php": "PHP",
+    "ruby": "Ruby",
+    "r": "R",
+
     python: "Python",
     py: "Python",
     javascript: "JavaScript",

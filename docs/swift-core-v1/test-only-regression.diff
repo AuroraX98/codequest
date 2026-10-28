@@ -1,0 +1,70 @@
+diff --git a/tests/python-authorized-baseline.mjs b/tests/python-authorized-baseline.mjs
+index 70ad507..a8af26b 100644
+--- a/tests/python-authorized-baseline.mjs
++++ b/tests/python-authorized-baseline.mjs
+@@ -1,7 +1,14 @@
+ import fs from 'node:fs';
++const swiftCoreDeltas=JSON.parse(fs.readFileSync('docs/swift-core-v1/existing-field-deltas.json','utf8'));
++export function historicalSwiftCoreBaseline(value){
++ if(!Array.isArray(value))return value;const rows=structuredClone(value);
++ for(const d of [...swiftCoreDeltas].reverse()){const row=rows.find(x=>x?.id===d.id&&(d.kind==='lesson'?Array.isArray(x.explanation):'track' in x));if(!row)continue;const path=d.field.split('.');let cur=row;for(const k of path.slice(0,-1))cur=cur[k];const k=path.at(-1);if(JSON.stringify(cur[k])===JSON.stringify(d.after)){if(d.before===null&&d.kind==='unit'&&k==='prerequisite_ids')delete cur[k];else cur[k]=structuredClone(d.before);}}
++ return rows;
++}
++
+ const sqlCoreDeltas=JSON.parse(fs.readFileSync('docs/sql-core-v1/existing-field-deltas.json','utf8'));
+ export function historicalSQLCoreBaseline(value){
+- if(!Array.isArray(value))return value;const rows=structuredClone(value);
++ if(!Array.isArray(value))return value;const rows=historicalSwiftCoreBaseline(value);
+  for(const d of [...sqlCoreDeltas].reverse()){const row=rows.find(x=>x?.id===d.id&&(d.kind==='lesson'?Array.isArray(x.explanation):'track' in x));if(!row)continue;const path=d.field.split('.');let cur=row;for(const k of path.slice(0,-1))cur=cur[k];const k=path.at(-1);if(JSON.stringify(cur[k])===JSON.stringify(d.after)){if(d.before===null&&d.kind==='unit'&&k==='prerequisite_ids')delete cur[k];else cur[k]=structuredClone(d.before);}}
+  return rows;
+ }
+diff --git a/tests/sql-core.mjs b/tests/sql-core.mjs
+index d2823af..d1762ba 100644
+--- a/tests/sql-core.mjs
++++ b/tests/sql-core.mjs
+@@ -1,12 +1,13 @@
++import {historicalSwiftCoreBaseline} from './python-authorized-baseline.mjs';
+ import assert from 'node:assert/strict';import fs from 'node:fs';import ts from 'typescript';import vm from 'node:vm';import crypto from 'node:crypto';
+-const read=p=>JSON.parse(fs.readFileSync(p,'utf8')),D='docs/sql-core-v1/',ls=read('content/lessons.json'),cat=read('content/catalog.json'),terms=read('content/terminology.json'),before=read(D+'integration-baseline-lessons.json'),beforeCat=read(D+'integration-baseline-catalog.json'),added=read(D+'all-twenty-eight.json');
++const read=p=>JSON.parse(fs.readFileSync(p,'utf8')),D='docs/sql-core-v1/',ls=historicalSwiftCoreBaseline(read('content/lessons.json').slice(0,1138)),cat={...read('content/catalog.json'),units:historicalSwiftCoreBaseline(read('content/catalog.json').units.slice(0,1138))},terms=read('content/terminology.json').slice(0,992),before=read(D+'integration-baseline-lessons.json'),beforeCat=read(D+'integration-baseline-catalog.json'),added=read(D+'all-twenty-eight.json');
+ for(const d of read(D+'existing-field-deltas.json')){let row=(d.kind==='lesson'?before:beforeCat.units).find(x=>x.id===d.id);const path=d.field.split('.');for(const k of path.slice(0,-1))row=row[k];const k=path.at(-1);assert.deepEqual(row[k]??null,d.before);row[k]=d.after;}
+ assert.equal(ls.length,1138);assert.equal(cat.units.length,1138);assert.equal(terms.length,992);assert.deepEqual(ls.slice(0,1110),before);assert.deepEqual(cat.units.slice(0,1110),beforeCat.units);assert.deepEqual(ls.slice(1110),added.lessons);assert.deepEqual(cat.units.slice(1110),added.units);assert.deepEqual(terms.slice(0,964),read(D+'integration-baseline-terminology.json'));assert.deepEqual(terms.slice(964),read(D+'all-terminology.json'));
+ for(const [name,sha]of Object.entries(read(D+'freeze-manifest.json').files))assert.equal(crypto.createHash('sha256').update(fs.readFileSync(D+name)).digest('hex'),sha,name);
+ for(const e of read(D+'all-function-evidence.json'))assert.ok(ls.find(l=>l.id===e.lessonId).explanation[e.paragraph].includes(e.visibleCall),e.target);
+ for(const t of read(D+'all-terminology.json'))for(const link of t.links)assert.ok(ls.find(l=>l.id===link.lessonId)?.explanation[link.paragraph],t.id);
+ const mod={exports:{}};vm.runInNewContext(ts.transpileModule(fs.readFileSync('lib/course-learning-order.ts','utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,esModuleInterop:true,target:ts.ScriptTarget.ES2022}}).outputText,{module:mod,exports:mod.exports,require:p=>read(p.replace('../',''))});const order=mod.exports.courseLearningOrder(cat.units),ids=order.filter(u=>u.track==='sql').map(u=>u.id);assert.deepEqual(ids,read('content/sql-route-plan.json').recommendedSeedOrder);const ix=new Map(order.map((u,i)=>[u.id,i]));for(const u of order.filter(u=>u.track==='sql'))for(const p of u.prerequisite_ids??[]){assert.ok(ix.has(p),p);assert.ok(ix.get(p)<ix.get(u.id),u.id+' after '+p);}
+-assert.deepEqual(order.filter(u=>u.track!=='sql').map(u=>u.id),mod.exports.courseLearningOrder(cat.units.filter(u=>u.track!=='sql')).map(u=>u.id));assert.match(fs.readFileSync('components/CodeQuest.tsx','utf8'),/"react", "sql"\]\.includes\(unit.track\)/);assert.equal(fs.readFileSync('public/runner/frame.html','utf8'),fs.readFileSync('docs/react-runner-scope-v1/staged-frame.html','utf8'),'no runner/CSP change');
++assert.deepEqual(order.filter(u=>u.track!=='sql').map(u=>u.id),mod.exports.courseLearningOrder(cat.units.filter(u=>u.track!=='sql')).map(u=>u.id));assert.match(fs.readFileSync('components/CodeQuest.tsx','utf8'),/"react", "sql", "swift"\]\.includes\(unit.track\)/);assert.equal(fs.readFileSync('public/runner/frame.html','utf8'),fs.readFileSync('docs/react-runner-scope-v1/staged-frame.html','utf8'),'no runner/CSP change');
+ const jobs=read(D+'runtime-evidence/browser-current177-jobs.json'),rs=read(D+'runtime-evidence/browser-current177.json');assert.equal(rs.complete,true);assert.equal(rs.results.length,177);for(let i=0;i<jobs.length;i++){let j=jobs[i],r=rs.results[i];assert.equal(j.id,r.id);assert.equal(r.passed,true,r.id);assert.ok(!r.result.error,r.id);if(j.expectedOutput!=null)assert.deepEqual(r.result.output,j.expectedOutput,r.id);else assert.ok(r.result.checks.length,r.id);if(!r.expected)assert.ok(r.result.checks.some(c=>!c.passed),r.id);}
+ assert.equal(read(D+'runtime-evidence/visible-source-match.json').filter(x=>!x.caseIds.length).length,0);assert.equal(read(D+'runtime-evidence/final-source-reconciliation.json').length,177);assert.equal(read(D+'runtime-evidence/multiset-validation.json').results.length,136);assert.ok(read(D+'runtime-evidence/multiset-validation.json').results.every(x=>x.validated));assert.equal(read(D+'runtime-evidence/multiset-generic-validation.json').passed,true);
+ for(const id of ['sql-51','sql-52']){const l=ls.find(l=>l.id===id);assert.equal(l.learningMode,'concept');assert.equal(l.checks.length,0);assert.ok(l.externalNotes);assert.ok(l.extraFiles.length);}
+diff --git a/tests/typescript-core.mjs b/tests/typescript-core.mjs
+index 4781f17..3577ff9 100644
+--- a/tests/typescript-core.mjs
++++ b/tests/typescript-core.mjs
+@@ -8,6 +8,6 @@ const module={exports:{}};vm.runInNewContext(ts.transpileModule(fs.readFileSync(
+ for(const l of types.filter(l=>l.learningMode!=='concept')){const proof=projectChecks(l).map(c=>({label:c.label,passed:true}));assert.equal(projectProofPasses(l,proof),true,l.id);assert.equal(projectProofPasses(l,proof.slice(1)),false);assert.equal(projectProofPasses(l,proof.map((c,i)=>i?c:{...c,passed:false})),false);assert.equal(projectProofPasses(l,proof.map((c,i)=>i?c:{...c,label:'Wrong'})),false);assert.equal(projectProofPasses(l,l.checks.map(c=>({label:c.label,passed:true}))),false,l.id+' runtime alone insufficient');}
+ for(const l of types.filter(l=>l.learningMode==='concept'))assert.equal(hasTypeContracts(l),false);
+ for(const l of ls.filter(l=>l.runtime!=='typescript'))assert.deepEqual(projectChecks(l),l.checks);
+-let src=fs.readFileSync('lib/course-learning-order.ts','utf8');for(const[n,t]of[['route','python'],['javascriptRoute','javascript'],['htmlRoute','html'],['cssRoute','css'],['typescriptRoute','typescript'],['reactRoute','react'],['sqlRoute','sql']])src=src.replace(`import ${n} from "../content/${t}-route-plan.json";`,`const ${n}=${JSON.stringify(read('content/'+t+'-route-plan.json'))};`);const code=ts.transpileModule(src,{compilerOptions:{module:ts.ModuleKind.ESNext}}).outputText;const{courseLearningOrder}=await import('data:text/javascript;base64,'+Buffer.from(code).toString('base64'));const sorted=courseLearningOrder(cat.units);assert.deepEqual(sorted.filter(u=>u.track==='typescript').map(u=>u.id),read('content/typescript-route-plan.json').recommendedSeedOrder);for(let i=0;i<sorted.length;i++)assert.equal(sorted[i].track,cat.units[i].track);
++let src=fs.readFileSync('lib/course-learning-order.ts','utf8');for(const[n,t]of[['route','python'],['javascriptRoute','javascript'],['htmlRoute','html'],['cssRoute','css'],['typescriptRoute','typescript'],['reactRoute','react'],['sqlRoute','sql'],['swiftRoute','swift']])src=src.replace(`import ${n} from "../content/${t}-route-plan.json";`,`const ${n}=${JSON.stringify(read('content/'+t+'-route-plan.json'))};`);const code=ts.transpileModule(src,{compilerOptions:{module:ts.ModuleKind.ESNext}}).outputText;const{courseLearningOrder}=await import('data:text/javascript;base64,'+Buffer.from(code).toString('base64'));const sorted=courseLearningOrder(cat.units);assert.deepEqual(sorted.filter(u=>u.track==='typescript').map(u=>u.id),read('content/typescript-route-plan.json').recommendedSeedOrder);for(let i=0;i<sorted.length;i++)assert.equal(sorted[i].track,cat.units[i].track);
+ assert.equal(read(D+'runtime-reconciliation.json').allPassed,true);assert.equal(read(D+'runtime-reconciliation.json').count,141);
+ console.log('PASS TypeScript49: exact34 additions/41 declared fields; 49 callable anchors; combined compiler/runtime completion proofs; finite49 route, original1054 preservation.');
+diff --git a/tests/unit-toc-data.mjs b/tests/unit-toc-data.mjs
+index 8149e49..0b20ff4 100644
+--- a/tests/unit-toc-data.mjs
++++ b/tests/unit-toc-data.mjs
+@@ -13,11 +13,11 @@ try{
+  const out=ts.transpileModule(await read('lib/'+file+'.ts'),{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.ESNext}}).outputText.replace(/(['"])\.\/(additional-unit-contents|lesson-headings)\1/g,'"./$2.mjs"');await writeFile(new URL(file+'.mjs',dir),out);
+  }
+  const {getUnitContents}=await import(new URL('unit-toc.mjs',dir));const {getLessonHeadings}=await import(new URL('lesson-headings.mjs',dir));const {additionalUnitContents}=await import(new URL('additional-unit-contents.mjs',dir));
+- assert.equal(Object.keys(additionalUnitContents).length,1022);
++ assert.equal(Object.keys(additionalUnitContents).length,JSON.parse(await read('content/catalog.json')).units.length-116);
+  for(const l of lessons){const entries=getUnitContents(l);assert.ok(entries.length,l.id);assert.equal(entries[0].paragraphIndex,0);assert.equal(getLessonHeadings(l.id).length,l.explanation.length,l.id);
+  for(const [i,e]of entries.entries()){assert.ok(e.label&&e.paragraphIndex>=0&&e.paragraphIndex<l.explanation.length);assert.ok(i===0||e.paragraphIndex>entries[i-1].paragraphIndex);if(i)assert.ok(l.explanation[e.paragraphIndex].replace(/```[\s\S]*?```/g,'').trim(),l.id+': code stays grouped');}
+  if(additionalUnitContents[l.id])assert.equal(new Set(entries.map(e=>e.label)).size,entries.length);
+  }
+  assert.deepEqual(getLessonHeadings('unknown'),[]);
+ }finally{await rm(dir,{recursive:true,force:true});}
+-console.log('All1138 current-unit maps valid;1022 curated grouped maps, stable paragraph indices, no standalone code-only anchors; all prior233 lesson objects unchanged.');
++console.log('All current-unit maps valid; catalog-derived curated map count, stable paragraph indices, no standalone code-only anchors; all prior233 lesson objects unchanged except independently accepted historical deltas.');

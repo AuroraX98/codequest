@@ -1,0 +1,210 @@
+[
+  {
+    "id": "swift-08-solution",
+    "lessonId": "swift-08",
+    "code": "protocol Transport { var description: String { get } }\nstruct Train: Transport { var description: String { \"Train\" } }\nstruct Bicycle: Transport { var description: String { \"Bicycle\" } }\nstruct Trip { var destination: String; var note: String? }\nfunc tripSummary(_ trip: Trip, by transport: any Transport) -> String {\n    let noteText = trip.note ?? \"No extra note\"\n    return \"To \\(trip.destination) by \\(transport.description). \\(noteText)\"\n}\nlet trip = Trip(destination: \"Salem\", note: nil)\nlet summary = tripSummary(trip, by: Train())\nlet bikeSummary = tripSummary(Trip(destination: \"Eugene\", note: \"Pack a light\"), by: Bicycle())",
+    "checks": [
+      {
+        "label": "Missing note is safe",
+        "expression": "summary.contains(\"No extra note\")"
+      },
+      {
+        "label": "Transport description appears",
+        "expression": "summary.contains(\"Train\") && summary.contains(\"Salem\")"
+      },
+      {
+        "label": "Another transport works",
+        "expression": "bikeSummary.contains(\"Eugene\") && bikeSummary.contains(\"Bicycle\") && bikeSummary.contains(\"Pack a light\")"
+      },
+      {
+        "label": "Changed trip and empty present note",
+        "expression": "{ let trip = Trip(destination: \"Corvallis\", note: \"\"); let text = tripSummary(trip, by: Bicycle()); return text.contains(\"Corvallis\") && text.contains(\"Bicycle\") && !text.contains(\"No extra note\") }()"
+      }
+    ],
+    "outcome": "success"
+  },
+  {
+    "id": "swift-08-starter",
+    "lessonId": "swift-08",
+    "code": "protocol Transport { var description: String { get } }\nstruct Train: Transport { var description: String { \"Train\" } }\nstruct Bicycle: Transport { var description: String { \"Bicycle\" } }\nstruct Trip { var destination: String; var note: String? }\nfunc tripSummary(_ trip: Trip, by transport: any Transport) -> String {\n    let noteText = trip.note ?? \"No extra note\"\n    return \"TODO\"\n}\nlet trip = Trip(destination: \"Salem\", note: nil)\nlet summary = tripSummary(trip, by: Train())\nlet bikeSummary = tripSummary(Trip(destination: \"Eugene\", note: \"Pack a light\"), by: Bicycle())",
+    "checks": [
+      {
+        "label": "Missing note is safe",
+        "expression": "summary.contains(\"No extra note\")"
+      },
+      {
+        "label": "Transport description appears",
+        "expression": "summary.contains(\"Train\") && summary.contains(\"Salem\")"
+      },
+      {
+        "label": "Another transport works",
+        "expression": "bikeSummary.contains(\"Eugene\") && bikeSummary.contains(\"Bicycle\") && bikeSummary.contains(\"Pack a light\")"
+      },
+      {
+        "label": "Changed trip and empty present note",
+        "expression": "{ let trip = Trip(destination: \"Corvallis\", note: \"\"); let text = tripSummary(trip, by: Bicycle()); return text.contains(\"Corvallis\") && text.contains(\"Bicycle\") && !text.contains(\"No extra note\") }()"
+      }
+    ],
+    "outcome": "checks-fail"
+  },
+  {
+    "id": "swift-10-solution",
+    "lessonId": "swift-10",
+    "code": "func accepts(request: Int, current: Int) -> Bool { request == current }\nenum LoadError: Error { case unavailable }\nactor PracticeStore {\n  private var entries: [String] = []\n  private var requestID = 0\n  func replace(with newEntries: [String], request: Int) {\n    guard request >= requestID else { return }\n    requestID = request\n    entries = newEntries\n  }\n  func snapshot() -> [String] { entries }\n}\nfunc loadPractice(_ id: Int) async throws -> [String] {\n  try await Task.sleep(for: .milliseconds(id == 1 ? 80 : 10))\n  try Task.checkCancellation()\n  if id == 0 { throw LoadError.unavailable }\n  return [\"session-\\(id)\"]\n}\n@MainActor final class Loader {\n  private(set) var result: [String] = []\n  private(set) var message = \"Ready\"\n  let store = PracticeStore()\n  private var task: Task<Void, Never>?\n  private var requestID = 0\n  func start(_ id: Int) -> Task<Void, Never> {\n    task?.cancel()\n    requestID += 1\n    let thisRequest = requestID\n    message = \"Loading\"\n    let started = Task {\n      do {\n        let values = try await loadPractice(id)\n        guard !Task.isCancelled, accepts(request: thisRequest, current: requestID) else { return }\n        await store.replace(with: values, request: thisRequest)\n        guard !Task.isCancelled, accepts(request: thisRequest, current: requestID) else { return }\n        result = values\n        message = \"Loaded \\(values.count) entries\"\n      } catch is CancellationError {\n        if accepts(request: thisRequest, current: requestID) { message = \"Load cancelled\" }\n      } catch {\n        if accepts(request: thisRequest, current: requestID) {\n          message = \"Could not load practice data\"\n        }\n      }\n    }\n    task = started\n    return started\n  }\n  func cancel() {\n    task?.cancel()\n    requestID += 1\n    message = \"Load cancelled\"\n  }\n}\nlet loader = await MainActor.run { Loader() }\nlet earlier = await loader.start(1)\nlet current = await loader.start(2)\nawait earlier.value\nawait current.value\nlet afterRace = await MainActor.run { loader.result }\nlet storedAfterRace = await loader.store.snapshot()\nlet failed = await loader.start(0)\nawait failed.value\nlet afterFailure = await MainActor.run { loader.message }\nlet cancelled = await MainActor.run {\n  let handle = loader.start(1)\n  loader.cancel()\n  return handle\n}\nawait cancelled.value\nlet afterCancellation = await MainActor.run { (loader.result, loader.message) }\nprint(\"Latest data: \\(afterRace); failure: \\(afterFailure); cancellation: \\(afterCancellation.1)\")\n",
+    "checks": [
+      {
+        "label": "Latest async request wins in display and actor",
+        "expression": "afterRace == [\"session-2\"] && storedAfterRace == [\"session-2\"]"
+      },
+      {
+        "label": "Failure is explained",
+        "expression": "afterFailure == \"Could not load practice data\""
+      },
+      {
+        "label": "Cancellation preserves current data",
+        "expression": "afterCancellation.0 == [\"session-2\"] && afterCancellation.1 == \"Load cancelled\""
+      }
+    ],
+    "outcome": "success"
+  },
+  {
+    "id": "swift-10-starter",
+    "lessonId": "swift-10",
+    "code": "func accepts(request: Int, current: Int) -> Bool {\n  // TODO: compare the identifiers\n  return false\n}\nenum LoadError: Error { case unavailable }\nactor PracticeStore {\n  private var entries: [String] = []\n  private var requestID = 0\n  func replace(with newEntries: [String], request: Int) {\n    guard request >= requestID else { return }\n    requestID = request\n    // TODO: replace entries\n  }\n  func snapshot() -> [String] { entries }\n}\nfunc loadPractice(_ id: Int) async throws -> [String] {\n  try await Task.sleep(for: .milliseconds(id == 1 ? 80 : 10))\n  try Task.checkCancellation()\n  if id == 0 { throw LoadError.unavailable }\n  return [\"session-\\(id)\"]\n}\n@MainActor final class Loader {\n  private(set) var result: [String] = []\n  private(set) var message = \"Ready\"\n  let store = PracticeStore()\n  private var task: Task<Void, Never>?\n  private var requestID = 0\n  func start(_ id: Int) -> Task<Void, Never> {\n    task?.cancel()\n    requestID += 1\n    let thisRequest = requestID\n    message = \"Loading\"\n    let started = Task {\n      do {\n        let values = try await loadPractice(id)\n        guard !Task.isCancelled, accepts(request: thisRequest, current: requestID) else { return }\n        await store.replace(with: values, request: thisRequest)\n        guard !Task.isCancelled, accepts(request: thisRequest, current: requestID) else { return }\n        // TODO: apply the latest result\n        message = \"Loaded \\(values.count) entries\"\n      } catch is CancellationError {\n        if accepts(request: thisRequest, current: requestID) { message = \"TODO\" }\n      } catch {\n        if accepts(request: thisRequest, current: requestID) { message = \"TODO\" }\n      }\n    }\n    task = started\n    return started\n  }\n  func cancel() {\n    task?.cancel()\n    requestID += 1\n    message = \"TODO\"\n  }\n}\nlet loader = await MainActor.run { Loader() }\nlet earlier = await loader.start(1)\nlet current = await loader.start(2)\nawait earlier.value\nawait current.value\nlet afterRace = await MainActor.run { loader.result }\nlet storedAfterRace = await loader.store.snapshot()\nlet failed = await loader.start(0)\nawait failed.value\nlet afterFailure = await MainActor.run { loader.message }\nlet cancelled = await MainActor.run {\n  let handle = loader.start(1)\n  loader.cancel()\n  return handle\n}\nawait cancelled.value\nlet afterCancellation = await MainActor.run { (loader.result, loader.message) }\nprint(\"Latest data: \\(afterRace); failure: \\(afterFailure); cancellation: \\(afterCancellation.1)\")\n",
+    "checks": [
+      {
+        "label": "Latest async request wins in display and actor",
+        "expression": "afterRace == [\"session-2\"] && storedAfterRace == [\"session-2\"]"
+      },
+      {
+        "label": "Failure is explained",
+        "expression": "afterFailure == \"Could not load practice data\""
+      },
+      {
+        "label": "Cancellation preserves current data",
+        "expression": "afterCancellation.0 == [\"session-2\"] && afterCancellation.1 == \"Load cancelled\""
+      }
+    ],
+    "outcome": "checks-fail"
+  },
+  {
+    "id": "swift-11-solution",
+    "lessonId": "swift-11",
+    "code": "import Foundation\nstruct PracticeEntry: Codable, Equatable {\n    let title: String\n    let minutes: Int\n}\nstruct LoadResult { let entries: [PracticeEntry]; let message: String }\nfunc encodeEntries(_ entries: [PracticeEntry]) throws -> Data {\n    try JSONEncoder().encode(entries)\n}\nfunc saveEntries(_ entries: [PracticeEntry], to url: URL) throws {\n    try encodeEntries(entries).write(to: url, options: .atomic)\n}\nfunc loadEntries(from url: URL) -> LoadResult {\n    do { return loadEntries(try Data(contentsOf: url)) }\n    catch { return LoadResult(entries: [], message: \"Saved file could not be read; starting with an empty list.\") }\n}\nfunc loadEntries(_ data: Data) -> LoadResult {\n    do {\n        let entries = try JSONDecoder().decode([PracticeEntry].self, from: data)\n        return LoadResult(entries: entries, message: \"Loaded \\(entries.count) entries\")\n    } catch {\n        return LoadResult(entries: [], message: \"Saved data could not be read; starting with an empty list.\")\n    }\n}\nlet original = [PracticeEntry(title: \"Swift\", minutes: 20)]\nlet fileURL = FileManager.default.temporaryDirectory.appendingPathComponent(\"practice-entries.json\")\ntry saveEntries(original, to: fileURL)\nlet restored = loadEntries(from: fileURL)\nlet recovered = loadEntries(Data(\"broken\".utf8))",
+    "checks": [
+      {
+        "label": "Valid data round trips",
+        "expression": "restored.entries == original && FileManager.default.fileExists(atPath: fileURL.path)"
+      },
+      {
+        "label": "Invalid data recovers empty",
+        "expression": "recovered.entries.isEmpty"
+      },
+      {
+        "label": "Recovery is explained",
+        "expression": "recovered.message.contains(\"could not be read\")"
+      }
+    ],
+    "outcome": "success"
+  },
+  {
+    "id": "swift-11-starter",
+    "lessonId": "swift-11",
+    "code": "import Foundation\nstruct PracticeEntry: Codable, Equatable {\n    let title: String\n    let minutes: Int\n}\nstruct LoadResult { let entries: [PracticeEntry]; let message: String }\nfunc encodeEntries(_ entries: [PracticeEntry]) throws -> Data {\n    // TODO: encode with JSONEncoder\n    Data()\n}\nfunc loadEntries(_ data: Data) -> LoadResult {\n    // TODO: decode, or recover from invalid bytes\n    LoadResult(entries: [], message: \"TODO\")\n}\nfunc saveEntries(_ entries: [PracticeEntry], to url: URL) throws {\n    try encodeEntries(entries).write(to: url, options: .atomic)\n}\nfunc loadEntries(from url: URL) -> LoadResult {\n    do { return loadEntries(try Data(contentsOf: url)) }\n    catch { return LoadResult(entries: [], message: \"Saved file could not be read; starting with an empty list.\") }\n}\nlet original = [PracticeEntry(title: \"Swift\", minutes: 20)]\nlet fileURL = FileManager.default.temporaryDirectory.appendingPathComponent(\"practice-entries.json\")\ntry saveEntries(original, to: fileURL)\nlet restored = loadEntries(from: fileURL)\nlet recovered = loadEntries(Data(\"broken\".utf8))",
+    "checks": [
+      {
+        "label": "Valid data round trips",
+        "expression": "restored.entries == original && FileManager.default.fileExists(atPath: fileURL.path)"
+      },
+      {
+        "label": "Invalid data recovers empty",
+        "expression": "recovered.entries.isEmpty"
+      },
+      {
+        "label": "Recovery is explained",
+        "expression": "recovered.message.contains(\"could not be read\")"
+      }
+    ],
+    "outcome": "checks-fail"
+  },
+  {
+    "id": "swift-12-solution",
+    "lessonId": "swift-12",
+    "code": "struct SearchResult { let index: Int?; let comparisons: Int }\nfunc find(_ target: Int, in values: [Int]) -> SearchResult {\n    var comparisons = 0\n    for (index, value) in values.enumerated() {\n        comparisons += 1\n        if value == target { return SearchResult(index: index, comparisons: comparisons) }\n    }\n    return SearchResult(index: nil, comparisons: comparisons)\n}\nlet sample = Array(0..<100)\nlet smallRun = find(99, in: sample)\nlet largeRun = find(199, in: Array(0..<200))\nlet missingRun = find(-1, in: sample)",
+    "checks": [
+      {
+        "label": "Last item is found",
+        "expression": "smallRun.index == 99"
+      },
+      {
+        "label": "Missing item reports nil",
+        "expression": "missingRun.index == nil"
+      },
+      {
+        "label": "Doubling this list doubles comparisons",
+        "expression": "largeRun.comparisons == smallRun.comparisons * 2"
+      },
+      {
+        "label": "First item takes one comparison",
+        "expression": "find(0, in: sample).index == 0 && find(0, in: sample).comparisons == 1"
+      },
+      {
+        "label": "Missing target examines every item",
+        "expression": "missingRun.comparisons == sample.count"
+      },
+      {
+        "label": "Empty and repeated target",
+        "expression": "find(4, in: []).index == nil && find(4, in: []).comparisons == 0 && find(4, in: [4, 4]).index == 0 && find(4, in: [4, 4]).comparisons == 1"
+      }
+    ],
+    "outcome": "success"
+  },
+  {
+    "id": "swift-12-starter",
+    "lessonId": "swift-12",
+    "code": "struct SearchResult { let index: Int?; let comparisons: Int }\nfunc find(_ target: Int, in values: [Int]) -> SearchResult {\n    // TODO: inspect values in order and count each comparison\n    SearchResult(index: nil, comparisons: 0)\n}\nlet sample = Array(0..<100)\nlet smallRun = find(99, in: sample)\nlet largeRun = find(199, in: Array(0..<200))\nlet missingRun = find(-1, in: sample)",
+    "checks": [
+      {
+        "label": "Last item is found",
+        "expression": "smallRun.index == 99"
+      },
+      {
+        "label": "Missing item reports nil",
+        "expression": "missingRun.index == nil"
+      },
+      {
+        "label": "Doubling this list doubles comparisons",
+        "expression": "largeRun.comparisons == smallRun.comparisons * 2"
+      },
+      {
+        "label": "First item takes one comparison",
+        "expression": "find(0, in: sample).index == 0 && find(0, in: sample).comparisons == 1"
+      },
+      {
+        "label": "Missing target examines every item",
+        "expression": "missingRun.comparisons == sample.count"
+      },
+      {
+        "label": "Empty and repeated target",
+        "expression": "find(4, in: []).index == nil && find(4, in: []).comparisons == 0 && find(4, in: [4, 4]).index == 0 && find(4, in: [4, 4]).comparisons == 1"
+      }
+    ],
+    "outcome": "checks-fail"
+  },
+  {
+    "id": "swift-10-controlled-stale-success",
+    "lessonId": "swift-10",
+    "code": "func accepts(request: Int, current: Int) -> Bool { request == current }\nenum LoadError: Error { case unavailable }\nactor PracticeStore {\n  private var entries: [String] = []\n  private var requestID = 0\n  func replace(with newEntries: [String], request: Int) {\n    guard request >= requestID else { return }\n    requestID = request\n    entries = newEntries\n  }\n  func snapshot() -> [String] { entries }\n}\nactor DeliveryGate {\n  var pending: [Int: CheckedContinuation<[String], Error>] = [:]\n  var observed: [Int: CheckedContinuation<Void, Never>] = [:]\n  func receive(_ id: Int) async throws -> [String] {\n    try await withCheckedThrowingContinuation { continuation in\n      pending[id] = continuation\n      observed.removeValue(forKey: id)?.resume()\n    }\n  }\n  func waitFor(_ id: Int) async {\n    if pending[id] != nil { return }\n    await withCheckedContinuation { observed[id] = $0 }\n  }\n  func deliver(_ id: Int, fail: Bool = false) {\n    let continuation = pending.removeValue(forKey: id)!\n    if fail { continuation.resume(throwing: LoadError.unavailable) }\n    else { continuation.resume(returning: [\"session-\\(id)\"]) }\n  }\n}\nlet delivery = DeliveryGate()\nfunc loadPractice(_ id: Int) async throws -> [String] { try await delivery.receive(id) }\n@MainActor final class Loader {\n  private(set) var result: [String] = []\n  private(set) var message = \"Ready\"\n  let store = PracticeStore()\n  private var task: Task<Void, Never>?\n  private var requestID = 0\n  func start(_ id: Int) -> Task<Void, Never> {\n    task?.cancel()\n    requestID += 1\n    let thisRequest = requestID\n    message = \"Loading\"\n    let started = Task {\n      do {\n        let values = try await loadPractice(id)\n        guard !Task.isCancelled, accepts(request: thisRequest, current: requestID) else { return }\n        await store.replace(with: values, request: thisRequest)\n        guard !Task.isCancelled, accepts(request: thisRequest, current: requestID) else { return }\n        result = values\n        message = \"Loaded \\(values.count) entries\"\n      } catch is CancellationError {\n        if accepts(request: thisRequest, current: requestID) { message = \"Load cancelled\" }\n      } catch {\n        if accepts(request: thisRequest, current: requestID) {\n          message = \"Could not load practice data\"\n        }\n      }\n    }\n    task = started\n    return started\n  }\n  func cancel() {\n    task?.cancel()\n    requestID += 1\n    message = \"Load cancelled\"\n  }\n}\nlet loader = await MainActor.run { Loader() }\nlet earlier = await loader.start(1)\nawait delivery.waitFor(1)\nlet current = await loader.start(2)\nawait delivery.waitFor(2)\nawait delivery.deliver(2)\nawait current.value\nawait delivery.deliver(1, fail: false)\nawait earlier.value\nlet state = await MainActor.run { (loader.result, loader.message) }\nlet saved = await loader.store.snapshot()\nprint(state.0 == [\"session-2\"] && state.1 == \"Loaded 1 entries\" && saved == [\"session-2\"])\nlet separateStore = PracticeStore()\nawait separateStore.replace(with: [\"new\"], request: 2)\nawait separateStore.replace(with: [\"old\"], request: 1)\nprint(await separateStore.snapshot() == [\"new\"])\n",
+    "expectedStdout": "true\ntrue",
+    "outcome": "success",
+    "scope": "Exact authored Loader/store with a supplied continuation-controlled service replacing simulated delays; no timer-order guarantee."
+  },
+  {
+    "id": "swift-10-controlled-stale-error",
+    "lessonId": "swift-10",
+    "code": "func accepts(request: Int, current: Int) -> Bool { request == current }\nenum LoadError: Error { case unavailable }\nactor PracticeStore {\n  private var entries: [String] = []\n  private var requestID = 0\n  func replace(with newEntries: [String], request: Int) {\n    guard request >= requestID else { return }\n    requestID = request\n    entries = newEntries\n  }\n  func snapshot() -> [String] { entries }\n}\nactor DeliveryGate {\n  var pending: [Int: CheckedContinuation<[String], Error>] = [:]\n  var observed: [Int: CheckedContinuation<Void, Never>] = [:]\n  func receive(_ id: Int) async throws -> [String] {\n    try await withCheckedThrowingContinuation { continuation in\n      pending[id] = continuation\n      observed.removeValue(forKey: id)?.resume()\n    }\n  }\n  func waitFor(_ id: Int) async {\n    if pending[id] != nil { return }\n    await withCheckedContinuation { observed[id] = $0 }\n  }\n  func deliver(_ id: Int, fail: Bool = false) {\n    let continuation = pending.removeValue(forKey: id)!\n    if fail { continuation.resume(throwing: LoadError.unavailable) }\n    else { continuation.resume(returning: [\"session-\\(id)\"]) }\n  }\n}\nlet delivery = DeliveryGate()\nfunc loadPractice(_ id: Int) async throws -> [String] { try await delivery.receive(id) }\n@MainActor final class Loader {\n  private(set) var result: [String] = []\n  private(set) var message = \"Ready\"\n  let store = PracticeStore()\n  private var task: Task<Void, Never>?\n  private var requestID = 0\n  func start(_ id: Int) -> Task<Void, Never> {\n    task?.cancel()\n    requestID += 1\n    let thisRequest = requestID\n    message = \"Loading\"\n    let started = Task {\n      do {\n        let values = try await loadPractice(id)\n        guard !Task.isCancelled, accepts(request: thisRequest, current: requestID) else { return }\n        await store.replace(with: values, request: thisRequest)\n        guard !Task.isCancelled, accepts(request: thisRequest, current: requestID) else { return }\n        result = values\n        message = \"Loaded \\(values.count) entries\"\n      } catch is CancellationError {\n        if accepts(request: thisRequest, current: requestID) { message = \"Load cancelled\" }\n      } catch {\n        if accepts(request: thisRequest, current: requestID) {\n          message = \"Could not load practice data\"\n        }\n      }\n    }\n    task = started\n    return started\n  }\n  func cancel() {\n    task?.cancel()\n    requestID += 1\n    message = \"Load cancelled\"\n  }\n}\nlet loader = await MainActor.run { Loader() }\nlet earlier = await loader.start(1)\nawait delivery.waitFor(1)\nlet current = await loader.start(2)\nawait delivery.waitFor(2)\nawait delivery.deliver(2)\nawait current.value\nawait delivery.deliver(1, fail: true)\nawait earlier.value\nlet state = await MainActor.run { (loader.result, loader.message) }\nlet saved = await loader.store.snapshot()\nprint(state.0 == [\"session-2\"] && state.1 == \"Loaded 1 entries\" && saved == [\"session-2\"])\nlet separateStore = PracticeStore()\nawait separateStore.replace(with: [\"new\"], request: 2)\nawait separateStore.replace(with: [\"old\"], request: 1)\nprint(await separateStore.snapshot() == [\"new\"])\n",
+    "expectedStdout": "true\ntrue",
+    "outcome": "success",
+    "scope": "Exact authored Loader/store with a supplied continuation-controlled service replacing simulated delays; no timer-order guarantee."
+  }
+]

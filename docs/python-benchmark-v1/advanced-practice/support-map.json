@@ -1,0 +1,196 @@
+[
+  {
+    "id": "python-85",
+    "quizTarget": "If ValueError and RuntimeError are grouped but only except* ValueError handles them, what happens to RuntimeError?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "ExceptionGroup(message, exceptions) constructs one exception containing a nonempty sequence of ordinary exceptions. ValueError(\"bad minutes\") and TypeError(\"wrong shape\") construct failures with diagnostic messages; construction alone does not raise them. This lesson uses a flat group so its direct exceptions are individual failures, not nested groups."
+      },
+      {
+        "paragraph": 1,
+        "fact": "except* ValueError selects only matching failures from the group. group.exceptions is their tuple; str(error) returns each message. route_errors(errors, handled) appends those messages to the supplied list and returns None when nothing remains. Unmatched failures propagate as an ExceptionGroup; they are not converted into success. A plain except ExceptionGroup around the call can observe that remaining group. Do not mix except and except* clauses on the same try, and do not return from an except* block."
+      },
+      {
+        "paragraph": 2,
+        "fact": "observe(errors) calls the router with a fresh list and returns (handled_messages, remaining_type_names). type(error).__name__ reads a diagnostic class name; it is not used to decide which failures to handle. The outer handler records the unmatched TypeError rather than hiding it.\n```python\ndef route_errors(errors, handled):\n    if not errors:\n        return\n    try:\n        raise ExceptionGroup(\"batch\", errors)\n    except* ValueError as group:\n        for error in group.exceptions:\n            handled.append(str(error))\ndef observe(errors):\n    handled = []\n    remaining = []\n    try:\n        route_errors(errors, handled)\n    except ExceptionGroup as group:\n        remaining = [type(error).__name__ for error in group.exceptions]\n    return handled, remaining\nprint(observe([ValueError(\"bad minutes\"), TypeError(\"wrong shape\")]))\n```\nOutput: (['bad minutes'], ['TypeError'])."
+      },
+      {
+        "paragraph": 3,
+        "fact": "If both failures are ValueError, both messages reach handled and no exception remains. With an empty input, return before constructing a group because an empty ExceptionGroup is invalid. The observe helper is supplied test scaffolding; implement route_errors, not a catch-all. Optional practice: replace one ValueError with RuntimeError and explain why it must still propagate."
+      }
+    ],
+    "reasoning": "except* selects failures by their exception type. Handling the ValueError subgroup does not discharge a different failure in the same batch.",
+    "source": "https://docs.python.org/3.12/library/asyncio-task.html#task-groups",
+    "prerequisites": [
+      "python-14",
+      "python-65"
+    ]
+  },
+  {
+    "id": "python-86",
+    "quizTarget": "If the handler changes to except* TypeError, does the final done append run after the ValueError child fails?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "async with asyncio.TaskGroup() creates and enters a task group. group.create_task(coroutine) schedules that coroutine as a child and returns its Task. Exiting the context waits for the children. A child failure other than cancellation requests cancellation of siblings and is reported after their cleanup as grouped failures."
+      },
+      {
+        "paragraph": 1,
+        "fact": "asyncio.Event() constructs an initially unset signal. ready.set() sets it and wakes waiters; await ready.wait() pauses until set and then returns True. blocked is never set: its wait is deliberately ended by sibling cancellation. The failing child waits for ready, ensuring the waiting child has entered its try/finally before failure. These are coroutine signals, not thread locks."
+      },
+      {
+        "paragraph": 2,
+        "fact": "run_pair(label) returns the recorded event list after the group exits. waiting() and failing() create child coroutines; create_task schedules them. asyncio.run(run_pair()) runs the top-level coroutine and returns its list in this course runner. finally records cleanup without swallowing CancelledError; the matching except* runs only after the group has finished its children.\n```python\nimport asyncio\n\nasync def run_pair(label=\"handled\"):\n    events = []\n    ready = asyncio.Event()\n    blocked = asyncio.Event()\n    async def waiting():\n        try:\n            ready.set()\n            await blocked.wait()\n        finally:\n            events.append(\"cleanup\")\n    async def failing():\n        await ready.wait()\n        raise ValueError(\"worker failed\")\n    try:\n        async with asyncio.TaskGroup() as group:\n            group.create_task(waiting())\n            group.create_task(failing())\n    except* ValueError:\n        events.append(label)\n    events.append(\"done\")\n    return events\nprint(asyncio.run(run_pair()))\n```\nOutput: ['cleanup', 'handled', 'done']."
+      },
+      {
+        "paragraph": 3,
+        "fact": "Replacing the handler with except* TypeError leaves the ValueError group unhandled, so the final done append is skipped. No sleep or scheduler speed establishes this ordering; the Event and group lifetime do. Optional practice: change the cleanup label and trace why it still appears before the handler. On a normal already-running async loop, await run_pair() rather than nesting asyncio.run; the course worker adapts its top-level execution boundary."
+      }
+    ],
+    "reasoning": "TaskGroup waits for cancellation cleanup, then raises the failure group. A handler for the wrong subgroup type does not recover normal flow.",
+    "source": "https://docs.python.org/3.12/library/asyncio-task.html#task-groups",
+    "prerequisites": [
+      "python-16",
+      "python-85"
+    ]
+  },
+  {
+    "id": "python-87",
+    "quizTarget": "If load_topic fetches topic-7 but assert_called_once_with expects wrong-key, what should happen?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "load_topic(fetch, key) calls the supplied fetch callable once with key. It formats the returned topic String, or returns Missing for KeyError. Supplying a dependency makes this boundary testable without a network, database or global patch. Other exception types are not swallowed."
+      },
+      {
+        "paragraph": 1,
+        "fact": "Mock(return_value=\"Stars\") constructs a callable test double. Calling fake(key) records the arguments and returns Stars. Mock(side_effect=KeyError(\"absent\")) instead raises that exception when called. assert_called_once_with(expected_key) takes the Mock receiver and expected arguments, returns None on a match, and raises AssertionError for the wrong call count or arguments."
+      },
+      {
+        "paragraph": 2,
+        "fact": "The function’s result alone would not prove it fetched the correct key. Verify both the returned text and the dependency call.\n```python\nfrom unittest.mock import Mock\n\ndef load_topic(fetch, key):\n    try:\n        topic = fetch(key)\n    except KeyError:\n        return \"Missing\"\n    return \"Topic: \" + topic\nfake = Mock(return_value=\"Stars\")\nprint(load_topic(fake, \"topic-7\"))\nfake.assert_called_once_with(\"topic-7\")\nprint(\"call verified\")\n```\nOutput: Topic: Stars then call verified."
+      },
+      {
+        "paragraph": 3,
+        "fact": "Here the dependency fails with a known KeyError; the application returns its chosen fallback, and the attempted call is still recorded.\n```python\nfrom unittest.mock import Mock\n\ndef load_topic(fetch, key):\n    try:\n        topic = fetch(key)\n    except KeyError:\n        return \"Missing\"\n    return \"Topic: \" + topic\nfake = Mock(side_effect=KeyError(\"absent\"))\nprint(load_topic(fake, \"topic-7\"))\nfake.assert_called_once_with(\"topic-7\")\n```\nOutput: Missing. Optional practice: use a different returned topic and key. A mock proves the authored interaction, not compatibility with a real service. The supplied check_fetch and check_other_error helpers are test infrastructure: keep them unchanged while implementing load_topic. Module patching and its lookup-location rules are not used or claimed in this injected-callable exercise."
+      }
+    ],
+    "reasoning": "The assertion compares recorded calls, not just returned output. A plausible result cannot excuse using the wrong dependency argument.",
+    "source": "https://docs.python.org/3.12/library/unittest.mock.html",
+    "prerequisites": [
+      "python-68"
+    ]
+  },
+  {
+    "id": "python-88",
+    "quizTarget": "If the threshold is DEBUG and ok is False, which text is captured?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "A log should describe an event without copying credentials or arbitrary request text. capture_status(ok, token, level) accepts a Boolean status and a synthetic secret token, but deliberately logs only a fixed status word. This is data minimization at this call site, not a universal redaction filter or proof that an entire application is safe."
+      },
+      {
+        "paragraph": 1,
+        "fact": "logging.Logger(name, level=...) constructs a local logger for this isolated exercise, rather than modifying the root logger or a shared registered logger. This direct construction is intentional study-only isolation, not the default application idiom: normal application code obtains loggers through logging.getLogger and a coordinated configuration policy, which are explicitly outside this exercise. StreamHandler(stream) sends records to the supplied text stream. Formatter(pattern) defines the text shape; setFormatter attaches it and addHandler connects the handler. %(levelname)s and %(message)s insert a record’s severity and formatted message. propagate=False prevents forwarding."
+      },
+      {
+        "paragraph": 2,
+        "fact": "debug(message) and info(format, argument) submit records at their respective levels; the logger’s threshold filters lower severities. Here INFO excludes DEBUG. The %s placeholder receives only ok or failed, never token. These logging methods return None. StringIO holds text in memory; getvalue returns its accumulated String. removeHandler detaches this handler in finally, and close releases handler resources without taking ownership of this supplied StringIO.\n```python\nimport logging\nfrom io import StringIO\n\ndef capture_status(ok, token, level=logging.INFO):\n    stream = StringIO()\n    logger = logging.Logger(\"lesson-local\", level=level)\n    logger.propagate = False\n    handler = logging.StreamHandler(stream)\n    handler.setFormatter(logging.Formatter(\"%(levelname)s:%(message)s\"))\n    logger.addHandler(handler)\n    try:\n        logger.debug(\"diagnostic\")\n        logger.info(\"status=%s\", \"ok\" if ok else \"failed\")\n        return stream.getvalue()\n    finally:\n        logger.removeHandler(handler)\n        handler.close()\nprint(capture_status(True, \"synthetic-secret\"), end=\"\")\n```\nOutput: INFO:status=ok."
+      },
+      {
+        "paragraph": 3,
+        "fact": "At level DEBUG, both records are included; INFO still appears after DEBUG. Repeated calls create independent logger/stream objects and detach their handlers, so records do not multiply. Optional practice: use WARNING as the threshold and explain why these DEBUG/INFO records are omitted. This demonstrates only selected synthetic messages; never use a real secret in a lesson fixture."
+      }
+    ],
+    "reasoning": "The lower threshold accepts both severities, but changing the threshold does not alter the authored message arguments or introduce the omitted token.",
+    "source": "https://docs.python.org/3.12/library/logging.html",
+    "prerequisites": [
+      "python-65",
+      "python-21"
+    ]
+  },
+  {
+    "id": "python-89",
+    "quizTarget": "Why does identity_count(\"text\") still return \"text\" despite its int annotation?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "dict[str, list[str]] describes a dictionary with String keys and lists of Strings as values. key: str describes the second parameter. -> str | None describes either a String result or no title. These annotations communicate intended types; they do not loop through incoming data and validate it at runtime."
+      },
+      {
+        "paragraph": 1,
+        "fact": "first_title(groups, key) reads the named list using get(key, []), which returns the stored list or the supplied empty-list default. It returns the first title, or None when the list is empty/missing. The data lookup and branch enforce that behavior; the annotations do not implement it. identity_count(value: int) -> int simply returns its argument.\n```python\ndef first_title(groups: dict[str, list[str]], key: str) -> str | None:\n    titles = groups.get(key, [])\n    return titles[0] if titles else None\n\ndef identity_count(value: int) -> int:\n    return value\nprint(first_title({\"today\": [\"Read\", \"Draw\"]}, \"today\"))\nprint(first_title({\"today\": []}, \"today\"))\nprint(identity_count(\"text\"))\n```\nOutput: Read, None, text on separate lines. The final call deliberately violates the annotation yet Python still returns its String."
+      },
+      {
+        "paragraph": 2,
+        "fact": "A static type checker analyzes annotated code and can reject the String argument to identity_count without executing that call. Python execution is a different check: annotations alone are not an input validator. This lesson’s runnable checks verify behavior, not a checker’s result. No third-party checker is installed or run by the browser exercise; any separate native checker evidence must be reported explicitly."
+      },
+      {
+        "paragraph": 3,
+        "fact": "For the practice function, inputs follow the annotated dictionary/list/String types. A real external-data boundary would need explicit shape checks before calling it. Optional practice: write down the expected type of groups[\"today\"] and the two possible return types; do not use a successful runtime call as proof of a static contract."
+      }
+    ],
+    "reasoning": "A checker can flag the mismatched call, while ordinary Python execution still follows the body. These are distinct kinds of evidence.",
+    "source": "https://docs.python.org/3.12/library/typing.html",
+    "prerequisites": [
+      "python-35",
+      "python-29"
+    ]
+  },
+  {
+    "id": "python-90",
+    "quizTarget": "For repeat=3 and number=2, how many elapsed totals and operation calls are requested?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "Prepare the tiny input list before measuring. operation() sums that list and returns its result; the measurement includes calling the function and summing, not constructing the list. A measured function with side effects will repeat them: the timer does not reset application state automatically."
+      },
+      {
+        "paragraph": 1,
+        "fact": "timeit.Timer(operation) receives the callable itself, not operation(), and constructs a timer without running the operation yet. timer.repeat(repeat=2, number=3) runs three calls per measurement and returns a list of two elapsed totals in seconds. It does not return the operation’s values. By default timeit temporarily disables garbage collection during timing; that policy may differ from a real workload."
+      },
+      {
+        "paragraph": 2,
+        "fact": "measure(operation, repeats, number) rejects nonpositive counts, constructs the timer, and returns its samples. all(value >= 0 for value in samples) returns True only when every elapsed result is nonnegative, without demanding a particular speed. The displayed operation is called indirectly by timer.repeat, three times in each sample; passing its name to Timer does not call it immediately.\n```python\nimport timeit\n\ndef measure(operation, repeats=2, number=3):\n    if repeats < 1 or number < 1:\n        raise ValueError(\"positive repetition counts required\")\n    timer = timeit.Timer(operation)\n    return timer.repeat(repeat=repeats, number=number)\nvalues = [1, 2, 3]\ndef operation():\n    return sum(values)\nsamples = measure(operation, repeats=2, number=3)\nprint(len(samples), all(value >= 0 for value in samples))\n```\nOutput: 2 True. Exact elapsed values vary, may be zero at clock resolution, and are deliberately not printed or asserted."
+      },
+      {
+        "paragraph": 3,
+        "fact": "A sample total covers number calls; dividing by number gives an average per call for that sample, not a universal performance guarantee. Repeat measurements to observe noise, but do not infer asymptotic complexity or real-user latency from this tiny case. Optional practice: change repeat to three and predict list length before running. Keep repetitions small in the browser. The supplied counted_measure test helper checks that the operation really ran six times; rejects_count checks the documented invalid-count boundary."
+      }
+    ],
+    "reasoning": "repeat controls the number of measurements; number controls calls inside each measurement. Their product counts operation invocations, not returned timing entries.",
+    "source": "https://docs.python.org/3.12/library/timeit.html",
+    "prerequisites": [
+      "python-79",
+      "python-80"
+    ]
+  },
+  {
+    "id": "python-91",
+    "quizTarget": "If count is four, what result and square call count should be observed?",
+    "essentialSupport": [
+      {
+        "paragraph": 0,
+        "fact": "square(value) returns value multiplied by itself. workload(count) calls square for integers from zero up to count-1 and returns their total. Keep count a small nonnegative integer. A profiler records calls and measured time during a run; it does not establish a growth-rate proof or remove measurement overhead."
+      },
+      {
+        "paragraph": 1,
+        "fact": "cProfile.Profile() creates a profiler. profiler.runcall(workload, count) profiles that call, returns workload’s result and stops profiling afterward. pstats.Stats(profiler) reads the collected statistics. This lesson inspects its stats mapping instead of depending on a machine-specific formatted timing table."
+      },
+      {
+        "paragraph": 2,
+        "fact": "Each stats key is (filename, line_number, function_name). Its value is (primitive_calls, total_calls, own_time, cumulative_time, callers). own_time excludes subcalls; cumulative_time includes them. We select the known local name square and read entry[1], the total call count. The dictionary items() method supplies each key/value pair. The filter is scoped to this tiny workload, not a unique identifier for arbitrary large programs.\n```python\nimport cProfile\nimport pstats\n\ndef square(value):\n    return value * value\n\ndef workload(count):\n    total = 0\n    for value in range(count):\n        total += square(value)\n    return total\n\ndef profile_work(count):\n    profiler = cProfile.Profile()\n    result = profiler.runcall(workload, count)\n    stats = pstats.Stats(profiler)\n    calls = 0\n    for key, entry in stats.stats.items():\n        if key[2] == \"square\":\n            calls += entry[1]\n    return result, calls\nprint(profile_work(3))\n```\nOutput: (5, 3): the result is 0+1+4 and square ran three times."
+      },
+      {
+        "paragraph": 3,
+        "fact": "The function returns (result, square_calls). Empty work has no square entry, so its initialized count remains zero. More calls do not automatically mean a function is the bottleneck; inspect accumulated time with workload context, and use timeit for focused timing. Optional practice: predict the result and count for four inputs before running. Do not assert exact own_time or cumulative_time values in either runtime."
+      }
+    ],
+    "reasoning": "Call counts record execution even when a call returns zero. The changed workload adds one square call and its value nine; timing remains environment-dependent.",
+    "source": "https://docs.python.org/3.12/library/profile.html",
+    "prerequisites": [
+      "python-90"
+    ]
+  }
+]

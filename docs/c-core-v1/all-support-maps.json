@@ -1,0 +1,1216 @@
+{
+  "foundations": [
+    {
+      "id": "c-07",
+      "quizTarget": "You edit the message but run the old executable without rebuilding. Which outcome is possible?",
+      "essentialSupport": [
+        {
+          "paragraph": 0,
+          "fact": "A C compiler translates source and a linker combines compiled parts into an executable. These examples use an implementation that provides the standard library."
+        },
+        {
+          "paragraph": 1,
+          "fact": "int main(void) is the entry function here. void in its parameter list means no arguments; returning zero reports successful termination to the host."
+        },
+        {
+          "paragraph": 2,
+          "fact": "Editing main.c does not alter an already-built executable. Recompile before expecting a changed source value to appear."
+        },
+        {
+          "paragraph": 3,
+          "fact": "This course uses portable C17 core rules. C23 is newer, but the installed GCC 14.2 describes its C23 support as incomplete. No browser C runner is provided."
+        }
+      ],
+      "reasoning": "The executable contains the previous compilation, separate from the edited source.",
+      "source": "https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf",
+      "prerequisites": [
+        "c-06"
+      ]
+    },
+    {
+      "id": "c-08",
+      "quizTarget": "Which change safely prints the long variable long count = 3L?",
+      "essentialSupport": [
+        {
+          "paragraph": 0,
+          "fact": "int represents whole numbers; double represents approximate fractional values. C specifies minimum ranges rather than requiring every machine to use the same int width."
+        },
+        {
+          "paragraph": 1,
+          "fact": "INT_MAX in limits.h is the largest int on this implementation. Never assume an int is always exactly 32 bits."
+        },
+        {
+          "paragraph": 2,
+          "fact": "printf uses a format string. %d expects int; %ld expects long; %f expects double for printf. Mismatched argument types can cause undefined behavior, so match them deliberately."
+        },
+        {
+          "paragraph": 3,
+          "fact": "The small values here fit all conforming int implementations. A long literal can use L, but long also has a finite implementation-dependent range."
+        }
+      ],
+      "reasoning": "The variadic printf contract requires the matching type for each format conversion.",
+      "source": "https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf",
+      "prerequisites": [
+        "c-07"
+      ]
+    },
+    {
+      "id": "c-09",
+      "quizTarget": "Change only 5 / 2 to 5.0 / 2. What prints?",
+      "essentialSupport": [
+        {
+          "paragraph": 0,
+          "fact": "5 / 2 uses integer operands and produces 2. With positive operands the fractional part is discarded; integer division generally truncates toward zero."
+        },
+        {
+          "paragraph": 1,
+          "fact": "5.0 / 2 uses a double operand and produces 2.5. Assigning 5 / 2 into double only converts the already-computed 2 into 2.0."
+        },
+        {
+          "paragraph": 2,
+          "fact": "%.1f prints a double with one digit after the decimal point. Formatting does not change the earlier arithmetic."
+        },
+        {
+          "paragraph": 3,
+          "fact": "Do not divide by zero. Signed minimum divided by -1 can also be unrepresentable. This example uses only safe positive operands."
+        }
+      ],
+      "reasoning": "The operand conversion occurs before division rather than after truncation.",
+      "source": "https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf",
+      "prerequisites": [
+        "c-08"
+      ]
+    },
+    {
+      "id": "c-10",
+      "quizTarget": "Set a to INT_MAX while keeping b=3. What should this guarded program do?",
+      "essentialSupport": [
+        {
+          "paragraph": 0,
+          "fact": "A signed integer operation whose result is not representable has undefined behavior. Do not run INT_MAX +1 and treat an observed number as a portable result."
+        },
+        {
+          "paragraph": 1,
+          "fact": "For nonnegative a and b, a <= INT_MAX - b is a safe check before computing a+b. The stated nonnegative precondition matters."
+        },
+        {
+          "paragraph": 2,
+          "fact": "Unsigned arithmetic is reduced modulo one more than the maximum value. That defined wrap still may be a bug for sizes or counts."
+        },
+        {
+          "paragraph": 3,
+          "fact": "This program prints rejected when the guard fails. It never evaluates the overflowing addition in that branch."
+        }
+      ],
+      "reasoning": "The precondition fails, and only the rejection branch runs.",
+      "source": "https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf",
+      "prerequisites": [
+        "c-09"
+      ]
+    },
+    {
+      "id": "c-11",
+      "quizTarget": "Set denominator=0. What happens with the same guard?",
+      "essentialSupport": [
+        {
+          "paragraph": 0,
+          "fact": "A zero scalar value is false in a condition; a nonzero value is true. Logical operators produce int 0 or 1."
+        },
+        {
+          "paragraph": 1,
+          "fact": "&& evaluates its right operand only if its left operand is true. || skips the right operand when the left is true."
+        },
+        {
+          "paragraph": 2,
+          "fact": "denominator !=0 must come before the division in this expression. A false left side prevents division by zero."
+        },
+        {
+          "paragraph": 3,
+          "fact": "& and | operate on integer bits and do not provide the same short-circuit guard as && and ||."
+        }
+      ],
+      "reasoning": "The false left operand of && skips its right operand.",
+      "source": "https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf",
+      "prerequisites": [
+        "c-10"
+      ]
+    },
+    {
+      "id": "c-12",
+      "quizTarget": "Remove the flags |=2u statement. What does the flag test print?",
+      "essentialSupport": [
+        {
+          "paragraph": 0,
+          "fact": "An unsigned value can store flags in separate bit positions. 1u and 2u select different low bits."
+        },
+        {
+          "paragraph": 1,
+          "fact": "flags | mask sets the bits in mask. flags & mask keeps only shared bits. Comparing that result with 0 asks whether a flag is present."
+        },
+        {
+          "paragraph": 2,
+          "fact": "Unsigned bit operations avoid signed representation assumptions. Shifts still need a count smaller than the promoted type width; this example needs no shifts."
+        },
+        {
+          "paragraph": 3,
+          "fact": "The |= operator updates flags with the bitwise OR result, preserving bits already set."
+        }
+      ],
+      "reasoning": "The second bit is absent until it is set.",
+      "source": "https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf",
+      "prerequisites": [
+        "c-11"
+      ]
+    },
+    {
+      "id": "c-13",
+      "quizTarget": "Replace the inner int score=7 with score=7. What prints?",
+      "essentialSupport": [
+        {
+          "paragraph": 0,
+          "fact": "A variable declared inside braces is available within that block, not automatically outside it."
+        },
+        {
+          "paragraph": 1,
+          "fact": "A new int score in an inner block is a different object. Updating it does not change the outer score."
+        },
+        {
+          "paragraph": 2,
+          "fact": "An ordinary automatic local variable without an initializer does not provide a reliable initial value. Initialize it before use."
+        },
+        {
+          "paragraph": 3,
+          "fact": "Keeping distinct names can make accidental shadowing easier to avoid. The example intentionally shows the difference between two objects."
+        }
+      ],
+      "reasoning": "Without a declaration, the assignment uses the existing visible variable.",
+      "source": "https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf",
+      "prerequisites": [
+        "c-12"
+      ]
+    },
+    {
+      "id": "c-14",
+      "quizTarget": "Change choice to 2 while keeping both breaks. What prints?",
+      "essentialSupport": [
+        {
+          "paragraph": 0,
+          "fact": "switch evaluates its controlling integer expression and starts at a matching case label or default."
+        },
+        {
+          "paragraph": 1,
+          "fact": "After a matching case, statements continue into following labels unless control leaves. break exits this switch."
+        },
+        {
+          "paragraph": 2,
+          "fact": "default supplies an optional path when no case value matches."
+        },
+        {
+          "paragraph": 3,
+          "fact": "Removing break changes control flow, not just formatting. Use it only when falling through is a deliberate requirement."
+        }
+      ],
+      "reasoning": "The matching case 2 runs and break exits the switch.",
+      "source": "https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf",
+      "prerequisites": [
+        "c-13"
+      ]
+    },
+    {
+      "id": "c-15",
+      "quizTarget": "Replace continue with break. What prints?",
+      "essentialSupport": [
+        {
+          "paragraph": 0,
+          "fact": "for (int i=0; i<4; i++) initializes once, tests before each body and updates after a completed body. i++ adds one."
+        },
+        {
+          "paragraph": 1,
+          "fact": "continue starts the next iteration; in this for loop, the update still happens before the next condition test."
+        },
+        {
+          "paragraph": 2,
+          "fact": "break leaves the loop immediately instead of moving to its next iteration."
+        },
+        {
+          "paragraph": 3,
+          "fact": "The small counter and fixed limit make every increment representable. A syntactic loop alone does not guarantee termination."
+        }
+      ],
+      "reasoning": "break ends the loop instead of merely skipping one body.",
+      "source": "https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf",
+      "prerequisites": [
+        "c-14"
+      ]
+    },
+    {
+      "id": "c-16",
+      "quizTarget": "Change only the assignment index from 1 to 2. What does the unchanged print of values[1] show?",
+      "essentialSupport": [
+        {
+          "paragraph": 0,
+          "fact": "int values[3]={2,4,6} creates three int elements. This object does not grow when another element is needed."
+        },
+        {
+          "paragraph": 1,
+          "fact": "values[0] is the first element and values[2] the third. Valid indices here are 0,1,2."
+        },
+        {
+          "paragraph": 2,
+          "fact": "Accessing values[3] would be outside the array and is not a valid way to append. Do not execute out-of-bounds examples to guess their behavior."
+        },
+        {
+          "paragraph": 3,
+          "fact": "Assigning through a valid index changes that element without changing the number of elements."
+        }
+      ],
+      "reasoning": "The new assignment updates the third element, leaving the second as 4.",
+      "source": "https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf",
+      "prerequisites": [
+        "c-15"
+      ]
+    },
+    {
+      "id": "c-17",
+      "quizTarget": "Add 8 as a fourth initializer without writing an explicit array bound. What does count become?",
+      "essentialSupport": [
+        {
+          "paragraph": 0,
+          "fact": "sizeof gives an object or type size in bytes. A C byte is the size of char and is not promised universally to contain exactly 8 bits."
+        },
+        {
+          "paragraph": 1,
+          "fact": "With int values[] = {...}, omitting the bound asks the compiler to count the initializer elements. For this actual array object, sizeof values / sizeof values[0] divides total storage by one element size."
+        },
+        {
+          "paragraph": 2,
+          "fact": "sizeof has type size_t, an unsigned size type. printf %zu matches it."
+        },
+        {
+          "paragraph": 3,
+          "fact": "Array parameters are adjusted to pointers. A pointer size does not tell you the caller\u2019s array length; pass a separate length."
+        }
+      ],
+      "reasoning": "The compiler infers the array bound from all four initializers.",
+      "source": "https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf",
+      "prerequisites": [
+        "c-16"
+      ]
+    },
+    {
+      "id": "c-18",
+      "quizTarget": "Replace the constant 'A' with 'B'. What changes?",
+      "essentialSupport": [
+        {
+          "paragraph": 0,
+          "fact": "An ordinary single-quoted character constant such as 'A' has type int in C. A double-quoted literal is an array of char ending in a zero character."
+        },
+        {
+          "paragraph": 1,
+          "fact": "char need not be signed on every implementation. Its value is not automatically a whole Unicode character in a multibyte encoding."
+        },
+        {
+          "paragraph": 2,
+          "fact": "printf %c receives an int and writes the corresponding character after conversion. Do not assume alphabetic letters have particular numeric codes."
+        },
+        {
+          "paragraph": 3,
+          "fact": "The example changes a character constant rather than depending on ASCII arithmetic."
+        }
+      ],
+      "reasoning": "The %c conversion outputs the selected character value.",
+      "source": "https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf",
+      "prerequisites": [
+        "c-17"
+      ]
+    },
+    {
+      "id": "c-19",
+      "quizTarget": "Change the initializer to \"hi\". What prints?",
+      "essentialSupport": [
+        {
+          "paragraph": 0,
+          "fact": "A C string is a sequence of char ending at the first '\\0'. The terminator is a zero value, different from the printable digit'0'."
+        },
+        {
+          "paragraph": 1,
+          "fact": "char text[]=\"cat\" allocates four chars: c,a,t,and the terminator. strlen counts the three before the terminator."
+        },
+        {
+          "paragraph": 2,
+          "fact": "strlen requires a valid terminated string; it does not receive a buffer size and cannot make an unterminated buffer safe."
+        },
+        {
+          "paragraph": 3,
+          "fact": "The array initialized here is writable. Do not attempt to modify the storage of a string literal through a pointer."
+        }
+      ],
+      "reasoning": "strlen excludes the terminator, whereas sizeof this array includes it.",
+      "source": "https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf",
+      "prerequisites": [
+        "c-18"
+      ]
+    },
+    {
+      "id": "c-20",
+      "quizTarget": "Increase the destination to char text[6]. What prints?",
+      "essentialSupport": [
+        {
+          "paragraph": 0,
+          "fact": "snprintf receives a destination, its capacity and a format. With positive capacity it writes at most capacity-1 text chars and a terminator, unless an encoding error occurs."
+        },
+        {
+          "paragraph": 1,
+          "fact": "On success the returned int is the number of chars that would have been written without truncation, excluding the terminator."
+        },
+        {
+          "paragraph": 2,
+          "fact": "A negative result means an encoding error. An explicit conversion written (size_t)needed converts needed to the size type. Check it is nonnegative before such a conversion when comparing with a capacity."
+        },
+        {
+          "paragraph": 3,
+          "fact": "A result at least the capacity means text was cut off. Do not silently treat the shortened text as the full message."
+        }
+      ],
+      "reasoning": "Capacity 6 accommodates five content chars and one terminator; the required text length remains 5.",
+      "source": "https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf",
+      "prerequisites": [
+        "c-19"
+      ]
+    },
+    {
+      "id": "c-21",
+      "quizTarget": "Change input text to \"12x\". What happens with this strict validation?",
+      "essentialSupport": [
+        {
+          "paragraph": 0,
+          "fact": "const char *text points to text that this code will not modify through that pointer. strtol converts the initial number into long and stores a pointer to the first unconverted character through an end-pointer argument. char *end declares such a pointer; &end passes its address so strtol can update it."
+        },
+        {
+          "paragraph": 1,
+          "fact": "end==text means no digits were converted. *end reads the character at that position; requiring it to be '\\0' rejects trailing nonnumeric text in this strict policy."
+        },
+        {
+          "paragraph": 2,
+          "fact": "Set errno=0 before calling strtol. ERANGE reports an out-of-range conversion. errno belongs to errno.h; do not infer failure from a legitimate numeric zero result alone."
+        },
+        {
+          "paragraph": 3,
+          "fact": "Base 10 requests decimal. A cast to int would still need a separate int-range check; this program keeps the long result."
+        }
+      ],
+      "reasoning": "The conversion stops at x, and the complete-input check rejects it.",
+      "source": "https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf",
+      "prerequisites": [
+        "c-20"
+      ]
+    },
+    {
+      "id": "c-22",
+      "quizTarget": "Change the call argument from 3 to 4. What prints?",
+      "essentialSupport": [
+        {
+          "paragraph": 0,
+          "fact": "int twice(int value); is a prototype: it states the return and parameter types before the definition appears."
+        },
+        {
+          "paragraph": 1,
+          "fact": "The later function definition supplies a body with the same compatible types. A declaration alone does not create executable behavior."
+        },
+        {
+          "paragraph": 2,
+          "fact": "In C17, f(void) explicitly means no parameters; f() is not the same complete prototype. This course uses explicit parameter lists."
+        },
+        {
+          "paragraph": 3,
+          "fact": "Each call supplies a value for the parameter. A return statement sends the computed result back to the caller."
+        }
+      ],
+      "reasoning": "The same function body runs with the changed argument.",
+      "source": "https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf",
+      "prerequisites": [
+        "c-21"
+      ]
+    },
+    {
+      "id": "c-23",
+      "quizTarget": "Replace *p=9 with *p=5, leaving the print unchanged. What prints?",
+      "essentialSupport": [
+        {
+          "paragraph": 0,
+          "fact": "&score produces a pointer to score. int *p declares a pointer to int; it does not create a second score object."
+        },
+        {
+          "paragraph": 1,
+          "fact": "*p designates the int object that p points to. Assigning *p=9 changes that object."
+        },
+        {
+          "paragraph": 2,
+          "fact": "Dereferencing requires a pointer to a live suitably typed object. Do not dereference an uninitialized or null pointer."
+        },
+        {
+          "paragraph": 3,
+          "fact": "Reading score after writing through p observes the same changed object."
+        }
+      ],
+      "reasoning": "The pointer designates the original object, so the mutation is visible through its name.",
+      "source": "https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf",
+      "prerequisites": [
+        "c-22"
+      ]
+    },
+    {
+      "id": "c-24",
+      "quizTarget": "Replace the function body with int other=7; p=&other; *p=9;. What does the caller print?",
+      "essentialSupport": [
+        {
+          "paragraph": 0,
+          "fact": "A function receives copies of argument values. Assigning its int parameter changes that local copy, not the caller\u2019s int."
+        },
+        {
+          "paragraph": 1,
+          "fact": "Passing &score copies an address value. Assigning through that pointer changes the caller\u2019s object, but reassigning the local pointer would not rebind the caller\u2019s variable."
+        },
+        {
+          "paragraph": 2,
+          "fact": "void set(int *p) returns no value; it is called for its side effect. The caller must supply a valid pointer under this function\u2019s contract."
+        },
+        {
+          "paragraph": 3,
+          "fact": "C still passes a pointer value by value. Shared access to the pointed-to object explains the mutation."
+        }
+      ],
+      "reasoning": "Reassigning the copied pointer changes only its local target; score is not mutated in this version.",
+      "source": "https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf",
+      "prerequisites": [
+        "c-23"
+      ]
+    }
+  ],
+  "memory-and-data": [
+    {
+      "id": "c-25",
+      "quizTarget": "If p starts at a + 2 instead, what is printed?",
+      "essentialSupport": [
+        {
+          "paragraph": 0,
+          "fact": "For an array a, a + 1 points to its second element, not its second byte. Dereference only an actual element. You may form a pointer one past the array for comparison, but must not dereference it."
+        },
+        {
+          "paragraph": 1,
+          "fact": "Subtract pointers only within the same array (including its one-past position). The result has type ptrdiff_t from <stddef.h>; printf uses %td for it. Array positions and distances must remain representable. In C17, reaching the closing brace of main returns status 0; this special rule does not supply a return value for ordinary non-void functions."
+        }
+      ],
+      "reasoning": "a + 2 designates the third element, whose value is 9; pointer subtraction counts two elements, not bytes.",
+      "source": "https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf",
+      "prerequisites": [
+        "c-24"
+      ]
+    },
+    {
+      "id": "c-26",
+      "quizTarget": "If the second counter() call is removed, what does *first print?",
+      "essentialSupport": [
+        {
+          "paragraph": 0,
+          "fact": "A block-local ordinary object has automatic storage duration: its lifetime ends when execution leaves its block. Returning its address would not extend that lifetime. Do not read through a dangling pointer."
+        },
+        {
+          "paragraph": 1,
+          "fact": "A block-local static object exists for the entire program and is initialized once. Returning its address is valid, but callers share that same object. ++n adds one and stores it; this single-threaded example keeps the count small."
+        }
+      ],
+      "reasoning": "Both calls access the same static n. With only the first call, it has been incremented once from zero.",
+      "source": "https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf",
+      "prerequisites": [
+        "c-25"
+      ]
+    },
+    {
+      "id": "c-27",
+      "quizTarget": "If n = 8 becomes *p = 8, what happens?",
+      "essentialSupport": [
+        {
+          "paragraph": 0,
+          "fact": "const int *p allows reading the pointed-to int but not assigning through *p. It does not freeze a separate non-const object against all other access paths."
+        },
+        {
+          "paragraph": 1,
+          "fact": "int * const p instead prevents changing the pointer itself, while permitting writes to its non-const target. Combining both const positions restricts both operations. Never cast away const to modify an object actually defined const."
+        }
+      ],
+      "reasoning": "The const qualifier on the pointed-to int prevents assignment through *p even though n itself remains modifiable through n.",
+      "source": "https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf",
+      "prerequisites": [
+        "c-26"
+      ]
+    },
+    {
+      "id": "c-28",
+      "quizTarget": "If measure(&n) becomes measure(NULL), what prints?",
+      "essentialSupport": [
+        {
+          "paragraph": 0,
+          "fact": "NULL is a null pointer constant provided by standard headers. A null pointer points to no object; comparing it is allowed, dereferencing it is not."
+        },
+        {
+          "paragraph": 1,
+          "fact": "A function may accept NULL for an optional output only if its documented contract allows it. Here result receives the number only when non-null; the return value independently reports success. A caller-provided output must also point to a live writable int."
+        }
+      ],
+      "reasoning": "The null check skips the output assignment, leaving n at zero; the function still returns its independent success status of one.",
+      "source": "https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf",
+      "prerequisites": [
+        "c-27"
+      ]
+    },
+    {
+      "id": "c-29",
+      "quizTarget": "If n is 11 instead, what happens?",
+      "essentialSupport": [
+        {
+          "paragraph": 0,
+          "fact": "Recursion means a function calls itself. A base case returns without another call, and each recursive call must move toward it."
+        },
+        {
+          "paragraph": 1,
+          "fact": "This sum accepts unsigned inputs only through 10. The caller rejects larger inputs before recursion, bounding both depth and arithmetic. This is not a claim that C guarantees unlimited call-stack space."
+        }
+      ],
+      "reasoning": "The caller checks the maximum before calling sum, so input eleven never enters the recursion.",
+      "source": "https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf",
+      "prerequisites": [
+        "c-28"
+      ]
+    },
+    {
+      "id": "c-30",
+      "quizTarget": "If p points to a instead of b, what prints?",
+      "essentialSupport": [
+        {
+          "paragraph": 0,
+          "fact": "A struct holds named members. struct Point names the type; p.x accesses the member of an object. A designated initializer such as .x = 2 explicitly names the field being initialized."
+        },
+        {
+          "paragraph": 1,
+          "fact": "ptr->x means (*ptr).x. Assigning one structure to another copies its member values; it does not make the two structures aliases. Pointer-valued members, if present, would copy pointers rather than deep-copy their targets."
+        }
+      ],
+      "reasoning": "b already contains its own copied x value of two. Redirecting p to a makes the later member assignment affect a instead.",
+      "source": "https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf",
+      "prerequisites": [
+        "c-29"
+      ]
+    },
+    {
+      "id": "c-31",
+      "quizTarget": "If end.value is initialized to 12, what prints?",
+      "essentialSupport": [
+        {
+          "paragraph": 0,
+          "fact": "typedef gives an existing type another name. typedef struct Node Node allows Node where you would otherwise write struct Node. It does not allocate a node."
+        },
+        {
+          "paragraph": 1,
+          "fact": "Within the structure definition, struct Node *next refers to a node without embedding a whole node. A structure cannot directly contain a full instance of itself: that would require an unbounded size. NULL can mark the end of this short chain."
+        }
+      ],
+      "reasoning": "start.next points to end, so following that link reads end.value after its changed initialization.",
+      "source": "https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf",
+      "prerequisites": [
+        "c-30"
+      ]
+    },
+    {
+      "id": "c-32",
+      "quizTarget": "If s starts as DONE, what prints?",
+      "essentialSupport": [
+        {
+          "paragraph": 0,
+          "fact": "An enum declares named integer constants. Explicit values make the intended representation clear here. This is a C enum, not a C++ scoped enum or a class."
+        },
+        {
+          "paragraph": 1,
+          "fact": "C does not automatically enforce a state machine. The function below only moves READY to DONE; other inputs remain unchanged. A switch or an if still supplies the rules."
+        }
+      ],
+      "reasoning": "The condition is false for DONE, so finish returns the supplied DONE unchanged; comparison with DONE is true.",
+      "source": "https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf",
+      "prerequisites": [
+        "c-31"
+      ]
+    },
+    {
+      "id": "c-33",
+      "quizTarget": "If initialization consistently switches to FRACTION and .value.fraction = 2.5, what prints?",
+      "essentialSupport": [
+        {
+          "paragraph": 0,
+          "fact": "A union overlays its members in shared storage; it does not hold independent copies of every member. This lesson reads only the member most recently stored."
+        },
+        {
+          "paragraph": 1,
+          "fact": "An enclosing enum tag tells our code whether the union contains an int or a double. The language does not maintain that relationship automatically. Update the tag together with its matching member; never pretend a mismatched read is a numeric conversion."
+        }
+      ],
+      "reasoning": "The changed tag selects the fraction branch, and the consistently initialized double prints with one digit after the decimal point.",
+      "source": "https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf",
+      "prerequisites": [
+        "c-32"
+      ]
+    },
+    {
+      "id": "c-34",
+      "quizTarget": "If the stored value becomes 19, what prints on successful allocation?",
+      "essentialSupport": [
+        {
+          "paragraph": 0,
+          "fact": "malloc from <stdlib.h> requests a number of bytes and returns NULL on failure. In C, its void * result converts to an object pointer without a cast. sizeof *p requests the size of the pointed-to type without reading an uninitialized value."
+        },
+        {
+          "paragraph": 1,
+          "fact": "Successful malloc storage is not initialized. Store a value before reading it. free releases an allocation exactly once; do not use its former contents afterward. Allocation failure here returns a failure status, not the successful output."
+        }
+      ],
+      "reasoning": "The successful allocation is explicitly assigned nineteen before reading; malloc itself does not choose that value.",
+      "source": "https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf",
+      "prerequisites": [
+        "c-33"
+      ]
+    },
+    {
+      "id": "c-35",
+      "quizTarget": "If the assignment targets a[0] instead, what prints on success?",
+      "essentialSupport": [
+        {
+          "paragraph": 0,
+          "fact": "calloc(count, element_size) allocates an array and initializes all bits of its storage to zero. Check NULL before use. For int elements this yields integer zero."
+        },
+        {
+          "paragraph": 1,
+          "fact": "All-bits-zero is not a portable promise of a null pointer representation or every floating representation. Here only int elements are read, and only indices below count are used."
+        }
+      ],
+      "reasoning": "calloc gives both int elements zero initially. Writing the first element leaves the second at zero.",
+      "source": "https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf",
+      "prerequisites": [
+        "c-34"
+      ]
+    },
+    {
+      "id": "c-36",
+      "quizTarget": "If the original a[0] is initialized to 6, what prints after successful growth?",
+      "essentialSupport": [
+        {
+          "paragraph": 0,
+          "fact": "realloc can resize an existing allocation. For the positive size used here, failure returns NULL and leaves the original allocation valid. Success may move it and ends the old allocation; use the returned pointer afterward, not old aliases."
+        },
+        {
+          "paragraph": 1,
+          "fact": "Store the result in a temporary pointer. On failure free the original before returning. Preserved old elements retain their values; newly added bytes need initialization. Avoid zero-size realloc in this pattern."
+        }
+      ],
+      "reasoning": "Successful realloc preserves the original first element, and the second element receives nine after growth.",
+      "source": "https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf",
+      "prerequisites": [
+        "c-35"
+      ]
+    },
+    {
+      "id": "c-37",
+      "quizTarget": "If release(&p) is called a second time before printing, what happens?",
+      "essentialSupport": [
+        {
+          "paragraph": 0,
+          "fact": "An owning pointer is responsible for eventually freeing an allocation. C does not enforce this responsibility. A borrowed pointer may access a live allocation but must not free it under this contract."
+        },
+        {
+          "paragraph": 1,
+          "fact": "The release contract requires owner itself to point to a live int * variable; owner must not be NULL. int **owner points to that int * variable. *owner accesses that pointer variable; free(*owner) releases its allocation, then *owner = NULL clears the caller\u2019s pointer. free(NULL) is allowed, so a second call with this cleared owner is safe. Other aliases are not automatically cleared."
+        }
+      ],
+      "reasoning": "The first release stores NULL in the caller pointer. The second call therefore passes NULL to free rather than passing the old allocation again.",
+      "source": "https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf",
+      "prerequisites": [
+        "c-36"
+      ]
+    },
+    {
+      "id": "c-38",
+      "quizTarget": "If count is zero, what happens?",
+      "essentialSupport": [
+        {
+          "paragraph": 0,
+          "fact": "size_t is an unsigned size type. Multiplying count by element size can wrap to a smaller value. SIZE_MAX from <stdint.h> is its maximum. For nonzero element size, count > SIZE_MAX / element_size detects an unrepresentable product before multiplication."
+        },
+        {
+          "paragraph": 1,
+          "fact": "This example also rejects zero count as an application policy. A representable byte size is not proof that memory is available; allocation still needs a NULL check."
+        }
+      ],
+      "reasoning": "The zero-count branch returns before either multiplication or malloc; this is the chosen application policy.",
+      "source": "https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf",
+      "prerequisites": [
+        "c-37"
+      ]
+    },
+    {
+      "id": "c-39",
+      "quizTarget": "If the second appended value is 9 instead of 7, what prints on success?",
+      "essentialSupport": [
+        {
+          "paragraph": 0,
+          "fact": "A dynamic array tracks data, length, and capacity. Only indices below length hold initialized elements in this example; capacity describes allocated slots. The invariant is length <= capacity."
+        },
+        {
+          "paragraph": 1,
+          "fact": "When full, reserve a larger allocation before writing. This deliberately bounded array grows from one to two slots only, rejecting further appends. Return status tells the caller whether append succeeded; do not increase length on failure. length++ uses the old index, then increments length."
+        }
+      ],
+      "reasoning": "Both appends succeed and increase length once each. The changed second value occupies index one; capacity growth does not add logical elements.",
+      "source": "https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf",
+      "prerequisites": [
+        "c-38"
+      ]
+    },
+    {
+      "id": "c-40",
+      "quizTarget": "If b.value is initialized to 11, what prints before cleanup?",
+      "essentialSupport": [
+        {
+          "paragraph": 0,
+          "fact": "Each linked node holds a value and a pointer to the next node. The head is the first node; NULL ends the chain. Unlike an array, successive nodes need not occupy adjacent storage."
+        },
+        {
+          "paragraph": 1,
+          "fact": "Read the next pointer while the current node is still alive, then free the current node and advance. Reading current->next after freeing current would be invalid. If allocating a later node fails, release the earlier allocation. (struct Node){...} is a compound literal: it creates a structure value used here to initialize a node by assignment."
+        }
+      ],
+      "reasoning": "The next pointer in a leads to b, whose value is eleven. The print occurs while both nodes are alive, before cleanup.",
+      "source": "https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf",
+      "prerequisites": [
+        "c-39"
+      ]
+    },
+    {
+      "id": "c-41",
+      "quizTarget": "If apply receives plus_one instead, what prints?",
+      "essentialSupport": [
+        {
+          "paragraph": 0,
+          "fact": "int (*operation)(int) declares a pointer to a function accepting an int and returning int. The parentheses matter: without them, int *operation(int) would declare a function returning a pointer."
+        },
+        {
+          "paragraph": 1,
+          "fact": "A function name can supply its function pointer. operation(value) calls it. The function-pointer type must match the called function; never cast an incompatible function pointer to bypass the contract. Here both functions are safe for the small input 4."
+        }
+      ],
+      "reasoning": "apply invokes the supplied function with four. plus_one adds one instead of doubling it.",
+      "source": "https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf",
+      "prerequisites": [
+        "c-40"
+      ]
+    },
+    {
+      "id": "c-42",
+      "quizTarget": "If the comparator reverses its signs to (*a < *b) - (*a > *b), what prints?",
+      "essentialSupport": [
+        {
+          "paragraph": 0,
+          "fact": "qsort from <stdlib.h> receives an array address, element count, element byte size, and comparator. The comparator gets const void * addresses of two elements. In C, assigning these to const int * restores the known element type for this int array."
+        },
+        {
+          "paragraph": 1,
+          "fact": "Return negative, zero, or positive for less, equal, or greater. (a > b) - (a < b) produces 1, 0, or -1 without subtracting the possibly extreme values themselves. A comparator must give consistent ordering; qsort does not promise stable ordering among equal elements."
+        }
+      ],
+      "reasoning": "Reversing the signs tells qsort that larger int values come first, producing descending order.",
+      "source": "https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf",
+      "prerequisites": [
+        "c-41"
+      ]
+    }
+  ],
+  "library-and-tooling": [
+    {
+      "id": "c-43",
+      "quizTarget": "If score.c is omitted from this fresh build, what happens?",
+      "essentialSupport": [
+        {
+          "paragraph": 0,
+          "fact": "A header lets callers and the implementation agree on a function prototype. The #ifndef/#define/#endif guard makes repeated inclusion harmless. These preprocessing directives select text before C compilation; the guard is not a runtime if."
+        },
+        {
+          "paragraph": 1,
+          "fact": "Save score.h with the guarded declaration and score.c with its definition below. Each .c file plus included headers forms a translation unit. Compile gcc -std=c17 -Wall -Wextra -Wpedantic -Werror main.c score.c -o app, then run ./app. A declaration alone does not provide the linked function body.\n```c\n#ifndef SCORE_H\n#define SCORE_H\nint score(int value);\n#endif\n\n/* score.c */\n#include \"score.h\"\nint score(int value) { return value * 2; }\n```"
+        }
+      ],
+      "reasoning": "The prototype permits compiling the call, but the linker still needs a definition.",
+      "source": "https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf",
+      "prerequisites": [
+        "c-42"
+      ]
+    },
+    {
+      "id": "c-44",
+      "quizTarget": "If main declares and calls helper instead, can it link to value.c\u2019s static helper?",
+      "essentialSupport": [
+        {
+          "paragraph": 0,
+          "fact": "A file-scope function declared static has internal linkage: code in another translation unit cannot link to that name. This is not C++ class privacy and does not mean a helper runs only once."
+        },
+        {
+          "paragraph": 1,
+          "fact": "value.h declares public_value, which calls a private helper in value.c. Other source files use the public operation rather than relying on the hidden helper.\n```c\n/* value.h */\nint public_value(void);\n/* value.c */\nstatic int helper(void) { return 9; }\nint public_value(void) { return helper(); }\n```"
+        }
+      ],
+      "reasoning": "The external declaration in main cannot expose the separate internal-linkage definition.",
+      "source": "https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf",
+      "prerequisites": [
+        "c-43"
+      ]
+    },
+    {
+      "id": "c-45",
+      "quizTarget": "If the macro becomes x * x without parentheses, what prints for 2 + 1?",
+      "essentialSupport": [
+        {
+          "paragraph": 0,
+          "fact": "A function-like macro is expanded before compilation; it is not a function call. Parenthesize each parameter and the whole expression to preserve precedence when substituting compound arguments."
+        },
+        {
+          "paragraph": 1,
+          "fact": "SQUARE uses x twice. Passing i++ would introduce unsequenced modifications and undefined behavior; do not run that experiment. A real function evaluates its argument once. This safe example uses only the expression 2 + 1."
+        }
+      ],
+      "reasoning": "Normal operator precedence makes multiplication bind first; this particular changed expression has no side effects.",
+      "source": "https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf",
+      "prerequisites": [
+        "c-44"
+      ]
+    },
+    {
+      "id": "c-46",
+      "quizTarget": "If VERBOSE is defined as 1, which text prints?",
+      "essentialSupport": [
+        {
+          "paragraph": 0,
+          "fact": "#if examines integer preprocessing expressions. A -D flag can define a configuration macro; #ifndef supplies a default only when the build did not define it. Code in an excluded branch is not compiled as C."
+        },
+        {
+          "paragraph": 1,
+          "fact": "Use documented feature macros to check optional facilities rather than guessing from an operating-system name. This tiny configuration chooses text; it is not proof that every C23 feature is implemented. The course uses C17 on GCC14.2."
+        }
+      ],
+      "reasoning": "Preprocessing retains only the selected macro definition.",
+      "source": "https://gcc.gnu.org/onlinedocs/gcc-14.2.0/gcc/C-Dialect-Options.html",
+      "prerequisites": [
+        "c-45"
+      ]
+    },
+    {
+      "id": "c-47",
+      "quizTarget": "What prints when 3 changes to 3.0?",
+      "essentialSupport": [
+        {
+          "paragraph": 0,
+          "fact": "C11 _Generic chooses an associated expression based on the controlling expression\u2019s compatible type. Here int and double select different string literals; default covers other types. This is not function overloading or dynamic object dispatch."
+        },
+        {
+          "paragraph": 1,
+          "fact": "_Generic does not execute its controlling expression. The selected result expression is evaluated normally. All associations still have to satisfy language constraints, so this is not a way to hide arbitrary ill-formed code."
+        }
+      ],
+      "reasoning": "3.0 is a double literal; type, not numeric equality, selects the association.",
+      "source": "https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf",
+      "prerequisites": [
+        "c-46"
+      ]
+    },
+    {
+      "id": "c-48",
+      "quizTarget": "If the filename is inside a nonexistent directory in this isolated fixture, what happens?",
+      "essentialSupport": [
+        {
+          "paragraph": 0,
+          "fact": "fopen returns a FILE pointer on success and a null pointer on failure. Check it before writing. Mode w creates or truncates a text file, so run this fixture only in a disposable directory: it replaces lesson.txt."
+        },
+        {
+          "paragraph": 1,
+          "fact": "fputs can report EOF on failure; fclose can report a final flush failure. Once fclose has been called, do not reuse the stream pointer, even if closing reports failure. C does not automatically close a local FILE pointer when a block ends."
+        }
+      ],
+      "reasoning": "fopen cannot create missing parent directories; the guarded failure path returns without dereferencing a null stream.",
+      "source": "https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf",
+      "prerequisites": [
+        "c-47"
+      ]
+    },
+    {
+      "id": "c-49",
+      "quizTarget": "For empty input, what count prints?",
+      "essentialSupport": [
+        {
+          "paragraph": 0,
+          "fact": "fgetc returns an unsigned char converted to int, or the distinct EOF sentinel. Storing that result directly into char can lose the ability to distinguish all byte values from EOF. getchar has the same result convention for stdin."
+        },
+        {
+          "paragraph": 1,
+          "fact": "After the loop, ferror reports a stream error; feof identifies end-of-file. For the worked output, supply exactly the three input characters abc with no trailing newline (for example, printf abc | ./app on the local shell). This fixture counts input characters, including any newline supplied. Empty input should finish normally with count zero, not attempt to process an extra character."
+        }
+      ],
+      "reasoning": "The loop body runs only for a character result; EOF is tested first.",
+      "source": "https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf",
+      "prerequisites": [
+        "c-48"
+      ]
+    },
+    {
+      "id": "c-50",
+      "quizTarget": "If the two encoded bytes are swapped to {2, 1}, what value is decoded?",
+      "essentialSupport": [
+        {
+          "paragraph": 0,
+          "fact": "Writing sizeof(struct) raw bytes exposes padding, native byte order and representation choices. A portable format specifies each field\u2019s encoding instead. This example decodes two eight-bit octets in high-byte-first order; it requires CHAR_BIT == 8 explicitly. _Static_assert checks this condition during compilation and rejects an unsupported byte width."
+        },
+        {
+          "paragraph": 1,
+          "fact": "unsigned long is guaranteed enough range for this two-octet value. Converting the high octet before shifting avoids signed-int shift overflow on a narrow-int implementation. The bitwise OR combines nonoverlapping fields; it does not perform logical Boolean OR."
+        }
+      ],
+      "reasoning": "The explicit format treats the first octet as units of 256: 2*256+1=513.",
+      "source": "https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf",
+      "prerequisites": [
+        "c-49"
+      ]
+    },
+    {
+      "id": "c-51",
+      "quizTarget": "If text becomes \"12\", what prints?",
+      "essentialSupport": [
+        {
+          "paragraph": 0,
+          "fact": "errno is an error indicator, not a success Boolean. A successful library call need not clear an earlier value. Set it to zero immediately before a conversion whose contract uses errno, then inspect it together with the return value and end pointer."
+        },
+        {
+          "paragraph": 1,
+          "fact": "strtol reports range failure using ERANGE. A partial parse such as 12x need not set errno; the end pointer reveals the trailing x. The code checks that at least one character was consumed and that no trailing characters remain before accepting a whole-number setting."
+        }
+      ],
+      "reasoning": "The complete valid parse leaves no trailing characters and does not signal range failure.",
+      "source": "https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf",
+      "prerequisites": [
+        "c-50"
+      ]
+    },
+    {
+      "id": "c-52",
+      "quizTarget": "With sufficient memory, what status does prepare(0) return?",
+      "essentialSupport": [
+        {
+          "paragraph": 0,
+          "fact": "C has no automatic destructor for a local heap pointer. This function initializes its status to failure, then routes a later validation failure through one cleanup label. free(NULL) is harmless, but free on an already freed pointer is not."
+        },
+        {
+          "paragraph": 1,
+          "fact": "goto cleanup transfers control to the labeled statement in the same function. It is not an exception or a jump into another function. The successful path sets status before falling through the same free; the failed path keeps the failure status."
+        }
+      ],
+      "reasoning": "The failure branch skips setting status to zero, but still runs free exactly once.",
+      "source": "https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf",
+      "prerequisites": [
+        "c-51"
+      ]
+    },
+    {
+      "id": "c-53",
+      "quizTarget": "If NDEBUG is defined, does this negative input become accepted?",
+      "essentialSupport": [
+        {
+          "paragraph": 0,
+          "fact": "assert from assert.h checks an expression unless NDEBUG was defined when the header was processed. Never put required input validation or necessary side effects only inside assert: a build may remove it."
+        },
+        {
+          "paragraph": 1,
+          "fact": "This function rejects negative minutes with an ordinary if, independent of assertion mode. The assertion documents an internal condition after validation. The changed NDEBUG build must still reject the same bad input."
+        }
+      ],
+      "reasoning": "Only the assertion macro is disabled; required validation remains normal C control flow.",
+      "source": "https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf",
+      "prerequisites": [
+        "c-52"
+      ]
+    },
+    {
+      "id": "c-54",
+      "quizTarget": "If the upper comparison changes to n > 11, what happens?",
+      "essentialSupport": [
+        {
+          "paragraph": 0,
+          "fact": "A regression test records behavior that should remain correct after edits. clamp caps values to 0 through 10. Test below, at, inside and above the range rather than only one ordinary input."
+        },
+        {
+          "paragraph": 1,
+          "fact": "These explicit comparisons return a nonzero process status when any expectation fails. puts announces success only after all checks pass. The changed fixture intentionally weakens the upper cap to expose a boundary regression without running undefined behavior."
+        }
+      ],
+      "reasoning": "The changed function returns 11 for input 11, violating the recorded upper-bound expectation.",
+      "source": "https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf",
+      "prerequisites": [
+        "c-53"
+      ]
+    },
+    {
+      "id": "c-55",
+      "quizTarget": "If an unused local variable is added under this warning policy, what happens?",
+      "essentialSupport": [
+        {
+          "paragraph": 0,
+          "fact": "Build with -std=c17 -Wall -Wextra -Wpedantic -Werror. These flags enable useful diagnostics and promote warnings to build failures. An unused local is legal C but rejected by this chosen warning policy."
+        },
+        {
+          "paragraph": 1,
+          "fact": "GCC options such as -fsanitize=address,undefined add runtime checks for classes of mistakes. A clean run covers only executed paths; it does not prove memory safety. Run the safe example, not an intentionally undefined access. Sanitizer availability depends on the environment."
+        }
+      ],
+      "reasoning": "The diagnostic is a configured build-policy failure, not an undefined-behavior execution.",
+      "source": "https://gcc.gnu.org/onlinedocs/gcc-14.2.0/gcc/Instrumentation-Options.html",
+      "prerequisites": [
+        "c-54"
+      ]
+    },
+    {
+      "id": "c-56",
+      "quizTarget": "What happens if the final link omits the score implementation?",
+      "essentialSupport": [
+        {
+          "paragraph": 0,
+          "fact": "A reproducible build specifies source files, headers, compiler version, language mode and flags. The command below lists both implementation files; an IDE having remembered an old object file is not a reliable build specification."
+        },
+        {
+          "paragraph": 1,
+          "fact": "With score.h and score.c from the visible definitions below, compile gcc -std=c17 -Wall -Wextra -Wpedantic -Werror -c main.c score.c, then link gcc main.o score.o -o app. -c stops before linking. Omitting score.o at link time leaves the definition unresolved. A real incremental build must also rebuild affected objects when included headers change.\n```c\n#ifndef SCORE_H\n#define SCORE_H\nint score(int value);\n#endif\n\n/* score.c */\n#include \"score.h\"\nint score(int value) { return value * 2; }\n```"
+        }
+      ],
+      "reasoning": "Separate compilation creates object files; linking must still combine all required definitions.",
+      "source": "https://gcc.gnu.org/onlinedocs/gcc-14.2.0/gcc/Overall-Options.html",
+      "prerequisites": [
+        "c-55"
+      ]
+    },
+    {
+      "id": "c-57",
+      "quizTarget": "With no user argument, what happens?",
+      "essentialSupport": [
+        {
+          "paragraph": 0,
+          "fact": "In the hosted main form, argc gives the argument count and argv points to strings. argv[argc] is a null pointer, not another argument string. This program requires exactly one user argument. Launch ./app C for the worked output topic=C; this gives argc == 2."
+        },
+        {
+          "paragraph": 1,
+          "fact": "Read argv[1] only after checking the count. Shell quoting decides which text reaches the program as one argument; C itself receives the resulting strings. Numeric options still need explicit parsing and validation, as in the earlier strtol lesson."
+        }
+      ],
+      "reasoning": "The argument-count check prevents a missing argument from being treated as a string.",
+      "source": "https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf",
+      "prerequisites": [
+        "c-56"
+      ]
+    },
+    {
+      "id": "c-58",
+      "quizTarget": "If compute writes 11 instead, what is printed after a successful join?",
+      "essentialSupport": [
+        {
+          "paragraph": 0,
+          "fact": "C11 introduced threads.h; a C17 implementation may declare it unavailable using __STDC_NO_THREADS__. These fixtures require the facility and were designed for the installed GCC/runtime combination, not every C implementation. On this toolchain use -pthread when compiling and linking."
+        },
+        {
+          "paragraph": 1,
+          "fact": "thrd_create starts a function with signature int worker(void *). The argument points to main\u2019s still-live int; converting void * back to int * recovers its type. thrd_join waits for termination and provides synchronization before main reads the result. It also writes the worker\u2019s return status. If join fails, abort from stdlib.h terminates the program abnormally rather than continuing with a worker whose lifetime is uncertain."
+        }
+      ],
+      "reasoning": "The shared int remains alive through join, and the synchronized read observes the worker write.",
+      "source": "https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf",
+      "prerequisites": [
+        "c-57"
+      ]
+    },
+    {
+      "id": "c-59",
+      "quizTarget": "If both loop bounds change from 1000 to 250, what is the final count?",
+      "essentialSupport": [
+        {
+          "paragraph": 0,
+          "fact": "The file-scope static int count has static storage duration and is initialized to zero even without a written initializer. count++ reads and writes shared state; a mutex must protect the entire operation. Both main and the worker call increment using the same mtx_t. mtx_plain requests an ordinary nonrecursive mutex. A failed lock must not be ignored before touching shared state."
+        },
+        {
+          "paragraph": 1,
+          "fact": "Initialize the mutex before starting work. Join the worker before reading the final count and destroying the mutex. The cast (void)unused explicitly discards the required callback argument. Checked failures abort rather than continuing unprotected; failed thread creation destroys the initialized mutex."
+        }
+      ],
+      "reasoning": "All 500 increments use the shared mutex, and observation happens after the worker finishes.",
+      "source": "https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf",
+      "prerequisites": [
+        "c-58"
+      ]
+    },
+    {
+      "id": "c-60",
+      "quizTarget": "If the counter starts at 10, what prints after joining?",
+      "essentialSupport": [
+        {
+          "paragraph": 0,
+          "fact": "atomic_int and atomic_fetch_add come from optional C atomics. atomic_init initializes the counter before any concurrent use. Each fetch-add is one atomic read-modify-write and returns the previous value, which this example intentionally ignores."
+        },
+        {
+          "paragraph": 1,
+          "fact": "The non-explicit atomic operations here use memory_order_seq_cst. This gives the default strong ordering; it is not a promise that operations are lock-free or fast. Atomics do not automatically turn a sequence of separate operations into a transaction. Do not replace them with volatile or introduce relaxed ordering without a separate proof."
+        }
+      ],
+      "reasoning": "The 1000 atomic increments add to the initial ten; join completes the worker before the read.",
+      "source": "https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf",
+      "prerequisites": [
+        "c-59"
+      ]
+    },
+    {
+      "id": "c-61",
+      "quizTarget": "In this single-threaded example, what changes if volatile is removed?",
+      "essentialSupport": [
+        {
+          "paragraph": 0,
+          "fact": "volatile affects how accesses to a qualified object are treated by the implementation. It does not make count++ atomic, establish inter-thread happens-before, or replace a mutex. Unsynchronized conflicting accesses by threads can cause undefined behavior even when the object is volatile."
+        },
+        {
+          "paragraph": 1,
+          "fact": "This example is deliberately single-threaded. Replacing volatile int by int keeps its observable printed value here. It is not a demonstration that volatile and ordinary objects are identical for device or signal use; those domains need their own platform and language rules. No racy multithreaded variant is run."
+        }
+      ],
+      "reasoning": "The simple sequential computation does not need synchronization; volatile would not supply it for competing threads.",
+      "source": "https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf",
+      "prerequisites": [
+        "c-60"
+      ]
+    },
+    {
+      "id": "c-62",
+      "quizTarget": "If the first request is 0 minutes, what are the three results and final count?",
+      "essentialSupport": [
+        {
+          "paragraph": 0,
+          "fact": "This in-memory Store has two slots and used counts initialized entries. The constructor-like initializer {{0}, 0} zeroes the array and count. C does not enforce a private constructor; callers must start with a valid store and use the checked operation rather than corrupting fields directly."
+        },
+        {
+          "paragraph": 1,
+          "fact": "add_session accepts minutes 1 through 60 only while used is below capacity. On rejection it changes neither the array nor the count. It checks capacity before indexing, preventing out-of-bounds writes. The example assumes a valid non-null store pointer and is not a file database, concurrent service or complete application."
+        }
+      ],
+      "reasoning": "The invalid first request leaves the store unchanged, so both later valid requests fit.",
+      "source": "https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf",
+      "prerequisites": [
+        "c-61"
+      ]
+    }
+  ]
+}
