@@ -1,0 +1,40 @@
+[
+  {
+    "lessonId": "c-49",
+    "paragraph": 1,
+    "before": "After the loop, ferror reports a stream error; feof identifies end-of-file. For the worked output, supply exactly the three input characters abc with no trailing newline (for example, printf abc | ./app on the local shell). This fixture counts input characters, including any newline supplied. Empty input should finish normally with count zero, not attempt to process an extra character.\n\nfeof(stream) returns nonzero when that stream\u2019s end-of-file indicator is set. Supply empty input to this separate example: first attempt a read, then inspect its outcome; do not use feof as a prediction before reading:\n```c\nint ch = getchar();\nif (ch == EOF && !ferror(stdin)) {\n    printf(\"%d\\n\", feof(stdin) != 0);\n}\n```\nOutput: 1.",
+    "after": "After the loop, ferror reports a stream error; feof identifies end-of-file. For the worked output, supply exactly the three input characters abc with no trailing newline (for example, printf abc | ./app on the local shell). This fixture counts input characters, including any newline supplied. Empty input should finish normally with count zero, not attempt to process an extra character.\n\nfeof(stream) returns nonzero when that stream\u2019s end-of-file indicator is set. Supply empty input to this separate complete example: first attempt a read, then inspect its outcome; do not use feof as a prediction before reading. fgetc(stdin) reads one character from standard input, just as getchar() does; its stream argument selects where to read:\n```c\n#include <stdio.h>\nint main(void) {\n    int ch = fgetc(stdin);\n    if (ch == EOF && !ferror(stdin)) {\n        printf(\"%d\\n\", feof(stdin) != 0);\n    }\n    return 0;\n}\n```\nOutput: 1.",
+    "reason": "fgetc is explicitly taught in paragraph 0 but no existing worked code calls it. Reuse the EOF companion rather than introduce a new exercise; make that fragment complete.",
+    "targets": [
+      "fgetc",
+      "feof"
+    ],
+    "validation": [
+      {
+        "status": "pass",
+        "method": "Fresh c17 compile and isolated execution",
+        "receipt": "/workspace/shared/cq-reconstruction/c-family-runtime/c-49/result.json",
+        "expectedOutput": "1\n"
+      }
+    ]
+  },
+  {
+    "lessonId": "cpp-63",
+    "paragraph": 2,
+    "before": "For real elapsed timing, subtract two steady_clock::now() time points and convert the resulting duration. A monotonic clock is suited to elapsed time, but workload timings still vary; this deterministic example converts a supplied duration instead of promising a benchmark result.",
+    "after": "For real elapsed timing, subtract two steady_clock::now() time points and convert the resulting duration. A monotonic clock is suited to elapsed time, but workload timings still vary; this deterministic example converts a supplied duration instead of promising a benchmark result.\n\nsteady_clock::now() takes no arguments and returns a time point from that clock. This separate complete example takes two readings and subtracts the earlier one from the later one:\n```cpp\n#include <chrono>\n#include <iostream>\nint main() {\n    auto start = std::chrono::steady_clock::now();\n    auto finish = std::chrono::steady_clock::now();\n    auto elapsed = finish - start;\n    std::cout << std::boolalpha\n              << (elapsed >= std::chrono::steady_clock::duration::zero())\n              << \"\\n\";\n}\n```\nOutput: true. duration::zero() supplies a zero duration for comparison. The readings may be equal, so zero elapsed time is allowed; no exact duration or speed is promised.",
+    "reason": "Existing prose actively instructs how to use steady_clock::now but only shows a supplied-duration conversion. Add a clock-call example with stable nonnegative assertion, not a fabricated benchmark.",
+    "targets": [
+      "std::chrono::steady_clock::now",
+      "std::chrono::steady_clock::duration::zero"
+    ],
+    "validation": [
+      {
+        "status": "pass",
+        "method": "Fresh c++23 compile and isolated execution",
+        "receipt": "/workspace/shared/cq-reconstruction/c-family-runtime/cpp-63/result.json",
+        "expectedOutput": "true\n"
+      }
+    ]
+  }
+]

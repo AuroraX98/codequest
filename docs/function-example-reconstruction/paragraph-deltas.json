@@ -1,0 +1,594 @@
+[
+  {
+    "lessonId": "react-09",
+    "paragraph": 6,
+    "before": "The exercise sends custom browser events using new Event(channel) and window.dispatchEvent. These are local signals, not network messages.",
+    "after": "The exercise sends custom browser events using new Event(channel) and window.dispatchEvent. These are local signals, not network messages. Creating an event with new Event(channel) produces an event object whose type is the supplied channel string. Calling window.dispatchEvent(event) sends that object to matching window listeners, running their handlers before returning. It does not contact a server.\n\nTry this standalone JavaScript example in a browser page:\n```javascript\nfunction receive() { console.log(\"Signal received\"); }\nwindow.addEventListener(\"lesson-ping\", receive);\nconst signal = new Event(\"lesson-ping\");\nconsole.log(window.dispatchEvent(signal));\nwindow.removeEventListener(\"lesson-ping\", receive);\n```\nIt prints Signal received, then true. The matching listener runs during dispatch. A true result means this event was not canceled, not that a network message arrived. Calling removeEventListener uses the same event name and function to remove the listener afterward; a later dispatch will no longer call receive.",
+    "reason": "Event construction and dispatch are named for the exercise without an actual worked dispatch or input/effect/result explanation.",
+    "targets": [
+      "Event constructor",
+      "EventTarget.dispatchEvent",
+      "EventTarget.addEventListener",
+      "EventTarget.removeEventListener"
+    ],
+    "validation": {
+      "provenance": "New reconstruction from retained edits against confirmed baseline517bef2; not recovered original commit bytes.",
+      "status": "PASS fresh exact snippet twice in isolated jsdom; listener cleanup; 12 steps and no generated quiz",
+      "sources": [
+        "https://developer.mozilla.org/en-US/docs/Web/API/Event/Event",
+        "https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/dispatchEvent"
+      ]
+    }
+  },
+  {
+    "lessonId": "c-49",
+    "paragraph": 1,
+    "before": "After the loop, ferror reports a stream error; feof identifies end-of-file. For the worked output, supply exactly the three input characters abc with no trailing newline (for example, printf abc | ./app on the local shell). This fixture counts input characters, including any newline supplied. Empty input should finish normally with count zero, not attempt to process an extra character.\n\nfeof(stream) returns nonzero when that stream’s end-of-file indicator is set. Supply empty input to this separate example: first attempt a read, then inspect its outcome; do not use feof as a prediction before reading:\n```c\nint ch = getchar();\nif (ch == EOF && !ferror(stdin)) {\n    printf(\"%d\\n\", feof(stdin) != 0);\n}\n```\nOutput: 1.",
+    "after": "After the loop, ferror reports a stream error; feof identifies end-of-file. For the worked output, supply exactly the three input characters abc with no trailing newline (for example, printf abc | ./app on the local shell). This fixture counts input characters, including any newline supplied. Empty input should finish normally with count zero, not attempt to process an extra character.\n\nfeof(stream) returns nonzero when that stream’s end-of-file indicator is set. Supply empty input to this separate complete example: first attempt a read, then inspect its outcome; do not use feof as a prediction before reading. fgetc(stdin) reads one character from standard input, just as getchar() does; its stream argument selects where to read:\n```c\n#include <stdio.h>\nint main(void) {\n    int ch = fgetc(stdin);\n    if (ch == EOF && !ferror(stdin)) {\n        printf(\"%d\\n\", feof(stdin) != 0);\n    }\n    return 0;\n}\n```\nOutput: 1.",
+    "reason": "fgetc is explicitly taught in paragraph 0 but no existing worked code calls it. Reuse the EOF companion rather than introduce a new exercise; make that fragment complete.",
+    "targets": [
+      "fgetc",
+      "feof"
+    ],
+    "validation": [
+      {
+        "status": "pass",
+        "method": "Fresh c17 compile and isolated execution",
+        "receipt": "/workspace/shared/cq-reconstruction/c-family-runtime/c-49/result.json",
+        "expectedOutput": "1\n"
+      }
+    ]
+  },
+  {
+    "lessonId": "cpp-63",
+    "paragraph": 2,
+    "before": "For real elapsed timing, subtract two steady_clock::now() time points and convert the resulting duration. A monotonic clock is suited to elapsed time, but workload timings still vary; this deterministic example converts a supplied duration instead of promising a benchmark result.",
+    "after": "For real elapsed timing, subtract two steady_clock::now() time points and convert the resulting duration. A monotonic clock is suited to elapsed time, but workload timings still vary; this deterministic example converts a supplied duration instead of promising a benchmark result.\n\nsteady_clock::now() takes no arguments and returns a time point from that clock. This separate complete example takes two readings and subtracts the earlier one from the later one:\n```cpp\n#include <chrono>\n#include <iostream>\nint main() {\n    auto start = std::chrono::steady_clock::now();\n    auto finish = std::chrono::steady_clock::now();\n    auto elapsed = finish - start;\n    std::cout << std::boolalpha\n              << (elapsed >= std::chrono::steady_clock::duration::zero())\n              << \"\\n\";\n}\n```\nOutput: true. duration::zero() supplies a zero duration for comparison. The readings may be equal, so zero elapsed time is allowed; no exact duration or speed is promised.",
+    "reason": "Existing prose actively instructs how to use steady_clock::now but only shows a supplied-duration conversion. Add a clock-call example with stable nonnegative assertion, not a fabricated benchmark.",
+    "targets": [
+      "std::chrono::steady_clock::now",
+      "std::chrono::steady_clock::duration::zero"
+    ],
+    "validation": [
+      {
+        "status": "pass",
+        "method": "Fresh c++23 compile and isolated execution",
+        "receipt": "/workspace/shared/cq-reconstruction/c-family-runtime/cpp-63/result.json",
+        "expectedOutput": "true\n"
+      }
+    ]
+  },
+  {
+    "lessonId": "html-15",
+    "paragraph": 3,
+    "before": "A button can request opening through a small event handler.\n```html\n<button onclick=\"document.getElementById('tip').showModal()\">Open tip</button>\n<dialog id=\"tip\" aria-labelledby=\"tip-title\">\n  <h2 id=\"tip-title\">Packing tip</h2>\n</dialog>\n```\nThis demonstration uses a local inline handler; larger apps can attach a listener from their script.",
+    "after": "A button can request opening through a small event handler.\n```html\n<button onclick=\"document.getElementById('tip').showModal()\">Open tip</button>\n<dialog id=\"tip\" aria-labelledby=\"tip-title\">\n  <h2 id=\"tip-title\">Packing tip</h2>\n</dialog>\n```\nThis demonstration uses a local inline handler; larger apps can attach a listener from their script.\n\nRead the handler in two steps. document.getElementById('tip') receives the ID text 'tip' and returns the element with that ID, or null when it is missing. Here it finds the dialog below the button. The dot then calls showModal on that dialog. Its empty parentheses supply no arguments. The effect is to open that existing dialog modally; its return value is undefined, not a new dialog. Keep the ID and lookup text identical so the second call has a dialog to use.",
+    "reason": "The worked event handler exists, but its lookup's input/result and the no-argument method chain are unexplained at first use.",
+    "targets": [
+      "document.getElementById",
+      "HTMLDialogElement.showModal"
+    ],
+    "validation": {
+      "kind": "fresh-baseline-DOM-and-syntax-check",
+      "sources": [
+        "https://developer.mozilla.org/en-US/docs/Web/API/Document/getElementById",
+        "https://developer.mozilla.org/en-US/docs/Web/API/HTMLDialogElement/showModal"
+      ],
+      "limits": [
+        "Official-reference review remains historical. Fresh JSDOM parse/lookup and handler syntax checks passed, not native modal focus/inert/top-layer verification."
+      ],
+      "runtimeReceipt": "web-swift-sql-validation.json"
+    }
+  },
+  {
+    "lessonId": "swift-01",
+    "paragraph": 5,
+    "before": "The expression condition ? firstValue : secondValue is a short conditional choice, called the ternary operator because it uses three parts. If the Bool condition is true, use the first value; otherwise use the second. In the trip example, false chooses bus. The question mark here belongs to that choice expression; later you will also see it in optional types, where it has a different job. String(kilometers) converts the number into text explicitly; interpolation can insert it directly. A method such as summary.contains(\"bus\") asks a String whether it contains that text.",
+    "after": "The expression condition ? firstValue : secondValue is a short conditional choice, called the ternary operator because it uses three parts. If the Bool condition is true, use the first value; otherwise use the second. In the trip example, false chooses bus. The question mark here belongs to that choice expression; later you will also see it in optional types, where it has a different job. String(kilometers) converts the number into text explicitly; interpolation can insert it directly. A method such as summary.contains(\"bus\") asks a String whether it contains that text.\n\nThis separate complete example makes those two results visible:\n```swift\nlet distanceText = String(12)\nprint(distanceText)\nprint(distanceText.contains(\"2\"))\n```\nThe output is 12, then true. String receives the integer 12 and creates the text \"12\". contains receives the text to find and returns a Bool: true when it occurs, false otherwise. It does not change distanceText. The quotes around \"2\" make the search input text, not a number.",
+    "reason": "Two taught operations have only inline mentions here; contains lacks a local explicit Boolean-result explanation. A small complete example avoids relying on later lessons.",
+    "targets": [
+      "String.init(_:)",
+      "String.contains"
+    ],
+    "validation": {
+      "kind": "reconstructed-source-reviewed-proposal",
+      "sources": [
+        "https://developer.apple.com/documentation/swift/string",
+        "https://github.com/swiftlang/swift/blob/main/stdlib/public/core/String.swift",
+        "https://developer.apple.com/documentation/swift/stringprotocol?changes=latest_minor"
+      ],
+      "limits": [
+        "No swift/swiftc executable currently available on PATH; this snippet has not been natively executed. Earlier source/reference review is historical."
+      ]
+    }
+  },
+  {
+    "lessonId": "java-52",
+    "paragraph": 1,
+    "before": "StandardCharsets.UTF_8 avoids a platform-dependent assumption. This in-memory example shows the same boundary that file or network code encounters; it does not access a network.",
+    "after": "StandardCharsets.UTF_8 avoids a platform-dependent assumption. This in-memory example shows the same boundary that file or network code encounters; it does not access a network.\n\ngetBytes(StandardCharsets.UTF_8) encodes the receiver String and returns a new byte array. new String(bytes, StandardCharsets.UTF_8) decodes that array into a new String. Neither call rewrites the original text; using the same charset is what recovers é here.",
+    "reason": "Worked calls need an explicit input/result or effect explanation.",
+    "targets": [
+      "String.getBytes",
+      "String(byte[], Charset)"
+    ],
+    "validation": {
+      "officialSources": [
+        "https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html"
+      ],
+      "kind": "source-semantic review; unchanged existing example",
+      "newCode": false,
+      "originalCodePreserved": true
+    }
+  },
+  {
+    "lessonId": "java-55",
+    "paragraph": 1,
+    "before": "Dividing 1.00 by 3 cannot produce a finite exact decimal. This example asks for two fractional digits and HALF_UP rounding, producing 0.33. HALF_UP chooses the nearest value, with exact halfway ties rounded away from zero. A positive scale specifies the number of digits to the right of the decimal point; it is not the same as a significant-digit precision. Currency rules must be chosen for the actual domain.",
+    "after": "Dividing 1.00 by 3 cannot produce a finite exact decimal. This example asks for two fractional digits and HALF_UP rounding, producing 0.33. HALF_UP chooses the nearest value, with exact halfway ties rounded away from zero. A positive scale specifies the number of digits to the right of the decimal point; it is not the same as a significant-digit precision. Currency rules must be chosen for the actual domain.\n\ndivide receives the divisor, the requested scale and the rounding mode, in that order. It returns a new BigDecimal; neither the numerator nor divisor is changed. Here 2 means two digits after the decimal point, not division by two.",
+    "reason": "Worked calls need an explicit input/result or effect explanation.",
+    "targets": [
+      "BigDecimal.divide"
+    ],
+    "validation": {
+      "officialSources": [
+        "https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/math/BigDecimal.html#divide(java.math.BigDecimal,int,java.math.RoundingMode)"
+      ],
+      "kind": "source-semantic review; unchanged existing example",
+      "newCode": false,
+      "originalCodePreserved": true
+    }
+  },
+  {
+    "lessonId": "java-56",
+    "paragraph": 0,
+    "before": "Comparator.comparingInt(String::length) sorts by length. thenComparing adds a natural String order only when lengths tie. It does not replace the first key.",
+    "after": "Comparator.comparingInt(String::length) sorts by length. thenComparing adds a natural String order only when lengths tie. It does not replace the first key.\n\nComparator.naturalOrder() takes no arguments and returns a comparator using the values' own natural order. For these lowercase Strings it orders ant before bee; thenComparing uses that comparator only after the length comparison ties. It does not sort the list by itself.",
+    "reason": "Worked calls need an explicit input/result or effect explanation.",
+    "targets": [
+      "Comparator.naturalOrder"
+    ],
+    "validation": {
+      "officialSources": [
+        "https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/Comparator.html#naturalOrder()"
+      ],
+      "kind": "source-semantic review; unchanged existing example",
+      "newCode": false,
+      "originalCodePreserved": true
+    }
+  },
+  {
+    "lessonId": "java-67",
+    "paragraph": 0,
+    "before": "ExecutorService accepts tasks and manages worker threads. submit of a value-returning lambda produces a Future; get waits and retrieves its result or reports failure via ExecutionException.",
+    "after": "ExecutorService accepts tasks and manages worker threads. submit of a value-returning lambda produces a Future; get waits and retrieves its result or reports failure via ExecutionException.\n\nExecutors.newFixedThreadPool(2) receives the worker limit and returns an ExecutorService that reuses up to two worker threads. Submitted tasks wait in its queue when workers are busy; the number 2 does not mean that the task runs twice.",
+    "reason": "Worked calls need an explicit input/result or effect explanation.",
+    "targets": [
+      "Executors.newFixedThreadPool"
+    ],
+    "validation": {
+      "officialSources": [
+        "https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/concurrent/Executors.html#newFixedThreadPool(int)"
+      ],
+      "kind": "source-semantic review; unchanged existing example",
+      "newCode": false,
+      "originalCodePreserved": true
+    }
+  },
+  {
+    "lessonId": "java-69",
+    "paragraph": 0,
+    "before": "CompletableFuture.thenApply transforms a successful result; it produces a new future. The non-Async variant does not promise a separate thread. thenCompose is appropriate when the transformation itself returns a future and you want to flatten it.",
+    "after": "CompletableFuture.thenApply transforms a successful result; it produces a new future. The non-Async variant does not promise a separate thread. thenCompose is appropriate when the transformation itself returns a future and you want to flatten it.\n\nthenCompose is a further-reading reference here, not an additional operation needed for this lesson's example or check. The worked chain below demonstrates thenApply.",
+    "reason": "Historical approved deferral required marking this related API as further reading; current prose did not make that scope explicit.",
+    "targets": [
+      "CompletableFuture.thenCompose"
+    ],
+    "validation": {
+      "officialSources": [],
+      "kind": "source-semantic review; unchanged existing example",
+      "newCode": false,
+      "originalCodePreserved": true
+    }
+  },
+  {
+    "lessonId": "rust-48",
+    "paragraph": 1,
+    "before": "parse::<u8> may fail for nonnumeric text or values outside u8. map_err converts that error into InvalidMinutes; ? propagates it from parse_minutes. The range 1..=60 includes both endpoints. A separate range check rejects otherwise parsed values outside 1 through 60. This intentionally loses the original parse cause; richer errors could preserve it when useful.",
+    "after": "parse::<u8> may fail for nonnumeric text or values outside u8. map_err converts that error into InvalidMinutes; ? propagates it from parse_minutes. The range 1..=60 includes both endpoints. A separate range check rejects otherwise parsed values outside 1 through 60. This intentionally loses the original parse cause; richer errors could preserve it when useful.\n\nThe range method (1..=60).contains(&n) borrows n and returns true when it lies between both included endpoints. It leaves n unchanged. The ! reverses that result so the if branch rejects values outside the range.",
+    "reason": "Worked calls need an explicit input/result or effect explanation.",
+    "targets": [
+      "RangeInclusive.contains"
+    ],
+    "validation": {
+      "officialSources": [
+        "https://doc.rust-lang.org/std/ops/struct.RangeInclusive.html#method.contains"
+      ],
+      "kind": "source-semantic review; unchanged existing example",
+      "newCode": false,
+      "originalCodePreserved": true
+    }
+  },
+  {
+    "lessonId": "rust-49",
+    "paragraph": 0,
+    "before": "A recursive enum cannot contain another full copy of itself directly with no indirection. Box<List> stores an owning pointer to a heap-allocated List, giving the enum a finite representation. Dropping the box releases its owned allocation and nested values.",
+    "after": "A recursive enum cannot contain another full copy of itself directly with no indirection. Box<List> stores an owning pointer to a heap-allocated List, giving the enum a finite representation. Dropping the box releases its owned allocation and nested values.\n\nBox::new(value) takes ownership of the supplied value and returns a Box owning it. In the worked list, each Box::new wraps the next List node; the box provides the indirection instead of embedding another full List directly.",
+    "reason": "Worked calls need an explicit input/result or effect explanation.",
+    "targets": [
+      "Box::new"
+    ],
+    "validation": {
+      "officialSources": [
+        "https://doc.rust-lang.org/std/boxed/struct.Box.html#method.new"
+      ],
+      "kind": "source-semantic review; unchanged existing example",
+      "newCode": false,
+      "originalCodePreserved": true
+    }
+  },
+  {
+    "lessonId": "rust-50",
+    "paragraph": 0,
+    "before": "Rc<T> is a reference-counted pointer for shared ownership within one thread. Rc::clone adds another strong owner of the same allocation. It does not clone the String itself. Rc::strong_count reports the current strong owner count in this controlled example.",
+    "after": "Rc<T> is a reference-counted pointer for shared ownership within one thread. Rc::clone adds another strong owner of the same allocation. It does not clone the String itself. Rc::strong_count reports the current strong owner count in this controlled example.\n\nRc::new(value) moves the supplied value into a new shared allocation and returns its first strong owner. Calling Rc::new again makes a separate allocation; Rc::clone instead adds an owner of the existing allocation.",
+    "reason": "Worked calls need an explicit input/result or effect explanation.",
+    "targets": [
+      "Rc::new"
+    ],
+    "validation": {
+      "officialSources": [
+        "https://doc.rust-lang.org/std/rc/struct.Rc.html#method.new"
+      ],
+      "kind": "source-semantic review; unchanged existing example",
+      "newCode": false,
+      "originalCodePreserved": true
+    }
+  },
+  {
+    "lessonId": "rust-52",
+    "paragraph": 0,
+    "before": "Arc<T> uses atomic reference counting for shared ownership. Arc can be sent and shared only when its inner type satisfies the required Send and Sync bounds. Arc alone does not make arbitrary inner mutation thread-safe; a Mutex or atomic payload may still be necessary.\n\nArc::clone(&value) receives a borrowed Arc and returns another strong owner of the same allocation. It does not copy the inner integer into a separate allocation.",
+    "after": "Arc<T> uses atomic reference counting for shared ownership. Arc can be sent and shared only when its inner type satisfies the required Send and Sync bounds. Arc alone does not make arbitrary inner mutation thread-safe; a Mutex or atomic payload may still be necessary.\n\nArc::clone(&value) receives a borrowed Arc and returns another strong owner of the same allocation. It does not copy the inner integer into a separate allocation.\n\nArc::new(7) puts the supplied integer in a new shared allocation and returns its first strong owner. A second Arc::new(7) creates a separate allocation even though its integer is equal; Arc::clone shares the existing allocation instead.",
+    "reason": "Worked calls need an explicit input/result or effect explanation.",
+    "targets": [
+      "Arc::new"
+    ],
+    "validation": {
+      "officialSources": [
+        "https://doc.rust-lang.org/std/sync/struct.Arc.html#method.new"
+      ],
+      "kind": "source-semantic review; unchanged existing example",
+      "newCode": false,
+      "originalCodePreserved": true
+    }
+  },
+  {
+    "lessonId": "php-51",
+    "paragraph": 1,
+    "before": "Require an array with an integer minutes field before using it. The null-coalescing lookup handles a missing key. json_encode serializes the accepted structure with the same throw policy. An application range remains a separate check.",
+    "after": "Require an array with an integer minutes field before using it. The null-coalescing lookup handles a missing key. json_encode serializes the accepted structure with the same throw policy. An application range remains a separate check.\n\nis_array($data) returns whether the decoded value is an array. is_int($data[\"minutes\"] ?? null) returns whether the selected value is an integer, not numeric-looking text. These tests return Booleans without converting the data.",
+    "reason": "Worked calls need an explicit input/result or effect explanation.",
+    "targets": [
+      "is_array",
+      "is_int"
+    ],
+    "validation": {
+      "officialSources": [
+        "https://www.php.net/manual/en/function.is-array.php",
+        "https://www.php.net/manual/en/function.is-int.php"
+      ],
+      "kind": "source-semantic review; unchanged existing example",
+      "newCode": false,
+      "originalCodePreserved": true
+    }
+  },
+  {
+    "lessonId": "php-54",
+    "paragraph": 1,
+    "before": "Writing advances the position; rewind returns it to the beginning. try/finally closes the stream on normal and exceptional exits. Check write length, rewind, read and close results; in larger code decide how to preserve an earlier failure if cleanup also fails.",
+    "after": "Writing advances the position; rewind returns it to the beginning. try/finally closes the stream on normal and exceptional exits. Check write length, rewind, read and close results; in larger code decide how to preserve an earlier failure if cleanup also fails.\n\nfwrite($stream, \"read\") receives the open stream and text, then returns the number of bytes written or false on failure. stream_get_contents($stream) returns the remaining text from the current position, or false on failure. fclose($stream) closes that handle and returns a success Boolean; it does not return the saved text.",
+    "reason": "Worked calls need an explicit input/result or effect explanation.",
+    "targets": [
+      "fwrite",
+      "stream_get_contents",
+      "fclose"
+    ],
+    "validation": {
+      "officialSources": [
+        "https://www.php.net/manual/en/function.fwrite.php",
+        "https://www.php.net/manual/en/function.stream-get-contents.php",
+        "https://www.php.net/manual/en/function.fclose.php"
+      ],
+      "kind": "source-semantic review; unchanged existing example",
+      "newCode": false,
+      "originalCodePreserved": true
+    }
+  },
+  {
+    "lessonId": "php-55",
+    "paragraph": 1,
+    "before": "FILTER_VALIDATE_INT checks an integer representation, and options restrict it to 1 through 60. Check false strictly. This requires the filter extension; strict_types does not automatically validate command-line text.",
+    "after": "FILTER_VALIDATE_INT checks an integer representation, and options restrict it to 1 through 60. Check false strictly. This requires the filter extension; strict_types does not automatically validate command-line text.\n\nfilter_var receives the input value, FILTER_VALIDATE_INT and the range options. With these settings it returns the validated integer or false if validation fails. It does not change $argv or merely return a true/false success flag.",
+    "reason": "Worked calls need an explicit input/result or effect explanation.",
+    "targets": [
+      "filter_var"
+    ],
+    "validation": {
+      "officialSources": [
+        "https://www.php.net/manual/en/function.filter-var.php"
+      ],
+      "kind": "source-semantic review; unchanged existing example",
+      "newCode": false,
+      "originalCodePreserved": true
+    }
+  },
+  {
+    "lessonId": "php-56",
+    "paragraph": 1,
+    "before": "The temporary handler converts only E_USER_WARNING to ErrorException and returns false for other severities so normal handling continues. trigger_error creates a synthetic warning. restore_error_handler in finally prevents this example from changing later policy.\n\nErrorException receives message, numeric code, severity, source filename and source line in that order. The code argument is 0 here; the other values come from the handler callback. Construction returns the throwable object, and throw transfers control to catch.",
+    "after": "The temporary handler converts only E_USER_WARNING to ErrorException and returns false for other severities so normal handling continues. trigger_error creates a synthetic warning. restore_error_handler in finally prevents this example from changing later policy.\n\nErrorException receives message, numeric code, severity, source filename and source line in that order. The code argument is 0 here; the other values come from the handler callback. Construction returns the throwable object, and throw transfers control to catch.\n\nset_error_handler receives the callback and installs it for subsequent handled errors; registration does not run the callback immediately. It returns the previous handler, or null if none was set. restore_error_handler takes no arguments and restores the previous handler when the example finishes.",
+    "reason": "Worked calls need an explicit input/result or effect explanation.",
+    "targets": [
+      "set_error_handler",
+      "restore_error_handler"
+    ],
+    "validation": {
+      "officialSources": [
+        "https://www.php.net/manual/en/function.set-error-handler.php",
+        "https://www.php.net/manual/en/function.restore-error-handler.php"
+      ],
+      "kind": "source-semantic review; unchanged existing example",
+      "newCode": false,
+      "originalCodePreserved": true
+    }
+  },
+  {
+    "lessonId": "php-63",
+    "paragraph": 0,
+    "before": "Actual request fields may be absent or arrays rather than strings. This pure function first checks the minutes field is a String, then validates an integer from 1 through 60 using the filter extension. Treating all request values as trustworthy scalars can cause type errors or bypass intended rules.",
+    "after": "Actual request fields may be absent or arrays rather than strings. This pure function first checks the minutes field is a String, then validates an integer from 1 through 60 using the filter extension. Treating all request values as trustworthy scalars can cause type errors or bypass intended rules.\n\nis_string($raw) returns true only when the supplied value is a String; it does not convert an array or number into text. The conditional call therefore passes only actual text to filter_var, while an unsuitable type follows the false branch.",
+    "reason": "Worked calls need an explicit input/result or effect explanation.",
+    "targets": [
+      "is_string"
+    ],
+    "validation": {
+      "officialSources": [
+        "https://www.php.net/manual/en/function.is-string.php"
+      ],
+      "kind": "source-semantic review; unchanged existing example",
+      "newCode": false,
+      "originalCodePreserved": true
+    }
+  },
+  {
+    "lessonId": "ruby-59",
+    "paragraph": 0,
+    "before": "Ruby interpreter and gem versions are different. Gem::Version compares version components, and Gem::Requirement checks a declared requirement. The constraint >= 6.0, < 7.0 admits compatible-major candidates, not proof that every API or application behavior works.",
+    "after": "Ruby interpreter and gem versions are different. Gem::Version compares version components, and Gem::Requirement checks a declared requirement. The constraint >= 6.0, < 7.0 admits compatible-major candidates, not proof that every API or application behavior works.\n\nGem::Requirement.new receives the constraint strings and builds the requirement object. Gem::Version.new(\"6.0.0\") builds the candidate version from text. requirement.satisfied_by?(candidate) returns true only when that candidate meets every supplied constraint; it neither installs a gem nor checks its behavior.",
+    "reason": "Worked calls need an explicit input/result or effect explanation.",
+    "targets": [
+      "Gem::Requirement.new",
+      "Gem::Version.new",
+      "Gem::Requirement#satisfied_by?"
+    ],
+    "validation": {
+      "officialSources": [
+        "https://ruby-doc.org/stdlib-3.1.0/libdoc/rubygems/rdoc/Gem/Requirement.html#method-i-satisfied_by-3F"
+      ],
+      "kind": "source-semantic review; unchanged existing example",
+      "newCode": false,
+      "originalCodePreserved": true
+    }
+  },
+  {
+    "lessonId": "r-17",
+    "paragraph": 1,
+    "before": "numeric(0) creates an empty double vector, whereas character(0) creates empty text storage. Both have length zero but are not identical types.",
+    "after": "numeric(0) creates an empty double vector, whereas character(0) creates empty text storage. Both have length zero but are not identical types.\n\nThe argument 0 requests zero entries. numeric returns a double vector and character returns a character vector; neither empty vector contains a missing-value entry. typeof reports the storage type, while length reports the entry count.\n```r\nnumbers <- numeric(0)\nwords <- character(0)\ncat(typeof(numbers), length(numbers), \"\\n\")\ncat(typeof(words), length(words), \"\\n\")\n```\nIt displays double 0, then character 0 on the next line.",
+    "reason": "The typed-empty-vector contrast is taught, but neither construction has a concrete worked call here and character has none elsewhere in the course.",
+    "targets": [
+      "numeric",
+      "character"
+    ],
+    "validation": {
+      "officialSources": [
+        "https://stat.ethz.ch/R-manual/R-devel/library/base/html/numeric.html",
+        "https://stat.ethz.ch/R-manual/R-devel/library/base/html/character.html"
+      ],
+      "kind": "source-semantic review; new snippet, runtime not yet executed",
+      "newCode": true,
+      "originalCodePreserved": true
+    }
+  },
+  {
+    "lessonId": "r-41",
+    "paragraph": 1,
+    "before": "Repeated keys can create multiple row pairs: two matching left rows and two matching right rows produce four joined rows. Validate key uniqueness when your model expects one-to-one or many-to-one relationships. Do not silently interpret duplicated joins as new independent observations.",
+    "after": "Repeated keys can create multiple row pairs: two matching left rows and two matching right rows produce four joined rows. Validate key uniqueness when your model expects one-to-one or many-to-one relationships. Do not silently interpret duplicated joins as new independent observations.\n\nnrow(joined) takes the resulting data frame and returns its row count: four in this example. It counts the joined rows, not the number of distinct id values.",
+    "reason": "Worked calls need an explicit input/result or effect explanation.",
+    "targets": [
+      "nrow"
+    ],
+    "validation": {
+      "officialSources": [
+        "https://stat.ethz.ch/R-manual/R-devel/library/base/html/nrow.html"
+      ],
+      "kind": "source-semantic review; unchanged existing example",
+      "newCode": false,
+      "originalCodePreserved": true
+    }
+  },
+  {
+    "lessonId": "r-43",
+    "paragraph": 1,
+    "before": "To place the value explicitly in a named argument, a named _ placeholder can be used once in an eligible call, such as value |> round(x = _, digits = 1). A pipe does not automatically vectorize a scalar-only function or change its missing-value behavior.",
+    "after": "To place the value explicitly in a named argument, a named _ placeholder can be used once in an eligible call, such as value |> round(x = _, digits = 1). A pipe does not automatically vectorize a scalar-only function or change its missing-value behavior.\n\nround receives numeric x and a digits setting, and returns the values rounded to that many decimal places. Here _ places 2.34 in x, so the result is 2.3; the pipe itself does not do the rounding.\n```r\nresult <- 2.34 |> round(x = _, digits = 1)\ncat(result, \"\\n\", sep = \"\")\n```\nIt prints 2.3.",
+    "reason": "Named pipe placeholder appears only with undefined value and unexplained round; provide a complete concrete use of the already taught syntax.",
+    "targets": [
+      "round",
+      "native-pipe-placeholder"
+    ],
+    "validation": {
+      "officialSources": [
+        "https://stat.ethz.ch/R-manual/R-devel/library/base/html/Round.html",
+        "https://stat.ethz.ch/R-manual/R-devel/library/base/html/pipeOp.html"
+      ],
+      "kind": "source-semantic review; new snippet, runtime not yet executed",
+      "newCode": true,
+      "originalCodePreserved": true
+    }
+  },
+  {
+    "lessonId": "r-48",
+    "paragraph": 0,
+    "before": "saveRDS writes one R object, preserving R-specific structure such as classes and attributes; readRDS returns the object instead of choosing a variable name in the caller. Assign its result explicitly. This differs from a plain-text CSV interchange.",
+    "after": "saveRDS writes one R object, preserving R-specific structure such as classes and attributes; readRDS returns the object instead of choosing a variable name in the caller. Assign its result explicitly. This differs from a plain-text CSV interchange.\n\nidentical(entry, restored) compares the two supplied objects and returns one TRUE or FALSE for exact equality under its default rules, including their types and attributes. Here TRUE confirms that the saved list was reconstructed; the call does not modify either object.",
+    "reason": "Worked calls need an explicit input/result or effect explanation.",
+    "targets": [
+      "identical"
+    ],
+    "validation": {
+      "officialSources": [
+        "https://stat.ethz.ch/R-manual/R-devel/library/base/html/identical.html"
+      ],
+      "kind": "source-semantic review; unchanged existing example",
+      "newCode": false,
+      "originalCodePreserved": true
+    }
+  },
+  {
+    "lessonId": "r-60",
+    "paragraph": 0,
+    "before": "residuals(fit) extracts discrepancies between responses and fitted means. In ordinary least squares with an intercept, their sum is approximately zero by the fitting equations; that arithmetic property is not evidence that every modeling assumption holds.",
+    "after": "residuals(fit) extracts discrepancies between responses and fitted means. In ordinary least squares with an intercept, their sum is approximately zero by the fitting equations; that arithmetic property is not evidence that every modeling assumption holds.\n\nabs takes the numeric residual sum and returns its absolute value: its distance from zero regardless of sign. Comparing that magnitude with 1e-10 tests whether the sum is very close to zero, not whether it is negative.",
+    "reason": "Worked calls need an explicit input/result or effect explanation.",
+    "targets": [
+      "abs"
+    ],
+    "validation": {
+      "officialSources": [
+        "https://stat.ethz.ch/R-manual/R-devel/library/base/html/MathFun.html"
+      ],
+      "kind": "source-semantic review; unchanged existing example",
+      "newCode": false,
+      "originalCodePreserved": true
+    }
+  },
+  {
+    "lessonId": "r-63",
+    "paragraph": 1,
+    "before": "The fixture creates one synthetic scatterplot in plot.pdf. main is its title; xlab and ylab are axis labels; pch chooses a point symbol. No GUI display, browser execution or publication is implied. Check the generated artifact rather than treating printed success as visual verification.",
+    "after": "The fixture creates one synthetic scatterplot in plot.pdf. main is its title; xlab and ylab are axis labels; pch chooses a point symbol. No GUI display, browser execution or publication is implied. Check the generated artifact rather than treating printed success as visual verification.\n\nfile.exists(\"plot.pdf\") receives the output path and returns whether that path is reported as existing. TRUE does not prove that the chart is correct or that the file is readable; inspect the artifact separately.",
+    "reason": "Worked calls need an explicit input/result or effect explanation.",
+    "targets": [
+      "file.exists"
+    ],
+    "validation": {
+      "officialSources": [
+        "https://stat.ethz.ch/R-manual/R-devel/library/base/html/files.html"
+      ],
+      "kind": "source-semantic review; unchanged existing example",
+      "newCode": false,
+      "originalCodePreserved": true
+    }
+  },
+  {
+    "lessonId": "r-67",
+    "paragraph": 1,
+    "before": "options returns prior values for changed settings, so a function can register on.exit(options(old), add = TRUE). This keeps local formatting from leaking into later analysis. Rscript --vanilla avoids startup files and workspace restoration, but still needs explicit data, package versions and seed policy.\n\ngetOption(\"digits\") receives an option name and returns its current value. In the example it reads 3 inside show_value, then reads the restored value after on.exit has run. It does not change the option.",
+    "after": "options returns prior values for changed settings, so a function can register on.exit(options(old), add = TRUE). This keeps local formatting from leaking into later analysis. Rscript --vanilla avoids startup files and workspace restoration, but still needs explicit data, package versions and seed policy.\n\ngetOption(\"digits\") receives an option name and returns its current value. In the example it reads 3 inside show_value, then reads the restored value after on.exit has run. It does not change the option.\n\nis.list(info) checks whether the returned session information has list structure and returns one logical result. Here it is TRUE; the test does not inspect or validate every recorded version value.",
+    "reason": "Worked calls need an explicit input/result or effect explanation.",
+    "targets": [
+      "is.list"
+    ],
+    "validation": {
+      "officialSources": [
+        "https://stat.ethz.ch/R-manual/R-devel/library/base/html/list.html"
+      ],
+      "kind": "source-semantic review; unchanged existing example",
+      "newCode": false,
+      "originalCodePreserved": true
+    }
+  },
+  {
+    "lessonId": "backend-05",
+    "paragraph": 4,
+    "before": "The supplied localhost login compares the chosen account's configured password, creates a random token with randomBytes, and stores its user and expiry in a server-side Map. The cookie carries that token. HttpOnly keeps page JavaScript from reading the cookie; SameSite=Strict limits when browsers attach it across sites; Max-Age sets a browser lifetime. The server still verifies its stored expiry. Environment variables supply passwords outside source code. Use your own throwaway local values and do not put them in repository files.\n\nSet the variables in the same terminal where you will start the downloaded local app. In Windows PowerShell, use:\n```powershell\n$env:ALICE_PASSWORD = \"replace-with-a-throwaway-alice-value\"\n$env:BOB_PASSWORD = \"replace-with-a-different-throwaway-bob-value\"\n```\nIn a macOS or Linux shell, use:\n```bash\nexport ALICE_PASSWORD=\"replace-with-a-throwaway-alice-value\"\nexport BOB_PASSWORD=\"replace-with-a-different-throwaway-bob-value\"\n```\nReplace these example values with different disposable local passwords. These commands set values for that terminal and programs it starts; they do not belong in the source files.",
+    "after": "The supplied localhost login compares the chosen account's configured password, creates a random token with randomBytes, and stores its user and expiry in a server-side Map. The cookie carries that token. HttpOnly keeps page JavaScript from reading the cookie; SameSite=Strict limits when browsers attach it across sites; Max-Age sets a browser lifetime. The server still verifies its stored expiry. Environment variables supply passwords outside source code. Use your own throwaway local values and do not put them in repository files.\n\nSet the variables in the same terminal where you will start the downloaded local app. In Windows PowerShell, use:\n```powershell\n$env:ALICE_PASSWORD = \"replace-with-a-throwaway-alice-value\"\n$env:BOB_PASSWORD = \"replace-with-a-different-throwaway-bob-value\"\n```\nIn a macOS or Linux shell, use:\n```bash\nexport ALICE_PASSWORD=\"replace-with-a-throwaway-alice-value\"\nexport BOB_PASSWORD=\"replace-with-a-different-throwaway-bob-value\"\n```\nReplace these example values with different disposable local passwords. These commands set values for that terminal and programs it starts; they do not belong in the source files.\n\nTo see what randomBytes produces without printing a token, save this separate example as random-demo.mjs and run it with Node.js:\n```javascript\nimport { randomBytes } from \"node:crypto\";\nconst bytes = randomBytes(32);\nconsole.log(bytes.length);\n```\nThe argument 32 requests thirty-two random bytes. With no callback supplied, randomBytes returns a Buffer, a container for bytes. Its length is 32 even though the byte values vary. This prints only the count, not a usable session token. Generating bytes alone does not create a session, associate a user, or enforce expiry.",
+    "targets": [
+      "randomBytes"
+    ],
+    "reason": "Named API has no actual call/input/result example."
+  },
+  {
+    "lessonId": "backend-10",
+    "paragraph": 5,
+    "before": "This server example assigns a header before sending a known public response.\n```javascript\nres.set(\"Cache-Control\", \"public, max-age=60\");\nres.json({title: \"Public catalog\"});\n```",
+    "after": "This server example assigns a header before sending a known public response.\n```javascript\nres.set(\"Cache-Control\", \"public, max-age=60\");\nres.json({title: \"Public catalog\"});\n```\n\nHere res is the response object supplied to an Express route. set receives the header name, Cache-Control, followed by its text value, public, max-age=60. It sets that outgoing header and returns the same response object; it does not send the body. json then sends the supplied object as JSON. The resulting response has that cache header and a body containing title: Public catalog. This fragment belongs inside a running route, not in a standalone browser program.",
+    "targets": [
+      "res.set"
+    ],
+    "reason": "Explain receiver, arguments, return and effect beside existing call."
+  },
+  {
+    "lessonId": "backend-05",
+    "paragraph": 2,
+    "before": "A failed save should show the failure and preserve the previous confirmed saved state. Here is a browser JavaScript fragment for a running same-origin API with GET/POST /entries and a verified session. Pass it an existing output element; this fragment is not a standalone server or sign-in system.\n```javascript\nasync function saveMinutes(minutes, output) {\n  const response = await fetch('/entries', {\n    method: 'POST',\n    headers: { 'Content-Type': 'application/json' },\n    body: JSON.stringify({ minutes })\n  });\n  if (!response.ok) {\n    const failure = await response.json();\n    output.textContent = failure.error || 'Save failed.';\n    return;\n  }\n  const read = await fetch('/entries');\n  if (!read.ok) {\n    output.textContent = 'Saved, but reload failed. Try loading again.';\n    return;\n  }\n  output.textContent = JSON.stringify(await read.json(), null, 2);\n}\n```\nresponse.ok means an HTTP success status. Only a successful write leads to a new read here; textContent displays returned text safely. A real interface must also catch rejected fetch promises, such as network failures.",
+    "after": "A failed save should show the failure and preserve the previous confirmed saved state. Here is a browser JavaScript fragment for a running same-origin API with GET/POST /entries and a verified session. Pass it an existing output element; this fragment is not a standalone server or sign-in system.\n```javascript\nasync function saveMinutes(minutes, output) {\n  const response = await fetch('/entries', {\n    method: 'POST',\n    headers: { 'Content-Type': 'application/json' },\n    body: JSON.stringify({ minutes })\n  });\n  if (!response.ok) {\n    const failure = await response.json();\n    output.textContent = failure.error || 'Save failed.';\n    return;\n  }\n  const read = await fetch('/entries');\n  if (!read.ok) {\n    output.textContent = 'Saved, but reload failed. Try loading again.';\n    return;\n  }\n  output.textContent = JSON.stringify(await read.json(), null, 2);\n}\n```\nresponse.ok means an HTTP success status. Only a successful write leads to a new read here; textContent displays returned text safely. A real interface must also catch rejected fetch promises, such as network failures.\n\nWith that same-origin API running and an existing page element stored in output, call `await saveMinutes(45, output);` in an async handler. The first argument is the duration to save; the second is where feedback appears. If the POST succeeds and the following GET returns [{\"minutes\":45}], output.textContent becomes a formatted JSON array containing that record. The helper returns no data value: its promise resolves to undefined after updating the element. A failed POST instead displays its error and skips the GET.",
+    "targets": [
+      "saveMinutes"
+    ],
+    "reason": "Definition-only helper needs a concrete invocation and effect."
+  },
+  {
+    "lessonId": "backend-06",
+    "paragraph": 2,
+    "before": "The supplied parsePage helper accepts digit-only text, converts it with Number, and checks Number.isSafeInteger.\n\n```javascript\nconsole.log(Number(\"12\"));\nconsole.log(Number.isSafeInteger(12));\nconsole.log(Number.isSafeInteger(1.5));\nconsole.log(Number.isSafeInteger(9007199254740992));\n```\nThe outputs are 12, true, false, false. Number converts the supplied text to a number. Number.isSafeInteger receives a value and returns whether it is an integer within JavaScript’s safely representable integer range. It does not convert quoted text or validate the allowed page range; those remain separate rules.",
+    "after": "The supplied parsePage helper accepts digit-only text, converts it with Number, and checks Number.isSafeInteger.\n\n```javascript\nconsole.log(Number(\"12\"));\nconsole.log(Number.isSafeInteger(12));\nconsole.log(Number.isSafeInteger(1.5));\nconsole.log(Number.isSafeInteger(9007199254740992));\n```\nThe outputs are 12, true, false, false. Number converts the supplied text to a number. Number.isSafeInteger receives a value and returns whether it is an integer within JavaScript’s safely representable integer range. It does not convert quoted text or validate the allowed page range; those remain separate rules.\n\nUsing the complete parsePage helper supplied with this lesson, `parsePage({limit: \"2\", offset: \"1\"})` returns `{limit: 2, offset: 1}`: the object supplies query text and the result supplies checked numbers. `parsePage({limit: \"0\"})` returns null because zero is outside the allowed limit range. `parsePage({})` returns `{limit: 5, offset: 0}` from the missing-value defaults. These calls use the supplied definition; they do not send a request or select entries.",
+    "targets": [
+      "parsePage"
+    ],
+    "reason": "Add concrete calls/results for supplied helper."
+  },
+  {
+    "lessonId": "backend-12",
+    "paragraph": 4,
+    "before": "Return a new state object so the caller can retain the previous snapshot.",
+    "after": "Return a new state object so the caller can retain the previous snapshot.\n\nHere is a separate two-ticket example with a ten-unit window:\n```javascript\nfunction takeTicket(state, now) {\n  const next = now >= state.start + 10\n    ? {start: now, used: 0} : {...state};\n  if (next.used >= 2) return {allowed: false, state: next};\n  next.used += 1;\n  return {allowed: true, state: next};\n}\nconst full = {start: 0, used: 2};\nconsole.log(takeTicket(full, 9));\nconsole.log(takeTicket(full, 10));\nconsole.log(full.used);\n```\nAt time 9 the result is allowed:false with start:0 and used:2. At time 10 it is allowed:true with start:10 and used:1. The last output is 2: full was not changed. state supplies the old count and starting time; now supplies the current time in the same unit. The first line resets an expired window or copies the current one. The early return rejects a full window; otherwise one ticket is counted in the returned state. This calculates a decision only; it neither waits nor limits a real server.",
+    "targets": [
+      "takeTicket"
+    ],
+    "reason": "Provide analogous worked rate-window function before assessment."
+  },
+  {
+    "lessonId": "backend-14",
+    "paragraph": 4,
+    "before": "This browser helper models one exact strong-tag comparison. For example, the text '\"v2\"' includes quotation marks as part of the HTTP tag. Real HTTP validator parsing has additional rules outside this small exercise.",
+    "after": "This browser helper models one exact strong-tag comparison. For example, the text '\"v2\"' includes quotation marks as part of the HTTP tag. Real HTTP validator parsing has additional rules outside this small exercise.\n\nThis complete JavaScript model compares two public-card versions:\n```javascript\nfunction cardReply(current, received) {\n  if (received === current) return {status: 304, body: null, etag: current};\n  return {status: 200, body: {title: \"Public card\"}, etag: current};\n}\nconsole.log(cardReply('\"card-3\"', '\"card-3\"'));\nconsole.log(cardReply('\"card-3\"', '\"card-2\"'));\n```\nThe first result has status 304 and body:null; the second has status 200 and the Public card body. Both include etag with the text \"card-3\", including its quote characters. current is the server’s present tag; received is the client’s saved tag. The strict comparison takes the no-body branch only when they match. Returning an object does not send HTTP; an adapter must translate it into the real response.",
+    "targets": [
+      "cardReply"
+    ],
+    "reason": "Provide analogous concrete conditional-response model."
+  },
+  {
+    "lessonId": "developer-toolkit-14",
+    "paragraph": 3,
+    "before": "In this simplified report, compare selfMs values. A frequently called function may still use less total self time than a slower function called once.\n\nTo find the largest measurement, start with the first row as the current best and visit the remaining rows. Replace the best only when the new selfMs is strictly greater, not equal; that keeps the first row on a tie. With measurements 2, 9, 9, the saved best changes to the first 9 and stays there. Check for an empty list before reading its first row.",
+    "after": "In this simplified report, compare selfMs values. A frequently called function may still use less total self time than a slower function called once.\n\nTo find the largest measurement, start with the first row as the current best and visit the remaining rows. Replace the best only when the new selfMs is strictly greater, not equal; that keeps the first row on a tie. With measurements 2, 9, 9, the saved best changes to the first 9 and stays there. Check for an empty list before reading its first row.\n\nThis separate example selects the heaviest parcel rather than a profiler row:\n```javascript\nfunction heaviest(parcels) {\n  if (parcels.length === 0) return null;\n  let best = parcels[0];\n  for (const parcel of parcels) {\n    if (parcel.grams > best.grams) best = parcel;\n  }\n  return best.label;\n}\nconsole.log(heaviest([{label: \"A\", grams: 3}, {label: \"B\", grams: 8}, {label: \"C\", grams: 8}]));\nconsole.log(heaviest([]));\n```\nThe outputs are B and null. parcels is the input array. The empty-array guard runs before reading its first entry. best begins as A, becomes B when 8 exceeds 3, and stays B when C only ties. return sends back the chosen label. Assigning best selects a record without changing the array or records. The same comparison pattern can inspect measurements; this example itself performs no profiling.",
+    "targets": [
+      "heaviest"
+    ],
+    "reason": "Provide analogous first-on-tie selection example."
+  },
+  {
+    "lessonId": "developer-toolkit-11",
+    "paragraph": 5,
+    "before": "Check allowed values after choosing the missing-value default.\n```javascript\nfunction readSize(env) {\n  const size = env.SIZE === undefined ? \"small\" : env.SIZE;\n  return size === \"small\" || size === \"large\" ? size : null;\n}\n```",
+    "after": "Check allowed values after choosing the missing-value default.\n```javascript\nfunction readSize(env) {\n  const size = env.SIZE === undefined ? \"small\" : env.SIZE;\n  return size === \"small\" || size === \"large\" ? size : null;\n}\n\nconsole.log(readSize({}));\nconsole.log(readSize({SIZE: \"large\"}));\nconsole.log(readSize({SIZE: \"\"}));\n```\nThe outputs are small, large, and null. The argument env is the settings object. An absent SIZE selects small; an allowed SIZE is returned unchanged; the present empty string reaches the invalid-value branch. readSize reads the object without changing it.",
+    "targets": [
+      "readSize"
+    ],
+    "reason": "Put definition and actual result-demonstrating calls together."
+  }
+]
