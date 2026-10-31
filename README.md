@@ -1,14 +1,14 @@
 # CodeQuest
 
-**[Open the app online](https://codequest-personal-learning.aurorax.chatgpt.site)**
+**[Open the app online](https://codequest.aurorax.chatgpt.site/)**
 
 Sign in with ChatGPT when prompted to access your own learning records.
 
-CodeQuest is a coding-learning app for people who want small, explained steps, worked examples and understanding checks. The current release contains **1,221 lessons across 21 courses** and **1,029 terminology entries**. Backend has 43 lessons, Developer Toolkit 24 and AI 32. This is a bounded curriculum, not a claim to cover every API or certify mastery.
+CodeQuest is a coding-learning app for people who want small, explained steps, worked examples and understanding checks. The current release contains **1,221 lessons across 21 courses** and **1,029 terminology entries** on a variety of coding courses: AI, Back-End Development, C, C#, C++, CSS, Developer Toolkit, Go, HTML, JAVA, JavaScript, Kotlin, PHP, Python, R, React, Ruby, Rust, SQL, Swift, TypeScript. This is a bounded curriculum, not a claim to cover every API or certify mastery. Courses have been created with ChatGPT and may contain errors. Some gaps in terms of topics have been filled in according to free MIT teachings available online. 
 
 ## Online through ChatGPT / Sites
 
-Open https://codequest-personal-learning.aurorax.chatgpt.site and sign in with ChatGPT when prompted. Public Site access permits visitors; individual learning records still belong to the signed-in account. A ChatGPT subscription does not supply third-party API credits.
+Open https://codequest.aurorax.chatgpt.site/ and sign in with ChatGPT when prompted. Public Site access permits visitors; individual learning records still belong to the signed-in account. A ChatGPT subscription does not supply third-party API credits.
 
 Lessons, code examples and projects are built into the app. Coding Buddy is optional and needs internet plus your own supported provider API key; provider charges may apply. Keep keys out of this repository. See [API key removal](docs/api-key-removal.md).
 
