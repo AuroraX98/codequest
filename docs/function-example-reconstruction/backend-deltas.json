@@ -1,0 +1,82 @@
+[
+  {
+    "lessonId": "backend-05",
+    "paragraph": 4,
+    "before": "The supplied localhost login compares the chosen account's configured password, creates a random token with randomBytes, and stores its user and expiry in a server-side Map. The cookie carries that token. HttpOnly keeps page JavaScript from reading the cookie; SameSite=Strict limits when browsers attach it across sites; Max-Age sets a browser lifetime. The server still verifies its stored expiry. Environment variables supply passwords outside source code. Use your own throwaway local values and do not put them in repository files.\n\nSet the variables in the same terminal where you will start the downloaded local app. In Windows PowerShell, use:\n```powershell\n$env:ALICE_PASSWORD = \"replace-with-a-throwaway-alice-value\"\n$env:BOB_PASSWORD = \"replace-with-a-different-throwaway-bob-value\"\n```\nIn a macOS or Linux shell, use:\n```bash\nexport ALICE_PASSWORD=\"replace-with-a-throwaway-alice-value\"\nexport BOB_PASSWORD=\"replace-with-a-different-throwaway-bob-value\"\n```\nReplace these example values with different disposable local passwords. These commands set values for that terminal and programs it starts; they do not belong in the source files.",
+    "after": "The supplied localhost login compares the chosen account's configured password, creates a random token with randomBytes, and stores its user and expiry in a server-side Map. The cookie carries that token. HttpOnly keeps page JavaScript from reading the cookie; SameSite=Strict limits when browsers attach it across sites; Max-Age sets a browser lifetime. The server still verifies its stored expiry. Environment variables supply passwords outside source code. Use your own throwaway local values and do not put them in repository files.\n\nSet the variables in the same terminal where you will start the downloaded local app. In Windows PowerShell, use:\n```powershell\n$env:ALICE_PASSWORD = \"replace-with-a-throwaway-alice-value\"\n$env:BOB_PASSWORD = \"replace-with-a-different-throwaway-bob-value\"\n```\nIn a macOS or Linux shell, use:\n```bash\nexport ALICE_PASSWORD=\"replace-with-a-throwaway-alice-value\"\nexport BOB_PASSWORD=\"replace-with-a-different-throwaway-bob-value\"\n```\nReplace these example values with different disposable local passwords. These commands set values for that terminal and programs it starts; they do not belong in the source files.\n\nTo see what randomBytes produces without printing a token, save this separate example as random-demo.mjs and run it with Node.js:\n```javascript\nimport { randomBytes } from \"node:crypto\";\nconst bytes = randomBytes(32);\nconsole.log(bytes.length);\n```\nThe argument 32 requests thirty-two random bytes. With no callback supplied, randomBytes returns a Buffer, a container for bytes. Its length is 32 even though the byte values vary. This prints only the count, not a usable session token. Generating bytes alone does not create a session, associate a user, or enforce expiry.",
+    "targets": [
+      "randomBytes"
+    ],
+    "reason": "Named API has no actual call/input/result example."
+  },
+  {
+    "lessonId": "backend-10",
+    "paragraph": 5,
+    "before": "This server example assigns a header before sending a known public response.\n```javascript\nres.set(\"Cache-Control\", \"public, max-age=60\");\nres.json({title: \"Public catalog\"});\n```",
+    "after": "This server example assigns a header before sending a known public response.\n```javascript\nres.set(\"Cache-Control\", \"public, max-age=60\");\nres.json({title: \"Public catalog\"});\n```\n\nHere res is the response object supplied to an Express route. set receives the header name, Cache-Control, followed by its text value, public, max-age=60. It sets that outgoing header and returns the same response object; it does not send the body. json then sends the supplied object as JSON. The resulting response has that cache header and a body containing title: Public catalog. This fragment belongs inside a running route, not in a standalone browser program.",
+    "targets": [
+      "res.set"
+    ],
+    "reason": "Explain receiver, arguments, return and effect beside existing call."
+  },
+  {
+    "lessonId": "backend-05",
+    "paragraph": 2,
+    "before": "A failed save should show the failure and preserve the previous confirmed saved state. Here is a browser JavaScript fragment for a running same-origin API with GET/POST /entries and a verified session. Pass it an existing output element; this fragment is not a standalone server or sign-in system.\n```javascript\nasync function saveMinutes(minutes, output) {\n  const response = await fetch('/entries', {\n    method: 'POST',\n    headers: { 'Content-Type': 'application/json' },\n    body: JSON.stringify({ minutes })\n  });\n  if (!response.ok) {\n    const failure = await response.json();\n    output.textContent = failure.error || 'Save failed.';\n    return;\n  }\n  const read = await fetch('/entries');\n  if (!read.ok) {\n    output.textContent = 'Saved, but reload failed. Try loading again.';\n    return;\n  }\n  output.textContent = JSON.stringify(await read.json(), null, 2);\n}\n```\nresponse.ok means an HTTP success status. Only a successful write leads to a new read here; textContent displays returned text safely. A real interface must also catch rejected fetch promises, such as network failures.",
+    "after": "A failed save should show the failure and preserve the previous confirmed saved state. Here is a browser JavaScript fragment for a running same-origin API with GET/POST /entries and a verified session. Pass it an existing output element; this fragment is not a standalone server or sign-in system.\n```javascript\nasync function saveMinutes(minutes, output) {\n  const response = await fetch('/entries', {\n    method: 'POST',\n    headers: { 'Content-Type': 'application/json' },\n    body: JSON.stringify({ minutes })\n  });\n  if (!response.ok) {\n    const failure = await response.json();\n    output.textContent = failure.error || 'Save failed.';\n    return;\n  }\n  const read = await fetch('/entries');\n  if (!read.ok) {\n    output.textContent = 'Saved, but reload failed. Try loading again.';\n    return;\n  }\n  output.textContent = JSON.stringify(await read.json(), null, 2);\n}\n```\nresponse.ok means an HTTP success status. Only a successful write leads to a new read here; textContent displays returned text safely. A real interface must also catch rejected fetch promises, such as network failures.\n\nWith that same-origin API running and an existing page element stored in output, call `await saveMinutes(45, output);` in an async handler. The first argument is the duration to save; the second is where feedback appears. If the POST succeeds and the following GET returns [{\"minutes\":45}], output.textContent becomes a formatted JSON array containing that record. The helper returns no data value: its promise resolves to undefined after updating the element. A failed POST instead displays its error and skips the GET.",
+    "targets": [
+      "saveMinutes"
+    ],
+    "reason": "Definition-only helper needs a concrete invocation and effect."
+  },
+  {
+    "lessonId": "backend-06",
+    "paragraph": 2,
+    "before": "The supplied parsePage helper accepts digit-only text, converts it with Number, and checks Number.isSafeInteger.\n\n```javascript\nconsole.log(Number(\"12\"));\nconsole.log(Number.isSafeInteger(12));\nconsole.log(Number.isSafeInteger(1.5));\nconsole.log(Number.isSafeInteger(9007199254740992));\n```\nThe outputs are 12, true, false, false. Number converts the supplied text to a number. Number.isSafeInteger receives a value and returns whether it is an integer within JavaScript’s safely representable integer range. It does not convert quoted text or validate the allowed page range; those remain separate rules.",
+    "after": "The supplied parsePage helper accepts digit-only text, converts it with Number, and checks Number.isSafeInteger.\n\n```javascript\nconsole.log(Number(\"12\"));\nconsole.log(Number.isSafeInteger(12));\nconsole.log(Number.isSafeInteger(1.5));\nconsole.log(Number.isSafeInteger(9007199254740992));\n```\nThe outputs are 12, true, false, false. Number converts the supplied text to a number. Number.isSafeInteger receives a value and returns whether it is an integer within JavaScript’s safely representable integer range. It does not convert quoted text or validate the allowed page range; those remain separate rules.\n\nUsing the complete parsePage helper supplied with this lesson, `parsePage({limit: \"2\", offset: \"1\"})` returns `{limit: 2, offset: 1}`: the object supplies query text and the result supplies checked numbers. `parsePage({limit: \"0\"})` returns null because zero is outside the allowed limit range. `parsePage({})` returns `{limit: 5, offset: 0}` from the missing-value defaults. These calls use the supplied definition; they do not send a request or select entries.",
+    "targets": [
+      "parsePage"
+    ],
+    "reason": "Add concrete calls/results for supplied helper."
+  },
+  {
+    "lessonId": "backend-12",
+    "paragraph": 4,
+    "before": "Return a new state object so the caller can retain the previous snapshot.",
+    "after": "Return a new state object so the caller can retain the previous snapshot.\n\nHere is a separate two-ticket example with a ten-unit window:\n```javascript\nfunction takeTicket(state, now) {\n  const next = now >= state.start + 10\n    ? {start: now, used: 0} : {...state};\n  if (next.used >= 2) return {allowed: false, state: next};\n  next.used += 1;\n  return {allowed: true, state: next};\n}\nconst full = {start: 0, used: 2};\nconsole.log(takeTicket(full, 9));\nconsole.log(takeTicket(full, 10));\nconsole.log(full.used);\n```\nAt time 9 the result is allowed:false with start:0 and used:2. At time 10 it is allowed:true with start:10 and used:1. The last output is 2: full was not changed. state supplies the old count and starting time; now supplies the current time in the same unit. The first line resets an expired window or copies the current one. The early return rejects a full window; otherwise one ticket is counted in the returned state. This calculates a decision only; it neither waits nor limits a real server.",
+    "targets": [
+      "takeTicket"
+    ],
+    "reason": "Provide analogous worked rate-window function before assessment."
+  },
+  {
+    "lessonId": "backend-14",
+    "paragraph": 4,
+    "before": "This browser helper models one exact strong-tag comparison. For example, the text '\"v2\"' includes quotation marks as part of the HTTP tag. Real HTTP validator parsing has additional rules outside this small exercise.",
+    "after": "This browser helper models one exact strong-tag comparison. For example, the text '\"v2\"' includes quotation marks as part of the HTTP tag. Real HTTP validator parsing has additional rules outside this small exercise.\n\nThis complete JavaScript model compares two public-card versions:\n```javascript\nfunction cardReply(current, received) {\n  if (received === current) return {status: 304, body: null, etag: current};\n  return {status: 200, body: {title: \"Public card\"}, etag: current};\n}\nconsole.log(cardReply('\"card-3\"', '\"card-3\"'));\nconsole.log(cardReply('\"card-3\"', '\"card-2\"'));\n```\nThe first result has status 304 and body:null; the second has status 200 and the Public card body. Both include etag with the text \"card-3\", including its quote characters. current is the server’s present tag; received is the client’s saved tag. The strict comparison takes the no-body branch only when they match. Returning an object does not send HTTP; an adapter must translate it into the real response.",
+    "targets": [
+      "cardReply"
+    ],
+    "reason": "Provide analogous concrete conditional-response model."
+  },
+  {
+    "lessonId": "developer-toolkit-14",
+    "paragraph": 3,
+    "before": "In this simplified report, compare selfMs values. A frequently called function may still use less total self time than a slower function called once.\n\nTo find the largest measurement, start with the first row as the current best and visit the remaining rows. Replace the best only when the new selfMs is strictly greater, not equal; that keeps the first row on a tie. With measurements 2, 9, 9, the saved best changes to the first 9 and stays there. Check for an empty list before reading its first row.",
+    "after": "In this simplified report, compare selfMs values. A frequently called function may still use less total self time than a slower function called once.\n\nTo find the largest measurement, start with the first row as the current best and visit the remaining rows. Replace the best only when the new selfMs is strictly greater, not equal; that keeps the first row on a tie. With measurements 2, 9, 9, the saved best changes to the first 9 and stays there. Check for an empty list before reading its first row.\n\nThis separate example selects the heaviest parcel rather than a profiler row:\n```javascript\nfunction heaviest(parcels) {\n  if (parcels.length === 0) return null;\n  let best = parcels[0];\n  for (const parcel of parcels) {\n    if (parcel.grams > best.grams) best = parcel;\n  }\n  return best.label;\n}\nconsole.log(heaviest([{label: \"A\", grams: 3}, {label: \"B\", grams: 8}, {label: \"C\", grams: 8}]));\nconsole.log(heaviest([]));\n```\nThe outputs are B and null. parcels is the input array. The empty-array guard runs before reading its first entry. best begins as A, becomes B when 8 exceeds 3, and stays B when C only ties. return sends back the chosen label. Assigning best selects a record without changing the array or records. The same comparison pattern can inspect measurements; this example itself performs no profiling.",
+    "targets": [
+      "heaviest"
+    ],
+    "reason": "Provide analogous first-on-tie selection example."
+  },
+  {
+    "lessonId": "developer-toolkit-11",
+    "paragraph": 5,
+    "before": "Check allowed values after choosing the missing-value default.\n```javascript\nfunction readSize(env) {\n  const size = env.SIZE === undefined ? \"small\" : env.SIZE;\n  return size === \"small\" || size === \"large\" ? size : null;\n}\n```",
+    "after": "Check allowed values after choosing the missing-value default.\n```javascript\nfunction readSize(env) {\n  const size = env.SIZE === undefined ? \"small\" : env.SIZE;\n  return size === \"small\" || size === \"large\" ? size : null;\n}\n\nconsole.log(readSize({}));\nconsole.log(readSize({SIZE: \"large\"}));\nconsole.log(readSize({SIZE: \"\"}));\n```\nThe outputs are small, large, and null. The argument env is the settings object. An absent SIZE selects small; an allowed SIZE is returned unchanged; the present empty string reaches the invalid-value branch. readSize reads the object without changing it.",
+    "targets": [
+      "readSize"
+    ],
+    "reason": "Put definition and actual result-demonstrating calls together."
+  }
+]

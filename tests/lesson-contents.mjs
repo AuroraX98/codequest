@@ -51,7 +51,7 @@ const compile = async (bundle, files) => {
   const dir = path.join(temp, bundle);
   await mkdir(dir, { recursive: true });
   if (files.includes('components/LessonContent.tsx')) files = [...new Set([...files, 'components/CodeAnatomy.tsx', 'components/LessonGlossary.tsx', 'lib/lesson-glossary.ts', 'lib/code-anatomy.ts'])];
-  if (files.includes('lib/lesson-headings.ts')) files = [...new Set([...files, 'lib/additional-unit-contents.ts'])];
+  if (files.includes('lib/lesson-headings.ts')) files = [...new Set([...files, 'lib/additional-unit-contents.ts', 'lib/remaining-lesson-headings.ts'])];
   for (const file of files) {
     const source = await readFile(path.join(cwd, file), 'utf8');
     const js = ts.transpileModule(source, {

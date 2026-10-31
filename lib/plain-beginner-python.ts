@@ -803,5 +803,35 @@ export default [
     "simple": "Use `print` one more time to show the updated value.",
     "runtime": "python",
     "lesson": "python-concepts"
+  },
+  {
+    "source": "Calling replace(old, new) takes the text to find and its replacement, returning a string with every match replaced.",
+    "simple": "For `replace`, give the old text first and the new text second. It gives back text with the matches changed.",
+    "runtime": "python",
+    "lesson": "python-concepts"
+  },
+  {
+    "source": "The original string stays unchanged.",
+    "simple": "The text you started with is not edited.",
+    "runtime": "python",
+    "lesson": "python-concepts"
+  },
+  {
+    "source": "Calling split() with no arguments returns a list of words separated by whitespace.",
+    "simple": "`split()` breaks text into words at spaces, tabs or line breaks and gives you a list.",
+    "runtime": "python",
+    "lesson": "python-concepts"
+  },
+  {
+    "source": "For join, the string before the dot is the separator, and the argument is a list of strings to combine.",
+    "simple": "In `\" \".join(words)`, the space goes between the words from the list.",
+    "runtime": "python",
+    "lesson": "python-concepts"
+  },
+  {
+    "source": "The result is one string, not a changed list.",
+    "simple": "You get combined text back. The list stays as it was.",
+    "runtime": "python",
+    "lesson": "python-concepts"
   }
 ];
