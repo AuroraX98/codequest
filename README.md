@@ -63,6 +63,8 @@ The **source** is the collection of files that make CodeQuest work. **Locally** 
 
 This setup does not need ChatGPT sign-in. It keeps its own saved work and does not bring over your website account data.
 
+**Mac (macOS):** This local GitHub version may run on a Mac, but it has not been tested on macOS. This is separate from opening the CodeQuest website in your browser.
+
 ### First-time setup
 
 1. **Download the project.** On this GitHub page, choose **Code → Download ZIP**. Extract the ZIP into a folder. If you already use Git, you can clone the project instead.
