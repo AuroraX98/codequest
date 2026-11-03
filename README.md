@@ -67,7 +67,7 @@ This setup does not need ChatGPT sign-in. It keeps its own saved work and does n
 
 1. **Download the project.** On this GitHub page, choose **Code → Download ZIP**. Extract the ZIP into a folder. If you already use Git, you can clone the project instead.
 
-2. **Install Node.js.** [Download Node.js from its official website](https://nodejs.org/en/download). Choose a supported LTS version. LTS means it receives fixes over a longer period. CodeQuest needs version **22.13 or newer**. Node.js runs the app on your computer, and its installer includes npm, the tool used in the commands below.
+2. **Install Node.js.** [Download Node.js from its official website](https://nodejs.org/en/download). Choose the version marked **Latest LTS**, rather than an Alpha or preview version. LTS means it receives fixes over a longer period. Older versions such as **22.13 are too old** for some of the project's current helper files. Node.js runs the app on your computer, and its installer includes npm, the tool used in the commands below.
 
 3. **Open a terminal in the project folder.** A terminal is a window where you type commands. Choose the extracted folder that contains `package.json`. On Windows, open that folder in File Explorer, click the address bar, type `cmd`, and press **Enter**.
 
