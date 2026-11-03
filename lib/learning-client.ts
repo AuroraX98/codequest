@@ -1,4 +1,5 @@
 import { projectChecks, hasTypeContracts } from "./project-checks";
+import { mergeBookmarks, type CourseBookmarks } from "./course-resume";
 import type { AIProvider } from "./ai-providers";
 import type { Lesson, QuestState } from "./types";
 import { normalizeProfile } from "./profile";
@@ -106,7 +107,9 @@ export class LearningClient {
     const s = structuredClone(input);
     s.profile = normalizeProfile(s.profile);
     if (a.action === "preferences") {
-      s.profile = normalizeProfile({ ...s.profile, ...a.settings });
+      s.profile = normalizeProfile({ ...s.profile, ...a.settings,
+        courseBookmarks: mergeBookmarks(s.profile.courseBookmarks ?? {}, (a.settings?.courseBookmarks as CourseBookmarks) ?? {}),
+      });
       return s;
     }
     const l = this.lesson(a.unitId),

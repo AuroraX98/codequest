@@ -58,6 +58,12 @@ const bodySchema = z.object({
   provider: z.enum(["deepseek", "openai", "anthropic"]).optional(),
   settings: z
     .object({
+      courseBookmarks: z.record(z.string().max(40), z.object({
+        view: z.enum(["quest", "studio"]), studioMode: z.literal("course"),
+        phase: z.enum(["learn", "practice", "build", "done"]),
+        activeId: z.string().max(60), paragraph: z.number().int().min(0).max(10000),
+        concept: z.string().max(60).optional(), savedAt: z.string().datetime(),
+      })).refine(value => Object.keys(value).length <= 40),
       track: z.string().max(40),
       level: z.enum(["beginner", "intermediate", "advanced"]),
       activeUnit: z.string().max(60),
@@ -169,6 +175,9 @@ export async function POST(req: Request) {
           { error: "Choose a known course." },
           { status: 400 },
         );
+      for (const [track, bookmark] of Object.entries(body.settings?.courseBookmarks ?? {})) {
+        if (units.get(bookmark.activeId)?.track !== track) return json({ error: "Choose a known course bookmark." }, { status: 400 });
+      }
       const runner = new URL(settings.runnerUrl);
       if (
         !["127.0.0.1", "localhost"].includes(runner.hostname) ||
@@ -178,12 +187,16 @@ export async function POST(req: Request) {
           { error: "The Swift runner must be a local address." },
           { status: 400 },
         );
-      await db()
-        .prepare(
-          "UPDATE profiles SET settings=json_patch(settings,?) WHERE user_id=?",
-        )
-        .bind(JSON.stringify({ ...body.settings, tutorLimit: null }), user)
-        .run();
+      const { courseBookmarks, ...otherSettings } = body.settings ?? {};
+      const updates = [db().prepare("UPDATE profiles SET settings=json_patch(settings,?) WHERE user_id=?")
+        .bind(JSON.stringify({ ...otherSettings, tutorLimit: null }), user)];
+      for (const [track, bookmark] of Object.entries(courseBookmarks ?? {})) {
+        const path = '$.courseBookmarks.' + track;
+        // Atomic timestamp guard: delayed offline writes cannot erase a newer device's place.
+        updates.push(db().prepare("UPDATE profiles SET settings=json_set(settings,?,json(?)) WHERE user_id=? AND (json_extract(settings,?) IS NULL OR json_extract(settings,?) < ?)")
+          .bind(path, JSON.stringify(bookmark), user, path + '.savedAt', path + '.savedAt', bookmark.savedAt));
+      }
+      await db().batch(updates);
     } else if (body.action === "key") {
       if (!body.key)
         return json({ error: "Enter an API key." }, { status: 400 });

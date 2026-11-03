@@ -57,6 +57,7 @@ export type Progress = {
   updatedAt: string;
 };
 export type Profile = {
+  courseBookmarks?: import("./course-resume").CourseBookmarks;
   track: string;
   level: string;
   activeUnit: string;

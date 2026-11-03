@@ -117,7 +117,7 @@ try{
 }finally{database.close()}
 const temp=await mkdtemp(path.join(tmpdir(),'codequest-concept-client-'));
 try{
- for(const name of ['learning-client','device-db','profile','project-checks']){const js=ts.transpileModule(await readFile(`lib/${name}.ts`,'utf8'),{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.ESNext}}).outputText.replace(/from "\.\/([^\"]+)"/g,'from "./$1.mjs"');await writeFile(path.join(temp,name+'.mjs'),js)}
+ for(const name of ['learning-client','device-db','profile','project-checks','course-resume','navigation']){const js=ts.transpileModule(await readFile(`lib/${name}.ts`,'utf8'),{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.ESNext}}).outputText.replace(/from "\.\/([^\"]+)"/g,'from "./$1.mjs"');await writeFile(path.join(temp,name+'.mjs'),js)}
  const {LearningClient}=await import(pathToFileURL(path.join(temp,'learning-client.mjs')));
  const {defaultProfile}=await import(pathToFileURL(path.join(temp,'profile.mjs')));
  const {readDevice}=await import(pathToFileURL(path.join(temp,'device-db.mjs')));

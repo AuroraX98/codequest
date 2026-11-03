@@ -28,6 +28,7 @@ import {
   X,
   Zap,
 } from "lucide-react";
+import { validBookmarks, mergeBookmarks, latestBookmark, isExplicitLessonLink, type CourseBookmarks, type CourseBookmark } from "../lib/course-resume";
 import { defaultProfile } from "../lib/profile";
 import { deviceStatusLabel } from "../lib/device-status-label";
 import { courseLearningOrder } from "../lib/course-learning-order";
@@ -288,6 +289,10 @@ export default function CodeQuest({
     [runnerToken, setRunnerToken] = useState(""),
     [manualReviewed, setManualReviewed] = useState(false),
     [navigationReady, setNavigationReady] = useState(false);
+  const [courseBookmarks, setCourseBookmarks] = useState<CourseBookmarks>({});
+  const bookmarksRef = useRef<CourseBookmarks>({});
+  const [resumeOffer, setResumeOffer] = useState<CourseBookmark | null>(null);
+  const bookmarkSignature = useRef("");
   const reading = useReadingProgress(state.draftScope);
   const [tutorHidden, setTutorHidden] = useState(true);
   const [flowBackTarget, setFlowBackTarget] = useState<string | null>(null);
@@ -538,11 +543,24 @@ export default function CodeQuest({
               "{}",
           );
         } catch {}
+        let localBookmarks: CourseBookmarks = {};
+        try { localBookmarks = validBookmarks(JSON.parse(localStorage.getItem("codequest-course-resume-" + d.draftScope) ?? "{}"), units, lessons); } catch {}
+        const bookmarks = mergeBookmarks(validBookmarks(d.profile.courseBookmarks, units, lessons), localBookmarks);
+        // Migrate the previous single-browser bookmark without resetting any progress.
+        const oldUnit = units.find(u => u.id === saved.activeId);
+        if (oldUnit && !bookmarks[oldUnit.track] && (saved.view === "quest" || (saved.view === "studio" && saved.studioMode !== "practice"))) {
+          bookmarks[oldUnit.track] = { ...normalizeRoute(saved, oldUnit.id, units, lessons), savedAt: new Date().toISOString() };
+        }
+        bookmarksRef.current = bookmarks;
+        setCourseBookmarks(bookmarks);
+        const latest = latestBookmark(bookmarks);
+        const linked = parseRoute(location.hash, d.profile.activeUnit, units, lessons);
         const restored = safeRoute(
-          parseRoute(location.hash, d.profile.activeUnit, units, lessons) ??
-            normalizeRoute(saved, d.profile.activeUnit, units, lessons),
-          d,
+          (isExplicitLessonLink(location.hash) ? linked : null) ??
+          (latest ? { ...latest, ...(linked && linked.view !== "quest" ? {view: linked.view} : {}) } : null) ??
+          linked ?? normalizeRoute(saved, d.profile.activeUnit, units, lessons), d,
         );
+        if (latest && isExplicitLessonLink(location.hash) && routeHash(restored) !== routeHash(latest)) setResumeOffer(latest);
         if (restored.activeId !== d.profile.activeUnit) {
           const selected = units.find((u) => u.id === restored.activeId)!;
           d = await request({
@@ -610,7 +628,9 @@ export default function CodeQuest({
     return route;
   }
   const applyLocation = useEffectEvent(async () => {
-    const parsed = parseRoute(location.hash, activeId, units, lessons);
+    const linked = parseRoute(location.hash, activeId, units, lessons);
+    const parsed = linked?.view === "quest" && !isExplicitLessonLink(location.hash)
+      ? latestBookmark(bookmarksRef.current) ?? linked : linked;
     if (!parsed) {
       navigationSequence.current++;
       navigationPending.current = "";
@@ -698,6 +718,24 @@ export default function CodeQuest({
         JSON.stringify(route),
       );
     } catch {}
+    if ((view === "quest" || (view === "studio" && studioMode === "course")) && !resumeOffer) {
+      const selected = units.find(u => u.id === activeId);
+      const bookmarkRoute = { ...route, studioMode: "course" as const };
+      const signature = routeHash(bookmarkRoute);
+      if (selected && signature !== bookmarkSignature.current) {
+        bookmarkSignature.current = signature;
+        const bookmark = { ...bookmarkRoute, savedAt: new Date().toISOString() };
+        const updated = { ...bookmarksRef.current, [selected.track]: bookmark };
+        bookmarksRef.current = updated;
+        setCourseBookmarks(updated);
+        try { localStorage.setItem("codequest-course-resume-" + draftScope.current, JSON.stringify(updated)); } catch {}
+        // Queue immediately, using the same account-scoped offline sync as code drafts.
+        void request({ action: "preferences", settings: { courseBookmarks: { [selected.track]: bookmark } } }).catch(e => {
+          bookmarkSignature.current = "";
+          setError("Your study position could not sync to your account: " + e.message);
+        });
+      }
+    }
     const labels: Record<string, string> = {
       quest: "Your quest",
       studio:
@@ -737,6 +775,7 @@ export default function CodeQuest({
     conceptTarget,
     navigationReady,
     lesson?.title,
+    resumeOffer,
   ]);
   useEffect(() => {
     const saveScroll = () => {
@@ -854,6 +893,7 @@ export default function CodeQuest({
       if (entry?.concept) setNoteSection({lessonId:id,key:"concept:"+entry.concept});
       setView(destination);
       setPhase("learn");
+      setResumeOffer(null);
     } catch (e) {
       if (sequence === navigationSequence.current)
         setError((e as Error).message);
@@ -862,7 +902,40 @@ export default function CodeQuest({
         navigationPending.current = "";
     }
   };
+  const resumeCourse = async (bookmark: CourseBookmark, destination?: "path") => {
+    if (completionLock.current) return;
+    const sequence = ++navigationSequence.current;
+    const selected = units.find(u => u.id === bookmark.activeId);
+    if (!selected) return;
+    const restored = safeRoute(bookmark, device.current);
+    navigationPending.current = routeHash({ ...restored, view: destination ?? restored.view });
+    try {
+      await saveCode();
+      if (sequence !== navigationSequence.current) return;
+      abort.current?.abort();
+      const pending = navigationPreferences.current.catch(() => {}).then(() => {
+        if (sequence !== navigationSequence.current) return null;
+        return request({ action: "preferences", settings: { activeUnit: selected.id, track: selected.track, level: selected.level } });
+      });
+      navigationPreferences.current = pending;
+      const d = await pending;
+      if (!d || sequence !== navigationSequence.current) return;
+      setState(d);
+      loadLesson(selected.id, d.progress, false);
+      setActiveId(selected.id);
+      setParagraph(restored.paragraph);
+      setConceptTarget(restored.concept);
+      setStudioMode(restored.studioMode);
+      setPhase(restored.phase);
+      setView(destination ?? restored.view);
+      setResumeOffer(null);
+    } finally {
+      if (sequence === navigationSequence.current) navigationPending.current = "";
+    }
+  };
   const changeCourse = async (track: string) => {
+    const bookmark = bookmarksRef.current[track];
+    if (bookmark) { setSearch(""); await resumeCourse(bookmark, "path"); return; }
     const target = orderedUnits.find(u => u.track === track && u.level === "beginner")
       ?? orderedUnits.find(u => u.track === track);
     if (!target) throw new Error("This course has no available lesson yet.");
@@ -1318,6 +1391,7 @@ export default function CodeQuest({
               </button>
             </div>
           )}
+          {ready && resumeOffer && <div className="notice" role="status"><span>You opened a lesson link. Your saved place is {lessons.find(l => l.id === resumeOffer.activeId)?.title}, idea {resumeOffer.paragraph + 1}.</span><button className="primary" onClick={() => void resumeCourse(resumeOffer).catch(e => setError(e.message))}>Resume where I left off</button><button className="secondary" onClick={() => setResumeOffer(null)}>Stay at this lesson</button></div>}
           {ready && terminologyReturn && view === "quest" && <div className="notice"><span>Your terminology search is kept.</span><button type="button" className="secondary" onClick={()=>{setView("terminology");setTerminologyReturn(false);}}>Back to Terminology</button></div>}
           {ready && returnToProject && phase === "learn" && <div className="notice"><span>Your project draft is waiting.</span><button className="secondary" onClick={() => { chooseCourseProject(returnToProject); setReturnToProject(null); setView("studio"); setPhase("build"); }}>Back to project</button></div>}
           {ready && view === "studio" && (
@@ -2265,6 +2339,7 @@ export default function CodeQuest({
                   revisit any lesson.
                 </p>
               </div>
+              {courseBookmarks[state.profile.track] && <div className="panel notice"><span>Continue {lessons.find(l => l.id === courseBookmarks[state.profile.track].activeId)?.title} · idea {courseBookmarks[state.profile.track].paragraph + 1}</span><button className="primary" onClick={() => void resumeCourse(courseBookmarks[state.profile.track]).catch(e => setError(e.message))}>Resume course</button></div>}
               <CourseChooser open={coursesOpen} onToggle={()=>setCoursesOpen(v=>!v)} onTools={()=>setView("tools")} track={state.profile.track} name={names[state.profile.track]}>
 
               <div className="track-grid">

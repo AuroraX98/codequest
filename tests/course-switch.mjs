@@ -15,7 +15,7 @@ const request=({settings})=>new Promise(resolve=>requests.push({settings,resolve
 const body=`return function Harness(){
 const {useState,useRef,useEffect}=React;
 const [state,setState]=useState({profile:{...profile},progress:[]}),[activeId,setActiveId]=useState(persisted.activeId),[view,setView]=useState("path"),[phase,setPhase]=useState("learn"),[paragraph,setParagraph]=useState(0),[concept,setConceptTarget]=useState(),[error,setError]=useState("");
-const studioMode="course",orderedUnits=units,completionLock=useRef(false),navigationSequence=useRef(0),navigationPending=useRef(""),navigationPreferences=useRef(Promise.resolve()),abort=useRef(null);
+const [studioMode,setStudioMode]=useState("course"); const bookmarksRef=useRef({python:{activeId:"python-01",view:"quest",studioMode:"course",phase:"practice",paragraph:3,concept:"names",savedAt:"2026-11-03T15:00:00.000Z"}}),device={current:state},safeRoute=x=>x,setResumeOffer=()=>{}; const orderedUnits=units,completionLock=useRef(false),navigationSequence=useRef(0),navigationPending=useRef(""),navigationPreferences=useRef(Promise.resolve()),abort=useRef(null);
 const saveCode=async()=>{saved.push(draft);},loadLesson=(id,records)=>loads.push(id),setNoteSection=()=>{},setSearch=()=>{};
 const routeHash=x=>JSON.stringify(x);
 ${handlers}
@@ -23,7 +23,7 @@ const choose=id=>${chooser};
 const isConcept=activeId.startsWith("csharp");
 
 useEffect(()=>{persisted.activeId=activeId;window.history.replaceState(null,"","#path?lesson="+activeId);},[activeId]);
-expose({choose,setView,state,activeId,view,error});
+expose({choose,setView,state,activeId,view,error,paragraph,phase,concept,resumeCourse,select,completionLock});
 return React.createElement("div",null,React.createElement("span",{"data-track":true},state.profile.track),React.createElement("span",{"data-active":true},activeId),React.createElement("button",null,"Projects"));
 }`;
 const code=ts.transpileModule(body,{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.None}}).outputText;
@@ -36,13 +36,20 @@ try{
  await act(async()=>root.render(React.createElement(Harness)));
  await click('python');await resolve(0);
  assert.equal(exposed.activeId,'python-01','Course choice must replace the stale C# active lesson');
- assert.equal(exposed.state.profile.activeUnit,'python-01');assert.equal(exposed.view,'path');assert.ok(document.querySelector('button'),'Projects visible for selected Python');
+ assert.equal(exposed.state.profile.activeUnit,'python-01');assert.equal(exposed.paragraph,3);assert.equal(exposed.phase,'practice');assert.equal(exposed.concept,'names');assert.equal(exposed.view,'path');assert.ok(document.querySelector('button'),'Projects visible for selected Python');
  await click('csharp');await click('python');
  // A later navigation cannot be overwritten by an older request resolving late.
  await resolve(1);await flush();if(requests[2])await resolve(2);
  assert.equal(exposed.activeId,'python-01');assert.equal(exposed.state.profile.track,'python');
  assert.equal(persisted.activeId,'python-01');assert.match(dom.window.location.hash,/python-01/);assert.ok(saved.every(x=>x==='untouched C# draft'));
+ // Direct Resume followed by selecting another lesson must keep the later choice.
+ await act(async()=>{exposed.resumeCourse({activeId:'python-01',view:'quest',studioMode:'course',phase:'practice',paragraph:3});});await flush();
+ await act(async()=>{exposed.select('csharp-01');});await flush();
+ await resolve(3);await flush();await resolve(4);
+ assert.equal(exposed.activeId,'csharp-01');assert.equal(exposed.state.profile.track,'csharp');
+ const beforeLocked=requests.length;exposed.completionLock.current=true;await act(async()=>{await exposed.resumeCourse({activeId:'python-01'});});assert.equal(requests.length,beforeLocked);exposed.completionLock.current=false;
+ await click('python');await resolve(5);
  await act(async()=>root.unmount());root=createRoot(document.getElementById('root'));context.profile=profile;await act(async()=>root.render(React.createElement(Harness)));
  assert.equal(exposed.activeId,'python-01');assert.ok(document.querySelector('button'));
- console.log('PASS actual CodeQuest selection handlers in React: C#→Python, rapid C#→Python with delayed saves, reload route, Projects capability and untouched drafts.');
+ console.log('PASS actual CodeQuest selection handlers in React: C#→Python, rapid course choices and Resume→select with delayed saves, bookmark position, completion lock, reload route, Projects capability and untouched drafts.');
 }finally{await act(async()=>root.unmount());dom.window.close();}
