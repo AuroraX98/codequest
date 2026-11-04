@@ -1,0 +1,94 @@
+{
+  "lesson": "javascript-53",
+  "position": 55,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Complete settledLabels(promises): await allSettled and return one String per input, ok:value for fulfillment or error:reason for rejection. This exercise uses String values and reasons. Preserve input order and handle an empty array.",
+      "after": "Wait for several Promises and keep a result for each one."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "Promise.all(iterable) returns a promise for an array of fulfilled values in input order. If an input rejects, the result rejects with a rejection reason; this does not cancel the other operations. It is useful when every result is needed.",
+        "Promise.allSettled(iterable) waits until every input settles and fulfills with records in input order. A fulfilled record has status and value; a rejected record has status and reason. It does not turn a failed operation into a successful one: it preserves the failure as data.",
+        "Promise.reject(reason) creates a rejected promise; handlers are attached immediately in this example. settledLabels maps the records to small display Strings. JSON.stringify serializes the arrays for exact output. No network work is started.\n```javascript\nasync function settledLabels(promises) {\n  const outcomes = await Promise.allSettled(promises);\n  return outcomes.map(item => item.status === \"fulfilled\"\n    ? \"ok:\" + item.value : \"error:\" + item.reason);\n}\nconst inputs = [Promise.resolve(\"A\"), Promise.reject(\"no\")];\nconsole.log(JSON.stringify(await settledLabels(inputs)));\ntry { await Promise.all(inputs); }\ncatch (reason) { console.log(\"all:\" + reason); }\n```\nOutput: [\"ok:A\",\"error:no\"] then all:no.",
+        "The result arrays follow input order, not whichever operation happens to finish first. Empty input produces an empty array. Optional practice: reverse the two supplied promises and predict the returned record order before running."
+      ],
+      "after": [
+        "`Promise.all` waits for every input to succeed. It returns their values in input order.\n\nIf one input fails, the combined Promise fails too. This does not cancel the other work. Use it when you need every result to succeed.",
+        "`Promise.allSettled` waits for every input to finish, whether it succeeds or fails.\n\nIt returns a record for each input. A successful record has `status: \"fulfilled\"` and a `value`. A failed record has `status: \"rejected\"` and a `reason`.",
+        "This example turns each outcome into a short label.\n```javascript\nasync function settledLabels(promises) {\n  const outcomes = await Promise.allSettled(promises);\n  return outcomes.map(item => item.status === \"fulfilled\"\n    ? \"ok:\" + item.value : \"error:\" + item.reason);\n}\nconst inputs = [Promise.resolve(\"A\"), Promise.reject(\"no\")];\nconsole.log(JSON.stringify(await settledLabels(inputs)));\ntry { await Promise.all(inputs); }\ncatch (reason) { console.log(\"all:\" + reason); }\n```\nOutput:\n```text\n[\"ok:A\",\"error:no\"]\nall:no\n```\n`allSettled` keeps both outcomes. `all` fails because one input failed. These are practice Promises; no internet request is made.",
+        "Complete `settledLabels(promises)`. Await `Promise.allSettled(promises)` and use the supplied mapping to make the labels.\n\nKeep input order, even if operations finish in a different order. Empty input returns an empty array. This exercise uses text values and text failure reasons."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the requirement.",
+        "Make one change to the starter.",
+        "Run the checks.",
+        "Explain why a changed input produces its result."
+      ],
+      "after": [
+        "Pass promises to Promise.allSettled.",
+        "Await the result and save it as outcomes.",
+        "Keep the mapping to ok:value or error:reason.",
+        "Check mixed outcomes, successful inputs, and an empty list."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If the rejecting input is replaced by Promise.resolve(\"B\"), what does Promise.all produce?",
+        "choices": [
+          "A rejection because the array once contained a rejected promise.",
+          "A fulfilled promise containing [\"A\", \"B\"] in input order.",
+          "Only \"B\", because all keeps the final completion."
+        ],
+        "answer": 1,
+        "explanation": "Both supplied inputs now fulfill, so all can fulfill with their ordered values; it does not remember a prior array from another run."
+      },
+      "after": {
+        "question": "If the rejecting input is replaced by Promise.resolve(\"B\"), what does Promise.all produce?",
+        "choices": [
+          "A rejection because the array once contained a rejected promise.",
+          "A fulfilled promise containing [\"A\", \"B\"] in input order.",
+          "Only \"B\", because all keeps the final completion."
+        ],
+        "answer": 1,
+        "explanation": "Both inputs now succeed, so Promise.all returns their values in input order: A, then B."
+      }
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Trace the visible worked calls before changing the starter."
+      ],
+      "after": [
+        "Replace the empty outcomes array with the awaited results.",
+        "Use status to choose between value and reason."
+      ]
+    },
+    {
+      "field": "externalNotes",
+      "before": "ECMAScript 2026 core; native Node24 and current app worker/DOM harness evidence are recorded separately. No external service or real-browser claim follows from a local fixture.",
+      "after": ""
+    }
+  ],
+  "headings": [
+    "Require every result with all",
+    "Keep every outcome with allSettled",
+    "Compare the two results",
+    "Build settledLabels"
+  ],
+  "project": {
+    "title": "Promise combinators",
+    "task": "Complete settledLabels(promises). Wait for every outcome and return one text label per input: ok:value or error:reason. Preserve input order.",
+    "done_when": "Mixed success and failure outcomes get the right labels. All-success and empty inputs work, with results in input order."
+  },
+  "notes": [
+    "Removed an unrelated local-project completion requirement; its useful teaching is in the lesson and technical evidence stays in review documents."
+  ]
+}

@@ -1,0 +1,86 @@
+{
+  "lesson": "react-34",
+  "position": 28,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Keep edits while using the same topic, but reset the draft to the new name when switching topics.",
+      "after": "Change a component's key when you deliberately want fresh local state."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "React associates state with a component’s identity at its place in the tree. Keeping its type and key keeps its state through ordinary rerenders. Changing the key deliberately replaces that identity, discarding the old local state and initializing a new instance.",
+        "Draft is defined outside App so its component type is stable. useState(name) uses name only when that instance initializes; later prop changes do not overwrite its text automatically. key={name} tells React that each selected topic should start a new draft. key is React metadata, not a normal prop received by Draft; name is passed separately. This reset loses edits intentionally. The input’s change handler reads e.target.value and requests text state; Add mark appends an exclamation mark through an updater. The frame calls App as the root component with no supplied props. App returns the JSX tree; define it here without calling App() yourself or adding imports/createRoot.",
+        "```react\nfunction Draft({name}) {\n  const [text, setText] = React.useState(name);\n  return <section>\n    <label>Draft <input value={text} onChange={e => setText(e.target.value)} /></label>\n    <button onClick={() => setText(t => t + \"!\")}>Add mark</button>\n  </section>;\n}\nfunction App() {\n  const [name, setName] = React.useState(\"River\");\n  return <main>\n    <button onClick={() => setName(n => n === \"River\" ? \"Forest\" : \"River\")}>Switch topic</button>\n    <Draft key={name} name={name} />\n  </main>;\n}\n```",
+        "```react\nfunction Draft({name}) {\n  const [text, setText] = React.useState(name);\n  return <section>\n    <label>Draft <input value={text} onChange={e => setText(e.target.value)} /></label>\n    <button onClick={() => setText(t => t + \"!\")}>Add mark</button>\n  </section>;\n}\nfunction App() {\n  const [name, setName] = React.useState(\"River\");\n  return <main>\n    <button onClick={() => setName(n => n === \"River\" ? \"Forest\" : \"River\")}>Switch topic</button>\n    <Draft name={name} />\n  </main>;\n}\n```\nWithout the key, changing the name prop to Forest preserves the edited text River!. The state initializer is not a synchronization rule. With the key, the fresh instance starts with Forest.",
+        "Keep edits while using the same topic, but reset the draft to the new name when switching topics. These finite behavior checks do not prove that every possible implementation is correct. Optional local practice: change one input, predict the screen, then run it."
+      ],
+      "after": [
+        "Keeping a component's type and key lets React keep its state. Changing its key tells React to replace that component with a fresh one. This deliberately discards its old local state.",
+        "`useState(name)` uses name when that component instance starts. A later prop change does not automatically replace its text. `key={name}` asks for a fresh Draft when the selected name changes.",
+        "```react\nfunction Draft({ name }) {\n  const [text, setText] = React.useState(name);\n  return (\n    <section>\n      <label>Draft <input value={text} onChange={e => setText(e.target.value)} /></label>\n      <button onClick={() => setText(t => t + \"!\")}>Add mark</button>\n    </section>\n  );\n}\nfunction App() {\n  const [name, setName] = React.useState(\"River\");\n  return (\n    <main>\n      <button onClick={() => setName(n => n === \"River\" ? \"Forest\" : \"River\")}>\n        Switch topic\n      </button>\n      <Draft key={name} name={name} />\n    </main>\n  );\n}\n```\nAdd mark changes the draft to `River!`. Switch topic starts a fresh draft containing `Forest`.",
+        "Without the changing key, the same Draft would keep its edited text after the name prop changes. A key does not save old drafts for later. To keep them, you would need to store those drafts elsewhere.",
+        "Keep edits while the same topic is selected. Reset to the new topic's name when switching. Define Draft outside App so its component type stays stable."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the small example and explain its inputs and effects.",
+        "Complete the starter for this lesson.",
+        "Run the behavior checks, then predict a changed case."
+      ],
+      "after": [
+        "Use the topic name as Draft's key and pass name separately.",
+        "Edit the draft, then switch topics.",
+        "Run the checks and confirm the intended reset."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Trace the visible input, event and resulting screen before changing the code."
+      ],
+      "after": [
+        "A key controls React's identity choice; it is not an ordinary prop read by Draft."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "The key changes from River to Forest. What happens to Draft’s local text state?",
+        "choices": [
+          "The old instance is removed; a fresh instance initializes from Forest.",
+          "React stores both drafts permanently under their keys.",
+          "The key is passed to Draft as a normal text prop."
+        ],
+        "answer": 0,
+        "explanation": "A changed key resets that subtree’s identity. Keys are not a persistence store; keeping previous drafts would require storing them elsewhere."
+      },
+      "after": {
+        "question": "The key changes from River to Forest. What happens to Draft's local text?",
+        "choices": [
+          "A fresh Draft starts with Forest.",
+          "React permanently saves both drafts under their keys.",
+          "Draft receives key as an ordinary text prop."
+        ],
+        "answer": 0,
+        "explanation": "The changed key replaces the old component identity. Its earlier local state is discarded."
+      }
+    }
+  ],
+  "headings": [
+    "Choose a fresh start",
+    "Use the starting prop once",
+    "Reset a topic's draft",
+    "Compare keeping the same identity",
+    "Build your draft reset"
+  ],
+  "project": {
+    "title": "A changed key starts a fresh draft",
+    "task": "Keep edits for the current topic. Start a new draft from the new name whenever the topic changes.",
+    "done_when": "Add mark keeps working within a topic. Switching topics resets the draft to that topic's name."
+  }
+}

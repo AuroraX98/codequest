@@ -1,0 +1,104 @@
+{
+  "lesson": "swift-16",
+  "position": 45,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Reject a negative duration while recording cleanup on both success and failure.",
+      "after": "Use defer to finish cleanup when a function succeeds or throws an error."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A throwing function can return a normal result or stop by throwing an error. throws in its signature announces that possibility.",
+        "```swift\nenum SizeError: Error { case tooSmall }\nfunc checkedSize(_ size: Int) throws -> Int {\n    if size < 1 { throw SizeError.tooSmall }\n    return size\n}\n```\nThe error enum conforms to Error so its cases can be thrown.",
+        "try marks a call that may throw. A do-catch block handles that failure instead of assuming success.",
+        "```swift\ndo {\n    let size = try checkedSize(0)\n    print(size)\n} catch {\n    print(\"Choose a positive size\")\n}\n```\nUse this after checkedSize. Throwing skips the remaining statements in do and enters catch.",
+        "defer schedules work for when the current scope exits, after execution reaches the defer statement. It runs on a normal return or a thrown error.",
+        "```swift\nfunc announce() {\n    defer { print(\"Finished\") }\n    print(\"Working\")\n}\nannounce()\n```\nThe output is Working, then Finished. defer does not run its body immediately.",
+        "The supplied Trace is a class containing an events array. Appending a message records the order of operations; caller and function refer to the same trace object.",
+        "In checkedMinutes, append \"started\", register a defer that appends \"finished\", then reject negative input. Return zero or positive input unchanged.",
+        "The supplied inspectMinutes caller records \"accepted: N\" after success or \"rejected\" after failure. Cleanup must appear before either caller message."
+      ],
+      "after": [
+        "defer schedules work for when the current block ends. It can finish cleanup when a function returns normally or stops by throwing an error.",
+        "An error describes a failure. throws says a function may fail. throw stops its normal work and sends an error to the caller. An error type must follow Swift's Error protocol.",
+        "try marks a call that may throw. A do-catch block handles that possibility: do holds the attempted work, and catch handles a thrown error.",
+        "```swift\nenum SizeError: Error { case tooSmall }\nfunc checkedSize(_ size: Int) throws -> Int {\n    defer { print(\"Finished\") }\n    if size < 1 { throw SizeError.tooSmall }\n    return size\n}\ndo {\n    print(try checkedSize(0))\n} catch {\n    print(\"Choose a positive size\")\n}\n```\nThis prints Finished, then Choose a positive size.",
+        "Zero is too small, so checkedSize throws. Before the function ends, its defer prints Finished. The caller then enters catch. A valid size would also run defer before returning to the caller.",
+        "defer only takes effect after the program reaches it. Put it before the work that might fail. It runs when its block ends, not as soon as it is written. It does not turn a failure into a success.",
+        "The exercise supplies a Trace object with an events array. Appending text records what happened. The caller and function share this same trace, so both can add events.",
+        "In checkedMinutes, append started. Set up defer to append finished. Then throw the supplied error for a negative number. Return zero or a positive number unchanged.",
+        "The supplied inspectMinutes caller adds accepted: N after success or rejected after failure. finished must appear before either caller message, because the function's cleanup runs before control returns to the caller."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Register cleanup before the operation that may throw.",
+        "Throw the error for negative input and return valid input unchanged."
+      ],
+      "after": [
+        "Append started, then register cleanup with defer.",
+        "Throw for negative minutes; return allowed minutes unchanged.",
+        "Check that finished comes before the caller's final message."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Register cleanup before the operation that may throw.",
+        "Throw the error for negative input and return valid input unchanged."
+      ],
+      "after": [
+        "Place defer before the check that can throw.",
+        "Zero minutes is allowed."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "A function reaches defer, then throws an error. What happens before the caller's catch runs?",
+        "choices": [
+          "The registered cleanup runs as the function scope exits",
+          "Cleanup is skipped because the function did not return normally",
+          "defer converts the error into a successful result"
+        ],
+        "answer": 0,
+        "explanation": "A reached defer runs when its scope exits, including by throwing. It does not suppress the error; the caller still handles that error."
+      },
+      "after": {
+        "question": "A function reaches defer, then throws. What happens before the caller's catch runs?",
+        "choices": [
+          "The scheduled cleanup runs",
+          "Cleanup is skipped",
+          "defer turns the error into success"
+        ],
+        "answer": 0,
+        "explanation": "The function runs its scheduled cleanup as it exits. The caller then handles the error."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "defer does not guarantee cleanup after process termination or a scope that never reaches it.",
+      "after": "defer cannot promise cleanup if the whole process is stopped. It also has no effect when execution never reaches it."
+    }
+  ],
+  "headings": [
+    "Finish work on the way out",
+    "Explain a thrown error",
+    "Mark a call that can fail",
+    "Read one example",
+    "Follow the cleanup order",
+    "Register cleanup first",
+    "Record the exercise's steps",
+    "Complete checkedMinutes",
+    "Check the caller's result"
+  ],
+  "project": {
+    "title": "Throw, catch, and finish cleanup",
+    "task": "Complete checkedMinutes: record started, arrange finished with defer, reject negative minutes, and return zero or positive minutes unchanged.",
+    "done_when": "Cleanup is recorded before the caller reports either success or failure."
+  }
+}

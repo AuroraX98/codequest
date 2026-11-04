@@ -1,0 +1,105 @@
+{
+  "lesson": "typescript-03",
+  "position": 10,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Use an enum, class, and typed function to calculate points from practice minutes.",
+      "after": "Give one point for every full ten minutes of practice."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "An enum gives names to a set of values. A function can use those named values as a typed input. A class describes objects that keep data and provide actions, called methods. Each learner object can keep its own points. A method can call a reward function so the calculation stays in one place instead of being repeated in every update.",
+        "Run this complete example in the TypeScript runner:\n```typescript\nenum Practice {\n  Drawing,\n  Singing\n}\nfunction pointsFor(minutes: number, kind: Practice): number {\n  return Math.floor(minutes / 10);\n}\nconsole.log(pointsFor(37, Practice.Drawing));\nconsole.log(pointsFor(9, Practice.Singing));\n```\nThe outputs are 3 and 0. / divides minutes by ten. Math.floor rounds the result down to the nearest integer: 3.7 becomes 3. Only completed ten-minute chunks earn points in this rule.",
+        "Practice.Drawing and Practice.Singing are named enum members. A plain numeric enum assigns 0 to the first member and 1 to the next unless values are specified. Those values identify activity categories; they are not point multipliers. The current reward rule is the same for both categories, so kind is accepted but does not change the calculation. Do not invent a bonus that the task did not request.",
+        "Continue after that enum and function:\n```typescript\nclass Student {\n  points = 0;\n  award(minutes: number, kind: Practice): number {\n    const earned = pointsFor(minutes, kind);\n    this.points += earned;\n    return earned;\n  }\n}\nconst student = new Student();\nconsole.log(student.award(37, Practice.Drawing));\nconsole.log(student.award(9, Practice.Singing));\nconsole.log(student.points);\n```\nThe outputs are 3, 0, and 3. new Student() creates an object; this refers to that object inside its method. += adds earned to its previous points. return earned returns this session's reward, not the accumulated total.",
+        "TypeScript infers points as number from its initial 0. The typed method requires numeric minutes and an enum activity, then promises a number result. A different Student starts with its own 0; two students do not share the points field. Store updates on this.points instead of a temporary local variable that disappears when the method returns.",
+        "In the exercise, award the first session's reward and accumulate the second reward too. Twenty minutes earns 2; fifteen earns 1; learner.points should then be 3. Keep earned and secondEarned as the names used by the checks. Returning the total from the second call would produce 3 rather than the requested session reward 1.",
+        "Temporarily passing quoted minutes such as '20' should fail the full TypeScript check. Restore a number afterward. Numeric typing alone does not ensure minutes is nonnegative or finite; the supplied exercise assumes valid durations. For real outside input you would validate that range too. Math.floor is rounding down, so negative values are another reason not to treat type checking as validation."
+      ],
+      "after": [
+        "An enum gives names to a set of values. A method is a function that belongs to an object. Here, an activity enum names the practice, and a learner method adds points to that learner's total.",
+        "This example gives one point for each full group of ten minutes.\n```typescript\nenum Practice { Drawing, Singing }\nfunction pointsFor(minutes: number, kind: Practice): number {\n  return Math.floor(minutes / 10);\n}\nclass Student {\n  points = 0;\n  award(minutes: number, kind: Practice): number {\n    const earned = pointsFor(minutes, kind);\n    this.points += earned;\n    return earned;\n  }\n}\nconst student = new Student();\nconsole.log(student.award(37, Practice.Drawing));\n```\nThe output is 3. Dividing 37 by 10 gives 3.7, and Math.floor rounds down to 3.",
+        "Practice.Drawing and Practice.Singing identify the activities. This numeric enum gives them 0 and 1. Those numbers are labels, not bonus amounts. Both activities use the same reward rule.",
+        "The award method adds earned points to the total, then returns only this session's reward. `this.points += earned` means add earned to this object's current points.",
+        "Each new Student starts with its own zero points. Updating `this.points` changes that student's total, not another student's total.",
+        "In the project, 20 minutes earns 2 points and 15 minutes earns 1. Save those rewards as earned and secondEarned. The learner's total should then be 3.",
+        "Quoted minutes are text and cause a type error. A number type alone does not prove a duration is valid: outside input could still be negative or not finite. This practice supplies valid durations."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Define Activity.Coding and Activity.Reading. Give one point for every full 10 minutes. Do not award a point for leftover minutes.",
+        "Create a Learner class with an award method that adds earned points to its running total.",
+        "Save learner.award(20, Activity.Coding) as earned. Expect 2 points.",
+        "Save learner.award(15, Activity.Reading) as secondEarned. Expect 1 point.",
+        "Check that learner.points is now 3."
+      ],
+      "after": [
+        "Define Activity.Coding and Activity.Reading, with one point per full ten minutes.",
+        "Make Learner.award add the reward to the learner's total and return that session's reward.",
+        "Save the 20-minute coding reward as earned.",
+        "Save the 15-minute reading reward as secondEarned.",
+        "Run the checks and confirm the total is 3."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "The enum names the kind of activity; the sample reward depends on minutes.",
+        "Use `Math.floor(minutes / 10)` to count each complete ten-minute block.",
+        "Add the reward to `this.points`, then return the amount just gained."
+      ],
+      "after": [
+        "Both activity kinds use the same reward rule.",
+        "Use `Math.floor(minutes / 10)`.",
+        "Add to `this.points`, then return earned, not the total."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "A reward gives one point per full ten minutes. What does Math.floor(28 / 10) return?",
+        "choices": [
+          "2",
+          "2.8",
+          "3"
+        ],
+        "answer": 0,
+        "explanation": "28 / 10 is 2.8. Math.floor rounds down to 2, so only the two complete ten-minute groups earn points; the remaining eight minutes do not."
+      },
+      "after": {
+        "question": "What does Math.floor(28 / 10) return for full ten-minute groups?",
+        "choices": [
+          "2",
+          "2.8",
+          "3"
+        ],
+        "answer": 0,
+        "explanation": "28 divided by 10 is 2.8. Rounding down gives 2 full groups."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Type-error practice: after the valid solution compiles, temporarily append this line and run the full TypeScript check: learner.award(\"20\", Activity.Coding); The compiler should report an error. Remove the line before completing the lesson. Runtime checks alone cannot establish rejection of an incorrect type.",
+      "after": "To try a type error, temporarily pass quoted minutes to learner.award. Read the error, then restore the numeric value."
+    }
+  ],
+  "headings": [
+    "Name an activity",
+    "Calculate and store a reward",
+    "Read the activity names",
+    "Return this session's points",
+    "Keep each learner's total",
+    "Add two sessions",
+    "Check more than the type"
+  ],
+  "project": {
+    "title": "A typed reward calculator",
+    "task": "Calculate each practice reward and add it to the learner's own points total.",
+    "done_when": "Each call returns its own reward, the total adds both rewards, and the checks pass."
+  }
+}

@@ -1,0 +1,91 @@
+{
+  "lesson": "go-36",
+  "position": 36,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "If n becomes 3 instead of 2, what is printed?",
+      "after": "Set a call aside to run when its function ends."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "defer schedules a call for when the surrounding function returns, including during panic unwinding. Arguments to the deferred call are evaluated when defer executes, not later.",
+        "Multiple deferred calls run in reverse scheduling order. This makes defer useful for cleanup, but a defer inside a long loop still waits for the whole function to return. Close errors may need explicit handling; defer is not proof that cleanup succeeded.",
+        "Complete local Go example; the app itself does not execute it:\n```go\npackage main\nimport (\"fmt\")\nfunc main() {\n n := 1\n defer fmt.Println(\"first\", n)\n n = 2\n defer fmt.Println(\"second\", n)\n fmt.Println(\"body\", n)\n}\n```",
+        "Expected output or behavior: body 2\nsecond 2\nfirst 1. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Replace a deferred argument with a closure reading n and predict the different capture behavior. You may trace it without a Go compiler; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "`defer` schedules a call for the end of the surrounding function. Its arguments are worked out when defer is reached. The call waits, but its input values are already chosen.",
+        "Deferred calls run in reverse order: the last one scheduled runs first. A defer in a loop still waits for the function to end. Deferred cleanup can also run during a panic, but you may still need to check for cleanup errors.",
+        "Follow when each value is chosen and when each call runs.\n```go\npackage main\nimport (\"fmt\")\nfunc main() {\n n := 1\n defer fmt.Println(\"first\", n)\n n = 2\n defer fmt.Println(\"second\", n)\n fmt.Println(\"body\", n)\n}\n```",
+        "The screen shows `body 2`, then `second 2`, then `first 1`. The first defer saved 1 before n changed.",
+        "A deferred call with n as an argument saves n's value now. A deferred closure whose body reads n can read its later value instead."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Check when each defer received its argument."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If n becomes 3 instead of 2, what is printed?",
+        "choices": [
+          "first 1, second 3, body 3",
+          "body 3, second 3, first 1",
+          "body 3, second 3, first 3"
+        ],
+        "answer": 1,
+        "explanation": "The first defer already captured one; the second captures three and executes before the first during return."
+      },
+      "after": {
+        "question": "Change n = 2 to n = 3. Which lines appear in order?",
+        "choices": [
+          "first 1, second 3, body 3",
+          "body 3, second 3, first 1",
+          "body 3, second 3, first 3"
+        ],
+        "answer": 1,
+        "explanation": "The body shows 3 first. The second defer saved 3 and runs next. The first defer saved 1 and runs last."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Go Core v1 uses the verified Go1.27.3 toolchain and standard library. The app supplies concept reading and an understanding check, not a Go browser runner. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "The browser shows Go code and checks your understanding; it does not run Go. Optional local examples use Go 1.27."
+    }
+  ],
+  "headings": [
+    "Schedule a call for later",
+    "Run the newest deferred call first",
+    "One example",
+    "Read the lines in order",
+    "Separate saved inputs from later reads"
+  ],
+  "project": {
+    "title": "Deferred cleanup order",
+    "task": "Predict both the order and the saved values.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local Go example is optional."
+  }
+}

@@ -1,0 +1,85 @@
+{
+  "lesson": "python-90",
+  "sourceHash": "1bd55536140526a0a8a59c1cbf5d125f9dcf59e4657dff7ead4ac32b08199eed",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Complete measure(operation, repeats=2, number=3): reject counts below one with ValueError, then return Timer(operation).repeat with the supplied repeat and number values. Use small positive integer counts. Leave counted_measure and rejects_count test scaffolding unchanged.",
+      "after": "Measure a small operation several times and understand what each time includes."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "Prepare the tiny input list before measuring. operation() sums that list and returns its result; the measurement includes calling the function and summing, not constructing the list. A measured function with side effects will repeat them: the timer does not reset application state automatically.",
+        "timeit.Timer(operation) receives the callable itself, not operation(), and constructs a timer without running the operation yet. timer.repeat(repeat=2, number=3) runs three calls per measurement and returns a list of two elapsed totals in seconds. It does not return the operation’s values. By default timeit temporarily disables garbage collection during timing; that policy may differ from a real workload.",
+        "measure(operation, repeats, number) rejects nonpositive counts, constructs the timer, and returns its samples. all(value >= 0 for value in samples) returns True only when every elapsed result is nonnegative, without demanding a particular speed. The displayed operation is called indirectly by timer.repeat, three times in each sample; passing its name to Timer does not call it immediately.\n```python\nimport timeit\n\ndef measure(operation, repeats=2, number=3):\n    if repeats < 1 or number < 1:\n        raise ValueError(\"positive repetition counts required\")\n    timer = timeit.Timer(operation)\n    return timer.repeat(repeat=repeats, number=number)\nvalues = [1, 2, 3]\ndef operation():\n    return sum(values)\nsamples = measure(operation, repeats=2, number=3)\nprint(len(samples), all(value >= 0 for value in samples))\n```\nOutput: 2 True. Exact elapsed values vary, may be zero at clock resolution, and are deliberately not printed or asserted.",
+        "A sample total covers number calls; dividing by number gives an average per call for that sample, not a universal performance guarantee. Repeat measurements to observe noise, but do not infer asymptotic complexity or real-user latency from this tiny case. Optional practice: change repeat to three and predict list length before running. Keep repetitions small in the browser. The supplied counted_measure test helper checks that the operation really ran six times; rejects_count checks the documented invalid-count boundary."
+      ],
+      "after": [
+        "Prepare the small input list before measuring. operation() adds its values and returns the sum. Timing includes calling the function and adding the values, but not making the list. If the function changes something, such as adding to a list, those changes happen on every call. The timer does not reset them.",
+        "timeit.Timer(operation) gets the function itself, not operation(). It creates a timer without calling the function yet. timer.repeat(repeat=2, number=3) makes two measurements, with three calls in each, and returns two elapsed totals in seconds. It does not return the function's results. By default, `timeit` pauses one kind of background memory cleanup while timing. Other cleanup can still happen. A real program may therefore behave differently.",
+        "Keep the positive-count check, then create the timer and return its samples. all(value >= 0 for value in samples) is True only if every elapsed total is zero or more; it does not check for a particular speed. In this example, each sample includes three calls to operation. The supplied counted_measure and rejects_count helpers check call counts and invalid counts. Leave them unchanged.\n```python\nimport timeit\n\ndef measure(operation, repeats=2, number=3):\n    if repeats < 1 or number < 1:\n        raise ValueError(\"positive repetition counts required\")\n    timer = timeit.Timer(operation)\n    return timer.repeat(repeat=repeats, number=number)\nvalues = [1, 2, 3]\ndef operation():\n    return sum(values)\nsamples = measure(operation, repeats=2, number=3)\nprint(len(samples), all(value >= 0 for value in samples))\n```\nOutput:\n```text\n2 True\n```\nElapsed totals can vary and may be zero if the timer cannot measure such a short operation. The example does not print or check their exact values.",
+        "Each sample covers number calls. Dividing its total by number gives an average time per call for that sample, not a promise about speed. Repeated measurements can show timing differences, but this tiny example does not tell you how an operation will scale or feel in a real program. Use small positive integer counts, especially in the browser. The supplied counted_measure helper checks that two measurements of three calls make six calls; rejects_count checks the invalid-count boundary."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the requirement.",
+        "Make one change to the starter.",
+        "Run the checks.",
+        "Explain why a changed input produces its result."
+      ],
+      "after": [
+        "Keep the check that raises ValueError when repeats or number is below one.",
+        "Create timeit.Timer with operation itself so the function is not called yet.",
+        "Return timer.repeat(repeat=repeats, number=number) to get one elapsed total per repeat.",
+        "Check that counted_measure() returns (2, 6, True) and that three repeats return three samples.",
+        "Check that zero and negative counts are rejected and that elapsed samples are nonnegative."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "For repeat=3 and number=2, how many elapsed totals and operation calls are requested?",
+        "choices": [
+          "Two totals, each covering three calls.",
+          "Six returned operation values, with no elapsed measurements.",
+          "Three elapsed totals, each covering two calls: six calls altogether."
+        ],
+        "answer": 2,
+        "explanation": "repeat controls the number of measurements; number controls calls inside each measurement. Their product counts operation invocations, not returned timing entries."
+      },
+      "after": {
+        "question": "For repeat=3 and number=2, how many elapsed totals and operation calls are requested?",
+        "choices": [
+          "Two totals, each covering three calls.",
+          "Six returned operation values, with no elapsed measurements.",
+          "Three elapsed totals, each covering two calls: six calls altogether."
+        ],
+        "answer": 2,
+        "explanation": "repeat sets the number of measurements. number sets the calls in each measurement. Three measurements of two calls make six calls."
+      }
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Trace the visible worked calls before changing the starter."
+      ],
+      "after": [
+        "Pass operation itself to timeit.Timer; do not call operation().",
+        "Return timer.repeat(repeat=repeats, number=number) to get elapsed totals.",
+        "repeat sets the number of totals; number sets calls in each total.",
+        "Keep the ValueError check for either count below one."
+      ]
+    }
+  ],
+  "reviewNotes": [
+    "Kept the ValueError boundary and message.",
+    "Timer receives the function itself and returns elapsed totals.",
+    "Explained repeated changes and timeit cleanup behavior simply.",
+    "Kept the average, timing variability, and small-count limits.",
+    "Preserved quiz answer index 2 and both test helpers.",
+    "Clarified that timeit pauses one kind of memory cleanup, not every automatic object cleanup."
+  ]
+}

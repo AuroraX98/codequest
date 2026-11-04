@@ -1,0 +1,48 @@
+{
+  "lesson": "javascript-23",
+  "position": 39,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Write createHistory(initial), where notes are strings. Return methods current(), edit(text), undo(), redo(). Each method returns the current string. Undo/redo stop at the ends. Editing after undo discards the redo branch; editing the current text does nothing.",
+      "after": "Save note versions so you can undo and redo edits."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "Undo needs more than the current note: it needs previous versions and a position within them. Model the editor with an array of strings and an index called a cursor. An invariant is a fact that must stay true: the cursor always points to an existing version, and current() returns that version.",
+        "A closure is a function that keeps access to variables from where it was created. createHistory can create versions and cursor, then return methods that share those variables. Each call to createHistory gets its own storage. The caller can operate the editor without directly changing its internal array.",
+        "This small closure keeps a private counter.\n```javascript\nfunction makeCounter() {\n  let count = 0;\n  return { next() { count += 1; return count; } };\n}\nconst a = makeCounter();\nconst b = makeCounter();\nconsole.log(a.next(), a.next(), b.next());\n```\nIt prints 1 2 1. The two objects have separate count variables, just as two note histories should remain separate.",
+        "Undo moves the cursor left if an earlier version exists. Redo moves it right if a later version exists. Neither action changes the array. At the first or last version, return the current text unchanged. Avoid negative indexes or reading past the final entry.",
+        "Editing after undo creates a new branch.\n```javascript\nlet versions = [\"A\", \"B\", \"C\"];\nlet cursor = 1;\nversions = versions.slice(0, cursor + 1);\nversions.push(\"D\");\ncursor = versions.length - 1;\nconsole.log(versions, versions[cursor]);\n```\nThe versions are A, B, D and the current text is D. slice excludes its end index, so cursor + 1 keeps the current version before appending.",
+        "If the new text equals the current text, return immediately. A repeated edit should not create a duplicate undo step or remove a useful redo branch. Strings suit this exercise because callers cannot mutate a saved string in place. Saving arbitrary objects would require a clear copy or immutability policy.",
+        "Test sequences, not just isolated methods: edit A to B to C, undo to B, then edit D. Redo must remain D because C belongs to the abandoned branch. Also test an empty string, repeated undo at the beginning, duplicate edits and two independent histories. Those transitions expose mistakes a single happy path would miss."
+      ],
+      "after": [
+        "Undo needs a record of earlier notes. Store the versions in an array of strings.\n\nA number called `cursor` points to the version you are viewing. It must always point to an existing entry. `current()` returns that entry.",
+        "A closure is a function that remembers variables from where it was created.\n\n`createHistory` can return functions that share its `versions` and `cursor`. Each call to `createHistory` gets separate storage. The caller uses the returned functions to change the history.",
+        "This small example shows how separate closures keep separate values.\n```javascript\nfunction makeCounter() {\n  let count = 0;\n  return { next() { count += 1; return count; } };\n}\nconst a = makeCounter();\nconst b = makeCounter();\nconsole.log(a.next(), a.next(), b.next());\n```\nOutput:\n```text\n1 2 1\n```\nCalling `a.next()` twice changes only `a`'s count. `b` still starts at 1. Our note histories should stay separate in the same way.",
+        "Undo moves the cursor one place back, if there is an earlier version. Redo moves it one place forward, if there is a later version.\n\nNeither action changes the saved array. At either end, stay on the current version and return its text.",
+        "A new edit after undo replaces the old future versions.\n```javascript\nlet versions = [\"A\", \"B\", \"C\"];\nlet cursor = 1;\nversions = versions.slice(0, cursor + 1);\nversions.push(\"D\");\ncursor = versions.length - 1;\nconsole.log(versions, versions[cursor]);\n```\nThe saved versions are now A, B, D. The current text is D.\n\n`slice(0, cursor + 1)` keeps everything through the current version. `push` adds the new one. The cursor then moves to that last entry.",
+        "If an edit contains the same text as the current version, do nothing and return that text.\n\nCheck this before removing future versions. Otherwise, an unchanged edit could erase useful redo steps. This exercise stores strings, which cannot be edited in place.",
+        "Complete `createHistory(initial)` with `current`, `edit`, `undo`, and `redo` methods. Each must return the current note text.\n\nCheck a whole sequence: edit A to B to C, undo to B, then edit D. Redo should stay at D because the old C version was removed.\n\nAlso check an empty note, repeated undo at the start, unchanged edits, and two separate histories."
+      ]
+    }
+  ],
+  "headings": [
+    "Keep versions and a position",
+    "Keep history in a closure",
+    "See separate saved values",
+    "Move backward or forward",
+    "Replace the old future",
+    "Ignore an unchanged edit",
+    "Build the note history"
+  ],
+  "project": {
+    "title": "A note editor with reversible history",
+    "task": "Complete createHistory(initial). Return current(), edit(text), undo(), and redo(), each returning the current note. Stop undo and redo at the ends. New edits after undo replace the old future; unchanged edits do nothing.",
+    "done_when": "Undo and redo stay within the saved versions. New edits replace the old future, unchanged edits preserve it, and separate histories do not affect each other."
+  },
+  "notes": []
+}

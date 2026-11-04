@@ -1,0 +1,91 @@
+{
+  "lesson": "python-20",
+  "sourceHash": "f8dc259d934af11e490a68213f19889fa432189598d14c6b88c76199c36d5db7",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Request data from a supplied practice API and show selected results.",
+      "after": "Validate supplied API responses, then return clean title lists or clear error records."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "An application programming interface, or API, is a defined way for one program to ask another service for data or an action. A reply often has a status code and a payload, the data body. Status 200 means an ordinary successful reply in this practice contract. Status 503 indicates the service cannot complete the request. A success status alone does not prove that the body contains the expected fields.",
+        "Your function receives status and payload as supplied values, so it can practise validation without a network connection. A fixture is prepared sample data used for a predictable scenario. First reject a status different from 200 using `!=`, which means not equal. Return a dictionary containing an error message when validation fails. That keeps expected failures clear and avoids blindly reading bad data.",
+        "Here is a complete safe title reader for a small example.\n```python\ndef read_titles(status, payload):\n    if status != 200:\n        return {\"error\": \"Service unavailable\"}\n    if not isinstance(payload, dict):\n        return {\"error\": \"Missing results\"}\n    results = payload.get(\"results\")\n    if not isinstance(results, list):\n        return {\"error\": \"Missing results\"}\n    for item in results:\n        if not isinstance(item, dict) or not isinstance(item.get(\"title\"), str):\n            return {\"error\": \"Invalid result\"}\n    return [item[\"title\"] for item in results]\n\nprint(read_titles(200, {\"results\": [{\"title\": \"Forest Notes\"}]}))\nprint(read_titles(200, {}))\nprint(read_titles(503, {}))\n```\nThe outputs are `['Forest Notes']`, `{'error': 'Missing results'}`, and `{'error': 'Service unavailable'}`. Each early return prevents later code from using data that failed a required rule.",
+        "`isinstance(value, type)` asks whether a value belongs to the expected kind. Dict means dictionary, list means list, and str means string. `.get(\"results\")` reads a dictionary field or returns None if it is absent. That is safer for validation than brackets, which raise KeyError for a missing key. Check that payload is a dictionary before using its get method, and check each item before reading its title.",
+        "The supplied solution uses all and a generator expression to validate every entry. `all(test for x in results)` is true only when every test is true. An empty list passes that rule because it contains no invalid entries. `and` checks the first condition before the next; if x is not a dictionary, the title get is skipped. This prevents calling a dictionary method on an unsuitable object.",
+        "This complete example isolates the all check and the title comprehension.\n```python\ndef titles_or_error(results):\n    valid = all(\n        isinstance(item, dict) and isinstance(item.get(\"title\"), str)\n        for item in results\n    )\n    if not valid:\n        return {\"error\": \"Invalid result\"}\n    return [item[\"title\"] for item in results]\n\nprint(titles_or_error([{\"title\": \"Garden Log\"}, {\"title\": \"Sky Notes\"}]))\nprint(titles_or_error([{\"title\": 7}]))\nprint(titles_or_error([]))\n```\nIt prints `['Garden Log', 'Sky Notes']`, then the invalid-result dictionary, then `[]`. The comprehension makes a new list of already-validated title strings. This helper assumes its input is a list; the outer reader performs that check first.",
+        "The matching math asks for an average: add 4 and 8 to get total 12, then divide by their count 2 to get 6. For a grouped dataset, calculate a total and count within each named group, then divide that group's total by its count. An empty group has no average; represent that explicitly as None rather than dividing by zero. These calculations only make sense after validating that the fields contain usable numeric values.",
+        "Your exercise must distinguish server failure, missing results, invalid entries, and a valid title list. Ocean Notes returns as a one-item list; missing results returns \"Missing results\"; status 503 returns \"Service unavailable\". Real requests also need a network client, timeout handling, and an approved service integration. The runnable fixture makes no actual API request and cannot verify a remote service. Keep private credentials on a server rather than embedding them in browser-delivered Python."
+      ],
+      "after": [
+        "An application programming interface (API) is a set way for one program to ask another service for data or an action. A reply often has a status code and a payload. The payload is the data body. Status 200 means a normal successful reply in this practice. Status 503 means the service cannot finish the request. A success status alone does not prove the body has the fields you expect.",
+        "Your function receives `status` and `payload` as supplied values. So you can practise validation without a network connection. A fixture is prepared sample data for a predictable scenario. First reject any status other than 200 using `!=`, which means not equal. Return a dictionary with an error message when the check fails. That keeps expected failures clear. It also stops later code from reading bad data.",
+        "Here is a complete safe title reader for a small example.\n```python\ndef read_titles(status, payload):\n    if status != 200:\n        return {\"error\": \"Service unavailable\"}\n    if not isinstance(payload, dict):\n        return {\"error\": \"Missing results\"}\n    results = payload.get(\"results\")\n    if not isinstance(results, list):\n        return {\"error\": \"Missing results\"}\n    for item in results:\n        if not isinstance(item, dict) or not isinstance(item.get(\"title\"), str):\n            return {\"error\": \"Invalid result\"}\n    return [item[\"title\"] for item in results]\n\nprint(read_titles(200, {\"results\": [{\"title\": \"Forest Notes\"}]}))\nprint(read_titles(200, {}))\nprint(read_titles(503, {}))\n```\nThe outputs are `['Forest Notes']`, `{'error': 'Missing results'}`, and `{'error': 'Service unavailable'}`. Each early return stops later code from using data that failed a rule.",
+        "`isinstance(value, type)` asks whether a value is the kind you expect. `dict` means dictionary, `list` means list, and `str` means string. `.get(\"results\")` reads a dictionary field or gives `None` if it is absent. That is safer for validation than brackets, which raise `KeyError` for a missing key. Check that `payload` is a dictionary before using its `get` method. Check each item before reading its title.",
+        "The supplied solution uses `all` with a test for each entry. `all(test for x in results)` is true only when every test is true. An empty list passes that rule because it has no invalid entries. `and` checks the first condition before the next. If `x` is not a dictionary, the title `get` is skipped. This prevents calling a dictionary method on the wrong kind of object.",
+        "This complete example isolates the `all` check and the title comprehension.\n```python\ndef titles_or_error(results):\n    valid = all(\n        isinstance(item, dict) and isinstance(item.get(\"title\"), str)\n        for item in results\n    )\n    if not valid:\n        return {\"error\": \"Invalid result\"}\n    return [item[\"title\"] for item in results]\n\nprint(titles_or_error([{\"title\": \"Garden Log\"}, {\"title\": \"Sky Notes\"}]))\nprint(titles_or_error([{\"title\": 7}]))\nprint(titles_or_error([]))\n```\nIt prints `['Garden Log', 'Sky Notes']`, then the invalid-result dictionary, then `[]`. The comprehension makes a new list of already-checked title strings. This helper assumes its input is a list. The outer reader checks that first.",
+        "The matching math asks for an average. Add 4 and 8 to get 12, then divide by their count 2 to get 6. For grouped data, find a total and count within each named group. Then divide that group's total by its count. An empty group has no average. Show that clearly as `None` instead of dividing by zero. These calculations only make sense after checking that the fields hold usable numbers.",
+        "Your exercise must tell apart four outcomes: server failure, missing results, invalid entries, and a valid title list. `Ocean Notes` returns as a one-item list. Missing results returns `{\"error\": \"Missing results\"}`. Status 503 returns `{\"error\": \"Service unavailable\"}`. Real requests also need a network client, timeout handling, and an approved service connection. The runnable fixture makes no real API request and cannot check a remote service. Keep private credentials on a server, not in Python sent to a browser."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Handle a status other than 200 before reading the results.",
+        "Check that `results` is a list.",
+        "Check each title before adding it to the output."
+      ],
+      "after": [
+        "Return `{\"error\": \"Service unavailable\"}` when `status != 200`, before reading `payload`.",
+        "Return `{\"error\": \"Missing results\"}` unless `payload` is a dictionary and `payload.get(\"results\")` is a list.",
+        "Return `{\"error\": \"Invalid result\"}` if any result is not a dictionary with a string `title`; otherwise return the list of title strings.",
+        "Check the three supplied cases: `Ocean Notes` succeeds, missing results fails, and status 503 fails."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "The response status is 200, but `results` is missing. What should the app do?",
+        "choices": [
+          "Return a clear invalid-response message",
+          "Assume success without checking",
+          "Crash while indexing results"
+        ],
+        "answer": 0,
+        "explanation": "A missing results field violates the response shape, so return an error rather than claiming success."
+      },
+      "after": {
+        "question": "The response status is 200, but `results` is missing. What should the app do?",
+        "choices": [
+          "Return a clear invalid-response message",
+          "Assume success without checking",
+          "Crash while indexing results"
+        ],
+        "answer": 0,
+        "explanation": "A missing `results` field means the reply has the wrong shape. Return a clear error instead of pretending success."
+      }
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Check status before payload.",
+        "Require a dictionary with a results list.",
+        "Check every row has a string title before returning titles."
+      ],
+      "after": [
+        "Check status before payload.",
+        "Require a dictionary with a `results` list.",
+        "Use `all(...)` to confirm every row has a string title before returning titles."
+      ]
+    }
+  ],
+  "reviewNotes": [
+    "Kept quiz answer index 0 and its meaning.",
+    "Kept both focused code examples and their outputs in fenced blocks.",
+    "Preserved the fixture-only limit: no real network request is made.",
+    "Preserved the 200, 503, missing-results, and invalid-entry behaviors.",
+    "Used plain wording for API, payload, fixture, isinstance, and all."
+  ]
+}

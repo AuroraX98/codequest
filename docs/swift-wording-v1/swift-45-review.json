@@ -1,0 +1,87 @@
+{
+  "lesson": "swift-45",
+  "position": 39,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Define ShelfKey as shown and uniqueShelfCount(_:) to return the number of distinct room/shelf pairs in an array.",
+      "after": "Let a set recognize matching values made from your own type."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "Equatable provides meaningful == comparisons. Hashable also supplies hashing for sets and dictionary keys and includes the equality requirement. Swift can synthesize both for this struct because its stored String and Int fields already support them. Equality compares all stored fields; a different field makes a different key.",
+        "ShelfKey(room:shelf:) constructs the value. Set<ShelfKey> stores distinct keys; equal a and same occupy one entry. keys.contains(same) asks membership and returns Bool. Equal values must have matching hashes, but matching hashes do not prove equality: collisions are allowed. Do not print or assert a particular hash number; hashing is intentionally not a stable saved identifier. These keys have constant stored fields and no shared mutable references.",
+        "Follow this complete example.\n```swift\nstruct ShelfKey: Hashable {\n    let room: String\n    let shelf: Int\n}\nlet a = ShelfKey(room: \"east\", shelf: 2)\nlet same = ShelfKey(room: \"east\", shelf: 2)\nlet different = ShelfKey(room: \"east\", shelf: 3)\nlet keys: Set<ShelfKey> = [a, same, different]\nprint(a == same)\nprint(a == different)\nprint(keys.count)\nprint(keys.contains(same))\n```\nOutput:\n```text\ntrue\nfalse\n2\ntrue\n```",
+        "Change the input or declaration and trace the result.\n```swift\nstruct ShelfKey: Hashable {\n    let room: String\n    let shelf: Int\n}\nlet a = ShelfKey(room: \"east\", shelf: 2)\nlet same = ShelfKey(room: \"east\", shelf: 2)\nlet different = ShelfKey(room: \"west\", shelf: 2)\nlet keys: Set<ShelfKey> = [a, same, different]\nprint(a == same)\nprint(a == different)\nprint(keys.count)\nprint(keys.contains(same))\n```\nOutput:\n```text\ntrue\nfalse\n2\ntrue\n```",
+        "For the exercise, keep the shown ShelfKey definition and implement uniqueShelfCount(_:) for an array of keys. Set(keys) constructs a set from that array; .count returns its number of distinct entries. The original array is not edited. Here is a complete application:\n```swift\nstruct ShelfKey: Hashable {\n    let room: String\n    let shelf: Int\n}\nfunc uniqueShelfCount(_ keys: [ShelfKey]) -> Int {\n    return Set(keys).count\n}\nlet key = ShelfKey(room: \"west\", shelf: 7)\nprint(uniqueShelfCount([key, key]))\n```\nThe final line prints 1. Optional local practice: predict the count for an empty array and for a third room with the same shelf number."
+      ],
+      "after": [
+        "A ShelfKey identifies one shelf in one room. Two keys are equal only when both their room and shelf match. Swift can create that equality check from the stored properties.",
+        "Hashable lets a type work in a Set or as dictionary keys. It includes Equatable, which supports == comparisons. Because String and Int already support Hashable, Swift can build the needed behavior for this simple struct.",
+        "```swift\nstruct ShelfKey: Hashable {\n    let room: String\n    let shelf: Int\n}\nlet a = ShelfKey(room: \"east\", shelf: 2)\nlet same = ShelfKey(room: \"east\", shelf: 2)\nlet different = ShelfKey(room: \"east\", shelf: 3)\nlet keys: Set<ShelfKey> = [a, same, different]\nprint(a == same)\nprint(a == different)\nprint(keys.count)\nprint(keys.contains(same))\n```\nThis prints true, false, 2, and true. a and same match, so they take one place in the set. different has another shelf number, so it takes another place.",
+        "A hash is a number that helps a set find values quickly. Equal values need matching hashes, but unequal values can also have matching hashes. The set still checks equality. Hashes can change between program runs, so do not save one as a permanent ID.",
+        "Keep ShelfKey as shown. Complete uniqueShelfCount(_:) to count different room-and-shelf pairs in an array. Set(keys) removes repeated keys, and .count gives the total. An empty array gives zero."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the small example and explain its inputs and effects.",
+        "Complete the starter for the stated contract.",
+        "Use the configured compatible Swift companion or local Swift toolchain, then explain the changed case."
+      ],
+      "after": [
+        "Keep both room and shelf in ShelfKey.",
+        "Make a Set from the input array.",
+        "Return the set's count without changing the array."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Trace the inputs, returned value and changed state before running."
+      ],
+      "after": [
+        "Two keys match only when both stored properties match.",
+        "Set(keys).count counts each distinct key once."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Two keys have the same shelf number but different room strings. How many entries should their Set contain?",
+        "choices": [
+          "2",
+          "It depends on randomized hash values",
+          "1"
+        ],
+        "answer": 0,
+        "explanation": "Both stored fields participate in synthesized equality. A hash collision would not make unequal keys equal."
+      },
+      "after": {
+        "question": "Two keys have the same shelf number but different rooms. How many entries will their set contain?",
+        "choices": [
+          "2",
+          "It depends on their hash numbers",
+          "1"
+        ],
+        "answer": 0,
+        "explanation": "The rooms differ, so the keys are different. Both belong in the set."
+      }
+    }
+  ],
+  "headings": [
+    "Recognize equal keys",
+    "Use Hashable",
+    "Read one example",
+    "Do not use hashes as IDs",
+    "Try it yourself"
+  ],
+  "project": {
+    "title": "Give values equality and hashing contracts",
+    "task": "Use the shown Hashable ShelfKey type. Complete uniqueShelfCount(_:) to count distinct room-and-shelf pairs without changing the input array.",
+    "done_when": "Repeated pairs count once; different rooms or shelves count separately."
+  }
+}

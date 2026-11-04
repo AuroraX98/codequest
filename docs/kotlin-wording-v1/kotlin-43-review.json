@@ -1,0 +1,91 @@
+{
+  "lesson": "kotlin-43",
+  "position": 43,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "If the use block prints body then throws IllegalArgumentException(), what prints?",
+      "after": "Use use to close a resource after its work, even if the work throws an error."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "On the JVM, use runs a block with a closeable resource and closes it afterward, including when the block throws. Garbage collection is not a substitute for promptly closing files or similar resources.",
+        "import java.io.Closeable makes that JVM interface available by its short name Closeable. It defines close(). throw IllegalArgumentException() creates and throws an exception, transferring control rather than returning normally. The lambda passed to use runs before close; after runs only after use returns normally. A block failure is propagated after cleanup, so ordinary following code is skipped unless a suitable handler recovers.\n\nThis complete failing-path companion constructs IllegalArgumentException with a diagnostic message and throws it inside use. The exception is not a normal return value: use closes the resource before the matching handler prints caught.\n```kotlin\nimport java.io.Closeable\nclass Trace : Closeable {\n    override fun close() { println(\"close\") }\n}\nfun main() {\n    try {\n        Trace().use {\n            println(\"body\")\n            throw IllegalArgumentException(\"stop\")\n        }\n    } catch (error: IllegalArgumentException) {\n        println(\"caught\")\n    }\n}\n```\nExpected output: body; close; caught.",
+        "Complete local Kotlin/JVM example; the app itself does not execute it:\n```kotlin\nimport java.io.Closeable\nclass Trace : Closeable {\n    override fun close() { println(\"close\") }\n}\nfun main() {\n    try {\n        Trace().use { println(\"body\") }\n        println(\"after\")\n    } catch (e: IllegalArgumentException) {\n        println(\"caught\")\n    }\n}\n```",
+        "Expected output or behavior: body\nclose\nafter. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Trace the normal and failing paths without relying on garbage collection timing. You may trace it without a Kotlin compiler; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "A resource is something your program must release when finished, such as an open file. Closeable is a JVM interface with a close function. The import line lets this code use that interface's short name.",
+        "The function `use` runs its block, then calls close on the resource. It also closes the resource if the block throws an error. The Trace class prints close so we can see when that happens.",
+        "Follow the example one line at a time.\n```kotlin\nimport java.io.Closeable\nclass Trace : Closeable {\n    override fun close() { println(\"close\") }\n}\nfun main() {\n    try {\n        Trace().use { println(\"body\") }\n        println(\"after\")\n    } catch (e: IllegalArgumentException) {\n        println(\"caught\")\n    }\n}\n```",
+        "The screen shows `body`, `close`, then `after`. Use runs the body, closes Trace, and returns normally. The next instruction then prints after.",
+        "The word `throw` sends an error out of the normal path. If the body throws IllegalArgumentException, use closes Trace before the catch handles the error. The after instruction inside try is skipped. Do not rely on automatic memory cleanup to close resources promptly."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Cleanup happens before the matching catch runs."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If the use block prints body then throws IllegalArgumentException(), what prints?",
+        "choices": [
+          "body, close, after",
+          "body, caught, close",
+          "body, close, caught"
+        ],
+        "answer": 2,
+        "explanation": "use closes the resource during exception propagation; the matching catch then runs and after inside the try is skipped."
+      },
+      "after": {
+        "question": "The use block prints body, then throws `IllegalArgumentException()`. What appears?",
+        "choices": [
+          "body, close, after",
+          "body, caught, close",
+          "body, close, caught"
+        ],
+        "answer": 2,
+        "explanation": "Use closes Trace before the error reaches catch. Catch prints caught, and after is skipped."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Kotlin JVM Core v1 uses Kotlin2.4.21 stable syntax and a verified JVM toolchain. The app supplies concept reading and an understanding check, not a Kotlin browser runner. Coroutine libraries are separate dependencies. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "The browser shows Kotlin code and checks your understanding; it does not run Kotlin. Optional local examples use Kotlin/JVM."
+    }
+  ],
+  "headings": [
+    "Release a finished resource",
+    "Close it with use",
+    "One example",
+    "Follow normal cleanup",
+    "Follow cleanup after an error"
+  ],
+  "project": {
+    "title": "Close resources with use",
+    "task": "Predict the order of cleanup and error handling.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local Kotlin example is optional."
+  }
+}

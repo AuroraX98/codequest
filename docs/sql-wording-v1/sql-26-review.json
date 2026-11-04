@@ -1,0 +1,87 @@
+{
+  "lesson": "sql-26",
+  "position": 5,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Create unfinished(id) containing waiting jobs and jobs whose state is missing, but not done jobs. Preserve jobs. Include IDs 2 and 3.",
+      "after": "Use IS NULL to find missing information."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "NULL represents a missing or unknown value. A comparison such as NULL = 3 produces NULL, not false. Use IS NULL to ask whether a value is missing; it returns 1 or 0 in SQLite.",
+        "WHERE retains rows whose condition is true. It excludes false and unknown conditions. NOT NULL is still unknown. With logical operators, 1 OR NULL is true and 0 AND NULL is false: the known operand already determines those results. This is three-valued logic, not an empty-string rule.",
+        "Run this complete example in a fresh database.\n```sql\nCREATE TEMP VIEW shown AS\nSELECT NULL = 3 AS comparison,NULL IS NULL AS missing,1 OR NULL AS either,0 AND NULL AS both;\nSELECT *\nFROM shown;\n```",
+        "Change the supplied values and trace the result. This is a separate complete example.\n```sql\nCREATE TEMP VIEW shown AS\nSELECT NOT NULL AS negated,0 OR NULL AS either,1 AND NULL AS both;\nSELECT *\nFROM shown;\n```",
+        "Application: Create unfinished(id) containing waiting jobs and jobs whose state is missing, but not done jobs. Preserve jobs. Include IDs 2 and 3."
+      ],
+      "after": [
+        "`NULL` means a value is missing or unknown. It is different from zero or empty text. Comparing it with `=` gives an unknown answer. Use `IS NULL` to ask whether a value is missing.",
+        "`WHERE` keeps a row only when its check is true. A false or unknown check leaves the row out. `NOT` reverses true and false, but an unknown answer stays unknown.",
+        "Run this query:\n```sql\nSELECT NULL = 3 AS comparison,\n       NULL IS NULL AS missing,\n       NOT (NULL = 3) AS negated;\n```\nThe row is `NULL`, `1`, `NULL`. In SQLite, `1` means true and `0` means false. The missing-value check has a clear answer; the other two do not.",
+        "Sometimes a known check settles the result. True OR unknown is true, because one check already passes. False AND unknown is false, because both cannot pass. Otherwise, an unknown check may leave the combined answer unknown.",
+        "Create `unfinished(id)` from `jobs`. Include jobs whose state is `'waiting'` or is missing. Use `IS NULL` for the missing case. Keep jobs unchanged; the result should contain IDs `2` and `3`."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the small example and explain its inputs and effects.",
+        "Complete the starter for this lesson.",
+        "Run the behavior checks, then predict a changed case."
+      ],
+      "after": [
+        "Check whether state is 'waiting'.",
+        "Also check whether state IS NULL.",
+        "Join these checks with OR and save the matching IDs."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Trace the supplied rows and resulting rows before changing the query."
+      ],
+      "after": [
+        "state = NULL cannot find missing states.",
+        "NOT does not turn an unknown check into true."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "What is the result of NOT (NULL = 3)?",
+        "choices": [
+          "1, because missing is different",
+          "NULL, meaning unknown",
+          "0, because NOT always returns false"
+        ],
+        "answer": 1,
+        "explanation": "Negating an unknown comparison still leaves it unknown. IS NULL would ask a different, answerable question."
+      },
+      "after": {
+        "question": "What does NOT (NULL = 3) return?",
+        "choices": [
+          "1, because missing must mean different.",
+          "NULL: the answer is still unknown.",
+          "0, because NOT always means false."
+        ],
+        "answer": 1,
+        "explanation": "Reversing an unknown answer still leaves it unknown. IS NULL is the check for a missing value."
+      }
+    }
+  ],
+  "headings": [
+    "Recognize a missing value",
+    "Keep only true checks",
+    "Compare missing values",
+    "Combine an unknown check",
+    "Find unfinished jobs"
+  ],
+  "project": {
+    "title": "Unknown is not false",
+    "task": "Create unfinished(id) with waiting jobs and jobs whose state is missing.",
+    "done_when": "unfinished contains IDs 2 and 3. Done jobs are excluded, and jobs stays unchanged."
+  }
+}

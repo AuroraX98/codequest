@@ -1,0 +1,90 @@
+{
+  "lesson": "html-46",
+  "position": 46,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Repair the broken source: separate paragraph and block, retain a single answer input, give help its own ID, and connect the label and description.",
+      "after": "Fix a page’s nesting and connect each label to the right field."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "Prerequisites: parser repair, unique IDs, labels, and pattern feedback. The original broken source below nests a div inside p and repeats the answer ID. Parsing can repair nesting, so an apparently reasonable DOM does not prove the source conforms. Duplicate IDs make references ambiguous.\n```html\n<main><h1>Reading plan</h1><p>Next task<div>Read one page.</div></p><label for=\"answer\">Study code</label><input id=\"answer\" name=\"code\"><p id=\"answer\">Use two uppercase letters and two digits.</p></main>\n```",
+        "Repair the source itself, give the help text its own unique ID, and point aria-describedby to that exact ID. Inspect source diagnostics with an HTML conformance checker separately; a tolerant DOM parser is not that checker. The exercise also detects the extra empty paragraph produced by this particular bad p/div source, but that fixture-specific symptom is not general source validation. Then manually review keyboard navigation, focus visibility, labels and understandable errors in the actual browser and assistive technology. Passing these few checks is not WCAG certification.",
+        "\n```html\n<!doctype html>\n<html lang=\"en\"><head><meta charset=\"utf-8\"><title>Reading plan</title></head><body>\n<main>\n<h1>Reading plan</h1>\n<p>Next task</p><div>Read one page.</div>\n<form><label for=\"answer\">Study code</label>\n<input id=\"answer\" name=\"code\" pattern=\"[A-Z]{2}[0-9]{2}\" required aria-describedby=\"answer-help\">\n<p id=\"answer-help\">Use two uppercase letters and two digits, such as AB12.</p></form>\n</main>\n</body></html>\n```",
+        "\n```html\n<!doctype html>\n<html lang=\"en\"><head><meta charset=\"utf-8\"><title>Reading plan</title></head><body>\n<main>\n<h1>Reading plan</h1>\n<p>Next task</p><div>Read one page.</div>\n<form><label for=\"answer\">Study code</label>\n<input id=\"answer\" name=\"code\" pattern=\"[A-Z]{2}[0-9]{2}\" required aria-describedby=\"answer-help\">\n<p id=\"other-help\">Use two uppercase letters and two digits, such as AB12.</p></form>\n</main>\n</body></html>\n```\nID references are exact strings. Nearby text is not automatically substituted for a missing referenced ID. ",
+        "Optional: change one relevant value, predict the effect, and compare the parsed attributes. Structural checks do not prove browser presentation or accessibility."
+      ],
+      "after": [
+        "A browser can repair broken HTML while reading it. That can hide a mistake in the source.\n\n```html\n<p>Next task<div>Read one page.</div></p>\n```\n\nA div cannot stay inside a paragraph. The browser closes the paragraph before the div, and the final `</p>` can create an extra empty paragraph. Fix the source by closing the paragraph before the div.",
+        "Each id should belong to just one element on the page. Give the input `id=\"answer\"` and its help paragraph `id=\"answer-help\"`. If both use answer, a reference may find the wrong one.",
+        "This complete page fixes the nesting and gives the help its own id.\n\n```html\n<!doctype html>\n<html lang=\"en\"><head><meta charset=\"utf-8\"><title>Reading plan</title></head><body>\n<main>\n<h1>Reading plan</h1>\n<p>Next task</p><div>Read one page.</div>\n<form><label for=\"answer\">Study code</label>\n<input id=\"answer\" name=\"code\" pattern=\"[A-Z]{2}[0-9]{2}\" required aria-describedby=\"answer-help\">\n<p id=\"answer-help\">Use two uppercase letters and two digits, such as AB12.</p></form>\n</main>\n</body></html>\n```\n\nThe first paragraph closes before the div begins. The label points to the answer input. The input’s `aria-describedby` points to answer-help. The pattern and required attributes set the entry rule.",
+        "Id references must match exactly. If you rename the help paragraph to other-help, update aria-describedby too. Nearby help text is not automatically connected to the input.",
+        "Build the corrected page in the editor. Keep one Next task paragraph followed by the Read one page div. Add the labeled answer input and its separate help paragraph. Run the checks, then try the field with the keyboard. An HTML validator can also check source rules; these practice checks cover only the listed parts."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one idea and its worked markup.",
+        "Apply the idea to the small task.",
+        "Run the supported checks, then explain the changed case."
+      ],
+      "after": [
+        "Close the Next task paragraph before the div.",
+        "Give the input and help different ids and connect them.",
+        "Add the input’s label and rules, then run the checks.",
+        "Try reaching and reading the field with the keyboard."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If the help paragraph ID changes to other-help but describedby stays answer-help, what breaks?",
+        "choices": [
+          "The label becomes a submit button.",
+          "The input automatically finds the nearest paragraph.",
+          "The input’s description reference no longer resolves."
+        ],
+        "answer": 2,
+        "explanation": "ID references are exact strings. Nearby text is not automatically substituted for a missing referenced ID."
+      },
+      "after": {
+        "question": "You rename the help id to other-help but leave aria-describedby=\"answer-help\". What breaks?",
+        "choices": [
+          "The label becomes a submit button.",
+          "The input finds the nearest paragraph automatically.",
+          "The input no longer points to the help paragraph."
+        ],
+        "answer": 2,
+        "explanation": "The reference must match the help paragraph’s exact id. Being nearby does not connect the text."
+      }
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Compare element meaning, attribute values and nesting with the visible example."
+      ],
+      "after": [
+        "Use answer for the input and answer-help for the help paragraph.",
+        "Keep aria-describedby=\"answer-help\" on the input.",
+        "Do not put the div inside the paragraph."
+      ]
+    }
+  ],
+  "headings": [
+    "Fix the source nesting",
+    "Give each element a unique id",
+    "Read the corrected page",
+    "Keep references matched",
+    "Build and review the repaired page"
+  ],
+  "project": {
+    "title": "Repair and review a complete document",
+    "task": "Build the corrected reading page with valid paragraph nesting and a connected input label and help.",
+    "done_when": "The task paragraph and div are separate, ids are unique, the label points to answer, and the input points to answer-help."
+  },
+  "notes": []
+}

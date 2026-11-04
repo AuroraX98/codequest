@@ -1,0 +1,77 @@
+{
+  "lesson": "python-87",
+  "sourceHash": "69eef08260888ab2f92a12a67a3116e0574b15b30dc2e471268226dc55a543b7",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Complete load_topic(fetch, key): call fetch once with the supplied key, return Topic: followed by the returned text, and return Missing only for KeyError. Keep the supplied check_fetch and check_other_error test helpers unchanged.",
+      "after": "Use a pretend helper to check what your function asks for and how it handles the answer."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "load_topic(fetch, key) calls the supplied fetch callable once with key. It formats the returned topic String, or returns Missing for KeyError. Supplying a dependency makes this boundary testable without a network, database or global patch. Other exception types are not swallowed.",
+        "Mock(return_value=\"Stars\") constructs a callable test double. Calling fake(key) records the arguments and returns Stars. Mock(side_effect=KeyError(\"absent\")) instead raises that exception when called. assert_called_once_with(expected_key) takes the Mock receiver and expected arguments, returns None on a match, and raises AssertionError for the wrong call count or arguments.",
+        "The function’s result alone would not prove it fetched the correct key. Verify both the returned text and the dependency call.\n```python\nfrom unittest.mock import Mock\n\ndef load_topic(fetch, key):\n    try:\n        topic = fetch(key)\n    except KeyError:\n        return \"Missing\"\n    return \"Topic: \" + topic\nfake = Mock(return_value=\"Stars\")\nprint(load_topic(fake, \"topic-7\"))\nfake.assert_called_once_with(\"topic-7\")\nprint(\"call verified\")\n```\nOutput: Topic: Stars then call verified.",
+        "Here the dependency fails with a known KeyError; the application returns its chosen fallback, and the attempted call is still recorded.\n```python\nfrom unittest.mock import Mock\n\ndef load_topic(fetch, key):\n    try:\n        topic = fetch(key)\n    except KeyError:\n        return \"Missing\"\n    return \"Topic: \" + topic\nfake = Mock(side_effect=KeyError(\"absent\"))\nprint(load_topic(fake, \"topic-7\"))\nfake.assert_called_once_with(\"topic-7\")\n```\nOutput: Missing. Optional practice: use a different returned topic and key. A mock proves the authored interaction, not compatibility with a real service. The supplied check_fetch and check_other_error helpers are test infrastructure: keep them unchanged while implementing load_topic. Module patching and its lookup-location rules are not used or claimed in this injected-callable exercise."
+      ],
+      "after": [
+        "A dependency is something your code uses to do its job. Here, `fetch` is a supplied function that gets topic text.\n\nCall it once with `key`. Return `\"Topic: \"` plus the text. If it raises `KeyError`, return `\"Missing\"`. Let other errors pass outward.",
+        "A mock is a pretend helper used in a test. `Mock(return_value=\"Stars\")` records calls and returns `\"Stars\"`. With `side_effect=KeyError(\"absent\")`, it raises that error instead.\n\n`assert_called_once_with(key)` checks that the mock was called exactly once with that key. It returns `None` on a match, or raises `AssertionError` if the calls differ.",
+        "Check both the returned text and the key your function asked for:\n```python\nfrom unittest.mock import Mock\n\ndef load_topic(fetch, key):\n    try:\n        topic = fetch(key)\n    except KeyError:\n        return \"Missing\"\n    return \"Topic: \" + topic\nfake = Mock(return_value=\"Stars\")\nprint(load_topic(fake, \"topic-7\"))\nfake.assert_called_once_with(\"topic-7\")\nprint(\"call verified\")\n```\nOutput:\n```text\nTopic: Stars\ncall verified\n```\nThe right-looking answer alone would not prove that the right key was used.",
+        "Now let the same pretend helper raise `KeyError`:\n```python\nfrom unittest.mock import Mock\n\ndef load_topic(fetch, key):\n    try:\n        topic = fetch(key)\n    except KeyError:\n        return \"Missing\"\n    return \"Topic: \" + topic\nfake = Mock(side_effect=KeyError(\"absent\"))\nprint(load_topic(fake, \"topic-7\"))\nfake.assert_called_once_with(\"topic-7\")\n```\nOutput:\n```text\nMissing\n```\nThe failed call is still recorded. Try changing the key or returned topic.\n\nKeep `check_fetch` and `check_other_error` unchanged. They check your function. A mock checks this planned interaction; it does not prove that a real service works."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the requirement.",
+        "Make one change to the starter.",
+        "Run the checks.",
+        "Explain why a changed input produces its result."
+      ],
+      "after": [
+        "Call `fetch(key)` once inside `try`.",
+        "Catch only `KeyError` and return `\"Missing\"` for it.",
+        "Otherwise return `\"Topic: \" + topic`.",
+        "Run the checks for changed keys, returned text, and a different error."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If load_topic fetches topic-7 but assert_called_once_with expects wrong-key, what should happen?",
+        "choices": [
+          "The mock rewrites the past call to match the assertion.",
+          "Verification succeeds because only the return value matters.",
+          "AssertionError reports the incorrect expected interaction, even if the returned topic text looks correct."
+        ],
+        "answer": 2,
+        "explanation": "The assertion compares recorded calls, not just returned output. A plausible result cannot excuse using the wrong dependency argument."
+      },
+      "after": {
+        "question": "The mock was called with `topic-7`, but the test expects `wrong-key`. What happens?",
+        "choices": [
+          "The mock changes the recorded call.",
+          "The test passes because the returned text looks right.",
+          "The test raises AssertionError because the keys differ."
+        ],
+        "answer": 2,
+        "explanation": "This check compares the recorded call with the expected call. Matching text does not make different keys match."
+      }
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Trace the visible worked calls before changing the starter."
+      ],
+      "after": [
+        "Use the supplied key instead of a fixed example key.",
+        "Catching every error would hide problems that should pass outward."
+      ]
+    }
+  ],
+  "reviewNotes": [
+    "Reviewed directly by the host, one lesson at a time. Plain wording, specific guidance, preserved exercise behavior."
+  ]
+}

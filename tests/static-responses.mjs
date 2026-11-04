@@ -65,7 +65,7 @@ const redirect = (text, path, status = 200) => {
 let network,
   fetchCount = 0;
 const navigator = { onLine: true };
-const module = { exports: {} };
+const loadedModule = { exports: {} };
 vm.runInNewContext(
   ts.transpileModule(await readFile("lib/offline-pack.ts", "utf8"), {
     compilerOptions: {
@@ -74,8 +74,8 @@ vm.runInNewContext(
     },
   }).outputText,
   {
-    module,
-    exports: module.exports,
+    module: loadedModule,
+    exports: loadedModule.exports,
     URL,
     Response,
     Uint8Array,
@@ -92,7 +92,7 @@ vm.runInNewContext(
     },
   },
 );
-const { expectedStaticResponse, staticResponse, runnerAssets } = module.exports;
+const { expectedStaticResponse, staticResponse, runnerAssets } = loadedModule.exports;
 const handlers = {};
 let manifest,
   assetBodies = {},

@@ -1,0 +1,83 @@
+{
+  "lesson": "typescript-24",
+  "position": 35,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Handle omitted details without replacing empty text.",
+      "after": "Let a caller leave out a detail without losing empty text."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A question mark after a parameter name makes that argument optional. In note?: string, callers may omit note or explicitly pass undefined. Inside the body, reading note gives string | undefined, so handle the missing case before using string-only operations.",
+        "```typescript\nfunction greeting(name: string, note?: string): string {\n  return name + \": \" + (note ?? \"Welcome\");\n}\nconsole.log(greeting(\"Ari\"));\nconsole.log(greeting(\"Ari\", \"\"));\n```\n\nThis prints Ari: Welcome and then Ari: followed by a space. greeting receives a required name and optional note, and returns a new string. ?? chooses Welcome only when note is missing or nullish; an explicitly supplied empty string remains empty. The optional type here does not allow null under strict checking.",
+        "The required name comes first and the optional note comes last. This makes greeting(\"Ari\") unambiguous. Optional does not mean that every kind of value is allowed; greeting(\"Ari\", 3) is rejected.",
+        "Implement labelTask(title: string, detail?: string): string. Return title, a colon and space, then detail, using \"No detail\" only when detail is absent. Preserve an explicitly empty detail."
+      ],
+      "after": [
+        "A question mark after a parameter name makes it optional. In `note?: string`, the caller may leave note out or pass undefined. Inside the function, note may be text or undefined.",
+        "This function uses Welcome when note is missing.\n```typescript\nfunction greeting(name: string, note?: string): string {\n  return name + \": \" + (note ?? \"Welcome\");\n}\nconsole.log(greeting(\"Ari\"));\n```\nThe output is Ari: Welcome. If note is empty text, ?? keeps it empty.",
+        "The required name comes first and the optional note comes last. Optional does not mean any value is allowed. A numeric note is rejected, and this strict type does not allow null.",
+        "Make labelTask return title, a colon and space, then detail. Use No detail when detail is missing. Preserve an explicitly empty detail."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the example and its input/output contract.",
+        "Complete the starter without turning off compiler diagnostics.",
+        "Run the compiler and behavior checks, then explain a changed case."
+      ],
+      "after": [
+        "Keep title required and detail optional.",
+        "Choose the backup with `??`.",
+        "Return the label and run the checks."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Compare the public input/output types and trace the visible call before editing."
+      ],
+      "after": [
+        "Omission and undefined use the same backup; empty text does not."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "What does greeting(\"Ari\", undefined) return?",
+        "choices": [
+          "Ari: Welcome, because undefined uses the missing-note fallback.",
+          "Ari: undefined, because optional arguments cannot use a fallback.",
+          "A compiler error because only omission is allowed."
+        ],
+        "answer": 0,
+        "explanation": "An optional parameter may be explicitly undefined. The same nullish fallback handles that value and omission."
+      },
+      "after": {
+        "question": "What does greeting(\"Ari\", undefined) return?",
+        "choices": [
+          "Ari: Welcome",
+          "Ari: undefined",
+          "A type error because only omission is allowed"
+        ],
+        "answer": 0,
+        "explanation": "An optional parameter may be undefined. The backup handles both undefined and an omitted input."
+      }
+    }
+  ],
+  "headings": [
+    "Make an input optional",
+    "Choose a missing-input backup",
+    "Keep the other input rules",
+    "Label a task"
+  ],
+  "project": {
+    "title": "Allow an omitted argument",
+    "task": "Label a task with an optional detail, preserving empty text.",
+    "done_when": "Missing detail uses the backup, supplied text stays unchanged, and the checks pass."
+  }
+}

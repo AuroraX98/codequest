@@ -1,0 +1,77 @@
+{
+  "lesson": "python-88",
+  "sourceHash": "a25b298d4b3475b8d34e1c3cfd16061138b14a254d7db88907bb4c959cecfcb5",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Complete the log message in capture_status: log only status=ok or status=failed, never the token. Keep the isolated logger, requested level, formatter and finally cleanup. Return the captured text.",
+      "after": "Record a useful status message without copying a secret into the log."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A log should describe an event without copying credentials or arbitrary request text. capture_status(ok, token, level) accepts a Boolean status and a synthetic secret token, but deliberately logs only a fixed status word. This is data minimization at this call site, not a universal redaction filter or proof that an entire application is safe.",
+        "logging.Logger(name, level=...) constructs a local logger for this isolated exercise, rather than modifying the root logger or a shared registered logger. This direct construction is intentional study-only isolation, not the default application idiom: normal application code obtains loggers through logging.getLogger and a coordinated configuration policy, which are explicitly outside this exercise. StreamHandler(stream) sends records to the supplied text stream. Formatter(pattern) defines the text shape; setFormatter attaches it and addHandler connects the handler. %(levelname)s and %(message)s insert a record’s severity and formatted message. propagate=False prevents forwarding.",
+        "debug(message) and info(format, argument) submit records at their respective levels; the logger’s threshold filters lower severities. Here INFO excludes DEBUG. The %s placeholder receives only ok or failed, never token. These logging methods return None. StringIO holds text in memory; getvalue returns its accumulated String. removeHandler detaches this handler in finally, and close releases handler resources without taking ownership of this supplied StringIO.\n```python\nimport logging\nfrom io import StringIO\n\ndef capture_status(ok, token, level=logging.INFO):\n    stream = StringIO()\n    logger = logging.Logger(\"lesson-local\", level=level)\n    logger.propagate = False\n    handler = logging.StreamHandler(stream)\n    handler.setFormatter(logging.Formatter(\"%(levelname)s:%(message)s\"))\n    logger.addHandler(handler)\n    try:\n        logger.debug(\"diagnostic\")\n        logger.info(\"status=%s\", \"ok\" if ok else \"failed\")\n        return stream.getvalue()\n    finally:\n        logger.removeHandler(handler)\n        handler.close()\nprint(capture_status(True, \"synthetic-secret\"), end=\"\")\n```\nOutput: INFO:status=ok.",
+        "At level DEBUG, both records are included; INFO still appears after DEBUG. Repeated calls create independent logger/stream objects and detach their handlers, so records do not multiply. Optional practice: use WARNING as the threshold and explain why these DEBUG/INFO records are omitted. This demonstrates only selected synthetic messages; never use a real secret in a lesson fixture."
+      ],
+      "after": [
+        "A log records what happened. Here, record only `status=ok` or `status=failed`. Never include `token`.\n\nChoosing only the needed details is called data minimization. This protects this message; it does not check every log in a whole app.",
+        "A logger creates log records. A handler sends them somewhere, and a formatter chooses their text layout.\n\nHere, the handler writes to a text buffer. `%(levelname)s` inserts the level, and `%(message)s` inserts the message. `propagate=False` stops forwarding.\n\nThe exercise makes its own `Logger` to keep each call separate. Normal apps usually use `logging.getLogger` with shared settings.",
+        "A level sets which messages are kept. `INFO` keeps INFO messages but skips DEBUG messages. `%s` receives only `\"ok\"` or `\"failed\"`:\n```python\nimport logging\nfrom io import StringIO\n\ndef capture_status(ok, token, level=logging.INFO):\n    stream = StringIO()\n    logger = logging.Logger(\"lesson-local\", level=level)\n    logger.propagate = False\n    handler = logging.StreamHandler(stream)\n    handler.setFormatter(logging.Formatter(\"%(levelname)s:%(message)s\"))\n    logger.addHandler(handler)\n    try:\n        logger.debug(\"diagnostic\")\n        logger.info(\"status=%s\", \"ok\" if ok else \"failed\")\n        return stream.getvalue()\n    finally:\n        logger.removeHandler(handler)\n        handler.close()\nprint(capture_status(True, \"synthetic-secret\"), end=\"\")\n```\nOutput:\n```text\nINFO:status=ok\n```\n`StringIO` stores the text in memory; `getvalue()` returns it. The logging calls return `None`. The `finally` block detaches and closes the handler without closing the supplied text buffer.",
+        "At `DEBUG` level, both DEBUG and INFO messages are kept. At `WARNING`, both are skipped because they are below that level.\n\nEach call uses fresh objects, so old handlers do not make messages appear twice. Try changing the level and checking the output. Use only made-up tokens in this exercise."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the requirement.",
+        "Make one change to the starter.",
+        "Run the checks.",
+        "Explain why a changed input produces its result."
+      ],
+      "after": [
+        "Replace the message that logs `token`.",
+        "Log `\"status=%s\"` at INFO, choosing `\"ok\"` or `\"failed\"` from `ok`.",
+        "Keep the supplied logger settings and `finally` cleanup.",
+        "Check different levels and repeated calls; the token must stay out of the text."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If the threshold is DEBUG and ok is False, which text is captured?",
+        "choices": [
+          "The token is automatically logged by the logger constructor.",
+          "DEBUG:diagnostic followed by INFO:status=failed; the token is still absent.",
+          "Only INFO appears because DEBUG can never be enabled."
+        ],
+        "answer": 1,
+        "explanation": "The lower threshold accepts both severities, but changing the threshold does not alter the authored message arguments or introduce the omitted token."
+      },
+      "after": {
+        "question": "At DEBUG level, with `ok=False`, what text is captured?",
+        "choices": [
+          "The token is automatically logged.",
+          "DEBUG:diagnostic, then INFO:status=failed. The token is absent.",
+          "Only INFO, because DEBUG cannot be enabled."
+        ],
+        "answer": 1,
+        "explanation": "DEBUG level allows both messages. It does not add a token that your messages never included."
+      }
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Trace the visible worked calls before changing the starter."
+      ],
+      "after": [
+        "Pass the fixed status word to `%s`, not `token`.",
+        "Keep the cleanup code so this call's handler is detached."
+      ]
+    }
+  ],
+  "reviewNotes": [
+    "Reviewed directly by the host, one lesson at a time. Plain wording, specific guidance, preserved exercise behavior."
+  ]
+}

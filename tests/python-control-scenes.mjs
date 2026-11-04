@@ -47,9 +47,7 @@ try {
   await mkdir(path.join(temp, "components"));
   await symlink(
     path.join(repo, "node_modules"),
-    path.join(temp, "node_modules"),
-    "dir",
-  );
+    path.join(temp, "node_modules"), process.platform === "win32" ? "junction" : "dir");
   for (const file of [
     "lib/python-control-scenes.ts",
     "components/PythonControlScenes.tsx",

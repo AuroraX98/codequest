@@ -1,0 +1,98 @@
+{
+  "lesson": "c-24",
+  "position": 24,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Replace the function body with int other=7; p=&other; *p=9;. What does the caller print?",
+      "after": "A function can change your variable when you give it a pointer to that variable."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A function receives copies of argument values. Assigning its int parameter changes that local copy, not the caller’s int.",
+        "Passing &score copies an address value. Assigning through that pointer changes the caller’s object, but reassigning the local pointer would not rebind the caller’s variable.",
+        "void set(int *p) returns no value; it is called for its side effect. The caller must supply a valid pointer under this function’s contract.",
+        "C still passes a pointer value by value. Shared access to the pointed-to object explains the mutation.",
+        "Complete local C example; the app itself does not execute it:\n```c\n#include <stdio.h>\nvoid set(int *p) { *p = 9; }\nint main(void) {\n    int score = 3;\n    set(&score);\n    printf(\"%d\\n\", score);\n    return 0;\n}\n\n```",
+        "Expected output or behavior: 9. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Compare a function assigning an int parameter with one assigning through an int pointer. Explain why only the second can mutate the original object. You may trace it without a C compiler; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "C copies each argument value into the function's parameter. Changing an ordinary int parameter changes that copy, not the caller's variable.",
+        "`set(&score)` passes the address of score. The parameter p gets a copy of that address. Both still lead to the same score, so assigning through `*p` changes score.",
+        "The void before set means the function returns no value. Its useful work is the change it makes through p. The caller must provide a valid pointer to a writable int.",
+        "Assigning a new address to p changes only the function's local pointer. That is different from assigning to `*p`, which changes the value p currently points to.",
+        "Follow the example one line at a time.\n```c\n#include <stdio.h>\nvoid set(int *p) { *p = 9; }\nint main(void) {\n    int score = 3;\n    set(&score);\n    printf(\"%d\\n\", score);\n    return 0;\n}\n\n```",
+        "set follows p to score and stores 9 there. After the call ends, main prints the changed score: 9.",
+        "Imagine set creates a local int named other, points p at other, then writes 9 through p. The write now changes other, so score is left alone."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Follow p's current arrow before deciding which value changes."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Replace the function body with int other=7; p=&other; *p=9;. What does the caller print?",
+        "choices": [
+          "9 because every pointer assignment changes the caller variable.",
+          "An address because the argument was a pointer.",
+          "3 because the reassigned local pointer now writes a different local object."
+        ],
+        "answer": 2,
+        "explanation": "Reassigning the copied pointer changes only its local target; score is not mutated in this version."
+      },
+      "after": {
+        "question": "Inside set, p is changed to point to a local variable named other before 9 is written through p. What does main print?",
+        "choices": [
+          "9, because changing p always changes score.",
+          "An address, because the input was a pointer.",
+          "3, because the write now changes other."
+        ],
+        "answer": 2,
+        "explanation": "p no longer points to score when the write happens. score keeps its original value, 3."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "C Core v1 uses a portable C17 baseline supported by the verified compiler. C23 exists but is not claimed fully supported here. The app supplies concept reading and an understanding check, not a C browser runner. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "The browser shows C code and checks your understanding; it does not run C. Optional local examples use C17."
+    }
+  ],
+  "headings": [
+    "Inputs are copied",
+    "A copied pointer reaches the same value",
+    "Change a value without returning one",
+    "Moving the pointer is different",
+    "One example",
+    "Follow the change in main",
+    "Point somewhere else"
+  ],
+  "project": {
+    "title": "Pass values and update through pointers",
+    "task": "Explain why changing where p points is different from changing the value at *p.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local C example is optional."
+  },
+  "navigationCorrection": "Added a short example introduction so its reviewed heading remains an explicit contents target."
+}

@@ -2,7 +2,7 @@ const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('nod
 const source=(()=>{const frame=fs.readFileSync('public/runner/frame.html','utf8');const match=frame.match(/source = (\"importScripts\('https:\/\/cdn\.jsdelivr\.net\/pyodide\/[^\n]+);/);if(!match)throw Error('Python worker source not found');return JSON.parse(match[1]);})();
 async function run({code='student',checks=['first','second'],failure,codeFailure}={}){
  const order=[],messages=[],files=[],destroyed=[];let opts;
- const p={FS:{writeFile:(...x)=>files.push(x)},loadPackagesFromImports:async()=>order.push('imports'),globals:{set:(key,x)=>order.push(key)},toPy:x=>({destroy:()=>destroyed.push('capture')}),
+ const p={FS:{writeFile:(...x)=>files.push(x)},loadPackagesFromImports:async()=>order.push('imports'),globals:{set:(key,_x)=>order.push(key)},toPy:_x=>({destroy:()=>destroyed.push('capture')}),
  runPython(){throw Error('Synchronous execution must not be used');},
  async runPythonAsync(code){order.push('start:'+code);await new Promise(r=>setTimeout(r,2));if(code==='student'&&codeFailure)throw Error(codeFailure);if(code===failure?.code)throw Error(failure.message);order.push('end:'+code);if(code==='student'){opts.stdout('done');return {destroy:()=>destroyed.push('value')}}return code!=='false';}};
  const c={importScripts(){},loadPyodide:async o=>(opts=o,p),postMessage:x=>messages.push(x),onmessage:null};

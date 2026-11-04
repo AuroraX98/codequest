@@ -1,0 +1,90 @@
+{
+  "lesson": "python-65",
+  "sourceHash": "709a3b4345f98eb27fee08e20713540f0ccd3705819d4f9ee981c47e53430bca",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Define MinuteError(ValueError) and parse_minutes(text). Invalid integer text raises MinuteError(\"whole minutes required\") from the conversion ValueError. Integers outside 1..60 raise MinuteError(\"minutes outside 1..60\") with no explicit cause; valid text returns its integer.",
+      "after": "Report a clear error when text cannot become a number of minutes from 1 to 60."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "MinuteError inherits from ValueError so callers can identify this domain failure while retaining its broader category. pass is an empty class body; inherited exception construction accepts a message. raise MinuteError(message) creates and raises that failure.",
+        "Purpose: parse_minutes(text) accepts integer text and returns an integer in 1..60. int(text) converts a string to an integer or raises ValueError for invalid integer text. Catch only that conversion failure; validate the range separately. Neither failure path supplies a silent default.",
+        "raise MinuteError(\"whole minutes required\") from error attaches the original conversion failure as __cause__. The separate range error has no explicit cause. Chaining preserves diagnostic context but does not make the operation successful or justify exposing sensitive details in logs.",
+        "str(error) returns the exception message; type(error.__cause__).__name__ gives the cause class name in this example. The worked code calls parse_minutes successfully and then catches a chained failure. Supplied __failure_details is test infrastructure for observing the result, not an alternate parser.",
+        "Worked call:\n```python\nclass MinuteError(ValueError):\n    pass\n\ndef parse_minutes(text):\n    try:\n        value = int(text)\n    except ValueError as error:\n        raise MinuteError(\"whole minutes required\") from error\n    if not 1 <= value <= 60:\n        raise MinuteError(\"minutes outside 1..60\")\n    return value\n\nprint(parse_minutes(\"15\"))\ntry:\n    parse_minutes(\"bad\")\nexcept MinuteError as error:\n    print(str(error))\n    print(type(error.__cause__).__name__)\n```\nExpected stdout:\n15\nwhole minutes required\nValueError",
+        "Optional local practice: Explain why a broad except Exception around an entire application can hide unrelated defects."
+      ],
+      "after": [
+        "`MinuteError` is a special kind of `ValueError`. Catch `MinuteError` for this specific problem, or `ValueError` for the wider group.\n\n`pass` leaves the class body empty. `raise MinuteError(message)` creates the error with a message and reports it.",
+        "`int(text)` turns whole-number text into an integer. It raises `ValueError` if it cannot do that.\n\nFirst try that conversion. Then check that the number is from 1 to 60, including both ends. Report an error for either problem instead of quietly using a default.",
+        "`raise MinuteError(\"whole minutes required\") from error` reports your clearer message and keeps the original error as its cause. You can find that cause in `__cause__`.\n\nA number outside 1 to 60 gets a separate error. It has no original conversion error to attach. Keep private details out of error messages and logs.",
+        "`str(error)` gives the error message. `type(error.__cause__).__name__` gives the name of the cause's class.\n\nThe supplied `__failure_details` helper reads those two details for the exercise checks. Leave that helper as supplied.",
+        "Follow a good input and a bad input:\n```python\nclass MinuteError(ValueError):\n    pass\n\ndef parse_minutes(text):\n    try:\n        value = int(text)\n    except ValueError as error:\n        raise MinuteError(\"whole minutes required\") from error\n    if not 1 <= value <= 60:\n        raise MinuteError(\"minutes outside 1..60\")\n    return value\n\nprint(parse_minutes(\"15\"))\ntry:\n    parse_minutes(\"bad\")\nexcept MinuteError as error:\n    print(str(error))\n    print(type(error.__cause__).__name__)\n```\nOutput:\n```text\n15\nwhole minutes required\nValueError\n```",
+        "Optional local practice: Explain why a broad `except Exception` around an entire application can hide unrelated bugs."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the requirement.",
+        "Make one change to the starter.",
+        "Run the checks.",
+        "Explain why a changed input produces its result."
+      ],
+      "after": [
+        "In `parse_minutes`, put `value = int(text)` inside a `try` block.",
+        "Catch `ValueError as error` and raise `MinuteError(\"whole minutes required\") from error`.",
+        "After conversion, raise `MinuteError(\"minutes outside 1..60\")` when `not 1 <= value <= 60`.",
+        "Return `value` when conversion succeeds and the range is valid.",
+        "Check valid and boundary calls: `parse_minutes(\"15\") == 15`, `parse_minutes(\"1\") == 1`, and `parse_minutes(\"60\") == 60`.",
+        "Use `__failure_details` to confirm `\"bad\"` and `\"1.5\"` give `(\"whole minutes required\", \"ValueError\")`, while `\"0\"` gives `(\"minutes outside 1..60\", \"NoneType\")`."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If \"bad\" changes to \"0\", what message and cause class are printed?",
+        "choices": [
+          "No exception; successful parsing guarantees a valid range.",
+          "minutes outside 1..60 and NoneType",
+          "whole minutes required and ValueError"
+        ],
+        "answer": 1,
+        "explanation": "int accepts 0, so conversion succeeds. The separate range check raises its own MinuteError without an explicit cause."
+      },
+      "after": {
+        "question": "If \"bad\" changes to \"0\", what message and cause class are printed?",
+        "choices": [
+          "No exception; successful parsing guarantees a valid range.",
+          "minutes outside 1..60 and NoneType",
+          "whole minutes required and ValueError"
+        ],
+        "answer": 1,
+        "explanation": "`int(\"0\")` succeeds, so the range check raises `MinuteError(\"minutes outside 1..60\")`. It has no explicit cause, so the cause class is `NoneType`."
+      }
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Read each purpose, input and result/effect description.",
+        "Trace the changed case and test a boundary."
+      ],
+      "after": [
+        "`int(\"bad\")` and `int(\"1.5\")` fail conversion, so use `from error` on that path.",
+        "`int(\"0\")` works, so the 1..60 check must then raise a separate `MinuteError` without `from`.",
+        "`str(error)` shows the message, and `type(error.__cause__).__name__` shows the cause class."
+      ]
+    }
+  ],
+  "reviewNotes": [
+    "All six original section roles kept in order.",
+    "Worked code and expected stdout preserved with code fences.",
+    "Quiz answer remains index 1 with the same correct meaning.",
+    "Headings are distinct and point to section ideas.",
+    "Steps name concrete code changes and checks.",
+    "Replaced conversion and error-chain jargon with concise plain wording."
+  ]
+}

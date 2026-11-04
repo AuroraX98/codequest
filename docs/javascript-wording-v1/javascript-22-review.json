@@ -1,0 +1,48 @@
+{
+  "lesson": "javascript-22",
+  "position": 37,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Write toggleTask(tasks, id). Return a new array; copy the matching task with done reversed. Leave all other task objects and the original array unchanged. IDs are unique strings. If the ID is missing, return a new array with the same task objects.",
+      "after": "Change one task in a new copy while keeping the old task board."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A task board may need its old state for undo or comparison. Mutation means changing an existing value in place. An immutable update creates the changed parts as new values and keeps the old state intact. This project practices that pattern with an array of task objects.",
+        "An array contains references to objects. Copying the array with [...tasks] creates a new array, but its task objects are still shared. Changing copied[0].done would also affect the object seen through tasks[0]. To change one task safely, create a new object for that task too.",
+        "This example copies both the changed array and object.\n```javascript\nconst before = [{ id: \"a\", done: false }];\nconst after = before.map(task => ({ ...task, done: true }));\nconsole.log(before[0].done);\nconsole.log(after[0].done);\n```\nIt prints false, then true. The object spread copies properties into a new object. The later done property replaces only that property in the new copy.",
+        "map calls a function for each array item and builds a new array from the returned values. Return a new object for the matching ID. Return the existing task for other IDs: unchanged objects can be shared safely because your function does not edit them. Preserve task order.",
+        "A conditional update can leave most objects shared.\n```javascript\nconst tasks = [{ id: \"a\", done: false }, { id: \"b\", done: true }];\nconst changed = tasks.map(task => task.id === \"b\"\n  ? { ...task, done: !task.done }\n  : task);\nconsole.log(changed[1].done);\nconsole.log(changed[0] === tasks[0]);\n```\nIt prints false and true. ! reverses a Boolean. === between objects checks whether they are the very same object.",
+        "This is a shallow copy: nested objects would still be shared unless you copy the nested part you change. Our tasks contain an ID, a Boolean done value and optional other properties. Keep those properties with object spread. The function assumes unique IDs, so a single requested ID refers to at most one task.",
+        "Check four cases: an unfinished task becomes finished, a finished task becomes unfinished, a missing ID leaves values alone, and an empty list remains empty. All cases return a fresh array. Compare the original after each call: preserving its data is part of success, not just getting the new checkbox value right."
+      ],
+      "after": [
+        "Keeping an old task board can help with undo or comparing changes.\n\nChanging an existing value is called mutation. An immutable update makes new copies of the parts that change, leaving the old data alone.",
+        "`[...tasks]` makes a new array, but both arrays still point to the same task objects.\n\nChanging a shared task would affect both views of it. To change one task while keeping the old board, copy that task object too.",
+        "This example makes a new array and a new task object.\n```javascript\nconst before = [{ id: \"a\", done: false }];\nconst after = before.map(task => ({ ...task, done: true }));\nconsole.log(before[0].done);\nconsole.log(after[0].done);\n```\nOutput:\n```text\nfalse\ntrue\n```\n`{ ...task, done: true }` copies the task's properties, then sets `done` in the copy. The original stays false.",
+        "`map` runs a function for every item and puts the returned values in a new array.\n\nReturn a copied object for the matching task. Return each other task unchanged. This keeps the original order and avoids copying objects you do not change.",
+        "This example changes only task `b`.\n```javascript\nconst tasks = [{ id: \"a\", done: false }, { id: \"b\", done: true }];\nconst changed = tasks.map(task => task.id === \"b\"\n  ? { ...task, done: !task.done }\n  : task);\nconsole.log(changed[1].done);\nconsole.log(changed[0] === tasks[0]);\n```\nOutput:\n```text\nfalse\ntrue\n```\n`!task.done` reverses true and false. The last line is true because the unchanged first task is still the same object.",
+        "Object spread makes a shallow copy. It copies the task's properties, but any objects stored inside it would still be shared.\n\nOur update changes only the `done` Boolean. Keep all other properties, such as the title. Each ID is unique, so at most one task matches.",
+        "Complete `toggleTask(tasks, id)`. Always return a new array.\n\nCheck both directions: unfinished to finished, and finished to unfinished. A missing ID leaves the task objects unchanged. An empty input returns a new empty array.\n\nAfter each call, the original board must still have its old values."
+      ]
+    }
+  ],
+  "headings": [
+    "Keep the old board",
+    "Copy the task that changes",
+    "See the old and new values",
+    "Use map to keep the order",
+    "Change only the matching task",
+    "Keep the other properties",
+    "Build toggleTask"
+  ],
+  "project": {
+    "title": "A task board that keeps its old copy",
+    "task": "Complete toggleTask(tasks, id). Return a new array with a copy of the matching task whose done value is reversed. Keep all other task objects and the original data unchanged.",
+    "done_when": "The selected task toggles and keeps its other properties. Other tasks keep their order and identity. Missing IDs and empty inputs still return a new array."
+  },
+  "notes": []
+}

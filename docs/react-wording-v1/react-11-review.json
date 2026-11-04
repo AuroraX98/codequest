@@ -1,0 +1,94 @@
+{
+  "lesson": "react-11",
+  "position": 22,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Share a theme through a wrapper while respecting nested providers.",
+      "after": "Context lets a component read a value supplied above it."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "Props are the usual way to pass data. Context is useful when several descendants need a value but intermediate components do not use it.",
+        "Create the context outside components. Its default is used when there is no matching provider above the consumer.\n\nReact.createContext(defaultValue) accepts a fallback value and returns a context object, not the value itself and not a state store. The existing call React.createContext(\"English\") creates LanguageContext. Its .Provider supplies a value to matching descendants in React18; useContext(LanguageContext) reads the closest provider’s value, or the fallback if none exists. The fallback does not change by itself.",
+        "```react\nconst LanguageContext = React.createContext(\"English\");\nfunction Greeting() {\n  const language = React.useContext(LanguageContext);\n  return <p>{language}</p>;\n}\nfunction App() {\n  return <LanguageContext.Provider value=\"Spanish\"><Greeting /></LanguageContext.Provider>;\n}\n```\nGreeting reads Spanish from the provider.",
+        "useContext reads the closest matching provider above that component. A nested provider can override the value for its own descendants.\n\nCompare a consumer outside a provider with one inside:\n```react\nconst LanguageContext = React.createContext(\"English\");\nfunction Greeting() {\n  const language = React.useContext(LanguageContext);\n  return <p>{language}</p>;\n}\nfunction App() {\n  return <main><Greeting /><LanguageContext.Provider value=\"Spanish\"><Greeting /></LanguageContext.Provider></main>;\n}\n```\nThe paragraphs read English, then Spanish. The provider changes only its descendants, not the context fallback.",
+        "A provider does not store state by itself. Parent state can supply its value; updating that state updates consumers.",
+        "For the exercise, Badge must read ThemeContext instead of hardcoding a theme. The main badge follows the changing outer theme, the nested badge stays gold, and the outside badge uses plain."
+      ],
+      "after": [
+        "Props are the usual way to pass data. Context helps when components farther down need a value but the components between them do not use it.",
+        "Create the context outside your components. Its default is the fallback used when no matching provider is above the reader. A provider is a component that supplies a context value to the components inside it.",
+        "```react\nconst LanguageContext = React.createContext(\"English\");\nfunction Greeting() {\n  const language = React.useContext(LanguageContext);\n  return <p>{language}</p>;\n}\nfunction App() {\n  return (\n    <main>\n      <Greeting />\n      <LanguageContext.Provider value=\"Spanish\">\n        <Greeting />\n      </LanguageContext.Provider>\n    </main>\n  );\n}\n```\nThe paragraphs read `English`, then `Spanish`. The first uses the fallback. The second reads the provider above it.",
+        "`useContext` reads the closest matching provider above that component. A provider inside another provider supplies its own value to its group. It does not change the context's fallback.",
+        "A provider does not keep state by itself. A parent can supply a state value to it. Updating that state lets the components reading the context receive the new value.",
+        "Make `Badge` read `ThemeContext`. The main badge follows the changing outer theme. The inner badge keeps `gold`, and the badge outside any provider uses `plain`."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the context inside Badge at its top level.",
+        "Leave provider placement and values intact."
+      ],
+      "after": [
+        "Read ThemeContext at the top of Badge.",
+        "Keep the supplied providers and their values.",
+        "Run the checks and compare the three badges."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Read the context inside Badge at its top level.",
+        "Leave provider placement and values intact."
+      ],
+      "after": [
+        "The closest matching provider wins. With none above, use the fallback."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "An inner provider says gold and its parent provider changes from mint to night. What does a badge inside the inner provider read?",
+        "choices": [
+          "gold, from its closest matching provider",
+          "night, because the outer update overrides every provider",
+          "plain, because defaults always win"
+        ],
+        "answer": 0,
+        "explanation": "Consumers use the closest matching provider above them. The inner gold provider still supplies that subtree's value."
+      },
+      "after": {
+        "question": "An inner provider supplies gold. The outer provider changes from mint to night. What does an inner badge read?",
+        "choices": [
+          "gold from its closest provider.",
+          "night because the outer provider overrides every value.",
+          "plain because defaults always win."
+        ],
+        "answer": 0,
+        "explanation": "The inner gold provider is still the closest matching provider above that badge."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Context is not automatically persistent or cross-tab storage. Uses Provider syntax supported by existing React runtime; no new framework features required.",
+      "after": "Context shares a value within the component tree. It does not save data across reloads or browser tabs."
+    }
+  ],
+  "headings": [
+    "Pass a value through a group",
+    "Create a context",
+    "Read the nearest supplied value",
+    "Keep each provider's reach",
+    "Change a supplied value",
+    "Build your theme badges"
+  ],
+  "project": {
+    "title": "Read a value from context",
+    "task": "Make Badge read its theme from context while keeping the supplied provider structure.",
+    "done_when": "The main badge follows the outer theme, the inner badge stays gold, and the outside badge uses plain."
+  }
+}

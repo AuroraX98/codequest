@@ -1,0 +1,98 @@
+{
+  "lesson": "css-05",
+  "position": 48,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Define reusable spacing and text-size custom properties on `:root`.",
+      "after": "Reuse named values and let a panel fit its available space."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A component is a reusable piece of an interface, such as a panel with a title and a description. Shared CSS values help several components stay consistent. A custom property is a named value whose name begins with two hyphens, such as --space. Define it on :root, which selects the document's root element, so descendants can normally inherit it. Use var(--space) to read that value. Changing the shared definition then changes the places using it, rather than making you hunt through many repeated numbers.",
+        "This CSS fragment styles HTML with a panel-wrap parent and panel child. Put it in that page's stylesheet.\n\n```css\n:root {\n  --space: 1.25rem;\n  --title-size: clamp(1rem, 4vw, 2.5rem);\n}\n.panel-wrap {\n  container-type: inline-size;\n}\n.panel {\n  padding: var(--space);\n}\n.panel h2 {\n  font-size: var(--title-size);\n}\n@container (min-width: 540px) {\n  .panel {\n    display: grid;\n    grid-template-columns: 1fr 2fr;\n  }\n}\n```\n\nThe custom values control padding and title size. The wrapper becomes a size query container. Its child's layout changes when that container has enough width, even if the browser window stays the same.",
+        "rem is a length based on the root element's font size. If that font size is 16px, 1.25rem is 20px, though users and styles can change the root size. vw means one percent of the viewport's width; 4vw is 20px in a 500px-wide viewport. font-size sets how large text is. Using relative units can support adaptation, but still test zoom and readability. var() is CSS syntax for reading a custom property; it is not a Swift or JavaScript function. Its parentheses enclose the value name you want.",
+        "clamp(minimum, preferred, maximum) chooses a preferred value while keeping it inside the given bounds when the minimum is below the maximum. clamp(12px, 4vw, 24px) gives 12px if the preferred part works out to 8px, 20px if it works out to 20px, and 24px if it works out to 30px. The commas separate its three arguments, meaning the three supplied values. These bounds apply to the resulting CSS length; they do not guarantee that a long heading never wraps or that every person finds the text comfortable.",
+        "Put this HTML fragment inside body to provide the example's structure.\n\n```html\n<div class=\"panel-wrap\">\n  <article class=\"panel\">\n    <h2>Nature notebook</h2>\n    <p>Collect one careful observation each day.</p>\n  </article>\n</div>\n```\n\nThe outer div is a general wrapper with the container setting. The inner article is the component that changes layout. .panel h2 selects a heading inside that component. At a wrapper width of at least 540px, 1fr 2fr gives the description column twice the available track share of the heading column. It is a ratio of one to two, not fixed pixel sizes.",
+        "A media query can test the viewport. A container query can test a qualifying ancestor container. That distinction helps a panel fit in a narrow sidebar inside a wide window. container-type: inline-size enables size queries along the inline direction, usually width in horizontal English text. The query changes descendants of the container; it does not query and restyle the container itself based on its own size. Give the wrapper a real available width through its surrounding layout. At the threshold, min-width includes the threshold value and larger widths.",
+        "For the exercise, define --space: 1rem and --title-size: clamp(1.2rem, 3vw, 2rem) on :root. Use var() for padding and heading size. Mark .panel-wrap with container-type: inline-size, and use a container query at a minimum width of 500px to switch .panel into a two-column grid with 1fr 2fr tracks. The supplied checks change the root font size to inspect both bounds, and change the wrapper from 480px to 520px to inspect the layout switch; they restore those values afterward. Inspect the authored rule too: matching a few computed results does not prove every possible size behaves correctly. Try small and large preferred values and explain which bound wins."
+      ],
+      "after": [
+        "A component is a reusable part of a page, such as a panel. A custom property is a named CSS value. Its name starts with two dashes. Defining it on `:root` makes it available through the page's usual inheritance.",
+        "`var()` reads a custom property. This example gives every panel the same padding.\n```css\n:root {\n  --space: 1rem;\n}\n.panel {\n  padding: var(--space);\n}\n```",
+        "`rem` uses the root element's font size. If that size is 16 pixels, 1rem is 16 pixels. `vw` uses the viewport width: 1vw is one percent of that width.",
+        "`clamp()` takes a minimum, a preferred size, and a maximum, in that order. With `clamp(14px, 3vw, 28px)`, a preferred size of 9 pixels becomes 14 pixels because it is below the minimum.",
+        "The supplied `.panel-wrap` holds the panel. Set `container-type: inline-size` on that wrapper so a container query can check its width.",
+        "A container query checks a surrounding container's size. A media query can check the viewport instead. This lets a panel adapt to a narrow sidebar even when the whole window is wide.",
+        "Use `--space: 1rem` and `--title-size: clamp(1.2rem, 3vw, 2rem)`. Read them with `var()` for padding and heading size. At a wrapper width of at least 500 pixels, give the panel columns of `1fr 2fr`: one share for the first and two for the second."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "On :root, create custom properties for spacing and heading size. These are named CSS values you can reuse.",
+        "Use `clamp()` for heading size so it grows between a minimum and maximum.",
+        "Set container-type: inline-size on .panel-wrap so a query can check its width.",
+        "Add a container query that changes the panel layout when .panel-wrap is at least 500px wide."
+      ],
+      "after": [
+        "Define the two custom properties on `:root`.",
+        "Use them for panel padding and heading size.",
+        "Set `container-type: inline-size` on `.panel-wrap`.",
+        "At 500 pixels or wider, change the panel to a two-column grid, then run the checks."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Put custom properties inside `:root` and read them with `var(--name)`.",
+        "`container-type: inline-size` belongs on `.panel-wrap`.",
+        "Write `font-size: clamp(1.2rem, 3vw, 2rem)` to bound the heading size."
+      ],
+      "after": [
+        "Read a named value with `var(--name)`.",
+        "The wrapper gets `container-type`; the panel inside gets the new layout.",
+        "Store `clamp(1.2rem, 3vw, 2rem)` in `--title-size`."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "The preferred 3vw works out to 9px. What does clamp(14px, 3vw, 28px) use?",
+        "choices": [
+          "9px",
+          "28px",
+          "14px"
+        ],
+        "answer": 2,
+        "explanation": "The preferred 9px is below the minimum of 14px, so clamp uses 14px. The 28px maximum does not apply here."
+      },
+      "after": {
+        "question": "In clamp(14px, 3vw, 28px), 3vw works out to 9 pixels. Which size is used?",
+        "choices": [
+          "9 pixels",
+          "28 pixels",
+          "14 pixels"
+        ],
+        "answer": 2,
+        "explanation": "Nine is below the minimum of 14, so the size becomes 14 pixels."
+      }
+    }
+  ],
+  "headings": [
+    "Name a shared value",
+    "Read a named value",
+    "Use sizes that adapt",
+    "Keep a size within limits",
+    "Give the panel a wrapper",
+    "Check the panel's own space",
+    "Build the flexible panel"
+  ],
+  "project": {
+    "title": "A responsive component set",
+    "task": "Use shared spacing and text sizes, then change the panel layout when its wrapper has enough room.",
+    "done_when": "The named values work, the panel changes at 500 pixels, and the checks pass."
+  }
+}

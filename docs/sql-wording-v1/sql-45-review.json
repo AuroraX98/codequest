@@ -1,0 +1,81 @@
+{
+  "lesson": "sql-45",
+  "position": 40,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Create answer(id,peers_total,row_total) with the two explicitly described frames. Preserve all source moves. Checks verify results, not whether your query spells the frames a particular way.",
+      "after": "Choose which rows belong in each running total."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A window frame selects the rows used by an aggregate for the current result row. RANGE ending at CURRENT ROW includes peers: rows equal on all window ordering expressions. ROWS counts positions instead. For ordered aggregate windows, the default is RANGE from the start through the current peer group. Here we spell both frames out.",
+        "\n```sql\nCREATE TABLE moves(id INTEGER PRIMARY KEY, tick INTEGER, amount INTEGER);\nINSERT INTO moves VALUES (1,1,4),(2,1,7),(3,2,3);\nSELECT id, SUM(amount) OVER (ORDER BY tick RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS peers_total, SUM(amount) OVER (ORDER BY tick,id ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS row_total\nFROM moves\nORDER BY id;\n```\nSUM(amount) adds the amounts in each frame. UNBOUNDED PRECEDING starts at the partition beginning. The RANGE order is tick alone, so both tick 1 rows share total 11. The ROWS order tick,id is unique, giving 4 then 11 then 14. Adding id to RANGE would remove those peer ties; it would answer a different ordering question.",
+        "\n```sql\nCREATE TABLE moves(id INTEGER PRIMARY KEY, tick INTEGER, amount INTEGER);\nINSERT INTO moves VALUES (1,1,4),(2,3,7),(3,2,3);\nSELECT id, SUM(amount) OVER (ORDER BY tick RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS peers_total, SUM(amount) OVER (ORDER BY tick,id ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS row_total\nFROM moves\nORDER BY id;\n```\nDisplayed by id, the rows become (1,4,4),(2,14,14),(3,7,7). Window calculation order and final display order differ. Optional practice: add another tick 2 row and predict both totals."
+      ],
+      "after": [
+        "A window frame is the set of rows used for one calculation. `UNBOUNDED PRECEDING` means start at the beginning. With `ROWS ... CURRENT ROW`, stop at this row's position. With `RANGE ... CURRENT ROW`, also include rows tied with this row in the window's order.",
+        "```sql\nCREATE TABLE demo_moves(id INTEGER PRIMARY KEY, tick INTEGER, amount INTEGER);\nINSERT INTO demo_moves VALUES (1, 1, 4), (2, 1, 7), (3, 2, 3);\nSELECT id,\n  SUM(amount) OVER (\n    ORDER BY tick\n    RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW\n  ) AS peers_total,\n  SUM(amount) OVER (\n    ORDER BY tick, id\n    ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW\n  ) AS row_total\nFROM demo_moves\nORDER BY id;\n```\nThe rows are `(1, 11, 4)`, `(2, 11, 11)`, and `(3, 14, 14)`. The first two rows have the same tick, so `RANGE` gives both the total 11. `ROWS` adds them one at a time: first 4, then 11.",
+        "Here, the `RANGE` order uses `tick` alone to keep equal ticks tied. The `ROWS` order adds `id` so the next row is clear. Adding `id` to the `RANGE` order would remove the ties. For an ordered sum, SQLite uses a frame from the beginning through the current tied group unless you choose another frame."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the small example and explain its inputs and effects.",
+        "Complete the starter for this lesson.",
+        "Run the behavior checks, then predict a changed case."
+      ],
+      "after": [
+        "Create `answer` with `id`, `peers_total`, and `row_total`.",
+        "For `peers_total`, add through the current tick, including tied ticks. For `row_total`, add through the current row in `tick, id` order.",
+        "Run the checks and compare the two totals for rows with the same tick."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Trace the supplied rows and resulting rows before changing the query."
+      ],
+      "after": [
+        "Use `SUM(amount) OVER (...)` for each total.",
+        "Use `RANGE` with `ORDER BY tick`, and `ROWS` with `ORDER BY tick, id`. Start both frames at `UNBOUNDED PRECEDING`."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Add (4,2,5) to the original worked data. What RANGE total do both tick 2 rows receive?",
+        "choices": [
+          "19",
+          "5",
+          "14"
+        ],
+        "answer": 0,
+        "explanation": "RANGE includes the full tick 2 peer group and all earlier ticks:4+7+3+5=19."
+      },
+      "after": {
+        "question": "Add an amount of 5 at tick 2 to the example. What RANGE total do both tick 2 rows get?",
+        "choices": [
+          "19",
+          "5",
+          "14"
+        ],
+        "answer": 0,
+        "explanation": "Both rows include every amount through tick 2: 4 + 7 + 3 + 5 = 19."
+      }
+    }
+  ],
+  "headings": [
+    "Choose the rows to add",
+    "One example",
+    "Keep ties or count rows"
+  ],
+  "project": {
+    "title": "Make the window frame explicit",
+    "task": "Create `answer(id, peers_total, row_total)` from `moves`. For `peers_total`, add amounts from the start through the current tick, including ties. For `row_total`, add from the start through the current row in `tick, id` order. Keep `moves` unchanged.",
+    "done_when": "The checks pass, and you can explain why tied ticks can have different row totals but the same peers total."
+  }
+}

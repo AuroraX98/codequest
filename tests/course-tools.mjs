@@ -10,7 +10,19 @@ const cwd=process.cwd();
 const staged=process.env.COURSE_TOOLS_STAGE;
 const dir=path.join(cwd,'.sites-runtime/course-tools-test');await fs.mkdir(dir,{recursive:true});
 const sources=['lib/course-tools.ts','lib/course-order.ts','lib/python-tools.ts','lib/unit-toc.ts','lib/additional-unit-contents.ts','lib/lesson-headings.ts','lib/remaining-lesson-headings.ts','lib/study-label.ts','lib/navigation.ts','components/CourseTools.tsx'];
-for(const source of sources){const root=staged&&['lib/course-tools.ts','lib/course-order.ts','components/CourseTools.tsx'].includes(source)?staged:cwd;let out=ts.transpileModule(await fs.readFile(path.join(root,source),'utf8'),{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.ESNext,jsx:ts.JsxEmit.ReactJSX}}).outputText;out=out.replace(/from ["'](?:\.\.\/lib\/|\.\/)([^"']+)["']/g,(_,name)=>`from './${name}.mjs'`);await fs.writeFile(path.join(dir,path.basename(source).replace(/\.tsx?$/,'.mjs')),out);}
+for (const source of sources) {
+  const root=staged && ['lib/course-tools.ts','lib/course-order.ts','components/CourseTools.tsx'].includes(source) ? staged : cwd;
+  const compiled=ts.transpileModule(await fs.readFile(path.join(root,source),'utf8'),{
+    compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.ESNext,jsx:ts.JsxEmit.ReactJSX}
+  }).outputText;
+  const linked=compiled
+    .replace(/from ["'](?:\.\.\/lib\/|\.\/)([^"']+)["']/g,(_,name)=> "from './"+name+".mjs'")
+    .replace(/from ["']\.\.\/content\/([^"']+\.json)["']/g,(_,name)=>{
+      const asset=pathToFileURL(path.join(cwd,'content',name)).href;
+      return "from '"+asset+"' with { type: 'json' }";
+    });
+  await fs.writeFile(path.join(dir,path.basename(source).replace(/\.tsx?$/,'.mjs')),linked);
+}
 const {courseTools,availableToolCourses,matchCourseTool}=await import(pathToFileURL(path.join(dir,'course-tools.mjs')));
 const {pythonTools}=await import(pathToFileURL(path.join(dir,'python-tools.mjs')));
 const {parseRoute,routeHash}=await import(pathToFileURL(path.join(dir,'navigation.mjs')));

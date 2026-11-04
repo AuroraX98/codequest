@@ -1,0 +1,97 @@
+{
+  "lesson": "javascript-68",
+  "position": 27,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Using the supplied button element, set aria-pressed to the text form of active and force only its active class token on/off. Return whether that token is present afterward. Preserve existing class tokens and text; active is a Boolean.",
+      "after": "Show whether a button is on or off, while keeping its other settings."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "This lesson requires a DOM document containing the following button. DOM APIs belong to the document host, not plain Node JavaScript. A DOM harness can verify attributes/classes but does not prove browser layout, assistive-technology announcements or real keyboard interaction.\n```html\n<button id=\"toggle\" class=\"control\" aria-pressed=\"false\">Focus</button>\n```",
+        "setAttribute(name,value) writes the named attribute and returns undefined. getAttribute(name) reads its string value or null if absent. String(active) converts the supplied Boolean to \"true\" or \"false\" for aria-pressed. ARIA state describes this button’s toggle state; it does not automatically install an event handler.",
+        "button.classList is a token-list view of its class attribute. toggle(\"active\",active) uses the Boolean second argument to add or remove that one token and returns whether it is present afterward. Calling it twice with true leaves the token present; it is not an inversion each time. contains(token) returns membership without changing the list. Other tokens, such as control, remain untouched.",
+        "setActive(button,active) receives an existing button and Boolean, updates its attribute/class, and returns the token’s final state. querySelector(\"#toggle\") returns the first matching element or null; this supplied markup guarantees a match.\n```javascript\nfunction setActive(button, active) {\n  button.setAttribute(\"aria-pressed\", String(active));\n  return button.classList.toggle(\"active\", active);\n}\nconst button = document.querySelector(\"#toggle\");\nconsole.log(setActive(button, true));\nconsole.log(button.getAttribute(\"aria-pressed\"));\nconsole.log(button.classList.contains(\"control\"), button.classList.contains(\"active\"));\nconsole.log(setActive(button, false));\n```\nOutput: true; true; true true; false. The second line is attribute text, even though it looks like the first line’s Boolean.",
+        "Implement setActive without replacing the entire class attribute or changing button text. Optional practice: call it twice with true, then once with false, and explain why unrelated classes remain. Check for null when selecting from an uncertain page outside this fixed fixture."
+      ],
+      "after": [
+        "An HTML attribute adds information to an element. This button has a name, a class, and an on-or-off state.\n```html\n<button id=\"toggle\" class=\"control\" aria-pressed=\"false\">Focus</button>\n```\n`id=\"toggle\"` lets JavaScript find the button. `class=\"control\"` gives it a class name. `aria-pressed=\"false\"` says this toggle button is off.",
+        "`setAttribute(name, value)` changes one attribute. `getAttribute(name)` reads it as text, or gives `null` if it is missing.\n\n`String(active)` turns `true` or `false` into text for `aria-pressed`. This attribute helps screen readers understand the button's state. It does not make the button respond to clicks.",
+        "An element can have several class names. `button.classList` lets you change one name while keeping the others.\n\n`toggle(\"active\", active)` adds the `active` class when the second value is `true`, and removes it when it is `false`. It returns whether the class is present afterward. `contains(\"control\")` checks for a class without changing it.",
+        "Here is the complete example. Run it on a page with the button above.\n```javascript\nfunction setActive(button, active) {\n  button.setAttribute(\"aria-pressed\", String(active));\n  return button.classList.toggle(\"active\", active);\n}\nconst button = document.querySelector(\"#toggle\");\nconsole.log(setActive(button, true));\nconsole.log(button.getAttribute(\"aria-pressed\"));\nconsole.log(button.classList.contains(\"control\"), button.classList.contains(\"active\"));\nconsole.log(setActive(button, false));\n```\nOutput:\n```text\ntrue\ntrue\ntrue true\nfalse\n```\n`setActive` updates the button and returns its class state. `querySelector(\"#toggle\")` finds the button. The second output line comes from an attribute, so it is text.",
+        "Complete `setActive(button, active)`. Update `aria-pressed`, then add or remove only the `active` class and return its final state.\n\nKeep the `control` class and the word Focus. Calling the function twice with `true` must leave the button on. On other pages, check that `querySelector` found a button before using it."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the requirement.",
+        "Make one change to the starter.",
+        "Run the checks.",
+        "Explain why a changed input produces its result."
+      ],
+      "after": [
+        "Set aria-pressed to String(active).",
+        "Use classList.toggle with \"active\" and the Boolean active.",
+        "Return the result of toggle.",
+        "Check on, off, and on twice. Keep the control class and button text."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "What happens after setActive(button,true) is called twice?",
+        "choices": [
+          "active remains present; aria-pressed remains \"true\".",
+          "The second call removes active because every toggle must invert.",
+          "The control class is removed automatically."
+        ],
+        "answer": 0,
+        "explanation": "The second argument forces the requested membership, so repeating the same desired state leaves it unchanged rather than inverting it."
+      },
+      "after": {
+        "question": "What happens if you call setActive(button, true) twice?",
+        "choices": [
+          "The active class stays present, and aria-pressed stays \"true\".",
+          "The second call removes the active class.",
+          "The control class is removed."
+        ],
+        "answer": 0,
+        "explanation": "The second argument tells toggle which state to set. Setting it to true twice keeps the class present."
+      }
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Trace the visible worked calls before changing the starter."
+      ],
+      "after": [
+        "Pass active as the second argument to toggle so it sets the requested state.",
+        "Do not replace the whole class attribute."
+      ]
+    },
+    {
+      "field": "externalNotes",
+      "before": "ECMAScript 2026 core; native Node24 and current app worker/DOM harness evidence are recorded separately. No external service or real-browser claim follows from a local fixture.",
+      "after": ""
+    }
+  ],
+  "headings": [
+    "Read a button's attributes",
+    "Change one attribute",
+    "Change one class",
+    "See it work",
+    "Build the button update"
+  ],
+  "project": {
+    "title": "DOM attributes and class tokens",
+    "task": "Complete setActive(button, active). Set aria-pressed to the text form of active, update only the active class, and return whether that class is present.",
+    "done_when": "Turning the button on and off works. Turning it on twice keeps it on. The control class and Focus text stay unchanged."
+  },
+  "notes": [
+    "Removed an unrelated local-project completion requirement; its useful teaching is in the lesson and technical evidence stays in review documents."
+  ]
+}

@@ -1,0 +1,91 @@
+{
+  "lesson": "kotlin-57",
+  "position": 57,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "If answer() is called directly from this ordinary main without runBlocking, what happens?",
+      "after": "Suspend lets a function pause and resume; it does not create a new thread."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "suspend is a Kotlin language modifier allowing a function to call suspending operations. It does not automatically start a thread, choose a dispatcher or make a blocking call nonblocking. This answer function returns immediately but must still be called from a suspending context.",
+        "runBlocking from the separate kotlinx.coroutines 1.8.0 dependency creates a coroutine scope and blocks the calling thread until it finishes. Here it bridges a tiny command-line main; it is not a recommendation to block a UI or call runBlocking inside existing suspending code. Its braces supply a suspending lambda with a scope receiver. On this Unix-like JVM setup, set COROUTINES to the actual path of kotlinx-coroutines-core-jvm.jar version 1.8.0, then compile kotlinc Main.kt -jvm-target 21 -include-runtime -cp \"$COROUTINES\" -d app.jar and run java -cp \"app.jar:$COROUTINES\" MainKt. The classpath separator here is a colon; this command does not download anything.",
+        "Complete local Kotlin/JVM example; the app itself does not execute it:\n```kotlin\nimport kotlinx.coroutines.runBlocking\nsuspend fun answer(): Int = 7\nfun main() {\n    runBlocking { println(answer()) }\n}\n```",
+        "Expected output or behavior: 7. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Explain why calling a blocking Java API inside a suspend function does not magically make it nonblocking. You may trace it without a Kotlin compiler; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "A coroutine is a task that can pause and resume. The word `suspend` allows a function to call other suspending functions. It does not automatically start another thread or make ordinary blocking work stop blocking.",
+        "The function `runBlocking` starts a coroutine and blocks the calling thread until its work finishes. Here it connects an ordinary command-line main to a suspend function. Do not use it to block an app's screen controls or inside work that already supports suspension.",
+        "Follow the example one line at a time.\n```kotlin\nimport kotlinx.coroutines.runBlocking\nsuspend fun answer(): Int = 7\nfun main() {\n    runBlocking { println(answer()) }\n}\n```",
+        "The screen shows `7`. Answer returns immediately in this example, but its suspend declaration still requires a call from code that supports suspension.",
+        "RunBlocking comes from the separate kotlinx-coroutines library. Add its JAR to the classpath, the list of code locations, for both compilation and execution. Windows separates runtime classpath entries with a semicolon; macOS and Linux use a colon. Importing a name does not install the library."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "The suspend declaration controls where a function may be called."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If answer() is called directly from this ordinary main without runBlocking, what happens?",
+        "choices": [
+          "The suspend modifier is silently ignored.",
+          "Compilation rejects the suspend call outside a suspending context.",
+          "Kotlin automatically creates a new thread."
+        ],
+        "answer": 1,
+        "explanation": "A suspend declaration constrains its call context even when this particular body does not actually pause."
+      },
+      "after": {
+        "question": "Call answer directly from this ordinary main, outside runBlocking. What happens?",
+        "choices": [
+          "Kotlin ignores suspend.",
+          "Compilation rejects a suspend call outside a supported context.",
+          "Kotlin creates a new thread automatically."
+        ],
+        "answer": 1,
+        "explanation": "A suspend function needs a suspending call context even when this particular body returns without pausing."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Kotlin JVM Core v1 uses Kotlin2.4.21 stable syntax and a verified JVM toolchain. The app supplies concept reading and an understanding check, not a Kotlin browser runner. Coroutine libraries are separate dependencies. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "The browser shows Kotlin code and checks your understanding; it does not run Kotlin. Optional local examples use Kotlin/JVM."
+    }
+  ],
+  "headings": [
+    "Allow a function to suspend",
+    "Bridge from an ordinary main",
+    "One example",
+    "Read the immediate result",
+    "Supply the coroutine library"
+  ],
+  "project": {
+    "title": "Suspend functions versus threads",
+    "task": "Explain why suspend does not automatically create a thread.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local Kotlin example is optional."
+  }
+}

@@ -1,5 +1,26 @@
 import {additionalParagraphHeadings} from "./additional-unit-contents";
 import {remainingLessonHeadings} from "./remaining-lesson-headings";
+import reviewedPythonHeadings from "../content/python-reviewed-headings.json";
+import reviewedJavaScriptHeadings from "../content/javascript-reviewed-headings.json";
+import reviewedHTMLHeadings from "../content/html-reviewed-headings.json";
+import reviewedCSSHeadings from "../content/css-reviewed-headings.json";
+import reviewedTypeScriptHeadings from "../content/typescript-reviewed-headings.json";
+import reviewedReactHeadings from "../content/react-reviewed-headings.json";
+import reviewedSQLHeadings from "../content/sql-reviewed-headings.json";
+import reviewedSwiftHeadings from "../content/swift-reviewed-headings.json";
+import reviewedBackendHeadings from "../content/backend-reviewed-headings.json";
+import reviewedToolkitHeadings from "../content/developer-toolkit-reviewed-headings.json";
+import reviewedAIHeadings from "../content/ai-reviewed-headings.json";
+import reviewedCSharpHeadings from "../content/csharp-reviewed-headings.json";
+import reviewedCppHeadings from "../content/cpp-reviewed-headings.json";
+import reviewedJavaHeadings from "../content/java-reviewed-headings.json";
+import reviewedCHeadings from "../content/c-reviewed-headings.json";
+import reviewedKotlinHeadings from "../content/kotlin-reviewed-headings.json";
+import reviewedRustHeadings from "../content/rust-reviewed-headings.json";
+import reviewedPHPHeadings from "../content/php-reviewed-headings.json";
+import reviewedRubyHeadings from "../content/ruby-reviewed-headings.json";
+import reviewedRHeadings from "../content/r-reviewed-headings.json";
+import reviewedGoHeadings from "../content/go-reviewed-headings.json";
 /** Authored table-of-contents labels for the unchanged explanation paragraphs.
  * Array positions match content/lessons.json exactly; no lesson prose is copied,
  * removed, or reordered here. Labels are concise navigation text, not summaries
@@ -46,7 +67,7 @@ const rows: [string, string][] = [
   ["javascript-22", "Preserve old state with immutable updates|An array copy still shares its objects|Copy the changed array and object|Map each task to the right object|Inspect changed values and shared identities|Understand the shallow-copy boundary|Test toggles, missing IDs, and empty lists"],
   ["javascript-23", "Track versions with a history cursor|Closures keep private history state|Create two independent counters|Move undo and redo within the limits|Replace the redo branch after an edit|Ignore duplicate edits without losing history|Test sequences and independent histories"],
   ["python-01", "Programs, values and text|Names and assignment|Calling print|Building text with f-strings|Trace Pepper’s introduction|Change inputs and compare|Reassignment and your first project"],
-  ["python-02", "Integers, floats, strings, and Booleans|Comparison operators and assignment|Compare a parcel below the limit|Check equality at the boundary|Compare compatible value types|Predict results on a number line|Test below, equal, and above readings"],
+  ["python-02", "Kinds of values|Ask a comparison question|Compare named values|Check the exact limit|Compare text and numbers|Use the project values|Try a different measurement"],
   ["python-03", "Conditions and indented branches|Define a reusable reminder function|Choose a light reminder|Read the exact threshold|Choose a value with a conditional expression|Return a message before printing it|Test the moisture reminder's boundaries"],
   ["python-04", "Repeat instructions over an ordered list|Read a for loop and its body|Print the three-day drawing schedule|Insert the current day into text|Count visits to a two-day schedule|Empty lists and repetition counts|Print one task for each supplied day"],
   ["python-05", "Lists keep changeable ordered values|Positions start at zero|Print a list, its length, and an entry|Append changes the existing list|Find the new final collectible|Avoid missing indexes and distinguish counts|Append and count the stamp collectible"],
@@ -126,7 +147,7 @@ const rows: [string, string][] = [
 
 export const lessonHeadings: Record<string, string[]> = {...additionalParagraphHeadings, ...remainingLessonHeadings, ...Object.fromEntries(
   rows.map(([id, headings]) => [id, headings.split("|")]),
-)};
+), ...reviewedPythonHeadings, ...reviewedJavaScriptHeadings, ...reviewedHTMLHeadings, ...reviewedCSSHeadings, ...reviewedTypeScriptHeadings, ...reviewedReactHeadings, ...reviewedSQLHeadings, ...reviewedSwiftHeadings, ...reviewedBackendHeadings, ...reviewedToolkitHeadings, ...reviewedAIHeadings, ...reviewedCSharpHeadings, ...reviewedCppHeadings, ...reviewedJavaHeadings, ...reviewedCHeadings, ...reviewedKotlinHeadings, ...reviewedRustHeadings, ...reviewedPHPHeadings, ...reviewedRubyHeadings, ...reviewedRHeadings, ...reviewedGoHeadings};
 
 export function getLessonHeadings(lessonId: string): string[] {
   return Object.prototype.hasOwnProperty.call(lessonHeadings, lessonId) ? [...lessonHeadings[lessonId]] : [];

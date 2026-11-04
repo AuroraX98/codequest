@@ -1,0 +1,86 @@
+{
+  "lesson": "typescript-40",
+  "position": 17,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Define Flags<T> so every property value becomes boolean. enabledTheme reads the theme flag.",
+      "after": "Keep the same property names, but make their values true or false."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A mapped type visits the property names of another type. In { [K in keyof T]: boolean }, keyof T supplies the keys, K names each key in turn, and boolean is the new value type. It creates a type description, not a runtime object.",
+        "Settings has theme and attempts. Flags<Settings> keeps those names but changes both value types to boolean. The object still must be written at runtime. enabledTheme takes that flags object and returns its theme boolean; the call below returns true. This example starts with required mutable properties; mapped types can preserve modifiers, which is not a runtime freeze.",
+        "```typescript\ntype Flags<T> = { [K in keyof T]: boolean };\ntype Settings = { theme: string; attempts: number };\nconst enabled: Flags<Settings> = { theme: true, attempts: false };\nfunction enabledTheme(flags: Flags<Settings>): boolean { return flags.theme; }\nconsole.log(enabledTheme(enabled));\n```",
+        "Optional local practice: Add a third required Settings property and update the flags object.",
+        "Changed case — trace this independently before checking the result.\n```typescript\ntype Flags<T> = { [K in keyof T]: boolean };\nconst f: Flags<{volume:number}> = {volume:8};\n```\nCompiler result: The mapped volume property must be boolean, not number. Diagnostic 2322. This intentionally failing example is separate from the runnable solution."
+      ],
+      "after": [
+        "A mapped type builds a type from another type's property names. In `[K in keyof T]`, keyof T supplies the keys and K stands for each key in turn. Writing boolean after the colon makes every new value true or false.",
+        "Settings has theme and attempts. Flags<Settings> keeps those names but gives both boolean values. This creates a type description; you still write the actual object.",
+        "This flags object turns theme on and attempts off.\n```typescript\ntype Flags<T> = { [K in keyof T]: boolean };\ntype Settings = { theme: string; attempts: number };\nconst enabled: Flags<Settings> = { theme: true, attempts: false };\nfunction enabledTheme(flags: Flags<Settings>): boolean {\n  return flags.theme;\n}\nconsole.log(enabledTheme(enabled));\n```\nThe output is true.",
+        "Adding another required property to Settings means the flags object needs that name too. The mapped type follows the keys in Settings.",
+        "If a setting called volume originally holds a number, its flag still needs true or false. A numeric flag value such as 8 would cause a type error."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the example and its input/output contract.",
+        "Complete the starter without turning off compiler diagnostics.",
+        "Run the compiler and behavior checks, then explain a changed case."
+      ],
+      "after": [
+        "Map every key of T to a boolean value.",
+        "Return the theme flag from enabledTheme.",
+        "Run the checks."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Compare the public input/output types and trace the visible call before editing."
+      ],
+      "after": [
+        "Keep `keyof T` for the names and use boolean for each new value type."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If Settings adds volume:number, what does Flags<Settings> require for volume?",
+        "choices": [
+          "No volume property because mapped types ignore new keys.",
+          "A boolean value, not a number.",
+          "A number because the original property was numeric."
+        ],
+        "answer": 1,
+        "explanation": "The map uses every key but replaces its value type with boolean."
+      },
+      "after": {
+        "question": "If Settings adds volume as a number, what does Flags<Settings> require for volume?",
+        "choices": [
+          "No volume property",
+          "A boolean value",
+          "A number"
+        ],
+        "answer": 1,
+        "explanation": "The mapped type keeps the property name but replaces its value type with boolean."
+      }
+    }
+  ],
+  "headings": [
+    "Map each property",
+    "Keep names and change value types",
+    "Make a flags object",
+    "Add another setting",
+    "Use the new value type"
+  ],
+  "project": {
+    "title": "Turn properties into boolean flags",
+    "task": "Make Flags turn every property value into a boolean, then read the theme flag.",
+    "done_when": "Every setting name has a boolean flag, enabledTheme returns theme, and the checks pass."
+  }
+}

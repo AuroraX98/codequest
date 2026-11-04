@@ -1,0 +1,97 @@
+{
+  "lesson": "csharp-43",
+  "position": 43,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "If Minutes changes from 15 to -2 while the JSON remains well formed, which branch runs?",
+      "after": "Read JSON text, then check that its data is allowed."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "JSON is a text format for exchanging values. JsonSerializer.Serialize turns an object into JSON; Deserialize<T> attempts to build a T from JSON. The three-quote raw string literal below keeps JSON quote characters without backslash escapes.",
+        "Successful parsing does not prove your application rules. In this example, a valid goal needs a nonblank Title and nonnegative Minutes. A JSON null can also produce a null object.",
+        "The if condition rejects null, a blank title, or negative minutes. Only the else branch prints Accepted. JsonException catches malformed or incompatible JSON separately.",
+        "Goal has public properties with defaults. Those defaults are not proof that missing input was deliberately supplied; choose validation rules appropriate to the real application.",
+        "Complete local C# example; the app does not execute it:\n```csharp\nusing System;\nusing System.Text.Json;\nstring json = \"\"\"{\"Title\":\"Read\",\"Minutes\":15}\"\"\";\ntry\n{\n    Goal? goal = JsonSerializer.Deserialize<Goal>(json);\n    if (goal is null || string.IsNullOrWhiteSpace(goal.Title) || goal.Minutes < 0)\n        Console.WriteLine(\"Rejected\");\n    else\n        Console.WriteLine(\"Accepted: \" + JsonSerializer.Serialize(goal));\n}\ncatch (JsonException) { Console.WriteLine(\"Invalid JSON\"); }\npublic class Goal\n{\n    public string Title { get; set; } = \"\";\n    public int Minutes { get; set; }\n}\n```",
+        "Expected behavior from this example: Accepted: {\"Title\":\"Read\",\"Minutes\":15}. This expected result is a reasoned prediction until a compiler test is recorded.",
+        "Optional local transfer: Try null, a blank title, negative minutes and malformed JSON separately. Record which check rejects each one. This is a separate local practice task, not a requirement to mark the reading complete."
+      ],
+      "after": [
+        "JSON is a text format for sharing data. Here it holds a title and a number of minutes. The three-quote C# string keeps the JSON's quote marks without extra escape characters.",
+        "Deserialize<Goal> tries to turn the JSON into a Goal object. Deserialize means rebuild a value from stored text. JSON containing null can produce a null result.",
+        "Reading the format successfully is only the first check. This program also requires an existing object, a title with more than spaces, and minutes of zero or more.",
+        "JsonException handles JSON that is broken or does not fit the expected types. The Rejected branch handles readable data that fails this program's rules.",
+        "Follow the data through reading and validation.\n\n```csharp\nusing System;\nusing System.Text.Json;\nstring json = \"\"\"{\"Title\":\"Read\",\"Minutes\":15}\"\"\";\ntry\n{\n    Goal? goal = JsonSerializer.Deserialize<Goal>(json);\n    if (goal is null || string.IsNullOrWhiteSpace(goal.Title) || goal.Minutes < 0)\n        Console.WriteLine(\"Rejected\");\n    else\n        Console.WriteLine(\"Accepted: \" + JsonSerializer.Serialize(goal));\n}\ncatch (JsonException) { Console.WriteLine(\"Invalid JSON\"); }\npublic class Goal\n{\n    public string Title { get; set; } = \"\";\n    public int Minutes { get; set; }\n}\n```",
+        "The program prints Accepted: {\"Title\":\"Read\",\"Minutes\":15}. Serialize turns the accepted object back into JSON text for this message.",
+        "A property may keep its default when input leaves it out. Here, a missing Title stays empty and is rejected, but missing Minutes stays zero and passes. A real app must decide whether missing and zero should mean different things."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Trace the changed case before choosing an answer.",
+        "Explain the consequence, then optionally try the local transfer task."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Trace the inputs through the visible rule, then compare the changed case."
+      ],
+      "after": [
+        "Reading the format and checking allowed values are separate steps."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If Minutes changes from 15 to -2 while the JSON remains well formed, which branch runs?",
+        "choices": [
+          "Invalid JSON, because all negative numbers break JSON",
+          "Accepted, because deserialization succeeded",
+          "Rejected, because the application validates Minutes"
+        ],
+        "answer": 2,
+        "explanation": "A negative JSON number parses as an int. The explicit Minutes < 0 rule rejects it afterward."
+      },
+      "after": {
+        "question": "Keep valid JSON but change Minutes to -2. Which message is chosen?",
+        "choices": [
+          "Invalid JSON",
+          "Accepted",
+          "Rejected"
+        ],
+        "answer": 2,
+        "explanation": "A negative number is valid JSON. The program's separate Minutes < 0 rule rejects it."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "C#14/.NET10 core syllabus. Concept-mode reading and understanding check; no in-app C# execution and no claim of mastery. Full example and optional local transfer task are supplied. Actual compiler validation, if available, is reported separately.",
+      "after": "The browser shows C# code and checks your understanding; it does not run C#. Optional local examples use a .NET 10 console project with C# 14."
+    }
+  ],
+  "headings": [
+    "JSON holds data as text",
+    "Turn the text into an object",
+    "Check the program's rules",
+    "Handle broken JSON separately",
+    "One example",
+    "What appears",
+    "Defaults do not prove input was supplied"
+  ],
+  "project": {
+    "title": "Serialize and validate JSON",
+    "task": "Follow how the example reads JSON and checks the resulting goal.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local C# example is optional."
+  }
+}

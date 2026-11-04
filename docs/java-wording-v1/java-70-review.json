@@ -1,0 +1,91 @@
+{
+  "lesson": "java-70",
+  "position": 70,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "If main opens the gate instead of interrupting, what prints?",
+      "after": "Let a waiting worker respond to a request to stop."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "interrupt requests that a thread respond; it is not a forced kill. A blocking interruptible operation such as CountDownLatch.await throws InterruptedException when interrupted, clearing the interrupt status. A worker can clean up and exit; when it cannot propagate the exception, restoring the status preserves the signal.",
+        "A CountDownLatch starts with a count; countDown reduces it, and await waits until it reaches zero. The started latch tells main that the worker has reached its setup. The never-opened gate keeps it waiting until interrupted. The worker catches the exception, records cancellation and restores its status before returning. main joins before reading the result; no race with guessed sleep timing is used.",
+        "Complete local Java example; the app itself does not execute it:\n```java\nimport java.util.concurrent.CountDownLatch;\npublic class Main {\n\n  public static void main(String[] args) throws InterruptedException {\n    CountDownLatch started = new CountDownLatch(1);\n    CountDownLatch gate = new CountDownLatch(1);\n    String[] result = {\"unset\"};\n    Thread worker = new Thread(() -> {\n      started.countDown();\n      try {\n        gate.await();\n        result[0] = \"finished\";\n      } catch (InterruptedException ex) {\n        result[0] = \"cancelled\";\n        Thread.currentThread().interrupt();\n      }\n    });\n    worker.start(); started.await();\n    worker.interrupt();\n    worker.join();\n    System.out.println(result[0]);\n  }\n}\n```",
+        "Expected output or behavior: cancelled. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Explain why restoring interrupt status is different from forcing another thread to stop. You may trace it without a JDK; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "interrupt sends a request; it does not forcibly kill a thread. An interruptible wait such as await responds by throwing InterruptedException and clearing the interrupt flag. The worker can handle that request and finish. Restoring the flag keeps the request recorded when the exception cannot be passed onward.",
+        "CountDownLatch holds a count. countDown reduces it, and await waits for zero. started tells main the worker has reached setup. gate stays closed until main interrupts the worker. The catch records cancellation and restores the worker's flag; main then joins before reading the result.",
+        "Follow the worker to the closed gate, then main's interruption request and join.\n\n```java\nimport java.util.concurrent.CountDownLatch;\npublic class Main {\n\n  public static void main(String[] args) throws InterruptedException {\n    CountDownLatch started = new CountDownLatch(1);\n    CountDownLatch gate = new CountDownLatch(1);\n    String[] result = {\"unset\"};\n    Thread worker = new Thread(() -> {\n      started.countDown();\n      try {\n        gate.await();\n        result[0] = \"finished\";\n      } catch (InterruptedException ex) {\n        result[0] = \"cancelled\";\n        Thread.currentThread().interrupt();\n      }\n    });\n    worker.start(); started.await();\n    worker.interrupt();\n    worker.join();\n    System.out.println(result[0]);\n  }\n}\n```",
+        "The program prints cancelled. The gate wait responds to interruption, the worker handles it, and main reads the result after the worker ends.",
+        "The quiz replaces worker.interrupt() with gate.countDown(). That opens the gate instead of requesting interruption."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Opening the gate follows the normal path; interruption follows catch."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If main opens the gate instead of interrupting, what prints?",
+        "choices": [
+          "cancelled because every await throws",
+          "unset despite joining the finished worker.",
+          "finished"
+        ],
+        "answer": 2,
+        "explanation": "Opening the gate permits await to return normally; main joins before observing finished."
+      },
+      "after": {
+        "question": "Have main open gate instead of interrupting the worker. What prints?",
+        "choices": [
+          "cancelled, because await always throws.",
+          "unset, even after joining the finished worker.",
+          "finished"
+        ],
+        "answer": 2,
+        "explanation": "The open gate lets await return normally. The worker stores finished, and main joins before reading it."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Java Core v1 uses stable Java25 LTS features without preview flags. The app supplies concept reading and an understanding check, not a Java browser runner. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "The browser shows Java code and checks your understanding; it does not run Java. Optional local examples use Java25."
+    }
+  ],
+  "headings": [
+    "Interruption asks a thread to respond",
+    "A latch coordinates the waiting steps",
+    "One example",
+    "What appears",
+    "Open the gate instead"
+  ],
+  "project": {
+    "title": "Cooperate with interruption and cancellation",
+    "task": "Trace the cancellation request, the worker's response, and the final join.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local Java example is optional."
+  }
+}

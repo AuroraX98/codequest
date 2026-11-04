@@ -1,0 +1,91 @@
+{
+  "lesson": "rust-54",
+  "position": 54,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "If the moved String is \"explore\", what result does join obtain?",
+      "after": "A thread can do work separately. Joining it waits for it to finish and gives back its result if it succeeds."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "thread::spawn starts a new operating-system thread. The move closure takes ownership of its captured String, so the worker does not borrow a local that might disappear. The final closure expression returns the String length.",
+        "JoinHandle::join waits and returns a Result containing the worker result or a panic payload. expect here makes a worker panic explicit rather than silently ignoring it. Dropping the handle would detach the worker, not wait for it. The sample makes no execution-order or speed promise.",
+        "Complete local Rust example; the app itself does not execute it:\n```rust\nuse std::thread;\n\nfn main() {\n    let text = String::from(\"read\");\n    let worker = thread::spawn(move || text.len());\n    let length = worker.join().expect(\"worker panicked\");\n    println!(\"{length}\");\n}\n```",
+        "Expected output or behavior: 4. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Explain why retaining ownership in a move closure differs from returning a dangling reference. You may trace it without a Rust compiler; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "A thread can do work separately. Joining it waits for it to finish and gives back its result if it succeeds.",
+        "The worker takes ownership of the String and counts its bytes. The main thread waits for that answer.",
+        "Follow the labeled parts of this example.\n```rust\nuse std::thread;\n\nfn main() {\n    let text = String::from(\"read\");\n    let worker = thread::spawn(move || text.len());\n    let length = worker.join().expect(\"worker panicked\");\n    println!(\"{length}\");\n}\n```",
+        "The output is `4`. The word read has four bytes.",
+        "Count the bytes in explore before following the join."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read one idea.",
+        "Follow the labeled example.",
+        "Try the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Count the bytes in explore before following the join."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If the moved String is \"explore\", what result does join obtain?",
+        "choices": [
+          "4 because move copies a fixed length into the closure",
+          "7",
+          "A borrowed reference to already-dropped stack memory."
+        ],
+        "answer": 1,
+        "explanation": "The worker owns the changed String and returns its seven-byte length before join completes."
+      },
+      "after": {
+        "question": "If the moved String is \"explore\", what result does join obtain?",
+        "choices": [
+          "4 because move copies a fixed length into the closure",
+          "7",
+          "A borrowed reference to already-dropped stack memory."
+        ],
+        "answer": 1,
+        "explanation": "Explore has seven plain English letters, one byte each. The worker gives back seven."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Rust Core v1 uses stable Rust1.99.1 with edition2024 and the standard library. The app supplies concept reading and an understanding check, not a Rust browser runner. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "CodeQuest shows the Rust example. Running it on your own computer is optional."
+    }
+  ],
+  "headings": [
+    "Wait for a worker",
+    "Follow the String",
+    "Read the example",
+    "What happens",
+    "Try one change"
+  ],
+  "project": {
+    "title": "Threads and joining",
+    "task": "Count the bytes in explore before following the join.",
+    "done_when": "Read each idea and pass the understanding check. Running the example on your computer is optional."
+  }
+}

@@ -1,0 +1,97 @@
+{
+  "lesson": "backend-41",
+  "position": 41,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Implement ready(state). Match the worked contract and the changed-input checks without modifying the supplied input values.",
+      "after": "A server is ready only when it can accept new work, even if its program is already running."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A running process is not necessarily ready to accept work. Readiness reflects the dependencies and lifecycle conditions required by the application.",
+        "This exercise is a small pure JavaScript model. Its inputs are supplied directly; it does not receive live HTTP requests, operate a database, or deploy a service.",
+        "Worked example:\n\n```javascript\nfunction ready(state) {\n  return state.databaseConnected && !state.draining;\n}\nconsole.log(ready({\"databaseConnected\":true,\"draining\":false}));\n```\nThe returned value is true.",
+        "The && requires both an available database and no draining state. ! reverses draining. This model assumes boolean inputs supplied by actual probes; it does not probe a database itself.",
+        "Read the function call ready({\"databaseConnected\":true,\"draining\":false}) from the inside out: the arguments supply the inputs, ready runs the body once, and return sends its result back to the caller. console.log displays that result; it does not change it.",
+        "The process runs but its required database is disconnected. Is it ready by this contract? This application’s readiness requires the database connection, not merely a live process."
+      ],
+      "after": [
+        "A program can be running while something it needs is unavailable. Readiness means the app can accept new work right now.",
+        "This app needs a database connection. It must also not be draining. Draining means finishing existing requests while stopping new ones, often before shutdown.",
+        "The database is connected and the server is not draining.\n\n```javascript\nfunction ready(state) {\n  return state.databaseConnected && !state.draining;\n}\nconsole.log(ready({\"databaseConnected\":true,\"draining\":false}));\n```\n\nThe output is true, so this rule considers the server ready.",
+        "&& requires both sides to be true. !state.draining is true when draining is false. Either a missing connection or draining makes ready return false.",
+        "The helper receives true-or-false values. It does not test a database connection itself. A real app must gather these facts before using this rule.",
+        "Set databaseConnected to false while keeping draining false. The result becomes false: this app cannot do its work without the database."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the contract and trace the worked example.",
+        "Replace the unfinished return in the starter.",
+        "Run the changed-input checks.",
+        "Explain the boundary in the understanding question."
+      ],
+      "after": [
+        "Read the two true-or-false fields.",
+        "Require a connected database and no draining.",
+        "Return the combined result without changing state.",
+        "Run the checks with each field changed."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "The && requires both an available database and no draining state. ! reverses draining. This model assumes boolean inputs supplied by actual probes; it does not probe a database itself."
+      ],
+      "after": [
+        "Use && to require both conditions.",
+        "Use ! to check that draining is false."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "The process runs but its required database is disconnected. Is it ready by this contract?",
+        "choices": [
+          "Yes, a running process is always ready",
+          "No, a required dependency is unavailable",
+          "Only if the homepage is cached"
+        ],
+        "answer": 1,
+        "explanation": "This application’s readiness requires the database connection, not merely a live process."
+      },
+      "after": {
+        "question": "The program is running, but its required database is disconnected. Is this app ready?",
+        "choices": [
+          "Yes. Every running program is ready.",
+          "No. Something it needs is unavailable.",
+          "Only if a saved homepage is available."
+        ],
+        "answer": 1,
+        "explanation": "This rule requires the database connection. Running the program is not enough."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Runs as a pure JavaScript function in the browser. Passing checks does not establish live HTTP behavior, database durability, concurrency safety, authentication security, queue delivery guarantees, or production readiness.",
+      "after": "The browser helper uses supplied boolean facts. It does not test a real database or configure a server's readiness endpoint."
+    }
+  ],
+  "headings": [
+    "Running does not mean ready",
+    "Know when new work must wait",
+    "One example",
+    "Check both requirements",
+    "Use measured facts",
+    "Try a disconnected database"
+  ],
+  "project": {
+    "title": "Separate readiness from process existence",
+    "task": "Complete ready(state). Return true only when databaseConnected is true and draining is false. Both fields are booleans. Keep the input unchanged.",
+    "done_when": "The checks pass for every combination of the two fields. Explain why a running program can still be unready."
+  }
+}

@@ -10,7 +10,7 @@ export const lessonGlossary: GlossaryTerm[] = [
   term('integer', 'integer', ['integers', 'Int'], 'A number with no fractional part. It can be negative, zero, or positive.', '3, 0, and -2 are integers. 3.5 is not.'),
   term('float', 'floating-point number', ['floating-point numbers', 'float', 'floats', 'Double'], 'A number type that can hold a fractional part. Some values are only approximate.', 'A price like 2.5 can be stored as a floating-point number.'),
   term('boolean', 'Boolean', ['Booleans', 'Boolean values', 'bool'], 'A value with just two choices: true or false.', 'In Python, 5 > 3 gives True.'),
-  term('function', 'function', ['functions'], 'A named tool that does a task. You can give it values to use, and it can give a result back.', 'print("Hello") uses the print function to show Hello.'),
+  term('function', 'function', ['functions'], 'Reusable instructions that do a task. You can give them values to use and get a result back. A function can have a name.', 'print("Hello") uses the print function to show Hello.'),
   term('call', 'function call', ['function calls', 'calling a function'], 'An instruction that asks a function to run.', 'In print("Hello"), the parentheses make this a call.'),
   term('parameter', 'parameter', ['parameters'], 'A name in a function definition that stands for an input.', 'In def greet(name):, name is a parameter.'),
   term('argument', 'argument', ['arguments'], 'A value you give a function when you call it.', 'In greet("Mina"), "Mina" is the argument.'),
@@ -64,6 +64,7 @@ export const lessonGlossary: GlossaryTerm[] = [
   term('event', 'event', ['events'], 'Something that happens, such as a click, that code can respond to.', 'An input event tells your app that a field changed.'),
   term('handler', 'handler', ['handlers', 'event handler'], 'A function that responds to an event or request.', 'A click handler can add one to a counter.'),
   term('type', 'type', ['types', 'data type'], 'A category of value that tells code what operations make sense.', 'A number can be added. A string is text.'),
+  term('go-interface', 'interface', ['interfaces'], 'A list of methods a Go value must provide to fit this interface.', 'A Reader can require a Read method. A type with that method fits automatically.', ['go']),
   term('interface', 'interface', ['interfaces'], 'In TypeScript, a description of the properties an object should have.', 'A Player interface can require a text name and a numeric score.', ['typescript', 'javascript', 'react']),
   term('union', 'union type', ['union', 'unions'], 'A type that allows more than one choice.', 'string | number allows either text or a number.', ['typescript', 'react']),
   term('type-guard', 'type guard', ['type guards'], 'A check that helps TypeScript narrow down what type a value has.', 'typeof value === "string" checks whether value is text.', ['typescript', 'react']),
@@ -136,7 +137,11 @@ function matcher(runtime: string) {
   if (!value) {
     const terms = new Map<string, GlossaryTerm>();
     for (const entry of lessonGlossary) if (!entry.runtimes || entry.runtimes.includes(runtime)) {
-      for (const alias of entry.aliases) terms.set(alias.toLowerCase(), entry);
+      for (const alias of entry.aliases) {
+        // Neither Rust nor Go has a built-in Double type. Functions may use that name.
+        if ((runtime === "go" || runtime === "rust") && entry.id === "float" && alias === "Double") continue;
+        terms.set(alias.toLowerCase(), entry);
+      }
     }
     const aliases = [...terms.keys()].sort((a, b) => b.length - a.length).map(escaped);
     value = { expression: new RegExp(`(?<![\\p{L}\\p{N}_])(?:${aliases.join('|')})(?![\\p{L}\\p{N}_])`, 'giu'), terms };
@@ -154,6 +159,8 @@ export function glossaryMatches(text: string, runtime = ''): GlossaryMatch[] {
     if (protectedRanges.some(([from, to]) => match.index >= from && match.index < to) || used.has(entry.id)) return [];
     // Avoid ordinary imperatives such as “Set the value”. The Python type remains in Words help when used as a noun.
     if (entry.id === 'python-set' && /^(?:set|sets)$/i.test(match[0]) && /^(?:the|a|an|it|this|that|each|both|up)\b/i.test(text.slice(match.index + match[0].length).trim())) return [];
+    // A set/list of instructions describes ordinary steps, not a Python collection type.
+    if (['python-set','list'].includes(entry.id) && /^of\s+(?:instructions|steps|rules|commands)\b/i.test(text.slice(match.index + match[0].length).trim())) return [];
     used.add(entry.id);
     return [{ from: match.index, to: match.index + match[0].length, text: match[0], term: entry }];
   });

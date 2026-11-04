@@ -1,0 +1,87 @@
+{
+  "lesson": "swift-30",
+  "position": 15,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Define previewText(_ text: String, count: Int) -> String. Return up to count Characters, all text when count exceeds its length, and empty text when count is negative.",
+      "after": "Take the beginning of text without cutting through a character."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A String uses String.Index positions, not arbitrary integer subscripts. startIndex is its beginning; endIndex is the position after its last Character and must not be subscripted as an element. index(_:offsetBy:limitedBy:) moves by Character positions and returns an optional index when constrained by a limit. Here a request beyond the end uses endIndex as the fallback.",
+        "text[..<stop] selects a prefix excluding stop. The result is Substring, a view that can share the original text’s storage. String(piece) constructs a String value for independent long-term use. It is an ownership choice, not a promise that every implementation immediately duplicates every byte. A negative requested count returns an empty String before moving an index.",
+        "\n```swift\nfunc leadingText(_ text: String, count: Int) -> String {\n    guard count >= 0 else {\n        return \"\"\n    }\n    let stop = text.index(text.startIndex, offsetBy: count, limitedBy: text.endIndex) ?? text.endIndex\n    let piece = text[..<stop]\n    return String(piece)\n}\nprint(leadingText(\"AéZ\", count: 2))\nprint(leadingText(\"Hi\", count: 8))\n```\nOutput:\n```text\nAé\nHi\n```",
+        "\n```swift\nfunc leadingText(_ text: String, count: Int) -> String {\n    guard count >= 0 else {\n        return \"\"\n    }\n    let stop = text.index(text.startIndex, offsetBy: count, limitedBy: text.endIndex) ?? text.endIndex\n    let piece = text[..<stop]\n    return String(piece)\n}\nprint(leadingText(\"AéZ\", count: 0))\nprint(leadingText(\"\", count: 2))\n```\nOutput:\n```text\n\n\n```",
+        "A short preview should stop at a Character boundary rather than split an encoded byte sequence. The function takes text and a requested character count, then returns an owned String prefix; it leaves the source unchanged. The changed program prints two empty lines."
+      ],
+      "after": [
+        "A String uses `String.Index` values to mark positions. `startIndex` marks the beginning. `endIndex` marks the position after the last character; there is no character to read at that position.",
+        "`index(_:offsetBy:limitedBy:)` moves by character positions without crossing the given limit. If the requested position would go too far, the result is nil. `?? text.endIndex` uses the end position as the fallback.",
+        "```swift\nfunc leadingText(_ text: String, count: Int) -> String {\n    guard count >= 0 else {\n        return \"\"\n    }\n    let stop = text.index(text.startIndex, offsetBy: count, limitedBy: text.endIndex) ?? text.endIndex\n    let piece = text[..<stop]\n    return String(piece)\n}\nprint(leadingText(\"AéZ\", count: 2))\nprint(leadingText(\"Hi\", count: 8))\n```\nThe outputs are `Aé` and `Hi`. The first call takes two Characters. The second asks for more than the text has, so it keeps all of it.",
+        "`text[..<stop]` takes the part before the stopping position. This is a Substring, a piece that can share storage with the original text. `String(piece)` makes a String value suitable for keeping. It does not promise that every byte is immediately copied.",
+        "Write `previewText(_ text: String, count: Int) -> String`. Return up to the requested number of Characters. Use all the text if the count is too large, and empty text if it is negative. A count of zero also gives empty text."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the small example and explain its inputs and effects.",
+        "Complete the starter for the stated contract.",
+        "Use the configured compatible Swift companion or local Swift toolchain, then explain the changed case."
+      ],
+      "after": [
+        "Return empty text for a negative count.",
+        "Find a stopping index, limited by `endIndex`.",
+        "Take the prefix, convert it to String, and run the checks."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Trace the inputs, returned value and changed state before running."
+      ],
+      "after": [
+        "Use `?? text.endIndex` when the requested position is beyond the end.",
+        "Exclude the stop position with `..<`."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "A String has three Characters. What does limitedBy: endIndex protect in this prefix example?",
+        "choices": [
+          "The index movement does not advance beyond the chosen end boundary",
+          "It makes endIndex a valid Character to read",
+          "It changes String indices into byte offsets"
+        ],
+        "answer": 0,
+        "explanation": "The limit bounds movement. endIndex still denotes the position after the last Character."
+      },
+      "after": {
+        "question": "What does limitedBy: endIndex protect in this example?",
+        "choices": [
+          "The move cannot cross the chosen end position",
+          "endIndex becomes a character you can read",
+          "String positions become byte numbers"
+        ],
+        "answer": 0,
+        "explanation": "The limit bounds the move. endIndex still sits after the last character."
+      }
+    }
+  ],
+  "headings": [
+    "Use text positions",
+    "Choose a safe stopping point",
+    "One example",
+    "Turn the piece into a String",
+    "Build the preview"
+  ],
+  "project": {
+    "title": "Use String indices and own a substring",
+    "task": "Write `previewText(_ text: String, count: Int) -> String`. Return up to that many Characters, all text for an oversized count, and empty text for a negative count.",
+    "done_when": "The checks pass for normal, zero, negative, oversized, empty-text, and Unicode cases."
+  }
+}

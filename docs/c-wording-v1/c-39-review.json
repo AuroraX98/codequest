@@ -1,0 +1,92 @@
+{
+  "lesson": "c-39",
+  "position": 39,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "If the second appended value is 9 instead of 7, what prints on success?",
+      "after": "A growing array needs two counts: items in use and spaces available."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A dynamic array tracks data, length, and capacity. Only indices below length hold initialized elements in this example; capacity describes allocated slots. The invariant is length <= capacity.",
+        "When full, reserve a larger allocation before writing. This deliberately bounded array grows from one to two slots only, rejecting further appends. Return status tells the caller whether append succeeded; do not increase length on failure. length++ uses the old index, then increments length.",
+        "Complete local C example; the app itself does not execute it:\n```c\n#include <stdio.h>\n#include <stdlib.h>\n\nstruct Vector { int *data; size_t length; size_t capacity; };\nint append(struct Vector *v, int value) {\n if (v->length == v->capacity) {\n  if (v->capacity >= 2) { return 0; }\n  int *next = realloc(v->data, 2 * sizeof *next);\n  if (next == NULL) { return 0; }\n  v->data = next; v->capacity = 2;\n }\n v->data[v->length++] = value;\n return 1;\n}\nint main(void) {\n struct Vector v = {.data = malloc(sizeof(int)), .length = 0, .capacity = 1};\n if (v.data == NULL) { return 1; }\n if (!append(&v, 3) || !append(&v, 7)) { free(v.data); return 1; }\n printf(\"%zu %d\\n\", v.length, v.data[1]);\n free(v.data);\n}\n```",
+        "Expected output or behavior: 2 7\n. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Attempt a third append and verify rejection leaves length and existing values unchanged. You may trace it without a C compiler; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "A dynamic array can ask for more storage. data points to its storage. length counts the items already filled. capacity counts the spaces available. Keep length at or below capacity, and read only items below length.",
+        "Appending means adding an item at the end. If this array is full, append first tries to grow it. This small example stops at two spaces. Failure returns 0 without increasing length. On success, `length++` uses the old length as the write position, then adds 1.",
+        "Follow the example one line at a time.\n```c\n#include <stdio.h>\n#include <stdlib.h>\n\nstruct Vector { int *data; size_t length; size_t capacity; };\nint append(struct Vector *v, int value) {\n if (v->length == v->capacity) {\n  if (v->capacity >= 2) { return 0; }\n  int *next = realloc(v->data, 2 * sizeof *next);\n  if (next == NULL) { return 0; }\n  v->data = next; v->capacity = 2;\n }\n v->data[v->length++] = value;\n return 1;\n}\nint main(void) {\n struct Vector v = {.data = malloc(sizeof(int)), .length = 0, .capacity = 1};\n if (v.data == NULL) { return 1; }\n if (!append(&v, 3) || !append(&v, 7)) { free(v.data); return 1; }\n printf(\"%zu %d\\n\", v.length, v.data[1]);\n free(v.data);\n}\n```",
+        "The first append fills position 0 with 3. The second grows the storage and fills position 1 with 7. The print shows length 2 and the second item, giving 2 7. Every failure path in main releases the storage before stopping.",
+        "Capacity growth alone does not add an item. Only a successful append increases length. A third append is rejected here because the two-space limit is reached."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Count successful appends separately from allocated spaces."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If the second appended value is 9 instead of 7, what prints on success?",
+        "choices": [
+          "2 3",
+          "1 9",
+          "2 9"
+        ],
+        "answer": 2,
+        "explanation": "Both appends succeed and increase length once each. The changed second value occupies index one; capacity growth does not add logical elements."
+      },
+      "after": {
+        "question": "Append 9 instead of 7 on the second call. What prints if both calls succeed?",
+        "choices": [
+          "2 3",
+          "1 9",
+          "2 9"
+        ],
+        "answer": 2,
+        "explanation": "Two appends make length 2. The second stored value is now 9, at index 1."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "C Core v1 uses a portable C17 baseline supported by the verified compiler. C23 exists but is not claimed fully supported here. The app supplies concept reading and an understanding check, not a C browser runner. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "The browser shows C code and checks your understanding; it does not run C. Optional local examples use C17."
+    }
+  ],
+  "headings": [
+    "Separate length from capacity",
+    "Make room before appending",
+    "One example",
+    "Follow the two successful appends",
+    "Keep the counts honest"
+  ],
+  "project": {
+    "title": "Dynamic arrays with size and capacity",
+    "task": "Explain why a rejected third append must leave length and the two stored values unchanged.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local C example is optional."
+  },
+  "navigationCorrection": "Added a short example introduction so its reviewed heading remains an explicit contents target."
+}

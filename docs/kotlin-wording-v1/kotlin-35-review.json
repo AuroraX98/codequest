@@ -1,0 +1,91 @@
+{
+  "lesson": "kotlin-35",
+  "position": 35,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "If the first create() call is removed, what id prints?",
+      "after": "Use an object for shared state and a companion function to create new instances."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "An object declaration defines a singleton and can hold shared state. Access it by its name; do not call it like a class constructor. Its initialization occurs when it is first accessed.",
+        "A companion object exposes members via the class name in Kotlin, such as Ticket.create(). It is still an object, not an instance property copied into every Ticket. The factory creates a new Ticket while Counter supplies shared state; no Java static interoperability is implied.",
+        "Complete local Kotlin/JVM example; the app itself does not execute it:\n```kotlin\nobject Counter { var next = 1 }\nclass Ticket(val id: Int) {\n    companion object {\n        fun create(): Ticket {\n            val ticket = Ticket(Counter.next)\n            Counter.next += 1\n            return ticket\n        }\n    }\n}\nfun main() {\n    Ticket.create()\n    println(Ticket.create().id)\n}\n```",
+        "Expected output or behavior: 2. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Create two tickets and distinguish their own id properties from the shared counter. You may trace it without a Kotlin compiler; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "An `object` declaration creates one named instance, called a singleton. Counter is shared, so every call sees the same next property. Its setup runs when it is first used.",
+        "A companion object holds functions reached through a class name. Here, `Ticket.create()` calls the companion's create function. That function makes a new Ticket using Counter.next, then adds 1 to the shared counter.",
+        "Follow the example one line at a time.\n```kotlin\nobject Counter { var next = 1 }\nclass Ticket(val id: Int) {\n    companion object {\n        fun create(): Ticket {\n            val ticket = Ticket(Counter.next)\n            Counter.next += 1\n            return ticket\n        }\n    }\n}\nfun main() {\n    Ticket.create()\n    println(Ticket.create().id)\n}\n```",
+        "The screen shows `2`. The first call creates ticket 1 and moves the counter to 2. The second call creates ticket 2, whose id is printed.",
+        "Each Ticket keeps its own id. Counter.next belongs to the shared Counter object. The companion function itself is not copied into each ticket."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Count the create calls that happen before the printed ticket is made."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If the first create() call is removed, what id prints?",
+        "choices": [
+          "1",
+          "2",
+          "0"
+        ],
+        "answer": 0,
+        "explanation": "Only one ticket is then created, using the singleton counter’s initial value before incrementing it."
+      },
+      "after": {
+        "question": "Remove the first `Ticket.create()` call. Which id appears?",
+        "choices": [
+          "1",
+          "2",
+          "0"
+        ],
+        "answer": 0,
+        "explanation": "Only one ticket is created. It takes the counter's starting value, 1, before the counter increases."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Kotlin JVM Core v1 uses Kotlin2.4.21 stable syntax and a verified JVM toolchain. The app supplies concept reading and an understanding check, not a Kotlin browser runner. Coroutine libraries are separate dependencies. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "The browser shows Kotlin code and checks your understanding; it does not run Kotlin. Optional local examples use Kotlin/JVM."
+    }
+  ],
+  "headings": [
+    "Keep one shared object",
+    "Create through a companion function",
+    "One example",
+    "Trace the two calls",
+    "Separate shared state from instance data"
+  ],
+  "project": {
+    "title": "Objects and companion members",
+    "task": "Trace a shared counter while creating separate tickets.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local Kotlin example is optional."
+  }
+}

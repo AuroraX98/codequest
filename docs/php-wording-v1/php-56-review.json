@@ -1,0 +1,91 @@
+{
+  "lesson": "php-56",
+  "position": 56,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "If trigger_error is removed, what prints?",
+      "after": "A warning normally reports a problem without acting like a thrown exception. This program installs a handler for one warning kind."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "Traditional PHP warnings are reported through the error system and can allow continuation. catch handles thrown Throwable objects, not every warning merely because its message describes an error.",
+        "The temporary handler converts only E_USER_WARNING to ErrorException and returns false for other severities so normal handling continues. trigger_error creates a synthetic warning. restore_error_handler in finally prevents this example from changing later policy.\n\nErrorException receives message, numeric code, severity, source filename and source line in that order. The code argument is 0 here; the other values come from the handler callback. Construction returns the throwable object, and throw transfers control to catch.",
+        "Complete local PHP example; the app itself does not execute it:\n```php\n<?php\ndeclare(strict_types=1);\nset_error_handler(function (int $severity, string $message, string $file, int $line): bool {\n    if ($severity !== E_USER_WARNING) { return false; }\n    throw new ErrorException($message, 0, $severity, $file, $line);\n});\ntry {\n    trigger_error(\"demonstration warning\", E_USER_WARNING);\n    echo \"continued\\n\";\n} catch (ErrorException $error) {\n    echo \"converted warning\\n\";\n} finally { restore_error_handler(); }\n\n```",
+        "Expected output or behavior: converted warning. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Explain why blanket conversion and suppression can hide distinctions. You may trace it without a PHP interpreter; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "A warning normally reports a problem without acting like a thrown exception. This program installs a handler for one warning kind.",
+        "For the selected warning, the handler throws an exception carrying its message.",
+        "Follow the labeled parts of this example.\n```php\n<?php\ndeclare(strict_types=1);\nset_error_handler(function (int $severity, string $message, string $file, int $line): bool {\n    if ($severity !== E_USER_WARNING) { return false; }\n    throw new ErrorException($message, 0, $severity, $file, $line);\n});\ntry {\n    trigger_error(\"demonstration warning\", E_USER_WARNING);\n    echo \"continued\\n\";\n} catch (ErrorException $error) {\n    echo \"converted warning\\n\";\n} finally { restore_error_handler(); }\n```",
+        "The output is `converted warning`. The catch handles this converted warning. Finally restores the previous handler.",
+        "Remove the call that creates the warning."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read one idea.",
+        "Follow the labeled example.",
+        "Try the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Remove the call that creates the warning."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If trigger_error is removed, what prints?",
+        "choices": [
+          "The handler can never be restored.",
+          "converted warning even without an event",
+          "continued"
+        ],
+        "answer": 2,
+        "explanation": "Without a warning, normal execution reaches continued; finally still restores the handler."
+      },
+      "after": {
+        "question": "If the call that triggers the warning is removed, what prints?",
+        "choices": [
+          "converted warning",
+          "Both",
+          "continued"
+        ],
+        "answer": 2,
+        "explanation": "The try block reaches its ordinary print line."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "PHP Core v1 uses PHP 8.5.12 CLI and explicitly available extensions. The app supplies concept reading and an understanding check, not a PHP browser runner. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "CodeQuest shows the PHP example. Running it on your own computer is optional."
+    }
+  ],
+  "headings": [
+    "Turn one warning into an exception",
+    "Pass the warning to catch",
+    "Read the example",
+    "What happens",
+    "Try one change"
+  ],
+  "project": {
+    "title": "Warnings versus thrown errors",
+    "task": "Remove the call that creates the warning.",
+    "done_when": "Read each idea and pass the understanding check. Running the example on your computer is optional."
+  }
+}

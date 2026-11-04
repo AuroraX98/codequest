@@ -1,0 +1,97 @@
+{
+  "lesson": "go-18",
+  "position": 18,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Change view[0]=9 to view[1]=9. What does the unchanged print show?",
+      "after": "Use a slice to view items stored in an array."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A slice carries a reference to underlying array storage plus length and capacity. Assigning a slice copies this descriptor, not all its elements.",
+        "values[1:3] includes indices 1 and 2, excluding 3. Updating view[0] updates the underlying element at values[1].",
+        "len(view) gives the accessible length. Capacity is a separate concept used for reslicing and growth.\n\nThe initialized view below covers two elements, so len(view) returns 2, not the three-element owner length and not the last valid view index.\n```go\npackage main\nimport \"fmt\"\nfunc main() {\n    values := []int{2, 4, 6}\n    view := values[1:3]\n    fmt.Println(len(view))\n}\n```\nExpected output: 2.",
+        "Changing a shared element is visible through any overlapping slice or array view.",
+        "Complete local Go example; the app itself does not execute it:\n```go\npackage main\n\nimport (\n\t\"fmt\"\n)\n\nfunc main() {\n\tvalues := []int{2, 4, 6}\n\tview := values[1:3]\n\tview[0] = 9\n\tfmt.Println(values[1])\n}\n\n```",
+        "Expected output or behavior: 9. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Draw the slice start and length, then map each valid slice index to the underlying array. You may trace it without a Go compiler; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "A slice describes part of an array: where it starts, its length, and its capacity. Copying a slice copies that description, so the slices can still share their stored items.",
+        "`values[1:3]` starts at index 1 and stops before index 3. The new view's index 0 points to values[1]. Its index 1 points to values[2].",
+        "`len(view)` counts the items you can use in the slice. Here it is 2. Capacity describes how far the slice can extend within the same array; the next lesson explains it.",
+        "Changing an item through one slice changes the shared item. Another view of that same item can see the change.",
+        "Map the view's first index back to the original items.\n```go\npackage main\n\nimport (\n\t\"fmt\"\n)\n\nfunc main() {\n\tvalues := []int{2, 4, 6}\n\tview := values[1:3]\n\tview[0] = 9\n\tfmt.Println(values[1])\n}\n\n```",
+        "The screen shows `9`. Changing view[0] changes the same stored item that values[1] reads.",
+        "Change the assignment to view[1]. That index points to values[2], while the display line still reads values[1]."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "The view starts at original index 1."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Change view[0]=9 to view[1]=9. What does the unchanged print show?",
+        "choices": [
+          "9 because every view index selects the same element.",
+          "6 because slice bounds are inclusive.",
+          "4 because the update now selects values[2]."
+        ],
+        "answer": 2,
+        "explanation": "The slice starts at original index 1, so its second element is original index 2."
+      },
+      "after": {
+        "question": "Change view[0] = 9 to view[1] = 9. What does the same display line show?",
+        "choices": [
+          "9, because every view index means the same item.",
+          "6, because the end boundary is included.",
+          "4, because only values[2] changed."
+        ],
+        "answer": 2,
+        "explanation": "view[1] points to values[2]. values[1] keeps its original value, 4."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Go Core v1 uses the verified Go1.27.3 toolchain and standard library. The app supplies concept reading and an understanding check, not a Go browser runner. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "The browser shows Go code and checks your understanding; it does not run Go. Optional local examples use Go 1.27."
+    }
+  ],
+  "headings": [
+    "View shared items with a slice",
+    "Read the slice boundaries",
+    "Count the visible items",
+    "Change a shared item",
+    "One example",
+    "Read the shared result",
+    "Map a different index"
+  ],
+  "project": {
+    "title": "Slice views and shared arrays",
+    "task": "Match the slice index to the original item's index.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local Go example is optional."
+  }
+}

@@ -1,0 +1,100 @@
+{
+  "lesson": "sql-20",
+  "position": 33,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Create a view paid_totals(customer_id,total) summing paid order amounts by customer. Use an ordinary CTE named paid to first select paid orders. Keep only totals at least 10. Do not change orders.",
+      "after": "Name a query step so the next part is easier to read."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "An ordinary common table expression gives a query result a temporary name within one statement.\n\nThe supplied practice database contains orders(customer_id, status, amount). The names inside parentheses are the available columns; use these exact identifiers when reading the fixture tables.",
+        "WITH introduces that name before the main query. Unlike a saved view, the name does not remain available to later statements.",
+        "This complete example names a filtered result before summing it. The first named row set supplies the input values.\n```sql\nWITH demo(amount) AS(VALUES(-2),(3),(4)),\npositive AS(\nSELECT amount\nFROM demo\nWHERE amount>0)\nSELECT SUM(amount) AS total\nFROM positive;\n```\nThe total is 7: only 3 and 4 contribute.",
+        "The name positive refers to the query result, not a separately stored table.",
+        "Breaking a complex query into named steps can make its intent easier to inspect. It does not automatically make it faster.",
+        "For this practice, paid selects the customer_id and amount of paid orders. The outer query groups that result and filters its totals.",
+        "HAVING applies the minimum to the group total. Applying the minimum to each original amount would discard small orders that should contribute.",
+        "CREATE VIEW can wrap the complete WITH statement so the final report has a reusable name."
+      ],
+      "after": [
+        "A common table expression, or CTE, gives a query result a name within one statement.",
+        "`WITH` introduces that name before the main query. Unlike a saved view, the name is not available to a later, separate statement.",
+        "Run this example in a fresh database:\n```sql\nCREATE TABLE numbers(amount INTEGER);\nINSERT INTO numbers VALUES (-2), (3), (4);\nWITH positive AS (\n  SELECT amount\n  FROM numbers\n  WHERE amount > 0\n)\nSELECT SUM(amount) AS total\nFROM positive;\n```\nThe total is `7`: only 3 and 4 pass the named filter.",
+        "`positive` is the name of the query step. This WITH statement does not create a separate stored table called positive.",
+        "Named steps can make a query easier to understand. They do not automatically make it faster.",
+        "The project has `orders(customer_id, status, amount)`. Make a CTE named `paid` that selects customer_id and amount only for paid orders.",
+        "Group the paid rows by customer_id. Use HAVING to keep totals of at least 10. Do not reject small individual orders before adding them.",
+        "Create the view `paid_totals(customer_id, total)` around the complete WITH statement. Leave orders unchanged."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the requirement.",
+        "Make one change to the starter.",
+        "Run the checks.",
+        "Explain why a changed input produces its result."
+      ],
+      "after": [
+        "Create a paid CTE that filters status = 'paid'.",
+        "Group its rows by customer_id and sum amount.",
+        "Keep totals at least 10 with HAVING.",
+        "Save the complete query as paid_totals."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Place WITH after CREATE VIEW ... AS.",
+        "The inner filter selects paid rows before grouping.",
+        "The outer HAVING checks the sum, not individual amounts."
+      ],
+      "after": [
+        "WITH goes after CREATE VIEW ... AS.",
+        "The threshold belongs on the sum, not each order."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "A CTE named paid is defined in one SELECT statement. Can the next independent SELECT automatically read paid as a saved table?",
+        "choices": [
+          "Yes; every CTE permanently creates a table.",
+          "No; the CTE name belongs to its statement.",
+          "Only if the previous query returned more than one row."
+        ],
+        "answer": 1,
+        "explanation": "An ordinary CTE is a named query step scoped to one statement. A table or view is a separately created database object."
+      },
+      "after": {
+        "question": "A CTE named paid is defined in one statement. Can the next separate SELECT read it as a saved table?",
+        "choices": [
+          "Yes. Every CTE creates a permanent table.",
+          "No. The CTE name belongs to its statement.",
+          "Only if the first query returns several rows."
+        ],
+        "answer": 1,
+        "explanation": "A CTE names a step inside one statement. A saved table or view needs its own creation."
+      }
+    }
+  ],
+  "headings": [
+    "Name a query result",
+    "Use WITH",
+    "Try a named filter",
+    "Keep the name inside its statement",
+    "Choose names for clarity",
+    "Select paid rows first",
+    "Filter the grouped totals",
+    "Save the complete report"
+  ],
+  "project": {
+    "title": "Summarize paid work in two readable steps",
+    "task": "Create paid_totals(customer_id, total) using a CTE named paid. Sum paid order amounts by customer and keep totals at least 10.",
+    "done_when": "The required CTE and view return the correct grouped totals, and orders stays unchanged."
+  }
+}

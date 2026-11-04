@@ -1,0 +1,81 @@
+{
+  "lesson": "sql-49",
+  "position": 48,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Insert one ticket labelled Atlas and report id,label,status with RETURNING. Checks verify its final generated fields, not syntax or returned output; inspect the output and explain the rollback companion.",
+      "after": "Ask a write to return the values it just changed."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "RETURNING adds output expressions to a top-level INSERT, UPDATE or DELETE. INSERT and UPDATE report the changed values of each directly affected row; DELETE reports its removed values. The result is returned to the caller, not saved as an answer table. Output row order is not guaranteed. These one-row examples avoid relying on it.",
+        "\n```sql\nCREATE TABLE tickets(id INTEGER PRIMARY KEY, label TEXT, status TEXT DEFAULT 'new');\nINSERT INTO tickets(label) VALUES ('Atlas')\nRETURNING id,label,status;\n```\nThe returned row is (1,'Atlas','new'). The table was empty, so this INTEGER PRIMARY KEY receives 1; status uses its default. RETURNING id,label,status selects those three output fields. A normal caller should use the returned key instead of guessing which key was allocated.",
+        "\n```sql\nCREATE TABLE tickets(id INTEGER PRIMARY KEY, label TEXT, status TEXT DEFAULT 'new');\nINSERT INTO tickets(label) VALUES ('Atlas');\nBEGIN;\nUPDATE tickets SET status='done'\nWHERE id=1\nRETURNING id,status;\nROLLBACK;\nSELECT id,status\nFROM tickets\nORDER BY id;\n```\nThe UPDATE returns (1,'done'), but the later SELECT returns (1,'new'). Seeing returned data did not force the surrounding transaction to commit. This course’s learner SELECT checks verify final state, not that RETURNING was used or that the caller received rows. The complete worked fixtures separately verify actual write output. Optional practice: change the update to a nonexistent id; no affected row means no RETURNING row."
+      ],
+      "after": [
+        "`RETURNING` asks an `INSERT`, `UPDATE`, or `DELETE` to send back values from the rows it directly changed. Inserts and updates return the new values. Deletes return the removed values. These results appear as output; they are not a new table.",
+        "```sql\nCREATE TABLE demo_tickets(\n  id INTEGER PRIMARY KEY,\n  label TEXT,\n  status TEXT DEFAULT 'new'\n);\nINSERT INTO demo_tickets(label) VALUES ('Atlas')\nRETURNING id, label, status;\n```\nThe output is `(1, Atlas, new)`. The empty table gives this row ID 1, and the default supplies `new`. In an app, read the returned ID instead of guessing it.",
+        "`RETURNING` does not commit an open transaction. A later rollback can still undo the write. A write that changes no rows returns no rows. If it changes several rows, their output order is not guaranteed."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the small example and explain its inputs and effects.",
+        "Complete the starter for this lesson.",
+        "Run the behavior checks, then predict a changed case."
+      ],
+      "after": [
+        "Insert the one requested ticket into `tickets`.",
+        "Add `RETURNING id, label, status`.",
+        "Run the checks and inspect the returned row."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Trace the supplied rows and resulting rows before changing the query."
+      ],
+      "after": [
+        "Insert only `label` so the database supplies the ID and default status.",
+        "Place `RETURNING id, label, status` after the `VALUES` part, before the semicolon."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "An UPDATE returned a row, then its enclosing transaction was rolled back. Is that update necessarily saved?",
+        "choices": [
+          "Yes, if its id was returned",
+          "Yes, RETURNING commits automatically",
+          "No"
+        ],
+        "answer": 2,
+        "explanation": "RETURNING provides statement output; transaction outcome and durable saving are separate matters."
+      },
+      "after": {
+        "question": "An UPDATE returned a row, then its transaction was rolled back. Is the update saved?",
+        "choices": [
+          "Yes, if its ID was returned",
+          "Yes, RETURNING commits automatically",
+          "No"
+        ],
+        "answer": 2,
+        "explanation": "RETURNING shows the changed values. It does not prevent a later rollback from undoing the change."
+      }
+    }
+  ],
+  "headings": [
+    "Get values from a write",
+    "One example",
+    "Returned does not mean committed"
+  ],
+  "project": {
+    "title": "Read values returned by a write",
+    "task": "Insert one ticket labeled `Atlas`. Use `RETURNING` to show its `id`, `label`, and `status`.",
+    "done_when": "The checks pass for the saved ticket, and you have inspected the returned ID, label, and status. The checks alone do not prove that RETURNING was used."
+  }
+}

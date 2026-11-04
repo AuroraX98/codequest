@@ -1,0 +1,97 @@
+{
+  "lesson": "backend-38",
+  "position": 38,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Implement canRetry(method,status). Match the worked contract and the changed-input checks without modifying the supplied input values.",
+      "after": "Before retrying, check both the kind of request and the error it received."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A retry repeats an operation after a failure. Repeating an operation that creates a new record may duplicate work, so the retry policy must consider the operation as well as the failure.",
+        "This exercise is a small pure JavaScript model. Its inputs are supplied directly; it does not receive live HTTP requests, operate a database, or deploy a service.",
+        "Worked example:\n\n```javascript\nfunction canRetry(method,status) {\n  return method === \"GET\" && [502,503,504].includes(status);\n}\nconsole.log(canRetry(\"GET\", 503));\n```\nThe returned value is true.",
+        "This deliberately narrow policy allows only GET with three selected transient gateway/service statuses. It is an application policy, not a list of all retriable HTTP situations.",
+        "Read the function call canRetry(\"GET\", 503) from the inside out: the arguments supply the inputs, canRetry runs the body once, and return sends its result back to the caller. console.log displays that result; it does not change it.",
+        "A POST creation receives 503. Does this narrow policy automatically retry it? This policy permits GET only. Retrying a write requires a deliberate idempotency design."
+      ],
+      "after": [
+        "A retry sends a request again after a failure. Repeating a request that creates a note could create a second note.",
+        "Our rule allows only GET requests with status 502, 503, or 504. GET asks to read data. These statuses can signal a temporary problem reaching or using a service.",
+        "Both checks pass for GET with status 503.\n\n```javascript\nfunction canRetry(method,status) {\n  return method === \"GET\" && [502,503,504].includes(status);\n}\nconsole.log(canRetry(\"GET\", 503));\n```\n\nThe output is true. The helper allows a retry; it does not send one.",
+        "&& means both conditions must pass. The method must be exactly \"GET\", and includes must find the numeric status in the list.",
+        "Try a different method or status. If either condition fails, canRetry returns false. This is the rule for this exercise, not every possible retry rule.",
+        "A POST request can create new data. This helper never automatically retries POST. A real app needs a deliberate way to avoid duplicate work before retrying a write."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the contract and trace the worked example.",
+        "Replace the unfinished return in the starter.",
+        "Run the changed-input checks.",
+        "Explain the boundary in the understanding question."
+      ],
+      "after": [
+        "Check that the method is GET.",
+        "Check that the status is 502, 503, or 504.",
+        "Join the two checks with &&.",
+        "Run the checks with changed methods and statuses."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "This deliberately narrow policy allows only GET with three selected transient gateway/service statuses. It is an application policy, not a list of all retriable HTTP situations."
+      ],
+      "after": [
+        "Both the method and status must qualify.",
+        "Use includes on the list of three numeric statuses."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "A POST creation receives 503. Does this narrow policy automatically retry it?",
+        "choices": [
+          "Yes, any 503 is safe",
+          "No, POST is outside the allowed policy",
+          "Yes, because status codes prevent duplicates"
+        ],
+        "answer": 1,
+        "explanation": "This policy permits GET only. Retrying a write requires a deliberate idempotency design."
+      },
+      "after": {
+        "question": "A POST request to create a note receives status 503. Does this helper allow a retry?",
+        "choices": [
+          "Yes. Every 503 can be retried safely.",
+          "No. This rule allows only GET.",
+          "Yes. Status codes prevent duplicate notes."
+        ],
+        "answer": 1,
+        "explanation": "The method check fails for POST. A status code alone does not prove that repeating a write is safe."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Runs as a pure JavaScript function in the browser. Passing checks does not establish live HTTP behavior, database durability, concurrency safety, authentication security, queue delivery guarantees, or production readiness.",
+      "after": "This helper models a narrow application rule. It sends no requests. A real retry system also needs limits on attempts and a delay between them."
+    }
+  ],
+  "headings": [
+    "A retry repeats a request",
+    "Choose a small retry rule",
+    "One example",
+    "Check both conditions",
+    "Read the result",
+    "Avoid duplicate writes"
+  ],
+  "project": {
+    "title": "Retry only an eligible operation",
+    "task": "Complete canRetry(method,status). Return true only for method \"GET\" and numeric status 502, 503, or 504. Return false otherwise.",
+    "done_when": "The checks pass when either input changes. Explain why POST with status 503 is outside this rule."
+  }
+}

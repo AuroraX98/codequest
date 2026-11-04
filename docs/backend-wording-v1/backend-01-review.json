@@ -1,0 +1,110 @@
+{
+  "lesson": "backend-01",
+  "position": 12,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Create routes for reading and adding practice entries in Express.",
+      "after": "Handle requests that read practice entries or add a valid entry."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "An API is an agreed way for programs to ask another program to do something. An HTTP request includes a method, a path, and sometimes a body of data. A route matches a method and path. GET /entries reads records; POST /entries asks to create one. A response has a status number and a body. JSON is a text format used to send objects and arrays between programs.",
+        "This standalone JavaScript example models a route decision without a real network:\n```javascript\nconst visits = [];\nfunction handle(method, path, body = {}) {\n  if (method === 'GET' && path === '/visits') {\n    return { status: 200, body: [...visits] };\n  }\n  if (method === 'POST' && path === '/visits') {\n    if (!Number.isInteger(body.minutes) || body.minutes < 1 || body.minutes > 180) {\n      return { status: 400, body: { error: 'Use 1 to 180 whole minutes' } };\n    }\n    const visit = { id: visits.length + 1, minutes: body.minutes };\n    visits.push(visit);\n    return { status: 201, body: visit };\n  }\n  return { status: 404, body: { error: 'Not found' } };\n}\nconsole.log(handle('POST', '/visits', { minutes: 45 }));\nconsole.log(handle('GET', '/visits'));\n```\nThe first response is status 201 with {id: 1, minutes: 45}; the second is 200 with an array containing that saved visit.",
+        "Number.isInteger requires a whole finite number, so it rejects a fraction, undefined, NaN, Infinity, and quoted numeric text. The bounds include 1 and 180; 0 and 181 fail. || means any invalid condition rejects the request. The default body = {} handles an omitted argument in this example. [...visits] makes a new array for the response, and push appends the valid record only after validation.",
+        "Express is a package for writing HTTP routes in Node.js, which runs JavaScript outside the browser. Save this complete separate example as server.mjs in a local project with the supplied Express dependency installed:\n```javascript\nimport express from 'express';\nconst app = express();\napp.use(express.json({ limit: '20kb' }));\nconst visits = [];\napp.get('/visits', (req, res) => res.json(visits));\napp.post('/visits', (req, res) => {\n  const minutes = req.body?.minutes;\n  if (!Number.isInteger(minutes) || minutes < 1 || minutes > 180) {\n    return res.status(400).json({ error: 'Use 1 to 180 whole minutes' });\n  }\n  const visit = { id: crypto.randomUUID(), minutes };\n  visits.push(visit);\n  res.status(201).json(visit);\n});\napp.listen(3000, '127.0.0.1', () => console.log('Local server ready'));\n```\nRun with Node.js 22.13 or newer. The callback receives req for request information and res for the response. listen starts the local server on port 3000.\n\nHere, express() takes no arguments and returns the application object used to register routes. crypto.randomUUID() also takes no arguments; each call returns a UUID string for an identifier, not a numeric sequence. The example stores that returned string in visit.id. These calls do not themselves verify the caller or save data durably.",
+        "app.use installs middleware, code that runs before route handlers. express.json reads JSON request bodies, with a 20-kilobyte size limit. res.status chooses the status and res.json sends JSON. crypto.randomUUID creates a unique record identifier in this Node environment. A 200 means the read succeeded; 201 means a record was created; 400 asks the caller to fix invalid input; 404 means no matching route here. JSON parsing and other server failures are additional cases beyond this small route exercise.",
+        "With that server running, this JavaScript fragment can be used in a browser console on the same local origin, or in a Node environment supporting fetch:\n```javascript\nconst created = await fetch('http://127.0.0.1:3000/visits', {\n  method: 'POST',\n  headers: { 'Content-Type': 'application/json' },\n  body: JSON.stringify({ minutes: 45 })\n});\nconsole.log(created.status);\nconst response = await fetch('http://127.0.0.1:3000/visits');\nconsole.log(await response.json());\n```\nIt prints 201 then the saved array. JSON.stringify turns the object into request text. await waits for each promise's result; response.json parses returned JSON. Cross-origin browser pages may need CORS permission, so prefer the local server's origin or Node for this walkthrough.",
+        "For the exercise, implement handleRequest for /entries, validate before push, preserve saved records for later GET calls, and return 404 for /missing. The array is memory-only and disappears when the server stops. The browser checks your decision function; it does not launch Node or prove actual HTTP behavior. Download the supplied server and tests, install its declared packages locally, start it in one terminal, and run npm test in another to check the real routes."
+      ],
+      "after": [
+        "An API is an agreed way for programs to ask another program to do something. This one lets callers read entries or add one. Each request has a method and path, and may also include data in its body.",
+        "GET reads the list. POST adds an entry. Match both the method and path before choosing what to do. Return a status number to describe the result and JSON content when a body is needed.",
+        "Accept minutes only when they are whole numbers from 1 through 180. Check before adding to the array. Invalid input must not leave a new entry behind. The saved array is held in memory and is lost when the server stops.",
+        "With Express installed, save this one example as server.mjs:\n```javascript\nimport express from 'express';\nconst app = express();\napp.use(express.json({ limit: '20kb' }));\nconst visits = [];\napp.get('/visits', (req, res) => res.json(visits));\napp.post('/visits', (req, res) => {\n  const minutes = req.body?.minutes;\n  if (!Number.isInteger(minutes) || minutes < 1 || minutes > 180) {\n    return res.status(400).json({ error: 'Use 1 to 180 whole minutes' });\n  }\n  const visit = { id: crypto.randomUUID(), minutes };\n  visits.push(visit);\n  res.status(201).json(visit);\n});\napp.listen(3000, '127.0.0.1', () => console.log('Local server ready'));\n```\nExpress is a Node.js package for handling HTTP requests. Node.js runs JavaScript outside the browser. This server listens only on this computer, at port 3000.",
+        "req describes the request; res sends the response. express.json reads JSON bodies with a 20-kilobyte limit. app.get and app.post register handlers. res.status sets the status, and res.json sends JSON. crypto.randomUUID() creates the new entry's string ID.",
+        "The local example needs Node.js 22.13 or newer and the supplied Express dependency. The downloadable practice project includes package.json, server.mjs, and test.mjs. Put them together, run npm install, then npm start. In a second terminal in that folder, run npm test to send real requests to the practice server.",
+        "In the browser, complete handleRequest for /entries. GET returns 200 with a copy of the entries array. Valid POST adds an entry and returns 201; invalid minutes return 400. Unknown routes return 404. These browser checks test the decision function; the downloaded tests check real HTTP."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "In handleRequest, return status 200 and a copy of entries for GET /entries.",
+        "For POST /entries, accept only whole-number minutes from 1 to 180, including 1 and 180.",
+        "For valid input, add an entry and return status 201.",
+        "For invalid input, return status 400. For a route you do not recognize, return status 404.",
+        "Download package.json, server.mjs, and test.mjs into one folder.",
+        "Install Node.js 22.13 or newer.",
+        "Open a terminal in the downloaded folder and run npm install.",
+        "Run npm start.",
+        "Open a second terminal in the same folder and run npm test.",
+        "Try 1 and 180 minutes, which are allowed. Also try 0 and 181, which are outside the limits."
+      ],
+      "after": [
+        "Match the method and path in handleRequest.",
+        "Validate minutes before adding any entry.",
+        "Return 200 for reads, 201 for creation, 400 for invalid input, or 404 for an unknown route.",
+        "Run the browser checks.",
+        "Optionally download the three local files, install their packages, start the server, and run npm test in a second terminal."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Check method and path together before reading or adding.",
+        "Reject values unless Number.isInteger(body.minutes) is true and the range includes them.",
+        "Use entries.push(entry) for a valid POST, then return the new entry with status 201."
+      ],
+      "after": [
+        "Include both 1 and 180 in the allowed range.",
+        "Text that looks numeric is still text.",
+        "Only push an entry after validation passes."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Which response fits a request with minutes: 0?",
+        "choices": [
+          "201: created",
+          "400: fix the input",
+          "200: read successfully"
+        ],
+        "answer": 1,
+        "explanation": "Zero is outside the allowed range, so this request should be rejected with 400."
+      },
+      "after": {
+        "question": "Which response fits a request with minutes: 0?",
+        "choices": [
+          "201: created",
+          "400: fix the input",
+          "200: read successfully"
+        ],
+        "answer": 1,
+        "explanation": "Zero is below the allowed minimum of 1, so the request is rejected."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "The in-app checks run your request decision function. Express runs in Node.js on your computer. Also run npm test against the local server to verify real routes and responses.",
+      "after": "The browser runs the request decision function. The downloaded Node/Express project and npm test check real local HTTP. Its in-memory entries do not survive stopping the server."
+    }
+  ],
+  "headings": [
+    "Make a small API",
+    "Read and create with different routes",
+    "Validate before saving",
+    "Read one server example",
+    "Explain the response helpers",
+    "Run the local example",
+    "Complete the browser exercise"
+  ],
+  "project": {
+    "title": "A practice-session API",
+    "task": "Complete the reading and creation routes for practice entries. Check the browser decision function, then optionally run the supplied Express server and its local tests.",
+    "done_when": "Reads return saved entries, valid creation adds one entry, invalid creation adds none, and each path returns the expected status."
+  }
+}

@@ -1,0 +1,87 @@
+{
+  "lesson": "swift-31",
+  "position": 16,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Define safeValue(_ values: [Int], at index: Int) -> Int?. Return the element only for a valid index; return nil for negative, end or empty-array positions.",
+      "after": "Check that a position exists before reading a list item."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "An Array starts at index 0. Its indices property gives valid element positions; an empty array has none. A subscript with an invalid position fails at runtime, so test membership before reading it. numbers.indices.contains(3) receives an index and returns whether that index is valid; the position 4 is just beyond this array. first instead returns an optional first element, which can be handled without a subscript. The firstNumber helper chooses -1 only as this demonstration’s missing-result marker.",
+        "numbers[2...] selects an ArraySlice beginning at original index 2. Its first element is tail[2], not tail[0]. Array(tail) constructs an Array with indices beginning at 0. A slice can share storage and retain the original allocation; construct an Array when keeping only the selected elements for longer. Neither operation changes numbers here.",
+        "\n```swift\nlet numbers = [10, 20, 30, 40]\nlet tail = numbers[2...]\nprint(tail.startIndex)\nprint(tail[2])\nlet rebased = Array(tail)\nprint(rebased.startIndex)\nprint(rebased[0])\nfunc firstNumber(_ values: [Int]) -> Int {\n    values.first ?? -1\n}\nprint(firstNumber([]))\nprint(numbers.indices.contains(3))\nprint(numbers.indices.contains(4))\n```\nOutput:\n```text\n2\n30\n0\n30\n-1\ntrue\nfalse\n```",
+        "\n```swift\nlet numbers = [10, 20, 30, 40]\nlet tail = numbers[1...]\nprint(tail.startIndex)\nprint(tail[1])\nlet rebased = Array(tail)\nprint(rebased.startIndex)\nprint(rebased[0])\nfunc firstNumber(_ values: [Int]) -> Int {\n    values.first ?? -1\n}\nprint(firstNumber([7]))\nprint(numbers.indices.contains(3))\nprint(numbers.indices.contains(4))\n```\nOutput:\n```text\n1\n20\n0\n20\n7\ntrue\nfalse\n```",
+        "A safe lookup can return Int? so a real -1 element is not confused with missing data. The exercise uses that optional contract; the earlier firstNumber demonstration intentionally uses a simpler sentinel."
+      ],
+      "after": [
+        "An Array's positions start at 0. Its `indices` property lists the valid positions. `values.indices.contains(index)` checks whether a position exists. Read `values[index]` only after that check; an invalid position causes a runtime failure.",
+        "A slice is part of an array. `numbers[2...]` starts at original position 2, and the slice keeps that position number. `Array(tail)` creates an array whose positions start at 0. The original array stays unchanged.",
+        "```swift\nlet numbers = [10, 20, 30, 40]\nlet tail = numbers[2...]\nprint(tail.startIndex)\nprint(tail[2])\nlet rebased = Array(tail)\nprint(rebased.startIndex)\nprint(rebased[0])\nfunc firstNumber(_ values: [Int]) -> Int {\n    values.first ?? -1\n}\nprint(firstNumber([]))\nprint(numbers.indices.contains(3))\nprint(numbers.indices.contains(4))\n```\nThe slice starts at 2 and its first value is 30. The new array starts at 0 and also holds 30 first. The last two checks show that position 3 exists but position 4 does not.",
+        "`values.first` returns an optional first item. An empty array gives nil. The example uses `?? -1` as a fallback, but -1 could also be a real item. Returning an optional keeps a missing item separate from every actual number.",
+        "Write `safeValue(_ values: [Int], at index: Int) -> Int?`. Return the item for a valid position. Return nil for negative positions, the position after the last item, or any position in an empty array."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the small example and explain its inputs and effects.",
+        "Complete the starter for the stated contract.",
+        "Use the configured compatible Swift companion or local Swift toolchain, then explain the changed case."
+      ],
+      "after": [
+        "Check whether `values.indices` contains the requested index.",
+        "Return the item only when that check succeeds.",
+        "Otherwise return nil, then run the checks."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Trace the inputs, returned value and changed state before running."
+      ],
+      "after": [
+        "The final valid array index is `count - 1`, not `count`.",
+        "Use the indices check so empty arrays are handled too."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "An ArraySlice starts at original index 3. Which operation gives a new Array starting at index 0?",
+        "choices": [
+          "Changing the variable name",
+          "Reading slice[0] without checking",
+          "Array(slice)"
+        ],
+        "answer": 2,
+        "explanation": "Array initialization creates an Array value with its usual zero-based indices. A slice keeps its original index positions."
+      },
+      "after": {
+        "question": "A slice starts at original position 3. What makes a new array starting at 0?",
+        "choices": [
+          "Changing its variable name",
+          "Reading slice[0] without checking",
+          "Array(slice)"
+        ],
+        "answer": 2,
+        "explanation": "A slice keeps its original positions. Converting it to an Array gives the new array positions starting at 0."
+      }
+    }
+  ],
+  "headings": [
+    "Check the position first",
+    "A slice keeps its old positions",
+    "One example",
+    "Ask for the first item safely",
+    "Build a safe lookup"
+  ],
+  "project": {
+    "title": "Read array positions and slices safely",
+    "task": "Write `safeValue(_ values: [Int], at index: Int) -> Int?`. Return the requested item only when its position exists; otherwise return nil.",
+    "done_when": "The checks pass for valid positions, negative positions, the end position, and an empty array."
+  }
+}

@@ -1,0 +1,93 @@
+{
+  "lesson": "swift-35",
+  "position": 24,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Implement shift(_:by:) to add a small Int amount to the caller’s Int. Negative and zero amounts must work. Do not replace it with a function that only returns a new number.",
+      "after": "Let a function change the variable passed into it."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "An ordinary Int parameter gives a function a value to read. An inout parameter lets the function change the caller’s variable. The variable is exclusively accessed for the call: the same storage must not be supplied twice to overlapping inout arguments. Think about the effect after the call, not an exposed pointer or a promise about how copying is implemented.",
+        "inout goes before the parameter type. In shift(&position, by: 3), & marks the variable whose value may change; by labels the ordinary amount input. value += amount adds and stores the result. No return arrow here means no useful returned value (Void); inspect position afterward. Supply a var, not a let constant or a temporary expression. These small examples keep Int arithmetic within range.",
+        "Follow this complete example.\n```swift\nfunc shift(_ value: inout Int, by amount: Int) {\n    value += amount\n}\nvar position = 4\nshift(&position, by: 3)\nprint(position)\n```\nOutput:\n```text\n7\n```",
+        "Change the input or declaration and trace the result.\n```swift\nfunc shift(_ value: inout Int, by amount: Int) {\n    value += amount\n}\nvar position = -2\nshift(&position, by: 5)\nprint(position)\n```\nOutput:\n```text\n3\n```",
+        "Implement shift(_:by:) to add a small Int amount to the caller’s Int. Negative and zero amounts must work. Do not replace it with a function that only returns a new number. Optional local practice: choose one more input, predict the outcome, then run it. The checks observe the stated values and effects; they do not require one exact implementation spelling.",
+        "moveOne subtracts one from its first variable and adds one to its second. -= subtracts and stores. Passing count to both parameters conflicts with exclusive access; two different variables would be valid. This complete local compiler example is intentionally rejected. It is not a runtime exercise; do not repair it with unsafe access.\n```swift\nfunc moveOne(_ source: inout Int, to destination: inout Int) {\n    source -= 1\n    destination += 1\n}\nfunc demonstrateConflict() {\n    var count = 5\n    moveOne(&count, to: &count)\n}\ndemonstrateConflict()\n```",
+        "Use two separate variables instead. moveOne changes both caller values and returns Void. The surrounding no-input demonstration function merely gives the variables a local scope; its call runs the example.\n```swift\nfunc moveOne(_ source: inout Int, to destination: inout Int) {\n    source -= 1\n    destination += 1\n}\nfunc demonstrateSeparateValues() {\n    var source = 5\n    var destination = 1\n    moveOne(&source, to: &destination)\n    print(source)\n    print(destination)\n}\ndemonstrateSeparateValues()\n```\nThis prints 4 then 2. These two accesses do not overlap."
+      ],
+      "after": [
+        "An `inout` parameter lets a function change a variable supplied by its caller. After the call finishes, the caller can read the changed value.",
+        "Write `inout` before the parameter's type. At the call, put `&` before the variable that may change. Supply a `var`, because a `let` constant cannot receive the changed value.",
+        "```swift\nfunc shift(_ value: inout Int, by amount: Int) {\n    value += amount\n}\nvar position = 4\nshift(&position, by: 3)\nprint(position)\n```\nThe output is 7. The call adds 3 to position's old value of 4.",
+        "This function changes `position` directly through its inout input. It does not return a new number for the caller to assign. With no result arrow, its return type is `Void`, meaning no useful result value.",
+        "Complete `shift(_:by:)` by adding the supplied amount. Negative amounts move the value down; zero keeps it the same. The exercise uses small values whose sums fit in Int.",
+        "Exclusive access means no conflicting use of the same variable during the change. Do not pass the same variable as two overlapping inout inputs to one call. Swift rejects such conflicting access.",
+        "When a function changes two separate values, pass two separate variables. `inout` describes the allowed change, not an exposed memory pointer or a promise about copying behind the scenes."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the small example and explain its inputs and effects.",
+        "Complete the starter for the stated contract.",
+        "Use the configured compatible Swift companion or local Swift toolchain, then explain the changed case."
+      ],
+      "after": [
+        "Keep the first input as `inout Int`.",
+        "Add amount to value with `+=`.",
+        "Run the checks and inspect the caller's value afterward."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Trace the inputs, returned value and changed state before running."
+      ],
+      "after": [
+        "The caller uses `shift(&position, by: amount)`.",
+        "A returned sum alone does not perform this task; the supplied variable must change."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Starting with x = 9, what remains in x after shift(&x, by: -4)?",
+        "choices": [
+          "5",
+          "9",
+          "-4"
+        ],
+        "answer": 0,
+        "explanation": "The call changes x itself by adding -4; no returned value needs to be assigned."
+      },
+      "after": {
+        "question": "x starts at 9. What is x after shift(&x, by: -4)?",
+        "choices": [
+          "5",
+          "9",
+          "-4"
+        ],
+        "answer": 0,
+        "explanation": "The function adds -4 to x, so x becomes 5."
+      }
+    }
+  ],
+  "headings": [
+    "Change the caller's value",
+    "Mark the input and the call",
+    "One example",
+    "Read the value after the call",
+    "Allow small positive or negative shifts",
+    "Give the call exclusive access",
+    "Use separate variables for separate changes"
+  ],
+  "project": {
+    "title": "Modify a caller value with inout",
+    "task": "Complete `shift(_:by:)` so it adds the small Int amount to the caller's variable. Handle positive, negative, and zero amounts.",
+    "done_when": "The checks pass by observing the caller's changed value, without needing a returned number."
+  }
+}

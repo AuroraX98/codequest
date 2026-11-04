@@ -1,0 +1,100 @@
+{
+  "lesson": "sql-21",
+  "position": 34,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Store theme=dark and language=en in settings. Existing theme must be updated, missing language inserted, and the unrelated font preference preserved. Use the key uniqueness constraint to handle conflicts.",
+      "after": "Insert a missing preference or update the one already stored."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "An INSERT can conflict with a UNIQUE or PRIMARY KEY constraint when its key already exists.",
+        "UPSERT describes what to do for that uniqueness conflict: update the matching row or leave it unchanged.",
+        "This complete example updates an existing key and inserts a missing one without removing the unrelated preference.\n```sql\nCREATE TABLE demo_settings(key TEXT PRIMARY KEY NOT NULL,value TEXT NOT NULL);\nINSERT INTO demo_settings VALUES('sound','on'),('font','large');\nINSERT INTO demo_settings(key,value) VALUES('sound','off') ON CONFLICT(key) DO UPDATE SET value=excluded.value;\nINSERT INTO demo_settings(key,value) VALUES('alerts','on') ON CONFLICT(key) DO UPDATE SET value=excluded.value;\nSELECT key,value\nFROM demo_settings\nORDER BY key;\n```\nThe rows are alerts/on, font/large and sound/off.",
+        "excluded.value refers to the value the attempted insertion would have stored.",
+        "The conflict target key chooses the uniqueness rule being handled. It does not mean every kind of constraint failure should be ignored.",
+        "Updating an existing row is different from adding a duplicate preference. The primary key ensures there is only one row per key.",
+        "For the practice, apply the same insert-or-update behavior to theme and language. Do not clear the settings table.",
+        "Check an existing key, a missing key, and an unrelated key that must survive unchanged."
+      ],
+      "after": [
+        "An insert can repeat a key that must be unique. A primary-key rule prevents two rows from using that same key.",
+        "An upsert handles this case by inserting a missing row or updating the existing one. `ON CONFLICT` tells SQLite which repeated key to handle.",
+        "Run this example in a fresh database:\n```sql\nCREATE TABLE demo_settings (\n  key TEXT PRIMARY KEY NOT NULL,\n  value TEXT NOT NULL\n);\nINSERT INTO demo_settings VALUES ('sound', 'on'), ('font', 'large');\nINSERT INTO demo_settings(key, value)\nVALUES ('sound', 'off'), ('alerts', 'on')\nON CONFLICT(key) DO UPDATE SET value = excluded.value;\nSELECT key, value\nFROM demo_settings\nORDER BY key;\n```\nThe rows are alerts/on, font/large, and sound/off.",
+        "`excluded.value` means the value from the attempted insert. The update uses that new value for the row already stored.",
+        "`ON CONFLICT(key)` handles the uniqueness rule for key. It does not mean every other rule or error should be ignored.",
+        "The existing sound row changes instead of being copied. The missing alerts row is added.",
+        "In settings, store theme as `'dark'` and language as `'en'` with this insert-or-update behavior. Keep the font preference unchanged.",
+        "Check all three cases: an existing key changes, a missing key is added, and an unrelated key stays the same."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the requirement.",
+        "Make one change to the starter.",
+        "Run the checks.",
+        "Explain why a changed input produces its result."
+      ],
+      "after": [
+        "Insert the requested theme and language values.",
+        "Handle a repeated key with ON CONFLICT(key).",
+        "Update value from excluded.value."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Use ON CONFLICT(key) after the insert values.",
+        "Read the incoming value through excluded.value.",
+        "Do not replace or drop the whole table."
+      ],
+      "after": [
+        "Do not clear the settings table.",
+        "The key rule decides whether the insert conflicts.",
+        "Keep the unrelated font row."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "settings already contains theme=light. An insert attempts theme=dark with ON CONFLICT(key) DO UPDATE SET value=excluded.value. What is stored afterward?",
+        "choices": [
+          "Two theme rows.",
+          "One theme row with dark.",
+          "The theme row is removed."
+        ],
+        "answer": 1,
+        "explanation": "The key conflict chooses the update path. excluded.value is the attempted new value dark, so the existing row receives it."
+      },
+      "after": {
+        "question": "theme=light exists. An upsert tries theme=dark and updates value from excluded.value. What remains?",
+        "choices": [
+          "Two theme rows.",
+          "One theme row with dark.",
+          "No theme row."
+        ],
+        "answer": 1,
+        "explanation": "The repeated key chooses the update path, which stores the proposed value dark."
+      }
+    }
+  ],
+  "headings": [
+    "Notice a repeated key",
+    "Choose insert or update",
+    "Try both paths",
+    "Read the proposed value",
+    "Choose the conflict rule",
+    "Keep one row per key",
+    "Update the project settings",
+    "Check unrelated settings too"
+  ],
+  "project": {
+    "title": "Update an existing preference without duplicating it",
+    "task": "Use the unique key rule to store theme=dark and language=en in settings, inserting or updating as needed.",
+    "done_when": "There is one row per key, both requested values are stored, and the font preference stays unchanged."
+  }
+}

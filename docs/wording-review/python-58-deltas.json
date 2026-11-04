@@ -1,0 +1,85 @@
+{
+  "lesson": "python-58",
+  "sourceHash": "34abb331904d5d1a9743896b2c4d6827e48765022d53f6221ab745e73039e1f0",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Implement close_readings(a, b) for finite real-number inputs using math.isclose with rel_tol=1e-6 and abs_tol=1e-9. Return the Boolean result, without rounding or modifying inputs.",
+      "after": "Check whether two numbers are close enough for your chosen rules."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "0.1 and 0.2 are not stored as exact decimal fractions in an ordinary float. Their sum can differ slightly from 0.3. This does not make every equality test wrong; choose exact or approximate comparison according to the contract.",
+        "math.isclose(a, b, rel_tol=..., abs_tol=...) returns a Boolean. Relative tolerance scales with the larger absolute input magnitude; absolute tolerance permits a fixed maximum gap, important near zero. The comparison accepts a gap no larger than the greater of these allowances. Use nonnegative tolerances and a relative tolerance below 1 so the comparison represents a meaningful small-error policy.",
+        "```python\nimport math\nprint(0.1 + 0.2 == 0.3)\nprint(math.isclose(0.1 + 0.2, 0.3, rel_tol=1e-9, abs_tol=0.0))\nprint(math.isclose(1e-12, 0.0, rel_tol=1e-9, abs_tol=1e-9))\n```\nThe outputs are False, True, True. import math makes the standard module available; the dot selects isclose. 1e-9 means one billionth. Named arguments keep the two policies explicit.",
+        "With one input zero and a relative tolerance below one, a nonzero other input cannot pass by relative tolerance alone. Changing the last abs_tol to 0.0 therefore gives False. A tolerance is an application decision, not a measured confidence interval or a repair for incorrect units.",
+        "```python\nimport math\n\ndef close_readings(a, b):\n    return math.isclose(a, b, rel_tol=1e-6, abs_tol=1e-9)\nprint(close_readings(100.0, 100.00005))\nprint(close_readings(0.0, 1e-10))\nprint(close_readings(1.0, 1.01))\n```\nThese calls return True, True, False. The project accepts finite real numbers; deciding what NaN or infinity means is outside that contract. Optional local transfer: pick different units and explain how the absolute tolerance would need to change."
+      ],
+      "after": [
+        "0.1 and 0.2 are not stored as exact decimal fractions in an ordinary float. Their sum can differ slightly from 0.3. This does not make every equality test wrong. Choose exact or approximate comparison to match the rules.",
+        "A tolerance is a gap you agree to allow. `math.isclose` returns `True` when two numbers fit the chosen tolerance, and `False` otherwise.\n\nRelative tolerance (`rel_tol`) grows with the larger input's distance from zero. Absolute tolerance (`abs_tol`) allows a fixed gap, which helps near zero.\n\nThe gap must fit the larger of those two allowances. Use nonnegative tolerances, and keep relative tolerance below 1 so it allows only a small difference.",
+        "Code breakdown:\n```python\nimport math\nprint(0.1 + 0.2 == 0.3)\nprint(math.isclose(0.1 + 0.2, 0.3, rel_tol=1e-9, abs_tol=0.0))\nprint(math.isclose(1e-12, 0.0, rel_tol=1e-9, abs_tol=1e-9))\n```\nOutput:\n```text\nFalse\nTrue\nTrue\n```\nThe outputs are False, True, True. `import math` makes the standard module available, and the dot selects `isclose`. `1e-9` means one billionth. Named arguments show each tolerance clearly.",
+        "When one input is zero and relative tolerance is below 1, relative tolerance alone cannot make a nonzero input close to zero. Changing the last `abs_tol` to 0.0 therefore gives False. Allowing a gap does not prove a measurement is accurate. It also does not make different units match.",
+        "```python\nimport math\n\ndef close_readings(a, b):\n    return math.isclose(a, b, rel_tol=1e-6, abs_tol=1e-9)\nprint(close_readings(100.0, 100.00005))\nprint(close_readings(0.0, 1e-10))\nprint(close_readings(1.0, 1.01))\n```\nThese calls return True, True, False. The project accepts finite real numbers. Deciding what NaN or infinity means is outside the project rules. If you use different units, consider how the absolute tolerance would need to change."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the requirement.",
+        "Make one change to the starter.",
+        "Run the checks.",
+        "Explain why a changed input produces its result."
+      ],
+      "after": [
+        "Keep `import math` and replace `return a == b` with `return math.isclose(a, b, rel_tol=1e-6, abs_tol=1e-9)`.",
+        "Check that `close_readings(0.1 + 0.2, 0.3)` returns True.",
+        "Check that `close_readings(100.0, 100.00005)` returns True and `close_readings(100.0, 100.01)` returns False.",
+        "Check that `close_readings(0.0, 1e-10)` returns True and `close_readings(0.0, 1e-7)` returns False. Explain how the absolute tolerance helps near zero.",
+        "Check that both `close_readings(-100.0, -100.00005)` and `close_readings(-100.00005, -100.0)` return True."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "For math.isclose(5e-8, 0.0, rel_tol=1e-6, abs_tol=0.0), what is returned?",
+        "choices": [
+          "True because all tiny numbers equal zero",
+          "False",
+          "A rounded numeric zero"
+        ],
+        "answer": 1,
+        "explanation": "The nonzero gap is larger than its relative allowance; there is no absolute allowance to bridge the gap to zero."
+      },
+      "after": {
+        "question": "For math.isclose(5e-8, 0.0, rel_tol=1e-6, abs_tol=0.0), what is returned?",
+        "choices": [
+          "True because all tiny numbers equal zero",
+          "False",
+          "A rounded numeric zero"
+        ],
+        "answer": 1,
+        "explanation": "The gap is larger than the relative allowance. With `abs_tol=0.0`, there is no absolute allowance to bridge the gap to zero."
+      }
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Trace the visible worked calls before changing the starter."
+      ],
+      "after": [
+        "`math.isclose` returns True or False directly, so the function can return its result.",
+        "Replace the starter's exact equality check with `math.isclose` and the two specified tolerances.",
+        "Near zero, `abs_tol=1e-9` lets `0.0` and `1e-10` count as close."
+      ]
+    }
+  ],
+  "reviewNotes": [
+    "Kept all five sections in their original order.",
+    "Preserved the finite-input limit and tolerance values.",
+    "Kept the worked code and output in Markdown fences.",
+    "Preserved quiz answer index 1.",
+    "Defined tolerance before using its two forms and shortened the summary without changing any numeric limits."
+  ]
+}

@@ -1,0 +1,109 @@
+{
+  "lesson": "react-03",
+  "position": 31,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Use shared state and explicit loading, empty, error, and success views across dashboard screens.",
+      "after": "Show a clear message for each stage of loading a shared list."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A dashboard can show different views of one shared dataset. Store the selected view and loaded records in the common parent component so switching views preserves them. Home and Saved here are local screen choices; they do not change the browser URL or maintain separate saved records. The loader is a simulation, so no server or secret is needed.",
+        "This complete React/JSX App demonstrates shared data and local navigation:\n```react\nfunction App() {\n  const [view, setView] = React.useState('home');\n  const [books] = React.useState(['Forest Guide']);\n  return <main>\n    <nav>\n      <button onClick={() => setView('home')}>Home</button>\n      <button onClick={() => setView('saved')}>Saved</button>\n    </nav>\n    <h1>{view === 'home' ? 'Library' : 'Saved books'}</h1>\n    <ul>{books.map(book => <li key={book}>{book}</li>)}</ul>\n  </main>;\n}\n```\nSaved changes the heading while Forest Guide remains. The expression condition ? first : second is a conditional choice, called a ternary. It chooses which heading text to render.",
+        "Loading means waiting for a result. Empty means a successful result with no records. Error means the attempt failed. Success with records means the list is ready. Idle means no attempt yet. Treating all these cases as one blank list hides useful information. A role=\"alert\" message can announce an error; a list of real results should appear only in the successful state.",
+        "This second App is a complete sample loader for the same runner:\n```react\nfunction App() {\n  const [status, setStatus] = React.useState('idle');\n  const [books, setBooks] = React.useState([]);\n  const [error, setError] = React.useState('');\n  const latest = React.useRef(0);\n  function load(mode) {\n    const id = ++latest.current;\n    setStatus('loading');\n    setError('');\n    setTimeout(() => {\n      if (id !== latest.current) return;\n      if (mode === 'error') {\n        setError('Could not load the library.');\n        setStatus('error');\n        return;\n      }\n      setBooks(mode === 'empty' ? [] : ['Forest Guide']);\n      setStatus('success');\n    }, mode === 'slow' ? 120 : 20);\n  }\n  return <main>\n    <button onClick={() => load('slow')}>Slow sample</button>\n    <button onClick={() => load('error')}>Error sample</button>\n    <button onClick={() => load('empty')}>Empty sample</button>\n    {status === 'loading' && <p>Loading…</p>}\n    {status === 'error' && <p role=\"alert\">{error}</p>}\n    {status === 'success' && books.length === 0 && <p>No books.</p>}\n    {status === 'success' && <ul>\n      {books.map(book => <li key={book}>{book}</li>)}\n    </ul>}\n  </main>;\n}\n```\nEmpty sample first shows loading, then No books. Error sample first shows loading, then the error message.",
+        "++latest.current adds one and supplies that new number as this attempt's id. A ref retains this counter across renders without causing an extra render. setTimeout schedules the callback after a delay in milliseconds; 1,000 milliseconds is one second. Each callback keeps the id and mode from its own call. Before changing either results or errors, compare that id with the newest one.",
+        "Click Slow sample and then Error sample before the slow result arrives. The later error owns the current id, so its message remains; the old success is ignored. Reverse the kinds of outcomes and the same rule should protect a later success from an old error. For example, request 2 succeeds and request 1 later fails: keep request 2's success. Checking only successful responses would still let stale errors break the screen.",
+        "For your exercise, combine shared navigation with the loader and preserve the supplied labels and messages. Include Load sample, Load empty, Load error, and Load older slow result. Sample success shows A Field Guide; empty success says No books yet.; error says Books could not be loaded. Show Loading books… while waiting. Keep view independent of load state so Home/Saved preserves the current dataset. A real fetch loader must also check response status and guard both success and failure against stale ids."
+      ],
+      "after": [
+        "A dashboard can show different views of the same data. Keep the selected view and records in a common parent so switching views keeps the records.",
+        "Home and Saved are local view choices in this exercise. They change the heading while using the same books. They do not change the browser address or create a separate saved list.",
+        "Loading means waiting. Empty means the load succeeded with no records. Error means it failed. Success with records means the list is ready. Idle means no attempt has started. Give these different situations clear displays.",
+        "```react\nfunction App() {\n  const [status, setStatus] = React.useState(\"idle\");\n  const [books, setBooks] = React.useState([]);\n  const [error, setError] = React.useState(\"\");\n  const latest = React.useRef(0);\n  function load(mode) {\n    const id = ++latest.current;\n    setStatus(\"loading\");\n    setError(\"\");\n    setTimeout(() => {\n      if (id !== latest.current) return;\n      if (mode === \"error\") {\n        setError(\"Could not load the library.\");\n        setStatus(\"error\");\n        return;\n      }\n      setBooks(mode === \"empty\" ? [] : [\"Forest Guide\"]);\n      setStatus(\"success\");\n    }, mode === \"slow\" ? 120 : 20);\n  }\n  return (\n    <main>\n      <button onClick={() => load(\"slow\")}>Slow sample</button>\n      <button onClick={() => load(\"error\")}>Error sample</button>\n      <button onClick={() => load(\"empty\")}>Empty sample</button>\n      {status === \"loading\" && <p>Loading…</p>}\n      {status === \"error\" && <p role=\"alert\">{error}</p>}\n      {status === \"success\" && books.length === 0 && <p>No books.</p>}\n      {status === \"success\" && <ul>\n        {books.map(book => <li key={book}>{book}</li>)}\n      </ul>}\n    </main>\n  );\n}\n```\nEmpty sample shows Loading, then No books. Error sample shows Loading, then the error. The delay imitates a load without contacting a server.",
+        "`++latest.current` gives each attempt a new number. The delayed callback remembers its own number. Before changing the screen, it checks whether that number is still the latest. `setTimeout` schedules the work after a delay, measured in milliseconds.",
+        "Start Slow sample, then Error sample. The newer error should stay when the old success arrives. Guard errors too: an old failure must not replace a newer success.",
+        "Combine the shared views with the supplied loader. Keep the required button labels and messages. Show `Loading books…` while waiting, `A Field Guide` for sample success, `No books yet.` for empty success, and `Books could not be loaded.` for failure."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Start on Home with the heading \"Reading\".",
+        "Make Saved change the heading to \"Saved books\". Make Home change it back to \"Reading\".",
+        "Use the same books list in both views.",
+        "Add four buttons: Load sample, Load empty, Load error, and Load older slow result.",
+        "Show the loading message before each result.",
+        "For a successful sample load, show \"A Field Guide\". For an empty result, show \"No books yet.\"",
+        "For a failed load, show \"Books could not be loaded.\"",
+        "Wait 100 ms for the slow response and 15 ms for normal responses.",
+        "Give each request an ID. Ignore a result if a newer request has started.",
+        "Click Load older slow result, then immediately click Load error. The later error must stay visible."
+      ],
+      "after": [
+        "Make Home show Reading and Saved show Saved books, using one books list.",
+        "Keep Load sample, Load empty, Load error, and Load older slow result.",
+        "Show the right loading, empty, error, or success message.",
+        "Use the supplied delays: 100 ms for the slow response and 15 ms for the others.",
+        "Ignore outdated successes and failures. Run the checks after overlapping two loads."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Keep status separate from the array so empty and still-loading are not confused.",
+        "Render a success list only when there are books, and an empty message when there are none.",
+        "Make success and error responses asynchronous, then check the captured request ID before each state change. Try starting a slow load and immediately starting a fast load."
+      ],
+      "after": [
+        "Keep status separate from books so an empty result is not confused with waiting.",
+        "Check the attempt number before changing either results or errors."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "A load succeeds but returns an empty list. Which display fits that result?",
+        "choices": [
+          "A spinner that never stops",
+          "An intentional “no items” view",
+          "An error message because every success must contain items"
+        ],
+        "answer": 1,
+        "explanation": "An empty success is distinct from loading or failure. Its display should explain that there are currently no items."
+      },
+      "after": {
+        "question": "A load succeeds with no records. What should appear?",
+        "choices": [
+          "A loading spinner that never stops.",
+          "A clear no-items message.",
+          "An error, because success must contain records."
+        ],
+        "answer": 1,
+        "explanation": "An empty result is a successful load with nothing to list. It is different from waiting or failure."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "The supplied delays and records simulate an API so the project works without a server or secret. Home/Saved is local view navigation; this lesson does not implement URL routing or separate saved records. For an actual API, replace the sample loader with fetch and keep the same loading/empty/error/race handling.",
+      "after": "The supplied loader is a local simulation. Home and Saved share one list; this exercise does not add browser-address navigation or server storage."
+    }
+  ],
+  "headings": [
+    "Keep data above the views",
+    "Switch views without losing data",
+    "Name the loading stages",
+    "Read one sample loader",
+    "Give each attempt a number",
+    "Ignore an older result",
+    "Build your reading dashboard"
+  ],
+  "project": {
+    "title": "A complete reading dashboard",
+    "task": "Build Home and Saved views over one books list. Use the supplied simulated loads and show each loading stage clearly.",
+    "done_when": "Views preserve the shared data. Loading, empty, error, and success displays work, and older results cannot overwrite newer ones."
+  }
+}

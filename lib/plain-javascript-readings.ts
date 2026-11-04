@@ -1,4 +1,4 @@
-export default [
+const readings = [
   {
     "source": "A program is a list of instructions the computer follows.",
     "simple": "A program tells the computer what to do, step by step.",
@@ -5070,3 +5070,5 @@ export default [
     "lesson": "javascript-23"
   }
 ];
+
+export default readings;

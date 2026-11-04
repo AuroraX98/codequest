@@ -1,0 +1,96 @@
+{
+  "lesson": "sql-03",
+  "position": 4,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Filter a supplied activity table by name and difficulty.",
+      "after": "Keep only rows that pass both checks."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A filter is a condition that decides which rows belong in a result. WHERE reads a row's details and asks a true-or-false question. You can combine questions: AND requires both to be true; OR requires at least one. Choosing rows with SELECT and WHERE does not delete the rows that fail the filter. They stay in the saved table.",
+        "This complete SQLite setup gives us three activities to examine:\n```sql\nCREATE TABLE demo_activities (\n  id INTEGER PRIMARY KEY,\n  name TEXT,\n  difficulty TEXT,\n  minutes INTEGER\n);\nINSERT INTO demo_activities VALUES\n  (1, 'Draw a leaf', 'easy', 8),\n  (2, 'Build a bridge', 'hard', 8),\n  (3, 'Read a chapter', 'easy', 18);\nSELECT name, minutes\nFROM demo_activities\nWHERE minutes <= 8;\n```\nThe query returns Draw a leaf and Build a bridge. <= means less than or equal to: 8 passes, while 18 does not.",
+        "The comparison symbols have precise boundaries. < excludes equality; <= includes it. > means greater than; >= includes the equal case. For text, difficulty = 'easy' matches a particular stored value. These two tests describe different details: being easy does not tell us how long an activity takes. We need both tests when both requirements matter.",
+        "Run this on the same practice table:\n```sql\nSELECT name\nFROM demo_activities\nWHERE difficulty = 'easy'\n  AND minutes <= 8\nORDER BY name;\n```\nOnly Draw a leaf appears. Build a bridge passes the time test but fails the difficulty test. Read a chapter passes the difficulty test but fails the time test. AND rejects both. The line break before AND is just formatting; it remains part of the same WHERE condition.",
+        "If you used OR instead, all three practice activities would pass because each satisfies at least one condition. Sorting cannot rescue a failed filter: ORDER BY arranges the rows that were kept; it does not make a false condition true. Parentheses help make grouping explicit when a future query combines AND and OR, for example (difficulty = 'easy' OR difficulty = 'medium') AND minutes <= 8.",
+        "For the exercise, select name from activities and keep difficulty 'easy' AND minutes at most 10. Ten is included because the symbol is <=. An easy activity taking 25 minutes fails because 25 <= 10 is false. Save the selected names using CREATE TEMP TABLE answer AS followed by your query; replace the starter's WHERE 0, which deliberately matches no rows.",
+        "Read the supplied fixture before predicting the result. Tiny quiz takes 5 minutes and Word puzzle takes 10, so both pass. Code maze and Logic grid do not pass the combined tests. ORDER BY name puts Tiny quiz before Word puzzle. Keeping the query column as name matters because the check reads that column from answer. A saved table has no inherent display order. Use SELECT name FROM answer ORDER BY name for display; these checks verify membership rather than table scan order."
+      ],
+      "after": [
+        "A filter chooses which rows to show. `WHERE` keeps rows whose check is true. Rows that fail the check stay in the table; they are only left out of this result.",
+        "Run this example in a fresh database:\n```sql\nCREATE TABLE demo_activities (\n  name TEXT, difficulty TEXT, minutes INTEGER\n);\nINSERT INTO demo_activities VALUES\n  ('Draw a leaf', 'easy', 8),\n  ('Build a bridge', 'hard', 8),\n  ('Read a chapter', 'easy', 18);\nSELECT name\nFROM demo_activities\nWHERE difficulty = 'easy'\n  AND minutes <= 8;\n```\nOnly `Draw a leaf` passes both checks.",
+        "`<= 8` means at most 8, including 8 itself. `< 8` would leave out 8. In the same way, `>=` includes its limit, while `>` does not.",
+        "`AND` requires both checks to be true. Build a bridge is short enough but not easy. Read a chapter is easy but too long. Neither belongs in this result.",
+        "`OR` needs at least one check to be true. It would keep all three example activities. When a query mixes AND and OR, use parentheses to show which checks belong together.",
+        "From `activities`, select `name` where the difficulty is `'easy'` and the time is at most `10` minutes. Save those names in `answer`. Replace the starter's `WHERE 0`, which keeps no rows.",
+        "`Tiny quiz` and `Word puzzle` should pass. Word puzzle takes exactly 10 minutes, so it belongs. Display the saved names with `ORDER BY name` when you want that order; a saved table has no promised display order."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Put both filter checks in `WHERE`.",
+        "Use `<=` so the time limit itself is allowed.",
+        "Connect the checks with `AND` so both must be true."
+      ],
+      "after": [
+        "Select name from activities.",
+        "Check difficulty = 'easy' and minutes <= 10.",
+        "Join the checks with AND and save the result in answer."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Select name from activities.",
+        "Add the difficulty and duration tests.",
+        "Join with AND and order the result."
+      ],
+      "after": [
+        "Both the difficulty and time must pass.",
+        "At most 10 includes exactly 10.",
+        "The answer column must be named name."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "The filter is difficulty = 'easy' AND minutes <= 10. A hard activity takes 6 minutes. Does it pass?",
+        "choices": [
+          "No; passing the time limit does not satisfy the difficulty condition",
+          "Yes; a duration below 10 is enough",
+          "Yes; AND accepts either condition"
+        ],
+        "answer": 0,
+        "explanation": "6 <= 10 is true, but 'hard' does not match 'easy'. AND needs both conditions to be true, so this row is excluded."
+      },
+      "after": {
+        "question": "A filter requires easy difficulty AND at most 10 minutes. Does a hard activity lasting 6 minutes pass?",
+        "choices": [
+          "No. It is short enough, but it is not easy.",
+          "Yes. Being under 10 minutes is enough.",
+          "Yes. AND accepts either check."
+        ],
+        "answer": 0,
+        "explanation": "AND needs both checks to pass. The difficulty check fails."
+      }
+    }
+  ],
+  "headings": [
+    "Filter without deleting",
+    "Try two checks together",
+    "Include the exact limit",
+    "Understand AND",
+    "Choose AND or OR",
+    "Filter the project activities",
+    "Check the matching names"
+  ],
+  "project": {
+    "title": "Find matching activities",
+    "task": "Save the names of easy activities taking at most 10 minutes in answer.",
+    "done_when": "answer contains only Tiny quiz and Word puzzle in its name column. The activities stay unchanged."
+  }
+}

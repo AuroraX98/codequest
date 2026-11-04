@@ -1,0 +1,87 @@
+{
+  "lesson": "swift-50",
+  "position": 21,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Parse valid whole numbers, retaining zero, duplicates and source order.",
+      "after": "Keep the successful results when a conversion can fail."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "compactMap calls a transformation for each element and keeps its non-nil results. It does not discard zero, false or empty text merely because they look empty.",
+        "parsedNumbers takes strings and returns the successful Int parses in source order. Int(text) is a failable integer conversion: malformed or unrepresentable text gives nil. The closure text in names each input; its last expression is its optional Int result. texts.compactMap unwraps successful results into [Int], omitting nil. It does not mutate texts or remove duplicate successful values.",
+        "\n```swift\nfunc parsedNumbers(_ texts: [String]) -> [Int] {\n    return texts.compactMap { text in\n        Int(text)\n    }\n}\nlet source = [\"8\", \"bad\", \"0\", \"8\"]\nprint(parsedNumbers(source))\nprint(source)\n```\nExpected output:\n```text\n[8, 0, 8]\n[\"8\", \"bad\", \"0\", \"8\"]\n```",
+        "\n```swift\nfunc parsedNumbers(_ texts: [String]) -> [Int] {\n    return texts.compactMap { text in\n        Int(text)\n    }\n}\nprint(parsedNumbers([\"-3\", \"no\", \"2\"]))\nprint(parsedNumbers([]))\n```\nExpected output:\n```text\n[-3, 2]\n[]\n```",
+        "Optional practice: Parse valid whole numbers, retaining zero, duplicates and source order. Predict a different input before running."
+      ],
+      "after": [
+        "`compactMap` transforms each input and keeps only results that are not nil. It unwraps those results into the new array.",
+        "`Int(text)` tries to read a whole number. Text that is malformed or too large for Int gives nil. The closure returns that optional result, and compactMap decides whether to keep it.",
+        "```swift\nfunc parsedNumbers(_ texts: [String]) -> [Int] {\n    return texts.compactMap { text in\n        Int(text)\n    }\n}\nlet source = [\"8\", \"bad\", \"0\", \"8\"]\nprint(parsedNumbers(source))\nprint(source)\n```\nThe result is `[8, 0, 8]`. The second print shows the original text array unchanged. Only the failed conversion of `bad` is left out.",
+        "Zero is not nil, so it stays. Repeated successful values also stay, in their original order. compactMap is not a tool for removing duplicates.",
+        "For the project, convert the supplied text values into whole numbers. Keep every successful result, including zero and negative numbers. Empty input or all failed conversions gives an empty array."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the small example and explain its inputs and effects.",
+        "Complete the starter for the stated contract.",
+        "Use the configured compatible Swift companion or local Swift toolchain, then explain the changed case."
+      ],
+      "after": [
+        "Call compactMap on the text array.",
+        "Return `Int(text)` from its closure.",
+        "Run the checks for valid numbers, failed conversions, zero, and duplicates."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Trace the inputs, returned value and changed state before running."
+      ],
+      "after": [
+        "Keep the conversion result optional; compactMap handles nil.",
+        "Do not add a filter that removes zero."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "What does parsedNumbers([\"0\", \"bad\", \"0\"]) return?",
+        "choices": [
+          "[0, 0]",
+          "[0]",
+          "[]"
+        ],
+        "answer": 0,
+        "explanation": "Both zero parses are present optional values. Only the nil parse disappears; compactMap is not deduplication."
+      },
+      "after": {
+        "question": "What does parsedNumbers([\"0\", \"bad\", \"0\"]) return?",
+        "choices": [
+          "[0, 0]",
+          "[0]",
+          "[]"
+        ],
+        "answer": 0,
+        "explanation": "Both zero values convert successfully. Only bad gives nil and is omitted."
+      }
+    }
+  ],
+  "headings": [
+    "Transform and skip missing results",
+    "Convert each text value",
+    "One example",
+    "Zero is a real result",
+    "Keep successful numbers"
+  ],
+  "project": {
+    "title": "Keep successful optional transformations",
+    "task": "Convert valid whole-number text into numbers. Keep zero, negative values, duplicates, and the original order. Leave the source array unchanged.",
+    "done_when": "The checks pass, and only failed conversions are omitted."
+  }
+}

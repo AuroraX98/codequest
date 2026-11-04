@@ -1,0 +1,81 @@
+{
+  "lesson": "sql-44",
+  "position": 39,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Create answer(id,previous) for all readings, using the previous row in the same room ordered by tick,id; use -1 only when absent. Keep readings unchanged.",
+      "after": "Read a value from the previous row without changing the table."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "LAG(value,1,-1) reads value from one earlier row in the window order. Its second argument is the row offset, not a time interval; its third is the fallback when no such row exists. PARTITION BY room starts a separate sequence per room. ORDER BY tick,id makes ties in tick deterministic. The outer ORDER BY id controls display, separately from the window order.",
+        "\n```sql\nCREATE TABLE readings(id INTEGER PRIMARY KEY, room TEXT, tick INTEGER, value INTEGER);\nINSERT INTO readings VALUES (1,'east',1,8),(2,'east',2,NULL),(3,'east',3,12),(4,'west',1,5);\nSELECT id, LAG(value,1,-1) OVER (PARTITION BY room ORDER BY tick,id) AS previous\nFROM readings\nORDER BY id;\n```\nThe id/previous rows are (1,-1),(2,8),(3,NULL),(4,-1). East row 3 follows an existing row whose value is NULL, so the fallback does not replace it. West starts its own partition and has no previous row. This query reads observations without changing them.",
+        "\n```sql\nCREATE TABLE readings(id INTEGER PRIMARY KEY, room TEXT, tick INTEGER, value INTEGER);\nINSERT INTO readings VALUES (1,'east',1,8),(2,'east',2,9),(3,'east',3,12),(4,'west',1,5);\nSELECT id, LAG(value,1,-1) OVER (PARTITION BY room ORDER BY tick,id) AS previous\nFROM readings\nORDER BY id;\n```\nNow row 3 has previous=9; the first row of each room still gets -1. Optional practice: change the offset to 2 and trace which earlier row exists before running it."
+      ],
+      "after": [
+        "`LAG(value, 1, -1)` reads `value` from one row earlier. The `1` means one row, not one second. The `-1` is a backup answer when that earlier row does not exist. `PARTITION BY room` starts a separate list for each room.",
+        "```sql\nCREATE TABLE demo_readings(id INTEGER PRIMARY KEY, room TEXT, tick INTEGER, value INTEGER);\nINSERT INTO demo_readings VALUES\n  (1, 'east', 1, 8), (2, 'east', 2, NULL),\n  (3, 'east', 3, 12), (4, 'west', 1, 5);\nSELECT id,\n  LAG(value, 1, -1) OVER (\n    PARTITION BY room ORDER BY tick, id\n  ) AS previous\nFROM demo_readings\nORDER BY id;\n```\nThe answers are `1: -1`, `2: 8`, `3: NULL`, and `4: -1`. Each room's first row has no earlier row. Within each room, `tick` sets the order and `id` breaks ties.",
+        "Row 3 follows a row that exists but stores `NULL`, meaning no known value. `LAG` keeps that `NULL`; it does not use the backup. The last `ORDER BY id` sets the display order. Reading the earlier values does not change the table."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the small example and explain its inputs and effects.",
+        "Complete the starter for this lesson.",
+        "Run the behavior checks, then predict a changed case."
+      ],
+      "after": [
+        "Create the `answer` view with `id` and `previous`.",
+        "Look back one row within the same room, ordered by `tick, id`.",
+        "Run the checks. Keep a real `NULL` separate from a missing earlier row."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Trace the supplied rows and resulting rows before changing the query."
+      ],
+      "after": [
+        "Use `LAG(value, 1, -1)`.",
+        "Inside `OVER`, use `PARTITION BY room ORDER BY tick, id`."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Change the fallback from -1 to 99 without changing the worked data. What does row 3 receive?",
+        "choices": [
+          "8",
+          "NULL",
+          "99"
+        ],
+        "answer": 1,
+        "explanation": "The previous row exists and stores NULL. LAG uses its fallback only when the offset row is absent."
+      },
+      "after": {
+        "question": "The previous row exists, but its value is NULL. What does LAG(value, 1, 99) return?",
+        "choices": [
+          "8",
+          "NULL",
+          "99"
+        ],
+        "answer": 1,
+        "explanation": "The backup 99 is used only when there is no earlier row. An existing row's NULL stays NULL."
+      }
+    }
+  ],
+  "headings": [
+    "Look one row back",
+    "One example",
+    "A missing row is different from a missing value"
+  ],
+  "project": {
+    "title": "Compare with the previous observation",
+    "task": "Create `answer(id, previous)` for every row in `readings`. Read the previous value in the same room, ordered by `tick, id`. Use -1 only when no previous row exists. Keep `readings` unchanged.",
+    "done_when": "The checks pass, each room starts with -1, and an earlier NULL value stays NULL."
+  }
+}

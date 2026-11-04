@@ -1,0 +1,83 @@
+{
+  "lesson": "python-78",
+  "sourceHash": "5aa845d846cc3af310c68bbf2d81c82f13cfdbdb3d5dd52495aff696ffe886eb",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Return the tuple (task.title, task.category) for a Task whose fields are strings. Do not mutate task or add a hash to Task. The returned key must retain its original values if task fields are later reassigned.",
+      "after": "Return a tuple of a Task’s string fields that keeps its original values when the task changes."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A hash is an integer used to help organize dictionary keys and set members. Equal hashable values must have equal hashes. The reverse is not required: different values can share a hash, so a hash is not a unique ID. A key must not change its equality-relevant value while stored in a hashed collection.",
+        "This Task compares its two string fields. Defining __eq__ without __hash__ makes instances unhashable automatically. Do not add a field-based hash to this mutable class: changing title could leave a stored key in the wrong place. Task(title, category) constructs a task; __init__ stores the two supplied strings. The equality hook receives self and the other value, returns a Boolean for Tasks, and returns NotImplemented for unsupported types. isinstance(other, Task) tests the supported type; it does not convert the value.\n```python\nclass Task:\n    def __init__(self, title, category):\n        self.title = title\n        self.category = category\n\n    def __eq__(self, other):\n        if not isinstance(other, Task):\n            return NotImplemented\n        return (self.title, self.category) == (other.title, other.category)\n```",
+        "snapshot_key receives a Task with string fields and returns a tuple containing those field values. The comma-separated values inside parentheses form the tuple. Both its components are immutable strings, so this tuple is a safe value key. hash(key) receives a hashable value and returns an integer; we compare hashes rather than depend on exact numbers, which can differ across processes.\n```python\nclass Task:\n    def __init__(self, title, category):\n        self.title = title\n        self.category = category\n\n    def __eq__(self, other):\n        if not isinstance(other, Task):\n            return NotImplemented\n        return (self.title, self.category) == (other.title, other.category)\n\ndef snapshot_key(task):\n    return (task.title, task.category)\nfirst = Task(\"read\", \"study\")\nsecond = Task(\"read\", \"study\")\na = snapshot_key(first)\nb = snapshot_key(second)\nprint(first == second)\nprint(a == b, hash(a) == hash(b))\ntry:\n    hash(first)\nexcept TypeError:\n    print(\"unhashable task\")\n```\nIt prints True; True True; unhashable task. Calling hash on the Task raises TypeError rather than returning a usable hash.",
+        "Reassigning a task field does not rewrite an earlier tuple of its string values.\n```python\nclass Task:\n    def __init__(self, title, category):\n        self.title = title\n        self.category = category\n\n    def __eq__(self, other):\n        if not isinstance(other, Task):\n            return NotImplemented\n        return (self.title, self.category) == (other.title, other.category)\n\ndef snapshot_key(task):\n    return (task.title, task.category)\ntask = Task(\"read\", \"study\")\nold_key = snapshot_key(task)\ntask.title = \"write\"\nprint(old_key)\nprint(old_key == snapshot_key(task))\n```\nIt prints ('read', 'study') and False. Build a new snapshot when you want a key for the new values; do not silently change a key already in a collection.",
+        "Complete snapshot_key(task) using the provided Task class. Keep exact string values, including spaces and case. Optional local practice: use two equal snapshots as dictionary keys and explain why the second assignment replaces one entry rather than creating two. The supplied __snapshot_preserved helper is test infrastructure: it checks the stated preservation contract. Leave it unchanged; the learning task is the main function, not writing this helper."
+      ],
+      "after": [
+        "A hash is a whole number Python uses to help find dictionary keys and set items. A value that supports this is called hashable.\n\nEqual hashable values must have equal hashes. Different values can also share a hash, so it is not a unique ID.\n\nWhile an object is used as a key, do not change the parts that decide whether it equals another key.",
+        "Our `Task` compares its saved title and category. It defines `__eq__` without `__hash__`, so Python makes it unhashable: it cannot be a dictionary key or set item.\n\nDo not add a hash based on these changeable fields. Changing `title` could make a stored key hard to find.\n\nThe class below saves two strings and compares Tasks by those strings. `isinstance` checks the other value's type; it does not change its type.\n```python\nclass Task:\n    def __init__(self, title, category):\n        self.title = title\n        self.category = category\n\n    def __eq__(self, other):\n        if not isinstance(other, Task):\n            return NotImplemented\n        return (self.title, self.category) == (other.title, other.category)\n```",
+        "A snapshot saves the values as they are now. `snapshot_key` returns the task's two strings in a tuple. Because strings cannot change in place, this tuple is a safe key.\n\n`hash(key)` gives the key's hash number. Compare the hashes here, rather than expecting exact numbers. The numbers can differ between runs.\n```python\nclass Task:\n    def __init__(self, title, category):\n        self.title = title\n        self.category = category\n\n    def __eq__(self, other):\n        if not isinstance(other, Task):\n            return NotImplemented\n        return (self.title, self.category) == (other.title, other.category)\n\ndef snapshot_key(task):\n    return (task.title, task.category)\nfirst = Task(\"read\", \"study\")\nsecond = Task(\"read\", \"study\")\na = snapshot_key(first)\nb = snapshot_key(second)\nprint(first == second)\nprint(a == b, hash(a) == hash(b))\ntry:\n    hash(first)\nexcept TypeError:\n    print(\"unhashable task\")\n```\nIt prints `True`, then `True True`, then `unhashable task`. Calling `hash(first)` raises `TypeError` instead of returning a usable hash.",
+        "Reassigning a task field does not change an earlier tuple of its string values.\n```python\nclass Task:\n    def __init__(self, title, category):\n        self.title = title\n        self.category = category\n\n    def __eq__(self, other):\n        if not isinstance(other, Task):\n            return NotImplemented\n        return (self.title, self.category) == (other.title, other.category)\n\ndef snapshot_key(task):\n    return (task.title, task.category)\ntask = Task(\"read\", \"study\")\nold_key = snapshot_key(task)\ntask.title = \"write\"\nprint(old_key)\nprint(old_key == snapshot_key(task))\n```\nIt prints `('read', 'study')` and `False`. Make a new snapshot when you want a key for the new values. Keep any key already stored in a dictionary or set unchanged.",
+        "Complete `snapshot_key(task)` using the provided Task class. Return `(task.title, task.category)` in that order. Do not change `task` or add a hash to Task. Keep the string values exactly as supplied, including spaces, letter case, and empty strings. The returned tuple must keep its original values if either task field is later reassigned.\n\nOptional practice: use two equal snapshots as dictionary keys. Explain why the second assignment replaces the value at the existing entry instead of creating a second entry.\n\nThe supplied `__snapshot_preserved` helper checks that an old snapshot keeps its values after a task changes. Leave this helper as it is. Complete only `snapshot_key`."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the requirement.",
+        "Make one change to the starter.",
+        "Run the checks.",
+        "Explain why a changed input produces its result."
+      ],
+      "after": [
+        "Read the requirements for the returned tuple.",
+        "Replace `return ()` in `snapshot_key` without changing the Task or helper.",
+        "Run the supplied checks.",
+        "Explain why `old_key` keeps its values after a task field changes."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "After making old_key from Task(\"draw\", \"art\"), you reassign its category to \"work\". Which value does old_key retain?",
+        "choices": [
+          "(\"draw\", \"work\")",
+          "It becomes unhashable automatically.",
+          "(\"draw\", \"art\")"
+        ],
+        "answer": 2,
+        "explanation": "The tuple keeps the original immutable string values; reassigning a Task attribute does not edit that tuple."
+      },
+      "after": {
+        "question": "After making old_key from Task(\"draw\", \"art\"), you reassign its category to \"work\". Which value does old_key retain?",
+        "choices": [
+          "(\"draw\", \"work\")",
+          "It becomes unhashable automatically.",
+          "(\"draw\", \"art\")"
+        ],
+        "answer": 2,
+        "explanation": "The tuple keeps the original string values. Reassigning a Task field does not change that tuple."
+      }
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Trace the visible worked calls before changing the starter."
+      ],
+      "after": [
+        "Trace the worked calls before changing the starter.",
+        "Return the two field values in order without assigning anything to the task."
+      ]
+    }
+  ],
+  "reviewNotes": [
+    "Preserved all five sections, code, and expected output.",
+    "Made the requirement to leave task unchanged explicit.",
+    "Preserved exact strings, field order, snapshot rules, and helper instructions.",
+    "Kept three quiz choices and answer index 2.",
+    "Explained hashing and snapshots more directly and removed a repeated initializer definition."
+  ]
+}

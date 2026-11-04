@@ -1,0 +1,98 @@
+{
+  "lesson": "javascript-17",
+  "position": 69,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Use the supplied graph with start A and target F.",
+      "after": "Find a short route by checking nearby places before farther ones."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A graph describes places and their connections. A node is one place; an edge is one connection. An adjacency list records each node's neighbors, such as `{ P: [\"Q\", \"R\"] }`. A path lists nodes traveled through. Four nodes along one path have three edges because an edge joins each consecutive pair. This lesson searches for a path to a target node.",
+        "Breadth-first search, or BFS, visits nearby nodes before farther ones. Its queue stores discovered nodes waiting to be processed. A queue takes the oldest added entry first: push adds at the end of an array and shift removes its first entry. Each queue entry can hold the node and its path. A Set records seen nodes; it keeps each name only once and supports has and add.",
+        "Here is a complete small BFS example.\n```javascript\nconst graph = { P: [\"Q\", \"R\"], Q: [\"S\"], R: [\"S\"], S: [] };\nfunction search(start, target) {\n  const queue = [[start, [start]]];\n  const seen = new Set([start]);\n  let visited = 0;\n  while (queue.length) {\n    const [node, path] = queue.shift();\n    visited++;\n    if (node === target) {\n      return { path, visited };\n    }\n    for (const next of graph[node] || []) {\n      if (!seen.has(next)) {\n        seen.add(next);\n        queue.push([next, [...path, next]]);\n      }\n    }\n  }\n  return { path: null, visited };\n}\nconst result = search(\"P\", \"S\");\nconsole.log(result.path.join(\"->\"), result.visited);\n```\nThis prints `P->Q->S 4`. The queue order is P, Q, R, S. S is recorded when first discovered from Q, so discovering it again from R does not add another visit.",
+        "`while (queue.length)` repeats while the queue has entries. Destructuring `[node, path]` reads the two parts removed by shift. `visited++` increases the count by one. `graph[node]` reads neighbors using a variable as a property key. `|| []` supplies an empty array if the lookup is missing. The for/of loop visits each neighbor. `!seen.has(next)` means the node has not already been seen. The spread `...path` copies the path's entries into a new array before adding next.",
+        "In an unweighted graph, every edge counts equally, so BFS finds a path with the fewest edges. When two paths tie, neighbor order decides which is discovered first. Seen nodes prevent endless revisits around cycles, where connections lead back to earlier places. Marking a node when adding it to the queue avoids adding it repeatedly. If the queue empties without reaching the target, return null for the path and the measured visit count.",
+        "DFS, depth-first search, follows one branch deeply before trying another. A stack removes the newest entry first; an array's pop does that. Here is a separate complete traversal example, with a cycle handled by seen.\n```javascript\nconst graph = { P: [\"Q\", \"R\"], Q: [\"S\"], R: [], S: [\"P\"] };\nfunction depthVisits(start) {\n  const stack = [start];\n  const seen = new Set();\n  const order = [];\n  while (stack.length) {\n    const node = stack.pop();\n    if (seen.has(node)) {\n      continue;\n    }\n    seen.add(node);\n    order.push(node);\n    for (const next of [...(graph[node] || [])].reverse()) {\n      stack.push(next);\n    }\n  }\n  return order;\n}\nconsole.log(depthVisits(\"P\").join(\",\"));\n```\nIt prints `P,Q,S,R`. Continue skips the rest of the current iteration. Copying and reversing neighbors makes the first listed neighbor processed first by this stack. DFS does not generally promise the shortest path.",
+        "The exercise graph's BFS tie is resolved by its neighbor order, producing A-B-D-F: four nodes, three edges. All six reachable nodes may be visited before F is processed. A missing target Z returns path null. Compare approaches on the same graph and state what you counted; a visit count on one graph does not prove one search is always faster. Array shift and path copies also cost work, so visits are a useful measure here rather than a complete benchmark."
+      ],
+      "after": [
+        "A graph describes places and their connections. Each place is a node, and each connection is an edge.\n\nAn adjacency list stores each node's neighbors. For example, `{ P: [\"Q\", \"R\"] }` says P connects to Q and R.\n\nA path lists the places visited on a route. Four places in a path have three connecting edges.",
+        "Breadth-first search, or BFS, checks nearby nodes before farther ones.\n\nA queue holds nodes waiting to be checked. `push` adds to its end, and `shift` takes from its front, so the oldest waiting node goes next.\n\nA `Set` remembers nodes already found, so we do not add them twice.",
+        "This example searches from P to S.\n```javascript\nconst graph = { P: [\"Q\", \"R\"], Q: [\"S\"], R: [\"S\"], S: [] };\nfunction search(start, target) {\n  const queue = [[start, [start]]];\n  const seen = new Set([start]);\n  let visited = 0;\n  while (queue.length) {\n    const [node, path] = queue.shift();\n    visited++;\n    if (node === target) {\n      return { path, visited };\n    }\n    for (const next of graph[node] || []) {\n      if (!seen.has(next)) {\n        seen.add(next);\n        queue.push([next, [...path, next]]);\n      }\n    }\n  }\n  return { path: null, visited };\n}\nconst result = search(\"P\", \"S\");\nconsole.log(result.path.join(\"->\"), result.visited);\n```\nOutput:\n```text\nP->Q->S 4\n```\nThe nodes are checked in the order P, Q, R, S. S was first found through Q, so that is the path returned.",
+        "Each queue entry holds a node and the path to it. `[node, path]` names those two parts when the entry is removed.\n\n`visited++` counts the processed node. `graph[node] || []` reads its neighbors, or uses an empty list if none are listed.\n\nFor each unseen neighbor, mark it seen and add it to the queue. `[...path, next]` makes a new path ending at that neighbor.",
+        "When every edge counts equally, BFS finds a route with the fewest edges. If routes tie, the listed neighbor order decides which is found first.\n\nRemembering seen nodes prevents repeated visits, including loops that lead back to earlier places.\n\nIf the queue becomes empty before finding the target, return `path: null` and the number visited.",
+        "Depth-first search, or DFS, follows one branch before trying another. It uses a stack: the newest waiting entry goes next. `pop` removes that entry.\n```javascript\nconst graph = { P: [\"Q\", \"R\"], Q: [\"S\"], R: [], S: [\"P\"] };\nfunction depthVisits(start) {\n  const stack = [start];\n  const seen = new Set();\n  const order = [];\n  while (stack.length) {\n    const node = stack.pop();\n    if (seen.has(node)) {\n      continue;\n    }\n    seen.add(node);\n    order.push(node);\n    for (const next of [...(graph[node] || [])].reverse()) {\n      stack.push(next);\n    }\n  }\n  return order;\n}\nconsole.log(depthVisits(\"P\").join(\",\"));\n```\nOutput:\n```text\nP,Q,S,R\n```\n`continue` skips a node already seen. Reversing the copied neighbors makes the first listed one come off the stack first. DFS does not generally find the shortest route.",
+        "Complete BFS in `search(start, target)` for the supplied graph. Searching A to F should return A-B-D-F, with 6 nodes processed. That path has 3 edges.\n\nSearching A to Z should return `path: null`. Count nodes when removing them from the queue.\n\nThis count shows work on this graph only. It does not prove that one search method is always faster."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Start a queue containing the start node and its path.",
+        "Mark nodes visited when adding them so they are not queued twice.",
+        "If the queue empties before reaching the target, return `path: null`."
+      ],
+      "after": [
+        "Start with [start, [start]] in the queue and start in the seen Set.",
+        "Mark a neighbor seen when adding it, but increase visited when removing a node to process it.",
+        "If the queue empties before finding the target, return {path: null, visited}."
+      ]
+    },
+    {
+      "field": "checks",
+      "before": [
+        {
+          "label": "Finds shortest path A-B-D-F",
+          "expression": "search(\"A\",\"F\").path.join(\"-\") === \"A-B-D-F\""
+        },
+        {
+          "label": "Visits no more than six nodes",
+          "expression": "search(\"A\",\"F\").visited <= 6"
+        },
+        {
+          "label": "Missing target returns no path",
+          "expression": "search(\"A\",\"Z\").path === null"
+        }
+      ],
+      "after": [
+        {
+          "label": "Finds shortest path A-B-D-F",
+          "expression": "search(\"A\",\"F\").path.join(\"-\") === \"A-B-D-F\""
+        },
+        {
+          "label": "Counts all six processed nodes",
+          "expression": "search(\"A\",\"F\").visited === 6"
+        },
+        {
+          "label": "Missing target returns no path",
+          "expression": "search(\"A\",\"Z\").path === null"
+        },
+        {
+          "label": "Start target and missing target have honest counts",
+          "expression": "search(\"A\",\"A\").path.join(\"-\")===\"A\" && search(\"A\",\"A\").visited===1 && search(\"A\",\"Z\").visited===6"
+        }
+      ]
+    }
+  ],
+  "headings": [
+    "Describe places and connections",
+    "Check the nearest nodes first",
+    "Follow one BFS search",
+    "Read the queue step",
+    "Know when the search ends",
+    "Compare a depth-first visit",
+    "Build the route search"
+  ],
+  "project": {
+    "title": "A route search game",
+    "task": "Complete breadth-first search on the supplied graph. Return the path and the number of processed nodes. Keep the listed neighbor order and avoid repeated visits.",
+    "done_when": "A to F returns A-B-D-F with 6 nodes processed. A to Z returns no path. Counts reflect nodes actually processed."
+  },
+  "notes": [
+    "Checks now reject invented or undercounted BFS visit totals."
+  ]
+}

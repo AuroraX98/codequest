@@ -1,0 +1,91 @@
+{
+  "lesson": "go-60",
+  "position": 60,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "If each update adds 2 instead of 1, what prints?",
+      "after": "Update one shared counter in a single atomic step."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "atomic.Int64 provides Add and Load operations on an integer. Its zero value starts at zero, and Add returns the new value. Do not copy an atomic object after first use. Atomic operations have sequentially consistent ordering, not a promise about a particular implementation speed.",
+        "Two workers update the same typed atomic and finish before Load. This avoids lost increments for the one counter. Combining several separate Load and Store calls would not automatically make an entire algorithm atomic or preserve an invariant involving other fields.\n\nStore replaces one atomic integer with its supplied value; Load returns its current value. This sequential companion has no goroutines and is not a read-modify-write operation. Separate Load and Store calls would still not make an increment atomic.\n```go\npackage main\nimport (\"fmt\"; \"sync/atomic\")\nfunc main() {\n    var count atomic.Int64\n    count.Store(7)\n    fmt.Println(count.Load())\n    count.Store(2)\n    fmt.Println(count.Load())\n}\n```\nExpected output: 7; 2.",
+        "Complete local Go example; the app itself does not execute it:\n```go\npackage main\n\nimport (\n\"fmt\"\n\"sync\"\n\"sync/atomic\"\n)\n\n\nfunc main() {\n    var count atomic.Int64\n    var wg sync.WaitGroup\n    wg.Add(2)\n    for worker := 0; worker < 2; worker++ {\n        go func() { defer wg.Done(); for i := 0; i < 100; i++ { count.Add(1) } }()\n    }\n    wg.Wait()\n    fmt.Println(count.Load())\n}\n```",
+        "Expected output or behavior: 200. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Contrast Add(1) with a separate Load followed by Store and explain the lost-update risk. You may trace it without a Go compiler; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "An atomic operation acts as one step that other workers cannot see half-finished. `atomic.Int64` starts at 0. `Add` changes it and returns the new value. `Load` reads it, and `Store` replaces it. Do not copy an atomic value after using it.",
+        "Both workers use Add on the same counter. Each addition stays together. Several separate atomic calls do not automatically protect a whole group of changes to other fields.",
+        "Follow the Add calls before the final Load.\n```go\npackage main\n\nimport (\n\"fmt\"\n\"sync\"\n\"sync/atomic\"\n)\n\n\nfunc main() {\n    var count atomic.Int64\n    var wg sync.WaitGroup\n    wg.Add(2)\n    for worker := 0; worker < 2; worker++ {\n        go func() { defer wg.Done(); for i := 0; i < 100; i++ { count.Add(1) } }()\n    }\n    wg.Wait()\n    fmt.Println(count.Load())\n}\n```",
+        "The screen shows `200`. Two workers each add 1 one hundred times. main waits before reading the final counter.",
+        "A separate Load followed by Store is not one addition. Another worker could update the count between those calls, causing an update to be lost."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Multiply the number of updates by the amount added each time."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If each update adds 2 instead of 1, what prints?",
+        "choices": [
+          "400",
+          "200 because atomic Add ignores its argument",
+          "2 because only the last update survives."
+        ],
+        "answer": 0,
+        "explanation": "There are two hundred atomic additions of two, yielding four hundred."
+      },
+      "after": {
+        "question": "If every Add adds 2 instead of 1, what appears?",
+        "choices": [
+          "400",
+          "200, because Add ignores its input.",
+          "2, because only the last change survives."
+        ],
+        "answer": 0,
+        "explanation": "There are 200 additions of 2. The final count is 400."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Go Core v1 uses the verified Go1.27.3 toolchain and standard library. The app supplies concept reading and an understanding check, not a Go browser runner. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "The browser shows Go code and checks your understanding; it does not run Go. Optional local examples use Go 1.27."
+    }
+  ],
+  "headings": [
+    "Add to an atomic integer",
+    "Keep a whole update together",
+    "One example",
+    "Read the completed count",
+    "Avoid splitting an increment"
+  ],
+  "project": {
+    "title": "Atomic counters",
+    "task": "Predict the final value of the shared atomic counter.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local Go example is optional."
+  }
+}

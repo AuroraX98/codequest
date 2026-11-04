@@ -1,0 +1,105 @@
+{
+  "lesson": "developer-toolkit-06",
+  "position": 6,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Describe a small feature, review an AI proposal, apply it, and check the result.",
+      "after": "Treat AI-written code as a proposed change. Read it and test the behavior you asked for."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "An AI coding proposal is a proposed change you need to understand and verify. Describe the promised behavior with examples before reviewing it: who should get a discount, how much, and what happens for invalid input. A confident explanation is not proof that code satisfies those requirements. Read the changed lines, then check the behavior that matters.",
+        "Here is a complete JavaScript proposal with a mistake:\n```javascript\nfunction ticketPrice(price, isMember) {\n  return price * 0.8;\n}\nconsole.log(ticketPrice(50, true));\nconsole.log(ticketPrice(50, false));\nconsole.log(ticketPrice(-5, true));\n```\nIt prints 40, 40, and -4. It gives everyone a twenty-percent discount and accepts a negative price. The function never reads isMember. Passing one member example would miss those failures.",
+        "Validation should happen before the calculation. Number.isFinite checks that price is an actual finite number; it rejects NaN, Infinity, and numeric text. price < 0 rejects a negative number, while 0 is valid. Membership must be the boolean true, not merely a truthy value. Nonempty strings such as 'false' are truthy in JavaScript, so if(isMember) alone can accidentally grant them a discount.",
+        "This separate complete example implements the stated twenty-percent member discount:\n```javascript\nfunction ticketPrice(price, isMember) {\n  if (!Number.isFinite(price) || price < 0) {\n    return null;\n  }\n  return isMember === true ? price * 0.8 : price;\n}\nconsole.log(ticketPrice(50, true));\nconsole.log(ticketPrice(50, false));\nconsole.log(ticketPrice(0, true));\nconsole.log(ticketPrice(-5, true));\nconsole.log(ticketPrice(50, 'false'));\n```\nThe outputs are 40, 50, 0, null, and 50. null deliberately means invalid input. The ternary condition ? first : second chooses the discounted price only for exact true.",
+        "For the exercise, the discount is ten percent rather than this walkthrough's twenty percent. Ten percent of 80 is 8, so a member keeps 80 - 8 = 72, equivalent to 80 × 0.9. A nonmember keeps 80. Validate the price first, then choose the member calculation. isMember === true prevents a string from receiving the discount. Invalid negative, NaN, or Infinity prices return null.",
+        "Review meaningful cases: valid member, valid nonmember, zero, negative, non-finite value, and a truthy string posing as membership. Keep the earlier working code in History or Git so you can recover if the proposal breaks a promised behavior. Explain why each branch exists before accepting it. For real money, fractional representation and rounding rules also need explicit decisions; this small number exercise checks the supplied arithmetic rule.",
+        "Implement finalPrice with the supplied names and confirm all relevant checks. An AI that changes only the first example might still get the nonmember case wrong. Ask for a focused explanation or hint when a line is unclear, then inspect and test it yourself. If a new change causes a regression, restore the known working version while investigating instead of treating the AI's reassurance as evidence."
+      ],
+      "after": [
+        "Before accepting a change, say what it must do. Our rule gives members a 10% discount and leaves other prices unchanged. Invalid prices return null.",
+        "A program can pass one example and still be wrong. Check both a member and a nonmember so a discount given to everyone is caught.",
+        "A valid price is a number at least zero, with a finite value. Number.isFinite rejects text, Infinity, and NaN. NaN means an invalid numeric result.",
+        "This example applies the stated rule.\n\n```javascript\nfunction ticketPrice(price, isMember) {\n  if (!Number.isFinite(price) || price < 0) return null;\n  return isMember === true ? price * 0.9 : price;\n}\nconsole.log(ticketPrice(80, true));\nconsole.log(ticketPrice(80, false));\nconsole.log(ticketPrice(-5, true));\n```\n\nThe outputs are 72, 80, and null.",
+        "Multiplying by 0.9 keeps 90% of the price. isMember === true accepts only the boolean true. Text such as \"false\" must not earn a discount.",
+        "Test a member, a nonmember, zero, a negative number, Infinity, NaN, and text in place of a membership flag. Each case checks a different part of the rule.",
+        "Complete finalPrice using the same rule. Read every changed line and run the checks. Keep a saved working version so you can undo a bad change. An AI's confident explanation is not a test result."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Write finalPrice(price,isMember). Return null if price is negative, is not a number, or is NaN or Infinity.",
+        "Apply a ten-percent discount only when isMember is true; otherwise return the original price.",
+        "Test price 100 with and without membership, zero, -1, NaN, and Infinity.",
+        "If the tutor is connected, ask it to review your change.",
+        "Explain each condition in your own words.",
+        "Practice recovery by restoring an earlier saved version."
+      ],
+      "after": [
+        "Reject prices that are not finite numbers or are below zero.",
+        "Apply the discount only when isMember === true.",
+        "Run the normal and invalid-input checks.",
+        "Explain the conditions and keep a saved working version."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "A valid price must be finite and at least zero.",
+        "Check invalid input before applying any discount.",
+        "Use isMember to choose between price * 0.9 and price."
+      ],
+      "after": [
+        "Reject invalid prices before calculating.",
+        "Use Number.isFinite and price < 0.",
+        "Choose price * 0.9 only for the boolean true."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "An AI change passes one example. What should you do next?",
+        "choices": [
+          "Accept every later change automatically",
+          "Review the changed code and check relevant edge cases",
+          "Hide errors from the output"
+        ],
+        "answer": 1,
+        "explanation": "One example is limited evidence. Review what changed and test the behaviors the feature promises."
+      },
+      "after": {
+        "question": "An AI change passes one example. What should happen next?",
+        "choices": [
+          "Accept all later changes automatically.",
+          "Read the changes and test other important cases.",
+          "Hide any error messages."
+        ],
+        "answer": 1,
+        "explanation": "One success does not check the whole rule. Test the other promised behavior too."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": null,
+      "after": "This lesson checks a small arithmetic rule. Real payment code also needs a defined way to represent and round money."
+    }
+  ],
+  "headings": [
+    "State the rule first",
+    "Check more than one case",
+    "Reject invalid prices",
+    "One example",
+    "Read the choice",
+    "Test the limits",
+    "Review and keep a way back"
+  ],
+  "project": {
+    "title": "A reviewed AI change",
+    "task": "Complete finalPrice(price,isMember). Return null for invalid or negative prices. Give a 10% discount only when isMember is exactly true. Review and test the result.",
+    "done_when": "All checks pass, each condition can be explained, and a saved working version is available for recovery."
+  }
+}

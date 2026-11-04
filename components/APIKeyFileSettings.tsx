@@ -2,7 +2,7 @@
 import {
   useEffect,
   useImperativeHandle,
-  useMemo,
+  useLayoutEffect,
   useRef,
   useState,
   type Ref,
@@ -46,16 +46,21 @@ function downloadBlank(text: string) {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 export default function APIKeyFileSettings(props: Props) {
+  return <KeyFileSettings key={props.state.draftScope} {...props} />;
+}
+function KeyFileSettings({ ref: forwardedRef, ...props }: Props) {
   const latest = useRef(props);
-  latest.current = props;
+  useLayoutEffect(() => { latest.current = props; }, [props]);
   const [, render] = useState(0);
   const [error, setError] = useState("");
   const [fallbackName, setFallbackName] = useState("");
-  const [supported, setSupported] = useState(false);
+  const [supported, setSupported] = useState(() => typeof window !== "undefined" && typeof (window as PickerWindow).showOpenFilePicker === "function");
   const fileInput = useRef<HTMLInputElement>(null);
   const pendingChooser = useRef<{ scope: string; lesson: string } | null>(null);
   const autoEdge = useRef(false);
-  const controller = useMemo(
+  const [controller] = useState(
+    // The constructor stores callbacks; it does not read the ref during render.
+    // eslint-disable-next-line react-hooks/refs
     () =>
       new APIKeyFileController(props.state.draftScope, {
         context: () => ({
@@ -68,7 +73,6 @@ export default function APIKeyFileSettings(props: Props) {
         saved: (state, message) => latest.current.onSaved(state, message),
         changed: () => render((n) => n + 1),
       }),
-    [props.state.draftScope],
   );
   const report = (failure: unknown) => {
     if (failure instanceof StaleKeyFileOperation) return;
@@ -79,17 +83,12 @@ export default function APIKeyFileSettings(props: Props) {
     );
   };
   useImperativeHandle(
-    props.ref,
+    forwardedRef,
     () => ({ disableAuto: () => controller.disableAuto() }),
     [controller],
   );
   useEffect(() => {
     controller.activate();
-    setSupported(
-      typeof (window as PickerWindow).showOpenFilePicker === "function",
-    );
-    setFallbackName("");
-    setError("");
     autoEdge.current = false;
     void controller.load().catch(report);
     return () => controller.dispose();

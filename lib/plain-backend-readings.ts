@@ -1,5 +1,5 @@
 // Reviewed backend counterparts.
-export default [
+const readings = [
   {
     "source": "An API is an agreed way for programs to ask another program to do something.",
     "simple": "An API is a shared way for one program to ask another program for data or an action.",
@@ -1159,3 +1159,5 @@ export default [
     "lesson": "backend-05"
   }
 ];
+
+export default readings;

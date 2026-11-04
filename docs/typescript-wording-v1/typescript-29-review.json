@@ -1,0 +1,83 @@
+{
+  "lesson": "typescript-29",
+  "position": 20,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Complete readLabel(value:unknown). Return its label only when value is a non-null object that has a string label. Otherwise return \"No label\". Keep an existing empty string. Checking a property exists is not enough to prove it contains text.",
+      "after": "Check an unknown value before reading its text property."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "unknown describes a value whose type is not yet established: check it before using its properties. The in operator checks whether an object has a named property, including inherited properties. First establish a non-null object; then check the property and its value type. This lesson only needs a string field, not a particular prototype.",
+        "```typescript\nfunction readPlace(value: unknown): string {\n  if (typeof value !== \"object\" || value === null) return \"No place\";\n  if (!(\"place\" in value)) return \"No place\";\n  if (typeof value.place !== \"string\") return \"No place\";\n  return value.place;\n}\nconsole.log(readPlace({ place: \"Hill\" }));\nconsole.log(readPlace({ other: \"Hill\" }));\n```\nThis prints Hill, then No place. readPlace takes an unchecked value. typeof checks its runtime kind; !== means not equal; || means either failure is enough. null needs its own check because typeof null is \"object\". \"place\" in value checks the name. ! negates that result. Each early return stops unsafe later reads; the last return is reached only for a string.",
+        "```typescript\nfunction readPlace(value: unknown): string {\n  if (typeof value !== \"object\" || value === null) return \"No place\";\n  if (!(\"place\" in value)) return \"No place\";\n  if (typeof value.place !== \"string\") return \"No place\";\n  return value.place;\n}\nconsole.log(readPlace(null));\nconsole.log(readPlace({ place: \"\" }));\n```\nThis prints No place, then an empty line. Trace the changed value through the same rule.",
+        "Complete readLabel(value:unknown). Return its label only when value is a non-null object that has a string label. Otherwise return \"No label\". Keep an existing empty string. Checking a property exists is not enough to prove it contains text."
+      ],
+      "after": [
+        "Unknown means the value's type is not established yet. Before reading a property, check that the value is an object and is not null. Then check that the property exists and contains text. The `in` operator can find inherited properties too.",
+        "Each early return stops the function before an unsafe read.\n```typescript\nfunction readPlace(value: unknown): string {\n  if (typeof value !== \"object\" || value === null) return \"No place\";\n  if (!(\"place\" in value)) return \"No place\";\n  if (typeof value.place !== \"string\") return \"No place\";\n  return value.place;\n}\nconsole.log(readPlace({ place: \"Hill\" }));\n```\nThe output is Hill. Null needs a separate check because typeof null gives object.",
+        "The same function returns No place for null. It keeps an empty text value unchanged. A property existing does not prove that it contains text.",
+        "Make readLabel return label only when the input is a non-null object with a string label. Otherwise return No label. Keep an empty label as empty text."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the example and its input/output contract.",
+        "Complete the starter without turning off compiler diagnostics.",
+        "Run the compiler and behavior checks, then explain a changed case."
+      ],
+      "after": [
+        "Check that the value is a non-null object.",
+        "Check that label exists and contains text.",
+        "Return the label or No label, then run the checks."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Compare the public input/output types and trace the visible call before editing."
+      ],
+      "after": [
+        "Check the object before using `in`, then check the property value with typeof."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "After \"place\" in value succeeds, value.place is 8. Should readPlace return it?",
+        "choices": [
+          "Yes. Existence proves the field is text.",
+          "No. The next typeof check rejects a number.",
+          "Yes. The type annotation converts 8 to \"8\"."
+        ],
+        "answer": 1,
+        "explanation": "Existence and field type are separate facts. The guard must check both."
+      },
+      "after": {
+        "question": "The place property exists, but its value is 8. Should readPlace return it?",
+        "choices": [
+          "Yes, existence proves it is text",
+          "No, the text-type check rejects the number",
+          "Yes, the type label converts it to text"
+        ],
+        "answer": 1,
+        "explanation": "A property can exist and still have the wrong type. Both facts need checking."
+      }
+    }
+  ],
+  "headings": [
+    "Start with an unknown value",
+    "Check one thing at a time",
+    "Keep empty text",
+    "Read a label safely"
+  ],
+  "project": {
+    "title": "Check a property before reading it",
+    "task": "Read a string label from an unknown object, using No label for other inputs.",
+    "done_when": "Invalid inputs get the backup, valid text including empty text is preserved, and the checks pass."
+  }
+}

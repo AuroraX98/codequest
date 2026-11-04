@@ -1,0 +1,91 @@
+{
+  "lesson": "c-44",
+  "position": 44,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "If main declares and calls helper instead, can it link to value.c’s static helper?",
+      "after": "A static function at file scope keeps its name local to that compiled source file."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A file-scope function declared static has internal linkage: code in another translation unit cannot link to that name. This is not C++ class privacy and does not mean a helper runs only once.",
+        "value.h declares public_value, which calls a private helper in value.c. Other source files use the public operation rather than relying on the hidden helper.\n```c\n/* value.h */\nint public_value(void);\n/* value.c */\nstatic int helper(void) { return 9; }\nint public_value(void) { return helper(); }\n```",
+        "Complete local C example; the app itself does not execute it:\n```c\n#include <stdio.h>\n#include \"value.h\"\n\nint main(void) {\n    printf(\"%d\\n\", public_value());\n    return 0;\n}\n```",
+        "Expected output or behavior: 9. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Give two translation units their own static helper names and explain why they do not collide. You may trace it without a C compiler; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "File scope means outside any function. A function declared static there has internal linkage: another separately compiled source file cannot link to that function by its name. Static here does not mean the function runs only once.",
+        "value.h declares public_value for callers. In value.c, public_value can call its local helper. main uses the public function and does not need to know how that helper works.",
+        "Save each part in the named file. Together they form one program.\n```c\n// File: value.h\nint public_value(void);\n\n// File: value.c\nstatic int helper(void) { return 9; }\nint public_value(void) { return helper(); }\n\n// File: main.c\n#include <stdio.h>\n#include \"value.h\"\n\nint main(void) {\n    printf(\"%d\\n\", public_value());\n    return 0;\n}\n```",
+        "Build main.c and value.c together. main calls public_value, which calls helper and returns 9. The program prints 9.",
+        "Declaring helper again in main.c does not expose value.c's static helper. The files may each have their own static helper without sharing that name."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "A declaration in a different file does not remove static from the original helper."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If main declares and calls helper instead, can it link to value.c’s static helper?",
+        "choices": [
+          "Yes: every function name is globally exported.",
+          "Only if the two functions return the same type.",
+          "No: that helper has internal linkage."
+        ],
+        "answer": 2,
+        "explanation": "The external declaration in main cannot expose the separate internal-linkage definition."
+      },
+      "after": {
+        "question": "If main declares and calls helper directly, can it link to value.c's static helper?",
+        "choices": [
+          "Yes, every function is shared by name.",
+          "Yes, if the return types match.",
+          "No, that helper's name stays local to value.c's compilation."
+        ],
+        "answer": 2,
+        "explanation": "helper has internal linkage. main must use the public function instead of trying to link to that helper."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "C Core v1 uses a portable C17 baseline supported by the verified compiler. C23 exists but is not claimed fully supported here. The app supplies concept reading and an understanding check, not a C browser runner. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "The browser shows C code and checks your understanding; it does not run C. Optional local examples use C17."
+    }
+  ],
+  "headings": [
+    "Keep a helper name local",
+    "Expose the operation callers need",
+    "One example in three labeled files",
+    "Call the public function",
+    "Respect the file boundary"
+  ],
+  "project": {
+    "title": "Linkage and file-private helpers",
+    "task": "Explain why public_value can call helper but main.c cannot link directly to it.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local C example is optional."
+  }
+}

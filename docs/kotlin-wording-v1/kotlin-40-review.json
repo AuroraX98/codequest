@@ -1,0 +1,91 @@
+{
+  "lesson": "kotlin-40",
+  "position": 40,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "If Wrapped adds override fun read(): String = \"wrapped\", what prints?",
+      "after": "Use by to pass an interface's work to another object."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "class Logged(base: Reader) : Reader by base asks the compiler to forward Reader members to base. This is interface delegation through another object, not subclassing that object’s class.",
+        "An explicit override in the wrapper replaces forwarding for that member when called on the wrapper. Calls made inside the delegate still use the delegate’s own members; delegation does not rewrite its internal self-calls.",
+        "Complete local Kotlin/JVM example; the app itself does not execute it:\n```kotlin\ninterface Reader { fun read(): String }\nclass PlainReader : Reader { override fun read(): String = \"plain\" }\nclass Wrapped(base: Reader) : Reader by base\nfun main() { println(Wrapped(PlainReader()).read()) }\n```",
+        "Expected output or behavior: plain. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Add a second interface method and identify which calls are forwarded and which are overridden. You may trace it without a Kotlin compiler; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "Delegation means asking another object to do a job. In `Reader by base`, Wrapped promises the Reader actions and forwards them to the object named base. Wrapped does not inherit from that object's class.",
+        "The compiler creates the forwarding code. If Wrapped provides its own override for an action, a direct call on Wrapped uses that override instead.",
+        "Follow the example one line at a time.\n```kotlin\ninterface Reader { fun read(): String }\nclass PlainReader : Reader { override fun read(): String = \"plain\" }\nclass Wrapped(base: Reader) : Reader by base\nfun main() { println(Wrapped(PlainReader()).read()) }\n```",
+        "The screen shows `plain`. Wrapped passes the read call to the PlainReader supplied as base.",
+        "Delegation does not rewrite calls made inside the base object. Those internal calls still use the base object's own behavior. An override on Wrapped changes the matching call made through Wrapped."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "An explicit override replaces the automatic forwarding for that action."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If Wrapped adds override fun read(): String = \"wrapped\", what prints?",
+        "choices": [
+          "plainwrapped",
+          "wrapped",
+          "plain"
+        ],
+        "answer": 1,
+        "explanation": "The explicit wrapper override takes priority over generated forwarding for that direct call."
+      },
+      "after": {
+        "question": "Add `override fun read(): String = \"wrapped\"` inside Wrapped. What appears?",
+        "choices": [
+          "plainwrapped",
+          "wrapped",
+          "plain"
+        ],
+        "answer": 1,
+        "explanation": "The direct call on Wrapped uses its explicit override instead of forwarding to PlainReader."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Kotlin JVM Core v1 uses Kotlin2.4.21 stable syntax and a verified JVM toolchain. The app supplies concept reading and an understanding check, not a Kotlin browser runner. Coroutine libraries are separate dependencies. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "The browser shows Kotlin code and checks your understanding; it does not run Kotlin. Optional local examples use Kotlin/JVM."
+    }
+  ],
+  "headings": [
+    "Hand work to another object",
+    "Let the compiler forward calls",
+    "One example",
+    "Follow the forwarded call",
+    "Know where an override applies"
+  ],
+  "project": {
+    "title": "Interface delegation",
+    "task": "Choose between a wrapper's override and its delegated action.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local Kotlin example is optional."
+  }
+}

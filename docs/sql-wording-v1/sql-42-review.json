@@ -1,0 +1,88 @@
+{
+  "lesson": "sql-42",
+  "position": 36,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Create page with IDs and scores from the second two-row page, ordered by descending score then ascending ID. Keep notes unchanged. Stored tables have no inherent display order; SELECT from page with ORDER BY when displaying it.",
+      "after": "Choose a page of results with a clear order, including tied scores."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "LIMIT 2 returns at most two rows. OFFSET 2 skips the first two rows of the ordered result before taking that limit. Neither clause creates a meaningful order by itself. OFFSET counts rows, not page numbers.",
+        "ORDER BY score DESC,id ASC sorts higher scores first, then uses the unique ID for tied scores. Without the ID tie-breaker, the database is not required to return tied rows in a fixed order. This example assumes one fixed dataset. Concurrent inserts, deletes or score changes can shift offsets between separate page requests; deterministic ordering alone does not create a snapshot.",
+        "\n```sql\nCREATE TABLE notes(id INTEGER PRIMARY KEY,score INTEGER);\nINSERT INTO notes VALUES(1,10),(2,10),(3,8),(4,8),(5,5);\nSELECT id,score\nFROM notes\nORDER BY score DESC,id ASC\nLIMIT 2\nOFFSET 2;\n```\nThe full ID order is 1,2,3,4,5. Skipping two and taking two returns IDs 3 and 4.",
+        "\n```sql\nCREATE TABLE notes(id INTEGER PRIMARY KEY,score INTEGER);\nINSERT INTO notes VALUES(1,10),(2,10),(3,8),(4,8),(5,5);\nSELECT id,score\nFROM notes\nORDER BY score DESC,id ASC\nLIMIT 2\nOFFSET 4;\n```\nSkipping four leaves only ID 5. LIMIT is a maximum, not a requirement to fill every page.",
+        "Optional practice: insert ID 6 with score 20 between two page requests. Explain why later offsets may repeat or skip items compared with the earlier dataset."
+      ],
+      "after": [
+        "Pagination means showing a long result in smaller pages. LIMIT sets the most rows to return. OFFSET says how many rows to skip first, not which page number to use.",
+        "Sort by score from high to low, then by unique ID from low to high. The ID settles tied scores. Without a tie-breaker, tied rows have no promised order.",
+        "Run this example in a fresh database:\n```sql\nCREATE TABLE demo_notes(id INTEGER PRIMARY KEY, score INTEGER);\nINSERT INTO demo_notes VALUES (1, 10), (2, 10), (3, 8), (4, 8), (5, 5);\nSELECT id, score\nFROM demo_notes\nORDER BY score DESC, id ASC\nLIMIT 2 OFFSET 2;\n```\nThe full ID order is 1, 2, 3, 4, 5. Skipping two and taking two gives IDs `3` and `4`, both with score `8`.",
+        "LIMIT is a maximum; it does not invent missing rows. This example assumes the data stays unchanged. New, removed, or edited rows can move the page boundaries between requests, even with a clear order.",
+        "Create `page` with IDs and scores from the second two-row page of notes. Order by descending score and ascending ID. Keep notes unchanged. When displaying the saved page, use ORDER BY again; a table has no built-in display order."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the small example and explain its inputs and effects.",
+        "Complete the starter for this lesson.",
+        "Run the behavior checks, then predict a changed case."
+      ],
+      "after": [
+        "Sort by score DESC, then id ASC.",
+        "Skip two rows and take at most two.",
+        "Save id and score in page, then sort the display query too."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Trace the supplied rows and resulting rows before changing the query."
+      ],
+      "after": [
+        "OFFSET 2 means skip two rows.",
+        "The unique ID makes tied scores predictable.",
+        "A fixed order does not freeze changing data."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "On the unchanged five-row dataset, LIMIT 2 OFFSET 5 returns how many rows?",
+        "choices": [
+          "Two",
+          "Zero",
+          "One"
+        ],
+        "answer": 1,
+        "explanation": "Five rows are skipped and none remain. LIMIT does not manufacture rows."
+      },
+      "after": {
+        "question": "There are five unchanged rows. How many does LIMIT 2 OFFSET 5 return?",
+        "choices": [
+          "Two",
+          "Zero",
+          "One"
+        ],
+        "answer": 1,
+        "explanation": "All five rows are skipped, so none remain."
+      }
+    }
+  ],
+  "headings": [
+    "Take a small page of rows",
+    "Break ties with a unique ID",
+    "Read the second page",
+    "Know when pages can shift",
+    "Save the project page"
+  ],
+  "project": {
+    "title": "Give pagination a complete order",
+    "task": "Create page(id, score) from the second two-row page of notes, ordered by score descending and ID ascending.",
+    "done_when": "The correct two rows are saved, the display query states their order, and notes stays unchanged."
+  }
+}

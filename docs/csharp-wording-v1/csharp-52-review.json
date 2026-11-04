@@ -1,0 +1,94 @@
+{
+  "lesson": "csharp-52",
+  "position": 52,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "ReadMinutesAsync now returns 7 instead of 4. What is printed, and when?",
+      "after": "Wait for an operation's result before using it."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "Task<T> represents an operation that will produce a T or fail. async permits await inside the method; it does not automatically create a new thread.",
+        "await waits for completion without blocking a thread just to wait for an incomplete task. The continuation uses the resulting value after completion.\n\nTask.Delay(10) takes a delay in milliseconds and returns a Task representing that delay. Awaiting it does not block a thread just to wait; scheduling means continuation is not promised at an exact instant.",
+        "An exception from an asynchronous Task method is observed when awaiting its task. Prefer Task rather than async void for ordinary methods so the caller can await and handle completion.",
+        "Complete local C# example; the app does not execute it:\n```csharp\nusing System;\nusing System.Threading.Tasks;\nint minutes = await ReadMinutesAsync();\nConsole.WriteLine(minutes + 1);\nstatic async Task<int> ReadMinutesAsync()\n{\n    await Task.Delay(10);\n    return 4;\n}\n```",
+        "Expected behavior from this example: 5 after the delay completes; the example does not promise exact timing. This expected result is a reasoned prediction until a compiler test is recorded.",
+        "Optional local transfer: Change the asynchronous method to throw InvalidOperationException and catch it around the await in the caller. This is a separate local practice task, not a requirement to mark the reading complete."
+      ],
+      "after": [
+        "Task<int> represents an operation that can finish with an int result. It can also fail or be canceled. The task lets calling code track that outcome.",
+        "async allows a method to use await. It does not automatically start a new thread, a separate path of running instructions.",
+        "await pauses this method until an incomplete task finishes, without keeping a thread busy just waiting. Task.Delay(10) requests a short delay in milliseconds; it does not promise an exact wake-up time.",
+        "Follow the wait before the returned number is used.\n\n```csharp\nusing System;\nusing System.Threading.Tasks;\nint minutes = await ReadMinutesAsync();\nConsole.WriteLine(minutes + 1);\nstatic async Task<int> ReadMinutesAsync()\n{\n    await Task.Delay(10);\n    return 4;\n}\n```",
+        "The program prints 5 after ReadMinutesAsync finishes. await gets its returned 4, then the next line adds one.",
+        "When an asynchronous task fails, awaiting it brings the error back to the caller. Ordinary asynchronous methods should return a Task so callers can wait for completion and handle errors."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Trace the changed case before choosing an answer.",
+        "Explain the consequence, then optionally try the local transfer task."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Trace the inputs through the visible rule, then compare the changed case."
+      ],
+      "after": [
+        "The line after await uses the completed result."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "ReadMinutesAsync now returns 7 instead of 4. What is printed, and when?",
+        "choices": [
+          "8 after that task completes",
+          "8 before the task completes",
+          "A Task object, because await never returns a value"
+        ],
+        "answer": 0,
+        "explanation": "Await obtains the returned int, now 7. Only then does minutes + 1 produce 8."
+      },
+      "after": {
+        "question": "Make ReadMinutesAsync return 7 instead. What prints, and when?",
+        "choices": [
+          "8 after the task finishes",
+          "8 before the task finishes",
+          "A Task object instead of a number"
+        ],
+        "answer": 0,
+        "explanation": "await gets 7 after the operation completes. The next line adds one and prints 8."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "C#14/.NET10 core syllabus. Concept-mode reading and understanding check; no in-app C# execution and no claim of mastery. Full example and optional local transfer task are supplied. Actual compiler validation, if available, is reported separately.",
+      "after": "The browser shows C# code and checks your understanding; it does not run C#. Optional local examples use a .NET 10 console project with C# 14."
+    }
+  ],
+  "headings": [
+    "A task tracks an operation",
+    "Allow waiting with await",
+    "Continue after completion",
+    "One example",
+    "What appears",
+    "Observe failures by awaiting"
+  ],
+  "project": {
+    "title": "Await an asynchronous operation",
+    "task": "Follow how await gets the result before the next calculation runs.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local C# example is optional."
+  }
+}

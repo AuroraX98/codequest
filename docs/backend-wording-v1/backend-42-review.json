@@ -1,0 +1,97 @@
+{
+  "lesson": "backend-42",
+  "position": 42,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Implement shouldAcknowledge(job). Match the worked contract and the changed-input checks without modifying the supplied input values.",
+      "after": "Tell a work queue that a job is finished only after its required result has been saved."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A queue acknowledgement tells the queue the consumer is finished. Acknowledging before the required durable result exists can lose work if the consumer crashes.",
+        "This exercise is a small pure JavaScript model. Its inputs are supplied directly; it does not receive live HTTP requests, operate a database, or deploy a service.",
+        "Worked example:\n\n```javascript\nfunction shouldAcknowledge(job) {\n  return job.saved === true;\n}\nconsole.log(shouldAcknowledge({\"saved\":false}));\n```\nThe returned value is false.",
+        "The strict comparison accepts only a confirmed saved flag in this model. It does not perform persistence. Real consumers also need to tolerate repeated delivery when a save succeeds but acknowledgement is lost.",
+        "Read the function call shouldAcknowledge({\"saved\":false}) from the inside out: the arguments supply the inputs, shouldAcknowledge runs the body once, and return sends its result back to the caller. console.log displays that result; it does not change it.",
+        "The result was saved, but acknowledgement was lost. What must a robust consumer expect? Delivery and persistence are separate events. Idempotent processing handles a repeated job safely."
+      ],
+      "after": [
+        "A queue holds jobs until a worker can handle them. A worker is a program that takes a job and does its work.",
+        "An acknowledgement tells the queue that the worker is finished. Send it after the required result is saved so it can survive a restart.",
+        "This job's result has not been saved yet.\n\n```javascript\nfunction shouldAcknowledge(job) {\n  return job.saved === true;\n}\nconsole.log(shouldAcknowledge({\"saved\":false}));\n```\n\nThe output is false. The worker should not acknowledge it yet.",
+        "=== true accepts only the boolean true. Text such as \"true\" is not enough. This helper assumes the saved flag comes from a reliable check.",
+        "Saving and acknowledging are separate steps. If saving succeeds but the acknowledgement gets lost, the queue may send the same job again. The worker must handle that retry without doing the same change twice.",
+        "Set saved to true. The helper returns true. It makes a decision only; it neither saves the result nor sends an acknowledgement."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the contract and trace the worked example.",
+        "Replace the unfinished return in the starter.",
+        "Run the changed-input checks.",
+        "Explain the boundary in the understanding question."
+      ],
+      "after": [
+        "Read the job's saved flag.",
+        "Return whether it is exactly true.",
+        "Run the checks with true, false, and other values.",
+        "Explain what happens if an acknowledgement gets lost."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "The strict comparison accepts only a confirmed saved flag in this model. It does not perform persistence. Real consumers also need to tolerate repeated delivery when a save succeeds but acknowledgement is lost."
+      ],
+      "after": [
+        "Use job.saved === true.",
+        "A value that looks like true is not necessarily the boolean true."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "The result was saved, but acknowledgement was lost. What must a robust consumer expect?",
+        "choices": [
+          "The queue can never redeliver",
+          "The same job may arrive again",
+          "The saved result is automatically erased"
+        ],
+        "answer": 1,
+        "explanation": "Delivery and persistence are separate events. Idempotent processing handles a repeated job safely."
+      },
+      "after": {
+        "question": "A worker saved its result, but its acknowledgement got lost. What should it be ready for?",
+        "choices": [
+          "The queue can never send that job again.",
+          "The same job may arrive again.",
+          "The saved result is automatically erased."
+        ],
+        "answer": 1,
+        "explanation": "The queue may not know the job finished. Repeated delivery must not repeat a change that should happen only once."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Runs as a pure JavaScript function in the browser. Passing checks does not establish live HTTP behavior, database durability, concurrency safety, authentication security, queue delivery guarantees, or production readiness.",
+      "after": "This browser helper checks a supplied flag. It does not save data or communicate with a real queue."
+    }
+  ],
+  "headings": [
+    "A queue holds jobs",
+    "Confirm the work is saved",
+    "One example",
+    "Accept only true",
+    "Handle a repeated job",
+    "Try a saved result"
+  ],
+  "project": {
+    "title": "Acknowledge after durable work",
+    "task": "Complete shouldAcknowledge(job). Return true only when job.saved is the boolean true. Leave the input unchanged.",
+    "done_when": "The checks pass for boolean true and rejected values. Explain why a worker must also be ready for a repeated job."
+  }
+}

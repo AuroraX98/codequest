@@ -1,0 +1,94 @@
+{
+  "lesson": "cpp-31",
+  "position": 31,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Replace std::move(p) with p when initializing q. What happens?",
+      "after": "Give one smart pointer responsibility for an object's cleanup."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "std::unique_ptr<T> from <memory> owns one object and destroys it automatically. std::make_unique<int>(7) constructs a heap-allocated int and returns its owner. Prefer this to raw owning new/delete.",
+        "unique_ptr cannot be copied. Moving it transfers ownership and specifically leaves the source pointer empty. Test a pointer before dereferencing it; *q accesses its owned int.",
+        "In a condition a nonempty smart pointer is true. The comparison p == nullptr checks whether p is empty; this check does not access a missing object.",
+        "Complete local C++ example; the app itself does not execute it:\n```cpp\n#include <iostream>\n#include <memory>\n#include <utility>\nint main() {\n    auto p = std::make_unique<int>(7);\n    auto q = std::move(p);\n    std::cout << std::boolalpha << (p == nullptr) << '\\n';\n    if (q) std::cout << *q << '\\n';\n}\n\n```",
+        "Expected output or behavior: true\n7\n. Local compiler test evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Change the owned value after transferring it, using only q and checking q first. You may trace this without a compiler; finishing the reading is not proof of a local run."
+      ],
+      "after": [
+        "std::unique_ptr owns an object and destroys it when ownership ends. std::make_unique<int>(7), from <memory>, creates an integer in separately managed storage and returns its owner. You do not need to write new and delete yourself.",
+        "A unique_ptr cannot be copied. Moving it transfers ownership to the destination. Unlike a general moved-from value, a moved-from unique_ptr is specifically guaranteed to be empty.",
+        "if (q) checks whether q has a target. *q then reaches the owned integer. Comparing p with nullptr only checks whether p is empty; it does not try to read a target.",
+        "Follow ownership from p to q before either pointer is checked.\n\n```cpp\n#include <iostream>\n#include <memory>\n#include <utility>\nint main() {\n    auto p = std::make_unique<int>(7);\n    auto q = std::move(p);\n    std::cout << std::boolalpha << (p == nullptr) << '\\n';\n    if (q) std::cout << *q << '\\n';\n}\n\n```",
+        "The program prints true, then 7 on the next line. p is empty after the move. q owns the integer and can read it after the check.",
+        "Only q owns the integer after this transfer. When q is destroyed, it also destroys the owned integer. An observing raw pointer would not take on that cleanup responsibility."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain why, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "unique_ptr means one owner. A move hands that ownership to another pointer."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Replace std::move(p) with p when initializing q. What happens?",
+        "choices": [
+          "Both owners safely share the int",
+          "Compilation fails because unique_ptr is noncopyable",
+          "p is copied and becomes empty"
+        ],
+        "answer": 1,
+        "explanation": "Copy construction is deleted. Shared ownership requires a different, deliberate type, not a copied unique_ptr."
+      },
+      "after": {
+        "question": "Replace std::move(p) with p when creating q. What happens?",
+        "choices": [
+          "Both pointers share ownership of the integer.",
+          "The compiler rejects the attempt to copy a unique_ptr.",
+          "p is copied and automatically becomes empty."
+        ],
+        "answer": 1,
+        "explanation": "unique_ptr forbids copying. Ownership can be transferred with a move, but it cannot be duplicated this way."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "C++ Core v1, standard C++23 features checked against the available GCC14.2 implementation. This app provides concept reading and an understanding check, not a C++ browser runner. Local example tests are separate evidence and do not certify learner mastery.",
+      "after": "The browser shows C++ code and checks your understanding; it does not run C++. Optional local examples use C++23."
+    }
+  ],
+  "headings": [
+    "Create one owner",
+    "Transfer ownership",
+    "Check before reading",
+    "One example",
+    "What appears",
+    "One owner at a time"
+  ],
+  "project": {
+    "title": "Own one object with unique_ptr",
+    "task": "Trace which pointer owns the integer before and after the move.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local C++ example is optional."
+  }
+}

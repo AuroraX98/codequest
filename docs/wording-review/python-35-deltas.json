@@ -1,0 +1,97 @@
+{
+  "lesson": "python-35",
+  "sourceHash": "ae643e51f15bf7fb1bee792eae550125a83c2790ff3679906bb6c241e357cc29",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Define a dataclass Task with title: str and tags: list. Creating Task(\"Read\") should give a new empty tags list for that instance. Two tasks must not share the same tags list.",
+      "after": "Create a Task dataclass that gives each task its own empty tags list by default."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A dataclass can generate routine record methods, including initialization, from declared fields.",
+        "A field annotation describes an intended type. Ordinary Python does not automatically enforce it at runtime.",
+        "This small record generates its initializer.\n```python\nfrom dataclasses import dataclass\n@dataclass\nclass Point:\n    x: int\n    y: int\n\npoint = Point(2, 3)\nprint(point.x)\n```",
+        "The @dataclass line applies a decorator supplied by the standard library. You use it here without implementing a decorator yourself.",
+        "A mutable default needs a new value for each instance. field(default_factory=list) calls list to create a fresh list when no value is supplied.",
+        "This separate example gives each box its own items.\n```python\nfrom dataclasses import dataclass, field\n@dataclass\nclass Box:\n    items: list = field(default_factory=list)\n```\n\nHere are actual instance calls that reveal the factory effect. field takes the default_factory keyword and returns field configuration for dataclass, not an already-created list. The dataclass calls that factory separately when constructing each Box without an items argument.\n```python\nfrom dataclasses import dataclass, field\n\n@dataclass\nclass Box:\n    items: list = field(default_factory=list)\n\nfirst = Box()\nsecond = Box()\nfirst.items.append(\"Map\")\nprint(first.items)\nprint(second.items)\n```\nIt prints ['Map'] then []. append receives one item and adds it to the first list in place; the second list remains empty.",
+        "Pass list itself as the factory, not list(). The factory must be callable so a new value can be made for each instance.",
+        "Changing the first task’s tags should not change a second task. Test that behavior rather than only checking the displayed class name.",
+        "Type annotations are useful descriptions for tools, but validating outside data still requires explicit checks."
+      ],
+      "after": [
+        "A dataclass helps you make objects that mainly hold data, called records. You list their fields, and it writes common methods for you, including the setup method.",
+        "A field annotation, such as `title: str`, describes the intended type. Ordinary Python does not automatically check that type while the program runs.",
+        "This small record gets its setup method from `@dataclass`.\n```python\nfrom dataclasses import dataclass\n@dataclass\nclass Point:\n    x: int\n    y: int\n\npoint = Point(2, 3)\nprint(point.x)\n```\nIt prints `2`, the saved value of `x`.",
+        "A decorator adds or changes a class or function's behavior. Here, `@dataclass` uses a ready-made decorator from Python's standard library to add the record methods. You do not need to write the decorator yourself.",
+        "A default list should be created separately for each instance so changes stay separate. `field(default_factory=list)` calls `list` to make a fresh list when no value is supplied. If you supply a list, that list is used.",
+        "A factory is something Python calls to make a value. `field(default_factory=list)` tells the dataclass to call `list` for each Box made without an `items` value.\n\nWatch the first box get an item while the second stays empty.\n```python\nfrom dataclasses import dataclass, field\n\n@dataclass\nclass Box:\n    items: list = field(default_factory=list)\n\nfirst = Box()\nsecond = Box()\nfirst.items.append(\"Map\")\nprint(first.items)\nprint(second.items)\n```\nIt prints `['Map']` then `[]`. `append` receives one item and adds it to the first list in place. The second list stays empty.",
+        "Pass `list` itself as the factory, not `list()`. Python must be able to call the factory to make a fresh value for each instance. `list()` would create a list immediately instead.",
+        "Changing the first task’s tags should not change a second task’s tags. Test that behavior rather than only checking the displayed class name.",
+        "Type notes help tools check your code. To check data coming from outside the program, you still need to write checks that run on that data."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the requirement.",
+        "Make one change to the starter.",
+        "Run the checks.",
+        "Explain why a changed input produces its result."
+      ],
+      "after": [
+        "Read the requirement: in main.py, Task needs title: str and tags: list. Task(\"Read\") must start with its own empty tags list.",
+        "Add tags: list = field(default_factory=list) after title in the starter.",
+        "Run the checks: Task(\"Explore\").title must equal \"Explore\", and Task(\"Read\").tags must equal [].",
+        "Check that Task(\"A\").tags and Task(\"B\").tags are different list objects.",
+        "Check that Task(\"Draw\", [\"art\"]).tags equals [\"art\"], so supplied tags remain available.",
+        "Create two tasks, change the first task’s tags, and check that the second task’s tags stay unchanged. Explain how the factory makes this happen."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Why use field(default_factory=list) instead of giving every task one shared list object?",
+        "choices": [
+          "Each instance needs its own newly created list.",
+          "The factory validates all future tag values as text.",
+          "The factory makes lists immutable."
+        ],
+        "answer": 0,
+        "explanation": "A factory supplies a fresh default for each instance. It neither freezes the list nor performs automatic runtime validation of tag elements."
+      },
+      "after": {
+        "question": "Why use field(default_factory=list) instead of giving every task one shared list object?",
+        "choices": [
+          "Each instance needs its own newly created list.",
+          "The factory checks that all future tag values are text.",
+          "The factory makes lists unchangeable."
+        ],
+        "answer": 0,
+        "explanation": "A factory supplies a fresh default for each instance. It does not make the list unchangeable or automatically check the types of its items."
+      }
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Import field as well as dataclass.",
+        "The factory receives the list callable, without parentheses.",
+        "Keep title before the field with a default."
+      ],
+      "after": [
+        "Import field as well as dataclass.",
+        "Pass list itself as the factory, without parentheses.",
+        "Keep title before the field with a default."
+      ]
+    }
+  ],
+  "reviewNotes": [
+    "Kept all nine sections in their original order.",
+    "Explained decorator and factory in simple words.",
+    "Preserved the existing code and described output.",
+    "Kept project values, independent defaults, and supplied tags behavior.",
+    "Preserved quiz answer index 0.",
+    "Explained records and automatic setup directly, removed the duplicate Box snippet, and added the Point output."
+  ]
+}

@@ -1,0 +1,88 @@
+{
+  "lesson": "sql-39",
+  "position": 28,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Create allowed from the supplied tables. Include only nonmissing candidate IDs with no equal ID in blocked. Preserve both source tables.",
+      "after": "Find unblocked IDs without letting missing values confuse the check."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "WHERE keeps true conditions, not false or NULL. With a blocked list containing 2 and NULL, 1 NOT IN that list is NULL: the missing entry might match. A matching value 2 gives false. These are different reasons for excluding a row.",
+        "NOT EXISTS asks whether the inner query finds any matching row. The correlated condition b.id=c.id refers to the current outer candidate. SELECT 1 supplies an irrelevant constant because EXISTS cares about row existence, not its selected value. With ordinary equality, NULL never equals NULL; therefore a missing candidate has no matching row and passes NOT EXISTS. Add c.id IS NOT NULL when your policy forbids missing candidate IDs. These operators express different questions, not interchangeable spellings.",
+        "\n```sql\nCREATE TABLE candidates(id INTEGER);\nCREATE TABLE blocked(id INTEGER);\nINSERT INTO candidates VALUES(1),(2),(NULL);\nINSERT INTO blocked VALUES(2),(NULL);\nSELECT c.id\nFROM candidates AS c\nWHERE NOT EXISTS (SELECT 1 FROM blocked AS b WHERE b.id=c.id)\nORDER BY c.id;\n```\nThe result contains NULL and 1, ordered with NULL first in SQLite’s ascending order. Candidate 2 has a match and is excluded.",
+        "\n```sql\nCREATE TABLE candidates(id INTEGER);\nCREATE TABLE blocked(id INTEGER);\nINSERT INTO candidates VALUES(1),(2),(NULL);\nINSERT INTO blocked VALUES(2),(NULL);\nSELECT id\nFROM candidates\nWHERE id NOT IN (SELECT id FROM blocked)\nORDER BY id;\n```\nThere are no result rows. Neither 1 nor NULL produces true, and 2 is a known blocked value.",
+        "Optional practice: remove the NULL from blocked in a fresh setup. Predict the NOT IN result, then separately decide whether missing candidate IDs should ever be returned."
+      ],
+      "after": [
+        "`NOT IN` can give an unknown answer when its list contains NULL. If the blocked list has 2 and NULL, SQL cannot say for sure that 1 is absent. WHERE does not keep an unknown answer.",
+        "`NOT EXISTS` asks a different question: did the inner query find an equal row? A missing blocked value does not equal a candidate under ordinary `=` comparison.",
+        "Run this example in a fresh database:\n```sql\nCREATE TABLE candidates(id INTEGER);\nCREATE TABLE blocked(id INTEGER);\nINSERT INTO candidates VALUES (1), (2), (NULL);\nINSERT INTO blocked VALUES (2), (NULL);\nSELECT c.id\nFROM candidates AS c\nWHERE c.id IS NOT NULL\n  AND NOT EXISTS (\n    SELECT 1 FROM blocked AS b WHERE b.id = c.id\n  )\nORDER BY c.id;\n```\nOnly `1` is returned. ID 2 is blocked, and the missing candidate is excluded explicitly.",
+        "NOT EXISTS alone would also keep the NULL candidate: ordinary equality finds no row equal to it. The separate IS NOT NULL check states that missing candidate IDs are not allowed.",
+        "Create `allowed` from the supplied tables. Keep only nonmissing candidate IDs with no equal ID in blocked. Leave both source tables unchanged. NOT IN and NOT EXISTS are not always interchangeable."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the small example and explain its inputs and effects.",
+        "Complete the starter for this lesson.",
+        "Run the behavior checks, then predict a changed case."
+      ],
+      "after": [
+        "Exclude candidates whose id IS NULL.",
+        "Use NOT EXISTS to check for an equal blocked ID.",
+        "Save the remaining IDs in allowed."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Trace the supplied rows and resulting rows before changing the query."
+      ],
+      "after": [
+        "Correlate b.id with the current c.id.",
+        "A NULL in blocked must not hide a known allowed ID.",
+        "Decide what missing candidates should do explicitly."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "blocked contains only NULL; candidates contains 7. Which condition selects 7?",
+        "choices": [
+          "Neither condition",
+          "id NOT IN (SELECT id FROM blocked)",
+          "NOT EXISTS with b.id=c.id"
+        ],
+        "answer": 2,
+        "explanation": "No equality match exists, so NOT EXISTS is true. NOT IN is unknown because its list contains NULL."
+      },
+      "after": {
+        "question": "blocked contains only NULL, and a candidate has ID 7. Which check keeps 7?",
+        "choices": [
+          "Neither check",
+          "id NOT IN (SELECT id FROM blocked)",
+          "NOT EXISTS using b.id = c.id"
+        ],
+        "answer": 2,
+        "explanation": "There is no equal blocked row, so NOT EXISTS is true. NOT IN gives an unknown answer."
+      }
+    }
+  ],
+  "headings": [
+    "Notice the NOT IN trap",
+    "Ask whether an equal row exists",
+    "Choose a known unblocked ID",
+    "Handle a missing candidate separately",
+    "Build the allowed list"
+  ],
+  "project": {
+    "title": "Avoid nullable NOT IN surprises",
+    "task": "Create allowed with nonmissing candidate IDs that have no equal ID in blocked.",
+    "done_when": "The required IDs remain even when blocked contains NULL, missing candidates are excluded, and both source tables stay unchanged."
+  }
+}

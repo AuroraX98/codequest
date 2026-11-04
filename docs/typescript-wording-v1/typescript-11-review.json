@@ -1,0 +1,98 @@
+{
+  "lesson": "typescript-11",
+  "position": 28,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Update editable profile fields without changing the ID or mutating the original object.",
+      "after": "Allow small text updates while keeping the profile's ID unchanged."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "Pick creates a type containing only chosen properties from another type.",
+        "```typescript\ninterface Card { id: number; title: string; note: string }\ntype CardText = Pick<Card, \"title\" | \"note\">;\n```\nCardText describes title and note, not id. It does not remove fields from an existing runtime object.",
+        "Partial makes every property of a type optional. A patch can then describe only the fields being changed.",
+        "```typescript\ntype TextPatch = Partial<{title: string; note: string}>;\nconst patch: TextPatch = {note: \"Updated\"};\n```\nLeaving title out means this patch supplies no new title.",
+        "Readonly prevents assignment through a typed reference. It is a shallow compiler restriction, not Object.freeze.",
+        "For the exercise, ProfilePatch permits name and bio. Return a new profile with supplied text fields applied, keep omitted fields, and preserve id. Treat an explicit undefined field like an omitted field; an empty string is a deliberate update.",
+        "Use the allowed fields explicitly rather than assuming a type annotation removes unexpected runtime fields."
+      ],
+      "after": [
+        "Pick makes a type from selected properties of another type. It describes which properties are allowed; it does not remove fields from an existing object.",
+        "This update type allows only title and note, and either can be omitted.\n```typescript\ninterface Card { id: number; title: string; note: string; }\ntype TextPatch = Partial<Pick<Card, \"title\" | \"note\">>;\nconst patch: TextPatch = { note: \"Updated\" };\n```\nThe ID is not an editable field in this type.",
+        "Partial makes each property optional. A patch is a small set of changes, so it can contain only the fields you want to update.",
+        "The example supplies a new note but no title. Applying that update should keep the old title. A missing property does not mean delete the old value.",
+        "Readonly prevents assigning to a property through that type. It is a shallow checking rule, so it does not freeze nested objects while the program runs.",
+        "ProfilePatch allows name and bio. Return a new profile with those supplied text updates, keep the ID, and keep omitted values. In this exercise, undefined also means keep the old value. Empty text is a real update.",
+        "Read and copy only the allowed fields. A type description does not strip unexpected fields from data while JavaScript runs."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read each allowed patch field.",
+        "Return a new object and preserve the original ID."
+      ],
+      "after": [
+        "Read the allowed name and bio updates.",
+        "Keep old text when an update is missing or undefined.",
+        "Return a new profile with the original ID and run the checks."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Read each allowed patch field.",
+        "Return a new object and preserve the original ID."
+      ],
+      "after": [
+        "Keep empty strings as deliberate updates.",
+        "Copy the ID from the original profile, not from the patch."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Pick<Profile, \"name\" | \"bio\"> is a type. Does it remove id from an existing object at runtime?",
+        "choices": [
+          "No; runtime code must choose which fields to copy",
+          "Yes; it deletes id as soon as the file runs",
+          "Yes; Partial then deletes every omitted field"
+        ],
+        "answer": 0,
+        "explanation": "Utility types describe allowed shapes during typechecking. They do not execute data transformations or sanitize external objects."
+      },
+      "after": {
+        "question": "Does Pick<Profile, \"name\" | \"bio\"> remove id from an actual object?",
+        "choices": [
+          "No, running code must choose what to copy",
+          "Yes, it deletes id when the file runs",
+          "Yes, Partial deletes every omitted field"
+        ],
+        "answer": 0,
+        "explanation": "These tools describe types. They do not change actual objects."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Strict compiler tests required for forbidden patch ID and readonly writes. Runtime unexpected-ID test intentionally supplies a value JavaScript may receive despite compile-time types. Partial permits undefined under this runner configuration; behavior explicitly preserves old text for undefined.",
+      "after": "This lesson's settings permit explicit undefined in the patch. The requested behavior keeps the old text for that value and rejects ID updates."
+    }
+  ],
+  "headings": [
+    "Choose the editable fields",
+    "Build a small update type",
+    "Allow fields to be omitted",
+    "Omitted means no new value",
+    "Readonly is a type rule",
+    "Apply the profile update",
+    "Copy only allowed fields"
+  ],
+  "project": {
+    "title": "Describe a small allowed update",
+    "task": "Update only editable profile text, keeping the ID and original object unchanged.",
+    "done_when": "Allowed updates work, missing and undefined values keep old text, empty text is preserved, and the checks pass."
+  }
+}

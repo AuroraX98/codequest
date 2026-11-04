@@ -1,0 +1,95 @@
+{
+  "lesson": "typescript-14",
+  "position": 33,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Validate a mixed palette while retaining useful per-field types.",
+      "after": "Check an object's shape while keeping useful types for each field."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A type annotation gives a variable the declared type. A satisfies expression checks compatibility while retaining the expression's resulting specific type.\n\nRecord<Keys, Value> describes object properties: each key named by Keys must have a value compatible with Value. A union of literal keys requires those particular names; Record<string, Value> instead describes string-named properties generally. This is a compile-time type, not a runtime object constructor. A string’s toUpperCase() method returns uppercase text without changing the original string.",
+        "```typescript\ntype Paint = string | [number, number, number];\nconst broad: Record<string, Paint> = {sky: \"blue\"};\n// broad.sky could be text or a tuple, so narrow it before string-only use.\nconst precise = {sky: \"blue\"} satisfies Record<string, Paint>;\nconsole.log(precise.sky.toUpperCase());\n```",
+        "satisfies is checked by TypeScript and removed from runtime JavaScript. It does not validate incoming data.",
+        "It is not a promise to preserve every literal unchanged. Contextual typing still matters; use precise compiler checks instead of assuming all values remain literal types.",
+        "For the exercise, create palette with calm text \"mint\" and alert tuple [255, 80, 0]. Check it satisfies Record<\"calm\" | \"alert\", Paint>, then return the uppercase calm name and the alert's first channel.",
+        "The palette must keep calm as text and alert as a three-number tuple. A precise safe annotation can meet that contract without using the same satisfies spelling."
+      ],
+      "after": [
+        "Satisfies checks whether a value fits a type without simply replacing it with that whole type. Record<Keys, Value> describes properties with the named keys and allowed value type. It does not create an object.",
+        "Paint allows text or a three-number tuple. This check still lets TypeScript know that sky is text.\n```typescript\ntype Paint = string | [number, number, number];\nconst precise = { sky: \"blue\" } satisfies Record<string, Paint>;\nconsole.log(precise.sky.toUpperCase());\n```\nThe output is BLUE. ToUpperCase returns uppercase text without changing the original string.",
+        "Satisfies is removed before JavaScript runs. It does not inspect incoming data or freeze the object.",
+        "Satisfies does not guarantee that every field keeps its exact literal type. The type used for the check can still help shape the inferred result.",
+        "Create palette with calm as the text mint and alert as the tuple [255, 80, 0]. Check it against Record<\"calm\" | \"alert\", Paint>. Produce the uppercase calm name and the first alert number.",
+        "Calm should remain usable as text. Alert should remain a three-number tuple. A safe, precise written type can also meet these requirements."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Use satisfies to check the required names and value shapes.",
+        "Use each field according to its retained type."
+      ],
+      "after": [
+        "Create the required calm and alert fields.",
+        "Check their names and value shapes with satisfies.",
+        "Use the text method and tuple position, then run the checks."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Use satisfies to check the required names and value shapes.",
+        "Use each field according to its retained type."
+      ],
+      "after": [
+        "The two required keys are calm and alert.",
+        "Keep calm as text and alert as a tuple instead of broadening both to the full Paint union."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Why can palette.calm.toUpperCase() work after this satisfies check without narrowing calm from Paint?",
+        "choices": [
+          "The checked expression retains calm as a string instead of replacing its type with the whole Paint union",
+          "satisfies converts every tuple into text",
+          "satisfies inserts a runtime if statement"
+        ],
+        "answer": 0,
+        "explanation": "The compatibility check does not replace each field with the broad union annotation. It preserves the useful field-specific result; no runtime conversion happens."
+      },
+      "after": {
+        "question": "Why can calm use toUpperCase after this satisfies check?",
+        "choices": [
+          "Its useful string type is kept",
+          "Satisfies turns every tuple into text",
+          "Satisfies adds a running if statement"
+        ],
+        "answer": 0,
+        "explanation": "The check keeps the useful field-specific type. It does not convert values."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Supported by actual TypeScript 5.9.3 runner. Full compile tests prove required keys, tuple length and string operations; no claim that satisfies freezes values or preserves every literal.",
+      "after": "The checks cover required keys, tuple length, and text operations. Satisfies does not freeze values or preserve every exact literal."
+    }
+  ],
+  "headings": [
+    "Check without replacing the whole type",
+    "Keep a text field as text",
+    "The check is not running validation",
+    "Literal types still need care",
+    "Build the mixed palette",
+    "Use each field's own type"
+  ],
+  "project": {
+    "title": "Check a shape without widening every field",
+    "task": "Check the mixed palette's shape while keeping each field's useful type.",
+    "done_when": "Calm supports text operations, alert keeps three number positions, and the checks pass."
+  }
+}

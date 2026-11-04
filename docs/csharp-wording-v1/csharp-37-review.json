@@ -1,0 +1,94 @@
+{
+  "lesson": "csharp-37",
+  "position": 37,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Remove only : IScored from Counter, leaving its public ReadScore method. Will Read<Counter> still compile?",
+      "after": "Require a generic input type to provide a known action."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A generic constraint states what the type argument must support. where T : IScored requires T to implement the IScored interface.",
+        "Because of that constraint, Read<T> can safely call item.ReadScore(). Without a suitable constraint, an arbitrary T is not known to provide that method.",
+        "Read<Counter> accepts Counter because it implements the contract. Read<string> would fail to compile even if you hoped the string represented a score. Constraints do not add methods to the supplied type. A class with a same-named method but no declaration that it implements IScored does not satisfy this interface constraint.",
+        "Complete local C# example; the app does not execute it:\n```csharp\nSystem.Console.WriteLine(Read<Counter>(new Counter()));\nint Read<T>(T item) where T : IScored { return item.ReadScore(); }\ninterface IScored { int ReadScore(); }\nclass Counter : IScored\n{\n    public int ReadScore() { return 6; }\n}\n```",
+        "Expected behavior from this example: 6. This expected result is a reasoned prediction until a compiler test is recorded.",
+        "Optional local transfer task: Implement a second IScored class and pass it to the same generic Read function. Use a .NET 10 console project with C# 14; reading completion does not verify this local work."
+      ],
+      "after": [
+        "A constraint is a rule for a generic type argument. It tells C# what the chosen type must support.",
+        "where T : IScored requires T to implement IScored. That interface promises a ReadScore method that returns an int.",
+        "Because the constraint guarantees the method, Read can call item.ReadScore(). Without that rule, C# would not know that every allowed T has this method.",
+        "Follow Counter as the chosen type for Read.\n\n```csharp\nSystem.Console.WriteLine(Read<Counter>(new Counter()));\nint Read<T>(T item) where T : IScored { return item.ReadScore(); }\ninterface IScored { int ReadScore(); }\nclass Counter : IScored\n{\n    public int ReadScore() { return 6; }\n}\n```",
+        "The program prints 6. Counter implements IScored, and its ReadScore method returns 6.",
+        "A class must actually declare that it implements IScored. Merely having a method named ReadScore does not satisfy this constraint. C# checks that rule before running the program."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Trace the changed case before choosing an answer.",
+        "Explain the consequence, then optionally try the local transfer task."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Look at the exact type rule after where."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Remove only : IScored from Counter, leaving its public ReadScore method. Will Read<Counter> still compile?",
+        "choices": [
+          "Yes, any matching method name satisfies an interface.",
+          "No: Counter no longer declares the required interface contract.",
+          "Yes, generic constraints only check values at runtime."
+        ],
+        "answer": 1,
+        "explanation": "The constraint requires the type to implement IScored, not merely contain a similarly named method. Removing that declaration breaks the compile-time contract even though ReadScore still exists."
+      },
+      "after": {
+        "question": "Remove : IScored from Counter but keep its ReadScore method. Does Read<Counter> compile?",
+        "choices": [
+          "Yes, the matching method name is enough.",
+          "No, Counter no longer implements the required interface.",
+          "Yes, constraints are checked only while running."
+        ],
+        "answer": 1,
+        "explanation": "The constraint requires IScored, not just a method with the same name."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "C#14/.NET10 core syllabus. Concept-mode reading and understanding check; no in-app C# execution and no claim of mastery. Full example and optional local transfer task are supplied. Actual compiler validation, if available, is reported separately.",
+      "after": "The browser shows C# code and checks your understanding; it does not run C#. Optional local examples use a .NET 10 console project with C# 14."
+    }
+  ],
+  "headings": [
+    "Set a rule for the type",
+    "Require an interface",
+    "Use the promised method",
+    "One example",
+    "What appears",
+    "A matching method name is not enough"
+  ],
+  "project": {
+    "title": "Constrain a generic parameter",
+    "task": "Follow how a generic constraint guarantees that ReadScore is available.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local C# example is optional."
+  }
+}

@@ -1,0 +1,86 @@
+{
+  "lesson": "react-32",
+  "position": 24,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Wire the ref to the input and focus that input when Focus topic is clicked.",
+      "after": "Use a ref to reach an input and move keyboard focus to it."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A ref is a stable box for a value that React does not use to decide what to render. React.useRef(null) returns an object with a current property. Unlike a state setter, changing current does not request a render. Call the Hook unconditionally at the top of the component.",
+        "Passing ref={field} asks React to put the input DOM node into field.current after committing it, and clear it when removed. The click handler can call that node’s focus() method to move keyboard focus. Optional chaining ?. skips the call if current is null. Do not read or change DOM focus during render. blur() in the changed example removes focus from that node; both DOM methods return undefined. A real button interaction can itself move focus; the supplied synthetic .click() check isolates the handler operation, not physical keyboard or pointer interaction. The frame calls App as the root component with no supplied props. App returns the JSX tree; define it here without calling App() yourself or adding imports/createRoot.",
+        "```react\nfunction App() {\n  const field = React.useRef(null);\n  function focusField() {\n    field.current?.focus();\n  }\n  return <main>\n    <label htmlFor=\"study-topic\">Study topic</label>\n    <input id=\"study-topic\" ref={field} />\n    <button onClick={focusField}>Focus topic</button>\n  </main>;\n}\n```",
+        "```react\nfunction App() {\n  const field = React.useRef(null);\n  function focusField() {\n    field.current?.blur();\n  }\n  return <main>\n    <label htmlFor=\"study-topic\">Study topic</label>\n    <input id=\"study-topic\" ref={field} />\n    <button onClick={focusField}>Leave topic</button>\n  </main>;\n}\n```\nThe changed handler removes focus instead of putting it on the input. Try focusing the field first, then activating the button. The visible label association remains unchanged.",
+        "Wire the ref to the input and focus that input when Focus topic is clicked. These finite behavior checks do not prove that every possible implementation is correct. Optional local practice: change one input, predict the screen, then run it."
+      ],
+      "after": [
+        "A ref is a small holder with a `current` property. `useRef(null)` creates it. Updating a ref does not ask React to redraw the screen.",
+        "`ref={field}` asks React to put the actual input element in `field.current` after it is on the page. React clears it when the element is removed. A click handler can then use the element's `focus()` method.",
+        "```react\nfunction App() {\n  const field = React.useRef(null);\n  function focusField() {\n    field.current?.focus();\n  }\n  return (\n    <main>\n      <label htmlFor=\"study-topic\">Study topic</label>\n      <input id=\"study-topic\" ref={field} />\n      <button onClick={focusField}>Focus topic</button>\n    </main>\n  );\n}\n```\nClick Focus topic. Keyboard focus moves to the input, ready for typing. `?.` skips the call if the ref is still null.",
+        "`focus()` moves focus to an element. `blur()` removes focus from it. Use these actions in response to an event or after React has added the element, not during rendering.",
+        "Connect the ref to the input and call `focus()` after the button is clicked. Keep the label connected through its matching `htmlFor` and `id`. Check the visible focus as well as running the checks."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the small example and explain its inputs and effects.",
+        "Complete the starter for this lesson.",
+        "Run the behavior checks, then predict a changed case."
+      ],
+      "after": [
+        "Create the ref at the top of App.",
+        "Attach it to the input.",
+        "Make Focus topic focus that input and run the checks."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Trace the visible input, event and resulting screen before changing the code."
+      ],
+      "after": [
+        "The actual input is in field.current after React adds it to the page."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "A ref’s current property is changed. Does that alone ask React to rerender?",
+        "choices": [
+          "Yes, every ref write rerenders immediately.",
+          "No; refs cannot contain DOM nodes.",
+          "No; use state for values that should drive a new screen."
+        ],
+        "answer": 2,
+        "explanation": "A ref keeps a mutable value without state-update scheduling. React can still use a ref to give event code a committed DOM node."
+      },
+      "after": {
+        "question": "Does changing a ref's current value by itself ask React to redraw?",
+        "choices": [
+          "Yes, every change redraws immediately.",
+          "No, because refs cannot hold page elements.",
+          "No. Use state for values that should update the screen."
+        ],
+        "answer": 2,
+        "explanation": "A ref keeps a value without requesting a render. It can still point to an input for an event handler to use."
+      }
+    }
+  ],
+  "headings": [
+    "Keep a reference to an element",
+    "Use the element after it exists",
+    "Focus one input",
+    "Move focus deliberately",
+    "Build your focus button"
+  ],
+  "project": {
+    "title": "A ref reaches the committed input",
+    "task": "Attach the ref to the input. Make Focus topic move keyboard focus to that input.",
+    "done_when": "Clicking the button focuses the correctly labeled input."
+  }
+}

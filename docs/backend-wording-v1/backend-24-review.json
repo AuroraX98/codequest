@@ -1,0 +1,96 @@
+{
+  "lesson": "backend-24",
+  "position": 10,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Implement deleteReply(removed). Match the worked contract and the changed-input checks without modifying the supplied input values.",
+      "after": "Use a successful deletion response that has no body."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A successful deletion may use status 204, which has no response body. A missing record can use a different status under the chosen API contract.",
+        "This exercise is a small pure JavaScript model. Its inputs are supplied directly; it does not receive live HTTP requests, operate a database, or deploy a service.",
+        "Worked example:\n\n```javascript\nfunction deleteReply(removed) {\n  return removed ? {status:204,body:null} : {status:404,body:{error:\"Not found\"}};\n}\nconsole.log(deleteReply(true));\n```\nThe returned value is {\"status\":204,\"body\":null}.",
+        "The conditional expression selects the status and body together. null here models the absence of a body; a real adapter must not serialize the word null into a 204 response.",
+        "Read the function call deleteReply(true) from the inside out: the arguments supply the inputs, deleteReply runs the body once, and return sends its result back to the caller. console.log displays that result; it does not change it.",
+        "Should the real HTTP adapter send the JSON text null for the 204 branch? The helper uses null as a model marker. HTTP 204 means there is no response content."
+      ],
+      "after": [
+        "A response status is a number describing what happened to a request. This rule uses 204 when a record was removed successfully. 204 means success with no response content.",
+        "A response body holds content sent back to the caller. A real 204 response has no body. In this small model, body: null marks that absence.",
+        "```javascript\nfunction deleteReply(removed) {\n  return removed ? {status:204,body:null} : {status:404,body:{error:\"Not found\"}};\n}\nconsole.log(deleteReply(true));\n```\nThe result is {status: 204, body: null}. The input true means the record was removed.",
+        "When removed is false, this API's rule returns 404 with an error message of Not found. The ? and : choose the status and body together.",
+        "The function creates a JavaScript description of the reply. Code that sends the real HTTP response must turn the 204 case into an empty body. It must not send the JSON text null as its content.",
+        "Complete deleteReply(removed). For true, return status 204 with the no-body marker. For false, return status 404 with {error: \"Not found\"}."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the contract and trace the worked example.",
+        "Replace the unfinished return in the starter.",
+        "Run the changed-input checks.",
+        "Explain the boundary in the understanding question."
+      ],
+      "after": [
+        "Choose the response from the removed Boolean.",
+        "Keep the 204 body's marker null.",
+        "Return the Not found error for the false case."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "The conditional expression selects the status and body together. null here models the absence of a body; a real adapter must not serialize the word null into a 204 response."
+      ],
+      "after": [
+        "Keep the status and body in the same chosen branch.",
+        "body: null represents no content in this model."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Should the real HTTP adapter send the JSON text null for the 204 branch?",
+        "choices": [
+          "No, it should send no body",
+          "Yes, every response needs JSON",
+          "Only if the note was private"
+        ],
+        "answer": 0,
+        "explanation": "The helper uses null as a model marker. HTTP 204 means there is no response content."
+      },
+      "after": {
+        "question": "Should a real 204 response send the JSON text null?",
+        "choices": [
+          "No, it should have no body",
+          "Yes, every response needs JSON",
+          "Only for a private note"
+        ],
+        "answer": 0,
+        "explanation": "204 means there is no response content. The model's null is only a marker."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Runs as a pure JavaScript function in the browser. Passing checks does not establish live HTTP behavior, database durability, concurrency safety, authentication security, queue delivery guarantees, or production readiness.",
+      "after": "This browser exercise describes a reply as an object. Real HTTP sending code must enforce the empty-body rule for 204."
+    }
+  ],
+  "headings": [
+    "Explain a response status",
+    "Keep 204 empty",
+    "Read one example",
+    "Handle a missing record",
+    "Separate the model from HTTP",
+    "Try it yourself"
+  ],
+  "project": {
+    "title": "Represent an empty successful response",
+    "task": "Complete deleteReply(removed) with the specified 204/no-body or 404/Not found result.",
+    "done_when": "Each Boolean input selects the matching status and body description."
+  }
+}

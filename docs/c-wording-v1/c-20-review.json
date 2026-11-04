@@ -1,0 +1,98 @@
+{
+  "lesson": "c-20",
+  "position": 20,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Increase the destination to char text[6]. What prints?",
+      "after": "snprintf limits how much text it stores and tells you how much space the full text would need."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "snprintf receives a destination, its capacity and a format. With positive capacity it writes at most capacity-1 text chars and a terminator, unless an encoding error occurs.",
+        "On success the returned int is the number of chars that would have been written without truncation, excluding the terminator.",
+        "A negative result means an encoding error. An explicit conversion written (size_t)needed converts needed to the size type. Check it is nonnegative before such a conversion when comparing with a capacity.",
+        "A result at least the capacity means text was cut off. Do not silently treat the shortened text as the full message.",
+        "Complete local C example; the app itself does not execute it:\n```c\n#include <stdio.h>\nint main(void) {\n    char text[4];\n    int needed = snprintf(text, sizeof text, \"%s\", \"hello\");\n    if (needed < 0) { return 1; }\n    printf(\"%s %d\\n\", text, needed);\n    return 0;\n}\n\n```",
+        "Expected output or behavior: hel 5. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Test capacities 1,4,and 6. Explain why the returned required length differs from the stored truncated length. You may trace it without a C compiler; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "A buffer is storage used to hold data. Its capacity is how much it can hold. snprintf receives the buffer and its capacity. With positive capacity, it leaves room for the ending zero instead of writing past the limit.",
+        "On a successful call, snprintf returns the full text length it wanted to write. This count excludes the ending zero, even if the buffer was too small for all the text.",
+        "A negative return value means a text-conversion error. Check for that first. If you later convert needed to size_t for a size comparison, do so only after checking it is nonnegative.",
+        "Truncation means part of the text was cut off. If the nonnegative needed length is at least the buffer's capacity, the complete text did not fit. Treat that as shortened text, not a complete message.",
+        "Follow the example one line at a time.\n```c\n#include <stdio.h>\nint main(void) {\n    char text[4];\n    int needed = snprintf(text, sizeof text, \"%s\", \"hello\");\n    if (needed < 0) { return 1; }\n    printf(\"%s %d\\n\", text, needed);\n    return 0;\n}\n\n```",
+        "The buffer has four spaces. It stores hel and an ending zero. The output is hel 5 because the full word hello needs five text spaces.",
+        "Increase the array to six spaces. Then the five letters and the ending zero all fit. The needed text length is still 5."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "The returned length counts the full text, without its ending zero."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Increase the destination to char text[6]. What prints?",
+        "choices": [
+          "hel 5 because snprintf always cuts text.",
+          "hello 5 because all five chars plus terminator fit.",
+          "hello 6 because the return includes the terminator."
+        ],
+        "answer": 1,
+        "explanation": "Capacity 6 accommodates five content chars and one terminator; the required text length remains 5."
+      },
+      "after": {
+        "question": "Increase the array to `char text[6]`. What prints?",
+        "choices": [
+          "hel 5",
+          "hello 5",
+          "hello 6"
+        ],
+        "answer": 1,
+        "explanation": "Six spaces hold hello plus its ending zero. The returned text length remains 5."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "C Core v1 uses a portable C17 baseline supported by the verified compiler. C23 exists but is not claimed fully supported here. The app supplies concept reading and an understanding check, not a C browser runner. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "The browser shows C code and checks your understanding; it does not run C. Optional local examples use C17."
+    }
+  ],
+  "headings": [
+    "Give the writing limit",
+    "Read the needed length",
+    "Check for an error first",
+    "Detect shortened text",
+    "One example",
+    "Read stored and needed lengths",
+    "Make enough room"
+  ],
+  "project": {
+    "title": "Bounded formatting with snprintf",
+    "task": "Explain why making the buffer bigger changes the stored text but not the needed length.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local C example is optional."
+  },
+  "navigationCorrection": "Added a short example introduction so its reviewed heading remains an explicit contents target."
+}

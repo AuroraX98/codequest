@@ -8,6 +8,7 @@ import type {Lesson} from '../lib/types';
 export default function Terminology({scope,lessons,languageNames,onStudy}:{scope:string;lessons:Lesson[];languageNames:Record<string,string>;onStudy:(link:TermLink)=>void}) {
  const uid=useId(),key=scope?`codequest-terminology:${scope}`:'';
  const [state,setState]=useState(defaultTerminologyState),[loadedKey,setLoadedKey]=useState('');
+ // eslint-disable-next-line react-hooks/set-state-in-effect -- Restore account-specific browser filters after hydration before persisting them.
  useEffect(()=>{setLoadedKey('');try{setState(readTerminologyState(key?localStorage.getItem(key):null));}catch{setState({...defaultTerminologyState});}setLoadedKey(key);},[key]);
  useEffect(()=>{if(key&&loadedKey===key)try{localStorage.setItem(key,JSON.stringify(state));}catch{}},[key,loadedKey,state]);
  const visible=terminology.filter(t=>(state.category==='all'||t.category===state.category)&&terminologyInLanguage(t,state.language)&&terminologyMatches(t,state.query));

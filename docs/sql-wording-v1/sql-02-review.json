@@ -1,0 +1,96 @@
+{
+  "lesson": "sql-02",
+  "position": 3,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Create a table, add rows, update one row, and remove a selected row.",
+      "after": "Add, change, and remove rows in a practice table."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "SQL can change saved rows as well as read them. CREATE TABLE defines a table's columns. INSERT INTO adds a row; UPDATE changes rows already there; DELETE FROM removes rows. These operations have different jobs. To make an edit safely, first be clear about which row you mean. An id is useful because a primary key identifies one row even when names are repeated.",
+        "Run this complete practice setup once in a fresh SQLite database:\n```sql\nCREATE TABLE demo_collection (\n  id INTEGER PRIMARY KEY,\n  name TEXT,\n  count INTEGER CHECK(count >= 0)\n);\nINSERT INTO demo_collection (id, name, count)\nVALUES\n  (1, 'Stones', 6),\n  (2, 'Tickets', 2),\n  (3, 'Ribbons', 4);\nSELECT id, name, count\nFROM demo_collection\nORDER BY id;\n```\nThe result has three rows. The explicit column list tells SQL which value belongs to which column. CHECK(count >= 0) refuses a row whose count is negative; >= means greater than or equal to.",
+        "An INSERT can name its columns and give one new set of VALUES. An UPDATE uses SET to say what changes, then WHERE to choose the existing rows. In SET count = count + 1, the right side reads the old count and adds one; the left side names the column that receives the result. In WHERE id = 1, equals compares the id with 1. Its meaning depends on its place.",
+        "Run this after the setup:\n```sql\nINSERT INTO demo_collection (id, name, count)\nVALUES (4, 'Pins', 3);\nUPDATE demo_collection\nSET count = count + 1\nWHERE id = 1;\nUPDATE demo_collection\nSET name = 'Train tickets'\nWHERE id = 2;\nDELETE FROM demo_collection\nWHERE id = 3;\nSELECT name, count\nFROM demo_collection\nORDER BY id;\n```\nYou get Stones with 7, Train tickets with 2, and Pins with 3. The first command adds; the next two edit; the fourth removes Ribbons. The last query reads the finished table.",
+        "WHERE is especially important for writes. UPDATE without WHERE changes every row; DELETE without WHERE removes every row. A WHERE that matches nothing makes no change, like the starter's id = -1. Before editing, a SELECT with the same WHERE can show which rows will match. A text comparison must match the stored name, including its spaces. Renaming a row also changes which name will match next time.",
+        "The exercise already supplies collection, so do not create it again. Add Cards with id 4 and count 1, increase Shells from 3 to 4, rename Badges to Travel badges, and remove Coins. Each edit should have a narrow condition. A final SELECT can help you see the rows, but this exercise checks collection itself; creating a separate answer table does not perform the requested edits.",
+        "Check both values and membership: exactly three rows should remain, with no Coins row. Increasing a count should leave the other counts alone. INSERT does not rename an old row, and ORDER BY does not add one. If you rerun an INSERT in the same unchanged database, the repeated primary key can cause an error; use a fresh practice setup when starting this walkthrough again.\n\nCounting uses the same idea of one added item per step. If you record one task each day for seven days, the count is 7 × 1 = 7. Updating a count by one once per day would produce 1, 2, 3, 4, 5, 6, 7."
+      ],
+      "after": [
+        "A row holds one record. A primary key is a value that identifies that row. Use it to choose the exact row to change, even when two rows have the same name.",
+        "Run this example in a fresh database:\n```sql\nCREATE TABLE demo_collection (\n  id INTEGER PRIMARY KEY,\n  name TEXT,\n  count INTEGER\n);\nINSERT INTO demo_collection (id, name, count)\nVALUES (1, 'Stones', 6), (2, 'Tickets', 2);\nUPDATE demo_collection\nSET count = count + 1\nWHERE id = 1;\nDELETE FROM demo_collection\nWHERE id = 2;\nSELECT name, count\nFROM demo_collection;\n```\nOne row remains: `Stones` with a count of `7`.",
+        "`CREATE TABLE` makes the table. `TEXT` holds text, and `INTEGER` holds whole numbers. `INSERT INTO` adds rows. Its column list shows where each value belongs.",
+        "`UPDATE` changes existing rows. `SET count = count + 1` stores one more than the old count. `WHERE id = 1` chooses the Stones row. Here, `=` after `SET` gives a new value; `=` inside `WHERE` compares values.",
+        "`DELETE FROM` removes rows. In the example, `WHERE id = 2` chooses Tickets. Without `WHERE`, DELETE removes every row, and UPDATE changes every row. Check which rows match before making an edit.",
+        "The project already has a `collection` table. Add Cards with id `4` and count `1`. Increase Shells from `3` to `4`, rename Badges to Travel badges, and remove Coins. Edit this table directly; do not create an answer table.",
+        "Exactly three rows should remain: Shells, Travel badges, and Cards. Check each count as well as each name. Start a fresh practice run before repeating the example, because creating the same table or inserting the same primary key again can fail."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Use `INSERT` to add Cards.",
+        "Use `UPDATE ... SET ... WHERE` to make each of the two requested edits.",
+        "Use `DELETE FROM collection WHERE name=\"Coins\"` to remove Coins."
+      ],
+      "after": [
+        "Add Cards with id 4 and count 1.",
+        "Update Shells and rename Badges, choosing each row with WHERE.",
+        "Delete only Coins, then inspect collection."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Insert id 4 with Cards and count 1.",
+        "Update Shells and rename Badges with WHERE clauses.",
+        "Delete only the Coins row."
+      ],
+      "after": [
+        "Use INSERT to add a row and UPDATE to change one.",
+        "Use single quotes around text values.",
+        "The checks read collection itself, not a separate answer table."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "You want to change the title of an existing book without adding a second row. Which operation fits?",
+        "choices": [
+          "ORDER BY the new title",
+          "UPDATE that row using its ID in WHERE",
+          "INSERT another row with the new title"
+        ],
+        "answer": 1,
+        "explanation": "UPDATE changes selected existing rows. INSERT adds a row, and ORDER BY changes result order rather than stored data."
+      },
+      "after": {
+        "question": "How can you rename a book that is already in the table?",
+        "choices": [
+          "Use ORDER BY with the new title.",
+          "Use UPDATE, choosing the book's ID with WHERE.",
+          "Use INSERT to add another row."
+        ],
+        "answer": 1,
+        "explanation": "UPDATE changes an existing row. Its WHERE check chooses which row."
+      }
+    }
+  ],
+  "headings": [
+    "Choose the row to change",
+    "Follow one table example",
+    "Add a row",
+    "Change an existing row",
+    "Remove the chosen row",
+    "Edit the supplied collection",
+    "Check the final table"
+  ],
+  "project": {
+    "title": "Manage a practice collection",
+    "task": "Edit collection: add Cards (id 4, count 1), add one to Shells, rename Badges to Travel badges, and remove Coins.",
+    "done_when": "Only the three requested rows remain, with the expected IDs, names, and counts."
+  }
+}

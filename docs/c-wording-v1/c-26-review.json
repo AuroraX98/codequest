@@ -1,0 +1,92 @@
+{
+  "lesson": "c-26",
+  "position": 26,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "If the second counter() call is removed, what does *first print?",
+      "after": "A pointer stays useful only while its target exists. A local static variable lasts for the whole program."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A block-local ordinary object has automatic storage duration: its lifetime ends when execution leaves its block. Returning its address would not extend that lifetime. Do not read through a dangling pointer.",
+        "A block-local static object exists for the entire program and is initialized once. Returning its address is valid, but callers share that same object. ++n adds one and stores it; this single-threaded example keeps the count small.",
+        "Complete local C example; the app itself does not execute it:\n```c\n#include <stdio.h>\n\nint *counter(void) {\n static int n = 0;\n ++n;\n return &n;\n}\nint main(void) {\n int *first = counter();\n counter();\n printf(\"%d\\n\", *first);\n}\n```",
+        "Expected output or behavior: 2\n. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Call counter a third time and explain why all returned pointers refer to one object. You may trace it without a C compiler; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "An ordinary local variable exists only until its block ends. Returning its address does not keep it alive. A pointer left referring to an object whose life has ended is called dangling. Do not use it to read or write.",
+        "A local variable marked static lasts for the whole program. Its starting value is set once. Every call here uses the same n. `++n` adds 1 before the function returns its address.",
+        "Follow the example one line at a time.\n```c\n#include <stdio.h>\n\nint *counter(void) {\n static int n = 0;\n ++n;\n return &n;\n}\nint main(void) {\n int *first = counter();\n counter();\n printf(\"%d\\n\", *first);\n}\n```",
+        "The first call changes n from 0 to 1. The second changes the same n to 2. first still points to that shared variable, so the print displays 2. This example has only one thread of work.",
+        "Remove the second call. The shared n is then increased only once. first still points to a live static variable."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Count how many times the same static n is increased."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If the second counter() call is removed, what does *first print?",
+        "choices": [
+          "0",
+          "1",
+          "A dangling value"
+        ],
+        "answer": 1,
+        "explanation": "Both calls access the same static n. With only the first call, it has been incremented once from zero."
+      },
+      "after": {
+        "question": "Remove the second counter() call. What does *first print?",
+        "choices": [
+          "0",
+          "1",
+          "A value from a dangling pointer."
+        ],
+        "answer": 1,
+        "explanation": "n starts at 0 and increases once to 1. It is static, so it stays alive after counter returns."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "C Core v1 uses a portable C17 baseline supported by the verified compiler. C23 exists but is not claimed fully supported here. The app supplies concept reading and an understanding check, not a C browser runner. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "The browser shows C code and checks your understanding; it does not run C. Optional local examples use C17."
+    }
+  ],
+  "headings": [
+    "A local value can stop existing",
+    "A static value stays alive",
+    "One example",
+    "Read the shared counter",
+    "Count one fewer call"
+  ],
+  "project": {
+    "title": "Storage duration and dangling pointers",
+    "task": "Explain why returning the address of this static variable is valid, while returning an ordinary local variable's address is not.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local C example is optional."
+  },
+  "navigationCorrection": "Added a short example introduction so its reviewed heading remains an explicit contents target."
+}

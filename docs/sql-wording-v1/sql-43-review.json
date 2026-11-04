@@ -1,0 +1,87 @@
+{
+  "lesson": "sql-43",
+  "position": 38,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Create ranked with id,name,score,position,level. Number rows by descending score with ID tie-breaker, but dense-rank scores alone. Preserve results.",
+      "after": "Give each row its own position while letting equal scores share a rank."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "ROW_NUMBER() OVER (ORDER BY score DESC,id) returns an integer starting at 1 for each row in that window order. Its empty parentheses take no ordinary arguments; OVER supplies the ordered input rows. The unique ID breaks score ties so the two tied rows get predictable positions.",
+        "DENSE_RANK() OVER (ORDER BY score DESC) gives equal ranks to equal ordered score values, then moves to the next integer without gaps. Do not add ID to this ranking order if equal scores must tie: ID would make each ordering tuple different. Unlike RANK, dense rank does not skip the next rank after ties. Neither window order guarantees final display order; the outer ORDER BY does that.",
+        "\n```sql\nCREATE TABLE results(id INTEGER PRIMARY KEY,name TEXT,score INTEGER);\nINSERT INTO results VALUES(1,'Mira',9),(2,'Oren',9),(3,'Paz',7),(4,'Rin',5);\nSELECT id,name,score,ROW_NUMBER() OVER (ORDER BY score DESC,id) AS position,DENSE_RANK() OVER (ORDER BY score DESC) AS level\nFROM results\nORDER BY score DESC,id;\n```\nPositions are 1,2,3,4. Dense ranks are 1,1,2,3: the two scores of 9 share rank 1.",
+        "\n```sql\nCREATE TABLE results(id INTEGER PRIMARY KEY,name TEXT,score INTEGER);\nINSERT INTO results VALUES(1,'Mira',9),(2,'Oren',9),(3,'Paz',7),(4,'Rin',5);\nSELECT id,name,score,ROW_NUMBER() OVER (ORDER BY score DESC,id) AS position,DENSE_RANK() OVER (ORDER BY score DESC,id) AS level\nFROM results\nORDER BY score DESC,id;\n```\nDense ranks become 1,2,3,4 because every (score,id) pair differs. The row numbers stay 1,2,3,4.",
+        "Optional practice: change Rin’s score to 7 in a fresh setup. Predict positions 1,2,3,4 and dense ranks 1,1,2,2 before running."
+      ],
+      "after": [
+        "`ROW_NUMBER()` gives each row a different number, starting at 1. `OVER` says which order to use. Put the highest score first, then use the ID to choose an order when scores tie.",
+        "`DENSE_RANK()` gives equal scores the same rank. The next different score gets the next rank, with no number skipped. Rank by score alone so equal scores stay tied.",
+        "```sql\nCREATE TABLE demo_results(id INTEGER PRIMARY KEY, name TEXT, score INTEGER);\nINSERT INTO demo_results VALUES\n  (1, 'Mira', 9), (2, 'Oren', 9), (3, 'Paz', 7), (4, 'Rin', 5);\nSELECT name, score,\n  ROW_NUMBER() OVER (ORDER BY score DESC, id) AS position,\n  DENSE_RANK() OVER (ORDER BY score DESC) AS level\nFROM demo_results\nORDER BY score DESC, id;\n```\nThe positions are `1, 2, 3, 4`. The ranks are `1, 1, 2, 3`. Mira and Oren share rank 1 because both scored 9.",
+        "The position needs an ID to break a tie. The rank must leave the ID out: adding it would make every score-and-ID pair different, so nobody would share a rank.",
+        "The order inside `OVER` controls the calculation. The last `ORDER BY` controls how the answer is shown. Use both when you need a predictable result."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the small example and explain its inputs and effects.",
+        "Complete the starter for this lesson.",
+        "Run the behavior checks, then predict a changed case."
+      ],
+      "after": [
+        "Create the `ranked` view from `results`.",
+        "Use score and ID for `position`, but score alone for `level`.",
+        "Run the checks and explain why tied scores have different positions but the same rank."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Trace the supplied rows and resulting rows before changing the query."
+      ],
+      "after": [
+        "Use `ROW_NUMBER()` for `position` and `DENSE_RANK()` for `level`.",
+        "Both use `score DESC`. Only the row-number order also uses `id`."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "For scores 8,8,3 ordered high to low, what does DENSE_RANK over score alone return?",
+        "choices": [
+          "1,2,3",
+          "1,1,3",
+          "1,1,2"
+        ],
+        "answer": 2,
+        "explanation": "Equal scores share a peer-group rank. The next distinct score gets the next integer, with no gap."
+      },
+      "after": {
+        "question": "Scores are 8, 8, and 3, highest first. What ranks does DENSE_RANK give them?",
+        "choices": [
+          "1, 2, 3",
+          "1, 1, 3",
+          "1, 1, 2"
+        ],
+        "answer": 2,
+        "explanation": "The two scores of 8 share rank 1. The next different score gets rank 2."
+      }
+    }
+  ],
+  "headings": [
+    "A position for each row",
+    "A rank for each score",
+    "One example",
+    "Why the two orders differ",
+    "Keep the result in order"
+  ],
+  "project": {
+    "title": "Number rows and keep tied ranks",
+    "task": "Create a view called `ranked` with `id`, `name`, `score`, `position`, and `level`. Give every row a position, highest score first, using ID to break ties. Give equal scores the same dense rank. Keep `results` unchanged.",
+    "done_when": "The checks pass, and equal scores share a level while every row has a different position."
+  }
+}

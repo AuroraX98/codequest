@@ -1,0 +1,105 @@
+{
+  "lesson": "typescript-04",
+  "position": 14,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Create a generic collection that preserves the item type for both numbers and text.",
+      "after": "Use one collection class while keeping each collection's item type."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A generic lets one piece of code work with different types while remembering which type was chosen. The type parameter T is a placeholder for a type, not a runtime value. Collection<number> chooses number; Collection<string> chooses string. Both can use the same storage and methods, while TypeScript checks which values can go into each instance.",
+        "Here is a complete example for a TypeScript runner:\n```typescript\nclass Shelf<T> {\n  private values: T[] = [];\n  add(value: T): void {\n    this.values.push(value);\n  }\n  first(): T | undefined {\n    return this.values[0];\n  }\n}\nconst counts = new Shelf<number>();\ncounts.add(11);\ncounts.add(22);\nconsole.log(counts.first());\n```\nThe output is 11. T[] means an array whose elements have type T. [] creates an empty array. push appends a value. [0] reads the first element because array positions begin at zero.",
+        "private asks TypeScript to prevent outside code from directly using values; callers use the methods. This TypeScript private keyword is not a security boundary for secret data at runtime. void means add does not promise a useful returned value. first returns T | undefined because an empty array has no first item. undefined means absent, rather than the number zero or an empty string.",
+        "Continue after the Shelf class:\n```typescript\nconst colors = new Shelf<string>();\ncolors.add('amber');\nconst empty = new Shelf<number>();\nconst maybeCount = empty.first();\nconsole.log(colors.first());\nconsole.log(maybeCount);\nif (maybeCount !== undefined) {\n  console.log(maybeCount + 1);\n}\n```\nThe outputs are amber and undefined; the guarded addition does not run. !== means not equal. The check narrows maybeCount to number inside the branch, making arithmetic safe. A present value of 0 would pass this check.",
+        "The same methods keep their chosen return types: counts.first() is number | undefined, while colors.first() is string | undefined. Replacing T with any would lose that connection and hide wrong-type mistakes. A bare new Collection() can still represent an empty collection, but an explicit type parameter is clearer when choosing the values you plan to store.",
+        "For the exercise, add must push into this.values, and first must return this.values[0]. Set firstNumber from numbers.first() and firstWord from words.first(). With the supplied inputs those values are 7 and maple. Adding does not replace the earlier item, so the first value stays first after later additions. Do not invent a default when the collection is empty.",
+        "After the valid solution compiles, temporarily try numbers.add('seven'). Expect a compiler error, then remove that call. A generic class provides compile-time consistency; it does not inspect unknown network values by itself. Check untrusted values before calling add. Distinguishing an empty collection from one containing 0 or empty text is part of preserving the actual stored value."
+      ],
+      "after": [
+        "A generic class can be used with different types. `T` stands for the chosen type. A Shelf<number> stores numbers; a Shelf<string> stores text. Each uses the same class code.",
+        "This shelf adds items to an array and reads the first item.\n```typescript\nclass Shelf<T> {\n  private values: T[] = [];\n  add(value: T): void {\n    this.values.push(value);\n  }\n  first(): T | undefined {\n    return this.values[0];\n  }\n}\nconst counts = new Shelf<number>();\ncounts.add(11);\nconsole.log(counts.first());\n```\nThe output is 11. Array position 0 is the first item.",
+        "Private tells TypeScript that outside code should use the methods instead of accessing values directly. Void means add promises no useful result. First returns T or undefined because the array might be empty.",
+        "An empty shelf returns undefined. Check `value !== undefined` before using a possible result. This check still accepts a stored 0 or an empty string.",
+        "A number shelf's first result is number or undefined. A text shelf's first result is string or undefined. Keeping T preserves that connection; using any would lose it.",
+        "For Collection, push each new value into `this.values`. Return `this.values[0]` from first. The supplied number and text collections should give 7 and maple. Leave an empty collection's result as undefined.",
+        "Adding text to a number collection causes a type error. TypeScript private and generic types are checking rules, not protection for secrets or checks of outside data while the program runs."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Define Collection<T> with an array inside it to store its values.",
+        "Add an add method to store a value and a first method to return the first value.",
+        "Add 7 to a Collection<number>. Save the result of first() as firstNumber.",
+        "Add \"maple\" to a Collection<string>. Save the result of first() as firstWord.",
+        "Check that first() returns undefined for an empty Collection<boolean>."
+      ],
+      "after": [
+        "Store items in a T array inside Collection.",
+        "Make add append an item and first read position 0.",
+        "Save the number collection's first result as firstNumber.",
+        "Save the text collection's first result as firstWord.",
+        "Check an empty collection and run the checks."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "The internal array should be `T[]`.",
+        "Use `push` to keep the supplied value.",
+        "Return `this.values[0]`; its type includes undefined because a collection may be empty."
+      ],
+      "after": [
+        "Use `T[]` for the stored items.",
+        "Push adds at the end without replacing earlier items.",
+        "Return the actual first item, including undefined when the list is empty."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "words is a Collection<string>. Which call keeps its chosen element type?",
+        "choices": [
+          "words.add(12)",
+          "words.add(\"12\")",
+          "words.add(true)"
+        ],
+        "answer": 1,
+        "explanation": "The type parameter string requires text inputs. Quoted \"12\" is text even though its characters are digits. The unquoted number and the Boolean do not meet that type."
+      },
+      "after": {
+        "question": "Words is a Collection<string>. Which item can it accept?",
+        "choices": [
+          "The number 12",
+          "The text \"12\"",
+          "The value true"
+        ],
+        "answer": 1,
+        "explanation": "This collection accepts text. Quotes make \"12\" a text value."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Type-error practice: after the valid solution compiles, temporarily append this line and run the full TypeScript check: numbers.add(\"seven\"); The compiler should report an error. Remove the line before completing the lesson. Runtime checks alone cannot establish rejection of an incorrect type.",
+      "after": "To try a type error, temporarily add text to the number collection. Read the error, then remove the invalid call."
+    }
+  ],
+  "headings": [
+    "Choose an item type",
+    "Store and read items",
+    "Read the method types",
+    "Handle an empty collection",
+    "Keep the type connection",
+    "Build Collection",
+    "Reject the wrong item kind"
+  ],
+  "project": {
+    "title": "A reusable typed collection",
+    "task": "Make one generic collection class work for numbers and text while preserving each item type.",
+    "done_when": "Items stay in order, first returns the actual first item or undefined, wrong item types are rejected, and the checks pass."
+  }
+}

@@ -1,0 +1,97 @@
+{
+  "lesson": "react-14",
+  "position": 36,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Keep selection feedback separate from a transition that updates displayed results.",
+      "after": "Mark a result update as less urgent so React can prioritize more immediate work."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "useTransition returns isPending and startTransition. It lets React treat certain rendering updates as non-urgent.",
+        "The callback passed to startTransition runs immediately. State updates scheduled synchronously inside it are marked as transitions.",
+        "```react\nfunction App() {\n  const [tab,setTab] = React.useState(\"Overview\");\n  const [pending,startTransition] = React.useTransition();\n  return <main><button onClick={()=>startTransition(()=>setTab(\"Details\"))}>Details</button>\n    <p>{pending ? \"Updating\" : tab}</p></main>;\n}\n```",
+        "A transition is not a timer or a guarantee that work finishes faster. React can prioritize other updates while preparing the new UI.",
+        "Keep urgent feedback outside the transition. In particular, do not use a transition to control a text input's immediate value.",
+        "For the exercise, choose updates selected immediately and updates filter inside startTransition. The result list must eventually match the latest choice. The screen checks verify the resulting selection and list, not which scheduling API produced them. Use the example and changed-case reasoning to explain what startTransition marks; identical output alone does not prove priority scheduling.",
+        "This React 18 lesson uses a synchronous transition callback. It does not rely on React 19 async action behavior or schedule state after await inside the callback."
+      ],
+      "after": [
+        "A transition marks a screen update as less urgent. `useTransition` gives you `isPending`, which reports unfinished transition work, and `startTransition`, which marks the update.",
+        "The function passed to startTransition runs immediately. State updates made directly inside it are marked as transitions. React can prioritize other updates while preparing that screen.",
+        "```react\nfunction App() {\n  const [tab, setTab] = React.useState(\"Overview\");\n  const [pending, startTransition] = React.useTransition();\n  return (\n    <main>\n      <button onClick={() => startTransition(() => setTab(\"Details\"))}>\n        Details\n      </button>\n      <p>{pending ? \"Updating\" : tab}</p>\n    </main>\n  );\n}\n```\nClicking Details requests that view as a transition. This small update may finish too quickly for Updating to be visible.",
+        "A transition is not a timer. It does not promise a fixed delay or a faster calculation. It tells React which rendering work can be treated as less urgent.",
+        "Keep immediate selection feedback outside the transition. A text input's current value must also update immediately rather than through a transition.",
+        "In `choose`, update `selected` immediately. Update `filter` inside startTransition so the result list follows the latest choice. The checks verify the final screen; read your code too, because matching output alone does not prove that a transition was used.",
+        "This course uses React 18's synchronous callback pattern: make the state update directly inside the callback. Do not rely on later-version behavior for async actions."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Keep selected feedback outside startTransition.",
+        "Put the filter state update inside its synchronous callback."
+      ],
+      "after": [
+        "Update selected outside startTransition.",
+        "Put the filter update directly inside its callback.",
+        "Run the checks and confirm the final list matches the latest choice."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Keep selected feedback outside startTransition.",
+        "Put the filter state update inside its synchronous callback."
+      ],
+      "after": [
+        "The callback runs now; the state update is marked as less urgent."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "You call startTransition(() => setFilter(\"a\")). Does React wait a fixed delay before running that callback?",
+        "choices": [
+          "No; the callback runs immediately and marks its state update as a transition",
+          "Yes; it always waits one second",
+          "Yes; it waits for a network request even when none exists"
+        ],
+        "answer": 0,
+        "explanation": "startTransition calls the function immediately. It marks the update's priority, not a timer delay; actual scheduling and pending visibility depend on rendering work."
+      },
+      "after": {
+        "question": "Does startTransition wait a fixed time before calling the function you give it?",
+        "choices": [
+          "No. It calls it now and marks its state update as a transition.",
+          "Yes. It always waits one second.",
+          "Yes. It waits for a network request."
+        ],
+        "answer": 0,
+        "explanation": "startTransition marks priority. It does not start a delay timer."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Targets installed React18.3.1 useTransition API, not React19 async actions. Small fixture may settle too quickly to visibly show pending. Tests assert eventual state, not scheduling time or benchmark speed; successful DOM behavior alone does not prove a performance improvement.",
+      "after": "This lesson uses React 18's synchronous transition callback. The small example may finish before pending feedback is visible. Checks verify final behavior, not speed."
+    }
+  ],
+  "headings": [
+    "Choose a less urgent update",
+    "Run the callback now",
+    "Read a small transition",
+    "Separate priority from time",
+    "Keep immediate feedback urgent",
+    "Build your result update",
+    "Use this course's transition behavior"
+  ],
+  "project": {
+    "title": "Mark a result update as non-urgent",
+    "task": "Keep selected feedback immediate. Use a transition for the result filter update.",
+    "done_when": "The selection feedback and final results match the latest choice. The filter update is inside startTransition."
+  }
+}

@@ -1,0 +1,108 @@
+{
+  "lesson": "backend-08",
+  "position": 29,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Complete requireLabel(req, res, next). Accept a body.label that is a nonblank string; trim it into req.cleanLabel and call next exactly once. Otherwise send status 400 with {error:\"Label required\"} and do not call next.",
+      "after": "Continue to the route only after a label passes validation."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "Middleware runs between receiving a request and finishing its response.",
+        "Calling next() passes control onward. Sending a response without calling next ends this middleware path.",
+        "Order matters: body parsing must happen before middleware that reads the parsed body.",
+        "This route order gives validation a chance to stop the request.\n```javascript\napp.use(express.json());\napp.post(\"/labels\", requireLabel, (req, res) => {\n  res.status(201).json({label: req.cleanLabel});\n});\n```\n\nThis small call shows the successful continuation path:\n```javascript\nfunction requireLabel(req, res, next) {\n  if (typeof req.body?.label !== \"string\") return res.status(400).json({error:\"Label required\"});\n  const clean = req.body.label.trim();\n  if (!clean) return res.status(400).json({error:\"Label required\"});\n  req.cleanLabel = clean;\n  next();\n}\nconst request = {body:{label:\"  Sky  \"}};\nrequireLabel(request, {}, () => console.log(\"Continue\"));\nconsole.log(request.cleanLabel);\n```\nThis prints Continue, then Sky. trim takes no arguments and returns a string without outer whitespace. The callback passed as next takes no input here and prints Continue. In Express, the framework supplies next to continue to later middleware. Rejected input must send its response and return without calling next. The empty response object is sufficient only for this successful local demonstration, not for testing the rejection path.",
+        "The route uses cleanLabel only after the validation middleware calls next.",
+        "If validation sends a 400 response, return from the function. Continuing into next could let later code try to send another response.",
+        "Check that the value is a string before calling trim. trim removes spaces at both ends while preserving spaces inside.",
+        "The practice passes small request and response test objects. It checks control flow, not a live HTTP server.",
+        "On success, attach the cleaned value to the request and call the supplied callback once. Do not send a response on that path."
+      ],
+      "after": [
+        "Middleware is code that runs along the request's path before the final response. This middleware checks the label before later code can use it.",
+        "next() passes control to later code. For invalid input, send the error response and return without calling next. These are separate paths.",
+        "In a real Express app, JSON body parsing must run before middleware that reads req.body. Otherwise, the parsed label may not be available.",
+        "```javascript\nfunction requireLabel(req, res, next) {\n  if (typeof req.body?.label !== \"string\") return res.status(400).json({error:\"Label required\"});\n  const clean = req.body.label.trim();\n  if (!clean) return res.status(400).json({error:\"Label required\"});\n  req.cleanLabel = clean;\n  next();\n}\nconst request = {body:{label:\"  Sky  \"}};\nrequireLabel(request, {}, () => console.log(\"Continue\"));\nconsole.log(request.cleanLabel);\n```\nThis prints Continue, then Sky. The input is valid, so the function trims its edges, saves cleanLabel, and calls the supplied continuation once.",
+        "req.cleanLabel holds the accepted text for the later route. Set it before calling next(). Do not send a response on this successful path; the later route handles that.",
+        "After sending status 400, return immediately. Calling next afterwards could let the route create a label or try to send a second response.",
+        "Check for a string before using trim(). Then reject it if the cleaned text is empty. Keep spaces inside the label; trim only removes surrounding whitespace.",
+        "The example uses a small request object and a callback that prints Continue. Its empty response object works only because this call succeeds. The practice checks provide response methods for rejected calls too.",
+        "Complete requireLabel(req, res, next). For valid text, set req.cleanLabel and call next exactly once. Otherwise, send status 400 with {error: \"Label required\"} and stop."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the requirement.",
+        "Make one change to the starter.",
+        "Run the checks.",
+        "Explain why a changed input produces its result."
+      ],
+      "after": [
+        "Require a string label and trim its edges.",
+        "Send 400 and return if the result is blank or invalid.",
+        "Save cleanLabel and call next once on success."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Check the type before trimming.",
+        "Return the error response on the invalid path.",
+        "Call next only after attaching cleanLabel."
+      ],
+      "after": [
+        "Check the type before trimming.",
+        "Do not call next on a rejected request.",
+        "Do not send a response on the successful continuation path."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Invalid middleware sends a 400 response but then also calls next. Why is that wrong for this route?",
+        "choices": [
+          "The later route may continue and try to create a label or send another response.",
+          "next automatically changes 400 to 200 safely.",
+          "Validation must always call next twice."
+        ],
+        "answer": 0,
+        "explanation": "The rejection path should stop. Passing control onward defeats the guard and can cause side effects or a second response attempt."
+      },
+      "after": {
+        "question": "Why is it wrong to send a 400 error and then call next in this route?",
+        "choices": [
+          "Later code may still create a label or send another response",
+          "next safely changes 400 to 200",
+          "Validation must call next twice"
+        ],
+        "answer": 0,
+        "explanation": "The rejected request must stop before the later route can act."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "In-app checks use request/response doubles to test flow. Real Express parsing and routing must be tested in a local server; this lesson does not claim a network request occurred.",
+      "after": "The browser uses test request and response objects to check the control flow. Real Express parsing and routing need a local server check."
+    }
+  ],
+  "headings": [
+    "Check before the route",
+    "Choose stop or continue",
+    "Parse the body first",
+    "Read one example",
+    "Pass on the cleaned label",
+    "Return after rejection",
+    "Check type before trimming",
+    "Use the practice objects",
+    "Complete requireLabel"
+  ],
+  "project": {
+    "title": "Stop invalid requests before the route",
+    "task": "Complete requireLabel with one successful continuation or one 400 rejection. Store only the accepted trimmed label in req.cleanLabel.",
+    "done_when": "Valid input continues exactly once; invalid input responds once and never continues."
+  }
+}

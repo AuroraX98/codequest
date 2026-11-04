@@ -1,0 +1,90 @@
+{
+  "lesson": "sql-34",
+  "position": 15,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Create STRICT table readings(id INTEGER PRIMARY KEY,value INTEGER NOT NULL), then insert ID1 with text 14 and ID2 with integer 9. Both stored values must be integers. Do not include an intentional failure in the normal project submission.",
+      "after": "Use STRICT to refuse values that do not fit a column's type."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "STRICT after a CREATE TABLE definition asks SQLite to enforce its supported column types. It does not mean every value must arrive with exactly that storage class: a lossless conversion can still be accepted. The text 12 can become integer 12, but the text cloudy cannot be stored in a STRICT INTEGER column.",
+        "These examples use INTEGER and TEXT. SQLite restricts the type names permitted in STRICT tables; do not copy arbitrary type names from another database. The project checks inspect the strict-table flag and stored values. The separate rejected-write example demonstrates an error, but this editor’s normal checks do not grade whether your table rejects every invalid input.",
+        "Run this complete example in a fresh database.\n```sql\nCREATE TABLE readings(id INTEGER PRIMARY KEY,value INTEGER) STRICT;\nINSERT INTO readings VALUES(1,'12');\nCREATE TEMP VIEW shown AS\nSELECT value,typeof(value) AS kind\nFROM readings;\nSELECT *\nFROM shown;\n```",
+        "Change the supplied values and trace the result. This is a separate complete example.\n```sql\nCREATE TABLE readings(id INTEGER PRIMARY KEY,value INTEGER) STRICT;\nINSERT INTO readings VALUES(1,'06');\nCREATE TEMP VIEW shown AS\nSELECT value,typeof(value) AS kind\nFROM readings;\nSELECT *\nFROM shown;\n```",
+        "Application: Create STRICT table readings(id INTEGER PRIMARY KEY,value INTEGER NOT NULL), then insert ID1 with text 14 and ID2 with integer 9. Both stored values must be integers. Do not include an intentional failure in the normal project submission.",
+        "Separate error experiment: run the following complete block in a fresh database, not after the project. The final statement should fail because cloudy cannot become an INTEGER. The earlier row with value 4 remains. Inspect it with SELECT value FROM sample if your local connection stays open after reporting the error. A normal Run checks error is not awarded as a successful project.\n```sql\nCREATE TABLE sample(value INTEGER) STRICT;\nINSERT INTO sample VALUES(4);\nINSERT INTO sample VALUES('cloudy');\n```"
+      ],
+      "after": [
+        "`STRICT` after a table definition makes SQLite enforce the column types it supports. An INTEGER column can then refuse text that cannot become a whole number.",
+        "STRICT still allows a conversion that keeps the value. Text such as `'12'` can become integer `12`. It does not mean every value must arrive with exactly the right type.",
+        "Run this example in a fresh database:\n```sql\nCREATE TABLE demo_readings (\n  id INTEGER PRIMARY KEY,\n  value INTEGER NOT NULL\n) STRICT;\nINSERT INTO demo_readings VALUES (1, '12'), (2, '06');\nSELECT id, value, typeof(value) AS kind\nFROM demo_readings\nORDER BY id;\n```\nThe values are `12` and `6`. Both have kind `integer`.",
+        "The word `'cloudy'` cannot fit this INTEGER column, so an insert of it fails. NULL also fails here because of NOT NULL. SQLite STRICT tables accept a limited list of type names; use its supported names, such as INTEGER and TEXT.",
+        "Create `readings(id INTEGER PRIMARY KEY, value INTEGER NOT NULL) STRICT`. Insert text `'14'` at id `1` and integer `9` at id `2`. Both must be stored as integers.",
+        "An error from an invalid insert is not a successful project run. Keep deliberate failures out of your submission. The project checks the table's STRICT setting and its saved values; those checks are not a test of every possible bad input."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the small example and explain its inputs and effects.",
+        "Complete the starter for this lesson.",
+        "Run the behavior checks, then predict a changed case."
+      ],
+      "after": [
+        "Put STRICT after the table's closing parenthesis.",
+        "Require a nonmissing INTEGER value.",
+        "Insert the two requested rows and run the checks."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Trace the supplied rows and resulting rows before changing the query."
+      ],
+      "after": [
+        "Keep quotes around '14' to show that SQLite converts it.",
+        "Use INTEGER, not an unsupported type name copied from another database."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "A STRICT INTEGER column receives the text '18'. Must it reject that value solely because it began as text?",
+        "choices": [
+          "No; a lossless conversion to integer can succeed.",
+          "Yes; STRICT forbids all conversion.",
+          "No; STRICT stores every text unchanged."
+        ],
+        "answer": 0,
+        "explanation": "STRICT requires compatibility after permitted lossless conversion, not an exact incoming storage-class match."
+      },
+      "after": {
+        "question": "Must a STRICT INTEGER column reject '18' just because it starts as text?",
+        "choices": [
+          "No. It can convert it to integer without losing its value.",
+          "Yes. STRICT forbids all conversion.",
+          "No. STRICT keeps every text value unchanged."
+        ],
+        "answer": 0,
+        "explanation": "STRICT allows a conversion that keeps the value, such as text '18' becoming integer 18."
+      }
+    }
+  ],
+  "headings": [
+    "Enforce the column type",
+    "Allow a safe conversion",
+    "Try a strict number column",
+    "Know which values fail",
+    "Build the strict readings table",
+    "Read a failed insert correctly"
+  ],
+  "project": {
+    "title": "Use a STRICT table",
+    "task": "Create the requested STRICT readings table, then insert text '14' at ID 1 and integer 9 at ID 2.",
+    "done_when": "The table is STRICT, value is required, and both rows are stored as integers. The submission runs without an intentional error."
+  }
+}

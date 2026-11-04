@@ -1,0 +1,91 @@
+{
+  "lesson": "rust-48",
+  "position": 48,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "If the input is \"0\", which result is displayed?",
+      "after": "A custom error lets the program explain a rule in its own words."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "InvalidMinutes is a custom error type. Deriving Debug supports diagnostic formatting; implementing Display supplies the user-facing message. The fmt method borrows a Formatter destination; its underscore lifetime placeholder is inferred. fmt::Result is the formatting Result type, and write! returns that Result. Implementing std::error::Error marks it as a standard error type. It does not automatically add recovery or validation.\n\nThis smaller formatting companion actually requests Display through the {} placeholder. fmt receives a shared error receiver and a borrowed mutable Formatter; write! sends the supplied message to that destination and returns the formatting Result, which fmt returns unchanged. It does not print independently of the caller.\n```rust\nuse std::fmt;\n#[derive(Debug)]\nstruct InvalidMinutes;\nimpl fmt::Display for InvalidMinutes {\n    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {\n        write!(f, \"minutes must be 1 through 60\")\n    }\n}\nimpl std::error::Error for InvalidMinutes {}\nfn main() {\n    println!(\"{}\", InvalidMinutes);\n}\n```\nExpected output: minutes must be 1 through 60.",
+        "parse::<u8> may fail for nonnumeric text or values outside u8. map_err converts that error into InvalidMinutes; ? propagates it from parse_minutes. The range 1..=60 includes both endpoints. A separate range check rejects otherwise parsed values outside 1 through 60. This intentionally loses the original parse cause; richer errors could preserve it when useful.",
+        "Complete local Rust example; the app itself does not execute it:\n```rust\nuse std::fmt;\n#[derive(Debug)]\nstruct InvalidMinutes;\nimpl fmt::Display for InvalidMinutes {\n    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {\n        write!(f, \"minutes must be 1 through 60\")\n    }\n}\nimpl std::error::Error for InvalidMinutes {}\nfn parse_minutes(text: &str) -> Result<u8, InvalidMinutes> {\n    let n = text.parse::<u8>().map_err(|_| InvalidMinutes)?;\n    if !(1..=60).contains(&n) { return Err(InvalidMinutes); }\n    Ok(n)\n}\nfn main() {\n    match parse_minutes(\"15\") {\n        Ok(n) => println!(\"{n}\"),\n        Err(error) => println!(\"{error}\"),\n    }\n}\n```",
+        "Expected output or behavior: 15. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Design separate syntax and range error variants without leaking sensitive input. You may trace it without a Rust compiler; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "A custom error lets the program explain a rule in its own words.",
+        "The function accepts a whole number from 1 through 60. Bad text and numbers outside that range both lead to the minutes error.",
+        "Follow the labeled parts of this example.\n```rust\nuse std::fmt;\n#[derive(Debug)]\nstruct InvalidMinutes;\nimpl fmt::Display for InvalidMinutes {\n    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {\n        write!(f, \"minutes must be 1 through 60\")\n    }\n}\nimpl std::error::Error for InvalidMinutes {}\nfn parse_minutes(text: &str) -> Result<u8, InvalidMinutes> {\n    let n = text.parse::<u8>().map_err(|_| InvalidMinutes)?;\n    if !(1..=60).contains(&n) { return Err(InvalidMinutes); }\n    Ok(n)\n}\nfn main() {\n    match parse_minutes(\"15\") {\n        Ok(n) => println!(\"{n}\"),\n        Err(error) => println!(\"{error}\"),\n    }\n}\n```",
+        "The output is `15`. The text 15 is a number in range, so the program takes the success path.",
+        "Try zero and trace the check after parsing."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read one idea.",
+        "Follow the labeled example.",
+        "Try the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Try zero and trace the check after parsing."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If the input is \"0\", which result is displayed?",
+        "choices": [
+          "minutes must be 1 through 60",
+          "A compile error because Result cannot hold a custom error.",
+          "0 because parsing alone enforces the domain"
+        ],
+        "answer": 0,
+        "explanation": "Zero parses as u8 but fails the explicit domain range and becomes the custom error."
+      },
+      "after": {
+        "question": "If the input is \"0\", which result is displayed?",
+        "choices": [
+          "minutes must be 1 through 60",
+          "A compile error because Result cannot hold a custom error.",
+          "0 because parsing alone enforces the domain"
+        ],
+        "answer": 0,
+        "explanation": "Zero can be read as a number, but the minutes rule starts at one."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Rust Core v1 uses stable Rust1.99.1 with edition2024 and the standard library. The app supplies concept reading and an understanding check, not a Rust browser runner. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "CodeQuest shows the Rust example. Running it on your own computer is optional."
+    }
+  ],
+  "headings": [
+    "Give an error a useful message",
+    "Check the minutes",
+    "Read the example",
+    "What happens",
+    "Try one change"
+  ],
+  "project": {
+    "title": "Custom errors and context",
+    "task": "Try zero and trace the check after parsing.",
+    "done_when": "Read each idea and pass the understanding check. Running the example on your computer is optional."
+  }
+}

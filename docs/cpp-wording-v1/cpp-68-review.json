@@ -1,0 +1,94 @@
+{
+  "lesson": "cpp-68",
+  "position": 68,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Change the last async argument from false to true. Where is calculation failed handled?",
+      "after": "Get a value or exception from work running asynchronously."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "std::async returns a future associated with the invoked function’s result. Explicit std::launch::async requests asynchronous execution rather than leaving the choice between deferred and asynchronous policy to the implementation.",
+        "future::get waits as necessary and retrieves the value. For an ordinary future it consumes the result; do not call get a second time as if it were a reusable cache.",
+        "If the asynchronous function throws, the exception is stored and rethrown when get retrieves the result. Catch it around get when this boundary can handle it. Asynchronous execution does not guarantee better performance or a particular completion time.",
+        "Complete local C++ example; the app itself does not execute it:\n```cpp\n#include <future>\n#include <iostream>\n#include <stdexcept>\nint calculate(bool fail) {\n    if (fail) throw std::runtime_error(\"calculation failed\");\n    return 6 * 7;\n}\nint main() {\n    auto result = std::async(std::launch::async, calculate, false);\n    try {\n        std::cout << result.get() << \"\\n\";\n    } catch (const std::runtime_error& error) {\n        std::cout << error.what() << \"\\n\";\n    }\n}\n```",
+        "Expected output or behavior: 42. Local compiler test evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Return a small struct from the calculation and inspect it after get, without sharing mutable output variables. You may trace this without a compiler; finishing the reading is not proof of a local run."
+      ],
+      "after": [
+        "Asynchronous work can run independently while the caller continues. std::async starts a function and returns a future connected to its result.",
+        "A future lets the caller retrieve that later result. std::launch::async explicitly requests asynchronous execution. Without an explicit policy, the implementation may instead delay the work until it is needed.",
+        "get() waits if necessary and retrieves the value. For this ordinary future, get consumes the result. Do not call it again as if the future were a reusable store.",
+        "Follow the calculation into the future and then through get().\n\n```cpp\n#include <future>\n#include <iostream>\n#include <stdexcept>\nint calculate(bool fail) {\n    if (fail) throw std::runtime_error(\"calculation failed\");\n    return 6 * 7;\n}\nint main() {\n    auto result = std::async(std::launch::async, calculate, false);\n    try {\n        std::cout << result.get() << \"\\n\";\n    } catch (const std::runtime_error& error) {\n        std::cout << error.what() << \"\\n\";\n    }\n}\n```",
+        "The program prints 42. calculate receives false, so it returns six times seven. get waits for and retrieves that answer.",
+        "If calculate throws, the future stores the exception. get rethrows it in the caller, where the matching catch can handle it. Asynchronous work does not guarantee faster execution or a particular finishing time."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain why, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Follow the result through the future, whether it contains a value or an exception."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Change the last async argument from false to true. Where is calculation failed handled?",
+        "choices": [
+          "It becomes the integer 0 automatically.",
+          "The future silently discards all exceptions.",
+          "At result.get(), where the stored exception is rethrown and caught."
+        ],
+        "answer": 2,
+        "explanation": "The worker stores its exception in the shared result state. get rethrows it into the caller’s matching catch."
+      },
+      "after": {
+        "question": "Change the final std::async argument from false to true. Where is calculation failed handled?",
+        "choices": [
+          "It automatically becomes the integer zero.",
+          "The future silently discards the exception.",
+          "At result.get(), where the stored exception is rethrown and caught."
+        ],
+        "answer": 2,
+        "explanation": "calculate throws on the worker path. The future carries that exception to get, which rethrows it into the caller's matching handler."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "C++ Core v1, standard C++23 features checked against the available GCC14.2 implementation. This app provides concept reading and an understanding check, not a C++ browser runner. Local example tests are separate evidence and do not certify learner mastery.",
+      "after": "The browser shows C++ code and checks your understanding; it does not run C++. Optional local examples use C++23."
+    }
+  ],
+  "headings": [
+    "Start asynchronous work",
+    "Keep a future for its result",
+    "Retrieve the result once",
+    "One example",
+    "What appears",
+    "Receive an exception through get"
+  ],
+  "project": {
+    "title": "Receive an asynchronous result",
+    "task": "Trace how the future carries the calculation's result to the caller.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local C++ example is optional."
+  }
+}

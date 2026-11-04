@@ -1,0 +1,84 @@
+{
+  "lesson": "python-57",
+  "sourceHash": "229c0d17221fc03fa2d465523bab794db825920a42970259a9c860c39391c533",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Write utf8_summary(text). Encode the supplied valid Unicode string as UTF-8 and return (byte_count, decoded_text). Preserve exact text without normalization; empty text returns (0, \"\").",
+      "after": "Turn text into UTF-8 bytes, count them, and turn them back into text."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "str stores Unicode text; bytes stores byte values. len on a string counts Unicode code points, not necessarily visible grapheme clusters. len on bytes counts bytes. One visible character may contain several code points, and one code point may need several UTF-8 bytes.",
+        "text.encode(\"utf-8\") takes an encoding name and returns new bytes representing the string. encoded.decode(\"utf-8\") interprets bytes using that encoding and returns new text. Neither call edits the original object. The dot selects the method, and parentheses pass its encoding argument.",
+        "```python\ntext = \"é\"\nencoded = text.encode(\"utf-8\")\nprint(len(text))\nprint(len(encoded))\nprint(encoded.decode(\"utf-8\"))\n```\nIt prints 1, then 2, then é. The encoding changes representation rather than the meaning of the text.",
+        "Strict decoding is the default. b\"\\xff\" is a one-byte literal written with a hexadecimal escape; it is not valid UTF-8. This complete example handles its specific failure:\n```python\ntry:\n    b\"\\xff\".decode(\"utf-8\")\nexcept UnicodeDecodeError:\n    print(\"Invalid UTF-8\")\n```\nIt prints Invalid UTF-8. Silently ignoring malformed bytes would lose information; choose a replacement policy only when the application explicitly permits it.",
+        "```python\ndef utf8_summary(text):\n    encoded = text.encode(\"utf-8\")\n    return len(encoded), encoded.decode(\"utf-8\")\nprint(utf8_summary(\"Café\"))\n```\nIt returns and prints (5, 'Café'): the byte count and exact round-tripped string. The project accepts ordinary Unicode strings encodable in UTF-8, not isolated surrogate code points. Optional local transfer: compare \"é\" with \"e\\u0301\"; the two can look alike without being the same code-point sequence."
+      ],
+      "after": [
+        "A string (`str`) holds text. A `bytes` value holds small whole numbers from 0 to 255.\n\nUnicode gives letters, marks, and symbols numbers called code points. `len(text)` counts these code points. One visible character can use more than one.\n\n`len(encoded)` counts bytes instead. In UTF-8, one code point can need several bytes.",
+        "`text.encode(\"utf-8\")` turns the text into new bytes. `encoded.decode(\"utf-8\")` turns those bytes back into text.\n\nNeither call changes the original value. The dot selects the method, and the text inside `()` chooses the encoding.",
+        "```python\ntext = \"é\"\nencoded = text.encode(\"utf-8\")\nprint(len(text))\nprint(len(encoded))\nprint(encoded.decode(\"utf-8\"))\n```\nIt prints 1, then 2, then é. Encoding changes how the text is represented, not its meaning.",
+        "By default, decoding stops with an error if the bytes do not fit the chosen encoding.\n\n`b\"\\xff\"` holds one byte. `\\xff` is a way to write the number 255 in hexadecimal, or base 16. That byte alone is not valid UTF-8. This example handles the error:\n```python\ntry:\n    b\"\\xff\".decode(\"utf-8\")\nexcept UnicodeDecodeError:\n    print(\"Invalid UTF-8\")\n```\nIt prints Invalid UTF-8. Ignoring malformed bytes would lose information. Use replacement text only when the application allows it.",
+        "```python\ndef utf8_summary(text):\n    encoded = text.encode(\"utf-8\")\n    return len(encoded), encoded.decode(\"utf-8\")\nprint(utf8_summary(\"Café\"))\n```\nIt returns and prints (5, 'Café'): the byte count and exact decoded text. The project accepts ordinary Unicode strings that UTF-8 can encode, but not isolated surrogate code points—special code values that cannot stand alone as UTF-8 text. Empty text returns (0, \"\"). Optional check: compare \"é\" with \"e\\u0301\"; they can look alike but have different code-point sequences."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If text changes from \"é\" to \"A\", what are the string length and UTF-8 byte length?",
+        "choices": [
+          "Both are always 2",
+          "String length 1, byte length 2",
+          "Both are 1"
+        ],
+        "answer": 2,
+        "explanation": "ASCII A occupies one Unicode code point and one UTF-8 byte. The encoding determines byte length, not a universal one-byte-per-character rule."
+      },
+      "after": {
+        "question": "If text changes from \"é\" to \"A\", what are the string length and UTF-8 byte length?",
+        "choices": [
+          "Both are always 2",
+          "String length 1, byte length 2",
+          "Both are 1"
+        ],
+        "answer": 2,
+        "explanation": "A is one code point and one UTF-8 byte. UTF-8 determines byte length; there is no rule that every character uses one byte."
+      }
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the requirement.",
+        "Make one change to the starter.",
+        "Run the checks.",
+        "Explain why a changed input produces its result."
+      ],
+      "after": [
+        "Encode `text` as UTF-8 bytes.",
+        "Count the bytes, then decode them back into text.",
+        "Return the count and decoded text together.",
+        "Check plain letters, accented text, and an empty string."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Trace the visible worked calls before changing the starter."
+      ],
+      "after": [
+        "Count `encoded`, not the original string, to find the byte length.",
+        "Use the same `\"utf-8\"` encoding for both calls."
+      ]
+    }
+  ],
+  "reviewNotes": [
+    "Kept all five sections in their original order.",
+    "Preserved the worked code and output fences.",
+    "Kept quiz answer index 2 and its meaning.",
+    "Retained exact text, empty input, invalid byte, and surrogate limits.",
+    "Explained Unicode, bytes and code-point counts in direct language and shortened the summary.",
+    "Made the summary and practice guidance concrete to this lesson, replacing generic review directions."
+  ]
+}

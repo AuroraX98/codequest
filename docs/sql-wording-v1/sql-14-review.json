@@ -1,0 +1,110 @@
+{
+  "lesson": "sql-14",
+  "position": 29,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Create a view named qualifying_subjects with subject and total_minutes. Include subjects whose summed known minutes are at least 30. Display the result ordered by subject. Do not modify sessions.",
+      "after": "Use HAVING to choose groups by their total."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "WHERE filters individual rows before they are grouped.",
+        "GROUP BY puts rows with the same group value together. SUM then adds the known numbers in each group.",
+        "HAVING filters the grouped results. It can ask a question about SUM(minutes).",
+        "This separate example keeps a group whose total reaches 20.\n```sql\nWITH practice(subject, minutes) AS (\n  VALUES ('Drawing', 8), ('Drawing', 14), ('Singing', 15)\n)\nSELECT subject, SUM(minutes) AS total_minutes\nFROM practice\nGROUP BY subject\nHAVING SUM(minutes) >= 20\nORDER BY subject;\n```",
+        "Drawing remains with 22 minutes. Neither individual Drawing row reaches 20, but the total does.",
+        "Using WHERE minutes >= 20 instead would remove both Drawing rows before addition. It answers a different question.",
+        "The >= comparison includes the exact boundary. A total of 30 qualifies when the minimum is 30.",
+        "SUM ignores NULL inputs. A group with only NULL minutes has an unknown total, so it does not pass this numeric condition.",
+        "Create the view from a grouped SELECT. A view saves the query; it is not a separate copied table.",
+        "Check a group that reaches the target through several small entries, one just below the target, and one with unknown minutes."
+      ],
+      "after": [
+        "`WHERE` filters individual rows before they are grouped.",
+        "`GROUP BY` puts matching group values together. SUM then adds the known numbers in each group.",
+        "`HAVING` filters groups after their totals are calculated.",
+        "Run this example in a fresh database:\n```sql\nCREATE TABLE practice(subject TEXT, minutes INTEGER);\nINSERT INTO practice VALUES\n  ('Drawing', 8), ('Drawing', 14), ('Singing', 15);\nSELECT subject, SUM(minutes) AS total_minutes\nFROM practice\nGROUP BY subject\nHAVING SUM(minutes) >= 20\nORDER BY subject;\n```\nThe query keeps groups totaling at least 20 minutes.",
+        "Drawing remains with `22` minutes. Its two small entries add up to enough, even though neither entry reaches 20 alone.",
+        "`WHERE minutes >= 20` would remove both Drawing rows before adding. That asks about each entry instead of the total.",
+        "`>=` includes the target itself. A total of 30 passes a minimum of 30.",
+        "SUM skips NULL values. A group with only NULL minutes has an unknown total, so it does not pass this number check.",
+        "Create `qualifying_subjects(subject, total_minutes)` as a view of sessions. Group by subject and use HAVING to keep totals of at least 30. Leave sessions unchanged.",
+        "Check a total made from several small entries, a total exactly at the target, and one below it. Display the view in subject order."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the requirement.",
+        "Make one change to the starter.",
+        "Run the checks.",
+        "Explain why a changed input produces its result."
+      ],
+      "after": [
+        "Group sessions by subject and calculate SUM(minutes).",
+        "Keep groups with totals at least 30 using HAVING.",
+        "Create qualifying_subjects and display it in subject order."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Keep rows available until the sum has been calculated.",
+        "Place HAVING after GROUP BY.",
+        "Use the aggregate SUM(minutes) in the group condition."
+      ],
+      "after": [
+        "HAVING comes after GROUP BY.",
+        "Keep the small entries until their total is calculated."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "A subject has entries of 11 and 14 minutes. You want subjects totaling at least 25 minutes. What happens if you use WHERE minutes >= 25 before GROUP BY?",
+        "choices": [
+          "The subject remains because 11 + 14 = 25.",
+          "The subject appears twice.",
+          "Both rows disappear before the total can be calculated."
+        ],
+        "answer": 2,
+        "explanation": "WHERE evaluates each row: neither 11 nor 14 meets 25. HAVING SUM(minutes) >= 25 checks the combined total and would keep the subject."
+      },
+      "after": {
+        "question": "A subject has 11 and 14 minutes. What happens if you use WHERE minutes >= 25 before grouping?",
+        "choices": [
+          "The subject stays because the total is 25.",
+          "The subject appears twice.",
+          "Both rows are removed before the total is calculated."
+        ],
+        "answer": 2,
+        "explanation": "Neither row reaches 25 alone. HAVING SUM(minutes) >= 25 would check their combined total."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "This practice executes SQLite. The threshold is inclusive; unknown is not treated as zero.",
+      "after": "This exercise uses SQLite. The minimum includes its exact limit. A missing total is not treated as zero."
+    }
+  ],
+  "headings": [
+    "Filter rows with WHERE",
+    "Group before adding",
+    "Filter groups with HAVING",
+    "Try a total check",
+    "Read the kept group",
+    "Avoid filtering too early",
+    "Include the exact target",
+    "Keep missing totals honest",
+    "Build the view",
+    "Check useful boundary cases"
+  ],
+  "project": {
+    "title": "Keep subjects that meet the total",
+    "task": "Create qualifying_subjects(subject, total_minutes) as a view of subjects whose known minutes total at least 30. Display it in subject order.",
+    "done_when": "The qualifying groups and totals are correct, including the exact limit, and sessions stays unchanged."
+  }
+}

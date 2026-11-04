@@ -1,0 +1,107 @@
+{
+  "lesson": "backend-11",
+  "position": 32,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Complete createOnce(cache, key, title). For a new key, save and return {status:201,id:cache.size+1,title}. Repeating the key with the same title returns the saved result without another entry. Reusing it with a different title returns {status:409}. Keys and titles are valid strings supplied by the caller.",
+      "after": "Use a request key to remember a note you already created. A matching retry gets the saved result."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A client may retry because it did not receive a response, even though the server already completed the operation.",
+        "An idempotency key identifies retries of one intended operation. It is not a new key for every network attempt.",
+        "Store the original request’s meaningful parameters and its result under that key.",
+        "If the same key arrives with matching parameters, return the saved result rather than creating a second record.",
+        "If the key arrives with different parameters, reject the conflicting reuse. Otherwise an old result might be attached to a different requested operation.",
+        "This exercise uses a Map in one process. Map.has(key) checks presence; get reads the record; set stores it.\n\nKeep the stored response separate from the object returned to a caller. Return a fresh shallow copy of the result on both a new request and a retry, so a caller changing a top-level returned field cannot overwrite the saved response. Object spread, {...savedResult}, copies top-level fields; it would still share nested objects, so this exercise uses flat result fields.\n\n```javascript\nconst saved = new Map();\nsaved.set(\"req-a\", {status:201});\nconsole.log(saved.has(\"req-a\"));\nconsole.log(saved.get(\"req-a\").status);\nconsole.log(saved.has(\"req-b\"));\nconsole.log(saved.get(\"req-b\"));\n```\nThe outputs are true, 201, false, undefined. set receives a key/value, stores the entry and returns the Map; has returns presence; get returns the value or undefined. Reading a stored object does not copy it, so the response-copy rule above still matters.",
+        "A real server needs durable, atomic storage and a key scope tied to the authorized caller or operation. A simple in-memory Map does not solve concurrent requests across servers.",
+        "The practice contains no payment or live API call. Test one new request, its retry, a conflicting retry, and a different key."
+      ],
+      "after": [
+        "A browser asks for a new note. The server creates it, but the reply gets lost. The browser may send the request again.",
+        "An idempotency key is a label for one intended action. Keep the same key when retrying that action.",
+        "Save the request's title and result under its key. The title lets you check whether a retry asks for the same note.",
+        "If both the key and title match, return the saved result. Do not create another note.",
+        "If the key matches but the title changes, return status 409. This means the request conflicts with the saved one.",
+        "A Map stores values under keys. Here, req-a has a saved result; req-b does not.\n\n```javascript\nconst saved = new Map();\nsaved.set(\"req-a\", {status:201});\nconsole.log(saved.has(\"req-a\"));\nconsole.log(saved.get(\"req-a\").status);\nconsole.log(saved.has(\"req-b\"));\nconsole.log(saved.get(\"req-b\"));\n```\n\nThe outputs are true, 201, false, and undefined. has checks for a key. get reads its value. set saves a value.",
+        "Reading an object from a Map does not copy it. Return {...savedResult} so changing a returned top-level field cannot change the saved result. This shallow copy still shares any nested objects; our result has only flat fields.",
+        "Complete createOnce(cache, key, title). A new key saves {status:201, id:cache.size+1, title}. A matching retry returns a copy of that result. A changed title returns {status:409}. Check that a retry leaves the Map size unchanged."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the requirement.",
+        "Return a separate copy of each result, so caller changes cannot overwrite the saved response.",
+        "Make one change to the starter.",
+        "Run the checks.",
+        "Explain why a changed input produces its result."
+      ],
+      "after": [
+        "Create a result only when the key is new.",
+        "For an existing key, compare the saved title.",
+        "Return a fresh copy of each saved result.",
+        "Run the checks, including a changed title and a changed returned object."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Check cache.has before creating.",
+        "Compare the saved title when a key already exists.",
+        "Store the result once and return a copy of its flat fields."
+      ],
+      "after": [
+        "Use cache.has(key) to check whether the key is saved.",
+        "Read the saved title before deciding whether the retry matches.",
+        "Store the result once. Use object spread when returning its flat fields."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "The server created a note, but the reply was lost. The client retries the same operation with the same key and title. What should this design do?",
+        "choices": [
+          "Create another note because the client did not see the reply.",
+          "Return the saved result without repeating the creation.",
+          "Treat the key as a new random identifier on every retry."
+        ],
+        "answer": 1,
+        "explanation": "A retry is not necessarily a new operation. Matching key and parameters let the server return the already completed result."
+      },
+      "after": {
+        "question": "A note was created, but its reply was lost. The browser retries with the same key and title. What should happen?",
+        "choices": [
+          "Create a second note.",
+          "Return the saved result without creating another note.",
+          "Give each retry a new key."
+        ],
+        "answer": 1,
+        "explanation": "The matching key and title identify the same action. Returning its saved result avoids creating a duplicate."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Original simplified note-creation model inspired by documented idempotency patterns, not an implementation of a specific external API. No live requests occur. Durable uniqueness, concurrency, auth scope, expiration and crash recovery need separate production design.",
+      "after": "This exercise uses a Map in one running process and valid input strings. A real server needs saved data that survives restarts, a key tied to the permitted caller, and a way to prevent simultaneous requests from creating duplicates."
+    }
+  ],
+  "headings": [
+    "One request may arrive twice",
+    "Give the request a key",
+    "Remember the first result",
+    "Reuse the saved result",
+    "Reject a changed request",
+    "One example",
+    "Keep saved data safe",
+    "Try a retry"
+  ],
+  "project": {
+    "title": "Do not create the same note twice",
+    "task": "Complete createOnce(cache, key, title). New keys save and return {status:201,id:cache.size+1,title}. Matching retries return the saved result. Reusing a key with a different title returns {status:409}. Return separate copies of flat saved results. Inputs are valid strings.",
+    "done_when": "The checks pass for a new key, a matching retry, a changed title, and changes to a returned object. Explain why a retry does not create another note."
+  }
+}

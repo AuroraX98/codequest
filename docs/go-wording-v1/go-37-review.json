@@ -1,0 +1,91 @@
+{
+  "lesson": "go-37",
+  "position": 37,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "If panic(\"broken\") is replaced by fmt.Println(\"normal\"), what prints?",
+      "after": "Recover from a panic at a chosen boundary."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "panic stops normal execution and unwinds the current goroutine, running deferred calls. Prefer returned errors for expected failures. recover can stop a panic only when called directly in a deferred function in that panicking goroutine.",
+        "After recovery, the panicking function does not resume at the panic statement. It returns to its caller once deferred work finishes. With no active panic, recover returns nil. This small boundary prints a recovery message and lets main continue; it is not a policy of hiding arbitrary faults.",
+        "Complete local Go example; the app itself does not execute it:\n```go\npackage main\nimport (\"fmt\")\nfunc guarded() {\n defer func() {\n  if recover() != nil { fmt.Println(\"recovered\") }\n }()\n panic(\"broken\")\n}\nfunc main() {\n guarded()\n fmt.Println(\"after\")\n}\n```",
+        "Expected output or behavior: recovered\nafter. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Trace which function returns after recovery; do not use panic for an ordinary invalid form field. You may trace it without a Go compiler; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "A panic interrupts normal instructions in the current goroutine, a running path of Go work. As the calls unwind, their deferred calls run. Use returned errors for expected problems instead.",
+        "`recover()` can stop an active panic when called directly inside a deferred function in the same goroutine. The interrupted function does not restart at the panic line. After its deferred work finishes, it returns to its caller.",
+        "Follow the panic from guarded back to main.\n```go\npackage main\nimport (\"fmt\")\nfunc guarded() {\n defer func() {\n  if recover() != nil { fmt.Println(\"recovered\") }\n }()\n panic(\"broken\")\n}\nfunc main() {\n guarded()\n fmt.Println(\"after\")\n}\n```",
+        "The screen shows `recovered`, then `after`. The deferred function recovers, guarded returns, and main continues.",
+        "Without an active panic, recover returns nil. The deferred function then has nothing to report."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Check whether a panic is active when recover runs."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If panic(\"broken\") is replaced by fmt.Println(\"normal\"), what prints?",
+        "choices": [
+          "recovered, then after",
+          "normal, then after",
+          "normal, recovered, after"
+        ],
+        "answer": 1,
+        "explanation": "Without an active panic, recover returns nil and the deferred handler prints nothing."
+      },
+      "after": {
+        "question": "Replace panic(\"broken\") with fmt.Println(\"normal\"). What appears?",
+        "choices": [
+          "recovered, then after",
+          "normal, then after",
+          "normal, recovered, then after"
+        ],
+        "answer": 1,
+        "explanation": "The normal display runs. recover finds no panic, so only main's after message follows."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Go Core v1 uses the verified Go1.27.3 toolchain and standard library. The app supplies concept reading and an understanding check, not a Go browser runner. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "The browser shows Go code and checks your understanding; it does not run Go. Optional local examples use Go 1.27."
+    }
+  ],
+  "headings": [
+    "Understand a panic",
+    "Recover in a deferred function",
+    "One example",
+    "Read the recovery order",
+    "Distinguish a normal return"
+  ],
+  "project": {
+    "title": "Panic recovery boundaries",
+    "task": "Follow the normal path when no panic occurs.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local Go example is optional."
+  }
+}

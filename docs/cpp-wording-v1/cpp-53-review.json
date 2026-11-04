@@ -1,0 +1,94 @@
+{
+  "lesson": "cpp-53",
+  "position": 53,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Instead, push directly into scores, then throw for a negative value, with no rollback. After adding -2, what does the catch leave?",
+      "after": "Prepare a change separately so a failed operation can leave the original untouched."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "The basic exception guarantee preserves valid invariants and avoids resource leaks, but may leave changed values. The strong guarantee additionally leaves the protected operation’s state unchanged when it fails.",
+        "addValidated builds a separate vector candidate. Copying, allocation or validation can fail before scores is changed. The final swap commits the prepared result; swapping these default-allocator vectors does not throw.\n\nscores.back() returns access to the last element and requires a nonempty vector. The initial element 4 remains present on this rejection path, so that read is valid.",
+        "Replacing the candidate operations with direct edits to scores changes the guarantee. Catching the validation exception does not undo a previously successful push_back. noexcept also does not mean success: an escaping exception from a noexcept function terminates.",
+        "Complete local C++ example; the app itself does not execute it:\n```cpp\n#include <iostream>\n#include <stdexcept>\n#include <vector>\nvoid addValidated(std::vector<int>& scores, int score) {\n    auto candidate = scores;\n    candidate.push_back(score);\n    if (score < 0) throw std::invalid_argument(\"negative\");\n    scores.swap(candidate);\n}\nint main() {\n    std::vector<int> scores{4};\n    try { addValidated(scores, -2); }\n    catch (const std::invalid_argument&) { std::cout << \"rejected \"; }\n    std::cout << scores.size() << \" \" << scores.back() << \"\\n\";\n}\n```",
+        "Expected output or behavior: rejected 1 4. Local compiler test evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Compare a prepare-then-commit function with a direct-mutation version and state the guarantee you actually implemented. You may trace this without a compiler; finishing the reading is not proof of a local run."
+      ],
+      "after": [
+        "An exception guarantee describes what remains true after failure. The basic guarantee keeps objects valid and avoids resource leaks. The strong guarantee also leaves the protected state unchanged if the operation fails.",
+        "candidate is a copy of scores. The function adds to that copy and checks the new score. If this work fails, scores has not been changed.",
+        "swap exchanges the original and prepared contents after validation succeeds. Swapping these vectors with their default allocators does not throw, so it can safely finish the change.",
+        "Follow the rejected value through the candidate without changing the original vector.\n\n```cpp\n#include <iostream>\n#include <stdexcept>\n#include <vector>\nvoid addValidated(std::vector<int>& scores, int score) {\n    auto candidate = scores;\n    candidate.push_back(score);\n    if (score < 0) throw std::invalid_argument(\"negative\");\n    scores.swap(candidate);\n}\nint main() {\n    std::vector<int> scores{4};\n    try { addValidated(scores, -2); }\n    catch (const std::invalid_argument&) { std::cout << \"rejected \"; }\n    std::cout << scores.size() << \" \" << scores.back() << \"\\n\";\n}\n```",
+        "The program prints rejected 1 4. The negative value triggers an exception before swap. scores still has one item, four. back() reads that last item; it requires a nonempty vector.",
+        "catch handles the failure but does not automatically reverse earlier changes. noexcept is also not an undo command: it promises that no exception escapes the function. If one does, the program terminates."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain why, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Find the first operation that changes the original, then check whether failure can happen after it."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Instead, push directly into scores, then throw for a negative value, with no rollback. After adding -2, what does the catch leave?",
+        "choices": [
+          "A valid vector of size 2 whose last value is -2.",
+          "An empty vector, because exceptions clear containers.",
+          "The original vector, because catch automatically reverses mutations."
+        ],
+        "answer": 0,
+        "explanation": "The direct push already succeeded. The catch handles control flow but supplies no rollback, so the strong guarantee has been lost."
+      },
+      "after": {
+        "question": "Instead, append directly to scores, then reject the negative value without undoing the append. What remains after catch?",
+        "choices": [
+          "A usable vector with two items, ending in -2.",
+          "An empty vector, because exceptions clear containers.",
+          "The original vector, because catch automatically undoes changes."
+        ],
+        "answer": 0,
+        "explanation": "The append already happened. Handling the exception does not remove the appended item, so this version loses the strong guarantee."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "C++ Core v1, standard C++23 features checked against the available GCC14.2 implementation. This app provides concept reading and an understanding check, not a C++ browser runner. Local example tests are separate evidence and do not certify learner mastery.",
+      "after": "The browser shows C++ code and checks your understanding; it does not run C++. Optional local examples use C++23."
+    }
+  ],
+  "headings": [
+    "Choose a failure guarantee",
+    "Prepare a separate candidate",
+    "Commit only after the checks",
+    "One example",
+    "What appears",
+    "Catching does not undo changes"
+  ],
+  "project": {
+    "title": "State exception guarantees honestly",
+    "task": "Trace how preparing a copy protects the original on the rejection path.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local C++ example is optional."
+  }
+}

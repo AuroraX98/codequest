@@ -1,0 +1,83 @@
+{
+  "lesson": "typescript-38",
+  "position": 42,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Complete describeFailure(failure:unknown). This small simulation deliberately throws its supplied value and catches it. Return error.message for an Error instance; for any other thrown value return \"Unknown failure\". Keep an Error with an empty message empty. Never assume every thrown value has a message field.",
+      "after": "Check a caught value before reading its error message."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "JavaScript can throw values other than Error objects. Under this strict TypeScript setup, a caught value is unknown. Use a real check before reading its message.",
+        "```typescript\nfunction failureText(failure: unknown): string {\n  try {\n    throw failure;\n  } catch (error) {\n    if (error instanceof Error) return error.message;\n    return \"Not an Error object\";\n  }\n}\nconsole.log(failureText(new Error(\"Door closed\")));\nconsole.log(failureText(\"Door closed\"));\n```\nThis prints Door closed, then Not an Error object. failureText takes any supplied failure. In this isolated simulation, throw sends it straight to catch(error); a real application would catch a failing operation instead. instanceof Error checks whether the caught value is an Error instance. Only that branch reads .message. new Error(\"Door closed\") constructs an Error with that message. console.log displays the returned text.",
+        "```typescript\nfunction failureText(failure: unknown): string {\n  try {\n    throw failure;\n  } catch (error) {\n    if (error instanceof Error) return error.message;\n    return \"Not an Error object\";\n  }\n}\nconsole.log(failureText(new Error(\"\")));\nconsole.log(failureText(null));\n```\nThis prints an empty line, then Not an Error object. Trace the changed value through the same rule.",
+        "Complete describeFailure(failure:unknown). This small simulation deliberately throws its supplied value and catches it. Return error.message for an Error instance; for any other thrown value return \"Unknown failure\". Keep an Error with an empty message empty. Never assume every thrown value has a message field."
+      ],
+      "after": [
+        "`throw` stops the current work and sends a value to `catch`. That value can be an `Error` object, text, or something else. Here, its type is `unknown`, so check it before reading `.message`.",
+        "```typescript\nfunction failureText(failure: unknown): string {\n  try {\n    throw failure;\n  } catch (error) {\n    if (error instanceof Error) {\n      return error.message;\n    }\n    return \"Not an Error object\";\n  }\n}\nconsole.log(failureText(new Error(\"Door closed\")));\n```\nThis prints `Door closed`. `instanceof Error` checks whether the caught value is an `Error` object. This small example throws a value on purpose so you can practise catching it.",
+        "An `Error` may have an empty message. Return that empty text as it is. A plain string is not an `Error` object, even if it contains the same words. It uses the fallback message.",
+        "Complete `describeFailure`. In `catch`, return `.message` for an `Error` object. For every other value, return `\"Unknown failure\"`."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the example and its input/output contract.",
+        "Complete the starter without turning off compiler diagnostics.",
+        "Run the compiler and behavior checks, then explain a changed case."
+      ],
+      "after": [
+        "Check the caught value with `instanceof Error`.",
+        "Return its message or the fallback text.",
+        "Run the checks, including an Error with an empty message."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Compare the public input/output types and trace the visible call before editing."
+      ],
+      "after": [
+        "Check the object type, not whether its message has any letters."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "The caught value is the string \"Door closed\", not new Error(\"Door closed\"). What does failureText return?",
+        "choices": [
+          "Not an Error object.",
+          "Door closed, because all thrown values gain a message.",
+          "An empty string, because string errors disappear."
+        ],
+        "answer": 0,
+        "explanation": "A thrown string stays a string. It does not satisfy instanceof Error, so the fallback branch runs."
+      },
+      "after": {
+        "question": "What does `failureText` return when it catches the plain string `\"Door closed\"`?",
+        "choices": [
+          "Not an Error object.",
+          "Door closed, because throw adds a message field.",
+          "Empty text, because the string disappears."
+        ],
+        "answer": 0,
+        "explanation": "The string stays a string. It fails the `instanceof Error` check, so the fallback is returned."
+      }
+    }
+  ],
+  "headings": [
+    "A caught value can be anything",
+    "Check for an Error object",
+    "Keep an empty message",
+    "Build your failure message"
+  ],
+  "project": {
+    "title": "Narrow a caught value before reading it",
+    "task": "Complete `describeFailure(failure: unknown)`. Keep the practice throw and catch. Return an Error's message, including empty text. Return `\"Unknown failure\"` for other values.",
+    "done_when": "Error objects keep their messages. Strings, null, and other values receive the fallback without unsafe property access."
+  }
+}

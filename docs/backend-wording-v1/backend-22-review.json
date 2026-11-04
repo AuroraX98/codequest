@@ -1,0 +1,96 @@
+{
+  "lesson": "backend-22",
+  "position": 8,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Implement titlePatch(body). Match the worked contract and the changed-input checks without modifying the supplied input values.",
+      "after": "Copy only the fields a caller is allowed to change."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A validated request can still contain fields the caller must not control. Build the write object from an explicit list of permitted fields.",
+        "This exercise is a small pure JavaScript model. Its inputs are supplied directly; it does not receive live HTTP requests, operate a database, or deploy a service.",
+        "Worked example:\n\n```javascript\nfunction titlePatch(body) {\n  return {title:body.title};\n}\nconsole.log(titlePatch({\"title\":\"Moon\",\"ownerId\":\"attacker\"}));\n```\nThe returned value is {\"title\":\"Moon\"}.",
+        "The object literal creates a new object with only title. Spreading the entire body would also copy ownerId or admin. This step assumes title was already validated.",
+        "Read the function call titlePatch({\"title\":\"Moon\",\"ownerId\":\"attacker\"}) from the inside out: the arguments supply the inputs, titlePatch runs the body once, and return sends its result back to the caller. console.log displays that result; it does not change it.",
+        "Why not use {...body} for this update? An allowlist determines writable fields. Ownership must come from a trusted session and stored record."
+      ],
+      "after": [
+        "An update should contain only the fields the caller may change. An allowlist names those permitted fields. This update allows title, and nothing else.",
+        "This step assumes title has already been checked. It chooses which field to copy; it does not check the caller's identity or permission to edit the record.",
+        "```javascript\nfunction titlePatch(body) {\n  return {title:body.title};\n}\nconsole.log(titlePatch({\"title\":\"Moon\",\"ownerId\":\"attacker\"}));\n```\nThe result contains only title: \"Moon\". The supplied ownerId is left out.",
+        "{title: body.title} creates a new object with one field. It reads the supplied title without changing the original body.",
+        "Copying the whole body with {...body} could also copy ownerId or admin. Those extra fields must not become writable just because the caller included them. A real server checks ownership using trusted identity and stored data.",
+        "Complete titlePatch(body) by returning a new object containing only title. Preserve its already-checked value exactly, and leave all other supplied fields out."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the contract and trace the worked example.",
+        "Replace the unfinished return in the starter.",
+        "Run the changed-input checks.",
+        "Explain the boundary in the understanding question."
+      ],
+      "after": [
+        "Read the checked title value.",
+        "Put it in a new object with only a title field.",
+        "Run the checks with extra fields in the input."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "The object literal creates a new object with only title. Spreading the entire body would also copy ownerId or admin. This step assumes title was already validated."
+      ],
+      "after": [
+        "Choose allowed fields explicitly.",
+        "Do not spread the entire request body into the update."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Why not use {...body} for this update?",
+        "choices": [
+          "It always deletes title",
+          "It may copy fields the caller must not control",
+          "It validates ownership automatically"
+        ],
+        "answer": 1,
+        "explanation": "An allowlist determines writable fields. Ownership must come from a trusted session and stored record."
+      },
+      "after": {
+        "question": "Why should this update avoid {...body}?",
+        "choices": [
+          "It always deletes title",
+          "It may copy fields the caller must not control",
+          "It checks ownership automatically"
+        ],
+        "answer": 1,
+        "explanation": "Spreading the whole body can copy unwanted fields. This update should copy only title."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Runs as a pure JavaScript function in the browser. Passing checks does not establish live HTTP behavior, database durability, concurrency safety, authentication security, queue delivery guarantees, or production readiness.",
+      "after": "This browser exercise selects writable fields. A real server must separately validate the value and check permission to edit the record."
+    }
+  ],
+  "headings": [
+    "Choose allowed fields",
+    "Check the title first",
+    "Read one example",
+    "Build a fresh update",
+    "Do not copy every field",
+    "Try it yourself"
+  ],
+  "project": {
+    "title": "Allow only intended write fields",
+    "task": "Complete titlePatch(body) to return a new object containing only the already-validated title, without changing body.",
+    "done_when": "The title is preserved, extra fields are excluded, and the input stays unchanged."
+  }
+}

@@ -1,0 +1,91 @@
+{
+  "lesson": "java-56",
+  "position": 56,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "What prints when the complete comparator is reversed?",
+      "after": "Sort by one rule, then use a second rule to break ties."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "Comparator.comparingInt(String::length) sorts by length. thenComparing adds a natural String order only when lengths tie. It does not replace the first key.",
+        "ArrayList is mutable, so sort can reorder it. List.of is unmodifiable and cannot itself be sorted in place. reversed applied to the complete comparator reverses both primary and tie-break ordering.\n\nreversed() takes no arguments and returns the reverse comparator; it does not sort a list until sort uses it. In this separate example:\n```java\nvar sample = new java.util.ArrayList<>(java.util.List.of(\"aa\", \"z\", \"bb\"));\njava.util.Comparator<String> order = java.util.Comparator.comparingInt(String::length)\n    .thenComparing(java.util.Comparator.naturalOrder());\nsample.sort(order.reversed());\nSystem.out.println(sample);\n```\nOutput: [bb, aa, z].",
+        "Complete local Java example; the app itself does not execute it:\n```java\nimport java.util.*;\npublic class Main {\n\n  public static void main(String[] args) {\n    var words = new ArrayList<>(List.of(\"bee\", \"ant\", \"ox\"));\n    Comparator<String> order = Comparator.comparingInt(String::length)\n        .thenComparing(Comparator.naturalOrder());\n    words.sort(order);\n    System.out.println(words);\n  }\n}\n```",
+        "Expected output or behavior: [ox, ant, bee]. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Add another two-letter word and trace both comparison keys. You may trace it without a JDK; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "A comparator decides which of two values comes first. comparingInt(String::length) compares word lengths first. thenComparing uses String's natural order only when lengths tie. For the lowercase English words here, that tie-break puts ant before bee.",
+        "sort changes the order inside the ArrayList. The List.of result cannot be changed, so the example first copies it into an ArrayList. Calling reversed on the complete comparator makes a new rule that reverses both the length order and its tie-break.",
+        "Find the shortest word first, then order the tied words.\n\n```java\nimport java.util.*;\npublic class Main {\n\n  public static void main(String[] args) {\n    var words = new ArrayList<>(List.of(\"bee\", \"ant\", \"ox\"));\n    Comparator<String> order = Comparator.comparingInt(String::length)\n        .thenComparing(Comparator.naturalOrder());\n    words.sort(order);\n    System.out.println(words);\n  }\n}\n```",
+        "The program prints [ox, ant, bee]. ox is shortest. ant and bee share a length, so the second rule puts ant first.",
+        "The quiz passes order.reversed() to sort. Reverse the entire ordering, including the order of equal-length words."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "reversed applies to the whole comparator built so far."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "What prints when the complete comparator is reversed?",
+        "choices": [
+          "[bee, ant, ox]",
+          "[ox, bee, ant]",
+          "[ant, bee, ox]"
+        ],
+        "answer": 0,
+        "explanation": "Reversing the whole composed comparator reverses both length order and the equal-length tie break."
+      },
+      "after": {
+        "question": "Use words.sort(order.reversed()). What prints?",
+        "choices": [
+          "[bee, ant, ox]",
+          "[ox, bee, ant]",
+          "[ant, bee, ox]"
+        ],
+        "answer": 0,
+        "explanation": "The reversed rule puts longer words first and reverses their tie-break too. bee comes before ant, then ox."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Java Core v1 uses stable Java25 LTS features without preview flags. The app supplies concept reading and an understanding check, not a Java browser runner. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "The browser shows Java code and checks your understanding; it does not run Java. Optional local examples use Java25."
+    }
+  ],
+  "headings": [
+    "A comparator describes an ordering rule",
+    "Apply the rule to a changeable list",
+    "One example",
+    "What appears",
+    "Reverse the whole rule"
+  ],
+  "project": {
+    "title": "Compose a Comparator",
+    "task": "Trace the length rule first, then the rule for equal lengths.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local Java example is optional."
+  }
+}

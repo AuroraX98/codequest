@@ -1,0 +1,90 @@
+{
+  "lesson": "sql-35",
+  "position": 11,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Create reminders with id as INTEGER PRIMARY KEY, title NOT NULL and nullable status DEFAULT open. Insert Read without a status and Walk with explicit NULL, with IDs 1 and 2.",
+      "after": "A default fills an omitted value; it does not replace an explicit NULL."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "DEFAULT supplies a value when an INSERT does not provide that column. It is an insertion rule, not a query that keeps repairing missing data. A text literal uses single quotes. NULL represents missing information and is different from omitting a column.",
+        "The column list in INSERT INTO reminders(id,title) leaves status out, so its declared default is used. INSERT with all three values explicitly supplies NULL instead; this nullable column stores NULL. NOT NULL is a separate constraint: adding it would reject an explicit NULL with ordinary INSERT, rather than silently using the default. The project checks successful rows; the local error example below separately demonstrates the rejected write.",
+        "\n```sql\nCREATE TABLE reminders(id INTEGER PRIMARY KEY, title TEXT NOT NULL, status TEXT DEFAULT 'open');\nINSERT INTO reminders(id,title) VALUES(1,'Read');\nINSERT INTO reminders VALUES(2,'Walk',NULL);\nSELECT id,title,status\nFROM reminders\nORDER BY id;\n```\nRow 1 has status open. Row 2 has NULL, not open. The final ORDER BY id states the display order.",
+        "\n```sql\nCREATE TABLE reminders(id INTEGER PRIMARY KEY, title TEXT NOT NULL, status TEXT DEFAULT 'open');\nINSERT INTO reminders(id,title) VALUES(1,'Read');\nINSERT INTO reminders VALUES(2,'Walk','done');\nSELECT id,title,status\nFROM reminders\nORDER BY id;\n```\nRow 2 now stores done because the supplied value wins. Row 1 still uses open.",
+        "Optional practice: change the declared default to queued in a fresh database. Predict which of the two inserts changes.",
+        "Local rejection demonstration, not the normal project solution: run each following block in its own fresh SQLite database. The final INSERT intentionally fails. The app’s current SELECT checks do not catch expected errors; this is a separately verified boundary, not a successful Run checks script.\n```sql\nCREATE TABLE strict_note(title TEXT NOT NULL DEFAULT 'New');\nINSERT INTO strict_note VALUES(NULL);\n```\nExpected diagnostic: NOT NULL constraint failed: strict_note.title. The failing statement adds no row; previously accepted rows remain."
+      ],
+      "after": [
+        "`DEFAULT` supplies a starting value when an insert leaves out a column. It does not keep checking old rows or repair missing values later.",
+        "Leaving a column out is different from supplying `NULL`. An omitted column can use its default. An explicit NULL stays NULL when the column allows missing values.",
+        "Run this example in a fresh database:\n```sql\nCREATE TABLE demo_reminders (\n  id INTEGER PRIMARY KEY,\n  title TEXT NOT NULL,\n  status TEXT DEFAULT 'open'\n);\nINSERT INTO demo_reminders (id, title)\nVALUES (1, 'Draw');\nINSERT INTO demo_reminders (id, title, status)\nVALUES (2, 'Visit', NULL);\nSELECT id, title, status\nFROM demo_reminders\nORDER BY id;\n```\nDraw has status `open`. Visit has status `NULL`.",
+        "The first insert leaves status out, so it uses the default. The second insert supplies a value—NULL—so the default is not used. A supplied text value would also take the place of the default.",
+        "`NOT NULL` is a separate rule that refuses missing values. The example requires a title but allows a missing status. With an ordinary INSERT, a default does not rescue an explicit NULL in a NOT NULL column.",
+        "Create `reminders` with an integer primary key `id`, a required text `title`, and a text `status` that allows NULL and defaults to `'open'`. Insert Read as id `1` without status. Insert Walk as id `2` with explicit NULL."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the small example and explain its inputs and effects.",
+        "Complete the starter for this lesson.",
+        "Run the behavior checks, then predict a changed case."
+      ],
+      "after": [
+        "Define the three columns and their rules.",
+        "Insert Read while leaving status out.",
+        "Insert Walk with NULL as its status."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Trace the supplied rows and resulting rows before changing the query."
+      ],
+      "after": [
+        "NOT NULL belongs on title, not status.",
+        "Use a column list to leave status out of the first insert."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "In a fresh table with status DEFAULT queued, insert one row without status and another with explicit NULL. What is stored?",
+        "choices": [
+          "queued, then NULL",
+          "queued for both",
+          "NULL for both"
+        ],
+        "answer": 0,
+        "explanation": "Only the omitted column invokes its default. An explicit NULL remains NULL in a nullable column."
+      },
+      "after": {
+        "question": "A status column allows NULL and defaults to queued. One insert omits status; another supplies NULL. What is stored?",
+        "choices": [
+          "queued, then NULL",
+          "queued for both",
+          "NULL for both"
+        ],
+        "answer": 0,
+        "explanation": "Only the omitted value uses the default. The explicit NULL stays NULL."
+      }
+    }
+  ],
+  "headings": [
+    "Use a starting value",
+    "Omit a column or supply NULL",
+    "Try both kinds of insert",
+    "Read the two results",
+    "Require a title separately",
+    "Build the reminders table"
+  ],
+  "project": {
+    "title": "Defaults are not missing-value repair",
+    "task": "Create reminders with the required id, title, and status rules. Insert Read without status and Walk with NULL, using IDs 1 and 2.",
+    "done_when": "Read has status open, Walk has status NULL, and the table enforces the requested column rules."
+  }
+}

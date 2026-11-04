@@ -1,0 +1,102 @@
+{
+  "lesson": "react-04",
+  "position": 26,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Build a menu with clear labels, keyboard actions, and predictable focus return.",
+      "after": "Open a panel with the keyboard, then close it and return focus to its button."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "Keyboard access means someone can use a feature without a mouse. Native buttons can receive focus with Tab and activate with Enter or Space. Focus is the control that currently receives keyboard input. Give buttons a visible name describing their action and keep focus visible. A clickable div would need extra keyboard behavior that a button already provides.",
+        "This complete React/JSX example exposes whether a panel is open:\n```react\nfunction App() {\n  const [open, setOpen] = React.useState(false);\n  return <nav>\n    <button aria-expanded={open} aria-controls=\"help-panel\"\n      onClick={() => setOpen(value => !value)}>\n      Help\n    </button>\n    {open && <ul id=\"help-panel\">\n      <li><button>Read instructions</button></li>\n    </ul>}\n  </nav>;\n}\n```\nAt first, Help is collapsed and no list appears. Activating it shows the list and changes aria-expanded to true. aria-controls names the id of the controlled element. This exposes information; the attributes do not implement opening by themselves.",
+        "In JSX, {open && ...} renders the element when open is true. !value flips a boolean: false becomes true. We also need a deliberate focus plan. Opening should focus the first action after it exists; Escape should close and return focus to the trigger. A ref stores a reference to an actual DOM element without needing a render every time it changes.",
+        "Replace the first App with this complete version:\n```react\nfunction App() {\n  const [open, setOpen] = React.useState(false);\n  const trigger = React.useRef(null);\n  const first = React.useRef(null);\n  React.useEffect(() => {\n    if (open) first.current?.focus();\n  }, [open]);\n  function close() {\n    setOpen(false);\n    trigger.current?.focus();\n  }\n  return <nav onKeyDown={event => {\n    if (event.key === 'Escape') close();\n  }}>\n    <button ref={trigger} aria-expanded={open}\n      aria-controls=\"help-panel\"\n      onClick={() => setOpen(value => !value)}>Help</button>\n    {open && <ul id=\"help-panel\">\n      <li><button ref={first}>Read instructions</button></li>\n      <li><button>Contact details</button></li>\n    </ul>}\n  </nav>;\n}\n```\nOpening focuses Read instructions. Pressing Escape while focus is inside the nav removes the list and focuses Help again.",
+        "useRef(null) starts without an element; React fills .current when the ref's button is mounted. ?. means only call focus when the current value exists. useEffect runs its work after React has committed the screen update, so the first button is available. [open] is the dependency array: run this effect when open changes. Setting a ref does not itself update the visible screen.",
+        "Key events bubble from a focused child to its ancestor, allowing nav's handler to see Escape from a list button. The close function hides the list and restores the trigger as the keyboard position. Tab is still ordinary focus navigation. This is a simple disclosure containing native buttons, not a full ARIA menu widget; adding role=\"menu\" would require additional expected keyboard behavior such as arrow-key navigation.",
+        "For the exercise, the trigger's visible name must be Activities, aria-controls must point to activity-menu, and opening must focus Start practice. Escape closes and returns focus to Activities. Test it with Tab, Enter or Space, then Escape. Confirm the expanded attribute changes with state and focus really moves. This unit has no math question; the learning task is the interaction itself."
+      ],
+      "after": [
+        "Focus is the place receiving keyboard input. A real button can receive focus with Tab and be pressed with Enter or Space. Give it a clear visible name.",
+        "A disclosure is a button that shows or hides extra content. `aria-expanded` reports whether it is open. `aria-controls` points to the content's ID. These attributes describe the state; your code still has to open the panel.",
+        "When this panel opens, move focus to its first action. When Escape closes it, move focus back to the opening button. This gives a keyboard user a clear place to continue.",
+        "```react\nfunction App() {\n  const [open, setOpen] = React.useState(false);\n  const trigger = React.useRef(null);\n  const first = React.useRef(null);\n  React.useEffect(() => {\n    if (open) first.current?.focus();\n  }, [open]);\n  function close() {\n    setOpen(false);\n    trigger.current?.focus();\n  }\n  return (\n    <nav onKeyDown={event => {\n      if (event.key === \"Escape\") close();\n    }}>\n      <button\n        ref={trigger}\n        aria-expanded={open}\n        aria-controls=\"help-panel\"\n        onClick={() => setOpen(value => !value)}\n      >Help</button>\n      {open && <ul id=\"help-panel\">\n        <li><button ref={first}>Read instructions</button></li>\n        <li><button>Contact details</button></li>\n      </ul>}\n    </nav>\n  );\n}\n```\nOpen Help to focus Read instructions. Press Escape inside the panel to close it and focus Help again.",
+        "The refs point to real buttons after React adds them. The Effect runs after the screen update, when the first action exists. `?.` skips focus if the ref is still null.",
+        "A key event can travel from a child to its parent. That lets the nav handler receive Escape from an action inside it. Tab keeps its normal job. This is a simple disclosure; adding `role=\"menu\"` would require more keyboard behavior, such as arrow-key navigation.",
+        "Build the version named `Activities`. Its controlled ID is `activity-menu`. Opening should focus `Start practice`. Escape should close it and return focus to Activities. Try Tab, Enter or Space, and Escape as well as Run checks."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Use a button element labeled \"Activities\" to open the menu.",
+        "Start aria-expanded at false and set aria-controls to \"activity-menu\".",
+        "Show the choices only when the menu is open. After opening it, move keyboard focus to the first choice.",
+        "When Escape is pressed, close the menu and move keyboard focus back to the Activities button."
+      ],
+      "after": [
+        "Use an Activities button with the correct expanded state and controlled ID.",
+        "Show the actions only while open.",
+        "Focus Start practice after opening.",
+        "Close on Escape and return focus to Activities."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Use a native button so standard keyboard activation works.",
+        "Set aria-expanded from the same `open` state that shows the list.",
+        "Keep a ref to the trigger and focus it in `close()` after hiding the menu."
+      ],
+      "after": [
+        "Use the same open state for the panel and aria-expanded.",
+        "Keep a ref to the trigger so close can focus it."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Focus is on an action inside the open menu. The user presses Escape. What should the implemented close behavior do?",
+        "choices": [
+          "Hide the menu but leave focus on its removed action",
+          "Keep the menu open and move to the next action",
+          "Hide the menu and return focus to its trigger"
+        ],
+        "answer": 2,
+        "explanation": "Closing removes the actions, so restoring focus to the trigger gives the keyboard user a valid place to continue. Merely hiding the focused action loses that position."
+      },
+      "after": {
+        "question": "Focus is on an action in the open panel. What should Escape do?",
+        "choices": [
+          "Hide the panel and leave focus on its removed action.",
+          "Keep the panel open and move to the next action.",
+          "Hide the panel and return focus to its opening button."
+        ],
+        "answer": 2,
+        "explanation": "The removed action cannot remain the keyboard user's place. Returning to the opening button lets them continue."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Manual interaction check: use Tab to reach Activities, press Enter or Space to open, verify focus moves to Start practice, press Escape, and verify focus returns to Activities. The catalog intentionally has no math lesson for this unit.",
+      "after": "Check with the keyboard: Tab to Activities, open with Enter or Space, then press Escape. Focus should move to Start practice and back to Activities."
+    }
+  ],
+  "headings": [
+    "Use a real button",
+    "Tell readers whether the panel is open",
+    "Plan where focus goes",
+    "Read the complete disclosure",
+    "Focus after the action exists",
+    "Handle Escape from inside",
+    "Build your activities panel"
+  ],
+  "project": {
+    "title": "A named disclosure with focus handling",
+    "task": "Build the Activities disclosure with correct expanded state, first-action focus, and Escape handling.",
+    "done_when": "Opening focuses Start practice. Escape closes the panel and returns focus to Activities. Keyboard use works too."
+  }
+}

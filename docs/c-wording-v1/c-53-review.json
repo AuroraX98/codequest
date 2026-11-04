@@ -1,0 +1,92 @@
+{
+  "lesson": "c-53",
+  "position": 53,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "If NDEBUG is defined, does this negative input become accepted?",
+      "after": "An assertion checks a programmer's assumption. Required input checks must still work when assertions are disabled."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "assert from assert.h checks an expression unless NDEBUG was defined when the header was processed. Never put required input validation or necessary side effects only inside assert: a build may remove it.",
+        "This function rejects negative minutes with an ordinary if, independent of assertion mode. The assertion documents an internal condition after validation. The changed NDEBUG build must still reject the same bad input.",
+        "Complete local C example; the app itself does not execute it:\n```c\n#include <stdio.h>\n#include <assert.h>\nstatic int accept(int minutes) {\n    if (minutes < 0) return 0;\n    assert(minutes >= 0);\n    return 1;\n}\nint main(void) {\n    printf(\"%d\\n\", accept(-1));\n    return 0;\n}\n```",
+        "Expected output or behavior: 0. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Move an increment out of an assertion and explain why required work must not disappear in release builds. You may trace it without a C compiler; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "An assertion checks that an assumption is true. If an enabled assert check fails, it stops the program. Defining NDEBUG before including assert.h disables these checks, so never put required work only inside assert.",
+        "Validation means checking whether input is allowed. This function uses an ordinary if to reject negative minutes. The later assertion checks an internal fact that should already be true after validation.",
+        "Follow the example one line at a time.\n```c\n#include <stdio.h>\n#include <assert.h>\nstatic int accept(int minutes) {\n    if (minutes < 0) return 0;\n    assert(minutes >= 0);\n    return 1;\n}\nint main(void) {\n    printf(\"%d\\n\", accept(-1));\n    return 0;\n}\n```",
+        "The input is -1. The if returns 0 before reaching the assertion, so main prints 0. The program handles this invalid input without depending on an assertion.",
+        "With NDEBUG defined, the assert expression is removed. The ordinary if still runs, so the same negative input is rejected."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "NDEBUG affects assert, not the earlier if statement."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If NDEBUG is defined, does this negative input become accepted?",
+        "choices": [
+          "No: the ordinary if still returns zero.",
+          "Yes: NDEBUG removes all if statements.",
+          "The program must abort on every input."
+        ],
+        "answer": 0,
+        "explanation": "Only the assertion macro is disabled; required validation remains normal C control flow."
+      },
+      "after": {
+        "question": "If NDEBUG is defined, does the negative input become accepted?",
+        "choices": [
+          "No; the ordinary if still returns 0.",
+          "Yes; NDEBUG removes all if statements.",
+          "The program must stop on every input."
+        ],
+        "answer": 0,
+        "explanation": "Disabling assert does not remove ordinary validation. The if still rejects negative minutes."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "C Core v1 uses a portable C17 baseline supported by the verified compiler. C23 exists but is not claimed fully supported here. The app supplies concept reading and an understanding check, not a C browser runner. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "The browser shows C code and checks your understanding; it does not run C. Optional local examples use C17."
+    }
+  ],
+  "headings": [
+    "Assertions can be switched off",
+    "Keep input checks in ordinary code",
+    "One example",
+    "Follow the rejected input",
+    "Disable assertions without losing validation"
+  ],
+  "project": {
+    "title": "Assertions versus input validation",
+    "task": "Explain why the input check belongs before the assertion and must remain ordinary code.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local C example is optional."
+  },
+  "navigationCorrection": "Added a short example introduction so its reviewed heading remains an explicit contents target."
+}

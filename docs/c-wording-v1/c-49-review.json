@@ -1,0 +1,92 @@
+{
+  "lesson": "c-49",
+  "position": 49,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "For empty input, what count prints?",
+      "after": "Read first, then check whether you received a character, reached the end, or hit an error."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "fgetc returns an unsigned char converted to int, or the distinct EOF sentinel. Storing that result directly into char can lose the ability to distinguish all byte values from EOF. getchar has the same result convention for stdin.",
+        "After the loop, ferror reports a stream error; feof identifies end-of-file. For the worked output, supply exactly the three input characters abc with no trailing newline (for example, printf abc | ./app on the local shell). This fixture counts input characters, including any newline supplied. Empty input should finish normally with count zero, not attempt to process an extra character.\n\nfeof(stream) returns nonzero when that stream’s end-of-file indicator is set. Supply empty input to this separate example: first attempt a read, then inspect its outcome; do not use feof as a prediction before reading:\n```c\nint ch = getchar();\nif (ch == EOF && !ferror(stdin)) {\n    printf(\"%d\\n\", feof(stdin) != 0);\n}\n```\nOutput: 1.",
+        "Complete local C example; the app itself does not execute it:\n```c\n#include <stdio.h>\n\nint main(void) {\n    int ch;\n    unsigned count = 0;\n    while ((ch = getchar()) != EOF) {\n      if (count == 1000) { puts(\"too long\"); return 1; }\n      count++;\n    }\n    if (ferror(stdin)) { puts(\"read failed\"); return 1; }\n    printf(\"%u\\n\", count);\n    return 0;\n}\n```",
+        "Expected output or behavior: 3. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Predict the result for text with a final newline and explain why char is the wrong storage type here. You may trace it without a C compiler; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "getchar reads one character unit from standard input. It returns an int, or the special signal EOF when no character is returned. Keep the result in int while checking it. Storing it in char first can lose information needed for the EOF check.",
+        "EOF can mean end of input or a reading error. After a read fails, ferror checks for an error and feof checks whether the end was reached. feof does not predict the next read; try reading first.",
+        "Follow the example one line at a time.\n```c\n#include <stdio.h>\n\nint main(void) {\n    int ch;\n    unsigned count = 0;\n    while ((ch = getchar()) != EOF) {\n      if (count == 1000) { puts(\"too long\"); return 1; }\n      count++;\n    }\n    if (ferror(stdin)) { puts(\"read failed\"); return 1; }\n    printf(\"%u\\n\", count);\n    return 0;\n}\n```",
+        "With exactly abc as input and no newline, the program counts 3. A supplied newline counts too. The 1000-character limit prevents the count from growing without a bound. The program reports a read error instead of treating it as a normal finish.",
+        "With empty input, the first read returns EOF. The loop body never runs. If there was no reading error, the count stays 0."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "The loop checks for EOF before increasing count."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "For empty input, what count prints?",
+        "choices": [
+          "0",
+          "The result is undefined because getchar returns int.",
+          "1 because EOF is a final character"
+        ],
+        "answer": 0,
+        "explanation": "The loop body runs only for a character result; EOF is tested first."
+      },
+      "after": {
+        "question": "For empty input with no reading error, what count prints?",
+        "choices": [
+          "0",
+          "There is no defined result because getchar returns int.",
+          "1, because EOF is a final character."
+        ],
+        "answer": 0,
+        "explanation": "No character was received, so the loop never adds to count. EOF is a signal, not a character to count."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "C Core v1 uses a portable C17 baseline supported by the verified compiler. C23 exists but is not claimed fully supported here. The app supplies concept reading and an understanding check, not a C browser runner. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "The browser shows C code and checks your understanding; it does not run C. Optional local examples use C17."
+    }
+  ],
+  "headings": [
+    "Keep the input result in int",
+    "Check why reading stopped",
+    "One example",
+    "Count only received characters",
+    "Handle empty input"
+  ],
+  "project": {
+    "title": "Read text and distinguish EOF",
+    "task": "Explain why EOF is checked before count is increased, and why ch has type int.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local C example is optional."
+  },
+  "navigationCorrection": "Added a short example introduction so its reviewed heading remains an explicit contents target."
+}

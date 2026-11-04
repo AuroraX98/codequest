@@ -1,0 +1,89 @@
+{
+  "lesson": "html-42",
+  "position": 43,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Explain why defer is appropriate for the displayed DOM-dependent external classic script.",
+      "after": "Wait until the page is ready before a script changes its text."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "An external classic script with defer downloads without blocking parsing and runs after parsing, before DOMContentLoaded. Deferred classic scripts preserve document order. An external async script executes when ready and does not promise that order or a completed document. defer has no effect on an inline classic script.",
+        "type=\"module\" selects JavaScript module semantics and normally defers execution; async on a module requests execution as soon as its graph is ready. Modules introduce fetch/CORS and dependency rules, not merely a renamed classic script. This app strips scripts from HTML submissions, so this unit is concept-only. Never interpret a stripped preview as a scheduling test.\n```html\n<script async src=\"stage.js\"></script>\n<script type=\"module\" src=\"module-stage.js\"></script>\n```\nThese are alternative declarations, not extra tags to add to the companion. The module file is deliberately not supplied: this reference illustrates the loading contract rather than claiming a tested module application.",
+        "Save these two files beside each other. index.html:\n```html\n<!doctype html>\n<html lang=\"en\"><head><meta charset=\"utf-8\"><title>Deferred script study</title>\n<script defer src=\"stage.js\"></script></head>\n<body><p id=\"stage\">Waiting for the script.</p></body></html>\n```\nstage.js:\n```javascript\ndocument.getElementById(\"stage\").textContent = \"The paragraph was parsed before this deferred script ran.\";\n```\nThe supplied JavaScript is a bridge: getElementById(\"stage\") finds the existing element by ID; assigning textContent replaces its text. Inputs are the ID and new string; the effect is an updated paragraph, not an HTML insertion. Open the local index.html in a browser to inspect this classic-script example. This manual companion has not been verified merely by reading these files.",
+        "Change defer to async in index.html. If stage.js is ready while parsing has not reached the paragraph, getElementById returns null and the property assignment fails. This race is permitted, not guaranteed to occur on every load. A successful load does not prove async has defer semantics.",
+        "Optional: compare two ordered external defer scripts in a local browser. Do not use this exercise to infer module fetch support from file URLs or to claim a timing benchmark."
+      ],
+      "after": [
+        "The browser reads HTML to build the page. An outside script with `defer` downloads while that happens, then runs after the HTML has been read. This lets the script find elements that appear later in the file. Deferred ordinary scripts also run in their document order.",
+        "This is `index.html`, one of the two files in this example.\n\n```html\n<!doctype html>\n<html lang=\"en\"><head><meta charset=\"utf-8\"><title>Deferred script study</title>\n<script defer src=\"stage.js\"></script></head>\n<body><p id=\"stage\">Waiting for the script.</p></body></html>\n```\n\n`src=\"stage.js\"` names the JavaScript file. `defer` makes it wait until the page’s HTML has been read. The paragraph’s `id=\"stage\"` gives the script a place to find. Keep both files in the same folder.",
+        "This is the matching `stage.js` file.\n\n```javascript\ndocument.getElementById(\"stage\").textContent = \"The paragraph was parsed before this deferred script ran.\";\n```\n\n`document.getElementById(\"stage\")` finds the paragraph. `textContent` is its text. The `=` replaces that text with the new sentence. This is the same example’s script, not a second task. CodeQuest removes scripts from HTML previews, so try these two files in a separate browser page if you want to run them.",
+        "`async` means the script can run as soon as it is ready. If you replace defer with async, the script might run before the paragraph exists and fail to find it. It may also succeed on some loads. One successful load does not mean the timing is guaranteed.",
+        "`type=\"module\"` marks a JavaScript module: a script that can share code through imports and exports. Modules normally wait until the HTML has been read too, but follow different loading rules. This example uses an ordinary external script, so keep defer. Defer does not delay an ordinary script written directly inside its script tag."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the complete local-browser companion.",
+        "Save the displayed files if you want to try it locally.",
+        "Explain the changed-case result; no in-app browser execution is claimed."
+      ],
+      "after": [
+        "Read index.html and its matching stage.js.",
+        "Explain why defer lets the script find the paragraph.",
+        "For optional practice, save both files in one folder and open index.html in a browser."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If defer is replaced by async, can the script assume the later paragraph already exists?",
+        "choices": [
+          "Yes; every external script waits until parsing ends.",
+          "No; async can run before the parser reaches it.",
+          "Yes; async preserves all deferred-script ordering."
+        ],
+        "answer": 1,
+        "explanation": "async does not guarantee the parsed-DOM or ordering contract supplied by defer."
+      },
+      "after": {
+        "question": "You replace defer with async. Can the script assume the later paragraph already exists?",
+        "choices": [
+          "Yes. All outside scripts wait until the HTML is read.",
+          "No. It can run before the browser reaches the paragraph.",
+          "Yes. Async always keeps defer’s timing."
+        ],
+        "answer": 1,
+        "explanation": "Async runs when ready. Defer waits until the HTML has been read."
+      }
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Compare element meaning, attribute values and nesting with the visible example."
+      ],
+      "after": [
+        "The paragraph appears after the script tag in the HTML file.",
+        "Defer waits for the HTML to be read; async does not promise that wait.",
+        "This is a reading lesson, so there is no in-app code check to pass."
+      ]
+    }
+  ],
+  "headings": [
+    "Wait until the HTML is read",
+    "Read the HTML file",
+    "Read its matching script",
+    "Understand the async difference",
+    "Recognize a module script"
+  ],
+  "project": {
+    "title": "Load a script at a predictable stage",
+    "task": "Explain why the script uses defer before changing the paragraph.",
+    "done_when": "You can explain when defer runs and why replacing it with async can make the paragraph lookup fail."
+  },
+  "notes": []
+}

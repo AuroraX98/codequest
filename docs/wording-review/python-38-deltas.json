@@ -1,0 +1,92 @@
+{
+  "lesson": "python-38",
+  "sourceHash": "ade9fddd39e8dda448b4e6956137f786ace8649525c901ef76a469d1330d95f3",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Implement session(log) with contextlib.contextmanager. Append \"open\" when entering, yield \"ready\" to the with body, and append \"close\" when leaving even if the body raises an exception. Do not suppress that exception.",
+      "after": "Build a context manager that always cleans up a temporary session, even after errors."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A context manager pairs setup with cleanup around a with block.",
+        "contextlib.contextmanager adapts a generator function into that protocol.",
+        "The generator runs to yield when the block begins. The yielded value becomes the value after as in the with statement.",
+        "Use try and finally so cleanup runs when control leaves the block.\n```python\nfrom contextlib import contextmanager\n@contextmanager\ndef marked(log):\n    log.append(\"begin\")\n    try:\n        yield \"inside\"\n    finally:\n        log.append(\"end\")\n```\n\ncontextmanager receives the generator function and returns a callable factory for generator-based context managers. Calling marked(log) supplies the list to receive event messages; entering with advances to yield, and exiting runs cleanup. as value names the yielded text inside the block.\n```python\nfrom contextlib import contextmanager\n\n@contextmanager\ndef marked(log):\n    log.append(\"begin\")\n    try:\n        yield \"inside\"\n    finally:\n        log.append(\"end\")\n\nlog = []\nwith marked(log) as value:\n    print(value)\nprint(log)\n```\nIt prints inside, then ['begin', 'end']. Setup and cleanup mutate the supplied log; the block receives the yielded string.",
+        "The finally block runs on normal exit and when the with body raises. It does not automatically turn a failure into success.",
+        "This kind of contextmanager generator must yield exactly once for each use.",
+        "Call the factory again for another with block. Do not try to reuse an already exhausted generator context manager.",
+        "For the exercise, append open before yielding ready and close in finally. The calling code decides how to handle an error from its body."
+      ],
+      "after": [
+        "A context manager sets something up before a `with` block and cleans it up afterward.",
+        "`contextlib.contextmanager` lets a generator function work with `with`. Add `@contextmanager` above the function. Calling that function then creates a context manager.",
+        "When the `with` block begins, the generator runs to `yield`. The name after `as` refers to the yielded value.",
+        "Put `yield` inside `try` and the cleanup inside `finally`.\n```python\nfrom contextlib import contextmanager\n\n@contextmanager\ndef marked(log):\n    log.append(\"begin\")\n    try:\n        yield \"inside\"\n    finally:\n        log.append(\"end\")\n\nlog = []\nwith marked(log) as value:\n    print(value)\nprint(log)\n```\nOutput:\n```text\ninside\n['begin', 'end']\n```\n`marked(log)` uses the supplied list to record events. Inside the block, `value` refers to `\"inside\"`. Setup and cleanup change `log`.",
+        "`finally` runs whether the `with` block finishes normally or raises an error. The error is then passed outward. Code with a matching `except` can catch it; otherwise the error stops that run.",
+        "A generator used with `@contextmanager` must yield exactly once for each use.",
+        "Call `session(log)` again for another `with` block. Each context manager is for one use; do not reuse it after its block ends.",
+        "For this exercise, append `\"open\"` before yielding `\"ready\"`, then append `\"close\"` in `finally`. Do not hide an error from the block. The code that called the function decides how to handle it."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the requirement.",
+        "Make one change to the starter.",
+        "Run the checks.",
+        "Explain why a changed input produces its result."
+      ],
+      "after": [
+        "In `session(log)`, append `\"open\"` to `log` before the yield.",
+        "Put `yield \"ready\"` inside a `try` block.",
+        "Add a `finally` block that appends `\"close\"` to `log`.",
+        "Check that `with session(log) as value:` gives `value` the string `\"ready\"` and leaves an initially empty log as `[\"open\", \"close\"]` afterward.",
+        "Check that raising `ValueError` inside the block still leaves `[\"open\", \"close\"]` in an initially empty log and lets the error continue outside the block."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Code inside with session(log) raises ValueError. Where should \"close\" be appended so it still happens without hiding that error?",
+        "choices": [
+          "Only after yield with no finally.",
+          "In a finally block around yield.",
+          "In an except block that returns success for every error."
+        ],
+        "answer": 1,
+        "explanation": "finally performs cleanup while the exception continues outward. An unconditional success handler would conceal the failure instead."
+      },
+      "after": {
+        "question": "Code inside with session(log) raises ValueError. Where should \"close\" be appended so it still happens without hiding that error?",
+        "choices": [
+          "Only after yield with no finally.",
+          "In a finally block around yield.",
+          "In an except block that returns success for every error."
+        ],
+        "answer": 1,
+        "explanation": "`finally` runs the cleanup while the error continues outside the block. Catching and ignoring the error would hide it."
+      }
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Put yield inside try.",
+        "Put the closing log entry in finally.",
+        "Do not catch and ignore every exception."
+      ],
+      "after": [
+        "Put `yield \"ready\"` inside `try`.",
+        "Put `log.append(\"close\")` inside `finally`.",
+        "Do not catch and ignore errors from the block."
+      ]
+    }
+  ],
+  "reviewNotes": [
+    "Combined the repeated code into one complete worked example.",
+    "Preserved all eight section roles, session behavior, and quiz answer index 1.",
+    "Simplified the reuse limit and error explanation.",
+    "Clarified that an error is passed outward after cleanup rather than continuing normal execution."
+  ]
+}

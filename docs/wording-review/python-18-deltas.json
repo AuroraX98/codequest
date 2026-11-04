@@ -1,0 +1,52 @@
+{
+  "lesson": "python-18",
+  "sourceHash": "bea1265646230610e9598e02f74adac7d9705b7008739b2fc5e684ceb261276a",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Analyze a supplied dataset and compare sample summaries with a reference distribution.",
+      "after": "Find the count, mean, and median of a sample, including the empty case."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "Statistics summarizes observed data. A sample is the values you actually observed, which may represent only part of a larger population. Count says how many values are present. Mean is the sum divided by count. Median is the middle of the sorted values. These summaries describe the sample; by themselves they do not prove what all future observations will look like.",
+        "Calculate the mean of [3, 5, 10] by adding 3 + 5 + 10 = 18, then dividing by the count 3 to get 6. Sum and len are Python's built-in functions for the total and count. An empty sample has count zero and no mean; division by zero is an error. Return None for the unavailable mean and median rather than inventing zero-valued summaries.",
+        "This complete first example shows mean and a safe empty case.\n```python\ndef mean_or_none(values):\n    if not values:\n        return None\n    return sum(values) / len(values)\n\nprint(mean_or_none([3, 5, 10]))\nprint(mean_or_none([]))\n```\nIt prints 6.0 and None. The slash performs division and returns a float. The initial if checks the empty list before any division happens. A numeric zero mean would be a real result, while None means there were no observations to summarize.",
+        "To find a median, sort a copy using sorted so the input order survives. For an odd count, the middle entry is the median. For [3, 5, 10], the middle value is 5, at index 1. `count // 2` uses whole-number floor division to calculate the middle index. For a positive count 3, it gives 1. Indexes begin at zero, so the second entry has index 1.",
+        "For an even count there are two middle entries. With [2, 6, 8, 12], count is 4 and mid is 2. The two entries are at indexes mid - 1 and mid: 6 and 8. Their average, (6 + 8) divided by 2, is 7. `count % 2` gives the remainder after dividing by two: 1 for odd counts and 0 for even counts. Parentheses make the addition happen before division.",
+        "Here is a complete summary covering both median cases.\n```python\ndef summarize_sample(values):\n    count = len(values)\n    if count == 0:\n        return {\"count\": 0, \"mean\": None, \"median\": None}\n    ordered = sorted(values)\n    mid = count // 2\n    if count % 2 == 1:\n        median = ordered[mid]\n    else:\n        median = (ordered[mid - 1] + ordered[mid]) / 2\n    return {\"count\": count, \"mean\": sum(values) / count, \"median\": median}\n\nprint(summarize_sample([3, 5, 10]))\nprint(summarize_sample([12, 2, 8, 6]))\nprint(summarize_sample([]))\n```\nIt prints count 3, mean 6.0, median 5; then count 4, mean 7.0, median 7.0; then count 0 with both summaries None. The actual displayed results are dictionaries with those named fields.",
+        "The supplied solution's compact conditional expression chooses `ordered[mid]` when count's remainder is nonzero; otherwise it averages the middle pair. Nonzero numbers count as true in a condition and zero counts as false. This is equivalent to the explicit if/else example above. Mean and median need not be equal: the [3, 5, 10] example has mean 6 but median 5 because the larger value affects the mean's total.",
+        "For a separate worked example [1, 3, 7, 9], the total is 20 and the count is 4, so the mean is 5. The middle pair 3 and 7 also averages to 5, giving the same median in this particular sample. The checks' [2, 4, 6] has mean 4.0 and median 4. When comparing a sample with a reference distribution, describe agreements and differences rather than claiming proof; sample size, selection, and variation affect what conclusions are reasonable. The fixture checks calculations and empty data, not a full uncertainty study."
+      ],
+      "after": [
+        "A sample is the data you collected. It may be only part of a larger group.\n\nStatistics helps you describe it. Count is how many values you have. Mean is their total divided by the count. Median is the middle after sorting.",
+        "For `[3, 5, 10]`, the total is 18 and the count is 3. The mean is `18 / 3`, which is 6.\n\nAn empty list has no mean. Use `None` for a missing mean or median instead of inventing 0.",
+        "Check for an empty list before dividing:\n```python\ndef mean_or_none(values):\n    if not values:\n        return None\n    return sum(values) / len(values)\n\nprint(mean_or_none([3, 5, 10]))\nprint(mean_or_none([]))\n```\nOutput:\n```text\n6.0\nNone\n```\n`/` gives a floating-point result. A mean of 0 would be a real answer; `None` means there was no data to summarize.",
+        "Use `sorted(values)` to make a sorted copy, keeping the input unchanged.\n\nWith an odd count, take the middle value. In `[3, 5, 10]`, it is 5 at position 1. `count // 2` gives that position: `3 // 2` is 1.",
+        "With an even count, average the two middle values. In `[2, 6, 8, 12]`, they are 6 and 8, so the median is 7.\n\nIf `mid = count // 2`, use positions `mid - 1` and `mid`. `count % 2` is 1 for an odd count and 0 for an even count.",
+        "Put the calculation and empty check together:\n```python\ndef summarize_sample(values):\n    count = len(values)\n    if count == 0:\n        return {\"count\": 0, \"mean\": None, \"median\": None}\n    ordered = sorted(values)\n    mid = count // 2\n    if count % 2 == 1:\n        median = ordered[mid]\n    else:\n        median = (ordered[mid - 1] + ordered[mid]) / 2\n    return {\"count\": count, \"mean\": sum(values) / count, \"median\": median}\n\nprint(summarize_sample([3, 5, 10]))\nprint(summarize_sample([12, 2, 8, 6]))\nprint(summarize_sample([]))\n```\nOutput:\n```text\n{'count': 3, 'mean': 6.0, 'median': 5}\n{'count': 4, 'mean': 7.0, 'median': 7.0}\n{'count': 0, 'mean': None, 'median': None}\n```",
+        "The short solution uses a conditional expression to choose the median. A nonzero remainder counts as true, so it chooses the single middle value for an odd count.\n\nMean and median can differ. In `[3, 5, 10]`, the mean is 6 and the median is 5. The larger value pulls up the total used for the mean.",
+        "Sometimes mean and median match. In `[1, 3, 7, 9]`, both are 5.\n\nThese numbers describe the sample you have. They do not prove that future data will match. How much data you collect, how you choose it, and how much it varies all matter."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Handle an empty list before trying to divide.",
+        "Sort a copy so the input list stays unchanged.",
+        "For an odd number of items, use the middle value as the median.",
+        "For an even number of items, average the two middle values."
+      ],
+      "after": [
+        "Return count 0 and two None values for an empty list.",
+        "Sort a copy and find its middle position.",
+        "Choose one middle value for an odd count, or average the middle pair for an even count.",
+        "Return the count, mean, and median in the named dictionary fields."
+      ]
+    }
+  ],
+  "reviewNotes": [
+    "Reviewed directly by the host, one lesson at a time. Plain wording, specific guidance, preserved exercise behavior."
+  ]
+}

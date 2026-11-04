@@ -1,0 +1,91 @@
+{
+  "lesson": "java-67",
+  "position": 67,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "If the submitted calculation is 6 + 7, what does get return?",
+      "after": "Submit a calculation to managed workers and retrieve its result."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "ExecutorService accepts tasks and manages worker threads. submit of a value-returning lambda produces a Future; get waits and retrieves its result or reports failure via ExecutionException.",
+        "The try-with-resources block closes this executor and waits for submitted tasks to terminate. Do not leave executors unmanaged. A two-thread pool is a resource choice, not a guarantee about execution order.",
+        "Complete local Java example; the app itself does not execute it:\n```java\nimport java.util.concurrent.*;\npublic class Main {\n\n  public static void main(String[] args) throws InterruptedException, ExecutionException {\n    try (ExecutorService pool = Executors.newFixedThreadPool(2)) {\n      Future<Integer> value = pool.submit(() -> 6 * 7);\n      System.out.println(value.get());\n    }\n  }\n}\n```",
+        "Expected output or behavior: 42. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Predict where a task exception is reported and why the executor still needs closing. You may trace it without a JDK; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "ExecutorService accepts tasks and manages threads that run them. submit returns a Future, which represents a result that may arrive later. get waits if needed and returns that result. If the task fails, get reports the failure through ExecutionException; waiting can also be interrupted.",
+        "The try-with-resources block closes this executor when leaving the block and waits for its submitted tasks to end. The fixed pool uses up to two worker threads. That number does not promise which task runs first.",
+        "Follow the calculation from submit to the Future and then to get.\n\n```java\nimport java.util.concurrent.*;\npublic class Main {\n\n  public static void main(String[] args) throws InterruptedException, ExecutionException {\n    try (ExecutorService pool = Executors.newFixedThreadPool(2)) {\n      Future<Integer> value = pool.submit(() -> 6 * 7);\n      System.out.println(value.get());\n    }\n  }\n}\n```",
+        "The program prints 42. The worker calculates six times seven, and get retrieves that answer before it is printed.",
+        "The quiz changes multiplication to addition. The Future will hold the result of the changed task."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Read the operation inside the lambda to find the task's answer."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If the submitted calculation is 6 + 7, what does get return?",
+        "choices": [
+          "13",
+          "42 because the Future caches the source text",
+          "No value because every submitted task must be void."
+        ],
+        "answer": 0,
+        "explanation": "This submitted Callable computes and returns the new integer result."
+      },
+      "after": {
+        "question": "Submit the calculation 6 + 7 instead. What does get return?",
+        "choices": [
+          "13",
+          "42, because the Future keeps the old calculation.",
+          "No value, because submitted tasks cannot return results."
+        ],
+        "answer": 0,
+        "explanation": "The submitted task now adds six and seven, so its Future supplies thirteen."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Java Core v1 uses stable Java25 LTS features without preview flags. The app supplies concept reading and an understanding check, not a Java browser runner. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "The browser shows Java code and checks your understanding; it does not run Java. Optional local examples use Java25."
+    }
+  ],
+  "headings": [
+    "An executor manages workers for submitted tasks",
+    "Close the executor when its work is done",
+    "One example",
+    "What appears",
+    "Change the submitted calculation"
+  ],
+  "project": {
+    "title": "Submit work through an ExecutorService",
+    "task": "Trace how submit, Future, and get carry one calculation's answer.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local Java example is optional."
+  }
+}

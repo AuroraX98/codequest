@@ -1,0 +1,91 @@
+{
+  "lesson": "go-57",
+  "position": 57,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "If the initial send is removed, which branch runs?",
+      "after": "Use select to choose a channel action that is ready."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "select waits until a communication case can proceed; if several are ready, it chooses among them rather than honoring source-order priority. A default branch runs only when no communication can proceed immediately.",
+        "This fixture places one value in a buffered channel before select, so the receive is ready and default cannot run. The changed fixture leaves the channel empty with no sender, so default runs instead. No time.Sleep or scheduler-order assertion is needed.",
+        "Complete local Go example; the app itself does not execute it:\n```go\npackage main\n\nimport (\n\"fmt\"\n)\n\n\nfunc main() {\n    values := make(chan int, 1)\n    values <- 5\n    select {\n    case value := <-values: fmt.Println(value)\n    default: fmt.Println(\"not ready\")\n    }\n}\n```",
+        "Expected output or behavior: 5. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Explain why two ready channels would make a fixed-choice assertion invalid. You may trace it without a Go compiler; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "`select` chooses a channel send or receive that can proceed. If several are ready, their order in the code does not give the first one priority. Without a default, select waits if none is ready.",
+        "A `default` branch runs only if no listed channel action can proceed immediately. Here, a value is already waiting in the buffered channel, so the receive is ready.",
+        "Check the channel before deciding which branch runs.\n```go\npackage main\n\nimport (\n\"fmt\"\n)\n\n\nfunc main() {\n    values := make(chan int, 1)\n    values <- 5\n    select {\n    case value := <-values: fmt.Println(value)\n    default: fmt.Println(\"not ready\")\n    }\n}\n```",
+        "The screen shows `5`. The receive takes the queued value, so default does not run.",
+        "Remove the initial send. The channel is still open but empty, and no sender is ready. default can now run."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "An open empty channel is not the same as a closed empty channel."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If the initial send is removed, which branch runs?",
+        "choices": [
+          "The first textual case always runs.",
+          "The receive returns zero from an open empty channel",
+          "default prints not ready"
+        ],
+        "answer": 2,
+        "explanation": "An open empty channel has no immediately available value and no sender, so default is selected."
+      },
+      "after": {
+        "question": "Remove the initial send. Which branch runs?",
+        "choices": [
+          "The first written case always runs.",
+          "The open empty channel immediately supplies zero.",
+          "default shows not ready."
+        ],
+        "answer": 2,
+        "explanation": "The receive cannot proceed immediately, so select chooses default."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Go Core v1 uses the verified Go1.27.3 toolchain and standard library. The app supplies concept reading and an understanding check, not a Go browser runner. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "The browser shows Go code and checks your understanding; it does not run Go. Optional local examples use Go 1.27."
+    }
+  ],
+  "headings": [
+    "Choose among ready actions",
+    "Use default when none is ready",
+    "One example",
+    "Read the ready value",
+    "Remove the queued value"
+  ],
+  "project": {
+    "title": "Select and ready cases",
+    "task": "Choose the ready branch after removing the send.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local Go example is optional."
+  }
+}

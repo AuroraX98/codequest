@@ -1,0 +1,96 @@
+{
+  "lesson": "backend-31",
+  "position": 25,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Implement updateVersion(record,expected,title). Match the worked contract and the changed-input checks without modifying the supplied input values.",
+      "after": "Reject an edit when the record has changed since the caller read it."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "Two clients may edit the same record. A version comparison can reject a request based on an older version instead of silently replacing a newer change.",
+        "This exercise is a small pure JavaScript model. Its inputs are supplied directly; it does not receive live HTTP requests, operate a database, or deploy a service.",
+        "Worked example:\n\n```javascript\nfunction updateVersion(record,expected,title) {\n  if(record.version !== expected) return {status:409};\n  return {status:200,record:{...record,title,version:record.version+1}};\n}\nconsole.log(updateVersion({\"id\":1,\"title\":\"Moon\",\"version\":3}, 3, \"Sea\"));\n```\nThe returned value is {\"status\":200,\"record\":{\"id\":1,\"title\":\"Sea\",\"version\":4}}.",
+        "The early return rejects a mismatch. The success branch copies the record and increments its version. In a real database, comparison and update must be one atomic operation; this pure helper does not solve concurrency.",
+        "Read the function call updateVersion({\"id\":1,\"title\":\"Moon\",\"version\":3}, 3, \"Sea\") from the inside out: the arguments supply the inputs, updateVersion runs the body once, and return sends its result back to the caller. console.log displays that result; it does not change it.",
+        "A client expects version 2, but storage has version 3. What follows? The client’s starting version is stale. The application must reconcile before retrying an update."
+      ],
+      "after": [
+        "A version number marks which saved revision a record has. A caller sends the version it expects. If storage now has a different version, the edit may be based on outdated data.",
+        "Compare record.version with expected before changing anything. A mismatch returns status 409, meaning a conflict. The caller should read and review the newer record before trying again.",
+        "```javascript\nfunction updateVersion(record,expected,title) {\n  if(record.version !== expected) return {status:409};\n  return {status:200,record:{...record,title,version:record.version+1}};\n}\nconsole.log(updateVersion({\"id\":1,\"title\":\"Moon\",\"version\":3}, 3, \"Sea\"));\n```\nThe expected version 3 matches. The result has status 200 and a new record with title Sea and version 4.",
+        "Copy the record before replacing its title and adding 1 to its version. Preserve the ID and other fields. The original supplied record stays unchanged.",
+        "In a real database, checking the version and applying the update must be one atomic operation: another write cannot slip between them. This small function only models the decision; it does not coordinate simultaneous database writes.",
+        "Complete updateVersion(record, expected, title). Return 409 for a mismatch. On a match, return 200 with the copied record, new title, and next version."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the contract and trace the worked example.",
+        "Replace the unfinished return in the starter.",
+        "Run the changed-input checks.",
+        "Explain the boundary in the understanding question."
+      ],
+      "after": [
+        "Compare the stored and expected versions exactly.",
+        "Return 409 immediately if they differ.",
+        "Otherwise return the updated copy with version increased by 1."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "The early return rejects a mismatch. The success branch copies the record and increments its version. In a real database, comparison and update must be one atomic operation; this pure helper does not solve concurrency."
+      ],
+      "after": [
+        "Keep the input record unchanged in both branches.",
+        "Do not return a successful update after a version mismatch."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "A client expects version 2, but storage has version 3. What follows?",
+        "choices": [
+          "Overwrite version 3",
+          "Return a conflict",
+          "Pretend version 2 still exists"
+        ],
+        "answer": 1,
+        "explanation": "The client’s starting version is stale. The application must reconcile before retrying an update."
+      },
+      "after": {
+        "question": "The caller expects version 2, but storage has version 3. What should happen?",
+        "choices": [
+          "Overwrite version 3",
+          "Return a conflict",
+          "Pretend version 2 is still current"
+        ],
+        "answer": 1,
+        "explanation": "The caller's version is outdated. A conflict prevents silently replacing the newer change."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Runs as a pure JavaScript function in the browser. Passing checks does not establish live HTTP behavior, database durability, concurrency safety, authentication security, queue delivery guarantees, or production readiness.",
+      "after": "This browser helper models a version check. A real database must combine the check and write atomically to protect against simultaneous edits."
+    }
+  ],
+  "headings": [
+    "Detect an outdated edit",
+    "Compare the version",
+    "Read one example",
+    "Return an updated copy",
+    "Make real writes indivisible",
+    "Try it yourself"
+  ],
+  "project": {
+    "title": "Reject a stale version update",
+    "task": "Complete updateVersion(record, expected, title) with a 409 mismatch result or a 200 updated copy and incremented version.",
+    "done_when": "Outdated edits are rejected, successful edits advance the version, and the supplied record stays unchanged."
+  }
+}

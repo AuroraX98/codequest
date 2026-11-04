@@ -1,0 +1,94 @@
+{
+  "lesson": "javascript-56",
+  "position": 67,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Complete countdown(start) so each Symbol.iterator call creates a fresh descending iterator. next returns positive values down to one, then done:true forever. Inputs are small nonnegative integers.",
+      "after": "Make an object that for...of can count down through."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "An object is iterable when its [Symbol.iterator] method returns an iterator. The brackets compute the method key from the well-known Symbol; this is not a newly invented Symbol(\"iterator\"). for...of calls that method and repeatedly asks the returned iterator for its next item.",
+        "iterator.next() returns an object with value and done. done:false supplies another item; done:true marks completion. The current-- expression returns the old counter then decreases it. Our iterator keeps returning done:true after exhaustion. Each new Symbol.iterator call gets a fresh counter, so this iterable can start again.",
+        "countdown(start) accepts a small nonnegative integer and returns the iterable, not an array. The explicit protocol calls show the same mechanism later used by for...of. JSON.stringify omits the undefined value property at completion.\n```javascript\nfunction countdown(start) {\n  return {\n    [Symbol.iterator]() {\n      let current = start;\n      return {\n        next() {\n          if (current > 0) return {value: current--, done: false};\n          return {value: undefined, done: true};\n        }\n      };\n    }\n  };\n}\nconst values = countdown(2);\nconst iterator = values[Symbol.iterator]();\nconsole.log(JSON.stringify(iterator.next()));\nconsole.log(JSON.stringify(iterator.next()));\nconsole.log(iterator.next().done);\nconst again = [];\nfor (const value of values) again.push(value);\nconsole.log(again.join(\",\"));\n```\nOutput: {\"value\":2,\"done\":false}, {\"value\":1,\"done\":false}, true, then 2,1.",
+        "Reusing one exhausted iterator does not restart it. Asking this iterable for another iterator does. Optional practice: obtain two iterators and advance one without changing the other; neither owns an external resource in this bounded example."
+      ],
+      "after": [
+        "An iterable is an object that can supply an iterator. It does this through a method named `[Symbol.iterator]`.\n\n`for...of` calls that method, then asks the returned iterator for values. Use JavaScript's shared `Symbol.iterator` key, not a new `Symbol(\"iterator\")`.",
+        "The iterator's `next()` method returns `{value, done}`. A false `done` supplies another item; a true `done` ends the sequence.\n\nOur countdown gives positive numbers down to 1. `current--` uses the current number, then subtracts one. Each new iterator gets its own counter.",
+        "Here is the complete example.\n```javascript\nfunction countdown(start) {\n  return {\n    [Symbol.iterator]() {\n      let current = start;\n      return {\n        next() {\n          if (current > 0) return {value: current--, done: false};\n          return {value: undefined, done: true};\n        }\n      };\n    }\n  };\n}\nconst values = countdown(2);\nconst iterator = values[Symbol.iterator]();\nconsole.log(JSON.stringify(iterator.next()));\nconsole.log(JSON.stringify(iterator.next()));\nconsole.log(iterator.next().done);\nconst again = [];\nfor (const value of values) again.push(value);\nconsole.log(again.join(\",\"));\n```\nOutput:\n```text\n{\"value\":2,\"done\":false}\n{\"value\":1,\"done\":false}\ntrue\n2,1\n```\nThe first iterator finishes. The later `for...of` asks for a new iterator, so the countdown starts again.",
+        "Complete `next()` inside `countdown(start)`. Return the next positive number with `done: false`, then move the counter down.\n\nAt zero, keep returning `done: true`. A finished iterator stays finished, but asking the iterable for another iterator starts a fresh countdown."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the requirement.",
+        "Make one change to the starter.",
+        "Run the checks.",
+        "Explain why a changed input produces its result."
+      ],
+      "after": [
+        "If current is above zero, return it with done: false.",
+        "Decrease current after choosing that value.",
+        "At zero, return done: true.",
+        "Check that a new iterator starts fresh and an old one stays finished."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "After one iterator is exhausted, what happens when for...of starts again on this countdown iterable?",
+        "choices": [
+          "It must reuse the exhausted iterator automatically.",
+          "It obtains a new iterator with a fresh counter and produces the values again.",
+          "It changes the stored start value to zero permanently."
+        ],
+        "answer": 1,
+        "explanation": "The iterable’s method constructs a new closure-held counter each time; an individual iterator still advances only forward."
+      },
+      "after": {
+        "question": "After one iterator is exhausted, what happens when for...of starts again on this countdown iterable?",
+        "choices": [
+          "It must reuse the exhausted iterator automatically.",
+          "It obtains a new iterator with a fresh counter and produces the values again.",
+          "It changes the stored start value to zero permanently."
+        ],
+        "answer": 1,
+        "explanation": "for...of asks the iterable for another iterator. This implementation creates a fresh counter each time."
+      }
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Trace the visible worked calls before changing the starter."
+      ],
+      "after": [
+        "Keep current inside the Symbol.iterator method so each iterator gets its own.",
+        "The positive case can return {value: current--, done: false}."
+      ]
+    },
+    {
+      "field": "externalNotes",
+      "before": "ECMAScript 2026 core; native Node24 and current app worker/DOM harness evidence are recorded separately. No external service or real-browser claim follows from a local fixture.",
+      "after": ""
+    }
+  ],
+  "headings": [
+    "Make an iterable object",
+    "Define the next result",
+    "Count down and start again",
+    "Complete countdown"
+  ],
+  "project": {
+    "title": "Custom iterable protocol",
+    "task": "Complete countdown(start). Give each new iterator its own countdown from start to 1. Afterward, next must keep reporting done: true.",
+    "done_when": "Positive values count down correctly, zero is empty, new iterators start fresh, and finished iterators stay finished."
+  },
+  "notes": [
+    "Removed an unrelated local-project completion requirement; its useful teaching is in the lesson and technical evidence stays in review documents."
+  ]
+}

@@ -206,8 +206,7 @@ export class APIKeyFileController {
     };
     this.busy = true;
     this.notify();
-    let flight!: Promise<T>;
-    flight = (async () => {
+    const flight = Promise.resolve().then(async () => {
       try {
         check();
         return await work(check);
@@ -222,7 +221,7 @@ export class APIKeyFileController {
         this.busy = false;
         this.notify();
       }
-    })();
+    });
     this.flight = flight;
     return flight;
   }

@@ -1,0 +1,90 @@
+{
+  "lesson": "swift-48",
+  "position": 43,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Implement pair so both items survive in input order.",
+      "after": "Pair items from different sources when their item types match."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "An associated type is a type slot declared by a protocol. Each conforming type supplies what that slot means. Two different conforming types can share the same item type.",
+        "ItemSource requires a readable item and names its type Item. Box<Value> infers Item from its stored item: Value. The automatically supplied Box(item:) initializer stores its argument. CountSource is a different conforming struct whose item is always Int; CountSource(item:) stores that Int. Box<Int> and CountSource are different source types with the same Item. pair accepts two possibly different source types A and B, but where A.Item == B.Item requires the same associated type, not equal item values. It returns an array containing the first then second item. [A.Item] is an array type whose element type is that shared item type.",
+        "\n```swift\nprotocol ItemSource {\n    associatedtype Item\n    var item: Item { get }\n}\nstruct Box<Value>: ItemSource {\n    let item: Value\n}\nstruct CountSource: ItemSource {\n    let item: Int\n}\nfunc pair<A: ItemSource, B: ItemSource>(_ a: A, _ b: B) -> [A.Item]\nwhere A.Item == B.Item {\n    return [a.item, b.item]\n}\nprint(pair(Box(item: 3), Box(item: 8)))\nprint(pair(Box(item: \"east\"), Box(item: \"west\")))\n```\nExpected output:\n```text\n[3, 8]\n[\"east\", \"west\"]\n```",
+        "\n```swift\nprotocol ItemSource {\n    associatedtype Item\n    var item: Item { get }\n}\nstruct Box<Value>: ItemSource {\n    let item: Value\n}\nstruct CountSource: ItemSource {\n    let item: Int\n}\nfunc pair<A: ItemSource, B: ItemSource>(_ a: A, _ b: B) -> [A.Item]\nwhere A.Item == B.Item {\n    return [a.item, b.item]\n}\nprint(pair(Box(item: 6), CountSource(item: 9)))\n```\nExpected output:\n```text\n[6, 9]\n```",
+        "This separate complete local example is intentionally rejected. It is author-validated compiler evidence, not an additional learner Run checks feature.\n```swift\nprotocol ItemSource {\n    associatedtype Item\n    var item: Item { get }\n}\nstruct Box<Value>: ItemSource {\n    let item: Value\n}\nstruct CountSource: ItemSource {\n    let item: Int\n}\nfunc pair<A: ItemSource, B: ItemSource>(_ a: A, _ b: B) -> [A.Item]\nwhere A.Item == B.Item {\n    return [a.item, b.item]\n}\nprint(pair(Box(item: 4), Box(item: \"4\")))\n```\nThe intended diagnostic identifies conflicting arguments to generic parameter 'Value' ('Int' vs. 'String'). Do not paste it together with a success example.",
+        "Optional practice: Implement pair so both items survive in input order. Predict a different input before running."
+      ],
+      "after": [
+        "A protocol can leave a place for a type using associatedtype. ItemSource calls that type Item. Any type that follows this protocol must provide a readable item of its chosen Item type.",
+        "Box<Value> stores an item of Value, so that becomes its Item type. CountSource always stores an Int item. These are different source types, but both can supply Int values.",
+        "```swift\nprotocol ItemSource {\n    associatedtype Item\n    var item: Item { get }\n}\nstruct Box<Value>: ItemSource {\n    let item: Value\n}\nstruct CountSource: ItemSource {\n    let item: Int\n}\nfunc pair<A: ItemSource, B: ItemSource>(_ a: A, _ b: B) -> [A.Item]\nwhere A.Item == B.Item {\n    return [a.item, b.item]\n}\nprint(pair(Box(item: 6), CountSource(item: 9)))\n```\nThis prints [6, 9]. The box supplies 6 and CountSource supplies 9. Both items are Int values, so they can go in the returned array together.",
+        "pair accepts source types A and B. where A.Item == B.Item requires their item types to match. [A.Item] means the answer is an array of that shared item type.",
+        "The rule compares types, not values. The numbers 6 and 9 may differ and still be Int values. A number and text containing the same digit have different types, so they do not satisfy this rule.",
+        "Complete pair to return both items in order: a.item first, then b.item. Keep the rule requiring matching item types. Do not convert or replace either item."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the small example and explain its inputs and effects.",
+        "Complete the starter for the stated contract.",
+        "Use the configured compatible Swift companion or local Swift toolchain, then explain the changed case."
+      ],
+      "after": [
+        "Keep the same-item-type requirement.",
+        "Read a.item and b.item.",
+        "Return them in that order in an array."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Trace the inputs, returned value and changed state before running."
+      ],
+      "after": [
+        "The two source types can differ while their Item types match.",
+        "Return [a.item, b.item]."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Can pair(Box(item: 4), Box(item: \"4\")) satisfy the shown constraint?",
+        "choices": [
+          "No: Int and String are different item types.",
+          "Yes: they display the same digit.",
+          "Yes: any two ItemSource values match."
+        ],
+        "answer": 0,
+        "explanation": "The same-type requirement compares types, not rendered values. Each argument conforms individually, but their associated types differ."
+      },
+      "after": {
+        "question": "Can pair combine Box(item: 4) and Box(item: \"4\") with this rule?",
+        "choices": [
+          "No. Int and String are different types",
+          "Yes. Both display the digit 4",
+          "Yes. Any two ItemSource values work"
+        ],
+        "answer": 0,
+        "explanation": "The number 4 is an Int. The text \"4\" is a String. Their item types do not match."
+      }
+    }
+  ],
+  "headings": [
+    "Name a type inside a protocol",
+    "Choose the item type",
+    "Read one example",
+    "Require matching types",
+    "Keep type and value separate",
+    "Try it yourself"
+  ],
+  "project": {
+    "title": "Match associated types across two conformers",
+    "task": "Complete pair for two ItemSource values with matching Item types. Return the first item's value followed by the second item's value.",
+    "done_when": "Both items remain unchanged and appear in the same order as their sources."
+  }
+}

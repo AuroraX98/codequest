@@ -1,0 +1,84 @@
+{
+  "lesson": "python-82",
+  "sourceHash": "d72ee40985dba3912ba754b9e7212ea3cf37478ec540448da1f9c6799599edb6",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Return (sorted_copy, shifts) for records containing (integer_priority, string_label) tuples. Sort by priority only, preserve equal-priority order, and leave the source list untouched. Count only moves of earlier records one position right.",
+      "after": "Sort records by priority, keep ties in order, and count moves to the right."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "Insertion sort keeps the positions before i sorted, then inserts the next item into that prefix. Our records are (integer_priority, text_label) tuples. Only priority decides order; the label lets us see which equal-priority item was originally first. result[j][0] reads the priority from the record at index j.",
+        "Save the current item, shift earlier records with strictly larger priorities one place right, then fill the gap. The guard j>=0 is tested before indexing, because and short-circuits. Using > rather than >= leaves an earlier equal-priority record before the new one. That property is called stability.",
+        "insertion_sort accepts a list of these tuples and returns (new_sorted_list, shifts). records.copy() returns a shallow new list: rearranging it does not reorder the source. A shift counts one assignment that moves an earlier record right; final placement is not counted. len(result) returns the copied list’s element count. range(1, len(result)) visits index 1 through the final index; the one-item prefix needs no work.\n```python\ndef insertion_sort(records):\n    result = records.copy()\n    shifts = 0\n    for i in range(1, len(result)):\n        item = result[i]\n        j = i - 1\n        while j >= 0 and result[j][0] > item[0]:\n            result[j + 1] = result[j]\n            shifts += 1\n            j -= 1\n        result[j + 1] = item\n    return result, shifts\nsource = [(2, \"A\"), (1, \"B\"), (2, \"C\")]\nprint(insertion_sort(source))\nprint(source)\n```\nIt prints ([(1, 'B'), (2, 'A'), (2, 'C')], 1), then the original list. The equal-priority A and C retain their order.",
+        "An already sorted input needs zero shifts but still checks its prefixes. A reverse-sorted list with distinct priorities needs 1+2+...+(n-1) shifts, which grows quadratically. This count does not include the initial copy or all comparisons. The input-copy design uses extra storage; it is not an in-place sort of the caller’s list.",
+        "Implement the sorted-prefix algorithm with the strict priority comparison. Empty input returns ([],0). Optional local practice: change the labels on equal-priority records without changing their priorities; explain why their order must stay the same. The supplied __insertion_preserved helper is test infrastructure: it checks the stated preservation contract. Leave it unchanged; the learning task is the main function, not writing this helper."
+      ],
+      "after": [
+        "Insertion sort keeps the positions before i sorted. Then it inserts the next item into that part of the list. Each record is a tuple: (integer priority, text label). Only the priority decides the order. The label helps us see which equal-priority record came first. result[j][0] reads the priority from the record at index j.",
+        "Save the current item. Move earlier records with larger priorities one place right, then fill the gap. Check j >= 0 before indexing because and stops early if that check is false. Use >, not >=, so an earlier record with the same priority stays first. Keeping equal-priority records in their original order is called stability.",
+        "insertion_sort takes a list of these tuples and returns (new_sorted_list, shifts). records.copy() makes a new list, so rearranging it does not reorder the source. A shift counts one assignment that moves an earlier record right. Final placement is not counted. len(result) gives the copied list's number of items. range(1, len(result)) visits index 1 through the last index. The first item alone is already in order, so start with the next one.\n```python\ndef insertion_sort(records):\n    result = records.copy()\n    shifts = 0\n    for i in range(1, len(result)):\n        item = result[i]\n        j = i - 1\n        while j >= 0 and result[j][0] > item[0]:\n            result[j + 1] = result[j]\n            shifts += 1\n            j -= 1\n        result[j + 1] = item\n    return result, shifts\nsource = [(2, \"A\"), (1, \"B\"), (2, \"C\")]\nprint(insertion_sort(source))\nprint(source)\n```\nIt prints ([(1, 'B'), (2, 'A'), (2, 'C')], 1), then the original list. Equal-priority A and C keep their order.",
+        "An already sorted list needs zero shifts, but the algorithm still checks each next item. A reverse-sorted list with distinct priorities needs 1+2+...+(n-1) shifts. This count grows quadratically. It does not include the initial copy or all comparisons. The function uses extra storage and does not sort the source list in place.",
+        "Build the sort by inserting each next item into the part already in order. Move a record only when its priority is greater than the saved item's priority. Empty input returns ([], 0). For optional practice, change labels on equal-priority records without changing their priorities. Explain why their order must stay the same. The supplied __insertion_preserved helper checks that the source stays unchanged, the function returns a new sorted list, and empty input works. Leave the helper unchanged; the task is to write the main function."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the requirement.",
+        "Make one change to the starter.",
+        "Run the checks.",
+        "Explain why a changed input produces its result."
+      ],
+      "after": [
+        "Copy `records` into `result` and start `shifts` at 0.",
+        "Visit each item after the first. Save it and start `j` at the position before it.",
+        "While `j >= 0` and the earlier priority is larger, move that record right, count one shift, and decrease `j`.",
+        "Put the saved item in the gap at `j + 1`. After the whole loop finishes, return `result` and `shifts`.",
+        "Check ties, an empty list, and that the source list stays unchanged."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "What does insertion_sort([(1, \"Z\"), (1, \"A\"), (0, \"B\")]) return?",
+        "choices": [
+          "([(0, \"B\"), (1, \"Z\"), (1, \"A\")], 3)",
+          "([(0, \"B\"), (1, \"A\"), (1, \"Z\")], 2)",
+          "([(0, \"B\"), (1, \"Z\"), (1, \"A\")], 2)"
+        ],
+        "answer": 2,
+        "explanation": "B moves past the two larger priorities, causing two shifts. Equal-priority Z and A are not compared by label and retain their order."
+      },
+      "after": {
+        "question": "What does insertion_sort([(1, \"Z\"), (1, \"A\"), (0, \"B\")]) return?",
+        "choices": [
+          "([(0, \"B\"), (1, \"Z\"), (1, \"A\")], 3)",
+          "([(0, \"B\"), (1, \"A\"), (1, \"Z\")], 2)",
+          "([(0, \"B\"), (1, \"Z\"), (1, \"A\")], 2)"
+        ],
+        "answer": 2,
+        "explanation": "B moves past the two larger priorities, causing two shifts. Equal-priority Z and A are not compared by label, so they keep their original order."
+      }
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Trace the visible worked calls before changing the starter."
+      ],
+      "after": [
+        "Compare priorities with result[j][0] > item[0], not the labels.",
+        "Count a shift only when result[j + 1] = result[j] moves a record right. Do not count final placement.",
+        "For empty input, the loop does not run, so the copied list and shift count are [], and 0."
+      ]
+    }
+  ],
+  "reviewNotes": [
+    "Kept the five sections in their original order and preserved the worked code and output.",
+    "Kept quiz answer index 2 and the source-copy behavior.",
+    "Steps name the function changes and useful checks.",
+    "Replaced prefix jargon and clarified that returning happens after all insertions, not inside the loop."
+  ]
+}

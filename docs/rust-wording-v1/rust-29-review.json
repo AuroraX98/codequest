@@ -1,0 +1,91 @@
+{
+  "lesson": "rust-29",
+  "position": 29,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "If mut is removed from the counter binding, what happens?",
+      "after": "A method is a function attached to a type. A method that changes a counter needs permission to write to it."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "Methods are defined in impl Type. &self borrows shared access, &mut self borrows exclusive mutable access, and self takes ownership of the receiver unless its type is Copy. Method-call syntax handles ordinary borrowing automatically.",
+        "The inc method changes n through &mut self. The caller must permit a mutable borrow of its Counter. read uses &self and does not consume it. The small counts avoid arithmetic overflow.",
+        "Complete local Rust example; the app itself does not execute it:\n```rust\nstruct Counter { n: u32 }\nimpl Counter {\n    fn inc(&mut self) { self.n += 1; }\n    fn read(&self) -> u32 { self.n }\n}\nfn main() {\n    let mut counter = Counter { n: 4 };\n    counter.inc();\n    println!(\"{}\", counter.read());\n}\n```",
+        "Expected output or behavior: 5. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Add a second shared read after inc and trace when each borrow ends. You may trace it without a Rust compiler; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "A method is a function attached to a type. A method that changes a counter needs permission to write to it.",
+        "The `inc` method borrows the counter with `&mut self`. The `read` method only needs `&self`.",
+        "Follow the labeled parts of this example.\n```rust\nstruct Counter { n: u32 }\nimpl Counter {\n    fn inc(&mut self) { self.n += 1; }\n    fn read(&self) -> u32 { self.n }\n}\nfn main() {\n    let mut counter = Counter { n: 4 };\n    counter.inc();\n    println!(\"{}\", counter.read());\n}\n```",
+        "The output is `5`. The first method adds one to 4. The second reads the new count.",
+        "Find the word that lets this counter change."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read one idea.",
+        "Follow the labeled example.",
+        "Try the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Find the word that lets this counter change."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If mut is removed from the counter binding, what happens?",
+        "choices": [
+          "It prints 4 because the update is silently skipped.",
+          "Compilation rejects the mutable borrow needed by inc.",
+          "read consumes the counter first."
+        ],
+        "answer": 1,
+        "explanation": "The method requires exclusive mutable access, but the binding no longer allows that borrow."
+      },
+      "after": {
+        "question": "Without `mut` on the counter, can `inc` change it?",
+        "choices": [
+          "Yes. Any method may write.",
+          "No. It cannot borrow the counter to write.",
+          "Yes. Only the print changes."
+        ],
+        "answer": 1,
+        "explanation": "Without mut, this counter cannot be borrowed for writing."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Rust Core v1 uses stable Rust1.99.1 with edition2024 and the standard library. The app supplies concept reading and an understanding check, not a Rust browser runner. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "CodeQuest shows the Rust example. Running it on your own computer is optional."
+    }
+  ],
+  "headings": [
+    "Change a counter",
+    "Read or change",
+    "Read the example",
+    "What happens",
+    "Try one change"
+  ],
+  "project": {
+    "title": "Methods and receiver choices",
+    "task": "Find the word that lets this counter change.",
+    "done_when": "Read each idea and pass the understanding check. Running the example on your computer is optional."
+  }
+}

@@ -1,0 +1,96 @@
+{
+  "lesson": "backend-32",
+  "position": 19,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Implement lookupQuery(id). Match the worked contract and the changed-input checks without modifying the supplied input values.",
+      "after": "Keep the SQL instructions fixed and supply the requested ID separately."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A bound query keeps the SQL structure fixed while supplying values separately. User text must not become part of the SQL program.",
+        "This exercise is a small pure JavaScript model. Its inputs are supplied directly; it does not receive live HTTP requests, operate a database, or deploy a service.",
+        "Worked example:\n\n```javascript\nfunction lookupQuery(id) {\n  return {sql:\"SELECT id, title FROM notes WHERE id = ?\",params:[id]};\n}\nconsole.log(lookupQuery(\"7\"));\n```\nThe returned value is {\"sql\":\"SELECT id, title FROM notes WHERE id = ?\",\"params\":[\"7\"]}.",
+        "The question mark is a value placeholder. params holds the value to bind through a database API. Returning this object does not execute SQL; the adapter must actually use parameter binding.",
+        "Read the function call lookupQuery(\"7\") from the inside out: the arguments supply the inputs, lookupQuery runs the body once, and return sends its result back to the caller. console.log displays that result; it does not change it.",
+        "What happens to the text \"7 OR 1=1\" in this query model? The SQL text stays fixed. A correctly binding database adapter treats the parameter as data."
+      ],
+      "after": [
+        "SQL instructions tell a database what to do. Caller-supplied text should stay data, not become more instructions. A bound query keeps the SQL text and its input values separate.",
+        "A placeholder marks where a value belongs. Here, ? is the placeholder, and params is an array holding the ID to supply. Binding means giving that value to the database through its parameter API.",
+        "```javascript\nfunction lookupQuery(id) {\n  return {sql:\"SELECT id, title FROM notes WHERE id = ?\",params:[id]};\n}\nconsole.log(lookupQuery(\"7\"));\n```\nThe result has fixed SQL text and a params array containing the text \"7\". The ID is not inserted into the SQL string.",
+        "Even text containing SQL-like words stays one parameter value. Do not rewrite the SQL string by joining the supplied ID into it.",
+        "This function only describes the query. It does not run it. The database adapter must use actual parameter binding; joining the values into SQL later would undo the separation.",
+        "Complete lookupQuery(id). Return the exact shown SELECT text and params containing the supplied ID. Keep the input's value and type unchanged."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the contract and trace the worked example.",
+        "Replace the unfinished return in the starter.",
+        "Run the changed-input checks.",
+        "Explain the boundary in the understanding question."
+      ],
+      "after": [
+        "Keep the SQL string fixed with its ? placeholder.",
+        "Put id in the params array.",
+        "Check that different inputs never change the SQL text."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "The question mark is a value placeholder. params holds the value to bind through a database API. Returning this object does not execute SQL; the adapter must actually use parameter binding."
+      ],
+      "after": [
+        "Do not use string joining or a text template to insert id into SQL.",
+        "The result describes the query; it does not execute it."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "What happens to the text \"7 OR 1=1\" in this query model?",
+        "choices": [
+          "It becomes extra SQL instructions",
+          "It stays one parameter value",
+          "It changes the SELECT columns"
+        ],
+        "answer": 1,
+        "explanation": "The SQL text stays fixed. A correctly binding database adapter treats the parameter as data."
+      },
+      "after": {
+        "question": "What happens to the input text \"7 OR 1=1\" in this query description?",
+        "choices": [
+          "It becomes extra SQL instructions",
+          "It stays one parameter value",
+          "It changes the selected columns"
+        ],
+        "answer": 1,
+        "explanation": "The SQL text stays fixed. A database adapter that binds params treats the input as a value."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Runs as a pure JavaScript function in the browser. Passing checks does not establish live HTTP behavior, database durability, concurrency safety, authentication security, queue delivery guarantees, or production readiness.",
+      "after": "This browser exercise builds a query description. Real SQL safety depends on the database adapter using parameter binding when it executes the query."
+    }
+  ],
+  "headings": [
+    "Separate instructions from data",
+    "Use a value placeholder",
+    "Read one example",
+    "Keep the parameter unchanged",
+    "Execute with real binding",
+    "Try it yourself"
+  ],
+  "project": {
+    "title": "Keep SQL text separate from values",
+    "task": "Complete lookupQuery(id) with the fixed SELECT statement and a separate one-item params array holding id.",
+    "done_when": "Every input stays separate from the unchanged SQL instructions."
+  }
+}

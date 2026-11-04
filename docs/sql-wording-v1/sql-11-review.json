@@ -1,0 +1,100 @@
+{
+  "lesson": "sql-11",
+  "position": 19,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Create a view contact_choices with id, name and contact for every row in contacts. Prefer a nonempty trimmed email, then a nonempty trimmed phone, otherwise use \"No contact yet\". The stored values can be NULL, empty, or contain outside spaces. Do not change the source table.",
+      "after": "Choose email first, phone second, or a clear fallback message."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A contact record may be missing an email, a phone number or both. NULL means a missing or unknown value in SQL. An empty string and spaces-only text are present strings, so they need cleanup before a fallback can treat them as missing. This project makes one useful display value per person.",
+        "TRIM(text) removes outside spaces in SQLite. It preserves spaces inside a phone number. TRIM(NULL) remains NULL. NULLIF(value, '') returns NULL when value is an empty string and otherwise returns value. Combining them turns an empty or spaces-only field into NULL.",
+        "This example shows the cleanup step.\n```sql\nWITH data(email) AS (VALUES ('  a@example.org  '), (''), ('   '), (NULL))\nSELECT NULLIF(TRIM(email), '') AS cleaned\nFROM data;\n```\nThe first result is a@example.org. The remaining values are NULL. AS cleaned gives the output column a useful name.",
+        "COALESCE chooses the first argument that is not NULL. Its argument order expresses your preference: cleaned email first, cleaned phone second, a written fallback last. COALESCE does not consider a plain empty string missing; that is why the NULLIF cleanup matters.",
+        "Here is a complete fallback example.\n```sql\nWITH people(email, phone) AS (VALUES ('   ', ' 555 0100 '))\nSELECT COALESCE(\n  NULLIF(TRIM(email), ''),\n  NULLIF(TRIM(phone), ''),\n  'No contact yet'\n) AS contact\nFROM people;\n```\nIt returns 555 0100. The outside spaces disappear but the internal space remains.",
+        "This is a display choice, not proof that an email or phone number is valid or reachable. Do not invent stricter validation than the task requests. Keep id and name in the view so a caller can associate the chosen contact with the right person. Every input person should produce one output row.",
+        "Create the contact_choices view and display it ordered by id. Check a person with both fields, phone only, neither field and spaces-only email. The preference rule must keep email when both are available. The source table should remain unchanged because formatting a view need not edit saved contact details."
+      ],
+      "after": [
+        "Contact details can be NULL, empty text, or text containing only spaces. These are different stored values. Clean the text before deciding which detail to display.",
+        "`TRIM(text)` removes ordinary spaces at the two ends. It keeps spaces inside a phone number. TRIM(NULL) stays NULL.",
+        "`NULLIF(value, '')` returns NULL when the value is empty text. Otherwise, it returns that value. After TRIM, this also turns spaces-only text into NULL.",
+        "`COALESCE` chooses the first input that is not NULL. Put cleaned email first, cleaned phone second, and the fallback message last. It does not skip empty text unless you clean that text first.",
+        "Run this example in a fresh database:\n```sql\nCREATE TABLE demo_contact(email TEXT, phone TEXT);\nINSERT INTO demo_contact VALUES ('   ', ' 555 0100 ');\nSELECT COALESCE(\n  NULLIF(TRIM(email), ''),\n  NULLIF(TRIM(phone), ''),\n  'No contact yet'\n) AS contact\nFROM demo_contact;\n```\nThe result is `555 0100`. Its inside space remains.",
+        "This result chooses what to display. It does not prove that the address or number is valid or reachable. Keep each person's id and name beside their chosen contact.",
+        "Create `contact_choices(id, name, contact)` as a view of every row in `contacts`. Prefer cleaned email, then cleaned phone, then `'No contact yet'`. Display the view in id order and keep the stored details unchanged."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Use `TRIM` to remove spaces at the edges of each contact field.",
+        "Use `NULLIF` to treat empty text as missing.",
+        "Use `COALESCE` to choose email first, then phone, then the fallback message.",
+        "Make a view with `id`, `name`, and `contact` for every person.",
+        "Display the rows in `id` order.",
+        "Run the check that confirms the source data stayed unchanged."
+      ],
+      "after": [
+        "Trim each field and turn empty text into NULL.",
+        "Use COALESCE in the required preference order.",
+        "Keep every person's id and name in the view.",
+        "Display the view in id order."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "NULLIF(TRIM(email), '') handles empty and spaces-only email.",
+        "Apply the same cleanup to phone.",
+        "Put 'No contact yet' last in COALESCE."
+      ],
+      "after": [
+        "Use NULLIF(TRIM(email), '') for the email.",
+        "Clean phone in the same way.",
+        "A present email must win over a present phone."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "What does COALESCE('', 'phone') return?",
+        "choices": [
+          "phone",
+          "An empty string",
+          "NULL"
+        ],
+        "answer": 1,
+        "explanation": "COALESCE skips NULL values, but an empty string is not NULL. NULLIF can turn the empty string into NULL first."
+      },
+      "after": {
+        "question": "What does COALESCE('', 'phone') return?",
+        "choices": [
+          "phone",
+          "Empty text",
+          "NULL"
+        ],
+        "answer": 1,
+        "explanation": "COALESCE skips NULL, but empty text is not NULL."
+      }
+    }
+  ],
+  "headings": [
+    "Recognize blank contact details",
+    "Remove spaces at the edges",
+    "Treat empty text as missing",
+    "Choose the first usable value",
+    "Try the contact fallback",
+    "Keep the meaning of the result",
+    "Build the contact choices"
+  ],
+  "project": {
+    "title": "A reachable contact list",
+    "task": "Create contact_choices(id, name, contact) for every contact. Choose a nonempty trimmed email, then a nonempty trimmed phone, then 'No contact yet'.",
+    "done_when": "Every person appears once with the preferred display value, and contacts stays unchanged."
+  }
+}

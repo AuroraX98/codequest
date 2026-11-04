@@ -1,0 +1,94 @@
+{
+  "lesson": "cpp-35",
+  "position": 35,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Replace larger(2, 5) with larger(2, 5.0). What happens?",
+      "after": "Write one function pattern that can work with several types."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "template<typename T> introduces a type parameter named T. The compiler instantiates a concrete function for a chosen type. This is compile-time generic code, not a runtime dynamically typed function.",
+        "larger(2, 5) deduces T as int. Both parameters use the same T. Passing one int and one double does not silently choose a common type for this signature; deduction conflicts unless the caller supplies a suitable explicit type.",
+        "This version returns by value, not a borrowed reference. These numeric examples copy values; other types may use move operations when returning a parameter. The comparison and value construction operations must be valid for the chosen type. Later a concept will state a constraint explicitly.",
+        "Complete local C++ example; the app itself does not execute it:\n```cpp\n#include <iostream>\ntemplate<typename T>\nT larger(T a, T b) {\n    if (a < b) return b;\n    return a;\n}\nint main() {\n    std::cout << larger(2, 5) << '\\n';\n    std::cout << larger(2.5, 1.5) << '\\n';\n}\n\n```",
+        "Expected output or behavior: 5\n2.5\n. Local compiler test evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Try larger<double>(2,5.0) and explain why explicitly selecting T removes this deduction conflict. You may trace this without a compiler; finishing the reading is not proof of a local run."
+      ],
+      "after": [
+        "A function template is a pattern for making functions with different types. template<typename T> introduces T as a type placeholder. The compiler creates the needed typed function before the program runs.",
+        "Both parameters use the same T. With two int inputs, the compiler chooses int. With two double inputs, it chooses double. This template cannot work out one T from a mixture of those two input types.",
+        "The chosen type must support the operations in the function. Here its values must be comparable with < and usable as the returned value.",
+        "Follow the same function pattern with the two input types.\n\n```cpp\n#include <iostream>\ntemplate<typename T>\nT larger(T a, T b) {\n    if (a < b) return b;\n    return a;\n}\nint main() {\n    std::cout << larger(2, 5) << '\\n';\n    std::cout << larger(2.5, 1.5) << '\\n';\n}\n\n```",
+        "The program prints 5, then 2.5 on the next line. Each call returns the larger of its two values.",
+        "The function returns a value, not a reference to one of its local parameters. For these numbers, the caller receives a separate numeric result."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain why, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Both inputs must agree on the same T when this template works out the type."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Replace larger(2, 5) with larger(2, 5.0). What happens?",
+        "choices": [
+          "T automatically becomes double",
+          "Compilation fails from conflicting deductions for T",
+          "It prints 2"
+        ],
+        "answer": 1,
+        "explanation": "The same T would need to be int and double. An explicit larger<double>(2,5.0) could request conversion, but is not the changed call."
+      },
+      "after": {
+        "question": "Replace larger(2, 5) with larger(2, 5.0). What happens?",
+        "choices": [
+          "The compiler automatically chooses double for T.",
+          "The compiler rejects the call because the inputs suggest different types for T.",
+          "The function prints 2."
+        ],
+        "answer": 1,
+        "explanation": "The first input suggests int and the second suggests double. This call does not provide one matching type for both T parameters."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "C++ Core v1, standard C++23 features checked against the available GCC14.2 implementation. This app provides concept reading and an understanding check, not a C++ browser runner. Local example tests are separate evidence and do not certify learner mastery.",
+      "after": "The browser shows C++ code and checks your understanding; it does not run C++. Optional local examples use C++23."
+    }
+  ],
+  "headings": [
+    "Use a type placeholder",
+    "Choose the type from the inputs",
+    "Require suitable operations",
+    "One example",
+    "What appears",
+    "Return a separate value"
+  ],
+  "project": {
+    "title": "Write a function template",
+    "task": "Trace how each call chooses a type and returns its larger value.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local C++ example is optional."
+  }
+}

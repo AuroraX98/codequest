@@ -1,0 +1,94 @@
+{
+  "lesson": "javascript-69",
+  "position": 51,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Fix totalValues so it sums each finite numeric array entry exactly once, returning0 for empty input and leaving the array unchanged. Correct the loop bound rather than masking NaN.",
+      "after": "Find a loop bug using the smallest input that shows it."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A minimal failing case keeps only the data needed to expose a bug. The intended total of [5] is 5, and the total of [] is 0. This broken function parses and runs, but returns the wrong value: it is a logic/bounds defect, not a syntax error.\n```javascript\nfunction brokenTotal(values) {\n  let total = 0;\n  for (let i = 0; i <= values.length; i += 1) {\n    total += values[i];\n  }\n  return total;\n}\nconsole.log(brokenTotal([5]));\nconsole.log(Number.isNaN(brokenTotal([])));\n```\nOutput: NaN then true. Number.isNaN(value) returns whether the value is the special numeric NaN, without converting strings.",
+        "For a one-item array the only valid index is 0; length is 1. The <= test permits an extra iteration at index 1. Reading that missing entry gives undefined; adding it produces NaN. Trace the state before each update:\n```javascript\nconst values = [5];\nlet total = 0;\nfor (let i = 0; i <= values.length; i += 1) {\n  console.log(i, values[i]);\n  total += values[i];\n}\nconsole.log(total);\n```\nOutput: 0 5; 1 undefined; NaN. A debugger’s breakpoint/watch can help inspect the same state, but this scripted trace does not demonstrate an actual DevTools session.",
+        "The loop must stop when i equals length. Replacing <= with < avoids the nonexistent entry. Do not merely replace NaN with 0 afterward: that would hide the defect and lose valid totals. totalValues receives a finite-number array and returns its sum without modifying it.\n```javascript\nfunction totalValues(values) {\n  let total = 0;\n  for (let i = 0; i < values.length; i += 1) {\n    total += values[i];\n  }\n  return total;\n}\nconsole.log(totalValues([5]));\nconsole.log(totalValues([]));\n```\nOutput: 5 then 0.",
+        "A regression check saves the smallest failing input so a later change can expose the same bug again. Also check a longer input to avoid a one-case patch. Optional practice: explain why [0] still needs correct bounds even though its intended total is zero. Finite tests are evidence for their cases, not proof for every possible program input."
+      ],
+      "after": [
+        "Debugging means finding and fixing mistakes in a program. A small failing example makes the mistake easier to see.\n\nThis function runs, but gives the wrong total even for one number.\n```javascript\nfunction brokenTotal(values) {\n  let total = 0;\n  for (let i = 0; i <= values.length; i += 1) {\n    total += values[i];\n  }\n  return total;\n}\nconsole.log(brokenTotal([5]));\nconsole.log(Number.isNaN(brokenTotal([])));\n```\nOutput:\n```text\nNaN\ntrue\n```\nThe first answer should be 5. `Number.isNaN` checks whether the second answer is NaN: not a number.",
+        "An array with one item has length 1, but its only valid position is 0. The `<=` condition lets the loop visit position 1 too.\n```javascript\nconst values = [5];\nlet total = 0;\nfor (let i = 0; i <= values.length; i += 1) {\n  console.log(i, values[i]);\n  total += values[i];\n}\nconsole.log(total);\n```\nOutput:\n```text\n0 5\n1 undefined\nNaN\n```\nThe missing entry gives `undefined`. Adding it turns the total into NaN. Printing the position and value shows where the mistake happens.",
+        "Stop before `i` reaches `values.length`. Change `<=` to `<`.\n```javascript\nfunction totalValues(values) {\n  let total = 0;\n  for (let i = 0; i < values.length; i += 1) {\n    total += values[i];\n  }\n  return total;\n}\nconsole.log(totalValues([5]));\nconsole.log(totalValues([]));\n```\nOutput:\n```text\n5\n0\n```\nNow each entry is added once. An empty array runs the loop zero times, leaving the total at zero.",
+        "Keep the small failing input as a regression test: a check that helps catch this same bug if it comes back later.\n\nAlso check a longer list, negative numbers, and the unchanged source array. Replacing NaN with zero would hide the bad loop and lose valid totals; fix the loop condition itself."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the requirement.",
+        "Make one change to the starter.",
+        "Run the checks.",
+        "Explain why a changed input produces its result."
+      ],
+      "after": [
+        "Trace the loop for the one-item array [5].",
+        "Change the condition so i stays below values.length.",
+        "Check that [5] returns 5 and [] returns 0.",
+        "Check a longer list and leave the input unchanged."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Why is returning 0 whenever the broken result is NaN not a correct fix?",
+        "choices": [
+          "NaN can never result from an array read.",
+          "It hides the extra iteration and discards valid nonzero totals.",
+          "Every array should always total0."
+        ],
+        "answer": 1,
+        "explanation": "The bug is visiting an invalid index. Fixing the bound preserves valid sums instead of substituting an unrelated answer."
+      },
+      "after": {
+        "question": "Why is returning 0 whenever the broken result is NaN not a correct fix?",
+        "choices": [
+          "NaN can never result from an array read.",
+          "It hides the extra iteration and discards valid nonzero totals.",
+          "Every array should always total0."
+        ],
+        "answer": 1,
+        "explanation": "The loop reads one missing entry. Returning zero would hide that mistake and throw away real totals such as 5."
+      }
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Trace the visible worked calls before changing the starter."
+      ],
+      "after": [
+        "The last valid position is length - 1.",
+        "Fix the comparison; do not replace a wrong total with zero."
+      ]
+    },
+    {
+      "field": "externalNotes",
+      "before": "ECMAScript 2026 core; native Node24 and current app worker/DOM harness evidence are recorded separately. No external service or real-browser claim follows from a local fixture.",
+      "after": ""
+    }
+  ],
+  "headings": [
+    "Start with a small failure",
+    "Trace the extra loop step",
+    "Fix the stopping rule",
+    "Keep a check for the bug"
+  ],
+  "project": {
+    "title": "Debugging a minimal failing case",
+    "task": "Fix the loop condition in totalValues so each supplied number is added once. Return zero for an empty array and leave the source unchanged.",
+    "done_when": "One-item, empty, and longer arrays return the right total. The loop never reads past the last entry and does not change the input."
+  },
+  "notes": [
+    "Removed an unrelated local-project completion requirement; its useful teaching is in the lesson and technical evidence stays in review documents."
+  ]
+}

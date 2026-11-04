@@ -1,0 +1,94 @@
+{
+  "lesson": "cpp-38",
+  "position": 38,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Change the capture to [&offset]. What prints in this same scope?",
+      "after": "Let a small function keep a copy of a nearby value."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A lambda is an unnamed function object. [offset](int value) { return value + offset; } takes an int and captures a copy of offset at creation. auto holds the lambda’s generated type.",
+        "[&offset] captures a reference instead. It observes later changes but must not outlive offset. Do not return or store a reference-capturing lambda past the referenced object’s lifetime.",
+        "The parameter value arrives on each call; the capture supplies surrounding context. Changing offset after value capture does not change the stored copy.",
+        "Complete local C++ example; the app itself does not execute it:\n```cpp\n#include <iostream>\nint main() {\n    int offset{2};\n    auto add = [offset](int value) { return value + offset; };\n    offset = 5;\n    std::cout << add(3) << '\\n';\n}\n\n```",
+        "Expected output or behavior: 5\n. Local compiler test evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Create both capture versions together and compare their results after one offset change. You may trace this without a compiler; finishing the reading is not proof of a local run."
+      ],
+      "after": [
+        "A lambda is a function object written where you need it. Here auto add stores that object. Parentheses describe its input, and braces contain its work.",
+        "A capture lets a lambda use a nearby local value. [offset] stores a copy of offset when the lambda is created. Later changes to the original do not change that copy.",
+        "The parameter value receives a fresh input each time add is called. The captured offset is already stored in the lambda. The body adds these two values.",
+        "Follow when offset is copied and when add is called.\n\n```cpp\n#include <iostream>\nint main() {\n    int offset{2};\n    auto add = [offset](int value) { return value + offset; };\n    offset = 5;\n    std::cout << add(3) << '\\n';\n}\n\n```",
+        "The program prints 5. The lambda kept a copy of two. Changing the original offset to five does not change that copy, so add(3) returns three plus two.",
+        "[&offset] would capture a reference instead. It would read the original's current value, but the original must still exist when the lambda uses it."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain why, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "A copied capture keeps the earlier value; a reference capture reads the original."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Change the capture to [&offset]. What prints in this same scope?",
+        "choices": [
+          "5",
+          "8",
+          "3"
+        ],
+        "answer": 1,
+        "explanation": "The reference capture sees the current offset of 5 when add(3) runs; both objects are still alive."
+      },
+      "after": {
+        "question": "Change [offset] to [&offset] and leave the rest unchanged. What prints?",
+        "choices": [
+          "5",
+          "8",
+          "3"
+        ],
+        "answer": 1,
+        "explanation": "The reference reads the current offset, five. Adding the input three gives eight, and offset is still alive during the call."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "C++ Core v1, standard C++23 features checked against the available GCC14.2 implementation. This app provides concept reading and an understanding check, not a C++ browser runner. Local example tests are separate evidence and do not certify learner mastery.",
+      "after": "The browser shows C++ code and checks your understanding; it does not run C++. Optional local examples use C++23."
+    }
+  ],
+  "headings": [
+    "Create a lambda",
+    "Capture a nearby value",
+    "Receive a fresh call input",
+    "One example",
+    "What appears",
+    "A reference capture needs a live target"
+  ],
+  "project": {
+    "title": "Capture inputs in a lambda",
+    "task": "Trace the captured copy separately from the later value of offset.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local C++ example is optional."
+  }
+}

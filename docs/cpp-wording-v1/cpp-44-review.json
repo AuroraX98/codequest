@@ -1,0 +1,94 @@
+{
+  "lesson": "cpp-44",
+  "position": 44,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Change the filter from x > 1 to x > 2. What is traversed?",
+      "after": "Describe a sequence of filtering and transforming steps with a view."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A range view describes iteration rather than eagerly creating a new vector. std::views::filter keeps values satisfying a predicate; std::views::transform computes a value from each kept element. | composes these adaptors.",
+        "The for loop traverses the pipeline: filter values greater than 1, then multiply each by 10. The underlying vector remains 1,2,3. This example does not modify it while a view is being traversed.",
+        "This view refers to the named vector, which outlives traversal. Do not return this view from a function if its local vector would be destroyed. Avoid assuming views are cached result collections.",
+        "Complete local C++ example; the app itself does not execute it:\n```cpp\n#include <iostream>\n#include <ranges>\n#include <vector>\nint main() {\n    std::vector<int> values{1, 2, 3};\n    auto selected = values\n        | std::views::filter([](int x) { return x > 1; })\n        | std::views::transform([](int x) { return x * 10; });\n    for (int value : selected) std::cout << value << ' ';\n    std::cout << '\\n';\n}\n\n```",
+        "Expected output or behavior: 20 30 \n. Local compiler test evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Keep the filter but change the transform to x+10 and predict the values before running. You may trace this without a compiler; finishing the reading is not proof of a local run."
+      ],
+      "after": [
+        "A view describes how to visit data. It does not immediately build a new vector of results. This is called lazy work: results are produced as the loop asks for them.",
+        "std::views::filter keeps the items that pass a test. Its test function is called a predicate. Here x > 1 keeps only source values greater than one.",
+        "std::views::transform changes each kept value as it is read. Here it multiplies by ten. The | symbols connect the filtering and transforming steps in order.",
+        "Follow each source value through the filter before the transform.\n\n```cpp\n#include <iostream>\n#include <ranges>\n#include <vector>\nint main() {\n    std::vector<int> values{1, 2, 3};\n    auto selected = values\n        | std::views::filter([](int x) { return x > 1; })\n        | std::views::transform([](int x) { return x * 10; });\n    for (int value : selected) std::cout << value << ' ';\n    std::cout << '\\n';\n}\n\n```",
+        "The program prints 20 30, with a space after each number. Two and three pass the filter, then become twenty and thirty. The original vector still holds one, two, and three.",
+        "This view refers to values, so that vector must stay alive while the view uses it. The view is not a saved collection of answers. Do not return this view if its local source vector will be destroyed."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain why, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Apply the filter to the original values before applying the transform."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Change the filter from x > 1 to x > 2. What is traversed?",
+        "choices": [
+          "20 and 30",
+          "30 only",
+          "1, 2 and 3"
+        ],
+        "answer": 1,
+        "explanation": "Only source value 3 passes the new predicate; the transform then yields 30."
+      },
+      "after": {
+        "question": "Change the filter from x > 1 to x > 2. Which value does the loop read?",
+        "choices": [
+          "20 and 30",
+          "Only 30",
+          "1, 2, and 3"
+        ],
+        "answer": 1,
+        "explanation": "Only three passes the new test. The transform then multiplies it by ten."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "C++ Core v1, standard C++23 features checked against the available GCC14.2 implementation. This app provides concept reading and an understanding check, not a C++ browser runner. Local example tests are separate evidence and do not certify learner mastery.",
+      "after": "The browser shows C++ code and checks your understanding; it does not run C++. Optional local examples use C++23."
+    }
+  ],
+  "headings": [
+    "Describe work to do during a visit",
+    "Filter the source items",
+    "Transform the kept values",
+    "One example",
+    "What appears",
+    "Keep the source alive"
+  ],
+  "project": {
+    "title": "Compose lazy range views",
+    "task": "Trace the filtering and transforming steps for the original sequence.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local C++ example is optional."
+  }
+}

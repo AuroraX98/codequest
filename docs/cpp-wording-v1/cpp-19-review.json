@@ -1,0 +1,97 @@
+{
+  "lesson": "cpp-19",
+  "position": 19,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Add name.clear() inside show_size before the output. What happens?",
+      "after": "Let a function read a string through a reference without changing it."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A parameter const std::string& name refers to the caller’s string without copying it for the parameter. const prevents this function from modifying that string through this parameter.",
+        "The function may inspect the input during the call. It must not keep a borrowed reference for use after the original object has gone away.",
+        "size() can inspect a const string. Calling a mutating operation such as clear() through this const reference is rejected.\n\nOn a mutable string, clear() takes no arguments, removes all characters and returns no value. This is separate from the const parameter below:\n```cpp\nstd::string text{\"Moon\"};\ntext.clear();\nstd::cout << text.size() << \"\\n\";\n```\nOutput: 0.",
+        "The complete example places the function definition before main, so its signature is known at the call site. void means this function returns no value; it displays the size instead.",
+        "Complete local C++ example; the app itself does not execute it:\n```cpp\n#include <iostream>\n#include <string>\nvoid show_size(const std::string& name)\n{\n    std::cout << name.size() << \"\\n\";\n}\n\nint main()\n{\n    std::string topic{\"Moon\"};\n    show_size(topic);\n    std::cout << topic << \"\\n\";\n}\n\n```",
+        "Expected output or behavior: 4\nMoon. Local compiler test evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Compare this read-only parameter with passing a string by value. Explain why neither version should be confused with a mutable reference. You may trace this without a compiler; finishing the reading is not proof of a local run."
+      ],
+      "after": [
+        "A parameter is a function's named input. const std::string& name refers to the caller's string instead of copying it. const stops the function from changing the string through name.",
+        "Borrowing means using an object without taking responsibility for its lifetime. The original string must still exist whenever the function uses the reference. This function only uses it during the call.",
+        "size() reads a string's size, so it works through a const reference. clear() would remove the string's characters; that change is not allowed through this parameter.",
+        "void means show_size returns no value. It prints the size instead. Its definition appears before main so the compiler knows how to call it.",
+        "Follow topic into the function through the name reference.\n\n```cpp\n#include <iostream>\n#include <string>\nvoid show_size(const std::string& name)\n{\n    std::cout << name.size() << \"\\n\";\n}\n\nint main()\n{\n    std::string topic{\"Moon\"};\n    show_size(topic);\n    std::cout << topic << \"\\n\";\n}\n\n```",
+        "The program prints 4, then Moon on the next line. show_size reads the string's size without changing its contents.",
+        "The reference reaches the caller's original string. const limits what this function can do through that reference; it does not create a private copy of the string."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain why, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "The & avoids a parameter copy. const prevents changes through that parameter."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Add name.clear() inside show_size before the output. What happens?",
+        "choices": [
+          "The caller’s string is silently erased.",
+          "Compilation fails because this parameter provides const access.",
+          "clear changes only an automatic parameter copy."
+        ],
+        "answer": 1,
+        "explanation": "This is a reference rather than a copy, and its const access forbids mutation."
+      },
+      "after": {
+        "question": "Add name.clear() inside show_size before the output. What happens?",
+        "choices": [
+          "The caller's string is erased.",
+          "The compiler rejects the change through the const reference.",
+          "Only a separate parameter copy is cleared."
+        ],
+        "answer": 1,
+        "explanation": "name refers to the original string, but its const access does not allow clear() to change that string."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "C++ Core v1, standard C++23 features checked against the available GCC14.2 implementation. This app provides concept reading and an understanding check, not a C++ browser runner. Local example tests are separate evidence and do not certify learner mastery.",
+      "after": "The browser shows C++ code and checks your understanding; it does not run C++. Optional local examples use C++23."
+    }
+  ],
+  "headings": [
+    "Borrow a string to read",
+    "Keep the original alive",
+    "Read through const access",
+    "Declare what the function returns",
+    "One example",
+    "What appears",
+    "Read-only access is not a copy"
+  ],
+  "project": {
+    "title": "Pass inputs by const reference",
+    "task": "Trace how the function reads the original string without changing it.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local C++ example is optional."
+  }
+}

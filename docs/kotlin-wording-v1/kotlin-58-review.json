@@ -1,0 +1,91 @@
+{
+  "lesson": "kotlin-58",
+  "position": 58,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "If the child assigns \"finished\", what does the print after coroutineScope report?",
+      "after": "A coroutine scope waits for its child tasks before it finishes normally."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "coroutineScope is a suspending function that does not finish until its child coroutines finish. launch starts a child and returns a Job rather than a value result. In these builders the implicit scope receiver lets you write launch without an explicit this.",
+        "The child writes result, and the print occurs after coroutineScope returns. With the inherited runBlocking context this child is not an uncoordinated worker thread. The example makes no claim about arbitrary launch order. A normal scope also propagates child failure; it is not an unmanaged global job.",
+        "Complete local Kotlin/JVM example; the app itself does not execute it:\n```kotlin\nimport kotlinx.coroutines.runBlocking\nimport kotlinx.coroutines.coroutineScope\nimport kotlinx.coroutines.launch\n\nfun main() {\n    runBlocking {\n        var result = \"waiting\"\n        coroutineScope { launch { result = \"ready\" } }\n        println(result)\n    }\n}\n```",
+        "Expected output or behavior: ready. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Explain why a sleep duration is not a substitute for owning and awaiting child work. You may trace it without a Kotlin compiler; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "A coroutine scope groups related tasks. The suspending function `coroutineScope` does not return normally until its child coroutines finish. This links the work's lifetime to the scope that owns it.",
+        "The function `launch` starts a child task and returns a Job, an object used to track or control that task. It does not return the child's calculated answer. Here, the child changes result, and the print comes after the scope finishes.",
+        "Follow the example one line at a time.\n```kotlin\nimport kotlinx.coroutines.runBlocking\nimport kotlinx.coroutines.coroutineScope\nimport kotlinx.coroutines.launch\n\nfun main() {\n    runBlocking {\n        var result = \"waiting\"\n        coroutineScope { launch { result = \"ready\" } }\n        println(result)\n    }\n}\n```",
+        "The screen shows `ready`. The scope waits for the child to finish its assignment before execution reaches println.",
+        "This child uses the surrounding runBlocking setup; it is not a detached thread. A normal scope also carries child failures back to its caller. Waiting a guessed number of seconds cannot replace waiting for the actual child work."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "The print is after coroutineScope returns."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If the child assigns \"finished\", what does the print after coroutineScope report?",
+        "choices": [
+          "waiting because scopes never wait for children",
+          "finished",
+          "Either string because the scope has already discarded its child."
+        ],
+        "answer": 1,
+        "explanation": "The scope does not return before its child completes, so the subsequent print observes the assignment."
+      },
+      "after": {
+        "question": "Make the child assign `\"finished\"`. What does the later print show?",
+        "choices": [
+          "waiting, because scopes never wait for children.",
+          "finished",
+          "Either value, because the scope discards its child."
+        ],
+        "answer": 1,
+        "explanation": "The scope waits for the assignment to finish. The following println then reads finished."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Kotlin JVM Core v1 uses Kotlin2.4.21 stable syntax and a verified JVM toolchain. The app supplies concept reading and an understanding check, not a Kotlin browser runner. Coroutine libraries are separate dependencies. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "The browser shows Kotlin code and checks your understanding; it does not run Kotlin. Optional local examples use Kotlin/JVM."
+    }
+  ],
+  "headings": [
+    "Own related child tasks",
+    "Launch and track a child",
+    "One example",
+    "Read after the child finishes",
+    "Keep waiting tied to real work"
+  ],
+  "project": {
+    "title": "Structured coroutine scopes",
+    "task": "Explain why the later read sees the completed child's value.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local Kotlin example is optional."
+  }
+}

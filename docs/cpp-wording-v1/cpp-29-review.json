@@ -1,0 +1,94 @@
+{
+  "lesson": "cpp-29",
+  "position": 29,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "If b is copied from a instead, why does the final output still read 2 7?",
+      "after": "Let a vector transfer its stored data, then give the source a known value."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "std::move from <utility> does not itself move bytes or empty an object. It casts an expression so a receiving operation may use move semantics. Standard containers can transfer owned storage efficiently.",
+        "After moving this vector into b, b has the original values. The source vector remains valid but its value is unspecified; do not predict its size. Calling clear then push_back gives a a known new value.\n\na.clear() removes every element, leaving a.size() equal to zero; it returns no value. The later push_back then establishes the new element.",
+        "Moving is not reference aliasing. Reusing a after resetting it does not change b. Small scalar moves can just copy; std::move is not a universal speed switch.",
+        "Complete local C++ example; the app itself does not execute it:\n```cpp\n#include <iostream>\n#include <utility>\n#include <vector>\nint main() {\n    std::vector<int> a{2, 4};\n    auto b = std::move(a);\n    a.clear();\n    a.push_back(7);\n    std::cout << b[0] << ' ' << a[0] << '\\n';\n}\n\n```",
+        "Expected output or behavior: 2 7\n. Local compiler test evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Print b.size() after the move; do not assert a particular moved-from size. You may trace this without a compiler; finishing the reading is not proof of a local run."
+      ],
+      "after": [
+        "Moving lets an object hand owned resources to another object. std::move, from <utility>, marks a value so the receiving operation may move from it. std::move alone does not transfer anything; the receiving operation does the work.",
+        "After this vector move, b has the original items. a still exists and can be used, but do not rely on a particular set of remaining contents unless the operation promises one.",
+        "b and a are separate vectors. Changing a afterward does not change b. Moving a simple number may just copy it, so std::move is not a guarantee of faster code.",
+        "Follow the move into b, then the new contents placed in a.\n\n```cpp\n#include <iostream>\n#include <utility>\n#include <vector>\nint main() {\n    std::vector<int> a{2, 4};\n    auto b = std::move(a);\n    a.clear();\n    a.push_back(7);\n    std::cout << b[0] << ' ' << a[0] << '\\n';\n}\n\n```",
+        "The program prints 2 7. b keeps the original first item, two. clear() removes any items left in a, and push_back puts seven into it.",
+        "clear() gives a a known empty state before the new item is added. The output therefore does not depend on guessing a's contents immediately after the move."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain why, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Trace the operations after the transfer before predicting the final values."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If b is copied from a instead, why does the final output still read 2 7?",
+        "choices": [
+          "Copying is identical to moving internally",
+          "The later clear/push establishes a fresh a in either case",
+          "Both vectors share one element"
+        ],
+        "answer": 1,
+        "explanation": "The final operations deliberately overwrite a’s contents, so the output does not reveal the different transfer/copy work."
+      },
+      "after": {
+        "question": "Copy a into b instead of moving it. Why does the final output still read 2 7?",
+        "choices": [
+          "Copying and moving always do identical work.",
+          "The later clear and push_back give a the same new contents either way.",
+          "Both vectors share their first item."
+        ],
+        "answer": 1,
+        "explanation": "b receives the original values. The later operations replace a's contents, whether b was copied or moved."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "C++ Core v1, standard C++23 features checked against the available GCC14.2 implementation. This app provides concept reading and an understanding check, not a C++ browser runner. Local example tests are separate evidence and do not certify learner mastery.",
+      "after": "The browser shows C++ code and checks your understanding; it does not run C++. Optional local examples use C++23."
+    }
+  ],
+  "headings": [
+    "Allow an operation to move",
+    "The source still exists",
+    "Moving is not sharing",
+    "One example",
+    "What appears",
+    "Reset before relying on the source"
+  ],
+  "project": {
+    "title": "Transfer resources with move semantics",
+    "task": "Trace the transferred values and the new value established in the source.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local C++ example is optional."
+  }
+}

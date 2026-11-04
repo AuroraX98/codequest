@@ -1,0 +1,86 @@
+{
+  "lesson": "react-36",
+  "position": 33,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Keep the selection pure and correct for changed prefixes and no matches; useMemo may reuse the result when letter stays the same.",
+      "after": "Use a memo to reuse a calculation, while keeping the result correct if it runs again."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "Memoization means reusing a previously calculated result when its inputs have not changed. React.useMemo can cache a pure calculation. The screen must still be correct if the calculation runs again; a cache is a performance option, not a place to put a required side effect.",
+        "useMemo receives a no-argument calculation callback and its dependencies, and returns the calculated value, not that callback. Here letter is reactive; activities is a fixed array outside the component and is never changed. React compares dependencies with Object.is and may discard a cache for supported reasons. selectActivities receives an array and prefix string; filter returns a new array without changing the input. startsWith returns whether a string begins with the supplied prefix. join makes comma-separated text; || supplies None for an empty result. This tiny example makes no speed claim. The frame calls App as the root component with no supplied props. App returns the JSX tree; define it here without calling App() yourself or adding imports/createRoot.",
+        "```react\nconst activities = [\"Draw\", \"Read\", \"Run\"];\nfunction selectActivities(items, letter) {\n  return items.filter(item => item.startsWith(letter));\n}\nfunction App() {\n  const [letter, setLetter] = React.useState(\"R\");\n  const [dark, setDark] = React.useState(false);\n  const visible = React.useMemo(() => selectActivities(activities, letter), [letter]);\n  return <main data-dark={dark}>\n    <p>{visible.join(\", \") || \"None\"}</p>\n    <button onClick={() => setLetter(\"D\")}>Choose D</button>\n    <button onClick={() => setDark(d => !d)}>Toggle background</button>\n  </main>;\n}\n```",
+        "```react\nconst activities = [\"Draw\", \"Read\", \"Run\"];\nfunction selectActivities(items, letter) {\n  return items.filter(item => item.startsWith(letter));\n}\nfunction App() {\n  const [letter, setLetter] = React.useState(\"R\");\n  const [dark, setDark] = React.useState(false);\n  const visible = selectActivities(activities, letter);\n  return <main data-dark={dark}>\n    <p>{visible.join(\", \") || \"None\"}</p>\n    <button onClick={() => setLetter(\"D\")}>Choose D</button>\n    <button onClick={() => setDark(d => !d)}>Toggle background</button>\n  </main>;\n}\n```\nRemoving useMemo preserves the same screen and selection behavior. It may repeat the calculation on an unrelated render, but no output or required side effect should rely on how often it runs.",
+        "Keep the selection pure and correct for changed prefixes and no matches; useMemo may reuse the result when letter stays the same. These finite behavior checks do not prove that every possible implementation is correct. Optional local practice: change one input, predict the screen, then run it."
+      ],
+      "after": [
+        "A cache keeps a result so it may be reused. Memoization means reusing a calculation when its inputs have not changed. `useMemo` can do this for a pure calculation.",
+        "Give useMemo a calculation function and its dependencies. Here, the changing input is `letter`. The activities array stays fixed outside the component. useMemo returns the calculated list, not the function.",
+        "```react\nconst activities = [\"Draw\", \"Read\", \"Run\"];\nfunction selectActivities(items, letter) {\n  return items.filter(item => item.startsWith(letter));\n}\nfunction App() {\n  const [letter, setLetter] = React.useState(\"R\");\n  const [dark, setDark] = React.useState(false);\n  const visible = React.useMemo(\n    () => selectActivities(activities, letter),\n    [letter]\n  );\n  return (\n    <main data-dark={dark}>\n      <p>{visible.join(\", \") || \"None\"}</p>\n      <button onClick={() => setLetter(\"D\")}>Choose D</button>\n      <button onClick={() => setDark(d => !d)}>Toggle background</button>\n    </main>\n  );\n}\n```\nThe page starts with `Read, Run`. Choose D changes it to `Draw`. Toggling the background flag leaves the selection the same.",
+        "Calling `selectActivities` directly would give the same correct list, but might repeat the work. React may discard a memo's cached result, so the calculation must be safe to repeat. This small example does not prove a speed gain.",
+        "Keep `selectActivities` pure: return matching items without changing the input. `startsWith` checks the start of each name. When none match, the page should show `None`."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the small example and explain its inputs and effects.",
+        "Complete the starter for this lesson.",
+        "Run the behavior checks, then predict a changed case."
+      ],
+      "after": [
+        "Filter by the supplied prefix without changing the list.",
+        "Include letter in the memo's dependencies.",
+        "Run the checks for changed prefixes and no matches."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Trace the visible input, event and resulting screen before changing the code."
+      ],
+      "after": [
+        "The app should still work if the same calculation runs again."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "A cache is discarded and the pure calculation runs again with the same inputs. What should happen?",
+        "choices": [
+          "The selected activities must reset to an empty array.",
+          "The app still behaves correctly and gets the same calculated selection.",
+          "A required network message should be sent again during calculation."
+        ],
+        "answer": 1,
+        "explanation": "The memoized operation is a pure calculation; repeating it does not alter external state. Memoization is optional for correctness, and these behavior checks do not prove a speedup or cache strategy."
+      },
+      "after": {
+        "question": "If React discards the cache and runs the calculation with the same inputs, what should happen?",
+        "choices": [
+          "The selected list must become empty.",
+          "The app stays correct and gets the same selection.",
+          "A required network message should be sent again."
+        ],
+        "answer": 1,
+        "explanation": "A pure calculation gives the same result without changing outside data. The cache is optional for correctness."
+      }
+    }
+  ],
+  "headings": [
+    "Reuse a calculated result",
+    "List the calculation's inputs",
+    "Select matching activities",
+    "Keep correctness without the cache",
+    "Build your pure selection"
+  ],
+  "project": {
+    "title": "A memo is a cache, not a correctness rule",
+    "task": "Keep activity selection correct and pure. UseMemo may reuse it while letter stays the same.",
+    "done_when": "Changed prefixes and no-match cases work, and the input list stays unchanged."
+  }
+}

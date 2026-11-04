@@ -1,0 +1,62 @@
+{
+  "lesson": "python-83",
+  "sourceHash": "97c0a9edf1415679f6f3cab5428d835b8b1c215adf9fb777c2a2e0188503b9a3",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Return a new ascending list containing every value from already sorted integer lists left and right, preserving duplicates and both sources. Use two forward indices, choose left on equal fronts, then append the unconsumed tail.",
+      "after": "Merge two sorted lists into one new list, keeping every repeated value."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "Merging combines two already ascending sorted lists into one sorted list. It is not concatenation followed by a sort. Compare the next unconsumed value from each list, append the smaller, and advance only that list’s position. Duplicates are preserved rather than removed.",
+        "On equal front values, choose the left one first using <=. Each iteration consumes exactly one value, so neither index goes backward. Once either side is exhausted, the other side’s remaining values are already sorted and can be appended without more value comparisons.",
+        "merge takes two ascending sorted integer lists and returns a new list, changing neither input. append(value) adds one value to result and returns None. extend(iterable) adds every supplied element and returns None; we use it as a statement, not as a new list value. left[i:] is a slice from i through the end, and is empty if i equals its length. len supplies the bounds.\n```python\ndef merge(left, right):\n    result = []\n    i = 0\n    j = 0\n    while i < len(left) and j < len(right):\n        if left[i] <= right[j]:\n            result.append(left[i])\n            i += 1\n        else:\n            result.append(right[j])\n            j += 1\n    result.extend(left[i:])\n    result.extend(right[j:])\n    return result\nprint(merge([1, 4, 4], [2, 4, 8]))\nprint(merge([], [3, 5]))\n```\nIt prints [1, 2, 4, 4, 4, 8] and [3, 5]. Each input occurrence appears exactly once in the output.",
+        "If the lengths are a and b, all a+b values must be copied to the result. The comparison loop makes at most a+b-1 value comparisons when both inputs are nonempty; an empty side needs none. The whole merge has linear work in a+b under constant-cost integer comparisons. The slices also copy remaining references; do not call this a zero-allocation merge.",
+        "Implement the two-index algorithm with the stated sorted-input precondition. Do not modify, pop from, or sort either source. Optional local practice: trace the indices when one list finishes much earlier than the other. The supplied __merge_preserved helper is test infrastructure: it checks the stated preservation contract. Leave it unchanged; the learning task is the main function, not writing this helper."
+      ],
+      "after": [
+        "Merging combines two lists already sorted from smallest to largest. Compare their next unused values, add the smaller one to the result, and move forward only in that list.\n\nKeep repeats. This method does the ordering as it goes; it does not join the lists and sort them afterward.",
+        "When the next values tie, use `<=` to choose the left one first. Each repeat uses one value, and both positions move only forward.\n\nOnce one list runs out, add all the unused values from the other list. They are already sorted, so they need no more value comparisons.",
+        "merge takes two ascending sorted integer lists and returns a new list. It changes neither input. append(value) adds one value to result and returns None. extend adds every supplied element and returns None; use it as a statement, not as a new list value. left[i:] is a slice from i through the end, and is empty if i equals len(left). len gives the bounds.\n```python\ndef merge(left, right):\n    result = []\n    i = 0\n    j = 0\n    while i < len(left) and j < len(right):\n        if left[i] <= right[j]:\n            result.append(left[i])\n            i += 1\n        else:\n            result.append(right[j])\n            j += 1\n    result.extend(left[i:])\n    result.extend(right[j:])\n    return result\nprint(merge([1, 4, 4], [2, 4, 8]))\nprint(merge([], [3, 5]))\n```\nOutput:\n```text\n[1, 2, 4, 4, 4, 8]\n[3, 5]\n```\nEvery input item appears once in the output, including each repeated value.",
+        "If the lengths are a and b, all a+b values must be copied to the result. The comparison loop makes at most a+b-1 value comparisons when both inputs are nonempty; an empty side needs none. The whole merge grows in a straight line with a+b when comparing integers costs the same each time. The slices also copy remaining values, so do not call it a no-copy merge.",
+        "Implement the two-index algorithm and keep the sorted-input rule. Do not modify, pop from, or sort either source. Optional local practice: trace the indices when one list finishes much earlier than the other. The supplied __merge_preserved helper is test code: it checks the stated rule that inputs are preserved. Leave it unchanged; the learning task is the main function, not writing this helper."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the requirement.",
+        "Make one change to the starter.",
+        "Run the checks.",
+        "Explain why a changed input produces its result."
+      ],
+      "after": [
+        "Replace the starter merge function with a loop that keeps i for left and j for right, compares left[i] and right[j], appends the smaller next value, and moves only the chosen index forward.",
+        "Use <= when the front values are equal so the value from left is chosen first, and keep duplicate values in the result.",
+        "After the loop, extend result with left[i:] and right[j:] to copy any remaining values without sorting again.",
+        "Check merge([1, 4, 4], [2, 4, 8]) returns [1, 2, 4, 4, 4, 8], and test empty sides and uneven lengths such as merge([0], [1, 2, 3, 4]).",
+        "Keep left and right unchanged, and leave __merge_preserved unchanged; run the checks to confirm the result is a new list, not either input."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Trace the visible worked calls before changing the starter."
+      ],
+      "after": [
+        "Keep the loop running while i < len(left) and j < len(right). Compare the current front values left[i] and right[j].",
+        "When left[i] <= right[j], append left[i] and do i += 1. Otherwise append right[j] and do j += 1.",
+        "After one side runs out, use extend with left[i:] and right[j:]. Test an empty left list and an empty right list."
+      ]
+    }
+  ],
+  "reviewNotes": [
+    "Added distinct headings for each section.",
+    "Replaced generic steps with two-index merge actions and checks.",
+    "Kept the worked code, output, quiz choices, and answer 0.",
+    "Simplified complexity and preservation-helper notes for age 10.",
+    "Replaced concatenate, fronts, and consumed-value jargon with next-item language."
+  ]
+}

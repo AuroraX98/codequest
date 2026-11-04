@@ -1,0 +1,83 @@
+{
+  "lesson": "typescript-22",
+  "position": 25,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Keep a coordinate literal precise and readonly.",
+      "after": "Keep exact literal types and prevent reassignment through that type."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "as const asks the checker to retain literal values and readonly properties for this literal expression. For [2, 4], it produces a readonly two-position tuple rather than a general mutable number array. A tuple describes fixed positions with separately known types; here those positions retain the literal types 2 and 4. For {kind:\"home\"}, kind keeps the literal type \"home\" and is readonly through this typed value.",
+        "```typescript\nconst position = [2, 4] as const;\nconst marker = { kind: \"home\" } as const;\nconsole.log(position[0]);\nconsole.log(marker.kind);\n```\n\nThis prints 2 and home. position[0] reads the first tuple value; marker.kind reads the property. The assertion changes type information, not the runtime data. It does not call Object.freeze or turn another referenced mutable object into a deep-frozen structure.",
+        "The checker rejects position[0] = 9 through this readonly tuple. Ordinary const only protects the binding; as const additionally changes the inferred type of the literal. A precise explicitly written readonly type can express an equivalent contract.",
+        "Create originPoint as a readonly two-position tuple with values 0 and 0, retaining each literal type 0. An as const assertion or an equivalent explicit readonly tuple type is accepted."
+      ],
+      "after": [
+        "A tuple is an array type with known positions. `as const` keeps exact literal types and makes this array literal a readonly tuple. Readonly means these positions cannot be assigned new values through this type.",
+        "This pair keeps the exact types 2 and 4, not just the general number type.\n```typescript\nconst position = [2, 4] as const;\nconsole.log(position[0]);\n```\nThe output is 2. Position 0 is the first item.",
+        "Assigning to position[0] is rejected, even if you try to assign 2 again. Plain const only stops replacing the variable's value; as const adds readonly type information. It does not freeze the object while JavaScript runs.",
+        "Create originPoint as a readonly pair containing 0 and 0, keeping each exact literal type. You may use as const or an equivalent written readonly tuple type."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the example and its input/output contract.",
+        "Complete the starter without turning off compiler diagnostics.",
+        "Run the compiler and behavior checks, then explain a changed case."
+      ],
+      "after": [
+        "Create the pair of zeros.",
+        "Keep both literal types and make the pair readonly.",
+        "Run the checks."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Compare the public input/output types and trace the visible call before editing."
+      ],
+      "after": [
+        "Put `as const` after the array literal."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "The example adds position[0] = 2, writing the same value already there. What does the checker do?",
+        "choices": [
+          "It accepts every write that repeats the old value.",
+          "It converts the tuple into a mutable array.",
+          "It rejects the write because that tuple position is readonly, even when the value is unchanged."
+        ],
+        "answer": 2,
+        "explanation": "Readonly forbids assignment through that typed reference. The restriction is about writing, not whether the new value would be different."
+      },
+      "after": {
+        "question": "What happens if you assign 2 to the readonly position[0], which already contains 2?",
+        "choices": [
+          "It is allowed because the value is unchanged",
+          "The tuple becomes a normal mutable array",
+          "TypeScript rejects the write because the position is readonly"
+        ],
+        "answer": 2,
+        "explanation": "Readonly prevents assignment through that type, even when the new value would be the same."
+      }
+    }
+  ],
+  "headings": [
+    "Keep the exact values",
+    "Make a readonly pair",
+    "Readonly blocks even identical writes",
+    "Create the origin point"
+  ],
+  "project": {
+    "title": "Preserve literal information",
+    "task": "Create originPoint as a readonly pair with two exact zero values.",
+    "done_when": "Both positions keep the literal type 0, writes are rejected, and the checks pass."
+  }
+}

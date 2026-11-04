@@ -1,0 +1,86 @@
+{
+  "lesson": "react-37",
+  "position": 30,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Give each field a distinct, stable input ID and matching label/description links; keep those links correct after an unrelated rerender.",
+      "after": "Give each repeated field its own ID so labels point to the right input."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A label’s htmlFor must name the id of its input. Repeating a component with one hardcoded id creates ambiguous links. React.useId() gives each mounted Hook call its own ID string, stable through ordinary rerenders of that instance. Its spelling is React’s detail, not a value to predict.",
+        "Call useId unconditionally at the top of TopicField. The input id and label htmlFor share the returned string. App uses two instances, so their strings differ. Adding -hint creates a related description id; aria-describedby links that text to its input. This establishes markup relationships, not proof of a particular screen-reader experience. useId does not take arguments. It is not a source of list keys: data records must supply their own stable keys. No server-rendering workflow is tested here. The frame calls App as the root component with no supplied props. App returns the JSX tree; define it here without calling App() yourself or adding imports/createRoot.",
+        "```react\nfunction TopicField({label}) {\n  const id = React.useId();\n  const hintId = id + \"-hint\";\n  return <section>\n    <label htmlFor={id}>{label}</label>\n    <input id={id} aria-describedby={hintId} />\n    <p id={hintId}>Use a short topic name.</p>\n  </section>;\n}\nfunction App() {\n  const [version, setVersion] = React.useState(0);\n  return <main>\n    <button onClick={() => setVersion(v => v + 1)}>Rerender {version}</button>\n    <TopicField label=\"First topic\" /><TopicField label=\"Second topic\" />\n  </main>;\n}\n```",
+        "```react\nfunction TopicField({label}) {\n  const id = \"shared-topic\";\n  const hintId = id + \"-hint\";\n  return <section>\n    <label htmlFor={id}>{label}</label>\n    <input id={id} aria-describedby={hintId} />\n    <p id={hintId}>Use a short topic name.</p>\n  </section>;\n}\nfunction App() {\n  const [version, setVersion] = React.useState(0);\n  return <main>\n    <button onClick={() => setVersion(v => v + 1)}>Rerender {version}</button>\n    <TopicField label=\"First topic\" /><TopicField label=\"Second topic\" />\n  </main>;\n}\n```\nBoth changed instances now use shared-topic. Their labels and descriptions are no longer uniquely linked on the page, even though each component’s local strings match. A unique id must be unique across these rendered instances.",
+        "Give each field a distinct, stable input ID and matching label/description links; keep those links correct after an unrelated rerender. These finite behavior checks do not prove that every possible implementation is correct. Optional local practice: change one input, predict the screen, then run it."
+      ],
+      "after": [
+        "A label's `htmlFor` must match its input's `id`. Reusing one fixed ID for several fields makes those links unclear. `useId()` gives each mounted Hook call its own ID.",
+        "Use that ID for both the input and its label. Add `\"-hint\"` to make a related hint ID. `aria-describedby` connects the input to that hint text.",
+        "```react\nfunction TopicField({ label }) {\n  const id = React.useId();\n  const hintId = id + \"-hint\";\n  return (\n    <section>\n      <label htmlFor={id}>{label}</label>\n      <input id={id} aria-describedby={hintId} />\n      <p id={hintId}>Use a short topic name.</p>\n    </section>\n  );\n}\nfunction App() {\n  const [version, setVersion] = React.useState(0);\n  return (\n    <main>\n      <button onClick={() => setVersion(v => v + 1)}>Rerender {version}</button>\n      <TopicField label=\"First topic\" />\n      <TopicField label=\"Second topic\" />\n    </main>\n  );\n}\n```\nEach label and hint points to its own input. The fields have different IDs even though they use the same component.",
+        "A field's ID stays stable through ordinary rerenders of that instance. React chooses the exact string; do not guess it. Keep `useId` at the top of the component. Use record IDs for list keys, not useId.",
+        "Give each field unique, matching label and hint links. Click Rerender and confirm those links still match. These links help assistive tools understand the field; actual screen-reader behavior also needs hands-on checking."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the small example and explain its inputs and effects.",
+        "Complete the starter for this lesson.",
+        "Run the behavior checks, then predict a changed case."
+      ],
+      "after": [
+        "Call useId at the top of TopicField.",
+        "Use the returned ID for the input and matching label.",
+        "Link the hint with aria-describedby and run the checks."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Trace the visible input, event and resulting screen before changing the code."
+      ],
+      "after": [
+        "Each component instance needs its own ID, not the same fixed text."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Why should useId not replace record IDs as list keys?",
+        "choices": [
+          "useId returns an array of records.",
+          "List identity should come from the stable data, while useId serves accessibility relationships.",
+          "Every render must create new keys so all inputs reset."
+        ],
+        "answer": 1,
+        "explanation": "Keys track which data item keeps component identity; generated accessibility IDs solve a different problem. Recreating identity can lose state, while duplicate DOM IDs make relationships ambiguous."
+      },
+      "after": {
+        "question": "Why should useId not replace record IDs as list keys?",
+        "choices": [
+          "useId returns an array of records.",
+          "List keys identify data items; useId links fields with labels and hints.",
+          "Keys must change on every render."
+        ],
+        "answer": 1,
+        "explanation": "The two IDs have different jobs. List identity should come from the stable record data."
+      }
+    }
+  ],
+  "headings": [
+    "Avoid duplicate input IDs",
+    "Connect one label and hint",
+    "Reuse the field safely",
+    "Keep IDs stable",
+    "Build your field links"
+  ],
+  "project": {
+    "title": "Each reusable field needs its own label link",
+    "task": "Give each field a distinct stable input ID, matching label, and matching description link.",
+    "done_when": "Every label and hint belongs to the right input, including after an unrelated rerender."
+  }
+}

@@ -1,0 +1,107 @@
+{
+  "lesson": "developer-toolkit-07",
+  "position": 7,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Check normal, empty, boundary, failure, and concurrency cases where applicable.",
+      "after": "A useful test checks a promised result and fails when that behavior breaks."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A useful test checks promised behavior by comparing actual and expected results. It should fail when that behavior breaks. For clamping, a valid number below the range becomes the lower limit, one above becomes the upper limit, and one already inside stays unchanged. First reject the wrong kind of input; then apply the boundaries.",
+        "Here is a complete small module for a separate range of 0 through 10. Save it as level.mjs for the next example:\n```javascript\nexport function clampLevel(value) {\n  if (!Number.isInteger(value)) return null;\n  return Math.max(0, Math.min(10, value));\n}\nconsole.log(clampLevel(6));\nconsole.log(clampLevel(12));\nconsole.log(clampLevel(-3));\nconsole.log(clampLevel(2.5));\n```\nIt prints 6, 10, 0, null. Number.isInteger rejects fractions, undefined, NaN, and Infinity. Math.min(10, value) applies the upper limit; Math.max(0, ...) then applies the lower limit.",
+        "An assertion compares an actual result with a specified expectation and reports a failure when they differ. This complete Node test file imports the module from the previous page; save it as test-level.mjs in the same folder:\n```javascript\nimport test from 'node:test';\nimport assert from 'node:assert/strict';\nimport { clampLevel } from './level.mjs';\ntest('keeps values and clamps both limits', () => {\n  for (const [input, expected] of [[6, 6], [0, 0], [10, 10], [-3, 0], [12, 10]]) {\n    assert.equal(clampLevel(input), expected);\n  }\n});\ntest('rejects invalid values', () => {\n  for (const input of [undefined, NaN, Infinity, 2.5]) {\n    assert.equal(clampLevel(input), null);\n  }\n});\n```\nEach test callback runs its assertions. The first loop unpacks an input/expected pair; the second visits invalid values. Imports from node: use Node's built-in library, not third-party packages.\n\nIn assert.equal(actual, expected), the first argument is the observed value and the second is its expected value. This file imports node:assert/strict, so assert.equal uses strict equality: 6 and \"6\" do not pass as equal. A mismatch throws an AssertionError that the test runner records as a failed test; a successful assertion returns normally without printing a success message of its own.",
+        "Run the test locally with Node installed:\n```bash\nnode --test test-level.mjs\n```\nPassing assertions produce a passing test report. The module's demonstration console logs may also appear because importing evaluates that module. Temporarily replace the clamp with return value and rerun: outside-range assertions should fail. Restore the working code afterward. A test that only confirms the function exists would not catch that broken behavior.",
+        "Choose cases from the feature's requirements. Normal input verifies ordinary use; boundaries verify the exact included endpoints; just-outside values verify the transition; invalid input verifies rejection. Empty input can mean undefined here rather than a zero-length list. Concurrency tests are useful for shared balance updates, but this pure calculation has no shared mutable state, so concurrency is not a relevant risk for it.",
+        "For clampScore, use the exercise's 0-through-100 limits and preserve null for non-integers. Check 42, 0, 100, -5, and 110, plus undefined, NaN, Infinity, and 2.5. The inside result 100 and the just-outside result for 101 are both 100, but for different reasons: the first is already valid; the second must be clamped. Together they test the boundary transition.",
+        "The browser checks your function's behavior. Download score.mjs and test.mjs, replace the supplied score stub with your implementation, and run node --test test.mjs from their folder. A working browser function does not automatically edit that local stub. Break a relevant behavior briefly and confirm the local test fails, then restore and rerun. Passing tests are evidence for their stated cases, not proof of every possible property."
+      ],
+      "after": [
+        "A test compares what a program does with what it should do. Here, clampScore must keep whole-number scores between 0 and 100. Clamping moves an outside value to the nearest limit.",
+        "Keep scores from 0 through 100 unchanged. Turn a lower whole number into 0 and a higher one into 100. Return null for anything that is not an integer, including fractions, NaN, and Infinity.",
+        "An assertion reports a failure when an answer differs from its expected value. Save this complete example as score-test.mjs.\n\n```javascript\nimport test from 'node:test';\nimport assert from 'node:assert/strict';\nfunction clampScore(value) {\n  if (!Number.isInteger(value)) return null;\n  return Math.max(0, Math.min(100, value));\n}\ntest('keeps scores within the limits', () => {\n  assert.equal(clampScore(42), 42);\n  assert.equal(clampScore(-5), 0);\n  assert.equal(clampScore(125), 100);\n  assert.equal(clampScore(2.5), null);\n});\n```\n\nThe first assertion checks an ordinary score. The next two check outside the limits. The last checks invalid input.",
+        "With Node installed, run node --test score-test.mjs in its folder. A passing report means these assertions passed. The first value in assert.equal is the actual result; the second is the expected result.",
+        "Temporarily replace the final calculation with return value. Run the test again: the outside-limit checks should fail. Restore the calculation and rerun. This confirms the test catches that mistake.",
+        "Complete the browser's clampScore function with the same rule. Also check the exact endpoints 0 and 100, missing input, NaN, and Infinity.",
+        "For the downloadable practice, put your function in the supplied score.mjs stub. Keep test.mjs beside it and run node --test test.mjs. A browser edit does not automatically change that downloaded file."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Write clampScore. Return null unless the input is a number with no decimal part. Negative integers are allowed; NaN and Infinity are not.",
+        "Return 0 for numbers below 0 and 100 for numbers above 100. Keep numbers from 0 through 100 unchanged.",
+        "Add cases for 42, 0, 100, -5, 110, undefined, NaN, Infinity, and 2.5.",
+        "Download score.mjs and test.mjs. Put your clampScore function in score.mjs.",
+        "From their folder, run node --test test.mjs.",
+        "Temporarily make the function wrong and check that a test catches the mistake.",
+        "Restore the working function and run the tests again."
+      ],
+      "after": [
+        "Reject non-integer inputs with null.",
+        "Keep integer scores within 0 through 100.",
+        "Run the browser checks.",
+        "Put the solution in the downloaded score.mjs and run its local test.",
+        "Confirm a deliberate wrong calculation fails, then restore the working code."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Reject non-integers first. Number.isInteger also rejects NaN and Infinity.",
+        "Math.min(100, value) applies the upper limit.",
+        "Wrap the result in Math.max(0, ...) for the lower limit."
+      ],
+      "after": [
+        "Number.isInteger also rejects NaN and Infinity.",
+        "Math.min applies the upper limit.",
+        "Math.max applies the lower limit."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "clampScore should reduce integer scores above 100 to 100. A broken version returns those scores unchanged. Which assertion would expose that bug?",
+        "choices": [
+          "clampScore(60) === 60",
+          "clampScore(100) === 100",
+          "clampScore(125) === 100"
+        ],
+        "answer": 2,
+        "explanation": "125 exercises the above-maximum path: the correct result is 100, but the broken version returns 125. The other assertions use already-allowed values and can still pass despite this bug."
+      },
+      "after": {
+        "question": "A broken clampScore leaves scores above 100 unchanged. Which check catches this?",
+        "choices": [
+          "clampScore(60) === 60",
+          "clampScore(100) === 100",
+          "clampScore(125) === 100"
+        ],
+        "answer": 2,
+        "explanation": "125 is above the limit. The correct answer is 100; the broken function returns 125."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Download the test and score.mjs, replace its stub with your solution, and run node --test test.mjs. The browser checks the same behaviors; the local test teaches your development workflow.",
+      "after": "The browser checks the function. The downloaded files teach the separate local test workflow. Passing a set of tests is evidence for those cases, not proof of every possible behavior."
+    }
+  ],
+  "headings": [
+    "Turn a rule into a check",
+    "Choose the boundaries",
+    "One example",
+    "Run the test",
+    "Make sure the test can fail",
+    "Complete the practice function",
+    "Check the downloaded files"
+  ],
+  "project": {
+    "title": "A tested feature",
+    "task": "Implement clampScore for integer scores from 0 through 100. Test ordinary inputs, limits, outside values, and invalid values.",
+    "done_when": "The browser and local tests pass, and a deliberate above-limit bug is caught before the working code is restored."
+  }
+}

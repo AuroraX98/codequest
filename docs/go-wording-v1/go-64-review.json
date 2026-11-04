@@ -1,0 +1,91 @@
+{
+  "lesson": "go-64",
+  "position": 64,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "If the context deadline is already in the past, what does this fake transaction report?",
+      "after": "Set a time limit on a request and check the outcome."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "http.Client delegates a single transaction to its RoundTripper. This fake transport returns an in-memory response and never calls the default transport, DNS, a listener or a socket. io.NopCloser wraps the strings.Reader with a Close method that does nothing; it does not acquire or release an external resource. Its RoundTrip checks the request context. Real custom transports must also honor cancellation during their actual blocking work.\n\nrequest.Context() takes no arguments and returns the context attached to that request. Calling Err on that returned context observes whether cancellation or a deadline has already ended it; it does not create a new context.",
+        "NewRequestWithContext attaches the context; a one-hour timeout here is a bound, not a timing assertion. Defer cancel releases context resources. On successful Do, close the response body even when reading fails. A received HTTP error status is not automatically a Do transport error; inspect StatusCode separately. The fixture reads only its known tiny in-memory body.\n\nio.ReadAll receives the response body as a Reader, consumes its remaining bytes and returns a byte slice plus an error. It can allocate for all remaining input, so this example deliberately supplies only its known tiny body.",
+        "Complete local Go example; the app itself does not execute it:\n```go\npackage main\n\nimport (\n\"fmt\"\n\"context\"\n\"time\"\n\"net/http\"\n\"io\"\n\"strings\"\n\"errors\"\n)\n\ntype fakeTransport struct{}\nfunc (fakeTransport) RoundTrip(request *http.Request) (*http.Response, error) {\n    if err := request.Context().Err(); err != nil { return nil, err }\n    return &http.Response{\n        StatusCode: http.StatusOK, Header: make(http.Header),\n        Body: io.NopCloser(strings.NewReader(\"ready\")), Request: request,\n    }, nil\n}\nfunc main() {\n    ctx, cancel := context.WithTimeout(context.Background(), time.Hour)\n    defer cancel()\n    request, err := http.NewRequestWithContext(ctx, http.MethodGet, \"https://example.invalid/study\", nil)\n    if err != nil { panic(err) }\n    client := &http.Client{Transport: fakeTransport{}}\n    response, err := client.Do(request)\n    if err != nil { fmt.Println(\"deadline:\", errors.Is(err, context.DeadlineExceeded)); return }\n    body, readErr := io.ReadAll(response.Body)\n    closeErr := response.Body.Close()\n    if readErr != nil || closeErr != nil { fmt.Println(\"body error\"); return }\n    fmt.Println(response.StatusCode, string(body))\n}\n```",
+        "Expected output or behavior: 200 ready. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Explain why this fake proves control flow but not real-network timeout reliability or security. You may trace it without a Go compiler; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "A transport handles one request and its reply for an HTTP client. This fake transport does all its work in memory. It checks `request.Context().Err()` to see whether the request has already been stopped. No network connection is opened.",
+        "A deadline is the latest time work should continue. This context allows up to one hour; it does not wait an hour. The request carries that context. If a response arrives, read and close its body and check both errors. A response status, such as 404, is separate from a transport error.",
+        "Follow the request into the fake transport and back to the client. Its tiny, known body is safe to read in full here.\n```go\npackage main\n\nimport (\n\"fmt\"\n\"context\"\n\"time\"\n\"net/http\"\n\"io\"\n\"strings\"\n\"errors\"\n)\n\ntype fakeTransport struct{}\nfunc (fakeTransport) RoundTrip(request *http.Request) (*http.Response, error) {\n    if err := request.Context().Err(); err != nil { return nil, err }\n    return &http.Response{\n        StatusCode: http.StatusOK, Header: make(http.Header),\n        Body: io.NopCloser(strings.NewReader(\"ready\")), Request: request,\n    }, nil\n}\nfunc main() {\n    ctx, cancel := context.WithTimeout(context.Background(), time.Hour)\n    defer cancel()\n    request, err := http.NewRequestWithContext(ctx, http.MethodGet, \"https://example.invalid/study\", nil)\n    if err != nil { panic(err) }\n    client := &http.Client{Transport: fakeTransport{}}\n    response, err := client.Do(request)\n    if err != nil { fmt.Println(\"deadline:\", errors.Is(err, context.DeadlineExceeded)); return }\n    body, readErr := io.ReadAll(response.Body)\n    closeErr := response.Body.Close()\n    if readErr != nil || closeErr != nil { fmt.Println(\"body error\"); return }\n    fmt.Println(response.StatusCode, string(body))\n}\n```",
+        "The screen shows `200 ready`. The fake response has status 200 and the text ready. Its body can be closed without releasing a real network connection.",
+        "If the deadline already passed, the error path checks for DeadlineExceeded using errors.Is. This tests the program's handling of that result, not the timing of a real network."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Follow the error branch after client.Do."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If the context deadline is already in the past, what does this fake transaction report?",
+        "choices": [
+          "200 ready because transports must ignore context.",
+          "A real request to example.invalid must be sent first.",
+          "deadline: true, without making any network request."
+        ],
+        "answer": 2,
+        "explanation": "The expired context yields DeadlineExceeded; errors.Is recognizes it even through the client’s wrapping error."
+      },
+      "after": {
+        "question": "Set the deadline in the past. What does this example report?",
+        "choices": [
+          "200 ready, because transports ignore context.",
+          "A real request to example.invalid must run first.",
+          "deadline: true, without a network request."
+        ],
+        "answer": 2,
+        "explanation": "The context has already expired. errors.Is recognizes the deadline error, even when the client wraps it."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Go Core v1 uses the verified Go1.27.3 toolchain and standard library. The app supplies concept reading and an understanding check, not a Go browser runner. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "The browser shows Go code and checks your understanding; it does not run Go. Optional local examples use Go 1.27."
+    }
+  ],
+  "headings": [
+    "Use a transport for one request",
+    "Attach a deadline and handle the body",
+    "One example",
+    "Read the in-memory response",
+    "Recognize an expired deadline"
+  ],
+  "project": {
+    "title": "HTTP client deadlines and transport",
+    "task": "Distinguish an expired request from an HTTP reply.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local Go example is optional."
+  }
+}

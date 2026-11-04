@@ -1,0 +1,87 @@
+{
+  "lesson": "swift-29",
+  "position": 14,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Define countsForText(_ text: String) -> String returning characterCount:UTF8ByteCount. Handle empty text and Unicode text without assuming one byte per character.",
+      "after": "Count text characters separately from the bytes used to store them."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "Iterating a String visits Character values. A visible accented character can consist of multiple Unicode scalars, and UTF-8 encodes text in bytes. Character count and byte count therefore answer different questions. text.count counts Characters; text.utf8.count counts bytes in the UTF-8 view.",
+        "The escape \\u{301} represents a combining acute accent. In \"e\\u{301}\", it combines with e into one Character but uses three UTF-8 bytes. The precomposed é is also one Character but uses two bytes. This lesson counts the representations; it does not promise every visual symbol is one Character or one byte. The loop binding character names each visited Character, although only the visit count is needed here.",
+        "\n```swift\nfunc textProfile(_ text: String) -> String {\n    var visited = 0\n    for character in text {\n        visited += 1\n    }\n    return \"\\(visited) characters; \\(text.utf8.count) bytes\"\n}\nprint(textProfile(\"Cafe\"))\nprint(textProfile(\"é\"))\n```\nOutput:\n```text\n4 characters; 4 bytes\n1 characters; 2 bytes\n```",
+        "\n```swift\nfunc textProfile(_ text: String) -> String {\n    var visited = 0\n    for character in text {\n        visited += 1\n    }\n    return \"\\(visited) characters; \\(text.utf8.count) bytes\"\n}\nprint(textProfile(\"\"))\nprint(textProfile(\"e\\u{301}\"))\n```\nOutput:\n```text\n0 characters; 0 bytes\n1 characters; 3 bytes\n```",
+        "A character limit for a short label is not the same as a storage-byte limit. Never use a byte count as a String subscript position. textProfile receives text and returns a descriptive String; it does not change the input."
+      ],
+      "after": [
+        "A Swift String is a sequence of `Character` values. `text.count` counts those characters. `text.utf8.count` measures something different: the bytes used by the text's UTF-8 form.",
+        "A byte is a small unit of computer data. UTF-8 is a way to store Unicode text, including letters from many languages. One character can need several bytes, so character count and byte count can differ.",
+        "```swift\nfunc textProfile(_ text: String) -> String {\n    var visited = 0\n    for character in text {\n        visited += 1\n    }\n    return \"\\(visited) characters; \\(text.utf8.count) bytes\"\n}\nprint(textProfile(\"Cafe\"))\nprint(textProfile(\"é\"))\n```\nThe outputs are `4 characters; 4 bytes` and `1 characters; 2 bytes`. The loop visits each Character once. The accented letter needs more than one byte.",
+        "A letter and a separate combining accent can form one Swift Character. The spelling `e\\u{301}` uses that form. It has one Character and three UTF-8 bytes. Character count is not a promise about the width or number of shapes on a screen.",
+        "Write `countsForText(_ text: String) -> String`. Return the character count, a colon, and the UTF-8 byte count. Empty text gives `0:0`. Do not use a byte count as a position for reading a String."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the small example and explain its inputs and effects.",
+        "Complete the starter for the stated contract.",
+        "Use the configured compatible Swift companion or local Swift toolchain, then explain the changed case."
+      ],
+      "after": [
+        "Read `text.count` for characters.",
+        "Read `text.utf8.count` for bytes.",
+        "Return the two counts separated by a colon and run the checks."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Trace the inputs, returned value and changed state before running."
+      ],
+      "after": [
+        "Use string interpolation to build the result.",
+        "Do not assume each character uses one byte."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "The String \"e\\u{301}\" contains e plus a combining accent. What do these examples establish?",
+        "choices": [
+          "String.count always counts UTF-8 bytes",
+          "One Character can occupy more than one UTF-8 byte",
+          "Every Unicode scalar must be a separate Character"
+        ],
+        "answer": 1,
+        "explanation": "The demonstrated combining sequence is one Character and three UTF-8 bytes."
+      },
+      "after": {
+        "question": "What does e followed by a combining accent show?",
+        "choices": [
+          "String.count always counts UTF-8 bytes",
+          "One Character can need several UTF-8 bytes",
+          "Every Unicode part must be a separate Character"
+        ],
+        "answer": 1,
+        "explanation": "That combined letter is one Swift Character but uses three UTF-8 bytes."
+      }
+    }
+  ],
+  "headings": [
+    "Two ways to measure text",
+    "Know what a byte counts",
+    "One example",
+    "Combined letters and accents",
+    "Build the text count"
+  ],
+  "project": {
+    "title": "Count characters rather than bytes",
+    "task": "Write `countsForText(_ text: String) -> String`, returning `characterCount:UTF8ByteCount`. Handle empty text and text from different writing systems.",
+    "done_when": "The checks pass without assuming one byte per character."
+  }
+}

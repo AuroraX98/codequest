@@ -1,5 +1,5 @@
 import { askProvider, AssistantError } from "../../../lib/ai-transport";
-import { providers } from "../../../lib/ai-providers";
+import { selectedModel } from "../../../lib/ai-providers";
 import {
   owner,
   aiConnection,
@@ -16,6 +16,7 @@ import { z } from "zod";
 const input = z.object({
   deviceScope: z.string().length(64).optional(),
   expectedProvider: z.enum(["deepseek", "openai", "anthropic"]).optional(),
+  expectedModel: z.string().max(100).optional(),
   unitId: z.string(),
   question: z.string().min(1).max(3000),
   code: z.string().max(15000),
@@ -72,6 +73,9 @@ export async function POST(req: Request) {
         },
         { status: 409 },
       );
+    const model = selectedModel(connection.provider, settings.aiModels?.[connection.provider]).id;
+    if (b.expectedModel && b.expectedModel !== model)
+      return Response.json({ error: "Your AI model changed. Check Settings before asking again." }, { status: 409 });
     const day = new Date().toISOString().slice(0, 10);
     await db()
       .prepare("INSERT OR IGNORE INTO activity(user_id,day) VALUES(?,?)")
@@ -89,6 +93,8 @@ export async function POST(req: Request) {
       connection.key,
       system,
       [...(b.history ?? []), { role: "user", content: b.question }],
+      fetch,
+      { model },
     );
     await db()
       .prepare(
@@ -106,7 +112,7 @@ export async function POST(req: Request) {
     return Response.json({
       answer,
       provider: connection.provider,
-      model: providers[connection.provider].model,
+      model,
     });
   } catch (e) {
     if (e instanceof AssistantError)

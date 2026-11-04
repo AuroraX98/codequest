@@ -1,0 +1,92 @@
+{
+  "lesson": "c-60",
+  "position": 60,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "If the counter starts at 10, what prints after joining?",
+      "after": "An atomic add updates a shared counter as one indivisible operation, so competing additions are not lost."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "atomic_int and atomic_fetch_add come from optional C atomics. atomic_init initializes the counter before any concurrent use. Each fetch-add is one atomic read-modify-write and returns the previous value, which this example intentionally ignores.\n\natomic_load(&count) atomically reads and returns the current int without modifying the counter; this non-explicit form also uses the default sequentially consistent ordering.",
+        "The non-explicit atomic operations here use memory_order_seq_cst. This gives the default strong ordering; it is not a promise that operations are lock-free or fast. Atomics do not automatically turn a sequence of separate operations into a transaction. Do not replace them with volatile or introduce relaxed ordering without a separate proof.",
+        "Complete local C example; the app itself does not execute it:\n```c\n#include <stdio.h>\n#include <stdlib.h>\n#if defined(__STDC_NO_THREADS__) && __STDC_NO_THREADS__\n#error C threads unavailable on this implementation\n#endif\n#include <threads.h>\n#if defined(__STDC_NO_ATOMICS__) && __STDC_NO_ATOMICS__\n#error C atomics unavailable on this implementation\n#endif\n#include <stdatomic.h>\nstatic atomic_int count;\nstatic int work(void *unused) {\n    (void)unused;\n    for (int i = 0; i < 500; i++) atomic_fetch_add(&count, 1);\n    return 0;\n}\nint main(void) {\n    thrd_t worker;\n    atomic_init(&count, 0);\n    if (thrd_create(&worker, work, NULL) != thrd_success) return 1;\n    for (int i = 0; i < 500; i++) atomic_fetch_add(&count, 1);\n    if (thrd_join(worker, NULL) != thrd_success) abort();\n    printf(\"%d\\n\", atomic_load(&count));\n    return 0;\n}\n```",
+        "Expected output or behavior: 1000. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Contrast one fetch-add with a separate load followed by store, and explain why the latter can lose updates. You may trace it without a C compiler; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "Atomic means other threads cannot observe the operation as separate partial steps. atomic_fetch_add reads, adds, and stores as one update. It returns the old value, which this example ignores. atomic_init sets the starting value before threads use it. atomic_load reads the current value without changing it.",
+        "These default atomic operations use sequentially consistent ordering: their atomic operations fit one shared order. They are not promised to be lock-free or faster. Several separate atomic calls still do not become one indivisible group. C17 implementations may lack these optional tools, which the example checks.",
+        "Follow the example one line at a time.\n```c\n#include <stdio.h>\n#include <stdlib.h>\n#if defined(__STDC_NO_THREADS__) && __STDC_NO_THREADS__\n#error C threads unavailable on this implementation\n#endif\n#include <threads.h>\n#if defined(__STDC_NO_ATOMICS__) && __STDC_NO_ATOMICS__\n#error C atomics unavailable on this implementation\n#endif\n#include <stdatomic.h>\nstatic atomic_int count;\nstatic int work(void *unused) {\n    (void)unused;\n    for (int i = 0; i < 500; i++) atomic_fetch_add(&count, 1);\n    return 0;\n}\nint main(void) {\n    thrd_t worker;\n    atomic_init(&count, 0);\n    if (thrd_create(&worker, work, NULL) != thrd_success) return 1;\n    for (int i = 0; i < 500; i++) atomic_fetch_add(&count, 1);\n    if (thrd_join(worker, NULL) != thrd_success) abort();\n    printf(\"%d\\n\", atomic_load(&count));\n    return 0;\n}\n```",
+        "main and the worker each make 500 atomic additions. Starting from 0 gives 1000 after the worker is joined. atomic_load reads the final count for printing.",
+        "Start the counter at 10 instead. The thousand additions are added to that starting value. Do not replace one atomic add with a separate read and write; another thread could update the counter between them."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Add the total number of increments to the starting value."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If the counter starts at 10, what prints after joining?",
+        "choices": [
+          "1000 because atomics discard initialization",
+          "10 because atomic_load cannot observe worker updates.",
+          "1010"
+        ],
+        "answer": 2,
+        "explanation": "The 1000 atomic increments add to the initial ten; join completes the worker before the read."
+      },
+      "after": {
+        "question": "Initialize the counter to 10. What prints after both loops and a successful join?",
+        "choices": [
+          "1000",
+          "10",
+          "1010"
+        ],
+        "answer": 2,
+        "explanation": "The two loops add 1000 altogether. Starting at 10 gives a final value of 1010."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "C Core v1 uses a portable C17 baseline supported by the verified compiler. C23 exists but is not claimed fully supported here. The app supplies concept reading and an understanding check, not a C browser runner. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "The browser shows C code and checks your understanding; it does not run C. Optional local examples use C17."
+    }
+  ],
+  "headings": [
+    "Make one update indivisible",
+    "Know what atomic ordering does",
+    "One example",
+    "Read after both sets of updates",
+    "Keep the starting value"
+  ],
+  "project": {
+    "title": "Atomic counters and memory order",
+    "task": "Explain why one atomic add prevents lost updates, while separate atomic reads and writes can still lose them.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local C example is optional."
+  },
+  "navigationCorrection": "Added a short example introduction so its reviewed heading remains an explicit contents target."
+}

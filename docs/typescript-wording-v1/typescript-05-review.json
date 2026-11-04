@@ -1,0 +1,106 @@
+{
+  "lesson": "typescript-05",
+  "position": 19,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Use mapped and conditional types so each event name carries its matching payload.",
+      "after": "Keep each event name paired with the right details."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "An event is a value describing something that happened. Its type field names the event, and its payload holds that event's details. One event might carry a title; another might carry a percentage. A useful type keeps the name paired with the correct details. Merely allowing either name and either payload independently would allow incorrect combinations.",
+        "Run this complete type setup in a TypeScript runner:\n```typescript\ntype Details = {\n  selected: { label: string };\n  counted: { count: number };\n};\ntype EventName = keyof Details;\ntype SelectedDetails = Details['selected'];\nconst detail: SelectedDetails = { label: 'Cedar' };\nconsole.log(detail.label);\n```\nIt prints Cedar. keyof Details produces the union 'selected' | 'counted'. Details['selected'] is an indexed access type: it looks up the type of that property. Those brackets operate on types here, not on a runtime Details object. A type alias does not create such an object.",
+        "K extends keyof Details means K must be one of those allowed keys. A conditional type has the form condition ? typeIfTrue : typeIfFalse. never describes an impossible type with no valid values. In PayloadFor<K>, the valid key selects Details[K]. Because K is already constrained to keyof Details, the condition is always satisfied for allowed uses; it still shows the conditional-type syntax.",
+        "Continue in the same TypeScript file:\n```typescript\ntype PayloadFor<K extends keyof Details> =\n  K extends keyof Details ? Details[K] : never;\ntype DemoEvent = {\n  [K in keyof Details]: {\n    type: K;\n    payload: PayloadFor<K>;\n  }\n}[keyof Details];\nfunction message(event: DemoEvent): string {\n  if (event.type === 'selected') {\n    return `Selected ${event.payload.label}`;\n  }\n  return `Count ${event.payload.count}`;\n}\nconsole.log(message({ type: 'selected', payload: detail }));\nconsole.log(message({ type: 'counted', payload: { count: 6 } }));\n```\nThe outputs are Selected Cedar and Count 6. The type declaration does no runtime loop; the handler is ordinary running code.",
+        "Read the mapped type in stages. [K in keyof Details] visits each key while building a type. At selected it builds {type: 'selected'; payload: {label: string}}. At counted it builds the matching count shape. The final [keyof Details] takes the built property types and combines them into a union. Each union member still contains its correctly paired name and payload.",
+        "Checking event.type === 'selected' narrows DemoEvent to its selected member, so event.payload.label is known to exist there. In the remaining branch, counted's count is available. Trying a selected event with only count fails the compiler. You can understand or expand the mapped declaration into two explicit union members; the reusable form is useful when the key list grows.",
+        "The exercise calls its map Payloads, with opened/title and progress/percent. The starter supplies those type declarations. Keep their public names, trace how AppEvent connects each name to its payload, and format the opened and progress sentences exactly. The % in a template string is ordinary displayed punctuation after the percentage; it is not an arithmetic remainder operator there. The mapping preserves relationships, not where an event came from at runtime.",
+        "Temporarily pair opened with {percent: 50} and run the full TypeScript check to see a rejection, then remove the invalid call. Types are erased at runtime, so real incoming events still require validation. An event with a numeric percent also needs a separate range rule if you intend to require 0 through 100; the current type number alone does not impose that rule."
+      ],
+      "after": [
+        "An event describes something that happened. Its type property names the event. Its payload is the data about that event. Each name needs the right kind of payload.",
+        "The example has selected events with a text label, and counted events with a number. Keyof gets the allowed event names. A type lookup gets the details for one name.",
+        "PayloadFor uses a type parameter K for an allowed name. The conditional type chooses the matching details. Never means no value is allowed; here, K is already limited to valid names.",
+        "This example keeps each name connected to its own payload.\n```typescript\ntype Details = {\n  selected: { label: string };\n  counted: { count: number };\n};\ntype PayloadFor<K extends keyof Details> =\n  K extends keyof Details ? Details[K] : never;\ntype DemoEvent = {\n  [K in keyof Details]: { type: K; payload: PayloadFor<K> }\n}[keyof Details];\nfunction message(event: DemoEvent): string {\n  if (event.type === \"selected\") {\n    return `Selected ${event.payload.label}`;\n  }\n  return `Count ${event.payload.count}`;\n}\nconsole.log(message({ type: \"selected\", payload: { label: \"Cedar\" } }));\n```\nThe output is Selected Cedar.",
+        "The mapped type builds one event shape for each key. The final `[keyof Details]` combines those shapes into a union. Each shape keeps its own name and payload together. No loop runs to do this.",
+        "Checking event.type identifies the event shape. The selected path can read label. The counted path can read count. Mixing a selected name with a count-only payload causes a type error.",
+        "The project uses opened with a title, and progress with a percent. Return Opened Notes for the supplied opened event and Progress 50% for the supplied progress event. The percent sign is ordinary text here.",
+        "Types check your code before it runs. Incoming events still need real value checks. A number type also does not limit percent to the range 0 through 100."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Describe the data each event carries: opened has a title, and progress has a percent. This data is called its payload.",
+        "For each event name, build a type with type and payload fields. Keep each name paired with its matching data.",
+        "For opened with title \"Notes\", return \"Opened Notes\".",
+        "For progress with percent 50, return \"Progress 50%\"."
+      ],
+      "after": [
+        "Keep opened paired with a text title and progress paired with a numeric percent.",
+        "Check event.type before reading its payload.",
+        "Return the requested sentence for each event.",
+        "Run the checks."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "The mapped type loops over `keyof Payloads`.",
+        "Each member should have `type: K` and `payload: Payloads[K]`.",
+        "Narrow using `event.type`, then read only the field for that case."
+      ],
+      "after": [
+        "The mapped type builds a shape for each key in Payloads.",
+        "Each shape pairs `type: K` with `payload: Payloads[K]`.",
+        "Read title only for opened and percent only for progress."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "AppEvent pairs opened with {title: string} and progress with {percent: number}. Which value keeps the progress event paired with its required payload?",
+        "choices": [
+          "{type: \"progress\", payload: {title: \"Draft\"}}",
+          "{type: \"opened\", payload: {percent: 25}}",
+          "{type: \"progress\", payload: {percent: 25}}"
+        ],
+        "answer": 2,
+        "explanation": "The mapped union preserves each event name and its matching payload together. progress needs a numeric percent; title belongs to opened. A field that is valid for one event is not automatically valid for the other."
+      },
+      "after": {
+        "question": "Which value correctly pairs progress with its details?",
+        "choices": [
+          "{type: \"progress\", payload: {title: \"Draft\"}}",
+          "{type: \"opened\", payload: {percent: 25}}",
+          "{type: \"progress\", payload: {percent: 25}}"
+        ],
+        "answer": 2,
+        "explanation": "A progress event needs a numeric percent. A title belongs to an opened event."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Type-error practice: after the valid solution compiles, temporarily append this line and run the full TypeScript check: handle({ type: \"opened\", payload: { percent: 50 } }); The compiler should report an error. Remove the line before completing the lesson. Runtime checks alone cannot establish rejection of an incorrect type.",
+      "after": "To try a type error, temporarily pair opened with a percent-only payload. Read the error, then restore a title payload."
+    }
+  ],
+  "headings": [
+    "Name what happened",
+    "Describe the matching details",
+    "Look up a payload type",
+    "Keep the pairs together",
+    "Read the mapped type",
+    "Check the event name",
+    "Handle the project events",
+    "Check incoming data separately"
+  ],
+  "project": {
+    "title": "A safe event system",
+    "task": "Use the supplied paired event types and return the correct opened or progress message.",
+    "done_when": "Valid pairs produce the requested text, mismatched pairs are rejected, and the checks pass."
+  }
+}

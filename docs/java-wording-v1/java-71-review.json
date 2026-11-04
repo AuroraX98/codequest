@@ -1,0 +1,91 @@
+{
+  "lesson": "java-71",
+  "position": 71,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "If the body calls use twice, what still happens?",
+      "after": "Close a resource at a known time instead of waiting for memory cleanup."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "Garbage collection reclaims memory of objects no longer reachable, at an unspecified time. It is not a reliable way to close files or other external resources. AutoCloseable lets a resource owner release them deterministically with try-with-resources.",
+        "This toy resource prints on close so the ownership boundary is visible without opening a real file. close runs on normal or exceptional block exit. A still-reachable reference and a closed resource are separate concepts; closing is not object deletion.",
+        "Complete local Java example; the app itself does not execute it:\n```java\n\npublic class Main {\n  static class Session implements AutoCloseable {\n    void use() { System.out.println(\"using\"); }\n    public void close() { System.out.println(\"closed\"); }\n  }\n  public static void main(String[] args) {\n    try (Session session = new Session()) {\n      session.use();\n    }\n    System.out.println(\"after\");\n  }\n}\n```",
+        "Expected output or behavior: using\nclosed\nafter. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Trace close during an exception and distinguish resource cleanup from memory reclamation. You may trace it without a JDK; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "An object is reachable while the running program can still get to it. Garbage collection can reclaim memory from unreachable objects, but the time is not promised. Do not rely on it to close files. try-with-resources calls close at a clear point when its block exits.",
+        "Closing and memory cleanup are different jobs. A reference may still reach an object after its resource has closed. This practice Session only prints a closing message, so it shows the order without opening a real file.",
+        "Follow use, the end of the managed block, and the print after it.\n\n```java\n\npublic class Main {\n  static class Session implements AutoCloseable {\n    void use() { System.out.println(\"using\"); }\n    public void close() { System.out.println(\"closed\"); }\n  }\n  public static void main(String[] args) {\n    try (Session session = new Session()) {\n      session.use();\n    }\n    System.out.println(\"after\");\n  }\n}\n```",
+        "The program prints using, closed, and after on separate lines. close runs before execution continues after the block; no garbage collection is needed for that order.",
+        "The quiz adds another use call inside the same block. The block still manages the same resource and closes it when leaving."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Find the end of the managed block; that is the closing point."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If the body calls use twice, what still happens?",
+        "choices": [
+          "Two uses prevent close from running.",
+          "Garbage collection must run before after can print.",
+          "close prints closed before after."
+        ],
+        "answer": 2,
+        "explanation": "try-with-resources owns closing at block exit, independent of whether use was invoked."
+      },
+      "after": {
+        "question": "Call use twice inside the block. What still happens?",
+        "choices": [
+          "The second use prevents close from running.",
+          "Garbage collection must run before after can print.",
+          "close prints closed before after."
+        ],
+        "answer": 2,
+        "explanation": "The number of use calls does not change who closes the resource. try-with-resources still calls close when leaving the block."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Java Core v1 uses stable Java25 LTS features without preview flags. The app supplies concept reading and an understanding check, not a Java browser runner. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "The browser shows Java code and checks your understanding; it does not run Java. Optional local examples use Java25."
+    }
+  ],
+  "headings": [
+    "Memory cleanup has no promised schedule",
+    "Closing releases a resource rather than deleting its object",
+    "One example",
+    "What appears",
+    "Use the resource twice"
+  ],
+  "project": {
+    "title": "Recognize reachability and resource ownership",
+    "task": "Explain why closing happens before the final print without waiting for garbage collection.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local Java example is optional."
+  }
+}

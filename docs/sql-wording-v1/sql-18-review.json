@@ -1,0 +1,103 @@
+{
+  "lesson": "sql-18",
+  "position": 22,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Create authors(id PRIMARY KEY,name) from the distinct author records in raw_notes, and notes(id PRIMARY KEY,author_id,title) from every raw note. Preserve raw_notes. Each author_id consistently has one name in this fixture.",
+      "after": "Store an author's name once and let notes point to that author."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "If every note repeats its author’s name, a name change may require updating many rows.\n\nThe supplied practice database contains raw_notes(note_id, author_id, author_name, title). The names inside parentheses are the available columns; use these exact identifiers when reading the fixture tables.",
+        "Missing one repeated copy creates inconsistent answers. This is an update anomaly.",
+        "Separate the author entity from the notes that refer to it. Store the name once under an author ID.",
+        "The notes keep author_id rather than their own repeated copy of the author name. A join can display the name when needed.",
+        "Two people can share a name, so use the supplied stable author_id to identify them.",
+        "INSERT INTO ... SELECT can populate a table from query results. This complete independent example copies distinct ID/name pairs.\n```sql\nCREATE TABLE raw_items(category_id INTEGER,category_name TEXT);\nCREATE TABLE categories(id INTEGER PRIMARY KEY,name TEXT);\nINSERT INTO raw_items VALUES(10,'paper'),(10,'paper'),(20,'tools');\nINSERT INTO categories(id,name)\nSELECT DISTINCT category_id,category_name\nFROM raw_items;\nSELECT id,name\nFROM categories\nORDER BY id;\n```\nThe result is 10/paper and 20/tools; the repeated source pair becomes one category.",
+        "DISTINCT removes repeated identical result rows. The fixture guarantees one name per ID; conflicting source names would require a separate resolution policy.",
+        "Copy every note into notes, preserving its note ID and relationship. Do not collapse different notes just because their author is the same.",
+        "Normalization organizes data by its dependencies. It is not simply splitting every column into its own table."
+      ],
+      "after": [
+        "If every note stores its author's name, changing that name means editing many copies. The project starts with `raw_notes(note_id, author_id, author_name, title)`.",
+        "If one copy is missed, different rows disagree about the same author. This problem is called an update anomaly.",
+        "Store each author's name once in an authors table, using the author's ID.",
+        "Keep author_id in each note. A join can bring back the author's name when you need to display it.",
+        "Two people can share a name. Use their supplied author IDs to keep them separate.",
+        "This example copies repeated category facts into one row per category. Run it in a fresh database:\n```sql\nCREATE TABLE raw_items(category_id INTEGER, category_name TEXT);\nCREATE TABLE categories(id INTEGER PRIMARY KEY, name TEXT);\nINSERT INTO raw_items VALUES\n  (10, 'paper'), (10, 'paper'), (20, 'tools');\nINSERT INTO categories(id, name)\nSELECT DISTINCT category_id, category_name\nFROM raw_items;\nSELECT id, name\nFROM categories\nORDER BY id;\n```\nThe result is `10 / paper` and `20 / tools`. INSERT ... SELECT copies the query's result rows.",
+        "DISTINCT removes identical pairs. It does not decide which name is right if one ID has two different names. The project data has one consistent name for each ID.",
+        "Create authors from the distinct author ID/name pairs. Copy every raw note into notes, keeping its note ID, author ID, and title. Keep raw_notes unchanged.",
+        "This organization is called normalization. It groups facts by what they describe. It does not mean putting every column in a separate table."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the requirement.",
+        "Make one change to the starter.",
+        "Run the checks.",
+        "Explain why a changed input produces its result."
+      ],
+      "after": [
+        "Create authors and copy distinct author ID/name pairs.",
+        "Create notes and copy every note with its original IDs and title.",
+        "Check that raw_notes is unchanged."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Select distinct ID/name pairs for authors.",
+        "Copy all note rows, not just one per author.",
+        "Keep the supplied author IDs instead of inventing new ones."
+      ],
+      "after": [
+        "Do not merge people just because their names match.",
+        "Do not reduce several notes to one note per author.",
+        "Use the supplied IDs instead of making new ones."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Two authors are both named Sam, with IDs 10 and 20. Why should a notes table store author_id rather than use name as its identity?",
+        "choices": [
+          "IDs preserve which Sam wrote each note despite matching names.",
+          "Names always uniquely identify people.",
+          "A foreign key automatically changes the authors’ names."
+        ],
+        "answer": 0,
+        "explanation": "A display name can be shared or changed. The stable key keeps the relationship attached to the intended author."
+      },
+      "after": {
+        "question": "Two authors named Sam have IDs 10 and 20. Why should notes store author_id?",
+        "choices": [
+          "The IDs keep each note connected to the right Sam.",
+          "Names always identify one person.",
+          "A foreign key changes both authors' names."
+        ],
+        "answer": 0,
+        "explanation": "Names can match or change. The ID keeps the note connected to the intended author."
+      }
+    }
+  ],
+  "headings": [
+    "Notice repeated facts",
+    "Avoid conflicting copies",
+    "Separate authors from notes",
+    "Keep the connection",
+    "Use IDs instead of names",
+    "Copy distinct records",
+    "Handle conflicting names carefully",
+    "Keep every note",
+    "Organize facts by what they describe"
+  ],
+  "project": {
+    "title": "Store each author name once",
+    "task": "Create authors(id PRIMARY KEY, name) from distinct author records in raw_notes. Create notes(id PRIMARY KEY, author_id, title) from every raw note.",
+    "done_when": "Each author appears once, every note keeps its original relationship, and raw_notes stays unchanged."
+  }
+}

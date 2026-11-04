@@ -1,0 +1,100 @@
+{
+  "lesson": "csharp-63",
+  "position": 63,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Change the second call to TryAdd(sessions, \"Practice\", 5). What list count and second Boolean result follow?",
+      "after": "Add a study session only after its details pass the checks."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "This study tracker separates validation from serialization. TryAdd accepts one title and duration; it changes the list only after checking both inputs.",
+        "Blank titles and nonpositive durations are rejected before Add. A failed request leaves existing entries unchanged. For accepted titles, Trim removes surrounding whitespace; it does not remove spaces between words.",
+        "The main program adds one valid session, rejects one invalid session, then serializes the list. It does not write a file yet. A real file-backed version must also handle read/write errors and validate loaded JSON.",
+        "Changing an invalid input to valid input affects the Boolean result, the list count, and the serialized output. Check all three rather than trusting the success message alone.",
+        "Extend this seed locally with export/import, cancellation where useful, and boundary tests. Keep backups before overwriting real files. Completing the reading check does not demonstrate a deployed or tested application.",
+        "Complete local C# example; the app does not execute it:\n```csharp\nusing System;\nusing System.Collections.Generic;\nusing System.Text.Json;\nvar sessions = new List<StudySession>();\nConsole.WriteLine(TryAdd(sessions, \"Read\", 10));\nConsole.WriteLine(TryAdd(sessions, \" \", 5));\nConsole.WriteLine(sessions.Count);\nConsole.WriteLine(JsonSerializer.Serialize(sessions));\nstatic bool TryAdd(List<StudySession> target, string title, int minutes)\n{\n    if (string.IsNullOrWhiteSpace(title) || minutes <= 0) return false;\n    target.Add(new StudySession(title.Trim(), minutes));\n    return true;\n}\npublic record StudySession(string Title, int Minutes);\n```",
+        "Expected behavior from this example: True, False, 1, then [{\"Title\":\"Read\",\"Minutes\":10}] on separate lines. This expected result is a reasoned prediction until a compiler test is recorded.",
+        "Optional local transfer: Build a local console tracker in a disposable folder. Add safe JSON loading, invalid-input tests, and a backup-before-save workflow. Demonstrate that rejected data does not replace accepted data. This is a separate local practice task, not a requirement to mark the reading complete."
+      ],
+      "after": [
+        "This small tracker keeps study sessions in a list. TryAdd checks one proposed session before changing that list.",
+        "A title must contain something besides spaces. IsNullOrWhiteSpace rejects missing, empty, or space-only text.",
+        "Minutes must be greater than zero. The || condition rejects the request if either the title is blank or the duration is not positive.",
+        "Only an accepted request reaches Add. Trim removes spaces around the title, while keeping spaces between words. TryAdd returns true after adding and false when it rejects.",
+        "The program prints each call's result, the list count, and the list as JSON. These show whether the list actually changed.",
+        "Follow the valid request and the rejected request through the same function.\n\n```csharp\nusing System;\nusing System.Collections.Generic;\nusing System.Text.Json;\nvar sessions = new List<StudySession>();\nConsole.WriteLine(TryAdd(sessions, \"Read\", 10));\nConsole.WriteLine(TryAdd(sessions, \" \", 5));\nConsole.WriteLine(sessions.Count);\nConsole.WriteLine(JsonSerializer.Serialize(sessions));\nstatic bool TryAdd(List<StudySession> target, string title, int minutes)\n{\n    if (string.IsNullOrWhiteSpace(title) || minutes <= 0) return false;\n    target.Add(new StudySession(title.Trim(), minutes));\n    return true;\n}\npublic record StudySession(string Title, int Minutes);\n```",
+        "The program prints True, False, 1, then [{\"Title\":\"Read\",\"Minutes\":10}] on separate lines. The blank title is rejected before any new entry is added.",
+        "This example keeps data in memory and prints JSON; it does not save a file. A file-based tracker also needs to handle read and write errors, check loaded data, and protect earlier saved data when a new save fails."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Trace the changed case before choosing an answer.",
+        "Explain the consequence, then optionally try the local transfer task."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Trace the inputs through the visible rule, then compare the changed case."
+      ],
+      "after": [
+        "The list changes only after both input rules pass."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Change the second call to TryAdd(sessions, \"Practice\", 5). What list count and second Boolean result follow?",
+        "choices": [
+          "Count 1 and False, because only one session is allowed",
+          "Count 2 and True, because both validation rules pass",
+          "Count 2 and False, because serialization controls validation"
+        ],
+        "answer": 1,
+        "explanation": "The second title is nonblank and duration positive. TryAdd adds it and returns true; the list now contains both sessions."
+      },
+      "after": {
+        "question": "Use \"Practice\" and 5 for the second request. What are the final count and second call's result?",
+        "choices": [
+          "Count 1 and False",
+          "Count 2 and True",
+          "Count 2 and False"
+        ],
+        "answer": 1,
+        "explanation": "Practice is not blank and 5 is positive. The second session is added, so the count is 2 and the call returns true."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "C#14/.NET10 core syllabus. Concept-mode reading and understanding check; no in-app C# execution and no claim of mastery. Full example and optional local transfer task are supplied. Actual compiler validation, if available, is reported separately.",
+      "after": "The browser shows C# code and checks your understanding; it does not run C#. Optional local examples use a .NET 10 console project with C# 14."
+    }
+  ],
+  "headings": [
+    "Keep the update behind a check",
+    "Check the title",
+    "Check the minutes",
+    "Save only accepted data",
+    "Show the saved data",
+    "One example",
+    "What appears",
+    "A saved file needs more work"
+  ],
+  "project": {
+    "title": "Build a small resilient study tracker",
+    "task": "Follow how the tracker keeps accepted data unchanged when a later request is rejected.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local C# example is optional."
+  }
+}

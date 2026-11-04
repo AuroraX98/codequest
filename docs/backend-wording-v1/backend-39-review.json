@@ -1,0 +1,98 @@
+{
+  "lesson": "backend-39",
+  "position": 39,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Implement retryDelay(attempt). Match the worked contract and the changed-input checks without modifying the supplied input values.",
+      "after": "Set a wait time for each retry, and stop after the allowed attempts."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A retry loop needs a stopping condition. This model allows attempts numbered 0, 1, and 2, then returns null to mean stop.",
+        "This exercise is a small pure JavaScript model. Its inputs are supplied directly; it does not receive live HTTP requests, operate a database, or deploy a service.",
+        "Worked example:\n\n```javascript\nfunction retryDelay(attempt) {\n  return Number.isInteger(attempt) && attempt >= 0 && attempt < 3 ? 100 * 2 ** attempt : null;\n}\nconsole.log(retryDelay(0));\n```\nThe returned value is 100.",
+        "** raises two to a power. Multiplying by 100 yields increasing delays in milliseconds. Returning a number does not wait; a caller must schedule it and respect cancellation and server guidance.",
+        "Read the function call retryDelay(0) from the inside out: the arguments supply the inputs, retryDelay runs the body once, and return sends its result back to the caller. console.log displays that result; it does not change it.",
+        "What does attempt 3 return under this zero-based budget? There are three permitted attempts: 0, 1, and 2. The next one is outside the budget."
+      ],
+      "after": [
+        "A request should not retry forever. This helper allows three retries, then returns null to mean stop.",
+        "We count these retries from 0: the allowed attempt numbers are 0, 1, and 2. Reject negative numbers, fractions, and other values.",
+        "The first retry gets a delay of 100 milliseconds. A millisecond is one thousandth of a second.\n\n```javascript\nfunction retryDelay(attempt) {\n  return Number.isInteger(attempt) && attempt >= 0 && attempt < 3 ? 100 * 2 ** attempt : null;\n}\nconsole.log(retryDelay(0));\n```\n\nThe output is 100.",
+        "** means raise to a power. Here, 2 ** attempt gives 1, 2, then 4. Multiplying by 100 gives delays of 100, 200, then 400 milliseconds.",
+        "Returning a number does not make JavaScript wait. The caller must use that delay to schedule the retry.",
+        "Attempt 3 is outside the three allowed retries, so return null. Checking the limit before calculating the delay prevents another retry."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the contract and trace the worked example.",
+        "Replace the unfinished return in the starter.",
+        "Run the changed-input checks.",
+        "Explain the boundary in the understanding question."
+      ],
+      "after": [
+        "Accept only whole-number attempts from 0 through 2.",
+        "Return 100 * 2 ** attempt for an accepted attempt.",
+        "Return null for every other value.",
+        "Run the checks at attempts 2 and 3."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "** raises two to a power. Multiplying by 100 yields increasing delays in milliseconds. Returning a number does not wait; a caller must schedule it and respect cancellation and server guidance."
+      ],
+      "after": [
+        "Number.isInteger rejects fractions and numeric text.",
+        "Use attempt < 3 for the upper limit.",
+        "The ? expression picks a delay or null based on the condition."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "What does attempt 3 return under this zero-based budget?",
+        "choices": [
+          "800",
+          "0",
+          "null"
+        ],
+        "answer": 2,
+        "explanation": "There are three permitted attempts: 0, 1, and 2. The next one is outside the budget."
+      },
+      "after": {
+        "question": "The allowed retry numbers are 0, 1, and 2. What does retryDelay(3) return?",
+        "choices": [
+          "800",
+          "0",
+          "null"
+        ],
+        "answer": 2,
+        "explanation": "The three retries are already used. null tells the caller to stop."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Runs as a pure JavaScript function in the browser. Passing checks does not establish live HTTP behavior, database durability, concurrency safety, authentication security, queue delivery guarantees, or production readiness.",
+      "after": "This helper calculates a delay; it does not wait or retry a live request. A real caller must also respect cancellation and any retry instructions from the server."
+    }
+  ],
+  "headings": [
+    "Give retries a stopping point",
+    "Number the attempts",
+    "One example",
+    "Double the delay",
+    "Return a plan for waiting",
+    "Stop after the last attempt"
+  ],
+  "project": {
+    "title": "Put a bound on retry attempts",
+    "task": "Complete retryDelay(attempt). For integer attempts 0, 1, and 2, return 100 * 2 ** attempt. Return null for all other inputs.",
+    "done_when": "The checks pass for allowed attempts and rejected values. Explain why returning a delay does not itself wait."
+  }
+}

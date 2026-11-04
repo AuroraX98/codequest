@@ -1,0 +1,87 @@
+{
+  "lesson": "swift-24",
+  "position": 12,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Define loopCounts(_ limit: Int) -> (before: Int, after: Int) for limits 0 through 5, returning the while and repeat-while visit counts shown above.",
+      "after": "Choose whether a loop checks its condition before or after its first turn."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "while checks its Bool condition before each iteration. If it starts false, the body runs zero times. A loop must change relevant state or otherwise reach an exit; merely repeating the same true test would not finish. before += 1 adds one and stores it back.",
+        "repeat runs its body before testing the condition. Therefore it makes at least one visit, even when limit is 0. The visits function returns a named tuple comparing the two loop counts for small nonnegative limits. The trailing while belongs to repeat, not a second independent loop.",
+        "\n```swift\nfunc visits(_ limit: Int) -> (before: Int, after: Int) {\n    var before = 0\n    while before < limit {\n        before += 1\n    }\n    var after = 0\n    repeat {\n        after += 1\n    } while after < limit\n    return (before, after)\n}\nlet result = visits(3)\nprint(result.before)\nprint(result.after)\n```\nOutput:\n```text\n3\n3\n```",
+        "\n```swift\nfunc visits(_ limit: Int) -> (before: Int, after: Int) {\n    var before = 0\n    while before < limit {\n        before += 1\n    }\n    var after = 0\n    repeat {\n        after += 1\n    } while after < limit\n    return (before, after)\n}\nlet result = visits(0)\nprint(result.before)\nprint(result.after)\n```\nOutput:\n```text\n0\n1\n```",
+        "A retry or input loop must deliberately choose whether an initial attempt is required. Use these tiny finite counters to trace the distinction, not to implement a busy wait."
+      ],
+      "after": [
+        "`while` checks a condition before each turn. If the condition starts false, the block runs zero times. Each turn must move toward stopping or have another way to leave.",
+        "`repeat` runs the block first, then checks the condition after `while`. This means the block runs at least once. The trailing `while` is part of that same loop.",
+        "```swift\nfunc visits(_ limit: Int) -> (before: Int, after: Int) {\n    var before = 0\n    while before < limit {\n        before += 1\n    }\n    var after = 0\n    repeat {\n        after += 1\n    } while after < limit\n    return (before, after)\n}\nlet result = visits(3)\nprint(result.before)\nprint(result.after)\n```\nBoth printed counts are 3. Each loop adds 1 to its counter until the counter reaches the limit.",
+        "With a limit of 0, the first loop makes no turns because `0 < 0` is false. The repeat loop still makes one turn before checking. Its count is 1.",
+        "Write `loopCounts(_ limit: Int) -> (before: Int, after: Int)` for limits 0 through 5. Start both counters at 0. Return the while count as `before` and the repeat-while count as `after`."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the small example and explain its inputs and effects.",
+        "Complete the starter for the stated contract.",
+        "Use the configured compatible Swift companion or local Swift toolchain, then explain the changed case."
+      ],
+      "after": [
+        "Count turns with a while loop that checks first.",
+        "Count turns with a repeat-while loop that checks afterward.",
+        "Return both counts and run the checks, including limit 0."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Trace the inputs, returned value and changed state before running."
+      ],
+      "after": [
+        "`+= 1` adds one and saves the new count.",
+        "Keep the counter changes inside their loops."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "With an initially false condition, how many body visits do while and repeat-while make?",
+        "choices": [
+          "0 and 1",
+          "1 and 1",
+          "0 and 0"
+        ],
+        "answer": 0,
+        "explanation": "while tests first; repeat executes once before its first test."
+      },
+      "after": {
+        "question": "The condition starts false. How many turns do while and repeat-while make?",
+        "choices": [
+          "0 and 1",
+          "1 and 1",
+          "0 and 0"
+        ],
+        "answer": 0,
+        "explanation": "while checks first and skips its block. repeat runs once before its first check."
+      }
+    }
+  ],
+  "headings": [
+    "Check before repeating",
+    "Check after one turn",
+    "One example",
+    "Try a zero limit",
+    "Return both counts"
+  ],
+  "project": {
+    "title": "Repeat until a condition changes",
+    "task": "Write `loopCounts(_ limit: Int) -> (before: Int, after: Int)` for limits 0 through 5. Count turns with while and repeat-while, starting both counters at zero.",
+    "done_when": "The checks pass, including `(before: 0, after: 1)` for a zero limit."
+  }
+}

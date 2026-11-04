@@ -1,0 +1,91 @@
+{
+  "lesson": "java-57",
+  "position": 57,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "If copyOf is replaced by unmodifiableList, what prints?",
+      "after": "Keep a list snapshot that does not gain later additions to its source."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "List.copyOf makes an unmodifiable snapshot of the elements. Later structural edits to the original list do not change the snapshot. This is a shallow copy: mutable element objects can still be shared.",
+        "Collections.unmodifiableList wraps a live view of the original list. It prevents edits through that view but still reflects edits through the original reference. Neither operation makes arbitrary element objects deeply immutable.\n\nunmodifiableList(source) returns a view that blocks edits through that reference, not through source. In this separate example:\n```java\nvar source = new java.util.ArrayList<>(java.util.List.of(\"Read\"));\nvar view = java.util.Collections.unmodifiableList(source);\nsource.add(\"Write\");\nSystem.out.println(view);\n```\nOutput: [Read, Write].",
+        "Complete local Java example; the app itself does not execute it:\n```java\nimport java.util.*;\npublic class Main {\n\n  public static void main(String[] args) {\n    var original = new ArrayList<>(List.of(\"A\"));\n    var snapshot = List.copyOf(original);\n    original.add(\"B\");\n    System.out.println(snapshot);\n  }\n}\n```",
+        "Expected output or behavior: [A]. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Explain what happens if the elements themselves are mutable lists. You may trace it without a JDK; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "List.copyOf makes an unmodifiable snapshot: a list whose items cannot be added, removed, or replaced. Later additions to the source list do not appear in it. The copy is shallow, meaning it may still refer to the same item objects rather than copying their insides.",
+        "Collections.unmodifiableList instead gives a view of the original list. That view blocks edits through itself but still shows edits made through the original reference. Neither a view nor a shallow snapshot freezes changeable data inside the item objects.",
+        "Find when the snapshot is taken, then when the source list gains another item.\n\n```java\nimport java.util.*;\npublic class Main {\n\n  public static void main(String[] args) {\n    var original = new ArrayList<>(List.of(\"A\"));\n    var snapshot = List.copyOf(original);\n    original.add(\"B\");\n    System.out.println(snapshot);\n  }\n}\n```",
+        "The program prints [A]. The snapshot was made before B was added to original, so it keeps only A.",
+        "The quiz replaces List.copyOf(original) with Collections.unmodifiableList(original). That changes the result from a snapshot into a view of the source."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "A snapshot keeps earlier list contents; a view follows the source list."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If copyOf is replaced by unmodifiableList, what prints?",
+        "choices": [
+          "Compilation fails because the original is mutable.",
+          "[A, B]",
+          "[A] because every unmodifiable list is a snapshot"
+        ],
+        "answer": 1,
+        "explanation": "The unmodifiable wrapper is a view backed by original; it sees the later addition."
+      },
+      "after": {
+        "question": "Use Collections.unmodifiableList(original) instead of List.copyOf(original). What prints?",
+        "choices": [
+          "Compilation fails because the original list can change.",
+          "[A, B]",
+          "[A], because every unmodifiable list is a snapshot."
+        ],
+        "answer": 1,
+        "explanation": "The view still follows original. Adding B through original is allowed and becomes visible through the view."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Java Core v1 uses stable Java25 LTS features without preview flags. The app supplies concept reading and an understanding check, not a Java browser runner. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "The browser shows Java code and checks your understanding; it does not run Java. Optional local examples use Java25."
+    }
+  ],
+  "headings": [
+    "A snapshot keeps the list's current items",
+    "A read-only view still follows its source",
+    "One example",
+    "What appears",
+    "Use a view instead of a snapshot"
+  ],
+  "project": {
+    "title": "Make a defensive immutable snapshot",
+    "task": "Explain why adding to original does not add to its snapshot.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local Java example is optional."
+  }
+}

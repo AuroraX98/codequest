@@ -1,0 +1,91 @@
+{
+  "lesson": "typescript-49",
+  "position": 49,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Compare two local outputs and explain why compiler API declarations do not install runtime features.",
+      "after": "Changing the generated code does not add missing features to a browser."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "target chooses the JavaScript syntax level to emit; lib supplies declarations for APIs the compiler may assume; module chooses module handling/output; strict enables a group of stricter checks. None installs runtime APIs. Raising lib alone does not add missing methods to an old browser.",
+        "Use Node and TypeScript 5.9.3 in an isolated local folder. This app does not expose these settings as learner controls. The two configurations below keep lib, module and strict identical and change target. ES5 lowers the arrow to a function; ES2015 can retain the arrow. CommonJS handles the exported doubled binding in both. DOM is included here for console declarations, not because Node becomes a browser.",
+        "File package.json\n```json\n{\"type\":\"commonjs\"}\n```\n\nFile main.ts\n```typescript\nexport const doubled: number[] = [2, 5].map(value => value * 2);\nconsole.log(doubled.join(\",\"));\n```\n\nFile tsconfig.es5.json\n```json\n{\n  \"compilerOptions\": {\n    \"target\": \"ES5\",\n    \"lib\": [\n      \"ES2015\",\n      \"DOM\"\n    ],\n    \"module\": \"commonjs\",\n    \"strict\": true,\n    \"noEmitOnError\": true,\n    \"outDir\": \"out-es5\"\n  },\n  \"files\": [\n    \"main.ts\"\n  ]\n}\n```\n\nFile tsconfig.es2015.json\n```json\n{\n  \"compilerOptions\": {\n    \"target\": \"ES2015\",\n    \"lib\": [\n      \"ES2015\",\n      \"DOM\"\n    ],\n    \"module\": \"commonjs\",\n    \"strict\": true,\n    \"noEmitOnError\": true,\n    \"outDir\": \"out-es2015\"\n  },\n  \"files\": [\n    \"main.ts\"\n  ]\n}\n```",
+        "Run:\n```sh\ntsc -p tsconfig.es5.json\ntsc -p tsconfig.es2015.json\nnode out-es5/main.js\nnode out-es2015/main.js\n```\n-p selects a configuration; files names the source and outDir separates outputs. map calls its callback once for each array element and returns a new array of doubled numbers. join(\",\") returns a comma-separated string. Both programs display 4,10 on the tested Node host; inspect the two main.js files to see their different arrow syntax. This is not evidence that every ES5 environment provides every API.",
+        "Optional local practice: change only lib to [\"ES2015\"]. The program still names console, but its declaration is missing from these chosen libraries, so compilation fails. This does not prove Node lacks a console. Restore the configuration before running; old output files may remain after failed builds."
+      ],
+      "after": [
+        "`target` chooses the JavaScript syntax that TypeScript writes. `lib` lists built-in features the type checker knows about. Neither setting installs missing features. This optional local example changes only the target and compares the generated code.",
+        "File: `main.ts`\n```typescript\nexport const doubled: number[] = [2, 5].map(value => value * 2);\nconsole.log(doubled.join(\",\"));\n```\n`map` doubles each number. `join` puts a comma between the results. The program prints `4,10`. The arrow `=>` is the part whose written form will change.",
+        "File: `tsconfig.es5.json`\n```json\n{\n  \"compilerOptions\": {\n    \"target\": \"ES5\",\n    \"lib\": [\"ES2015\", \"DOM\"],\n    \"module\": \"commonjs\",\n    \"strict\": true,\n    \"noEmitOnError\": true,\n    \"outDir\": \"out-es5\"\n  },\n  \"files\": [\"main.ts\"]\n}\n```\nES5 is an older JavaScript syntax level. TypeScript rewrites the arrow as a regular function. `outDir` names the folder for generated files.",
+        "File: `tsconfig.es2015.json`\n```json\n{\n  \"compilerOptions\": {\n    \"target\": \"ES2015\",\n    \"lib\": [\"ES2015\", \"DOM\"],\n    \"module\": \"commonjs\",\n    \"strict\": true,\n    \"noEmitOnError\": true,\n    \"outDir\": \"out-es2015\"\n  },\n  \"files\": [\"main.ts\"]\n}\n```\nThis target can keep the arrow. The other settings stay the same: `module` chooses how files share code, and `strict` enables stricter type checks. Here, `DOM` supplies the description of `console`; it does not turn Node into a browser.",
+        "Optional local run: use a separate folder with Node and TypeScript 5.9.3. Add `package.json` containing `{\"type\":\"commonjs\"}`. Run `tsc -p tsconfig.es5.json`, then `tsc -p tsconfig.es2015.json`. The `-p` option selects a settings file. Run `node out-es5/main.js` and `node out-es2015/main.js`; both should print `4,10`. Compare their arrow syntax. Removing `DOM` from these settings makes the console type check fail, even though Node still has console. Failed builds can leave old output files behind."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the complete local files and commands.",
+        "Optionally run them in an isolated local folder.",
+        "Explain the changed-case result."
+      ],
+      "after": [
+        "Compare the target setting in the two files.",
+        "Find the arrow in each generated file if you run the optional local example.",
+        "Explain why a type description does not install a missing feature."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "This lesson has no in-app module or configuration runner."
+      ],
+      "after": [
+        "The app does not expose these settings. This comparison uses files on your computer."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "What does adding an API declaration through lib guarantee?",
+        "choices": [
+          "The target setting becomes irrelevant to generated syntax.",
+          "The browser receives a polyfill automatically.",
+          "Only that the compiler can know its declared shape, not that the runtime implements it."
+        ],
+        "answer": 2,
+        "explanation": "lib provides compile-time declarations. Runtime support, emitted syntax and module execution are separate concerns."
+      },
+      "after": {
+        "question": "What does adding a built-in feature to `lib` do?",
+        "choices": [
+          "It makes target stop affecting the code.",
+          "It automatically installs the feature in a browser.",
+          "It gives the type checker a description of the feature."
+        ],
+        "answer": 2,
+        "explanation": "The place running the code must still provide that feature. A type description does not create it."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Pinned TypeScript5.9.3 strict ES2015 browser host. Compiler assertions are separate sources and never execute as learner JavaScript; local module/configuration workflows are explicitly separate.",
+      "after": "This optional comparison runs on your computer. It does not change the app runner's TypeScript settings."
+    }
+  ],
+  "headings": [
+    "Separate code style from available features",
+    "Start with one small program",
+    "Choose older output syntax",
+    "Choose newer output syntax",
+    "Compare the two outputs"
+  ],
+  "project": {
+    "title": "Separate emitted syntax from available APIs",
+    "task": "Compare the ES5 and ES2015 output for this one program. Explain how target differs from lib and why a missing runtime feature is not installed by either setting.",
+    "done_when": "You can explain the changed arrow syntax and why lib supplies descriptions, not running features. Running the local commands is optional."
+  }
+}

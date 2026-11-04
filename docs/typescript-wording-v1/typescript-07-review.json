@@ -1,0 +1,110 @@
+{
+  "lesson": "typescript-07",
+  "position": 24,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Represent each workflow phase as a typed state and ignore results from outdated requests.",
+      "after": "Let only the current request change the workflow."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "An asynchronous job can finish later, after other code has run. A workflow needs to describe what is happening now: idle, loading, success, error, or cancelled. A discriminated union lets each kind of state carry just the fields it needs. Success has data; error has a message; idle does not pretend to have either.",
+        "This complete TypeScript setup models a smaller delivery workflow:\n```typescript\ntype DeliveryState =\n  | { kind: 'idle' }\n  | { kind: 'loading'; requestId: number }\n  | { kind: 'success'; requestId: number; data: string[] }\n  | { kind: 'error'; requestId: number; message: string }\n  | { kind: 'cancelled'; requestId: number };\ntype DeliveryAction =\n  | { type: 'start'; requestId: number }\n  | { type: 'resolve'; requestId: number; data: string[] }\n  | { type: 'reject'; requestId: number; message: string }\n  | { type: 'cancel'; requestId: number };\nconst waiting: DeliveryState = { kind: 'idle' };\nconsole.log(waiting.kind);\n```\nIt prints idle. string[] is an array of text. The union bars mean one valid shape at a time; the state is not simultaneously success and error.",
+        "A reducer is a function that receives the current state and an action, then returns the next state. The action describes an event; it does not edit state by itself. A requestId identifies one attempt. If request 8 starts after request 7, the reply from 7 should no longer control the screen, even when it arrives last.",
+        "Continue after the type declarations:\n```typescript\nfunction nextState(state: DeliveryState, action: DeliveryAction): DeliveryState {\n  if (action.type === 'start') {\n    return { kind: 'loading', requestId: action.requestId };\n  }\n  if (state.kind !== 'loading' || state.requestId !== action.requestId) {\n    return state;\n  }\n  if (action.type === 'resolve') {\n    return { kind: 'success', requestId: action.requestId, data: action.data };\n  }\n  if (action.type === 'reject') {\n    return { kind: 'error', requestId: action.requestId, message: action.message };\n  }\n  return { kind: 'cancelled', requestId: action.requestId };\n}\nconst active = nextState(waiting, { type: 'start', requestId: 8 });\nconst old = nextState(active, { type: 'resolve', requestId: 7, data: ['old'] });\nconsole.log(active.kind);\nconsole.log(old === active);\n```\nIt prints loading and true. The old response returns the identical state object rather than constructing a misleading new success.",
+        "The order of the branches matters. start may begin a new loading state from any state. Every other action needs a current loading state and matching requestId. The || means either a wrong state kind or wrong id is enough to ignore it. Checking state.kind first also safely narrows state before reading its requestId. resolve produces success; reject produces error; the remaining valid action is cancel.",
+        "A third example in the same file shows cancellation:\n```typescript\nconst stopped = nextState(active, { type: 'cancel', requestId: 8 });\nconst late = nextState(stopped, {\n  type: 'resolve', requestId: 8, data: ['late parcel']\n});\nconst failed = nextState(active, {\n  type: 'reject', requestId: 8, message: 'Offline'\n});\nconsole.log(stopped.kind);\nconsole.log(late === stopped);\nconsole.log(failed.kind);\n```\nThe outputs are cancelled, true, error. Cancellation here prevents a late result changing the model; it does not actually stop a network request or timer. Real cancellation can also stop work with an appropriate API.",
+        "For the exercise, keep the supplied State and Action unions. reduce should return the exact same state on stale or invalid terminal actions, because the checks compare object identity with ===. Accept only the active request's result, rejection, or cancellation. An idle state must ignore resolve. Once cancelled, even the matching late resolve must be ignored because the state is no longer loading.\n\nTrace the matching math case: loading request 8 first receives resolve for 7. That id mismatch keeps loading 8 unchanged. Then reject for 8 matches, so the final state is error for 8. The order of arrival alone does not choose the winner; current identity does.",
+        "The supplied first request uses id 2. Its matching success carries ['book']; id 1 is stale. Add or retain the current and stale variables required by the checks. Temporarily construct success without data and run the full TypeScript check to see why success needs that field, then remove the invalid line. This reducer models transitions; it does not itself fetch data or schedule requests."
+      ],
+      "after": [
+        "A workflow can be idle, loading, successful, failed, or cancelled. A discriminated union gives each state a kind label and only the fields it needs. Success has data; error has a message.",
+        "A request ID identifies one attempt. If request 8 starts after request 7, an old reply from 7 should not replace the result for 8.",
+        "A reducer receives a current state and an action, then returns the next state. An action describes an event, such as start, resolve, reject, or cancel.",
+        "This smaller example ignores a reply whose ID does not match.\n```typescript\ntype State =\n  | { kind: \"loading\"; requestId: number }\n  | { kind: \"success\"; requestId: number; data: string[] };\nfunction resolve(state: State, requestId: number, data: string[]): State {\n  if (state.kind !== \"loading\" || state.requestId !== requestId) {\n    return state;\n  }\n  return { kind: \"success\", requestId, data };\n}\nconst active: State = { kind: \"loading\", requestId: 8 };\nconsole.log(resolve(active, 7, [\"old\"]) === active);\n```\nThe output is true: the old reply returns the exact same state object.",
+        "In the full project, start may begin a new request from any state. Handle start first. Other actions require a loading state with the same request ID.",
+        "Cancel changes a matching loading request to cancelled. A later result must leave it cancelled. This stops the result from changing the model; it does not stop a real network request by itself.",
+        "Resolve gives a matching request its success data. Reject gives it an error message. An old or out-of-place action returns the same state object. Check the kind before reading fields that only some states have.",
+        "Keep the supplied five-state union and actions. Start request 2, accept its matching result, and ignore request 1. Also check rejection, cancellation, and a reply arriving after cancellation."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Define State so it can be one of five states: idle, loading, success, error, or cancelled.",
+        "Write reduce to choose the next state when it receives a start, resolve, reject, or cancel action.",
+        "From idle, start request 2. It should enter loading.",
+        "Resolve request 2 with [\"book\"]. It should enter success with that data.",
+        "While request 2 is loading, try resolving older request 1 with [\"old\"]. Ignore it.",
+        "In a separate test, reject request 2 while it is loading. It should enter error.",
+        "In another test, cancel request 2 while it is loading. Ignore any result that arrives after cancellation."
+      ],
+      "after": [
+        "Handle start by returning a new loading state.",
+        "For other actions, require loading and a matching request ID.",
+        "Return success, error, or cancelled for a matching action.",
+        "Return the original state for old or out-of-place actions.",
+        "Run the checks."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Handle start before requiring a current loading state.",
+        "For other actions, compare the current state request ID with the action ID.",
+        "Return the unchanged state for a mismatch, then map matching actions to success/error/cancelled."
+      ],
+      "after": [
+        "Start comes before the loading-state check.",
+        "Compare the action's request ID with the active request ID.",
+        "Return state itself when ignoring an action, not a copy."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "An older request finishes after a newer one. What should happen?",
+        "choices": [
+          "Ignore the old result",
+          "Replace the new result with old data",
+          "Delete every state"
+        ],
+        "answer": 0,
+        "explanation": "Only the currently active request ID should be allowed to update the workflow."
+      },
+      "after": {
+        "question": "An older request finishes after a newer one. What should happen?",
+        "choices": [
+          "Ignore the old result",
+          "Replace the new result with old data",
+          "Delete every state"
+        ],
+        "answer": 0,
+        "explanation": "Only the currently active request may change the workflow."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Type-error practice: after the valid solution compiles, temporarily append this line and run the full TypeScript check: const invalidState: State = { kind: \"success\", requestId: 2 }; The compiler should report an error. Remove the line before completing the lesson. Runtime checks alone cannot establish rejection of an incorrect type.",
+      "after": "To try a type error, temporarily make a success state without its data. TypeScript should reject it. This lesson models state changes; it does not send network requests."
+    }
+  ],
+  "headings": [
+    "Describe the current state",
+    "Give each attempt a number",
+    "Use a reducer",
+    "Ignore an older reply",
+    "Handle start first",
+    "Keep cancellation final",
+    "Follow the active request",
+    "Build the supplied workflow"
+  ],
+  "project": {
+    "title": "A cancellable typed workflow",
+    "task": "Model the five workflow states and accept only actions for the current loading request.",
+    "done_when": "Matching actions work, stale and cancelled replies leave the same state unchanged, and the checks pass."
+  }
+}

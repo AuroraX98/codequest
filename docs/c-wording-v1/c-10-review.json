@@ -1,0 +1,98 @@
+{
+  "lesson": "c-10",
+  "position": 10,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Set a to INT_MAX while keeping b=3. What should this guarded program do?",
+      "after": "Check that a sum will fit before calculating it. A signed integer cannot safely hold every possible answer."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A signed integer operation whose result is not representable has undefined behavior. Do not run INT_MAX +1 and treat an observed number as a portable result.",
+        "For nonnegative a and b, a <= INT_MAX - b is a safe check before computing a+b. The stated nonnegative precondition matters.",
+        "Unsigned arithmetic is reduced modulo one more than the maximum value. That defined wrap still may be a bug for sizes or counts.",
+        "This program prints rejected when the guard fails. It never evaluates the overflowing addition in that branch.",
+        "Complete local C example; the app itself does not execute it:\n```c\n#include <stdio.h>\n#include <limits.h>\nint main(void) {\n    int a = 4;\n    int b = 3;\n    if (a <= INT_MAX - b) { printf(\"%d\\n\", a + b); }\n    else { puts(\"rejected\"); }\n    return 0;\n}\n\n```",
+        "Expected output or behavior: 7. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Test safe boundary a=INT_MAX-b and rejected a=INT_MAX-b+1. Keep operands nonnegative and never remove the guard for an overflowing run. You may trace it without a C compiler; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "Overflow means a result does not fit its type. Signed int overflow has undefined behavior: C makes no promise about the result. Do not expect the number to wrap safely.",
+        "For this check, a and b must both be nonnegative, meaning zero or greater. `a <= INT_MAX - b` asks whether there is enough room to add b. Only add after that check passes.",
+        "Unsigned integers cannot represent negative values. Their arithmetic wraps around when it passes a limit. That rule is defined, but wrapping can still give the wrong size or count.",
+        "If the check fails, this program prints rejected. That path never calculates `a + b`, so it avoids the overflow.",
+        "Follow the example one line at a time.\n```c\n#include <stdio.h>\n#include <limits.h>\nint main(void) {\n    int a = 4;\n    int b = 3;\n    if (a <= INT_MAX - b) { printf(\"%d\\n\", a + b); }\n    else { puts(\"rejected\"); }\n    return 0;\n}\n\n```",
+        "4 and 3 fit easily, so the check passes and the program prints 7.",
+        "Keep b at 3. Setting a to `INT_MAX - b` makes the sum just fit. Increasing a by 1 makes the check fail. Keep both inputs nonnegative and keep the check in place."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "If a already equals the largest int, is there room to add 3?"
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Set a to INT_MAX while keeping b=3. What should this guarded program do?",
+        "choices": [
+          "Print rejected without evaluating a+b.",
+          "Print a portable negative wrapped sum.",
+          "Ignore the guard because int is unlimited."
+        ],
+        "answer": 0,
+        "explanation": "The precondition fails, and only the rejection branch runs."
+      },
+      "after": {
+        "question": "If a is INT_MAX and b is 3, what does this program do?",
+        "choices": [
+          "Prints rejected without calculating the sum.",
+          "Prints a safely wrapped negative sum.",
+          "Ignores the check because int has no limit."
+        ],
+        "answer": 0,
+        "explanation": "There is no room to add 3. The condition is false, so only the rejection path runs."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "C Core v1 uses a portable C17 baseline supported by the verified compiler. C23 exists but is not claimed fully supported here. The app supplies concept reading and an understanding check, not a C browser runner. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "The browser shows C code and checks your understanding; it does not run C. Optional local examples use C17."
+    }
+  ],
+  "headings": [
+    "A result can be too large",
+    "Check before adding",
+    "Unsigned wrap still needs care",
+    "Reject the unsafe sum",
+    "One example",
+    "Read the safe result",
+    "Check the edge"
+  ],
+  "project": {
+    "title": "Overflow and checked preconditions",
+    "task": "Explain why the check rejects a sum that would exceed INT_MAX.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local C example is optional."
+  },
+  "navigationCorrection": "Added a short example introduction so its reviewed heading remains an explicit contents target."
+}

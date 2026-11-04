@@ -1,0 +1,78 @@
+{
+  "lesson": "javascript-27",
+  "position": 61,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Implement saveDraft(storage, text) and loadDraft(storage) using the key draft; report failures without losing the distinction between empty and missing text.",
+      "after": "Save a draft and read it back, while handling missing or damaged data."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "localStorage stores strings for one origin in a browser. It is not cloud sync, and users or browser policies can clear or block it.",
+        "setItem(key, text) writes a string. getItem(key) returns the stored string or null when no entry exists.",
+        "Use JSON when storing a small record.\n```javascript\nconst encoded = JSON.stringify({ color: \"teal\" });\nconsole.log(encoded);\n```\nThis produces text that can later be parsed.",
+        "This practice receives a storage object with getItem and setItem methods. Tests supply an in-memory adapter; they do not prove real browser persistence.",
+        "After reading a record, parse it and check its shape. Saved data may be old or damaged even if your current writer is correct.",
+        "Both storage access and JSON parsing can throw. Wrap those operations in try/catch and choose an honest failure result.",
+        "For a real browser companion, obtain window.localStorage inside try/catch before calling these helpers. Accessing the property itself can fail. Never store passwords or secrets here.",
+        "The practice saves JSON shaped as {text: yourText}. saveDraft returns true only after writing succeeds; loadDraft returns a string or null for missing, broken, or wrongly shaped data.",
+        "saveDraft accepts only a string. Reject other values with false before attempting to write; empty text is a valid draft.",
+        "This companion is for your own browser page, not the adapter tests.\n```javascript\ntry {\n  const storage = window.localStorage;\n  storage.setItem(\"practice-color\", JSON.stringify({ color: \"teal\" }));\n  console.log(storage.getItem(\"practice-color\"));\n} catch (error) {\n  console.log(\"Browser storage is unavailable\");\n}\n```\nReload the same origin and read the same key to check persistence; remove the harmless practice key when finished."
+      ],
+      "after": [
+        "`localStorage` saves text in a browser for one origin: the same address scheme, host, and port.\n\nIt can keep data after a page reload, but it is not cloud sync. Users or browser settings can clear or block it.",
+        "`setItem(key, text)` saves text under a key. `getItem(key)` reads it back, or gives `null` when the key is missing.\n\nAn empty string is saved text. It is different from a missing entry.",
+        "Use JSON to turn a small record into text before saving it.\n```javascript\nconst encoded = JSON.stringify({ color: \"teal\" });\nconsole.log(encoded);\n```\nOutput:\n```text\n{\"color\":\"teal\"}\n```\nLater, `JSON.parse` can turn that text back into a value.",
+        "The practice functions receive a storage object with `getItem` and `setItem` methods.\n\nThe checks use a small in-memory stand-in. That lets us test success and failure without changing your browser's saved data.",
+        "Check loaded data before using it. An old or damaged record might have the wrong shape.\n\nFor a draft, require a non-null record with a `text` property whose type is string.",
+        "Reading, writing, or parsing can throw an error. Put these operations inside `try` and handle failures in `catch`.\n\nReturn `false` when saving fails. Return `null` when loading cannot produce a valid draft. Do not report a failed write as saved.",
+        "On a real page, read `window.localStorage` inside `try` too. Even access to that property can be blocked.\n\nUse browser storage for suitable local preferences or drafts, not passwords or secrets.",
+        "Complete `saveDraft(storage, text)` and `loadDraft(storage)` using the key `draft`.\n\nSave JSON containing `{text: yourText}`. Return `true` only after writing succeeds. Loading returns the saved string, or `null` for missing, broken, or wrongly shaped data.",
+        "Accept only strings when saving. Return `false` for other types before attempting a write.\n\nAn empty string is valid. Check its type rather than whether it is truthy.",
+        "This separate example uses storage on a browser page you control.\n```javascript\ntry {\n  const storage = window.localStorage;\n  storage.setItem(\"practice-color\", JSON.stringify({ color: \"teal\" }));\n  console.log(storage.getItem(\"practice-color\"));\n} catch (error) {\n  console.log(\"Browser storage is unavailable\");\n}\n```\nIt prints the saved JSON, or a message if storage is blocked. To check persistence, reload that same page and read the same key. Remove the practice key when finished."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Implement saveDraft(storage, text) and loadDraft(storage) using the key draft; report failures without losing the distinction between empty and missing text.",
+        "Run the checks.",
+        "Change one case and explain the result."
+      ],
+      "after": [
+        "Reject nonstring drafts before writing.",
+        "Save JSON with a text property under draft and return true only after success.",
+        "Read draft, parse it, and check that its text is a string.",
+        "Return false for write failures and null for missing, damaged, or unreadable drafts."
+      ]
+    },
+    {
+      "field": "externalNotes",
+      "before": "The automatic exercise uses supplied storage adapters, not window.localStorage. To verify persistence, serve your own page from a normal web origin, wrap access to window.localStorage in try/catch, save a harmless draft, reload and read it. Browser policy, private mode, clearing site data and storage limits may change availability; this is not phone/computer synchronization.",
+      "after": ""
+    }
+  ],
+  "headings": [
+    "Know where browser data lives",
+    "Save and read text",
+    "Encode a record as JSON",
+    "Use the supplied storage object",
+    "Check what you load",
+    "Report failures honestly",
+    "Access real storage carefully",
+    "Build the draft helpers",
+    "Allow empty text",
+    "Try storage on your own page"
+  ],
+  "project": {
+    "title": "Save and read browser data safely",
+    "task": "Complete saveDraft(storage, text) and loadDraft(storage) using the key draft. Save a JSON record, check loaded data, and distinguish empty text from a missing draft.",
+    "done_when": "Valid and empty drafts round-trip correctly. Invalid input is not written, and storage or parsing failures return false or null as specified."
+  },
+  "notes": [
+    "Removed an unrelated local-project completion requirement; its useful teaching is in the lesson and technical evidence stays in review documents."
+  ]
+}

@@ -1,0 +1,96 @@
+{
+  "lesson": "backend-28",
+  "position": 15,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Implement renameNote(notes,id,title). Match the worked contract and the changed-input checks without modifying the supplied input values.",
+      "after": "Rename the matching note in a new array while preserving the original."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "An immutable update returns a new collection while leaving the caller’s existing collection unchanged. Only the matching record receives the new title.",
+        "This exercise is a small pure JavaScript model. Its inputs are supplied directly; it does not receive live HTTP requests, operate a database, or deploy a service.",
+        "Worked example:\n\n```javascript\nfunction renameNote(notes,id,title) {\n  return notes.map(note=>note.id === id ? {...note,title} : note);\n}\nconsole.log(renameNote([{\"id\":1,\"title\":\"Moon\"},{\"id\":2,\"title\":\"Sea\"}], 2, \"Ocean\"));\n```\nThe returned value is [{\"id\":1,\"title\":\"Moon\"},{\"id\":2,\"title\":\"Ocean\"}].",
+        "map creates a new array. For the matching ID, {...note,title} copies the record and replaces its title. Unmatched records are reused because this function does not mutate them.",
+        "Read the function call renameNote([{\"id\":1,\"title\":\"Moon\"},{\"id\":2,\"title\":\"Sea\"}], 2, \"Ocean\") from the inside out: the arguments supply the inputs, renameNote runs the body once, and return sends its result back to the caller. console.log displays that result; it does not change it.",
+        "Why test with ordinary mutable input as well as frozen input? An accidental write can fail silently on frozen objects. Comparing mutable input before and after catches a real change."
+      ],
+      "after": [
+        "An immutable update returns a new result without editing the caller's original data. Here, the result keeps every note in order and changes only the title for the requested ID.",
+        "map builds a new array by choosing a result for each item. Compare note.id with the requested id to decide which note needs the new title.",
+        "```javascript\nfunction renameNote(notes,id,title) {\n  return notes.map(note=>note.id === id ? {...note,title} : note);\n}\nconsole.log(renameNote([{\"id\":1,\"title\":\"Moon\"},{\"id\":2,\"title\":\"Sea\"}], 2, \"Ocean\"));\n```\nThe result keeps Moon and changes Sea to Ocean. The input array still contains its original titles.",
+        "{...note, title} copies the matching note's fields, then replaces title in that copy. Unmatched notes can be reused because this function does not edit them. A missing ID leaves all note values unchanged in the new array.",
+        "Check the original data after the function runs. Also test with ordinary changeable objects: an attempted write to a frozen object may fail silently in some JavaScript code. Frozen means the object's own properties have been locked against changes.",
+        "Complete renameNote(notes, id, title). Match the ID exactly, copy the matching record with the new title, and return all others unchanged. Do not write to a note from the input array."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the contract and trace the worked example.",
+        "Replace the unfinished return in the starter.",
+        "Run the changed-input checks.",
+        "Explain the boundary in the understanding question."
+      ],
+      "after": [
+        "Use map to create a new array.",
+        "Copy the matching note and replace its title.",
+        "Compare the original input before and after running."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "map creates a new array. For the matching ID, {...note,title} copies the record and replaces its title. Unmatched records are reused because this function does not mutate them."
+      ],
+      "after": [
+        "Write title after ...note so the new title wins.",
+        "Keep every other field of the matching note."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Why test with ordinary mutable input as well as frozen input?",
+        "choices": [
+          "Frozen input proves every side effect",
+          "Mutable input lets the test observe accidental writes directly",
+          "Mutable input disables assertions"
+        ],
+        "answer": 1,
+        "explanation": "An accidental write can fail silently on frozen objects. Comparing mutable input before and after catches a real change."
+      },
+      "after": {
+        "question": "Why also test with ordinary changeable input instead of only frozen objects?",
+        "choices": [
+          "Frozen objects reveal every possible side effect",
+          "The test can directly observe an accidental change",
+          "Changeable input turns checks off"
+        ],
+        "answer": 1,
+        "explanation": "An attempted write may fail silently on a frozen object. Changeable input lets the test spot a real unwanted change."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Runs as a pure JavaScript function in the browser. Passing checks does not establish live HTTP behavior, database durability, concurrency safety, authentication security, queue delivery guarantees, or production readiness.",
+      "after": "This browser exercise returns updated data in memory. It does not write to a database."
+    }
+  ],
+  "headings": [
+    "Return an updated copy",
+    "Visit each note",
+    "Read one example",
+    "Copy only the changed record",
+    "Check for accidental changes",
+    "Try it yourself"
+  ],
+  "project": {
+    "title": "Replace one record without changing the input",
+    "task": "Complete renameNote(notes, id, title) with a new array and a copied matching note. Preserve all other fields and the original input.",
+    "done_when": "Only the matching title changes in the result, and the input remains unchanged."
+  }
+}

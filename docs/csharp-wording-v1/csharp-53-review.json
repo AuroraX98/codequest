@@ -1,0 +1,94 @@
+{
+  "lesson": "csharp-53",
+  "position": 53,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Change the call to Task.WhenAll(second, first). What is the result order?",
+      "after": "Wait for independent tasks together and keep their results in input order."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "Calling an async method starts its execution up to its first incomplete await. Store two returned tasks before awaiting their combined completion when the operations are independent.",
+        "Task.WhenAll completes when all supplied tasks finish. It does not create threads or start arbitrary unstarted tasks. Awaiting it gives their results in the same order as the input tasks, not completion order.",
+        "If a supplied task faults, the combined task faults after the group finishes. Await it inside appropriate exception handling; do not assume a successful partial result means the whole group succeeded.",
+        "Complete local C# example; the app does not execute it:\n```csharp\nusing System;\nusing System.Threading.Tasks;\nTask<int> first = FetchAsync(2, 20);\nTask<int> second = FetchAsync(5, 1);\nint[] results = await Task.WhenAll(first, second);\nConsole.WriteLine(string.Join(\",\", results));\nstatic async Task<int> FetchAsync(int value, int delay)\n{\n    await Task.Delay(delay);\n    return value;\n}\n```",
+        "Expected behavior from this example: 2,5; delay completion order does not rearrange the result array. This expected result is a reasoned prediction until a compiler test is recorded.",
+        "Optional local transfer: Give three tasks different delays and verify argument order, not finish order, determines the returned array. This is a separate local practice task, not a requirement to mark the reading complete."
+      ],
+      "after": [
+        "These async method calls begin running when called. Each can pause at its delay, letting the caller start the other operation before waiting for both.",
+        "Task.WhenAll gives a task that finishes after all supplied tasks finish. It does not itself create threads or start tasks that have never been started.",
+        "After successful completion, the result array follows the order passed to WhenAll. It does not follow the order in which operations happened to finish.",
+        "Follow the order of the two tasks passed to WhenAll.\n\n```csharp\nusing System;\nusing System.Threading.Tasks;\nTask<int> first = FetchAsync(2, 20);\nTask<int> second = FetchAsync(5, 1);\nint[] results = await Task.WhenAll(first, second);\nConsole.WriteLine(string.Join(\",\", results));\nstatic async Task<int> FetchAsync(int value, int delay)\n{\n    await Task.Delay(delay);\n    return value;\n}\n```",
+        "The program prints 2,5. first was passed before second, so its result occupies the first position, regardless of the delays.",
+        "If one supplied task fails, the combined task reports failure after the group finishes. The caller can catch that error around await. One successful task does not make the whole group successful."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Trace the changed case before choosing an answer.",
+        "Explain the consequence, then optionally try the local transfer task."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Trace the inputs through the visible rule, then compare the changed case."
+      ],
+      "after": [
+        "Read the argument order, not the delay values."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Change the call to Task.WhenAll(second, first). What is the result order?",
+        "choices": [
+          "2,5 because the first task was created first",
+          "Whichever value happens to complete first",
+          "5,2 because results follow the supplied task order"
+        ],
+        "answer": 2,
+        "explanation": "WhenAll preserves input order for results. Reversing the task arguments reverses the result positions, independent of timing."
+      },
+      "after": {
+        "question": "Use Task.WhenAll(second, first) instead. What is the result order?",
+        "choices": [
+          "2,5",
+          "Whichever finishes first",
+          "5,2"
+        ],
+        "answer": 2,
+        "explanation": "The results follow the order supplied to WhenAll. second now comes first."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "C#14/.NET10 core syllabus. Concept-mode reading and understanding check; no in-app C# execution and no claim of mastery. Full example and optional local transfer task are supplied. Actual compiler validation, if available, is reported separately.",
+      "after": "The browser shows C# code and checks your understanding; it does not run C#. Optional local examples use a .NET 10 console project with C# 14."
+    }
+  ],
+  "headings": [
+    "Start the independent operations",
+    "Wait for the whole group",
+    "Keep the supplied order",
+    "One example",
+    "What appears",
+    "A failed task makes the group fail"
+  ],
+  "project": {
+    "title": "Coordinate tasks with WhenAll",
+    "task": "Follow how WhenAll waits for both operations and orders their results.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local C# example is optional."
+  }
+}

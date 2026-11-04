@@ -1,12 +1,13 @@
+import { pathToFileURL } from "node:url";
 import assert from 'node:assert/strict';
 import {mkdtemp,readFile,writeFile,rm} from 'node:fs/promises';
 import {tmpdir} from 'node:os';import path from 'node:path';import ts from 'typescript';
 const temp=await mkdtemp(path.join(tmpdir(),'codequest-providers-'));
 try {
 for(const f of ['ai-providers','ai-keys','ai-transport']){const source=await readFile(`lib/${f}.ts`,'utf8');const js=ts.transpileModule(source,{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.ESNext}}).outputText.replace(/from "\.\/([^"]+)"/g,'from "./$1.mjs"');await writeFile(path.join(temp,f+'.mjs'),js);}
-const {providerIds,providers}=await import(path.join(temp,'ai-providers.mjs'));
-const {sealConnection,openConnection,storedConnection}=await import(path.join(temp,'ai-keys.mjs'));
-const {providerRequest,providerAnswer,askProvider}=await import(path.join(temp,'ai-transport.mjs'));
+const {providerIds,providers,providerModels,selectedModel}=await import(pathToFileURL(path.join(temp,'ai-providers.mjs')).href);
+const {sealConnection,openConnection,storedConnection}=await import(pathToFileURL(path.join(temp,'ai-keys.mjs')).href);
+const {providerRequest,providerAnswer,askProvider}=await import(pathToFileURL(path.join(temp,'ai-transport.mjs')).href);
 const secret=crypto.getRandomValues(new Uint8Array(32));const key='test-only-synthetic-key';
 const messages=[{role:'user',content:'What is a variable?'},{role:'assistant',content:'A name for a value.'},{role:'user',content:'Explain that again.'}];
 const payloads={deepseek:{choices:[{finish_reason:'stop',message:{content:'Helpful reply'}}]},openai:{status:'completed',output:[{type:'reasoning',summary:[]},{type:'message',content:[{type:'output_text',text:'Helpful reply'},{type:'output_text',text:'Another point'}]}]},anthropic:{stop_reason:'end_turn',content:[{type:'text',text:'Helpful reply'},{type:'text',text:'Another point'}]}};
@@ -25,6 +26,25 @@ for(const provider of providerIds){
  assert.throws(()=>providerAnswer(provider,{}));
 }
 assert.equal(providerAnswer('openai',payloads.openai),'Helpful reply\nAnother point');assert.equal(providerAnswer('anthropic',payloads.anthropic),'Helpful reply\nAnother point');
+for (const provider of providerIds) {
+  for (const model of providerModels[provider]) {
+    const request = providerRequest(provider,key,'Teach one idea',messages,{model:model.id});
+    assert.equal(request.body.model,model.id);
+    assert.equal(request.url,urls[provider]);
+    if (provider === 'anthropic' && model.id !== 'claude-sonnet-4-6') {
+      assert.deepEqual(request.body.thinking,{type:'adaptive'});
+      assert.deepEqual(request.body.output_config,{effort:'low'});
+      assert.equal(request.body.max_tokens,6000);
+    }
+    await askProvider(provider,key,'Teach one idea',messages,async(url,options)=>{
+      assert.equal(JSON.parse(options.body).model,model.id);
+      return Response.json(payloads[provider]);
+    },{model:model.id});
+  }
+  assert.equal(selectedModel(provider,'unknown').id,providers[provider].model);
+  assert.throws(()=>providerRequest(provider,key,'',messages,{model:'unknown'}),/Choose a model/);
+}
+assert.throws(()=>providerRequest('openai',key,'',messages,{model:'claude-opus-5-5'}),/Choose a model/);
 assert.throws(()=>providerAnswer('openai',{status:'incomplete',output:payloads.openai.output,incomplete_details:{reason:'max_output_tokens'}}),/finish/);
 assert.throws(()=>providerAnswer('openai',{status:'completed',output:[{type:'reasoning'}]}),/empty/);
 assert.throws(()=>providerAnswer('openai',{status:'completed',output:[null,{type:'message',content:[null,{type:'output_text',text:5}]}]}),/empty/);

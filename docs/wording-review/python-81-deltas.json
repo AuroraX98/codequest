@@ -1,0 +1,83 @@
+{
+  "lesson": "python-81",
+  "sourceHash": "727a51eb507c0e3c0d22bcc8632e44ca2b2529acc4bc1a28c33c5cef3244e05a",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Return (index, probes) using the shown inclusive-interval binary search on an ascending sorted integer list. Use mid=(low+high)//2. Return (None, probes) if absent. Any matching duplicate index is valid; leave input unchanged.",
+      "after": "Find an item by repeatedly halving a sorted list's search range."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "Binary search assumes ascending sorted data. It keeps an inclusive candidate interval from low to high. If the target exists, some matching position must remain in that interval. Sorting is a separate operation with its own cost; this function neither sorts nor validates the entire list.",
+        "mid = (low + high) // 2 selects the middle index using integer floor division. If that item equals the target, return it. If it is smaller, sorted order rules out every position through mid, so move low to mid+1. Otherwise move high to mid-1. Excluding mid makes progress; keeping mid again can cause an infinite loop.",
+        "binary_find receives an ascending sorted integer list and an integer target. It returns (matching_index, probes), or (None, probes). A probe means one inspected middle position, not one comparison: the code may use both == and < for that position. len(values) supplies the element count; high is the last valid index.\n```python\ndef binary_find(values, target):\n    low = 0\n    high = len(values) - 1\n    probes = 0\n    while low <= high:\n        mid = (low + high) // 2\n        probes += 1\n        if values[mid] == target:\n            return mid, probes\n        if values[mid] < target:\n            low = mid + 1\n        else:\n            high = mid - 1\n    return None, probes\nprint(binary_find([2, 4, 6, 8, 10], 8))\nprint(binary_find([], 8))\n```\nIt prints (3, 2) and (None, 0). For the first call, index 2 contains6; the remaining interval is indices 3..4, whose middle is3. The empty list starts with high=-1 and never indexes it.",
+        "With duplicates, any matching index is acceptable; this is not a first-match search. Each unsuccessful probe removes at least about half the candidate positions, so worst-case probes grow logarithmically. This uses indices rather than copying slices. Unsorted input breaks the reasoning, even if one particular search accidentally succeeds.",
+        "Complete the same low/high algorithm. Check empty, absent, boundary, and duplicate targets. Optional local practice: compare its probe count with counted_find from lesson79 on an already sorted list. Those counters measure different events, so do not equate them with seconds or call one a universal speed winner."
+      ],
+      "after": [
+        "Binary search needs data already sorted from smallest to largest. It keeps a search range from `low` through `high`, including both ends.\n\nIf the target is present, a matching position must stay inside this range. Sorting is a separate job with its own work. `binary_find` does not sort the list or check every item to confirm the order.",
+        "mid = (low + high) // 2 picks the middle index using integer floor division. If values[mid] equals target, return it. If it is smaller, sorted order rules out every position through mid, so set low to mid + 1. Otherwise set high to mid - 1. Leaving out mid makes progress; keeping mid again can cause an infinite loop.",
+        "binary_find receives an ascending sorted integer list and an integer target. It returns (matching_index, probes), or (None, probes). A probe is one look at a middle position. It is not the same as one comparison: the code may use both `==` and `<` on that item. len(values) gives the item count, and high is the last valid index.\n```python\ndef binary_find(values, target):\n    low = 0\n    high = len(values) - 1\n    probes = 0\n    while low <= high:\n        mid = (low + high) // 2\n        probes += 1\n        if values[mid] == target:\n            return mid, probes\n        if values[mid] < target:\n            low = mid + 1\n        else:\n            high = mid - 1\n    return None, probes\nprint(binary_find([2, 4, 6, 8, 10], 8))\nprint(binary_find([], 8))\n```\nExpected output:\n```text\n(3, 2)\n(None, 0)\n```\nFor the first call, index 2 contains 6; the remaining interval is indices 3..4, whose middle is 3. The empty list starts with high = -1 and never indexes it.",
+        "With duplicates, any matching index is acceptable; this is not a first-match search. Each unsuccessful probe removes at least about half the candidate positions, so worst-case probes grow slowly as the interval halves. The function uses indices instead of copying slices. Unsorted input breaks the reasoning, even if one particular search accidentally succeeds.",
+        "Complete the same low/high algorithm. Check empty, absent, boundary, and duplicate targets. For extra practice, compare its probe count with the earlier `counted_find` function on an already sorted list. Those counters measure different events, so do not treat them as seconds or call one a universal speed winner."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the requirement.",
+        "Make one change to the starter.",
+        "Run the checks.",
+        "Explain why a changed input produces its result."
+      ],
+      "after": [
+        "Start binary_find with low = 0, high = len(values) - 1, and probes = 0.",
+        "While low <= high, set mid = (low + high) // 2, add 1 to probes, and compare values[mid] with target.",
+        "Return (mid, probes) when equal. If values[mid] < target, set low = mid + 1; otherwise set high = mid - 1.",
+        "After the loop, return (None, probes). Check empty, missing, boundary, duplicate, and single-item searches, and confirm the input list is unchanged."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Using the shown algorithm, what happens when searching [1, 3, 5, 7] for4?",
+        "choices": [
+          "(None, 2): inspect3, then5, then the interval is empty.",
+          "(2, 2): choose the nearest larger value.",
+          "(None, 4): every item must be inspected."
+        ],
+        "answer": 0,
+        "explanation": "The first middle is index 1 (3), so low becomes2. The next is index 2 (5), so high becomes1. low>high proves absence in this sorted list."
+      },
+      "after": {
+        "question": "Using the shown algorithm, what happens when searching [1, 3, 5, 7] for 4?",
+        "choices": [
+          "(None, 2): inspect 3, then 5, then the interval is empty.",
+          "(2, 2): choose the nearest larger value.",
+          "(None, 4): every item must be inspected."
+        ],
+        "answer": 0,
+        "explanation": "The first middle is index 1, which holds 3, so low becomes 2. The next middle is index 2, which holds 5, so high becomes 1. Now low > high, so the sorted list proves 4 is absent."
+      }
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Trace the visible worked calls before changing the starter."
+      ],
+      "after": [
+        "For [2, 4, 6, 8, 10] and target 8, the first mid is index 2. Since 6 < 8, set low to 3.",
+        "Return (mid, probes) as soon as values[mid] == target.",
+        "If low becomes greater than high, return (None, probes). For duplicates, any matching index is fine."
+      ]
+    }
+  ],
+  "reviewNotes": [
+    "Kept the ascending-sorted requirement and inclusive low/high interval.",
+    "Preserved (index, probes), (None, probes), the probe definition, and input unchanged.",
+    "Kept quiz answer index 0; steps now name concrete binary-search edits and checks.",
+    "Used search range and looking at a middle item to explain intervals and probes."
+  ]
+}

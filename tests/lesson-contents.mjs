@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { mkdtemp, mkdir, readFile, writeFile, rm, symlink } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { pathToFileURL } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import ts from 'typescript';
 import postcss from 'postcss';
 import React, { act } from 'react';
@@ -11,7 +11,7 @@ import { JSDOM } from 'jsdom';
 
 // Compile only to a disposable directory. Parallel test runs never write or import
 // generated files beside production source and cannot race over a shared bundle.
-const cwd = path.resolve(new URL('..', import.meta.url).pathname);
+const cwd = fileURLToPath(new URL('..', import.meta.url));
 const temp = await mkdtemp(path.join(tmpdir(), 'codequest-lesson-contents-'));
 const failures = [];
 const passed = [];
@@ -50,8 +50,18 @@ const fixtureVisuals = Object.fromEntries(['sequence', 'compare', 'collection', 
 const compile = async (bundle, files) => {
   const dir = path.join(temp, bundle);
   await mkdir(dir, { recursive: true });
-  if (files.includes('components/LessonContent.tsx')) files = [...new Set([...files, 'components/CodeAnatomy.tsx', 'components/LessonGlossary.tsx', 'lib/lesson-glossary.ts', 'lib/code-anatomy.ts'])];
-  if (files.includes('lib/lesson-headings.ts')) files = [...new Set([...files, 'lib/additional-unit-contents.ts', 'lib/remaining-lesson-headings.ts'])];
+  if (files.includes('components/LessonContent.tsx')) files = [...new Set([...files, 'components/CodeAnatomy.tsx', 'components/LessonGlossary.tsx', 'lib/lesson-glossary.ts', 'lib/code-anatomy.ts', 'lib/swift-code-words.ts', 'lib/csharp-reviewed-anatomy.ts', 'lib/cpp-reviewed-anatomy.ts', 'lib/java-reviewed-anatomy.ts', 'lib/c-reviewed-anatomy.ts', 'lib/kotlin-reviewed-anatomy.ts', 'lib/rust-reviewed-anatomy.ts', 'lib/php-reviewed-anatomy.ts', 'lib/ruby-reviewed-anatomy.ts', 'lib/r-reviewed-anatomy.ts', 'lib/go-reviewed-anatomy.ts'])];
+  if (files.includes('lib/lesson-headings.ts')) {
+    files = [...new Set([...files, 'lib/additional-unit-contents.ts', 'lib/remaining-lesson-headings.ts'])];
+    const headingsSource = await readFile(path.join(cwd, 'lib/lesson-headings.ts'), 'utf8');
+    for (const match of headingsSource.matchAll(/from\s+["'](\.\.\/content\/[^"']+\.json)["']/g)) {
+      const relative = path.posix.normalize(path.posix.join('lib', match[1]));
+      const json = JSON.parse(await readFile(path.join(cwd, relative), 'utf8'));
+      const output = path.join(dir, relative + '.mjs');
+      await mkdir(path.dirname(output), { recursive: true });
+      await writeFile(output, 'export default ' + JSON.stringify(json) + ';');
+    }
+  }
   for (const file of files) {
     const source = await readFile(path.join(cwd, file), 'utf8');
     const js = ts.transpileModule(source, {

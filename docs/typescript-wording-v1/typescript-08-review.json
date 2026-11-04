@@ -1,0 +1,102 @@
+{
+  "lesson": "typescript-08",
+  "position": 13,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Return a note label that falls back only when its optional detail is missing.",
+      "after": "Use backup text only when an optional detail is missing."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "An optional property may be absent from an object. Write ? after its name in the type.",
+        "```typescript\ninterface Visit {\n  place: string;\n  note?: string;\n}\nconst trip: Visit = { place: \"Forest\" };\n```\nThe missing note is allowed. Reading trip.note produces undefined.",
+        "With strict null checking, an optional string property is read as string | undefined. Check for absence before calling a string method on it.",
+        "```typescript\ninterface Visit { place: string; note?: string }\nfunction visitNote(visit: Visit): string {\n  return visit.note ?? \"No note\";\n}\nconsole.log(visitNote({ place: \"Forest\" }));\nconsole.log(visitNote({ place: \"Forest\", note: \"\" }));\n```\nThe first call returns No note. The second returns an empty string: a present empty value is different from a missing property.",
+        "The ?? operator uses its fallback for null or undefined. Unlike ||, it preserves an empty string.",
+        "A readonly property cannot be reassigned through that typed reference. This is a compiler restriction, not a runtime freeze.",
+        "```typescript\ninterface Ticket { readonly title: string }\nconst ticket: Ticket = { title: \"Museum\" };\nconsole.log(ticket.title);\n// ticket.title = \"Cinema\"; // TypeScript would reject this assignment.\n```",
+        "For the exercise, label({title: \"Read\"}) returns \"Read: No detail\". A present detail is kept exactly, including an empty string. Return a label without changing the note."
+      ],
+      "after": [
+        "An optional property does not have to be present on an object. Write a question mark after its name in the type.",
+        "In `note?: string`, the question mark makes note optional. If the object has no note, reading that property gives `undefined`, meaning no value is there.",
+        "With strict checking, an optional text property may be string or undefined. Check that it exists before using a text method on it.",
+        "The `??` operator chooses backup text when the value is null or undefined.\n```typescript\ninterface Visit { place: string; note?: string; }\nfunction visitNote(visit: Visit): string {\n  return visit.note ?? \"No note\";\n}\nconsole.log(visitNote({ place: \"Forest\" }));\n```\nThe output is No note.",
+        "An empty string is still a present text value. This function keeps it empty. The `||` operator would replace empty text with the backup, which is different.",
+        "A readonly property cannot be reassigned through that typed reference. For example, `readonly title: string` lets you read the title but prevents assigning a new title through that type.",
+        "Readonly is a TypeScript checking rule. It does not freeze the object while JavaScript runs.",
+        "Make label return the note's title, a colon and space, then its detail. Use No detail only when the detail is missing. Keep a present empty string and leave the object unchanged."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read title and the optional detail.",
+        "Choose a fallback only for missing detail.",
+        "Return title, colon, space, and the chosen detail."
+      ],
+      "after": [
+        "Read the title and optional detail.",
+        "Use backup text only when the detail is missing.",
+        "Return the label and run the checks."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "The type permits a missing property; it does not supply fallback text.",
+        "Choose an operator that preserves empty text."
+      ],
+      "after": [
+        "The optional type allows absence; it does not add backup text.",
+        "Use `??` to keep empty text unchanged."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "label uses note.detail ?? \"No detail\". Someone replaces ?? with ||. What changes for {title:\"Draw\", detail:\"\"}?",
+        "choices": [
+          "Nothing; both operators only replace undefined",
+          "The empty detail becomes \"No detail\"",
+          "The title becomes undefined"
+        ],
+        "answer": 1,
+        "explanation": "An empty string is falsy, so || chooses the fallback. ?? preserves it because it is neither null nor undefined."
+      },
+      "after": {
+        "question": "If ?? is replaced by ||, what happens to a detail that is an empty string?",
+        "choices": [
+          "Nothing changes",
+          "It becomes the backup text No detail",
+          "The title becomes undefined"
+        ],
+        "answer": 1,
+        "explanation": "The || operator replaces empty text. The ?? operator keeps it because empty text is neither null nor undefined."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Prerequisites: typescript-01 and JavaScript object/string access. Verify with strict TypeScript checking as well as runtime cases. A readonly annotation does not freeze the object at runtime. Compile-negative examples: assigning note.title, passing detail: 5, or calling an optional detail method without narrowing must be rejected. No external-data validation is implied.",
+      "after": "The checks cover missing detail, empty detail, wrong value types, and readonly title. Readonly helps the checker; it does not freeze outside data."
+    }
+  ],
+  "headings": [
+    "A property may be absent",
+    "Mark an optional property",
+    "Check before using it",
+    "Choose backup text",
+    "Keep empty text",
+    "Protect a property from reassignment",
+    "Know what readonly does",
+    "Make the note label"
+  ],
+  "project": {
+    "title": "Handle a missing detail",
+    "task": "Return a note label with No detail only when the detail is missing.",
+    "done_when": "Missing detail gets the backup, empty text stays empty, the note stays unchanged, and the checks pass."
+  }
+}

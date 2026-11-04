@@ -1,0 +1,91 @@
+{
+  "lesson": "rust-57",
+  "position": 57,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "If each atomic update adds 2 instead of 1, what prints after both joins?",
+      "after": "An atomic addition updates a counter in one operation that other threads cannot split apart."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "AtomicUsize::fetch_add performs an atomic addition and returns the previous value, which this example ignores. Arc lets the two workers own handles to the same counter. Each worker performs a bounded one hundred increments.\n\nAtomicUsize::new(0) constructs an atomic counter initialized to zero. Vec::new() creates an empty vector; pushing JoinHandles later determines its element type and grows its length.",
+        "Ordering::SeqCst requests sequentially consistent ordering. It does not make several unrelated operations a single transaction or guarantee performance. Joining both workers bounds lifetime before the final load; no racy ordinary-counter variant or relaxed-ordering experiment is run.\n\ncount.load(Ordering::SeqCst) reads and returns the current atomic integer using the supplied ordering. It does not reset the counter; both joins finish before this observation.",
+        "Complete local Rust example; the app itself does not execute it:\n```rust\nuse std::sync::{Arc, atomic::{AtomicUsize, Ordering}};\nuse std::thread;\n\nfn main() {\n    let count = Arc::new(AtomicUsize::new(0));\n    let mut workers = Vec::new();\n    for _ in 0..2 {\n        let local = Arc::clone(&count);\n        workers.push(thread::spawn(move || {\n            for _ in 0..100 { local.fetch_add(1, Ordering::SeqCst); }\n        }));\n    }\n    for worker in workers { worker.join().expect(\"worker panicked\"); }\n    println!(\"{}\", count.load(Ordering::SeqCst));\n}\n```",
+        "Expected output or behavior: 200. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Contrast fetch_add with a separate load followed by store and explain why the pair is not one atomic update. You may trace it without a Rust compiler; reading completion is not proof of a local run.\n\nstore receives a replacement integer and an ordering, writes that value atomically and returns unit. This sequential companion demonstrates replacement, not a concurrent increment; a separate load followed by store would still be two operations.\n```rust\nuse std::sync::atomic::{AtomicUsize, Ordering};\nfn main() {\n    let count = AtomicUsize::new(0);\n    count.store(7, Ordering::SeqCst);\n    println!(\"{}\", count.load(Ordering::SeqCst));\n    count.store(2, Ordering::SeqCst);\n    println!(\"{}\", count.load(Ordering::SeqCst));\n}\n```\nExpected output: 7; 2."
+      ],
+      "after": [
+        "An atomic addition updates a counter in one operation that other threads cannot split apart.",
+        "Two workers each add one a hundred times. Both finish before the program reads the count.",
+        "Follow the labeled parts of this example.\n```rust\nuse std::sync::{Arc, atomic::{AtomicUsize, Ordering}};\nuse std::thread;\n\nfn main() {\n    let count = Arc::new(AtomicUsize::new(0));\n    let mut workers = Vec::new();\n    for _ in 0..2 {\n        let local = Arc::clone(&count);\n        workers.push(thread::spawn(move || {\n            for _ in 0..100 { local.fetch_add(1, Ordering::SeqCst); }\n        }));\n    }\n    for worker in workers { worker.join().expect(\"worker panicked\"); }\n    println!(\"{}\", count.load(Ordering::SeqCst));\n}\n```",
+        "The output is `200`. Two groups of a hundred single additions make 200.",
+        "Keep the same number of updates but add two each time."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read one idea.",
+        "Follow the labeled example.",
+        "Try the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Keep the same number of updates but add two each time."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If each atomic update adds 2 instead of 1, what prints after both joins?",
+        "choices": [
+          "400",
+          "200 because fetch_add ignores its argument",
+          "2 because only the final store survives."
+        ],
+        "answer": 0,
+        "explanation": "Two workers perform one hundred additions of two each; atomic updates avoid lost increments."
+      },
+      "after": {
+        "question": "If each atomic update adds 2 instead of 1, what prints after both joins?",
+        "choices": [
+          "400",
+          "200 because fetch_add ignores its argument",
+          "2 because only the final store survives."
+        ],
+        "answer": 0,
+        "explanation": "Two hundred updates now add two each, so the total is four hundred."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Rust Core v1 uses stable Rust1.99.1 with edition2024 and the standard library. The app supplies concept reading and an understanding check, not a Rust browser runner. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "CodeQuest shows the Rust example. Running it on your own computer is optional."
+    }
+  ],
+  "headings": [
+    "Count without losing updates",
+    "Wait for both sets of adds",
+    "Read the example",
+    "What happens",
+    "Try one change"
+  ],
+  "project": {
+    "title": "Atomic counters and ordering",
+    "task": "Keep the same number of updates but add two each time.",
+    "done_when": "Read each idea and pass the understanding check. Running the example on your computer is optional."
+  }
+}

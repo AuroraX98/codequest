@@ -6,7 +6,7 @@ import { spawnSync } from "node:child_process";
 import ts from "typescript";
 const require = createRequire(import.meta.url);
 const load = async (file, imports = {}) => {
-  const module = { exports: {} };
+  const loadedModule = { exports: {} };
   vm.runInNewContext(
     ts.transpileModule(await readFile(file, "utf8"), {
       compilerOptions: {
@@ -16,8 +16,8 @@ const load = async (file, imports = {}) => {
       },
     }).outputText,
     {
-      module,
-      exports: module.exports,
+      module: loadedModule,
+      exports: loadedModule.exports,
       require: (id) => (id in imports ? imports[id] : require(id)),
       crypto,
       Request,
@@ -33,7 +33,7 @@ const load = async (file, imports = {}) => {
     },
     { filename: file },
   );
-  return module.exports;
+  return loadedModule.exports;
 };
 const providers = await load("lib/ai-providers.ts");
 const practice = await load("lib/practice-project.ts", {
@@ -476,7 +476,7 @@ const pythonPrompt = contractPrompt("python");
 const pythonExpression = /Example check: `([^`]+)`/.exec(pythonPrompt)[1];
 assert.match(pythonPrompt, /PYTHON LIST OF STRINGS/);
 const pythonProof = spawnSync(
-  "python3",
+  process.env.PYTHON || (process.platform === "win32" ? "python" : "python3"),
   [
     "-c",
     `expression = ${JSON.stringify(pythonExpression)}\nassert eval(expression, {"__output": ["Milo is 3 years old."]})\nassert not eval(expression, {"__output": "Milo is 3 years old."})\nassert not eval(expression, {"__output": ["Milo is 4 years old."]})`,

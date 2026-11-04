@@ -1,0 +1,107 @@
+{
+  "lesson": "swift-11",
+  "position": 56,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Separate the practice model from storage, save entries as JSON, and recover safely from bad data.",
+      "after": "Save entries to a file and handle data that cannot be read."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "Persistence means keeping information outside the running program so it can be loaded later. A variable in memory normally disappears when the process ends. A file can remain on disk, but only if you write it to an appropriate location and keep that file. Separate the model, which describes an entry's information, from storage functions, which encode, write, read, and decode it. The screen can then use the result without being responsible for every file operation. This separation also makes success and recovery easier to inspect.",
+        "This complete Swift program encodes and decodes entries in memory using Foundation, Apple's general-purpose library module.\n\n```swift\nimport Foundation\n\nstruct ReadingEntry: Codable, Equatable {\n    let title: String\n    let minutes: Int\n}\n\nlet original = [ReadingEntry(title: \"History\", minutes: 15)]\ndo {\n    let bytes = try JSONEncoder().encode(original)\n    let restored = try JSONDecoder().decode([ReadingEntry].self, from: bytes)\n    print(restored == original)\n} catch {\n    print(\"Entry data could not be read or written\")\n}\n```\n\nThe usual result is true. Codable supplies encoding and decoding abilities for this model. Equatable allows equality comparisons. JSON is a text-based data format; encoded Data stores bytes. This example checks an in-memory round trip, not disk persistence.",
+        "Codable combines Encodable and Decodable. Swift can generate their behavior for a struct whose stored properties also support them. JSONEncoder().encode(original) constructs an encoder and asks it to turn the array into Data. JSONDecoder().decode([ReadingEntry].self, from: bytes) names the exact expected type and converts bytes back. .self here refers to the type itself as an argument; it is not an array instance. The brackets in [ReadingEntry] mean an array of that model. If the bytes have a different shape or wrong field types, decoding can throw rather than producing valid entries.",
+        "throws on a function announces that it can fail. try marks the possibly failing operation. do groups operations whose errors you want to handle, and catch runs when one throws. Return a clear result in both success and failure paths. A LoadResult can contain an entries array and a message. On damaged input, returning an empty collection plus a message containing could not be read makes recovery visible without crashing. Do not use try! for this case: it assumes success and would turn a decoding failure into a crash. A controlled fallback should not silently overwrite the damaged file before a real app's recovery policy is decided.",
+        "This separate complete Swift program writes valid JSON to a temporary file, reads it back, and handles failure.\n\n```swift\nimport Foundation\n\nstruct ReadingEntry: Codable, Equatable {\n    let title: String\n    let minutes: Int\n}\n\nlet entries = [ReadingEntry(title: \"Geography\", minutes: 25)]\nlet url = FileManager.default.temporaryDirectory\n    .appendingPathComponent(\"reading-example.json\")\n\ndo {\n    let data = try JSONEncoder().encode(entries)\n    try data.write(to: url, options: .atomic)\n    let storedData = try Data(contentsOf: url)\n    let restored = try JSONDecoder().decode([ReadingEntry].self, from: storedData)\n    print(restored == entries)\n    print(FileManager.default.fileExists(atPath: url.path))\n} catch {\n    print(\"Saved entries could not be read or written\")\n}\n```\n\nOn success, both outputs are true. URL describes a file location. appendingPathComponent adds a filename to the directory URL. path gives a filesystem path for the existence check. This example writes a real temporary file.",
+        "options: .atomic asks Data to write through an auxiliary file and replace the destination on success, reducing the risk of exposing a partly written destination. Atomic means one indivisible update at that file-replacement level; it does not turn several separate files or read-modify-write operations into a transaction. Two writers can still overwrite each other's changes without coordination. A consistency invariant is something that should stay true through valid operations. Moving three of twelve entries from planned to done should keep twelve total. A crash after deleting them but before inserting them elsewhere can violate that total if the change is split into unrelated writes.",
+        "Overloading means functions can share a name when their input signatures differ. loadEntries(_ data: Data) loads supplied bytes; loadEntries(from url: URL) reads the file and then reuses the byte decoder. The underscore lets the Data call omit a label, while from is the URL call's label. Data(\"broken\".utf8) makes bytes from the letters of broken using UTF-8 text encoding. Those bytes are not valid JSON for [PracticeEntry], so they should exercise the catch path. A file-read failure and a decode failure are different causes, but both need an understandable outcome.\n\nThis complete local example calls both actual overloads:\n```swift\nimport Foundation\nstruct PracticeEntry: Codable { let title: String; let minutes: Int }\nstruct LoadResult { let entries: [PracticeEntry]; let message: String }\nfunc loadEntries(_ data: Data) -> LoadResult {\n    do {\n        let entries = try JSONDecoder().decode([PracticeEntry].self, from: data)\n        return LoadResult(entries: entries, message: \"Loaded\")\n    } catch {\n        return LoadResult(entries: [], message: \"Data could not be read\")\n    }\n}\nfunc loadEntries(from url: URL) -> LoadResult {\n    do { return loadEntries(try Data(contentsOf: url)) }\n    catch { return LoadResult(entries: [], message: \"File could not be read\") }\n}\nlet bytes = Data(\"[{\\\"title\\\":\\\"Map\\\",\\\"minutes\\\":5}]\".utf8)\nlet url = FileManager.default.temporaryDirectory.appendingPathComponent(\"worked-overloads.json\")\ntry bytes.write(to: url, options: .atomic)\nprint(loadEntries(bytes).entries.count)\nprint(loadEntries(from: url).entries.count)\nprint(loadEntries(Data(\"broken\".utf8)).entries.count)\n```\nThe outputs are 1, 1, 0. The unlabeled call receives bytes; the from-labeled call receives a file URL and delegates after reading. Both return LoadResult with entries and a message rather than throwing a read/decode error to the caller. The separate write can still throw. This local example writes a temporary file; it is not a claim of browser filesystem access.",
+        "For the exercise, use Codable PracticeEntry values, encode the supplied Swift/20 entry, save atomically at the supplied temporary file URL, and load it through the URL function. Return an empty collection and a could not be read message for the broken-byte fixture. The checks establish file round-tripping and controlled malformed-data recovery within one run. The companion removes its sandbox after runs, so this does not demonstrate survival across app restarts. In a real Xcode app, use an appropriate persistent application-support location and test stop/relaunch separately; old file formats may also need migrations, meaning deliberate conversion to a new format. Foundation compilation must succeed on the compatible Apple toolchain, and the fixture's documented cold compile limit may still prevent verification in that companion."
+      ],
+      "after": [
+        "Persistence means keeping data so it can be loaded later. A file can keep data after a program ends. A temporary file may be removed, so this exercise checks saving and loading within one run.",
+        "A model describes the data you store. ReadingEntry holds a title and minutes. Codable lets Swift convert this model into saved data and back. Equatable lets the example compare restored entries with the originals.",
+        "JSON is a text format for storing data. JSONEncoder turns the entries into Data, a collection of bytes. JSONDecoder turns those bytes back into the requested type. [ReadingEntry].self tells it to expect an array of ReadingEntry values.",
+        "Decoding can fail if the saved data is damaged or has the wrong shape. try marks the possible failure. do-catch handles it. Give a clear message and safe result; try! would crash if decoding fails.",
+        "```swift\nimport Foundation\n\nstruct ReadingEntry: Codable, Equatable {\n    let title: String\n    let minutes: Int\n}\n\nlet entries = [ReadingEntry(title: \"Geography\", minutes: 25)]\nlet url = FileManager.default.temporaryDirectory\n    .appendingPathComponent(\"reading-example.json\")\n\ndo {\n    let data = try JSONEncoder().encode(entries)\n    try data.write(to: url, options: .atomic)\n    let storedData = try Data(contentsOf: url)\n    let restored = try JSONDecoder().decode([ReadingEntry].self, from: storedData)\n    print(restored == entries)\n    print(FileManager.default.fileExists(atPath: url.path))\n} catch {\n    print(\"Saved entries could not be read or written\")\n}\n```\nOn success, this prints true twice: the restored entries match, and the file exists. Foundation supplies the file and JSON tools. url names a temporary folder and filename. This example writes a real file on the computer running Swift.",
+        "The .atomic option writes through a temporary file before replacing the destination. This reduces the risk of exposing a partly written file. It does not combine several files into one change or protect against two writers replacing each other's work.",
+        "The exercise has two loadEntries functions with different inputs. loadEntries(_:) decodes supplied bytes. loadEntries(from:) reads a file, then uses the byte decoder. Both return entries and a message. Failed loading should not automatically overwrite the damaged file.",
+        "Make PracticeEntry Codable. Encode the supplied Swift entry with 20 minutes, save it with .atomic, and load it from its file URL. For the supplied broken bytes, return an empty list and a message containing could not be read. Keep those words so the checks can recognize the recovery message."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Define PracticeEntry with Codable so it can be converted to saved data and read back.",
+        "Encode [PracticeEntry(title: \"Swift\", minutes: 20)] as data for saving.",
+        "Write it to the supplied temporary file URL using .atomic, so a failed write does not leave a partly written file.",
+        "Read the saved file with loadEntries(from:).",
+        "Pass Data(\"broken\".utf8) to loadEntries(_:) to try reading invalid saved data.",
+        "Return an empty list and a message containing \"could not be read\"."
+      ],
+      "after": [
+        "Make PracticeEntry Codable and encode the supplied entry.",
+        "Write it to the supplied file URL using .atomic.",
+        "Read the file and decode its entries.",
+        "Handle broken data with an empty list and a clear message."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Make the entry Codable so JSONEncoder and JSONDecoder can work with it.",
+        "Return a LoadResult in both the success and catch paths.",
+        "Try `JSONDecoder().decode([PracticeEntry].self, from: data)` and use `Data(\"broken\".utf8)` to exercise recovery."
+      ],
+      "after": [
+        "Return LoadResult on both success and failure.",
+        "Use the URL loader to read bytes, then reuse the byte loader."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Why put decoding, which reads saved data, inside `do`/`catch`?",
+        "choices": [
+          "Saved bytes may be malformed or incompatible",
+          "JSON always contains a number",
+          "Codable prevents errors"
+        ],
+        "answer": 0,
+        "explanation": "Decoding can throw, so the app should handle a failed load deliberately."
+      },
+      "after": {
+        "question": "Why handle decoding with do-catch?",
+        "choices": [
+          "Saved data may be damaged or use the wrong format",
+          "JSON always contains a number",
+          "Codable prevents all errors"
+        ],
+        "answer": 0,
+        "explanation": "Decoding can fail. catch lets the program respond without crashing."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "The companion deletes its sandbox directory after each run, so this exercise checks atomic disk round-tripping and malformed-data recovery within one run. To verify survival across app restarts, inject an application-support URL in an Xcode app, save an entry, stop the app, and launch again. Plan versioning/migration separately; the temporary companion fixture does not establish persistent iOS storage. Native Linux execution and Apple SDK/companion execution are separate evidence; a cold Mac compile may still reach the companion time limit.",
+      "after": "The Swift companion removes its temporary files after each run. This exercise does not prove saving across app restarts. A real app needs a persistent storage location and a save, stop, and reopen check in Xcode. Foundation also needs a compatible Swift toolchain."
+    }
+  ],
+  "headings": [
+    "Keep data outside the program",
+    "Describe the saved entries",
+    "Turn entries into bytes",
+    "Handle a failed read",
+    "Read one example",
+    "Replace a file carefully",
+    "Separate the two loading steps",
+    "Try it yourself"
+  ],
+  "project": {
+    "title": "A durable iOS tracker",
+    "task": "Store and reload PracticeEntry values through the supplied temporary file. Keep file work separate from display logic and return a clear result for unreadable data.",
+    "done_when": "The saved entries load correctly within one run, and broken data returns an empty list with a could not be read message."
+  }
+}

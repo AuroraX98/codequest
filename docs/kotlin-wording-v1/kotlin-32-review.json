@@ -1,0 +1,91 @@
+{
+  "lesson": "kotlin-32",
+  "position": 32,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "If copy instead receives topics = first.topics.toMutableList(), what prints?",
+      "after": "A data-class copy makes a new object but can still share the list inside it."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A data class generates useful operations such as equals, hashCode and copy from properties declared in its primary constructor. Properties declared only in the body are excluded from those generated comparisons and copies. copy(topics = newList) replaces that constructor property in the new instance. toMutableList() copies a list container, but its element references are still shared.\n\nCalling toMutableList on a list returns a new mutable outer list containing the same element references. Here adding to the copied container leaves the original container at one element; this is not a recursive clone.\n```kotlin\nfun main() {\n    val original = mutableListOf(\"read\")\n    val copied = original.toMutableList()\n    copied.add(\"write\")\n    println(\"${original.size} ${copied.size}\")\n}\n```\nExpected output: 1 2.",
+        "copy creates another data-class instance but does not recursively clone referenced mutable objects. Here both instances retain the same MutableList reference. Read-only val prevents replacing the reference, not modifying that list.",
+        "Complete local Kotlin/JVM example; the app itself does not execute it:\n```kotlin\ndata class Plan(val topics: MutableList<String>)\nfun main() {\n    val first = Plan(mutableListOf(\"C\"))\n    val second = first.copy()\n    second.topics.add(\"Kotlin\")\n    println(first.topics.size)\n}\n```",
+        "Expected output or behavior: 2. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Compare first == second before and after changing a separately copied list. You may trace it without a Kotlin compiler; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "A data class is a class meant to hold data. Kotlin adds useful functions, including value comparisons and `copy`, based on properties in its primary constructor. Properties declared only in the class body are not part of those generated comparisons or copy inputs.",
+        "The copy function makes a new outer object. It keeps the same property values unless you supply replacements. When a property is a list reference, both objects can still reach the same list. This is called a shallow copy.",
+        "Follow the example one line at a time.\n```kotlin\ndata class Plan(val topics: MutableList<String>)\nfun main() {\n    val first = Plan(mutableListOf(\"C\"))\n    val second = first.copy()\n    second.topics.add(\"Kotlin\")\n    println(first.topics.size)\n}\n```",
+        "The screen shows `2`. First and second are different Plan objects, but their topics properties reach one shared list. Adding Kotlin through second also changes the list read through first.",
+        "The function `toMutableList()` creates a separate outer list. Passing it as the topics argument to copy separates the two list containers. The list items themselves are still shared references; this does not copy every object inside them."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Decide whether the two Plan objects share one list or hold separate lists."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If copy instead receives topics = first.topics.toMutableList(), what prints?",
+        "choices": [
+          "2",
+          "0",
+          "1"
+        ],
+        "answer": 2,
+        "explanation": "toMutableList creates a separate list container, so adding to second no longer changes first’s list. Its String elements need no mutable deep clone here."
+      },
+      "after": {
+        "question": "Use `first.copy(topics = first.topics.toMutableList())`. After adding to second, what size does first show?",
+        "choices": [
+          "2",
+          "0",
+          "1"
+        ],
+        "answer": 2,
+        "explanation": "Second now has a separate list container. Adding to it leaves first's list with its original one item."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Kotlin JVM Core v1 uses Kotlin2.4.21 stable syntax and a verified JVM toolchain. The app supplies concept reading and an understanding check, not a Kotlin browser runner. Coroutine libraries are separate dependencies. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "The browser shows Kotlin code and checks your understanding; it does not run Kotlin. Optional local examples use Kotlin/JVM."
+    }
+  ],
+  "headings": [
+    "Use a class for data",
+    "Understand a shallow copy",
+    "One example",
+    "Read the shared-list result",
+    "Copy the list container too"
+  ],
+  "project": {
+    "title": "Data classes and shallow copies",
+    "task": "Predict how a separate list container changes the copy's behavior.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local Kotlin example is optional."
+  }
+}

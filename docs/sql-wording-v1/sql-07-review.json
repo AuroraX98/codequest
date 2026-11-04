@@ -1,0 +1,97 @@
+{
+  "lesson": "sql-07",
+  "position": 37,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Calculate running totals and ranks within groups using a fixed dataset.",
+      "after": "Add a running total and rank while keeping every session row."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A window function calculates across related rows while keeping each original row in the result. GROUP BY usually reduces a group to one report row; a window can attach a running total or rank to every practice row. OVER introduces the window's rules: which group to use, which order to follow, and which rows count for a calculation.",
+        "Run this complete SQLite setup and running-total query:\n```sql\nCREATE TABLE demo_practice (\n  id INTEGER PRIMARY KEY,\n  subject TEXT,\n  day TEXT,\n  minutes INTEGER\n);\nINSERT INTO demo_practice VALUES\n  (1, 'Art', '2026-01-01', 10),\n  (2, 'Art', '2026-01-02', 25),\n  (3, 'Art', '2026-01-03', 25),\n  (4, 'Music', '2026-01-01', 8);\nSELECT subject, day, minutes,\n  SUM(minutes) OVER (\n    PARTITION BY subject\n    ORDER BY day, id\n    ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW\n  ) AS running_total\nFROM demo_practice\nORDER BY subject, day, id;\n```\nArt's totals are 10, 35, 60. Music begins its own total at 8. There are still four output rows.",
+        "PARTITION BY subject separates the calculations by subject. ORDER BY day, id inside OVER sets the order for accumulation. Fixed year-month-day text sorts these dates chronologically. id breaks a tie when two sessions share a day. ROWS selects individual rows; UNBOUNDED PRECEDING means the start of the partition, and CURRENT ROW means the row being calculated. SUM adds that whole frame.",
+        "Run this ranking query after the same setup:\n```sql\nSELECT subject, day, minutes,\n  RANK() OVER (\n    PARTITION BY subject\n    ORDER BY minutes DESC\n  ) AS duration_rank\nFROM demo_practice\nORDER BY subject, day, id;\n```\nBoth Art rows with 25 minutes get rank 1, and the 10-minute row gets rank 3. RANK leaves a gap after a tie because two rows occupy the first two positions. Music's single row ranks 1. Empty parentheses mean RANK needs no direct input argument.",
+        "Each window has its own order. Running totals need chronological order; duration ranks need minutes descending, largest first. Do not add id to the ranking order if equal durations should tie: that extra detail would separate them. The outer ORDER BY controls display order, independently of the two window calculations. A rank of 1 does not move that row to the first displayed row by itself.\n\nMean is another name for the arithmetic average. For 3, 6, 9, add 3 + 6 + 9 = 18, then divide by their count 3: 18 / 3 = 6. A running total stops at each current row; a mean also needs a denominator, so it is a different calculation.",
+        "For the exercise, select subject, day, and minutes, then add running_total and duration_rank as named result columns. Save that SELECT as answer. The running-total frame must stop at the current row, rather than sum the entire partition every time. RANK needs PARTITION BY subject so a Spanish session is compared with Spanish sessions.",
+        "The supplied Math durations are 20, 30, 30: chronological running totals 20, 50, 80. The two 30-minute entries tie at duration rank 1. Spanish starts again at 15 and then totals 40. The checks now compare every fixture row's running total and rank, including both partitions. They test these results, not every possible input or one required SQL spelling."
+      ],
+      "after": [
+        "A window function calculates across related rows but keeps each row in the result. `OVER` gives its rules: which group to use and which rows to include.",
+        "Run this example in a fresh database:\n```sql\nCREATE TABLE demo_practice(id INTEGER, subject TEXT, day TEXT, minutes INTEGER);\nINSERT INTO demo_practice VALUES\n  (1, 'Art', '2026-01-01', 10), (2, 'Art', '2026-01-02', 25),\n  (3, 'Art', '2026-01-03', 25), (4, 'Music', '2026-01-01', 8);\nSELECT subject, day, minutes,\n  SUM(minutes) OVER (\n    PARTITION BY subject ORDER BY day, id\n    ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW\n  ) AS running_total,\n  RANK() OVER (\n    PARTITION BY subject ORDER BY minutes DESC\n  ) AS duration_rank\nFROM demo_practice\nORDER BY subject, day, id;\n```\nArt's running totals are `10`, `35`, and `60`. Music starts its own total at `8`. All four rows remain.",
+        "`PARTITION BY subject` makes a separate calculation for each subject. `ORDER BY day, id` puts its rows in date order, with id breaking ties. The ROWS rule adds from the first row through the current row.",
+        "RANK orders each subject by minutes from high to low. The two Art rows with 25 minutes both rank `1`. The 10-minute row ranks `3`: RANK leaves a gap after a tie. Music's only row ranks `1`.",
+        "The running total and rank use different orders. Do not add id to the rank order when equal durations should tie. The outer ORDER BY controls only how the finished report is displayed.",
+        "Save subject, day, minutes, running_total, and duration_rank in `answer`. Use a running sum that ends at the current row and a separate duration rank within each subject.",
+        "In the project, Math's totals are `20`, `50`, and `80`, while its two 30-minute rows tie at rank 1. Spanish starts its own total. Check every row in both subjects; one correct final total is not enough."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Keep every source row in the result.",
+        "Use `SUM` with an ordered window to add a running total.",
+        "Use `RANK` so tied top values get the same rank."
+      ],
+      "after": [
+        "Keep every source session row.",
+        "Add SUM(minutes) with a subject window in day/id order.",
+        "Add RANK() within each subject, ordered by minutes descending.",
+        "Save the named columns in answer."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Add OVER(...) to SUM(minutes).",
+        "Partition by subject and order by date.",
+        "Use RANK() over each subject ordered by minutes descending."
+      ],
+      "after": [
+        "The running frame must end at CURRENT ROW.",
+        "Use minutes alone for the rank order so equal durations tie.",
+        "Use an outer ORDER BY for the displayed report."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Two rows tie for the most minutes. What rank does `RANK` give them?",
+        "choices": [
+          "Both rank 1",
+          "One rank 1 and one rank 2",
+          "Both rank 2"
+        ],
+        "answer": 0,
+        "explanation": "Both 30-minute rows tie for the highest duration, so RANK assigns each rank 1."
+      },
+      "after": {
+        "question": "Two rows tie for the most minutes. What rank does RANK give them?",
+        "choices": [
+          "Both rank 1",
+          "One rank 1 and one rank 2",
+          "Both rank 2"
+        ],
+        "answer": 0,
+        "explanation": "Equal top durations share rank 1."
+      }
+    }
+  ],
+  "headings": [
+    "Calculate across rows without merging them",
+    "Try one practice report",
+    "Read the running-total window",
+    "Read the ranks",
+    "Keep calculation order separate from display order",
+    "Build the project report",
+    "Check each subject separately"
+  ],
+  "project": {
+    "title": "A running practice report",
+    "task": "Create answer with each session's subject, day, minutes, running_total, and duration_rank within its subject.",
+    "done_when": "Every row remains, running totals stop at each current row, and equal durations receive the required tied ranks."
+  }
+}

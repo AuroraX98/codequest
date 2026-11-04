@@ -1,0 +1,91 @@
+{
+  "lesson": "rust-55",
+  "position": 55,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "If the sent String becomes \"finished\", what is received before the loop ends?",
+      "after": "A channel carries values from a sender to a receiver."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "mpsc::channel creates a multi-producer, single-consumer channel with a Sender and Receiver. send moves this String into the channel; the sending code cannot keep using that moved String. Here only one worker sends, then its sender is dropped when the closure returns.",
+        "The for loop receives messages until all senders have been dropped and queued messages drained. Keeping an unused sender alive would keep the loop waiting. After collection, join still explicitly observes the worker’s completion and any panic.",
+        "Complete local Rust example; the app itself does not execute it:\n```rust\nuse std::sync::mpsc;\nuse std::thread;\n\nfn main() {\n    let (sender, receiver) = mpsc::channel();\n    let worker = thread::spawn(move || {\n        sender.send(String::from(\"ready\")).expect(\"receiver gone\");\n    });\n    for message in receiver { println!(\"{message}\"); }\n    worker.join().expect(\"worker panicked\");\n}\n```",
+        "Expected output or behavior: ready. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Explain why cloning a sender and retaining that clone could prevent this receiver loop from terminating. You may trace it without a Rust compiler; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "A channel carries values from a sender to a receiver.",
+        "The worker sends one String. When it finishes, its sender goes away. The receiving loop stops after it has read the remaining message.",
+        "Follow the labeled parts of this example.\n```rust\nuse std::sync::mpsc;\nuse std::thread;\n\nfn main() {\n    let (sender, receiver) = mpsc::channel();\n    let worker = thread::spawn(move || {\n        sender.send(String::from(\"ready\")).expect(\"receiver gone\");\n    });\n    for message in receiver { println!(\"{message}\"); }\n    worker.join().expect(\"worker panicked\");\n}\n```",
+        "The output is `ready`. The receiver prints the text that the worker sent.",
+        "Change the message and follow it from the worker to the loop."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read one idea.",
+        "Follow the labeled example.",
+        "Try the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Change the message and follow it from the worker to the loop."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If the sent String becomes \"finished\", what is received before the loop ends?",
+        "choices": [
+          "No message, because dropping the sender discards queued values.",
+          "finished",
+          "ready because channels reuse the original source text"
+        ],
+        "answer": 1,
+        "explanation": "The owned finished String is delivered; dropping the last sender ends iteration only after the queue is drained."
+      },
+      "after": {
+        "question": "If the sent String becomes \"finished\", what is received before the loop ends?",
+        "choices": [
+          "No message, because dropping the sender discards queued values.",
+          "finished",
+          "ready because channels reuse the original source text"
+        ],
+        "answer": 1,
+        "explanation": "The receiver prints finished, the text actually sent by the worker."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Rust Core v1 uses stable Rust1.99.1 with edition2024 and the standard library. The app supplies concept reading and an understanding check, not a Rust browser runner. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "CodeQuest shows the Rust example. Running it on your own computer is optional."
+    }
+  ],
+  "headings": [
+    "Send a message between threads",
+    "Find the last sender",
+    "Read the example",
+    "What happens",
+    "Try one change"
+  ],
+  "project": {
+    "title": "Channels and sender lifetime",
+    "task": "Change the message and follow it from the worker to the loop.",
+    "done_when": "Read each idea and pass the understanding check. Running the example on your computer is optional."
+  }
+}

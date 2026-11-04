@@ -1,0 +1,94 @@
+{
+  "lesson": "react-12",
+  "position": 23,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Give two counters the same behavior without sharing their stored count.",
+      "after": "A custom Hook reuses state logic while keeping each call's state separate."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A custom hook is a function that uses React hooks to package reusable stateful behavior. Its name begins with use.",
+        "```react\nfunction useToggle(initial) {\n  const [enabled, setEnabled] = React.useState(initial);\n  return [enabled, () => setEnabled(value => !value)];\n}\nfunction App() {\n  const [enabled, toggle] = useToggle(false);\n  return <button onClick={toggle}>{enabled ? \"On\" : \"Off\"}</button>;\n}\n```",
+        "Each call gets its own state. Sharing a hook definition shares logic, not one shared stored value.\n\nChange only the initial argument to true:\n```react\nfunction useToggle(initial) {\n  const [enabled, setEnabled] = React.useState(initial);\n  return [enabled, () => setEnabled(value => !value)];\n}\nfunction App() {\n  const [enabled, toggle] = useToggle(true);\n  return <button onClick={toggle}>{enabled ? \"On\" : \"Off\"}</button>;\n}\n```\nThis instance starts On; one click shows Off. useToggle(initial) returns the current Boolean and an action function. React invokes that function on the click; it queues the opposite pending value. The initial argument seeds useState on mount, not on every later render. In the separate useCounter exercise, reset explicitly uses the initial argument from the current render when that action is invoked; initialization and an explicit reset are different operations.",
+        "Call custom hooks at the top level of a component or another hook. Do not call them conditionally or inside an event handler.",
+        "A hook can return an object containing its current value and actions. A component chooses how to display and trigger those actions.",
+        "For the exercise, useCounter(initial) returns count, increment, and reset. Both counters start at 2. Incrementing A must not change B; resetting A returns only A to its initial value."
+      ],
+      "after": [
+        "A custom Hook is a function that uses React Hooks to share reusable behavior. Its name starts with `use`. Components can use the same logic without sharing one stored value.",
+        "```react\nfunction useToggle(initial) {\n  const [enabled, setEnabled] = React.useState(initial);\n  return [enabled, () => setEnabled(value => !value)];\n}\nfunction App() {\n  const [enabled, toggle] = useToggle(false);\n  return <button onClick={toggle}>{enabled ? \"On\" : \"Off\"}</button>;\n}\n```\nThe button starts Off. One click makes it On. `useToggle` returns the current value and an action that changes it.",
+        "Each call to the Hook has its own state. The initial value sets the starting state; changing that argument later does not automatically restart the state.",
+        "Call Hooks at the top of a component or another Hook. Keep them outside conditions, loops, and event handlers so React can track them in the same order.",
+        "A Hook may return an object with a value and action functions. The component decides how to show the value and which buttons call the actions.",
+        "Complete `useCounter(initial)` to return `count`, `increment`, and `reset`. Both counters start at 2. Changing A must leave B alone. Reset is a separate action that sets this counter to the initial argument supplied in the current render."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Use a functional update to increment the current count.",
+        "Reset only this hook call's count to initial."
+      ],
+      "after": [
+        "Add one using the pending count.",
+        "Reset only this call's count to initial.",
+        "Run the checks with both counters."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Use a functional update to increment the current count.",
+        "Reset only this hook call's count to initial."
+      ],
+      "after": [
+        "Keep useState inside useCounter so each Hook call gets its own count."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Two components call the same useCounter hook. Why does clicking one not change the other?",
+        "choices": [
+          "Each hook call has its own state associated with its component",
+          "The hook is copied into a separate JavaScript file each time",
+          "All custom hooks are stateless"
+        ],
+        "answer": 0,
+        "explanation": "A custom hook reuses the stateful logic. Its calls use independent React state; shared state would need an explicit common owner or store."
+      },
+      "after": {
+        "question": "Why does clicking one counter not change another that uses the same Hook?",
+        "choices": [
+          "Each Hook call has its own React state.",
+          "React creates a separate JavaScript file each time.",
+          "Custom Hooks cannot store state."
+        ],
+        "answer": 0,
+        "explanation": "The definition shares the instructions. Each call keeps its own state."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "The initial argument is stable in this exercise; changing it later does not reinitialize useState automatically. No effect needed. Custom hooks must obey the same top-level call rules as built-in hooks.",
+      "after": "Changing the initial argument does not restart useState. The reset action explicitly uses the initial argument from its current render."
+    }
+  ],
+  "headings": [
+    "Name reusable state logic",
+    "Read a small toggle Hook",
+    "Keep each call independent",
+    "Call Hooks in the same order",
+    "Return values and actions",
+    "Build your reusable counter"
+  ],
+  "project": {
+    "title": "Reuse state logic with a custom hook",
+    "task": "Complete useCounter with independent count, increment, and reset behavior for each caller.",
+    "done_when": "Incrementing or resetting A leaves B unchanged. Reset returns that counter to its supplied initial value."
+  }
+}

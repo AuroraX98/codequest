@@ -1,0 +1,85 @@
+{
+  "lesson": "python-77",
+  "sourceHash": "f8ecc71b65dcfe4924f22707cbb31811cafac3dff1aebdb7cf050d859dba69df",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Implement Tag value equality for Tag instances by text. Return NotImplemented from a direct __eq__ call with an unsupported type. Preserve identity semantics and do not claim all objects with a text attribute are Tags.",
+      "after": "Let two Tag objects compare equal when their text matches."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "Two separate objects can represent the same value. Tag equality compares their text fields. The == operator can ask __eq__ for this rule; is still asks whether two names refer to the same object. Defining equality does not change identity.",
+        "__eq__(self, other) receives the other operand. isinstance(other, Tag) checks whether this rule supports it. Return the special singleton NotImplemented for an unsupported type, rather than raising NotImplementedError or pretending the type was understood. This lets Python try the other operand’s comparison behavior.",
+        "If neither operand supports equality with the other, == falls back to identity comparison. In this example a Tag and a string are distinct objects, so they compare False even if their displayed text matches. Do not treat NotImplemented as a Boolean result in your own if statement.",
+        "A custom equality rule also matters when values are compared in collections. It does not automatically make the object a safe dictionary key. The next hash-contract lesson addresses that separately; do not add an arbitrary hash just to suppress an error.",
+        "```python\nclass Tag:\n    def __init__(self, text):\n        self.text = text\n\n    def __eq__(self, other):\n        if not isinstance(other, Tag):\n            return NotImplemented\n        return self.text == other.text\nleft = Tag(\"music\")\nright = Tag(\"music\")\nprint(left == right)\nprint(left is right)\nprint(left == \"music\")\n```\nEqual text prints True, separate identity prints False, and the unsupported string comparison ultimately prints False.",
+        "Implement Tag value equality for Tag instances by text. Return NotImplemented from a direct __eq__ call with an unsupported type. Preserve identity semantics and do not claim all objects with a text attribute are Tags."
+      ],
+      "after": [
+        "Two separate `Tag` objects can hold matching text. We can make `==` use `__eq__` to compare that text.\n\n`is` still asks whether the objects are the very same one. Changing the rule for `==` does not change this identity check.",
+        "`__eq__(self, other)` receives the other value to compare. `isinstance(other, Tag)` checks whether it is a `Tag`.\n\nFor other kinds of values, return `NotImplemented`. This tells Python to try the other value's comparison rule.\n\n`NotImplemented` is a special value to return. It is different from raising the error `NotImplementedError`.",
+        "If neither value knows how to compare with the other, `==` checks whether they are the same object.\n\nHere, a `Tag` and a string are separate objects. They compare `False` even if their text looks the same.\n\nDo not use `NotImplemented` as a true-or-false answer in your own `if` check.",
+        "Collections can use your `__eq__` rule when comparing their items. But adding this rule does not make your object ready to use as a dictionary key.\n\nDictionary keys also need a hash: a number Python uses to help find a key. The next lesson explains this. Do not add a made-up hash just to hide an error.",
+        "```python\nclass Tag:\n    def __init__(self, text):\n        self.text = text\n\n    def __eq__(self, other):\n        if not isinstance(other, Tag):\n            return NotImplemented\n        return self.text == other.text\nleft = Tag(\"music\")\nright = Tag(\"music\")\nprint(left == right)\nprint(left is right)\nprint(left == \"music\")\n```\nOutput:\n```text\nTrue\nFalse\nFalse\n```\nThe two Tags have equal text, so the first answer is `True`. They are separate objects, so the second is `False`. Comparing this Tag with a string also gives `False`.",
+        "Build `Tag`'s equality rule. For two `Tag` objects, compare their text.\n\nWhen `__eq__` receives another kind of value, return `NotImplemented`. Having a `text` attribute alone does not make an object a `Tag`.\n\nLeave the `is` identity check unchanged."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Why return NotImplemented rather than False when this __eq__ receives an unsupported type?",
+        "choices": [
+          "It lets Python try the other operand’s comparison rule.",
+          "It makes every unsupported comparison True.",
+          "It automatically raises NotImplementedError."
+        ],
+        "answer": 0,
+        "explanation": "NotImplemented signals that this method does not define the pair’s comparison. It is different from a completed comparison returning False."
+      },
+      "after": {
+        "question": "Why return NotImplemented rather than False when this __eq__ receives an unsupported type?",
+        "choices": [
+          "It lets Python try the other value's comparison rule.",
+          "It makes every unsupported comparison True.",
+          "It automatically raises NotImplementedError."
+        ],
+        "answer": 0,
+        "explanation": "NotImplemented means this method does not define the pair's comparison. It is different from a finished comparison that returns False."
+      }
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the requirement.",
+        "Make one change to the starter.",
+        "Run the checks.",
+        "Explain why a changed input produces its result."
+      ],
+      "after": [
+        "In `__eq__`, check whether `other` is a `Tag`.",
+        "Return `NotImplemented` for other kinds of values.",
+        "For another Tag, compare the two saved text values.",
+        "Check equal text, different text, and comparison with a string."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Trace the visible worked calls before changing the starter."
+      ],
+      "after": [
+        "`NotImplemented` lets Python try the other value's rule.",
+        "Two equal Tags can still be separate objects."
+      ]
+    }
+  ],
+  "reviewNotes": [
+    "Kept the starter, solution, checks, and quiz answer 0.",
+    "Clarified equality by text, identity, NotImplemented, and the dictionary-key limit.",
+    "Used six distinct section headings.",
+    "Shortened the equality summary and described identity and unsupported types in everyday words.",
+    "Made the summary and practice guidance concrete to this lesson, replacing generic review directions."
+  ]
+}

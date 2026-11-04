@@ -1,0 +1,94 @@
+{
+  "lesson": "javascript-57",
+  "position": 68,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Complete firstLabel(labels, events) using for await...of over the supplied asyncLabels generator. Return its first value or null when empty; preserve generator cleanup before completion. Leave asyncLabels unchanged.",
+      "after": "Read values that arrive asynchronously and close the sequence when finished."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "async function* defines an async generator. Calling asyncLabels(labels, events) returns an async iterator; its body advances when requested. Its Symbol.asyncIterator method returns that iterator, and next() returns a Promise for a value/done record. for await...of awaits each record rather than treating a Promise as the item.",
+        "yield await Promise.resolve(label) yields one resolved label. The surrounding finally appends closed when the generator exits. Returning from inside for await...of asks the iterator to close, including awaiting its return() cleanup when that method exists. This is cooperative protocol cleanup, not an automatic cancellation rule for arbitrary background operations.",
+        "firstLabel returns the first label or null for empty input. Its return inside the loop triggers the generator’s cleanup before the function’s promise completes.\n```javascript\nasync function* asyncLabels(labels, events) {\n  try {\n    for (const label of labels) yield await Promise.resolve(label);\n  } finally {\n    events.push(\"closed\");\n  }\n}\nasync function firstLabel(labels, events) {\n  for await (const label of asyncLabels(labels, events)) return label;\n  return null;\n}\nconst events = [];\nconsole.log(await firstLabel([\"read\", \"draw\"], events));\nconsole.log(events.join(\",\"));\n```\nOutput: read then closed.",
+        "This direct call shows Symbol.asyncIterator returning the same async-generator iterator, next returning a Promise for a record, and return requesting early completion. Awaiting return runs finally before inspection.\n```javascript\nasync function* asyncLabels(labels, events) {\n  try {\n    for (const label of labels) yield await Promise.resolve(label);\n  } finally {\n    events.push(\"closed\");\n  }\n}\nasync function firstLabel(labels, events) {\n  for await (const label of asyncLabels(labels, events)) return label;\n  return null;\n}\nconst events = [];\nconst iterator = asyncLabels([\"one\", \"two\"], events);\nconsole.log(iterator[Symbol.asyncIterator]() === iterator);\nconsole.log((await iterator.next()).value);\nconsole.log((await iterator.return()).done);\nconsole.log(events.join(\",\"));\n```\nOutput: true, one, true, closed. Optional practice: consume all labels with for await...of and explain why cleanup still runs."
+      ],
+      "after": [
+        "An async generator supplies values that may need waiting for. Write it with `async function*`.\n\nIts `next()` method returns a Promise for the next value-and-done record. `for await...of` waits for each record before using it.",
+        "`yield await Promise.resolve(label)` waits for a label, then yields it.\n\nOur generator has a `finally` block that records `closed` when it exits. Returning early from `for await...of` asks this generator to close and waits for its cleanup.",
+        "This example takes only the first label.\n```javascript\nasync function* asyncLabels(labels, events) {\n  try {\n    for (const label of labels) yield await Promise.resolve(label);\n  } finally {\n    events.push(\"closed\");\n  }\n}\nasync function firstLabel(labels, events) {\n  for await (const label of asyncLabels(labels, events)) return label;\n  return null;\n}\nconst events = [];\nconsole.log(await firstLabel([\"read\", \"draw\"], events));\nconsole.log(events.join(\",\"));\n```\nOutput:\n```text\nread\nclosed\n```\nThe return inside the loop gives back read. Before `firstLabel` finishes, the generator's finally block records closed. Empty input gives `null` instead.",
+        "You can also ask an async iterator for values directly.\n```javascript\nasync function* asyncLabels(labels, events) {\n  try {\n    for (const label of labels) yield await Promise.resolve(label);\n  } finally {\n    events.push(\"closed\");\n  }\n}\nasync function firstLabel(labels, events) {\n  for await (const label of asyncLabels(labels, events)) return label;\n  return null;\n}\nconst events = [];\nconst iterator = asyncLabels([\"one\", \"two\"], events);\nconsole.log(iterator[Symbol.asyncIterator]() === iterator);\nconsole.log((await iterator.next()).value);\nconsole.log((await iterator.return()).done);\nconsole.log(events.join(\",\"));\n```\nOutput:\n```text\ntrue\none\ntrue\nclosed\n```\n`Symbol.asyncIterator` returns this generator's iterator. `next()` requests a value, and `return()` asks it to finish early. Both are awaited.\n\nComplete `firstLabel` using `for await...of`. Keep the supplied generator unchanged. An empty string is still a valid first label."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the requirement.",
+        "Make one change to the starter.",
+        "Run the checks.",
+        "Explain why a changed input produces its result."
+      ],
+      "after": [
+        "Loop over asyncLabels(labels, events) with for await...of.",
+        "Return the first label from inside the loop.",
+        "Return null after the loop if there were no values.",
+        "Check that closed is recorded before the function completes."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If firstLabel returns after the first yielded value, when should the generator’s finally run?",
+        "choices": [
+          "Never; returning from a loop abandons all iterator cleanup.",
+          "Only if a second item is requested manually.",
+          "Before firstLabel completes, because for await...of performs iterator closing on early exit."
+        ],
+        "answer": 2,
+        "explanation": "The loop awaits the async iterator closing protocol on this early return; the generator’s finally records that cleanup."
+      },
+      "after": {
+        "question": "If firstLabel returns after the first yielded value, when should the generator’s finally run?",
+        "choices": [
+          "Never; returning from a loop abandons all iterator cleanup.",
+          "Only if a second item is requested manually.",
+          "Before firstLabel completes, because for await...of performs iterator closing on early exit."
+        ],
+        "answer": 2,
+        "explanation": "The loop waits for this generator to close before finishing the early return, so finally runs first."
+      }
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Trace the visible worked calls before changing the starter."
+      ],
+      "after": [
+        "Returning from this loop lets it close the generator.",
+        "Do not reject an empty string; it is a label too."
+      ]
+    },
+    {
+      "field": "externalNotes",
+      "before": "ECMAScript 2026 core; native Node24 and current app worker/DOM harness evidence are recorded separately. No external service or real-browser claim follows from a local fixture.",
+      "after": ""
+    }
+  ],
+  "headings": [
+    "Wait for each next value",
+    "Close the sequence on exit",
+    "Take the first label",
+    "See the iterator's methods"
+  ],
+  "project": {
+    "title": "Async iteration",
+    "task": "Complete firstLabel with for await...of. Return the supplied async generator's first label, or null when it is empty. Leave the generator unchanged.",
+    "done_when": "The first label is returned, including empty text. Empty input returns null, and every path records closed before completion."
+  },
+  "notes": [
+    "Removed an unrelated local-project completion requirement; its useful teaching is in the lesson and technical evidence stays in review documents."
+  ]
+}

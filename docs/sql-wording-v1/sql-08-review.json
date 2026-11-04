@@ -1,0 +1,103 @@
+{
+  "lesson": "sql-08",
+  "position": 42,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Compare query plans before and after adding an appropriate index.",
+      "after": "Use an index to help SQLite find rows, then inspect its plan."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "An index is an extra structure the database maintains to help it find rows. Think of an index in a book: it can guide you to a topic without reading every page. SQL still decides which rows belong in the result. An index should preserve those intended results; it does not remove duplicates or make every query faster.",
+        "Here is a complete small SQLite dataset:\n```sql\nCREATE TABLE demo_books (\n  id INTEGER PRIMARY KEY,\n  title TEXT,\n  genre TEXT\n);\nINSERT INTO demo_books VALUES\n  (1, 'Stone Cities', 'history'),\n  (2, 'Cloud Tales', 'fiction'),\n  (3, 'Ancient Roads', 'history'),\n  (4, 'Trade Routes', 'history');\nEXPLAIN QUERY PLAN\nSELECT title\nFROM demo_books\nWHERE genre = 'history'\nORDER BY title\nLIMIT 2;\n```\nEXPLAIN QUERY PLAN reports how SQLite plans to find the result; it does not return the titles themselves. The exact plan text can vary. Without a helpful index it may scan rows and use temporary sorting work.",
+        "A scan examines many rows. An indexed search can use indexed keys to narrow the search. A composite index has more than one column in a chosen order. An index on genre, title first groups entries by genre, then orders titles within each genre. That fits a query that fixes one genre and sorts by title. LIMIT 2 asks for at most two returned rows.",
+        "Run this after the setup:\n```sql\nCREATE INDEX demo_genre_title\nON demo_books (genre, title);\nEXPLAIN QUERY PLAN\nSELECT title\nFROM demo_books\nWHERE genre = 'history'\nORDER BY title\nLIMIT 2;\nSELECT title\nFROM demo_books\nWHERE genre = 'history'\nORDER BY title\nLIMIT 2;\n```\nThe title result is Ancient Roads, then Stone Cities. The new plan may mention the named index. CREATE INDEX builds it; ON names the table and indexed columns. The query's requested rows remain the same.",
+        "An index costs storage and work during INSERT, UPDATE, and DELETE because its entries must stay current. SQLite chooses a plan; a tiny table may be fast even without an index. Timing depends on machine load, database size, and caching. Compare identical queries and verify identical results before calling an index helpful. A plan is evidence about strategy, not a guarantee of a particular duration.\n\nA full scan that checks each of n rows once has linear work, written O(n). If a 12-row table needs 12 comparisons, a similar 24-row full scan needs about 24: twice the input gives twice the comparisons. This describes growth of work, not a guaranteed elapsed time. An index may avoid that full scan for a suitable query.",
+        "The exercise fixture creates 1,000 books with a recursive number generator. WITH RECURSIVE names an intermediate numbers sequence; UNION ALL appends the next values until value < 1000 becomes false. The || operator joins text, forming titles such as Book 10. The % operator finds the remainder: value % 5 = 0 marks every fifth book history. CASE WHEN chooses history for that condition, otherwise fiction. These are setup mechanics; your task is to add the index and query.",
+        "Create the specifically named idx_books_genre_title on books(genre, title), then save the first five history titles in answer with ORDER BY title LIMIT 5. Titles sort as text: Book 100 appears before Book 20. The checks compare the index's key-column metadata and exact selected title membership. Display answer with an explicit ORDER BY title. Inspect the demonstrated EXPLAIN QUERY PLAN before and after; neither these checks nor a particular plan proves a speed gain."
+      ],
+      "after": [
+        "An index is a separate list that helps a database find rows. It works a little like a book's index: it points toward useful information. Adding an index should keep the query's answer the same.",
+        "```sql\nCREATE TABLE demo_books(id INTEGER PRIMARY KEY, title TEXT, genre TEXT);\nINSERT INTO demo_books VALUES\n  (1, 'Stone Cities', 'history'),\n  (2, 'Cloud Tales', 'fiction'),\n  (3, 'Ancient Roads', 'history');\nEXPLAIN QUERY PLAN\nSELECT title FROM demo_books WHERE genre = 'history' ORDER BY title;\nCREATE INDEX demo_genre_title ON demo_books(genre, title);\nEXPLAIN QUERY PLAN\nSELECT title FROM demo_books WHERE genre = 'history' ORDER BY title;\nSELECT title FROM demo_books WHERE genre = 'history' ORDER BY title;\n```\nThe final query returns `Ancient Roads`, then `Stone Cities`. The two plan reports let you compare how SQLite looks for those titles before and after the index.",
+        "`EXPLAIN QUERY PLAN` shows a plan, not the query's answer. A scan reads through rows. A search can use an index to narrow the work. Plan wording can vary, so look for the strategy rather than one exact sentence.",
+        "`ON demo_books(genre, title)` puts genre first and title second in the index. That fits this query: choose one genre, then read its titles in order. A different query may need a different index.",
+        "An index uses storage. Inserts, changes, and deletions must keep it up to date. SQLite chooses whether to use it. A helpful plan does not prove a speed gain; compare the same query on the same data before making that claim.",
+        "The exercise already supplies 1,000 books. You do not need to write that setup. Your job is to add an index and choose the first five history titles in text order.",
+        "Name the index `idx_books_genre_title` and put it on `books(genre, title)`. Save the five titles in `answer`. Use `ORDER BY title LIMIT 5`. Text order compares the written titles, so numbers inside titles do not sort like plain numbers."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Put `genre` first in the index because the query filters by genre.",
+        "Put `title` next in the index.",
+        "Compare the query plans before and after the index.",
+        "Compare the actual run times too."
+      ],
+      "after": [
+        "Inspect the history-title query with `EXPLAIN QUERY PLAN`.",
+        "Create `idx_books_genre_title` on `books(genre, title)`.",
+        "Save the first five history titles in `answer`, ordered by title.",
+        "Run the checks and inspect the plan again."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Create the named index on genre,title.",
+        "Keep the history condition and title ordering.",
+        "Inspect EXPLAIN QUERY PLAN; do not assume it got faster."
+      ],
+      "after": [
+        "Put `genre` first because the query chooses one genre.",
+        "Use `WHERE genre = 'history' ORDER BY title LIMIT 5`.",
+        "A changed plan is not a measured speed gain."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "You add an index and rerun the same query on unchanged data. What should remain the same?",
+        "choices": [
+          "The exact query plan on every run",
+          "The query’s intended result rows",
+          "The measured runtime on every run"
+        ],
+        "answer": 1,
+        "explanation": "An index may change how SQLite obtains the answer, not which rows the query means to return. Timing and the chosen plan can vary."
+      },
+      "after": {
+        "question": "You add an index and run the same query on unchanged data. What should stay the same?",
+        "choices": [
+          "The exact query plan every time",
+          "The rows the query asks for",
+          "The time the query takes every time"
+        ],
+        "answer": 1,
+        "explanation": "An index can change how SQLite finds the rows. It should not change which rows the query asks for."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "SQL fixtures and checks use SQLite syntax. Query-plan timing varies by database engine and machine; inspect EXPLAIN QUERY PLAN locally for the index exercise.",
+      "after": "This course uses SQLite. Its query plans and run times can differ from other databases. Inspect the plan in the runner; measure speed separately if you need to compare performance."
+    }
+  ],
+  "headings": [
+    "Help the database find rows",
+    "One example",
+    "Read the plan",
+    "Choose the column order",
+    "An index has a cost",
+    "Use the prepared books",
+    "Check the same answer"
+  ],
+  "project": {
+    "title": "A faster collection search",
+    "task": "Create `idx_books_genre_title` on `books(genre, title)`. Save the first five history titles in `answer`, in title order. Compare the query plan before and after adding the index.",
+    "done_when": "The checks pass for the named index and selected titles, and you have inspected both plans. A plan change alone is not proof that the query runs faster."
+  }
+}

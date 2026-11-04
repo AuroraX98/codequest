@@ -1,0 +1,91 @@
+{
+  "lesson": "go-49",
+  "position": 49,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "If the path names a file inside a nonexistent directory in this fixture, what prints?",
+      "after": "Check for errors when creating, writing, and closing a file."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "os.Create creates or truncates a file. Run this sample only in a disposable directory because it replaces notes.txt. Check the returned error before using the *os.File; a failed creation does not provide a usable file.",
+        "WriteString can fail, and Close can report a final failure. This helper closes explicitly after attempting the write, then prioritizes the write error while still observing the close result. A bare deferred Close would run but its error would be ignored unless handled deliberately.\n\nfile.WriteString(\"ready\") writes the supplied String bytes to the open file and returns a byte count and an error. The underscore deliberately discards the count here; writeErr retains the failure result. It does not return the written String.",
+        "Complete local Go example; the app itself does not execute it:\n```go\npackage main\n\nimport (\n\"fmt\"\n\"os\"\n)\n\nfunc save(path string) error {\n    file, err := os.Create(path)\n    if err != nil { return err }\n    _, writeErr := file.WriteString(\"ready\")\n    closeErr := file.Close()\n    if writeErr != nil { return writeErr }\n    return closeErr\n}\nfunc main() {\n    if err := save(\"notes.txt\"); err != nil { fmt.Println(\"save failed\"); return }\n    fmt.Println(\"saved\")\n}\n```",
+        "Expected output or behavior: saved. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Explain the chosen priority when both writing and closing fail, and how callers could retain both errors. You may trace it without a Go compiler; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "`os.Create` creates a file or empties an existing file with the same name. Try this example only in a new empty folder, because it replaces notes.txt. If creation fails, return the error before using the file.",
+        "`WriteString` writes the text and returns a byte count and an error. This example discards the count with `_` and keeps the error. It then closes the file. It returns a write error first; otherwise it returns any close error.",
+        "Follow each step before the program reports success.\n```go\npackage main\n\nimport (\n\"fmt\"\n\"os\"\n)\n\nfunc save(path string) error {\n    file, err := os.Create(path)\n    if err != nil { return err }\n    _, writeErr := file.WriteString(\"ready\")\n    closeErr := file.Close()\n    if writeErr != nil { return writeErr }\n    return closeErr\n}\nfunc main() {\n    if err := save(\"notes.txt\"); err != nil { fmt.Println(\"save failed\"); return }\n    fmt.Println(\"saved\")\n}\n```",
+        "The screen shows `saved` when creation, writing, and closing succeed. The file contains `ready`.",
+        "A path inside a missing folder cannot be created by os.Create alone. The helper returns that error without trying to write."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Look at the error check immediately after os.Create."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If the path names a file inside a nonexistent directory in this fixture, what prints?",
+        "choices": [
+          "saved because os.Create makes parent directories too",
+          "save failed before any write",
+          "The program must dereference the failed file handle."
+        ],
+        "answer": 1,
+        "explanation": "Creation fails and the helper returns that error before trying to write."
+      },
+      "after": {
+        "question": "Use a path inside a folder that does not exist. What appears?",
+        "choices": [
+          "saved, because os.Create also creates parent folders.",
+          "save failed before any write.",
+          "The program must use the failed file handle."
+        ],
+        "answer": 1,
+        "explanation": "File creation fails. The helper returns early, and main shows save failed."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Go Core v1 uses the verified Go1.27.3 toolchain and standard library. The app supplies concept reading and an understanding check, not a Go browser runner. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "The browser shows Go code and checks your understanding; it does not run Go. Optional local examples use Go 1.27."
+    }
+  ],
+  "headings": [
+    "Create the file in an empty folder",
+    "Check both writing and closing",
+    "One example",
+    "Read the success message",
+    "Follow a failed creation"
+  ],
+  "project": {
+    "title": "Files and close errors",
+    "task": "Follow the first error path without using a failed file.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local Go example is optional."
+  }
+}

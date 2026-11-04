@@ -1,0 +1,97 @@
+{
+  "lesson": "go-19",
+  "position": 19,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Create the initial slice with capacity 2 instead of 1. What prints after the same append/update?",
+      "after": "Check whether adding an item keeps or replaces shared storage."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "append adds values and returns a slice descriptor. Store that result because length or underlying storage may change.",
+        "make([]int,1,1) creates a slice with length 1 and capacity 1. Appending one more value requires a new backing array in this case.",
+        "An alias to the old full-capacity slice still refers to the old array after append allocates a new one.",
+        "The exact chosen new capacity is an implementation detail. This example relies only on the documented need to grow beyond capacity.",
+        "Complete local Go example; the app itself does not execute it:\n```go\npackage main\n\nimport (\n\t\"fmt\"\n)\n\nfunc main() {\n\tvalues := make([]int, 1, 1)\n\tvalues[0] = 3\n\told := values\n\tvalues = append(values, 7)\n\tvalues[0] = 9\n\tfmt.Println(old[0], values[0])\n}\n\n```",
+        "Expected output or behavior: 3 9. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Compare enough capacity with forced growth. Explain sharing without predicting an undocumented capacity growth factor. You may trace it without a Go compiler; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "`append` adds items and returns an updated slice. Save that result, because the slice's length or storage may change.",
+        "Length is the number of available items. Capacity is how many fit from the slice's start in its array. `make([]int, 1, 1)` starts with length 1 and capacity 1. Adding a second item needs a new array.",
+        "The old slice still points to the original array. Once values uses a new array, changing values[0] no longer changes old[0].",
+        "Go decides how much extra space to reserve when growing. Do not rely on an exact growth amount. Check whether the existing capacity is enough.",
+        "Follow which array each slice uses after append.\n```go\npackage main\n\nimport (\n\t\"fmt\"\n)\n\nfunc main() {\n\tvalues := make([]int, 1, 1)\n\tvalues[0] = 3\n\told := values\n\tvalues = append(values, 7)\n\tvalues[0] = 9\n\tfmt.Println(old[0], values[0])\n}\n\n```",
+        "The screen shows `3 9`. old still reads the original array; values reads the newly grown array.",
+        "Change the starting capacity to 2 but keep the length at 1. The extra item now fits in the existing array."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Ask whether the second item fits without a new array."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Create the initial slice with capacity 2 instead of 1. What prints after the same append/update?",
+        "choices": [
+          "9 9 because append can reuse the available backing array.",
+          "3 9 because append always allocates.",
+          "3 3 because appended slices cannot change."
+        ],
+        "answer": 0,
+        "explanation": "The existing capacity now accommodates the extra element, so both slices share the updated first slot."
+      },
+      "after": {
+        "question": "Start with make([]int, 1, 2). After the same append and update, what appears?",
+        "choices": [
+          "9 9, because both slices still share the first item.",
+          "3 9, because append always creates a new array.",
+          "3 3, because appended slices cannot change."
+        ],
+        "answer": 0,
+        "explanation": "Capacity 2 leaves enough room. append reuses the array, so both slices see the first item change to 9."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Go Core v1 uses the verified Go1.27.3 toolchain and standard library. The app supplies concept reading and an understanding check, not a Go browser runner. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "The browser shows Go code and checks your understanding; it does not run Go. Optional local examples use Go 1.27."
+    }
+  ],
+  "headings": [
+    "Keep the result of append",
+    "Compare length and capacity",
+    "Follow the older slice",
+    "Avoid guessing future capacity",
+    "One example",
+    "Read the two values",
+    "Leave room for one more item"
+  ],
+  "project": {
+    "title": "Append length and capacity",
+    "task": "Explain how spare capacity changes sharing after append.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local Go example is optional."
+  }
+}

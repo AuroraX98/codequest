@@ -1,0 +1,97 @@
+{
+  "lesson": "cpp-21",
+  "position": 21,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Change the final output to inner instead of saved. What happens?",
+      "after": "Keep a copied value after a local variable's block ends."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A local variable declared inside braces is visible only within its scope. Code outside that block cannot refer to its name.",
+        "For these ordinary local variables, the object’s lifetime ends when its block exits. A saved pointer or reference does not extend that lifetime.",
+        "Copying a small integer into an outer variable before the inner block ends gives the outer variable its own surviving value.",
+        "Returning a pointer or reference to an ordinary local object leaves a dangling observer after the function exits. Such code may compile but using it is unsafe; it is not a valid runtime experiment.",
+        "Complete local C++ example; the app itself does not execute it:\n```cpp\n#include <iostream>\n\nint main()\n{\n    int saved{0};\n    {\n        int inner{7};\n        saved = inner;\n    }\n    std::cout << saved << \"\\n\";\n}\n\n```",
+        "Expected output or behavior: 7. Local compiler test evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Copy a value out of a small block and identify which object survives. Explain why saving an address is not the same as copying the value. You may trace this without a compiler; finishing the reading is not proof of a local run."
+      ],
+      "after": [
+        "Scope is the region where you can use a name. A name declared inside a block's braces is not available outside that block.",
+        "Lifetime is the time an object exists. The ordinary local variable inner is destroyed when its block ends. Saving a pointer or reference to it would not keep it alive.",
+        "Copying inner into saved gives saved its own value. saved was created in the outer block, so it remains available after the inner block ends.",
+        "A dangling pointer or reference refers to an object that no longer exists. Returning a reference to an ordinary local variable can create this problem, even if the compiler accepts the code.",
+        "Follow the copy before the inner block ends.\n\n```cpp\n#include <iostream>\n\nint main()\n{\n    int saved{0};\n    {\n        int inner{7};\n        saved = inner;\n    }\n    std::cout << saved << \"\\n\";\n}\n\n```",
+        "The program prints 7. saved receives its own copy of seven while inner is still alive.",
+        "After the inner block, saved still exists and inner does not. The output reads saved's value, so it does not need the destroyed object."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain why, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Scope tells you where a name can be used; lifetime tells you when its object exists."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Change the final output to inner instead of saved. What happens?",
+        "choices": [
+          "Compilation rejects the name because inner is outside its scope.",
+          "It prints 7 because all local names are global.",
+          "The inner block automatically runs again."
+        ],
+        "answer": 0,
+        "explanation": "The copied value remains in saved, but inner’s name is no longer in scope."
+      },
+      "after": {
+        "question": "Change the final output to inner instead of saved. What happens?",
+        "choices": [
+          "The compiler rejects inner because its name is outside its scope.",
+          "It prints 7 because every local name is available everywhere.",
+          "The inner block automatically runs again."
+        ],
+        "answer": 0,
+        "explanation": "inner's name is only available inside its block. saved holds the copy that can be used afterward."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "C++ Core v1, standard C++23 features checked against the available GCC14.2 implementation. This app provides concept reading and an understanding check, not a C++ browser runner. Local example tests are separate evidence and do not certify learner mastery.",
+      "after": "The browser shows C++ code and checks your understanding; it does not run C++. Optional local examples use C++23."
+    }
+  ],
+  "headings": [
+    "A name has a scope",
+    "An object has a lifetime",
+    "Save a separate copy",
+    "Avoid a dangling reference",
+    "One example",
+    "What appears",
+    "Track the surviving object"
+  ],
+  "project": {
+    "title": "Respect scope and object lifetime",
+    "task": "Trace the copied value and identify which object survives the inner block.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local C++ example is optional."
+  }
+}

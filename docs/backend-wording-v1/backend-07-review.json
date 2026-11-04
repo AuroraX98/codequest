@@ -1,0 +1,111 @@
+{
+  "lesson": "backend-07",
+  "position": 28,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Complete errorReply(error). For an error with code INVALID_INPUT return status 400 and body.error \"Check the supplied values\". All other errors return status 500 and body.error \"Something went wrong\". Do not return the internal error message or stack.",
+      "after": "Send a useful error message without revealing private server details."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A request can fail because of invalid input or an unexpected server problem. Those failures need different responses.",
+        "An HTTP 400 response tells the caller to correct the request. A 500 response indicates an unexpected server failure.",
+        "An internal error can contain file paths, database details, or secrets. Do not send its message or stack directly to a client.",
+        "Use a small known code to classify an expected failure.\n```javascript\nconst problem = {code: \"MISSING_FIELD\", message: \"internal details\"};\nconsole.log(problem.code === \"MISSING_FIELD\");\n```",
+        "This prints true. The code is used for a decision, while the internal message stays private.",
+        "Express error-handling middleware has four parameters: error, request, response, and next. The four-parameter form identifies its job.",
+        "Place error middleware after routes that may fail.\n```javascript\napp.use((error, req, res, next) => {\n  if (res.headersSent) return next(error);\n  res.status(500).json({error: \"Request failed\"});\n});\n```",
+        "If headers have already been sent, forward the error instead of trying to send a second response.",
+        "In this practice, errorReply only chooses safe response data. The browser does not run an Express server.",
+        "The supplied companion middleware calls your function, applies its status, and sends its body. Test actual routes separately before treating a server integration as verified."
+      ],
+      "after": [
+        "Some requests fail because their input is invalid. Others fail because the server has an unexpected problem. Give the caller a clear response for the kind of failure.",
+        "Status 400 asks the caller to correct the request. Status 500 reports an unexpected server failure. Hiding private details does not turn a failure into success.",
+        "An internal error message or stack can reveal file paths, database details, or secrets. A stack lists where the program was running when it failed. Keep those details out of the response.",
+        "```javascript\nfunction errorReply(error) {\n  if (error?.code === \"INVALID_INPUT\") {\n    return {status: 400, body: {error: \"Check the supplied values\"}};\n  }\n  return {status: 500, body: {error: \"Something went wrong\"}};\n}\nconsole.log(errorReply({code: \"INVALID_INPUT\", message: \"private details\"}));\n```\nThis returns status 400 with the public message Check the supplied values.",
+        "Match the exact known code INVALID_INPUT. Optional access, ?., lets the check handle a missing error value. Every other case uses the general server-error response.",
+        "Create a separate response object containing only the required public fields. Do not copy the incoming error object, message, or stack into it.",
+        "An Express error handler has four parameters: error, req, res, and next. Place it after routes that may fail. The supplied local handler calls errorReply and sends its chosen status and body.",
+        "If response headers were already sent, the local handler forwards the error with next(error). It must not try to send another complete response.",
+        "Complete errorReply with the two specified statuses and messages. Keep the wording exact so callers and checks can recognize the response.",
+        "The browser checks response selection only. A local route test must also confirm what the real server sends. Keep detailed diagnostics in restricted server logs with secrets removed."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the requirement.",
+        "Make one change to the starter.",
+        "Run the checks.",
+        "Explain why a changed input produces its result."
+      ],
+      "after": [
+        "Check for the exact INVALID_INPUT code.",
+        "Return the specified safe status and message.",
+        "Keep the incoming error's message and stack out.",
+        "Run the checks for expected and unexpected failures."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Check the known code, not whether any message exists.",
+        "Keep the response body separate from the incoming error object.",
+        "Return only the public fields required by the contract."
+      ],
+      "after": [
+        "A message's existence does not make an error an input error.",
+        "Return a fresh response object with only the required public fields."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "A database failure includes an internal password in error.message. What should the client receive?",
+        "choices": [
+          "The full message so it can debug the database.",
+          "A generic server-error response, without the password.",
+          "Status 200 because hiding the message means success."
+        ],
+        "answer": 1,
+        "explanation": "Unexpected failures still need an error status, but private diagnostic details must not be copied into the public response."
+      },
+      "after": {
+        "question": "A database error's message contains a password. What should the caller receive?",
+        "choices": [
+          "The complete internal message",
+          "A general server-error response without the password",
+          "Status 200 because the details are hidden"
+        ],
+        "answer": 1,
+        "explanation": "Report the failure while keeping private diagnostic details out of the response."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "The browser checks the response classifier, not an HTTP service. Import companion errorHandler after routes in a separate Express application. Unexpected diagnostics belong in access-controlled, redacted server logs, not a response body.",
+      "after": "Browser checks test the response helper. The supplied Express error handler must be connected after real routes and checked locally."
+    }
+  ],
+  "headings": [
+    "Name the kind of failure",
+    "Choose the right status",
+    "Keep internal details private",
+    "Read one example",
+    "Use a known error code",
+    "Return only public fields",
+    "Connect an Express error handler",
+    "Avoid a second response",
+    "Complete errorReply",
+    "Check the real server separately"
+  ],
+  "project": {
+    "title": "Explain a failure without exposing internals",
+    "task": "Complete errorReply(error): INVALID_INPUT gives 400 and Check the supplied values; other errors give 500 and Something went wrong. Exclude internal details.",
+    "done_when": "Statuses and public messages are correct, and no internal message or stack is returned."
+  }
+}

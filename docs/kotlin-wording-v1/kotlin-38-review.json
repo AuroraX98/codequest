@@ -1,0 +1,91 @@
+{
+  "lesson": "kotlin-38",
+  "position": 38,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "If first tries values.add(2.5) before returning values[0], what happens?",
+      "after": "Use out to read a general type while protecting the more specific type stored inside."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "out T means a generic producer may expose T in output positions without accepting it as an ordinary input. This permits a Source<String> to be used as Source<Any>. in T supports the complementary consumer direction; variance does not mean deep immutability.",
+        "MutableList<out Number> is a use-site projection: it accepts a mutable list whose actual element type is some subtype of Number. Reading as Number is safe, but adding an arbitrary Number is not: the original list might allow only Int. The underlying list may still be mutated through another valid reference.",
+        "Complete local Kotlin/JVM example; the app itself does not execute it:\n```kotlin\nclass Source<out T>(val value: T)\nfun first(values: MutableList<out Number>): Number = values[0]\nfun main() {\n    val source: Source<Any> = Source(\"ok\")\n    val numbers = mutableListOf(3, 5)\n    println(source.value)\n    println(first(numbers))\n}\n```",
+        "Expected output or behavior: ok\n3. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Explain why reading a Number is safe even when adding a different Number is not. You may trace it without a Kotlin compiler; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "Variance describes when one generic type can stand in for another. A class declared with `out T` gives out T values without accepting them as ordinary inputs. A source of Strings can therefore be read as a source of Any values.",
+        "The type `MutableList<out Number>` gives a restricted view, called a projection. It may refer to a list of Ints or another Number subtype. You can read an item as Number, but cannot add an arbitrary Number because the list's exact item type is hidden.",
+        "Follow the example one line at a time.\n```kotlin\nclass Source<out T>(val value: T)\nfun first(values: MutableList<out Number>): Number = values[0]\nfun main() {\n    val source: Source<Any> = Source(\"ok\")\n    val numbers = mutableListOf(3, 5)\n    println(source.value)\n    println(first(numbers))\n}\n```",
+        "The screen shows `ok`, then `3`. Reading the first number is safe: an Int is a Number. Adding a Double through this view would not be safe for the original Int list.",
+        "The word `in` supports the other direction: accepting values as inputs. These type rules control access, not whether an object can ever change. Another valid reference may still change the same list."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "A Number can be a Double, but an Int list must keep Int items."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If first tries values.add(2.5) before returning values[0], what happens?",
+        "choices": [
+          "Compilation rejects adding through the projected list.",
+          "It adds a Double to every Int list safely.",
+          "It changes Source to an input-only type."
+        ],
+        "answer": 0,
+        "explanation": "The projection hides the exact allowed subtype; a Double might violate the original Int list’s element contract."
+      },
+      "after": {
+        "question": "Inside first, try `values.add(2.5)` before reading the first item. What happens?",
+        "choices": [
+          "Compilation fails because this view cannot add that value.",
+          "It safely adds a Double to any Int list.",
+          "It makes Source accept inputs only."
+        ],
+        "answer": 0,
+        "explanation": "The actual list may accept only Int values. The out view hides that exact type, so adding a Double is rejected."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Kotlin JVM Core v1 uses Kotlin2.4.21 stable syntax and a verified JVM toolchain. The app supplies concept reading and an understanding check, not a Kotlin browser runner. Coroutine libraries are separate dependencies. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "The browser shows Kotlin code and checks your understanding; it does not run Kotlin. Optional local examples use Kotlin/JVM."
+    }
+  ],
+  "headings": [
+    "Read through an output type",
+    "Restrict a list view",
+    "One example",
+    "Explain why reading is safe",
+    "Keep type access separate from mutation"
+  ],
+  "project": {
+    "title": "Variance and projected access",
+    "task": "Explain why the projected list allows a read but rejects an added Double.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local Kotlin example is optional."
+  }
+}

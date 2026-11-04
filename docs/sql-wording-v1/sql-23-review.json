@@ -1,0 +1,99 @@
+{
+  "lesson": "sql-23",
+  "position": 35,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Create reminders(id,reminder_date) as a view that returns the calendar day after each stored event_date. Dates in this fixture are valid YYYY-MM-DD text dates. Use SQLite date functions, not numeric addition on the string.",
+      "after": "Use the date function to find the next calendar day."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "SQLite does not have a dedicated date datatype. Applications choose a consistent supported representation.",
+        "This fixture uses YYYY-MM-DD text for calendar dates without a time of day.",
+        "date accepts supported date text and modifiers.\n```sql\nSELECT date('2026-04-30', '+1 day');\n```",
+        "The result is 2026-05-01. The date function handles the month boundary.",
+        "Adding the number 1 to a text date is not calendar arithmetic. Use the date function for this contract.",
+        "A leap day is a useful boundary test. The day after 2024-02-28 is 2024-02-29.",
+        "Calendar dates are not the same as timezone-aware instants. If your app stores moments, choose and document an explicit timezone/UTC policy separately.",
+        "This exercise uses fixed supplied dates, not the current clock, so tests remain reproducible."
+      ],
+      "after": [
+        "SQLite has no separate date type. An app chooses a consistent way to store dates.",
+        "This project stores valid dates as `YYYY-MM-DD` text: year, month, then day. These values have no time of day.",
+        "Run this query:\n```sql\nSELECT date('2026-04-30', '+1 day') AS reminder_date;\n```\nThe date function reads the date and applies the change `'+1 day'`.",
+        "The result is `2026-05-01`. April ends after day 30, so the next day starts May.",
+        "Adding the number 1 to date text does not apply calendar rules. Use the date function instead.",
+        "A leap year has an extra day in February. Calendar calculations must handle that day as well as month and year boundaries.",
+        "A calendar date is different from an exact moment. An app that stores moments also needs a clear rule for time zones.",
+        "Create `reminders(id, reminder_date)` as a view that adds one calendar day to each event_date. Keep each event ID. Use the supplied dates, not today's clock, and leave the source events unchanged."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the requirement.",
+        "Make one change to the starter.",
+        "Run the checks.",
+        "Explain why a changed input produces its result."
+      ],
+      "after": [
+        "Use date(event_date, '+1 day').",
+        "Name the result reminder_date and keep id.",
+        "Create the reminders view."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Use date(event_date, modifier).",
+        "The modifier is the text +1 day.",
+        "Preserve the event ID in the result."
+      ],
+      "after": [
+        "The change '+1 day' is text, so use single quotes.",
+        "Check dates at the end of a month and around a leap day."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Why is event_date + 1 not a reliable way to find the next day for a text date?",
+        "choices": [
+          "Numeric addition does not apply calendar month/year rules to the text representation.",
+          "Every month has exactly thirty days.",
+          "SQLite date functions always use today instead of supplied dates."
+        ],
+        "answer": 0,
+        "explanation": "Calendar arithmetic has boundaries and representation rules. date(value, \"+1 day\") interprets the supported date text instead of treating it as an ordinary number."
+      },
+      "after": {
+        "question": "Why is event_date + 1 unreliable for a date stored as text?",
+        "choices": [
+          "Plain number addition does not follow calendar rules for that text.",
+          "Every month has exactly 30 days.",
+          "SQLite date functions always use today."
+        ],
+        "answer": 0,
+        "explanation": "The date function reads the date and handles month, year, and leap-day boundaries."
+      }
+    }
+  ],
+  "headings": [
+    "Store dates consistently",
+    "Read the date format",
+    "Add one calendar day",
+    "Cross a month boundary",
+    "Avoid plain number addition",
+    "Include leap-year rules",
+    "Separate dates from moments",
+    "Build the reminder view"
+  ],
+  "project": {
+    "title": "Calculate a next-day reminder",
+    "task": "Create reminders(id, reminder_date) as a view of the day after each supplied event_date, using SQLite's date function.",
+    "done_when": "Every next-day date is correct, IDs are preserved, and the source events stay unchanged."
+  }
+}

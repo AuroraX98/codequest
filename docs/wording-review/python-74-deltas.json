@@ -1,0 +1,81 @@
+{
+  "lesson": "python-74",
+  "sourceHash": "d47fb6cceff55bcad06e4e61f72e2eb19ee3b67dd07cf895efb833b7fe28ffd1",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Repair total_prefix for a list of numbers and a valid count. Sum exactly the first count values, preserve the input, and handle zero without indexing. The caller supplies a count within 0..len(values).",
+      "after": "Find the first wrong step in a loop and fix it with a small test."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "The contract is to sum exactly count leading items, with 0 <= count <= len(values). A result of 20 for values [4, 7, 9] and count 2 is wrong: the expected result is 11. First write this mismatch clearly instead of changing several lines at once.",
+        "For values [4] and count 0, the expected result is 0. A faulty range(count + 1) still visits index 0 and adds 4. This tiny case identifies the extra visit without distraction from other values.",
+        "Before the loop, total = 0 is correct. The next action should be no iteration when count is zero. Seeing index 0 means the iteration range, not addition, first violates the contract. Replace range(count + 1) with range(count), then keep the zero-count case as a regression test.",
+        "Subtracting the last value after the loop would hide one symptom and could still index past the list. Fix the number of visits. The supplied starter is intentionally wrong; the worked implementation below is the repair.",
+        "```python\ndef total_prefix(values, count):\n    total = 0\n    for index in range(count):\n        total += values[index]\n    return total\nprint(total_prefix([4, 7, 9], 2))\nprint(total_prefix([4], 0))\n```\nThe repaired calls print 11 and 0.",
+        "Repair total_prefix for a list of numbers and a valid count. Sum exactly the first count values, preserve the input, and handle zero without indexing. The caller supplies a count within 0..len(values)."
+      ],
+      "after": [
+        "`total_prefix` should add exactly the first `count` numbers. The supplied count is from 0 through the list's length.\n\nFor `[4, 7, 9]` and count 2, the answer should be 11. If it gives 20, write down that difference before changing the code.",
+        "Try a smaller case: `[4]` with count 0. The answer should be 0.\n\nBut `range(count + 1)` still visits position 0 and adds 4. This tiny example makes the unwanted extra visit easy to see.",
+        "Starting with `total = 0` is correct. With count 0, the loop should then do nothing.\n\nThe first mistake is the extra visit. Change `range(count + 1)` to `range(count)`. Keep the small test to catch this bug if it ever returns. That is a regression test.",
+        "Subtracting the last value afterward only hides part of the problem. The loop could still try to read past the end of the list.\n\nFix the number of visits instead. The starter contains the bug; the example below shows the repair.",
+        "```python\ndef total_prefix(values, count):\n    total = 0\n    for index in range(count):\n        total += values[index]\n    return total\nprint(total_prefix([4, 7, 9], 2))\nprint(total_prefix([4], 0))\n```\nOutput:\n```text\n11\n0\n```",
+        "Repair `total_prefix` to add exactly the first `count` numbers. Leave the list unchanged.\n\nWhen count is 0, return 0 without reading any item. You can assume the supplied count is valid."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the requirement.",
+        "Make one change to the starter.",
+        "Run the checks.",
+        "Explain why a changed input produces its result."
+      ],
+      "after": [
+        "Try `[4]` with count 0 and identify the extra loop visit.",
+        "Change the range so it contains exactly `count` positions.",
+        "Keep the total at 0 when the loop has no positions.",
+        "Check zero items, part of the list, and the whole list."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Why is ([4], 0) useful for diagnosing the faulty range(count + 1)?",
+        "choices": [
+          "It proves addition is broken.",
+          "It shows one visit occurs when the contract requires none.",
+          "It proves every possible list is handled correctly."
+        ],
+        "answer": 1,
+        "explanation": "The minimal failing case isolates the first unwanted loop iteration. Fixing it still needs regression tests for other supported inputs."
+      },
+      "after": {
+        "question": "Why does `[4]` with count 0 help find the bug in `range(count + 1)`?",
+        "choices": [
+          "It proves addition is broken.",
+          "It shows one loop visit when there should be none.",
+          "It proves every possible list is handled correctly."
+        ],
+        "answer": 1,
+        "explanation": "Only one unwanted visit is needed to show the bug. After fixing it, check other counts too."
+      }
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Trace the visible worked calls before changing the starter."
+      ],
+      "after": [
+        "`range(0)` is empty; `range(1)` contains 0.",
+        "Fix the range instead of adjusting the answer after the loop."
+      ]
+    }
+  ],
+  "reviewNotes": [
+    "Reviewed directly by the host, one lesson at a time. Plain wording, specific guidance, preserved exercise behavior."
+  ]
+}

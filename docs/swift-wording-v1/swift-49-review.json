@@ -1,0 +1,90 @@
+{
+  "lesson": "swift-49",
+  "position": 44,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Keep makeTrail opaque and make chooseCaption select the correct caption.",
+      "after": "Choose whether a function returns one hidden type or different allowed types."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "An opaque result written some Protocol hides one concrete result type from callers. An existential written any Protocol can hold different conforming concrete types. Neither means that the value has no concrete type.",
+        "makeTrail always returns Trail behind some Captioned. The caller can invoke the promised caption() requirement, which takes no arguments and returns text. chooseCaption uses any Captioned to return either Harbor or Trail; the Bool selects the stored concrete value. Trail() and Harbor() create empty value instances. This lesson concerns some in result position, not some parameters or SwiftUI result builders. Existential storage is often called boxing; this does not promise a particular allocation or performance cost.",
+        "\n```swift\nprotocol Captioned {\n    func caption() -> String\n}\nstruct Trail: Captioned {\n    func caption() -> String { return \"trail\" }\n}\nstruct Harbor: Captioned {\n    func caption() -> String { return \"harbor\" }\n}\nfunc makeTrail() -> some Captioned {\n    return Trail()\n}\nfunc chooseCaption(_ water: Bool) -> any Captioned {\n    if water { return Harbor() }\n    return Trail()\n}\nprint(makeTrail().caption())\nprint(chooseCaption(true).caption())\n```\nExpected output:\n```text\ntrail\nharbor\n```",
+        "\n```swift\nprotocol Captioned {\n    func caption() -> String\n}\nstruct Trail: Captioned {\n    func caption() -> String { return \"trail\" }\n}\nstruct Harbor: Captioned {\n    func caption() -> String { return \"harbor\" }\n}\nfunc makeTrail() -> some Captioned {\n    return Trail()\n}\nfunc chooseCaption(_ water: Bool) -> any Captioned {\n    if water { return Harbor() }\n    return Trail()\n}\nprint(chooseCaption(false).caption())\n```\nExpected output:\n```text\ntrail\n```",
+        "This separate complete local example is intentionally rejected. It is author-validated compiler evidence, not an additional learner Run checks feature.\n```swift\nprotocol Captioned {\n    func caption() -> String\n}\nstruct Trail: Captioned {\n    func caption() -> String { return \"trail\" }\n}\nstruct Harbor: Captioned {\n    func caption() -> String { return \"harbor\" }\n}\nfunc makeTrail() -> some Captioned {\n    return Trail()\n}\nfunc chooseCaption(_ water: Bool) -> some Captioned {\n    if water { return Harbor() }\n    return Trail()\n}\nprint(chooseCaption(true).caption())\n```\nThe intended diagnostic identifies do not have matching underlying types. Do not paste it together with a success example.",
+        "Optional practice: Keep makeTrail opaque and make chooseCaption select the correct caption. Predict a different input before running."
+      ],
+      "after": [
+        "Captioned promises a caption() method that returns text. A function can describe its answer using this promise without naming its exact type. some and any give that promise different rules.",
+        "A result written some Captioned hides one fixed type from callers. makeTrail always returns Trail. The caller can still use caption(), because that ability is promised.",
+        "```swift\nprotocol Captioned {\n    func caption() -> String\n}\nstruct Trail: Captioned {\n    func caption() -> String { return \"trail\" }\n}\nstruct Harbor: Captioned {\n    func caption() -> String { return \"harbor\" }\n}\nfunc makeTrail() -> some Captioned {\n    return Trail()\n}\nfunc chooseCaption(_ water: Bool) -> any Captioned {\n    if water { return Harbor() }\n    return Trail()\n}\nprint(makeTrail().caption())\nprint(chooseCaption(true).caption())\n```\nThis prints trail, then harbor. makeTrail returns a Trail. chooseCaption(true) returns a Harbor.",
+        "A result written any Captioned can hold different types that meet the promise. chooseCaption returns Harbor when water is true and Trail otherwise. Each returned value still has its own actual type.",
+        "For an ordinary function returning some Captioned, every return path must use the same actual type. Returning Trail on one path and Harbor on another fails that rule. This lesson is about function results; SwiftUI's special view-building rules come later.",
+        "Keep some Captioned for makeTrail and return Trail. Use any Captioned for chooseCaption. Select Harbor for true and Trail for false, keeping each type's own caption."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the small example and explain its inputs and effects.",
+        "Complete the starter for the stated contract.",
+        "Use the configured compatible Swift companion or local Swift toolchain, then explain the changed case."
+      ],
+      "after": [
+        "Return Trail from makeTrail.",
+        "Choose Harbor or Trail from water in chooseCaption.",
+        "Read the result's caption to check your choice."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Trace the inputs, returned value and changed state before running."
+      ],
+      "after": [
+        "some hides one fixed result type.",
+        "any permits different types that meet Captioned."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If makeTrail has result some Captioned, can ordinary return branches return Trail and Harbor?",
+        "choices": [
+          "Only when the captions are equal.",
+          "Yes: both conform to Captioned.",
+          "No: its opaque result must have one underlying concrete type."
+        ],
+        "answer": 2,
+        "explanation": "Conformance alone is enough for the any result here, not two different underlying types in this opaque result."
+      },
+      "after": {
+        "question": "Can an ordinary function returning some Captioned return Trail on one path and Harbor on another?",
+        "choices": [
+          "Only if their captions match",
+          "Yes, because both have captions",
+          "No, its actual result type must stay the same"
+        ],
+        "answer": 2,
+        "explanation": "some hides one fixed result type. Use any for the two-type choice shown here."
+      }
+    }
+  ],
+  "headings": [
+    "Describe an answer by its ability",
+    "Keep one hidden type",
+    "Read one example",
+    "Allow a choice of types",
+    "Know the some limit",
+    "Try it yourself"
+  ],
+  "project": {
+    "title": "Separate a hidden result type from a boxed choice",
+    "task": "Keep makeTrail returning some Captioned with a Trail value. Complete chooseCaption using any Captioned: Harbor for true and Trail for false.",
+    "done_when": "The fixed result and both choices return the expected captions."
+  }
+}

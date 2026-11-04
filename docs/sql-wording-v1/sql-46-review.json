@@ -1,0 +1,81 @@
+{
+  "lesson": "sql-46",
+  "position": 41,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Create answer(team,all_rows,done_rows,done_minutes) retaining both teams and computing only completed-session aggregates. Preserve sessions.",
+      "after": "Count only matching rows in one calculation while keeping every group."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "FILTER (WHERE done=1) sends only matching rows into the aggregate immediately before it. It does not remove those rows from the whole query. GROUP BY team still forms groups from all sessions. A query-level WHERE done=1 would remove unfinished rows before grouping and would remove moss entirely in this example.",
+        "\n```sql\nCREATE TABLE sessions(id INTEGER PRIMARY KEY, team TEXT, done INTEGER, minutes INTEGER);\nINSERT INTO sessions VALUES (1,'fern',1,10),(2,'fern',0,20),(3,'moss',0,7);\nSELECT team, COUNT(*) AS all_rows, COUNT(*) FILTER (WHERE done=1) AS done_rows, SUM(minutes) FILTER (WHERE done=1) AS done_minutes\nFROM sessions\nGROUP BY team\nORDER BY team;\n```\nCOUNT(*) counts input rows, so the filtered count for moss is 0. SUM(minutes) adds non-NULL minute values; with no matching inputs it returns NULL, not 0. Fern has 2 total rows but only 1 completed row and 10 completed minutes. FILTER is a clause, not a function call.",
+        "\n```sql\nCREATE TABLE sessions(id INTEGER PRIMARY KEY, team TEXT, done INTEGER, minutes INTEGER);\nINSERT INTO sessions VALUES (1,'fern',1,10),(2,'fern',0,20),(3,'moss',1,7);\nSELECT team, COUNT(*) AS all_rows, COUNT(*) FILTER (WHERE done=1) AS done_rows, SUM(minutes) FILTER (WHERE done=1) AS done_minutes\nFROM sessions\nGROUP BY team\nORDER BY team;\n```\nMoss now has (all_rows,done_rows,done_minutes)=(1,1,7). Fern is unchanged. Optional practice: set that completed row’s minutes to NULL. Its row still counts, but its value contributes nothing to SUM."
+      ],
+      "after": [
+        "An aggregate combines several rows into one answer, such as a count or a sum. Add `FILTER (WHERE done = 1)` after an aggregate to use only finished sessions in that calculation. Other calculations can still use every session.",
+        "```sql\nCREATE TABLE demo_sessions(id INTEGER PRIMARY KEY, team TEXT, done INTEGER, minutes INTEGER);\nINSERT INTO demo_sessions VALUES\n  (1, 'fern', 1, 10), (2, 'fern', 0, 20), (3, 'moss', 0, 7);\nSELECT team,\n  COUNT(*) AS all_rows,\n  COUNT(*) FILTER (WHERE done = 1) AS done_rows,\n  SUM(minutes) FILTER (WHERE done = 1) AS done_minutes\nFROM demo_sessions\nGROUP BY team\nORDER BY team;\n```\nFern has `2` sessions, `1` finished session, and `10` finished minutes. Moss has `1` session, `0` finished sessions, and `NULL` finished minutes.",
+        "With no matching rows, `COUNT(*)` returns 0. `SUM(minutes)` returns `NULL` because it has no known values to add. Both teams stay in the result. A `WHERE done = 1` for the whole query would remove unfinished rows before grouping, so moss would disappear."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the small example and explain its inputs and effects.",
+        "Complete the starter for this lesson.",
+        "Run the behavior checks, then predict a changed case."
+      ],
+      "after": [
+        "Create `answer` with one row per team.",
+        "Count all sessions, then use `FILTER` for finished sessions and their minutes.",
+        "Run the checks. Keep teams that have no finished sessions."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Trace the supplied rows and resulting rows before changing the query."
+      ],
+      "after": [
+        "Use `COUNT(*)` for `all_rows`.",
+        "Add `FILTER (WHERE done = 1)` to the count and sum for finished sessions. Group by `team`."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If moss has one done=1 row with minutes=NULL, what are its filtered COUNT(*) and SUM(minutes)?",
+        "choices": [
+          "1 and0",
+          "0 and0",
+          "1 and NULL"
+        ],
+        "answer": 2,
+        "explanation": "COUNT(*) counts the matching row even when minutes is NULL; SUM has no non-NULL values to add."
+      },
+      "after": {
+        "question": "A team has one finished session with minutes = NULL. What are its filtered count and sum?",
+        "choices": [
+          "1 and 0",
+          "0 and 0",
+          "1 and NULL"
+        ],
+        "answer": 2,
+        "explanation": "The count includes the finished row. The sum has no known minute value to add, so it is NULL."
+      }
+    }
+  ],
+  "headings": [
+    "Filter one calculation",
+    "One example",
+    "When nothing matches"
+  ],
+  "project": {
+    "title": "Filter one aggregate without dropping its group",
+    "task": "Create `answer(team, all_rows, done_rows, done_minutes)` from `sessions`. Keep both teams. Count every session, count finished sessions, and add only finished-session minutes. Keep `sessions` unchanged.",
+    "done_when": "The checks pass, including the team with no finished sessions."
+  }
+}

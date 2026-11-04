@@ -1,0 +1,100 @@
+{
+  "lesson": "react-09",
+  "position": 27,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Keep exactly the intended browser event subscription while a component is visible.",
+      "after": "Return cleanup from an Effect to undo the work it set up."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "An effect synchronizes a component with something outside React, such as a browser event subscription.",
+        "Return a cleanup function from the effect to undo its setup. React calls it before replacing that effect and when removing the component.",
+        "```react\nfunction KeyNotice() {\n  const [key, setKey] = React.useState(\"\");\n  React.useEffect(() => {\n    function receive(event) { setKey(event.key); }\n    window.addEventListener(\"keydown\", receive);\n    return () => window.removeEventListener(\"keydown\", receive);\n  }, []);\n  return <p>Last key: {key}</p>;\n}\nfunction App() { return <KeyNotice />; }\n```\nThe cleanup removes the same listener function that setup added.",
+        "A dependency array lists reactive values used by the effect. When a listed value changes, React cleans up the old subscription before setting up the new one.",
+        "If setup reads channel, include channel in the dependency array. An empty array would leave this subscription attached to its original channel.",
+        "In development, Strict Mode may run a setup, cleanup, setup cycle to reveal missing cleanup. Correct cleanup makes this safe; do not hide the problem by disabling it.",
+        "The exercise sends custom browser events using new Event(channel) and window.dispatchEvent. These are local signals, not network messages.",
+        "Complete the cleanup. Show the listener, send a signal, switch channels, and hide it. The old channel must stop responding after the switch, and no subscription should remain after hiding."
+      ],
+      "after": [
+        "An event listener is a function the browser calls when a chosen event happens. An Effect can add a listener while a component is on the page.",
+        "Return a cleanup function from the Effect. React calls it before replacing that Effect and when removing the component. Cleanup should undo that setup's own work.",
+        "```react\nfunction KeyNotice() {\n  const [key, setKey] = React.useState(\"\");\n  React.useEffect(() => {\n    function receive(event) {\n      setKey(event.key);\n    }\n    window.addEventListener(\"keydown\", receive);\n    return () => window.removeEventListener(\"keydown\", receive);\n  }, []);\n  return <p>Last key: {key}</p>;\n}\nfunction App() {\n  return <KeyNotice />;\n}\n```\nA key press updates the message. When KeyNotice is removed, cleanup removes the same receive function that setup added.",
+        "The dependency list names changing values read by the Effect. When a listed value changes, React cleans up the old connection before starting the new one.",
+        "If setup reads a `channel` prop, include channel in the list. Using `[]` would keep listening to the original channel even after the prop changes.",
+        "Strict Mode is a development check that can run setup, cleanup, then setup again. Correct cleanup makes this safe. Removing that check would hide the mistake instead of fixing it.",
+        "The exercise sends events with `new Event(channel)` and `window.dispatchEvent`. These are signals inside the browser, not messages sent over the internet.",
+        "Complete the listener cleanup. After changing channels, the old one must stop responding. After hiding the listener, its connection must be removed. Leave unrelated listeners alone."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Return a cleanup function rather than removing the listener immediately.",
+        "Remove the same event name and function that setup added."
+      ],
+      "after": [
+        "Return a cleanup function from the Effect.",
+        "Remove the same event name and function that setup added.",
+        "Run the checks for channel changes and hiding."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return a cleanup function rather than removing the listener immediately.",
+        "Remove the same event name and function that setup added."
+      ],
+      "after": [
+        "Return a function that removes the listener later, rather than removing it immediately."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "An effect subscribes to channel A. The channel prop becomes B. What should cleanup remove?",
+        "choices": [
+          "The subscription to A created by the old effect",
+          "Only the new subscription to B",
+          "Every event listener on the entire window"
+        ],
+        "answer": 0,
+        "explanation": "Each effect cleanup closes over its own setup values. It removes its old A subscription before the new effect subscribes to B, without touching unrelated listeners."
+      },
+      "after": {
+        "question": "An Effect listened to channel A. The prop changes to B. What should the old cleanup remove?",
+        "choices": [
+          "The A connection created by that setup.",
+          "Only the new B connection.",
+          "Every listener on the window."
+        ],
+        "answer": 0,
+        "explanation": "Each cleanup remembers its own setup values, so the old one removes its A connection."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "The fixture starts hidden so checks can observe setup and removal. Dependencies are supplied correctly; learner focuses on cleanup. Real DOM lifecycle and listener identity are tested. Do not add effects for values that can be calculated during render.",
+      "after": "The listener starts hidden. Show it, switch channels, and hide it to check the full setup and cleanup path."
+    }
+  ],
+  "headings": [
+    "Listen to an outside event",
+    "Undo the setup",
+    "Read a key listener",
+    "Replace a changed connection",
+    "Include the channel",
+    "Make repeated setup safe",
+    "Send a local signal",
+    "Build your cleanup"
+  ],
+  "project": {
+    "title": "Clean up an effect",
+    "task": "Keep the intended event listener only while its component is visible. Clean up the old listener when the channel changes.",
+    "done_when": "The old channel stops responding after a switch. Hiding removes the listener without removing unrelated ones."
+  }
+}

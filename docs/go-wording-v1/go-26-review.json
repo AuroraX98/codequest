@@ -1,0 +1,97 @@
+{
+  "lesson": "go-26",
+  "position": 26,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Change the assignment before invocation to factor=5. What prints?",
+      "after": "Let a function use a variable from the code around it."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "func(value int) int { ... } can be assigned to a variable and called later.",
+        "The literal refers to factor from its surrounding scope. Calling it reads that variable’s current value rather than necessarily freezing the creation-time value.",
+        "The function body runs at transform(3), after the assignment to factor.",
+        "This single-threaded example is deterministic. Capturing a variable does not make concurrent reads and writes automatically safe.",
+        "Complete local Go example; the app itself does not execute it:\n```go\npackage main\n\nimport (\n\t\"fmt\"\n)\n\nfunc main() {\n\tfactor := 2\n\ttransform := func(value int) int { return value * factor }\n\tfactor = 4\n\tfmt.Println(transform(3))\n}\n\n```",
+        "Expected output or behavior: 12. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Compare a mutable capture with deliberately copying its value into another variable before constructing a function. You may trace it without a Go compiler; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "A function can itself be a value. Here, transform holds a function we can call later.",
+        "A closure is a function that keeps access to variables around it. This function uses the outer variable factor. It does not freeze factor at its first value.",
+        "The function body runs when `transform(3)` is called. By then, factor has already changed.",
+        "This example runs in order, one step at a time. If several tasks change the same captured variable at once, they need coordination. Capturing a variable does not provide that by itself.",
+        "Read factor's latest value before the call.\n```go\npackage main\n\nimport (\n\t\"fmt\"\n)\n\nfunc main() {\n\tfactor := 2\n\ttransform := func(value int) int { return value * factor }\n\tfactor = 4\n\tfmt.Println(transform(3))\n}\n\n```",
+        "The screen shows `12`. The function multiplies 3 by the current factor, 4.",
+        "Change the assignment before the call to `factor = 5`. The same function will read this new value when it runs."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Follow the assignment that happens just before the call."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Change the assignment before invocation to factor=5. What prints?",
+        "choices": [
+          "6 because creation captured a frozen 2.",
+          "15 because the body reads the current factor.",
+          "5 because function literals cannot use arguments."
+        ],
+        "answer": 1,
+        "explanation": "The call multiplies 3 by the captured variable’s new value."
+      },
+      "after": {
+        "question": "Set factor = 5 before transform(3). What appears?",
+        "choices": [
+          "6, because the function froze the first value, 2.",
+          "15, because the function reads the current factor.",
+          "5, because the function ignores its input."
+        ],
+        "answer": 1,
+        "explanation": "The call multiplies its input, 3, by the current factor, 5."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Go Core v1 uses the verified Go1.27.3 toolchain and standard library. The app supplies concept reading and an understanding check, not a Go browser runner. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "The browser shows Go code and checks your understanding; it does not run Go. Optional local examples use Go 1.27."
+    }
+  ],
+  "headings": [
+    "Save a function for later",
+    "Keep access to an outer variable",
+    "Read it when the function runs",
+    "Keep shared changes in mind",
+    "One example",
+    "Read the current factor",
+    "Change the factor before calling"
+  ],
+  "project": {
+    "title": "Closures and captured variables",
+    "task": "Predict a closure's answer after its outer variable changes.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local Go example is optional."
+  }
+}

@@ -1,0 +1,91 @@
+{
+  "lesson": "java-65",
+  "position": 65,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "If each worker loops 250 times, what is the final count?",
+      "after": "Protect a shared counter so two workers do not lose each other's changes."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "count++ reads, adds and writes; it is not one indivisible operation. A synchronized instance method locks that instance monitor for the entire method. Both workers must call increment on the same Counter to coordinate.",
+        "Each worker makes 1000 protected increments. Both joins complete before the read, making the finished count visible. The synchronized getter also uses the same monitor; it does not make unrelated locks equivalent.",
+        "Complete local Java example; the app itself does not execute it:\n```java\n\npublic class Main {\n  static class Counter {\n    private int count;\n    synchronized void increment() { count++; }\n    synchronized int get() { return count; }\n  }\n  public static void main(String[] args) throws InterruptedException {\n    Counter counter = new Counter();\n    Runnable work = () -> { for (int i = 0; i < 1000; i++) counter.increment(); };\n    Thread a = new Thread(work), b = new Thread(work);\n    a.start(); b.start(); a.join(); b.join();\n    System.out.println(counter.get());\n  }\n}\n```",
+        "Expected output or behavior: 2000. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Explain why locking a separate newly created object on every call would not protect the shared counter. You may trace it without a JDK; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "count++ reads the old value, adds one, and writes it back. Those steps can overlap between workers. A synchronized instance method locks its object's monitor, a built-in lock, for the whole call. Both workers use the same Counter, so only one can run its synchronized method at a time.",
+        "Each worker adds one a thousand times. main joins both workers before reading, so both have finished and their work is visible. The synchronized get method uses the same object's lock; different objects' locks would not coordinate these updates.",
+        "Follow both workers to the same Counter, then find the two joins before get.\n\n```java\n\npublic class Main {\n  static class Counter {\n    private int count;\n    synchronized void increment() { count++; }\n    synchronized int get() { return count; }\n  }\n  public static void main(String[] args) throws InterruptedException {\n    Counter counter = new Counter();\n    Runnable work = () -> { for (int i = 0; i < 1000; i++) counter.increment(); };\n    Thread a = new Thread(work), b = new Thread(work);\n    a.start(); b.start(); a.join(); b.join();\n    System.out.println(counter.get());\n  }\n}\n```",
+        "The program prints 2000. Each of the two workers contributes a thousand protected additions.",
+        "The quiz reduces the number of turns in the shared task. Both workers still finish before the total is read."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Add both workers' turn counts; the lock prevents lost updates."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If each worker loops 250 times, what is the final count?",
+        "choices": [
+          "500",
+          "250 because a monitor discards one worker",
+          "An unpredictable value despite the shared monitor and joins."
+        ],
+        "answer": 0,
+        "explanation": "The shared monitor protects every increment and both workers complete before the read."
+      },
+      "after": {
+        "question": "Make each worker loop 250 times. What is the final count?",
+        "choices": [
+          "500",
+          "250, because the lock discards one worker's changes.",
+          "An unpredictable value, even with the shared lock and both joins."
+        ],
+        "answer": 0,
+        "explanation": "Each worker contributes 250. The shared lock protects every addition, and both joins finish before the total of 500 is read."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Java Core v1 uses stable Java25 LTS features without preview flags. The app supplies concept reading and an understanding check, not a Java browser runner. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "The browser shows Java code and checks your understanding; it does not run Java. Optional local examples use Java25."
+    }
+  ],
+  "headings": [
+    "A shared update needs one shared lock",
+    "Wait for both workers before reading the total",
+    "One example",
+    "What appears",
+    "Reduce each worker's turns"
+  ],
+  "project": {
+    "title": "Protect shared state with synchronization",
+    "task": "Explain why both workers must use the same Counter and its lock.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local Java example is optional."
+  }
+}

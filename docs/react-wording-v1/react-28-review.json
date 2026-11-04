@@ -1,0 +1,86 @@
+{
+  "lesson": "react-28",
+  "position": 14,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Implement extend as a nonmutating replacement and use it to add five minutes per click.",
+      "after": "To update an object in state, make a new object with the changed field."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "Treat an object already in state as read-only. A replacement object allows the next render to use new data without changing the previous object. Object spread {...plan} copies its own enumerable fields into a new object; the later minutes field replaces only that copied value.",
+        "extend(plan) accepts a record and returns a new record with five extra minutes. It does not modify the input. setPlan(current => extend(current)) bases each click on the pending state. Spread is shallow: nested objects would still be shared, so changing a nested field requires copying each changed level. These examples use only flat fields.",
+        "```react\nconst initialPlan = {name: \"Survey\", minutes: 10};\nfunction extend(plan) {\n  return {...plan, minutes: plan.minutes + 5};\n}\nfunction App() {\n  const [plan, setPlan] = React.useState(initialPlan);\n  return <main><p role=\"status\">{plan.name}: {plan.minutes} minutes</p>\n    <button onClick={() => setPlan(current => extend(current))}>Add five</button>\n  </main>;\n}\n```\nThe first click shows Survey: 15 minutes; the second shows 20. initialPlan still contains 10.",
+        "```react\nconst initialPlan = {name: \"Sketch\", minutes: 0};\nfunction extend(plan) {\n  return {...plan, minutes: plan.minutes + 5};\n}\nfunction App() {\n  const [plan, setPlan] = React.useState(initialPlan);\n  return <main><p role=\"status\">{plan.name}: {plan.minutes} minutes</p>\n    <button onClick={() => setPlan(current => extend(current))}>Add five</button>\n  </main>;\n}\n```\nThis version starts Sketch at zero. One click returns a replacement with 5 minutes and keeps the name.",
+        "Optional practice: Add an unchanged flat label field and check that extend preserves it. The checks cover these finite behaviors; a matching DOM alone does not prove every implementation choice. The frame supplies React and mounts App. No imports, server, persistence or network are involved."
+      ],
+      "after": [
+        "Treat an object already in state as read-only. Make a new object for the next state. This lets you change one field without rewriting the earlier object.",
+        "`{...plan}` copies the plan's fields into a new object. Writing `minutes` after the spread replaces that copied field. Fields written later win when names match.",
+        "```react\nconst initialPlan = { name: \"Survey\", minutes: 10 };\nfunction extend(plan) {\n  return { ...plan, minutes: plan.minutes + 5 };\n}\nfunction App() {\n  const [plan, setPlan] = React.useState(initialPlan);\n  return (\n    <main>\n      <p role=\"status\">{plan.name}: {plan.minutes} minutes</p>\n      <button onClick={() => setPlan(current => extend(current))}>\n        Add five\n      </button>\n    </main>\n  );\n}\n```\nOne click shows `Survey: 15 minutes`. Another shows `20`. `initialPlan.minutes` stays `10`.",
+        "The name stays the same because the spread copies it. This copy is shallow: objects inside the plan would still be shared. If you change a nested field, copy that inner object too.",
+        "Complete `extend` so it returns a new plan with five more minutes. Use it in the state update. Keep every other field and leave the input object unchanged."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the small example and explain its inputs and effects.",
+        "Complete the starter for this lesson.",
+        "Run the behavior checks, then predict a changed case."
+      ],
+      "after": [
+        "Copy the plan's fields into a new object.",
+        "Replace minutes with its old value plus 5.",
+        "Run the checks and confirm the old plan is unchanged."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Trace the visible input, event and resulting screen before changing the code."
+      ],
+      "after": [
+        "Write the updated minutes field after `...plan`."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If {...plan, minutes: 15} becomes {minutes: 15, ...plan} and plan.minutes is 10, what value wins?",
+        "choices": [
+          "15",
+          "Both values exist under the same key",
+          "10"
+        ],
+        "answer": 2,
+        "explanation": "Object fields written later overwrite earlier fields with the same key. Spreading plan last restores its old minutes value."
+      },
+      "after": {
+        "question": "plan.minutes is 10. What does `{minutes: 15, ...plan}` keep for minutes?",
+        "choices": [
+          "15",
+          "Both numbers under the same field name.",
+          "10"
+        ],
+        "answer": 2,
+        "explanation": "The spread comes last, so it replaces 15 with the plan's old value, 10."
+      }
+    }
+  ],
+  "headings": [
+    "Keep the old object unchanged",
+    "Copy before changing",
+    "Add five minutes",
+    "Keep the other fields",
+    "Build your plan update"
+  ],
+  "project": {
+    "title": "Replace a field without rewriting the old object",
+    "task": "Make extend return a new plan with five extra minutes. Use it for every Add five click.",
+    "done_when": "The screen adds five each time. Other fields are kept, and earlier objects stay unchanged."
+  }
+}

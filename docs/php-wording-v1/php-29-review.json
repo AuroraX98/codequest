@@ -1,0 +1,91 @@
+{
+  "lesson": "php-29",
+  "position": 29,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "If deposit(5) is replaced by $account->amount = 5, what happens?",
+      "after": "A private property can be used by its own class but cannot be set directly by outside code."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "public members are accessible externally; protected members are accessible within the permitted inheritance scope; private members are accessible only within the declaring class. Visibility supports an interface boundary, not authentication.",
+        "Here the balance field is private. deposit checks its input before updating it, and balance() exposes a read operation. A caller cannot bypass this method by assigning the private property directly.",
+        "Complete local PHP example; the app itself does not execute it:\n```php\n<?php\ndeclare(strict_types=1);\nclass Account {\n    private int $amount = 0;\n    public function deposit(int $value): void {\n        if ($value < 0) { throw new InvalidArgumentException('negative'); }\n        $this->amount += $value;\n    }\n    public function balance(): int { return $this->amount; }\n}\n$account = new Account();\n$account->deposit(5);\necho $account->balance(), \"\\n\";\n```",
+        "Expected output or behavior: 5. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Add a bounded withdrawal operation and decide which failures should be exceptions. You may trace it without a PHP interpreter; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "A private property can be used by its own class but cannot be set directly by outside code.",
+        "The method checks the amount before changing the private balance.",
+        "Follow the labeled parts of this example.\n```php\n<?php\ndeclare(strict_types=1);\nclass Account {\n    private int $amount = 0;\n    public function deposit(int $value): void {\n        if ($value < 0) { throw new InvalidArgumentException('negative'); }\n        $this->amount += $value;\n    }\n    public function balance(): int { return $this->amount; }\n}\n$account = new Account();\n$account->deposit(5);\necho $account->balance(), \"\\n\";\n```",
+        "The output is `5`. Five passes the check and is added.",
+        "Find which line is allowed to write to amount."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read one idea.",
+        "Follow the labeled example.",
+        "Try the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Find which line is allowed to write to amount."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If deposit(5) is replaced by $account->amount = 5, what happens?",
+        "choices": [
+          "It silently calls deposit for validation.",
+          "Access to the private property throws an Error.",
+          "It creates another public amount property."
+        ],
+        "answer": 1,
+        "explanation": "Private visibility rejects the external assignment; PHP does not translate it into a method call."
+      },
+      "after": {
+        "question": "What happens if outside code tries to set the private amount directly?",
+        "choices": [
+          "The balance becomes five.",
+          "An Error stops the write.",
+          "The property becomes public."
+        ],
+        "answer": 1,
+        "explanation": "The outside code cannot reach this private property."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "PHP Core v1 uses PHP 8.5.12 CLI and explicitly available extensions. The app supplies concept reading and an understanding check, not a PHP browser runner. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "CodeQuest shows the PHP example. Running it on your own computer is optional."
+    }
+  ],
+  "headings": [
+    "Protect a balance",
+    "Use the allowed method",
+    "Read the example",
+    "What happens",
+    "Try one change"
+  ],
+  "project": {
+    "title": "Visibility and controlled state",
+    "task": "Find which line is allowed to write to amount.",
+    "done_when": "Read each idea and pass the understanding check. Running the example on your computer is optional."
+  }
+}

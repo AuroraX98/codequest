@@ -1,0 +1,87 @@
+{
+  "lesson": "swift-27",
+  "position": 8,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Define seatCount(_ text: String) -> Int. Accept parsed integers1 through 8 inclusive; return 0 for malformed, out-of-range or otherwise rejected input.",
+      "after": "Leave a function early when an input cannot be used."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "Int(text) attempts to construct an integer from text and returns Int?. It returns nil for text that cannot represent an Int, including an out-of-range integer string. It does not return zero as a general parse-failure signal. Our function deliberately chooses 0 as its own rejected-input result.",
+        "guard let number = Int(text) else requires the failure branch to exit this function. After the guard succeeds, number stays available in the remaining function body. The next guard checks the separate application range 1 through 8. Parsing and range validation answer different questions.",
+        "\n```swift\nfunc seats(_ text: String) -> Int {\n    guard let number = Int(text) else {\n        return 0\n    }\n    guard number >= 1 && number <= 8 else {\n        return 0\n    }\n    return number\n}\nprint(seats(\"4\"))\nprint(seats(\"many\"))\n```\nOutput:\n```text\n4\n0\n```",
+        "\n```swift\nfunc seats(_ text: String) -> Int {\n    guard let number = Int(text) else {\n        return 0\n    }\n    guard number >= 1 && number <= 8 else {\n        return 0\n    }\n    return number\n}\nprint(seats(\"9\"))\nprint(seats(\"8\"))\n```\nOutput:\n```text\n0\n8\n```",
+        "A booking form can reject malformed text before checking its policy. Explain which step rejects \"many\" and which rejects \"9\"; do not describe every rejected input as a parsing error."
+      ],
+      "after": [
+        "`Int(text)` tries to turn text into a whole number. Its result is optional: a number on success, or nil when the text cannot fit an Int. Failure does not automatically mean zero.",
+        "`guard let number = Int(text) else` tries to get that number. The `else` part must leave the current path; here it returns 0. When the guard succeeds, `number` stays available for the rest of the function.",
+        "```swift\nfunc seats(_ text: String) -> Int {\n    guard let number = Int(text) else {\n        return 0\n    }\n    guard number >= 1 && number <= 8 else {\n        return 0\n    }\n    return number\n}\nprint(seats(\"4\"))\nprint(seats(\"many\"))\n```\nThe outputs are `4` and `0`. The text `4` becomes an allowed number. The text `many` cannot become an Int, so the function leaves early.",
+        "Reading a number and accepting it are separate checks. A whole number can still be outside the allowed range. The second guard accepts only 1 through 8, including both endpoints.",
+        "Define `seatCount(_ text: String) -> Int`. Return the accepted number. Choose 0 for every rejected input, whether conversion failed or the number was outside 1 through 8."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the small example and explain its inputs and effects.",
+        "Complete the starter for the stated contract.",
+        "Use the configured compatible Swift companion or local Swift toolchain, then explain the changed case."
+      ],
+      "after": [
+        "Use `guard let` to read an Int from the text.",
+        "Use another guard for the allowed range 1 through 8.",
+        "Return the accepted number and run the checks."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Trace the inputs, returned value and changed state before running."
+      ],
+      "after": [
+        "Both guard failure branches return 0.",
+        "The range check needs `number >= 1 && number <= 8`."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Int(\"12\") succeeds, but the allowed range is 1 through 8. Which step rejects it?",
+        "choices": [
+          "The range guard",
+          "The Int initializer",
+          "Optional binding always rejects two digits"
+        ],
+        "answer": 0,
+        "explanation": "12 is a valid integer, but it is outside this application’s accepted range."
+      },
+      "after": {
+        "question": "The text 12 becomes an Int, but only 1 through 8 is allowed. Which check rejects it?",
+        "choices": [
+          "The range guard",
+          "The Int conversion",
+          "Optional binding always rejects two digits"
+        ],
+        "answer": 0,
+        "explanation": "Twelve is a valid whole number. It fails this function's allowed-range rule."
+      }
+    }
+  ],
+  "headings": [
+    "Try turning text into a number",
+    "Stop when a check fails",
+    "One example",
+    "Check the allowed range",
+    "Write the seat counter"
+  ],
+  "project": {
+    "title": "Leave early with guard let",
+    "task": "Write `seatCount(_ text: String) -> Int`. Accept whole numbers from 1 through 8. Return 0 when the text cannot become an Int or the number is outside that range.",
+    "done_when": "The checks pass for allowed values, both endpoints, unreadable text, and numbers outside the range."
+  }
+}

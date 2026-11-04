@@ -1,0 +1,111 @@
+{
+  "lesson": "sql-15",
+  "position": 21,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Enable foreign keys and create notes with id INTEGER PRIMARY KEY, author_id INTEGER NOT NULL referencing authors(id), and title TEXT NOT NULL. Insert note 1 for author 2 with title Moon. Do not change authors.",
+      "after": "Make each note point to an author who exists."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A constraint is a rule the database checks when data changes.",
+        "NOT NULL rejects a missing value in that column. It does not reject an empty string by itself.",
+        "A foreign key links a stored value to a key in another table. It can stop a note from naming an author who does not exist.",
+        "SQLite requires foreign-key enforcement to be enabled on the connection. Do this before beginning a transaction.\n```sql\nPRAGMA foreign_keys = ON;\n```",
+        "A reference declares which key must exist.\n```sql\nCREATE TABLE teams (id INTEGER PRIMARY KEY);\nCREATE TABLE players (\n  id INTEGER PRIMARY KEY,\n  team_id INTEGER NOT NULL REFERENCES teams(id)\n);\n```",
+        "With enforcement on, a player cannot refer to team 8 unless teams already has id 8.",
+        "The parent row must exist before its child is inserted.\n```sql\nINSERT INTO teams VALUES (8);\nINSERT INTO players VALUES (1, 8);\n```",
+        "An ordinary join reads relationships; it does not enforce them. The foreign-key constraint checks future writes.",
+        "In the practice, authors already contains ids 1 and 2. Create notes, then store the note belonging to author 2.",
+        "An attempt to use author 99 should fail instead of creating an orphan note. A missing author_id should fail because NOT NULL is also required. The project checks inspect connection/schema metadata and the accepted row. They do not execute expected failing writes as learner checks. The separate local constraint demonstrations in the later row-rule and relationship lessons show those errors; do not insert a deliberate failure into this normal solution."
+      ],
+      "after": [
+        "A constraint is a rule the database checks when data changes. It can keep related rows from pointing to missing records.",
+        "`NOT NULL` requires a value. It does not reject empty text by itself.",
+        "A foreign key is a value that must match a key in another table. For a note, author_id can point to an existing author's id.",
+        "Turn on SQLite's foreign-key checks for the connection you are using. Do this before starting a transaction—a group of changes handled together.",
+        "Run this example in a fresh database:\n```sql\nPRAGMA foreign_keys = ON;\nCREATE TABLE teams(id INTEGER PRIMARY KEY);\nCREATE TABLE players (\n  id INTEGER PRIMARY KEY,\n  team_id INTEGER NOT NULL REFERENCES teams(id)\n);\nINSERT INTO teams VALUES (8);\nINSERT INTO players VALUES (1, 8);\nSELECT id, team_id\nFROM players;\n```\nPlayer `1` belongs to team `8`.",
+        "`REFERENCES teams(id)` says which key must exist. With the checks on, a player cannot point to a team that is missing.",
+        "This example adds the team before adding its player. That makes the required parent row available when the child row is inserted.",
+        "A join reads matching rows. It does not enforce the relationship when data changes. A foreign-key rule does that separate job.",
+        "The project already has authors 1 and 2. Enable foreign-key checks, then create notes with a primary-key id, a required author_id referencing authors(id), and a required text title. Insert note `1` for author `2` with title `'Moon'`.",
+        "Author 99 is missing, so a note pointing there should fail. NULL author_id should also fail because it is required. Keep deliberate failures out of your solution. A later connection needs its own foreign-key setting."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the requirement.",
+        "Make one change to the starter.",
+        "Run the checks.",
+        "Explain why a changed input produces its result."
+      ],
+      "after": [
+        "Enable foreign-key checks on this connection.",
+        "Create notes with the required key, reference, and NOT NULL rules.",
+        "Insert the Moon note for author 2."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Declare REFERENCES authors(id) on author_id.",
+        "A reference alone still permits NULL unless you also use NOT NULL.",
+        "Insert the child only after the parent exists."
+      ],
+      "after": [
+        "REFERENCES authors(id) names the parent key.",
+        "NOT NULL is also needed to require an author.",
+        "Keep the existing authors unchanged."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "You declared a foreign key, but a new SQLite connection has foreign_keys off. Can you rely on that connection to reject a note for a missing author?",
+        "choices": [
+          "Yes; the column name author_id is enough.",
+          "No; enable enforcement on that connection before relying on it.",
+          "Yes; SELECT queries enable it automatically."
+        ],
+        "answer": 1,
+        "explanation": "Declaring a relationship and enabling its enforcement are different. SQLite connection settings must be checked before relying on writes being rejected."
+      },
+      "after": {
+        "question": "A new SQLite connection has foreign_keys off. Can you rely on it to reject a note for a missing author?",
+        "choices": [
+          "Yes. Naming the column author_id is enough.",
+          "No. Turn on foreign-key checks for that connection.",
+          "Yes. SELECT turns the checks on."
+        ],
+        "answer": 1,
+        "explanation": "Declaring the rule and turning on its checks are separate steps."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "In-app checks inspect enforcement and the declared schema. Author validation separately attempted invalid inserts and confirmed rejection. Enforcement is connection-specific; do not assume a later connection inherits it.",
+      "after": "The project checks the connection setting, table rules, and accepted row. Deliberate invalid inserts are separate checks, not part of the normal solution."
+    }
+  ],
+  "headings": [
+    "Protect a relationship",
+    "Require a value",
+    "Connect two tables",
+    "Turn on foreign-key checks",
+    "Try a parent and child",
+    "Read REFERENCES",
+    "Create the parent first",
+    "Separate joins from rules",
+    "Build the notes table",
+    "Check the rule's limits"
+  ],
+  "project": {
+    "title": "Keep every note attached to an author",
+    "task": "Enable foreign keys. Create notes with the required primary key, author reference, and title. Insert note 1 for author 2 with title Moon.",
+    "done_when": "The reference and NOT NULL rules are present, foreign-key checks are on, the Moon note is stored, and authors stays unchanged."
+  }
+}

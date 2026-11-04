@@ -1,0 +1,91 @@
+{
+  "lesson": "java-50",
+  "position": 50,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "How can a second query validly produce [3, 5]?",
+      "after": "Finish a stream once, then create a new one for another query."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "Creating a stream pipeline does not traverse its source. A terminal operation requests a result. Avoid relying on side effects in map or peek: implementations may skip work that cannot affect the result.",
+        "After a terminal operation, the stream must not be reused. Obtain a new stream from the collection for another query. Implementations may detect reuse with IllegalStateException; this example catches that detected misuse.",
+        "Complete local Java example; the app itself does not execute it:\n```java\nimport java.util.List;\npublic class Main {\n\n  public static void main(String[] args) {\n    var stream = List.of(2, 4).stream().map(n -> n + 1);\n    System.out.println(stream.toList());\n    try {\n      System.out.println(stream.toList());\n    } catch (IllegalStateException ex) {\n      System.out.println(\"consumed\");\n    }\n  }\n}\n```",
+        "Expected output or behavior: [3, 5]\nconsumed. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Explain why a collection can supply several streams but one stream is not a reusable collection. You may trace it without a JDK; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "Streams are lazy: setting up their processing steps does not yet visit the source items. A terminal operation, such as toList, asks for the result. Do not rely on extra effects inside map or peek; Java may skip work that cannot change that result.",
+        "A stream is single-use. After a terminal operation, do not use that same stream again. Ask the collection for a new stream instead. Java can report detected reuse with IllegalStateException, as it does here.",
+        "Follow the first toList call, then the attempted second call on the same stream.\n\n```java\nimport java.util.List;\npublic class Main {\n\n  public static void main(String[] args) {\n    var stream = List.of(2, 4).stream().map(n -> n + 1);\n    System.out.println(stream.toList());\n    try {\n      System.out.println(stream.toList());\n    } catch (IllegalStateException ex) {\n      System.out.println(\"consumed\");\n    }\n  }\n}\n```",
+        "The program prints [3, 5], then consumed on the next line. The first call finishes the stream. The second call throws an error that the catch block reports.",
+        "The quiz asks how to repeat the query correctly. The source list can supply a new stream even though the old stream is finished."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Reuse the source collection, but start a new stream."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "How can a second query validly produce [3, 5]?",
+        "choices": [
+          "Call the same terminal operation on the consumed stream.",
+          "Store the consumed stream in a final variable.",
+          "Create a new stream from the list."
+        ],
+        "answer": 2,
+        "explanation": "A fresh pipeline can be traversed; final does not reset a stream."
+      },
+      "after": {
+        "question": "How can another query validly produce [3, 5]?",
+        "choices": [
+          "Call toList again on the same finished stream.",
+          "Make the finished stream variable final.",
+          "Create a new stream from the list and apply the same mapping."
+        ],
+        "answer": 2,
+        "explanation": "A new stream can process the list again. Making a variable final does not reset a finished stream."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Java Core v1 uses stable Java25 LTS features without preview flags. The app supplies concept reading and an understanding check, not a Java browser runner. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "The browser shows Java code and checks your understanding; it does not run Java. Optional local examples use Java25."
+    }
+  ],
+  "headings": [
+    "A stream waits for an operation that needs its result",
+    "A finished stream cannot be reused",
+    "One example",
+    "What appears",
+    "Start a fresh stream"
+  ],
+  "project": {
+    "title": "Understand lazy single-use streams",
+    "task": "Explain why the first toList succeeds and the second use is invalid.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local Java example is optional."
+  }
+}

@@ -1,0 +1,111 @@
+{
+  "lesson": "backend-05",
+  "position": 26,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Connect a front end, API, and database with sign-in and tested save flows.",
+      "after": "Keep saved data consistent when a change succeeds or fails."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A full-stack app connects a screen, an HTTP server, and durable storage. The screen sends a request. The server verifies the session, checks permissions and values, and writes permitted data. The screen then reads the saved result. A reload should read the database again, rather than rely on an old browser array. Each layer has a job, and a success message should reflect the server's actual result.",
+        "The browser exercise models an atomic transfer. This separate standalone JavaScript example keeps an invariant, a fact that must remain true after every allowed change:\n```javascript\nfunction move(state, amount, fail = false) {\n  if (fail || !Number.isInteger(amount) || amount < 0 || amount > state.available) {\n    return { ...state };\n  }\n  return {\n    available: state.available - amount,\n    saved: state.saved + amount\n  };\n}\nconst original = { available: 24, saved: 2 };\nconsole.log(move(original, 6));\nconsole.log(move(original, 30));\nconsole.log(move(original, 6, true));\nconsole.log(original);\n```\nSuccess returns available 18 and saved 8, total 26. Invalid or forced-failure requests return 24 and 2. The original object remains unchanged because the function returns new objects.",
+        "A failed save should show the failure and preserve the previous confirmed saved state. Here is a browser JavaScript fragment for a running same-origin API with GET/POST /entries and a verified session. Pass it an existing output element; this fragment is not a standalone server or sign-in system.\n```javascript\nasync function saveMinutes(minutes, output) {\n  const response = await fetch('/entries', {\n    method: 'POST',\n    headers: { 'Content-Type': 'application/json' },\n    body: JSON.stringify({ minutes })\n  });\n  if (!response.ok) {\n    const failure = await response.json();\n    output.textContent = failure.error || 'Save failed.';\n    return;\n  }\n  const read = await fetch('/entries');\n  if (!read.ok) {\n    output.textContent = 'Saved, but reload failed. Try loading again.';\n    return;\n  }\n  output.textContent = JSON.stringify(await read.json(), null, 2);\n}\n```\nresponse.ok means an HTTP success status. Only a successful write leads to a new read here; textContent displays returned text safely. A real interface must also catch rejected fetch promises, such as network failures.",
+        "The local project stores entries in practice.sqlite with id, owner, and minutes columns. A prepared insert supplies the session's user as owner, not an owner from the body. A prepared SELECT with WHERE owner = ? reads only that session user's entries. Test as Alice, then Bob, to establish separation. Stopping and restarting clears memory sessions but should preserve database rows, so sign in again before checking persistence.",
+        "The supplied localhost login compares the chosen account's configured password, creates a random token with randomBytes, and stores its user and expiry in a server-side Map. The cookie carries that token. HttpOnly keeps page JavaScript from reading the cookie; SameSite=Strict limits when browsers attach it across sites; Max-Age sets a browser lifetime. The server still verifies its stored expiry. Environment variables supply passwords outside source code. Use your own throwaway local values and do not put them in repository files.\n\nSet the variables in the same terminal where you will start the downloaded local app. In Windows PowerShell, use:\n```powershell\n$env:ALICE_PASSWORD = \"replace-with-a-throwaway-alice-value\"\n$env:BOB_PASSWORD = \"replace-with-a-different-throwaway-bob-value\"\n```\nIn a macOS or Linux shell, use:\n```bash\nexport ALICE_PASSWORD=\"replace-with-a-throwaway-alice-value\"\nexport BOB_PASSWORD=\"replace-with-a-different-throwaway-bob-value\"\n```\nReplace these example values with different disposable local passwords. These commands set values for that terminal and programs it starts; they do not belong in the source files.",
+        "The learning server listens on 127.0.0.1, meaning only this computer's loopback address. It is deliberately a localhost exercise. Before a real public deployment, add HTTPS and Secure cookies, hashed password/account storage, login throttling, CSRF validation, and an established authentication library reviewed for your environment. CSRF means a different site trying to induce a signed-in browser to perform an unwanted action. The supplied sign-in is not a production authentication system.",
+        "Concurrent requests create another consistency risk. With a balance of 20, two requests can each read 20 and decide spending 15 is allowed. If they both rely on that stale read, the combined requested spending is 30, exceeding 20. A database transaction or atomic conditional update must check the current balance when each write happens. After one valid spend the balance is 5, so the next spend of 15 must fail. A memory-only function test does not prove this database concurrency protection.",
+        "For the exercise, amount must be a nonnegative integer no larger than available. A successful 7-unit move from available 20/saved 0 returns 13/7 and preserves 20. A forced failure, negative amount, or overspend returns the old values in a copy. Then test the downloaded app separately: sign in, save valid minutes, reload, reject invalid input, check two-user separation, and check restart persistence. The browser checks the transfer invariant; the actual screen, HTTP, storage, and session behavior need their own local evidence."
+      ],
+      "after": [
+        "A full-stack app connects its screen, server, and storage. The screen asks for a change, and the server checks it before saving. Show success only when the server confirms it. After a failed save, keep the previous confirmed data.",
+        "```javascript\nfunction move(state, amount, fail = false) {\n  if (fail || !Number.isInteger(amount) || amount < 0 || amount > state.available) {\n    return { ...state };\n  }\n  return {\n    available: state.available - amount,\n    saved: state.saved + amount\n  };\n}\nconst original = { available: 24, saved: 2 };\nconsole.log(move(original, 6));\nconsole.log(move(original, 30));\nconsole.log(move(original, 6, true));\nconsole.log(original);\n```\nThe valid move returns available: 18 and saved: 8, keeping the total 26. Invalid input or a forced failure keeps 24 and 2. The original stays unchanged. This models an invariant: a fact that must remain true after an allowed change.",
+        "If saving fails, show that failure and keep the prior saved state. If saving succeeds but reading the new list fails, say Saved, but reload failed. Those are different outcomes. Also handle network errors that prevent getting a reply.",
+        "The downloaded app saves entries in practice.sqlite. It writes the owner from the verified session and reads entries for that owner only. Test as Alice, then Bob. Restarting clears sign-in sessions, so sign in again before checking that saved entries remain.",
+        "Download the local project files and use Node.js 22.13 or newer. Environment variables are settings passed to a program when it starts. In PowerShell, set `$env:ALICE_PASSWORD = \"your-disposable-value\"` and `$env:BOB_PASSWORD = \"a-different-disposable-value\"`. In a macOS or Linux shell, use `export ALICE_PASSWORD=\"your-disposable-value\"` and `export BOB_PASSWORD=\"a-different-disposable-value\"`. Choose different throwaway values, then run npm install and npm start in that terminal.",
+        "Open http://127.0.0.1:3000 on this computer. The app's simple sign-in is for local learning. Its cookie and server expiry checks do not make it ready for public use. A public app needs an established authentication system and appropriate security controls.",
+        "Two requests may read the same old data before either saves. A real database must keep the check and related writes together using a transaction or an atomic conditional update. Atomic means the change happens as one indivisible operation. This browser function alone cannot prove safe overlapping database writes.",
+        "Complete transfer with whole amounts from zero through available. A valid move subtracts from available and adds the same amount to saved. Invalid input or fail: true returns a copy with old values. Separately test the local app's save, reload, invalid input, two-user separation, and restart behavior."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Implement transfer(state,amount,fail=false) using the supplied state {available:20,saved:0}.",
+        "Allow only whole amounts from zero up to the available balance. If the amount is invalid or fail is true, keep the values unchanged.",
+        "For a valid transfer of 7, return {available:13,saved:7}; the total stays 20.",
+        "Download the local app files.",
+        "Set ALICE_PASSWORD and BOB_PASSWORD in your terminal. Use different values and do not put them in source files.",
+        "Run npm install, then npm start.",
+        "Open the local app and sign in as alice. Save an entry, reload, and check that it remains.",
+        "Sign in as bob and check that alice’s entry is not shown.",
+        "Restart the server and sign in again. Check that saved entries are still there."
+      ],
+      "after": [
+        "Validate the transfer amount before calculating new values.",
+        "Return a new state that keeps the total, or an unchanged-value copy on failure.",
+        "Run the browser checks.",
+        "Optionally follow the local setup and test saving, separate users, and restart persistence."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Check invalid and failure cases before calculating a new state.",
+        "Subtract amount from available and add the same amount to saved.",
+        "Return a new object, preserving the original object on failure."
+      ],
+      "after": [
+        "Subtract and add the same amount.",
+        "Preserve the input object, even on failure.",
+        "A successful browser model check does not test the downloaded app."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "A save request fails. What should the screen do?",
+        "choices": [
+          "Show the failure and keep the previous saved state",
+          "Display a successful save anyway",
+          "Give the record to another user"
+        ],
+        "answer": 0,
+        "explanation": "The displayed saved state should match the server result. A failed request needs a clear message and a safe retry."
+      },
+      "after": {
+        "question": "A save request fails. What should the screen do?",
+        "choices": [
+          "Show the failure and keep the previous saved state",
+          "Show success anyway",
+          "Give the record to another user"
+        ],
+        "answer": 0,
+        "explanation": "The screen must match the confirmed server result. A failed save must not appear successful."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "The in-app checks cover the transfer invariant. Complete the actual screen, HTTP, database, sign-in, reload, and two-user tests using the downloadable local app. The server binds only localhost; public deployment needs the security additions described in the lesson.",
+      "after": "Browser checks cover the transfer rule only. The downloaded app needs separate screen, HTTP, database, and sign-in checks. Keep its disposable passwords out of source files. Its local sign-in is not a production authentication system."
+    }
+  ],
+  "headings": [
+    "Show only confirmed saved data",
+    "Read one example",
+    "Handle a failed save honestly",
+    "Keep each user's data separate",
+    "Set up the local practice app",
+    "Keep this sign-in local",
+    "Protect against overlapping writes",
+    "Complete and check the project"
+  ],
+  "project": {
+    "title": "A complete private learning tracker",
+    "task": "Complete the transfer model, then optionally run the downloadable local tracker and check confirmed saves, reloads, per-user access, and restart persistence.",
+    "done_when": "The model preserves totals and handles failure. In the local app, each user can save and retrieve only their own entries."
+  }
+}

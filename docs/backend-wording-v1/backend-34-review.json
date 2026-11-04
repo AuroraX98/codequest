@@ -1,0 +1,96 @@
+{
+  "lesson": "backend-34",
+  "position": 22,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Implement ownsNote(session,note). Match the worked contract and the changed-input checks without modifying the supplied input values.",
+      "after": "Compare the signed-in user's ID with the note's stored owner ID."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A private record belongs to an owner stored by the application. Compare that owner with a trusted session, rather than accepting an owner claim from the request body.",
+        "This exercise is a small pure JavaScript model. Its inputs are supplied directly; it does not receive live HTTP requests, operate a database, or deploy a service.",
+        "Worked example:\n\n```javascript\nfunction ownsNote(session,note) {\n  return Boolean(session && session.userId === note.ownerId);\n}\nconsole.log(ownsNote({\"userId\":\"a\"}, {\"ownerId\":\"a\"}));\n```\nThe returned value is true.",
+        "&& stops when the session is absent. === compares the trusted session ID with the stored owner ID. Boolean converts the result to exactly true or false.",
+        "Read the function call ownsNote({\"userId\":\"a\"}, {\"ownerId\":\"a\"}) from the inside out: the arguments supply the inputs, ownsNote runs the body once, and return sends its result back to the caller. console.log displays that result; it does not change it.",
+        "A caller changes body.ownerId to match themselves. Should that grant access to someone else’s stored note? The request body is caller-controlled. It cannot redefine ownership for the permission check."
+      ],
+      "after": [
+        "For a private note, ownership comes from the application's stored record. Compare that owner with the signed-in user. A caller cannot gain ownership by changing an ownerId field in the request body.",
+        "This model assumes a verified session with a valid userId and a stored note with a valid ownerId. The server must obtain and check those values before using this helper.",
+        "```javascript\nfunction ownsNote(session,note) {\n  return Boolean(session && session.userId === note.ownerId);\n}\nconsole.log(ownsNote({\"userId\":\"a\"}, {\"ownerId\":\"a\"}));\n```\nThis prints true. The trusted user ID and stored owner ID are both a.",
+        "session && ... stops before reading session.userId when the session is missing. With a session present, === checks whether the two IDs match exactly.",
+        "Boolean(...) makes the answer exactly true or false. Without that conversion, the && expression could return the missing session value itself.",
+        "Complete ownsNote(session, note). Require a session and compare its userId with the stored note's ownerId. Keep both inputs unchanged."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the contract and trace the worked example.",
+        "Replace the unfinished return in the starter.",
+        "Run the changed-input checks.",
+        "Explain the boundary in the understanding question."
+      ],
+      "after": [
+        "Check that a trusted session exists.",
+        "Compare its userId with the stored ownerId.",
+        "Return the result as a Boolean."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "&& stops when the session is absent. === compares the trusted session ID with the stored owner ID. Boolean converts the result to exactly true or false."
+      ],
+      "after": [
+        "Use the stored note, not a caller's owner claim.",
+        "Boolean turns a missing-session result into false."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "A caller changes body.ownerId to match themselves. Should that grant access to someone else’s stored note?",
+        "choices": [
+          "Yes, the body is authoritative",
+          "No, compare against the stored owner",
+          "Only for updates"
+        ],
+        "answer": 1,
+        "explanation": "The request body is caller-controlled. It cannot redefine ownership for the permission check."
+      },
+      "after": {
+        "question": "A caller changes body.ownerId to their own ID. Does that grant access to someone else's note?",
+        "choices": [
+          "Yes, the body decides ownership",
+          "No, check the stored owner",
+          "Only when updating"
+        ],
+        "answer": 1,
+        "explanation": "The caller controls the body. Permission must use the application's stored ownership information."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Runs as a pure JavaScript function in the browser. Passing checks does not establish live HTTP behavior, database durability, concurrency safety, authentication security, queue delivery guarantees, or production readiness.",
+      "after": "This browser helper assumes already-verified identity and valid stored IDs. It does not authenticate a caller or fetch the stored note."
+    }
+  ],
+  "headings": [
+    "Use the stored owner",
+    "Start with trusted inputs",
+    "Read one example",
+    "Require a session",
+    "Return a clear Boolean",
+    "Try it yourself"
+  ],
+  "project": {
+    "title": "Check ownership against stored data",
+    "task": "Complete ownsNote(session, note) using the trusted session ID and stored owner ID. Return only true or false.",
+    "done_when": "Matching ownership passes, while missing sessions and different owners fail."
+  }
+}

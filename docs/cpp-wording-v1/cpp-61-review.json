@@ -1,0 +1,94 @@
+{
+  "lesson": "cpp-61",
+  "position": 61,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "With this course’s -Wall -Wextra -Wpedantic -Werror flags, add int unused = 7; inside main and never use it. What should you do with the build result?",
+      "after": "Use compiler messages and runtime checks without treating them as proof that every path is safe."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "Use -Wall -Wextra -Wpedantic to request useful GCC diagnostics. They do not mean every possible warning is enabled. This course also uses -Werror, which treats emitted warnings as build errors rather than silently accepting them.\n\nSave the complete safe example below as main.cpp in a disposable folder. With GCC installed, these terminal commands build it with the stated warning policy and then run it on Linux or macOS:\n```sh\ng++ -std=c++23 -Wall -Wextra -Wpedantic -Werror main.cpp -o example\n./example\n```\nThe output is 2 4. These commands do not install a compiler.",
+        "A local build with -g -fsanitize=address,undefined can instrument checks for supported memory and undefined-behavior errors. It only checks paths that actually execute; a clean run does not prove the whole program safe. Tool availability and platform support matter.\n\nOn a platform whose GCC supports these sanitizers, build the same safe source into a separate executable:\n```sh\ng++ -std=c++23 -Wall -Wextra -Wpedantic -Werror -g -fsanitize=address,undefined main.cpp -o checked\n./checked\n```\nIts normal program output is still 2 4; sanitizer diagnostics, if any, must be investigated. A platform limitation is not a passing safety test.",
+        "The worked array iteration stays in bounds. We do not execute invalid indexing or dangling-pointer examples. To demonstrate a rejected build safely, the changed case adds a genuinely unused variable; the configured warning policy rejects it before any run.",
+        "Complete local C++ example; the app itself does not execute it:\n```cpp\n#include <array>\n#include <iostream>\nint main() {\n    std::array<int, 2> scores{2, 4};\n    for (int score : scores) std::cout << score << \" \";\n    std::cout << \"\\n\";\n}\n```",
+        "Expected output or behavior: 2 4 . Local compiler test evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Build the safe worked example with sanitizer instrumentation locally, then record both the flags and what paths you actually tested. You may trace this without a compiler; finishing the reading is not proof of a local run."
+      ],
+      "after": [
+        "A diagnostic is a compiler message about your code. GCC's -Wall -Wextra -Wpedantic options request useful warnings. They do not enable every possible warning. -Werror makes emitted warnings fail the build.",
+        "Save the example as main.cpp. With GCC installed, build it using g++ -std=c++23 -Wall -Wextra -Wpedantic -Werror main.cpp -o example. After a successful build, run ./example on Linux or macOS, or .\\example.exe in Windows PowerShell.",
+        "A sanitizer adds runtime checks for certain errors. On a supported GCC platform, adding -g -fsanitize=address,undefined can help detect memory errors and undefined behavior on executed paths. These options do not install the required tools.",
+        "Follow the array through the loop; every visited item exists.\n\n```cpp\n#include <array>\n#include <iostream>\nint main() {\n    std::array<int, 2> scores{2, 4};\n    for (int score : scores) std::cout << score << \" \";\n    std::cout << \"\\n\";\n}\n```",
+        "The program prints 2 4, with a space after each number. A failed build is not a successful run, even if an older executable remains in the folder.",
+        "A clean sanitizer run only covers the paths it checked. It does not prove every possible execution is safe. A missing or unsupported sanitizer is also not a passing check."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain why, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Read the build result before deciding whether there is a new program to run."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "With this course’s -Wall -Wextra -Wpedantic -Werror flags, add int unused = 7; inside main and never use it. What should you do with the build result?",
+        "choices": [
+          "Treat the warning-as-error failure as a rejected build; no run is certified.",
+          "Assume compilation succeeded because unused variables can never matter.",
+          "Run an out-of-bounds access to make the warning go away."
+        ],
+        "answer": 0,
+        "explanation": "GCC diagnoses the unused local, and -Werror makes that diagnostic a compilation failure. Fix the cause or justify a deliberate policy change; do not pretend a binary was produced."
+      },
+      "after": {
+        "question": "With GCC's -Wall -Wextra -Wpedantic -Werror options, add an unused int unused = 7 inside main. How should the result be handled?",
+        "choices": [
+          "Treat the warning made into an error as a failed build and fix its cause.",
+          "Assume the build succeeded because unused variables never matter.",
+          "Read outside the array to remove the warning."
+        ],
+        "answer": 0,
+        "explanation": "GCC warns about the unused local variable. -Werror makes that warning fail the build, so the changed program has not been successfully built."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "C++ Core v1, standard C++23 features checked against the available GCC14.2 implementation. This app provides concept reading and an understanding check, not a C++ browser runner. Local example tests are separate evidence and do not certify learner mastery.",
+      "after": "The browser shows C++ code and checks your understanding; it does not run C++. Optional local examples use C++23."
+    }
+  ],
+  "headings": [
+    "Read compiler diagnostics",
+    "Build with a clear warning policy",
+    "Add supported runtime checks",
+    "One example",
+    "What appears",
+    "Know what a check can prove"
+  ],
+  "project": {
+    "title": "Use diagnostics and sanitizers responsibly",
+    "task": "Trace the valid array loop and understand what the build checks can establish.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local C++ example is optional."
+  }
+}

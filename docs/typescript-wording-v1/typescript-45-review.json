@@ -1,0 +1,86 @@
+{
+  "lesson": "typescript-45",
+  "position": 45,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Implement editCard so its new result preserves the original id, applies title/done, and changes neither input.",
+      "after": "Use `Omit` to leave a field out of a type."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "Omit<T, K> describes T without the keys named by K. CardEdit removes id from Card but keeps title and done required. Omit is a compiler utility type, not a runtime function that deletes properties.",
+        "editCard receives the original card and the edit values. It returns a fresh object, retaining the original id and explicitly copying only title and done from the edit. A variable with extra fields can still be structurally assignable to CardEdit; types are not an input-sanitization barrier. The function therefore does not spread all edit properties over the card. The example prints 7 Read Draft: the original is unchanged.",
+        "```typescript\ntype Card = { id: number; title: string; done: boolean };\ntype CardEdit = Omit<Card, \"id\">;\nfunction editCard(card: Card, edit: CardEdit): Card {\n  return { id: card.id, title: edit.title, done: edit.done };\n}\nconst before: Card = {id: 7, title: \"Draft\", done: false};\nconst after = editCard(before, {title: \"Read\", done: true});\nconsole.log(after.id, after.title, before.title);\n```",
+        "Optional local practice: Pass a variable containing id plus valid edit fields and confirm the original card id is retained.",
+        "Changed case — trace this independently before checking the result.\n```typescript\ntype Card = { id: number; title: string; done: boolean };\ntype CardEdit = Omit<Card, \"id\">;\nfunction editCard(card: Card, edit: CardEdit): Card {\n  return { id: card.id, title: edit.title, done: edit.done };\n}\nconst extra={id:99,title:\"Done\",done:true};\nconsole.log(editCard({id:7,title:\"Old\",done:false},extra).id);\n```\nOutput: 7."
+      ],
+      "after": [
+        "`Omit<T, K>` makes a type like `T` without the field names in `K`. `Omit<Card, \"id\">` leaves out `id`. The other fields, `title` and `done`, are still required.",
+        "The edit type describes the fields an edit needs. It does not remove fields from real objects. Keep the original card's `id` by reading it from `card`, then copy only the allowed edit fields.",
+        "```typescript\ntype Card = { id: number; title: string; done: boolean };\ntype CardEdit = Omit<Card, \"id\">;\nfunction editCard(card: Card, edit: CardEdit): Card {\n  return { id: card.id, title: edit.title, done: edit.done };\n}\nconst before: Card = { id: 7, title: \"Draft\", done: false };\nconst after = editCard(before, { title: \"Read\", done: true });\nconsole.log(after.id, after.title, before.title);\n```\nThis prints `7 Read Draft`. The new card keeps `id: 7`. The old card still has the title `Draft`.",
+        "Complete `editCard`. Return a new object with the old `id` and the edit's `title` and `done`. Do not change either input object.",
+        "A variable may contain extra fields and still meet the edit type. If that variable also contains `id: 99`, the function must still keep the card's original `id`. Copying the chosen fields makes that rule hold while the program runs."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the example and its input/output contract.",
+        "Complete the starter without turning off compiler diagnostics.",
+        "Run the compiler and behavior checks, then explain a changed case."
+      ],
+      "after": [
+        "Leave `id` out of the edit type.",
+        "Copy the old id and the two edit fields into a new object.",
+        "Run the checks and confirm both inputs stay unchanged."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Compare the public input/output types and trace the visible call before editing."
+      ],
+      "after": [
+        "Read the result's id from `card`, not from `edit`."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "A variable edit includes id:99 plus valid title/done. Original card id is 7. What does editCard return for id?",
+        "choices": [
+          "7, because the implementation copies id only from the original card.",
+          "The function must throw because extra properties can never pass structurally.",
+          "99, because Omit deletes the original id."
+        ],
+        "answer": 0,
+        "explanation": "Omit does not strip runtime fields. Explicit copying enforces the function’s chosen update behavior."
+      },
+      "after": {
+        "question": "The card's id is 7. An edit variable also has id 99. Which id does this function keep?",
+        "choices": [
+          "7, because it reads id from the original card.",
+          "Neither, because extra fields always cause an error.",
+          "99, because Omit changes the original object."
+        ],
+        "answer": 0,
+        "explanation": "`Omit` changes the type rule. The function itself keeps the old id by copying `card.id`."
+      }
+    }
+  ],
+  "headings": [
+    "Leave one field out",
+    "Keep the original identifier",
+    "Read a card edit",
+    "Build your card update",
+    "Handle extra fields carefully"
+  ],
+  "project": {
+    "title": "Omit an identifier from an edit shape",
+    "task": "Complete `editCard`. Keep the original id, use the edit's title and done fields, and return a new object without changing either input.",
+    "done_when": "The title and done fields update. The original id stays, even when an edit variable has an extra id field. Both inputs stay unchanged."
+  }
+}

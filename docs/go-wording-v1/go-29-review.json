@@ -1,0 +1,91 @@
+{
+  "lesson": "go-29",
+  "position": 29,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "If c.Add() is called twice before printing, what prints?",
+      "after": "Use a pointer receiver to change the original value."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "*Counter is a pointer type; &c obtains a pointer to c. *p dereferences a pointer to access its target. Field access through a struct pointer can use p.N directly. A nil pointer must not be dereferenced.",
+        "func (c *Counter) Add() receives a pointer copy that still refers to the caller’s object. For an addressable variable c, Go permits c.Add() as shorthand for (&c).Add(). This convenience does not make Counter and *Counter have identical method sets.",
+        "Complete local Go example; the app itself does not execute it:\n```go\npackage main\nimport (\"fmt\")\ntype Counter struct { N int }\nfunc (c *Counter) Add() { c.N++ }\nfunc main() {\n c := Counter{N: 4}\n c.Add()\n fmt.Println(c.N)\n}\n```",
+        "Expected output or behavior: 5. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Call through an explicit p := &c and explain why p and c refer to the same target. You may trace it without a Go compiler; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "A pointer holds the address of a value. `*Counter` means a pointer to a Counter; `&c` takes c's address. `*p` follows a pointer named p to its value. A nil pointer points to nothing, so do not follow it.",
+        "Add receives a copy of the pointer, but the copy still points to the original counter. `c.N++` adds 1 to the field in that counter. Go lets a struct pointer use the dot directly.",
+        "Follow the pointer to the field that changes.\n```go\npackage main\nimport (\"fmt\")\ntype Counter struct { N int }\nfunc (c *Counter) Add() { c.N++ }\nfunc main() {\n c := Counter{N: 4}\n c.Add()\n fmt.Println(c.N)\n}\n```",
+        "The screen shows `5`. Add changed the original field from 4 to 5.",
+        "For this variable, `c.Add()` is a shorter way to call `(&c).Add()`. Go can take its address here. A Counter and a pointer to a Counter still do not have exactly the same set of methods."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Each call adds 1 to the original counter."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If c.Add() is called twice before printing, what prints?",
+        "choices": [
+          "5",
+          "6",
+          "4"
+        ],
+        "answer": 1,
+        "explanation": "Each pointer-receiver call updates the same original field rather than a copied struct."
+      },
+      "after": {
+        "question": "Call c.Add() twice before displaying c.N. What appears?",
+        "choices": [
+          "5",
+          "6",
+          "4"
+        ],
+        "answer": 1,
+        "explanation": "Both calls update the same field. Starting at 4, it becomes 5 and then 6."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Go Core v1 uses the verified Go1.27.3 toolchain and standard library. The app supplies concept reading and an understanding check, not a Go browser runner. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "The browser shows Go code and checks your understanding; it does not run Go. Optional local examples use Go 1.27."
+    }
+  ],
+  "headings": [
+    "Point to an existing counter",
+    "Update through the pointer",
+    "One example",
+    "Read the changed field",
+    "Recognize the shorter call"
+  ],
+  "project": {
+    "title": "Pointer receivers and mutation",
+    "task": "Predict the field after two pointer-receiver calls.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local Go example is optional."
+  }
+}

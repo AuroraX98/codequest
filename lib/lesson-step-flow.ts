@@ -18,7 +18,7 @@ export type LessonPractice = {
 export type LessonStep =
   | { kind: "explain"; text: string; purpose?: "exercise-preparation" }
   | { kind: "example"; code: string; language: string }
-  | { kind: "output"; code: string; language: string }
+  | { kind: "output"; code: string; language: string; caption?: string }
   | LessonPractice;
 
 /** Use real sentence or semicolon boundaries; never turn a long idea into fragments. */
@@ -36,7 +36,7 @@ export function shortLessonThoughts(text: string): string[] {
       if (inBold && !closesBold) continue;
       const end = i + (closesBold ? 3 : 1);
       const tail = idea.slice(end);
-      const boundary = idea[i] === ";" ? /^\s+\S/ : /^\s+(?=(?:\*\*)?[A-Z0-9`"“])/;
+      const boundary = /^\s+\S/;
       if (!boundary.test(tail)) continue;
       const thought = idea.slice(start, end).trim();
       if (/\b(?:e\.g|i\.e|Mr|Mrs|Dr|vs)\.(?:\*\*)?$/i.test(thought)) continue;
@@ -55,18 +55,22 @@ export function codePartPractice(code: string, language: string): LessonPractice
 }
 
 /** A read-only view of the curriculum. The original text is the reference source. */
-export function buildLessonSteps(text: string, runtime: string): LessonStep[] {
+export function buildLessonSteps(text: string, runtime: string, options: { authoredOnly?: boolean } = {}): LessonStep[] {
   const steps: LessonStep[] = [];
   const examples = new Set<string>();
   const addExample = (code: string, language: string) => {
     if (!supportsCodeAnatomy(language)) {
-      steps.push({ kind: "output", code, language });
+      const previous = steps[steps.length - 1];
+      // A label alone is not a learning idea. Keep it with the result it labels.
+      const caption = options.authoredOnly && previous?.kind === "explain" && /^(?:Output|Result|Expected output):$/i.test(previous.text.trim()) ? previous.text : undefined;
+      if (caption) steps.pop();
+      steps.push({ kind: "output", code, language, ...(caption ? { caption } : {}) });
       return;
     }
     const key = language.toLowerCase() + "\0" + code.trim();
     if (examples.has(key)) return;
     examples.add(key);
-    const practice = codePartPractice(code, language);
+    const practice = options.authoredOnly ? null : codePartPractice(code, language);
     // Essential rules appear as ordinary short steps before the example and
     // question. They must never require opening the anatomy disclosure.
     for (const preparation of practice?.preparation ?? []) {
@@ -87,7 +91,7 @@ export function buildLessonSteps(text: string, runtime: string): LessonStep[] {
     for (const paragraph of block.text.trim().split(/\n\s*\n/)) {
       for (const thought of shortLessonThoughts(paragraph)) {
         steps.push({ kind: "explain", text: thought });
-        for (const match of thought.matchAll(/`([^`\n]+)`/g)) {
+        for (const match of options.authoredOnly ? [] : thought.matchAll(/`([^`\n]+)`/g)) {
           const code = match[1];
           if (/\w\s*\(|[A-Za-z_]\w*\s*=(?!=)|^["']/.test(code)) addExample(code, runtime);
         }

@@ -1,0 +1,86 @@
+{
+  "lesson": "react-35",
+  "position": 29,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Return the supplied resource’s cleanup so no resource remains after removing Listener, including under the explicit StrictMode wrapper.",
+      "after": "Make an Effect safe to start, clean up, and start again."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "StrictMode enables extra development checks for its descendants. In React18 development it can render again and replay an initial Effect setup with cleanup between setups. That rehearsal exposes missing cleanup; it is not a promise that production performs the same rehearsal. The sandbox does not add this wrapper automatically.",
+        "This example supplies a local resource counter, not a network connection. connections.open() increments active and returns a close function. Its local closed flag makes repeat closing harmless. Called as connections.open(), this refers to that object; += and -= increase or decrease its count. Listener opens the resource in its Effect and returns close for React to invoke during cleanup. Do not call close immediately with return close(). The UI does not read active as state; the checks inspect this supplied model directly. The frame calls App as the root component with no supplied props. App returns the JSX tree; define it here without calling App() yourself or adding imports/createRoot.",
+        "```react\nconst connections = {\n  active: 0,\n  open() {\n    this.active += 1;\n    let closed = false;\n    return () => {\n      if (!closed) { this.active -= 1; closed = true; }\n    };\n  }\n};\nfunction Listener() {\n  React.useEffect(() => {\n    const close = connections.open();\n    return close;\n  }, []);\n  return <p>Listener mounted</p>;\n}\nfunction App() {\n  const [shown, setShown] = React.useState(true);\n  return <main>\n    <button onClick={() => setShown(s => !s)}>Toggle listener</button>\n    <React.StrictMode>{shown && <Listener />}</React.StrictMode>\n  </main>;\n}\n```",
+        "```react\nconst connections = {\n  active: 0,\n  open() {\n    this.active += 1;\n    let closed = false;\n    return () => {\n      if (!closed) { this.active -= 1; closed = true; }\n    };\n  }\n};\nfunction Listener() {\n  React.useEffect(() => {\n    const close = connections.open();\n    return undefined;\n  }, []);\n  return <p>Listener mounted</p>;\n}\nfunction App() {\n  const [shown, setShown] = React.useState(true);\n  return <main>\n    <button onClick={() => setShown(s => !s)}>Toggle listener</button>\n    <React.StrictMode>{shown && <Listener />}</React.StrictMode>\n  </main>;\n}\n```\nReturning undefined instead of close means no cleanup is registered. Removing Listener then leaves active resources behind. In a development build, the extra setup/cleanup rehearsal can expose the leak even earlier. The correct version has one live resource while mounted and zero after removal.",
+        "Return the supplied resource’s cleanup so no resource remains after removing Listener, including under the explicit StrictMode wrapper. These finite behavior checks do not prove that every possible implementation is correct. Optional local practice: change one input, predict the screen, then run it."
+      ],
+      "after": [
+        "Strict Mode adds development checks to the components inside it. In React 18 development, it can try an Effect's setup, cleanup, and setup again. This helps reveal missing cleanup; it is not a promise that production repeats the same check.",
+        "This example's connection is only a local counter. `open()` adds one and returns a function that subtracts one later. Return that close function from the Effect so React can use it for cleanup.",
+        "```react\nconst connections = {\n  active: 0,\n  open() {\n    this.active += 1;\n    let closed = false;\n    return () => {\n      if (!closed) {\n        this.active -= 1;\n        closed = true;\n      }\n    };\n  }\n};\nfunction Listener() {\n  React.useEffect(() => {\n    const close = connections.open();\n    return close;\n  }, []);\n  return <p>Listener mounted</p>;\n}\nfunction App() {\n  const [shown, setShown] = React.useState(true);\n  return (\n    <main>\n      <button onClick={() => setShown(s => !s)}>Toggle listener</button>\n      <React.StrictMode>{shown && <Listener />}</React.StrictMode>\n    </main>\n  );\n}\n```\nThe correct setup leaves one active connection while Listener is shown and zero after removal. The checks inspect this counter; it is not displayed as state.",
+        "Returning nothing would leave the connection active after removal. `return close()` would close it immediately instead of giving React a cleanup function. The closed flag prevents the supplied close function from subtracting twice.",
+        "Return the cleanup supplied by `connections.open()`. Keep the StrictMode wrapper. Toggle Listener off and on, then run the checks to confirm the active count stays correct."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the small example and explain its inputs and effects.",
+        "Complete the starter for this lesson.",
+        "Run the behavior checks, then predict a changed case."
+      ],
+      "after": [
+        "Open the supplied resource inside the Effect.",
+        "Return its close function without calling it.",
+        "Run the checks after showing and removing Listener."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Trace the visible input, event and resulting screen before changing the code."
+      ],
+      "after": [
+        "Use `return close`, not `return close()`."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Why does returning close differ from returning close()?",
+        "choices": [
+          "Returning close lets React call it during cleanup; close() calls it immediately and returns no cleanup.",
+          "Both delay closing until unmount.",
+          "Returning a function forces React to render that function as text."
+        ],
+        "answer": 0,
+        "explanation": "The Effect return value is a cleanup callback. Passing the function preserves the later operation; invoking it runs the operation now."
+      },
+      "after": {
+        "question": "Why does `return close` differ from `return close()`?",
+        "choices": [
+          "It gives React a cleanup function for later; close() runs it now.",
+          "Both delay closing until removal.",
+          "Returning a function shows it as text."
+        ],
+        "answer": 0,
+        "explanation": "React needs the function to call later. Parentheses would call it immediately."
+      }
+    }
+  ],
+  "headings": [
+    "Let development checks repeat the work",
+    "Keep the cleanup for later",
+    "Read a small resource counter",
+    "Notice missing cleanup",
+    "Build your safe listener"
+  ],
+  "project": {
+    "title": "Setup must be safe to undo and repeat",
+    "task": "Return the supplied resource's cleanup and keep the StrictMode wrapper.",
+    "done_when": "One resource stays active while Listener is shown. None remain after it is removed, even after repeated setup."
+  }
+}

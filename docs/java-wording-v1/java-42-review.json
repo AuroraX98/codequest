@@ -1,0 +1,94 @@
+{
+  "lesson": "java-42",
+  "position": 42,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Call run(true) instead of run(false), taking the early return after body. What prints next?",
+      "after": "Close a resource when its try block ends, even after an early return."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "try-with-resources manages AutoCloseable resources. It calls close when the try block exits, including a return or exception. This Trace only logs lifecycle events; real streams release external resources.",
+        "AutoCloseable declares close with a possible checked Exception, but Trace overrides it without throwing a checked exception. This example therefore needs no catch for close.",
+        "Multiple resources close in reverse initialization order. If the body throws and closing also throws, the body exception remains primary and close failures can be suppressed. Garbage collection is not a substitute for timely resource closure.",
+        "Complete local Java example; the app itself does not execute it:\n```java\nclass Trace implements AutoCloseable {\n    Trace() { System.out.println(\"open\"); }\n    void work() { System.out.println(\"body\"); }\n    @Override\n    public void close() { System.out.println(\"close\"); }\n}\npublic class Main {\n    static void run(boolean early) {\n        try (Trace trace = new Trace()) {\n            trace.work();\n            if (early) return;\n        }\n        System.out.println(\"after\");\n    }\n    public static void main(String[] args) { run(false); }\n}\n\n```",
+        "Expected output or behavior: open\nbody\nclose\nafter\n. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Declare two trace resources and inspect reverse close order using distinct labels. You may trace it without a JDK; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "A resource is something a program uses and then closes, such as an open file. try-with-resources calls close when its block exits, including through return or an exception. Trace only prints these steps so they are easy to see.",
+        "AutoCloseable is the interface for resources with a close method. Its method may throw a checked Exception. Trace's version declares none, so this example needs no catch for closing it.",
+        "If several resources are opened, Java closes them in reverse order. If both the body and closing throw, the body error stays primary and closing errors are attached as suppressed errors. Memory cleanup does not replace this timely closing.",
+        "Follow opening, work, closing, and the line after the block.\n\n```java\nclass Trace implements AutoCloseable {\n    Trace() { System.out.println(\"open\"); }\n    void work() { System.out.println(\"body\"); }\n    @Override\n    public void close() { System.out.println(\"close\"); }\n}\npublic class Main {\n    static void run(boolean early) {\n        try (Trace trace = new Trace()) {\n            trace.work();\n            if (early) return;\n        }\n        System.out.println(\"after\");\n    }\n    public static void main(String[] args) { run(false); }\n}\n\n```",
+        "The program prints open, body, close, and after on separate lines. The resource closes before execution reaches the line after try.",
+        "The quiz returns from run inside the try block. Closing still happens, but the return skips the later line in run."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "An early return still closes the resource before leaving the method."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Call run(true) instead of run(false), taking the early return after body. What prints next?",
+        "choices": [
+          "after, but not close",
+          "Neither close nor after",
+          "close, but not after"
+        ],
+        "answer": 2,
+        "explanation": "Returning from run still exits its try block and closes the resource. The statement after the try is not reached."
+      },
+      "after": {
+        "question": "Call run(true). After open and body, what prints?",
+        "choices": [
+          "after, but not close",
+          "Neither close nor after",
+          "close, but not after"
+        ],
+        "answer": 2,
+        "explanation": "The early return exits the managed block, so Java calls close. It then leaves run without reaching the after print."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Java Core v1 uses stable Java25 LTS features without preview flags. The app supplies concept reading and an understanding check, not a Java browser runner. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "The browser shows Java code and checks your understanding; it does not run Java. Optional local examples use Java25."
+    }
+  ],
+  "headings": [
+    "Give a resource a clear lifetime",
+    "AutoCloseable supplies the closing operation",
+    "Java closes managed resources in order",
+    "One example",
+    "What appears",
+    "Leave the method early"
+  ],
+  "project": {
+    "title": "Close resources with try-with-resources",
+    "task": "Trace where automatic closing happens before leaving the try block.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local Java example is optional."
+  }
+}

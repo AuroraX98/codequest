@@ -1,0 +1,101 @@
+{
+  "lesson": "backend-14",
+  "position": 35,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Complete conditionalReply(currentTag, suppliedTag). For an exact matching supplied ETag return {status:304, body:null, etag:currentTag}; otherwise return {status:200, body:{title:\"Public note\"}, etag:currentTag}. This simplified contract accepts one exact strong tag or a missing tag, not comma lists, weak tags, or wildcard matching.",
+      "after": "An ETag labels a version of a response. A matching tag lets the browser reuse its saved copy."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "An ETag is a response validator identifying a version of a representation. It is not necessarily a timestamp.",
+        "A client can send its saved tag in If-None-Match to ask whether that representation changed.",
+        "For a matching GET validator, a server can respond 304 Not Modified without sending the representation body again. The client can reuse its stored representation.",
+        "When the tag differs, a normal 200 response sends the representation and its current tag. A changed version must not be described as unchanged.",
+        "This browser helper models one exact strong-tag comparison. For example, the text '\"v2\"' includes quotation marks as part of the HTTP tag. Real HTTP validator parsing has additional rules outside this small exercise.",
+        "body:null in this helper means send no response body for304. It is not an instruction to send the JSON text null over HTTP.",
+        "This practice uses explicitly public content. Validators do not replace access controls or establish that personalized data is safe to share."
+      ],
+      "after": [
+        "An ETag is a label for a particular version of a response. It does not have to be a date or time.",
+        "A browser can send its saved tag in the If-None-Match request header. This asks whether the saved copy is still current.",
+        "For a GET request with a matching tag, the server can send status 304: Not Modified. The browser reuses its saved copy.",
+        "If the tag is different or missing, this exercise returns status 200 with the current content and tag.",
+        "Our small helper compares one exact tag. The double quotes are part of each tag's text.\n\n```javascript\nconst currentTag = '\"v2\"';\nconsole.log(currentTag === '\"v2\"');\nconsole.log(currentTag === '\"v1\"');\n```\n\nThe outputs are true and false. Only the first saved tag matches this version.",
+        "In the helper, body:null means a 304 reply has no response body. A real server must not send the JSON text null as that body.",
+        "Complete conditionalReply(currentTag, suppliedTag). A match returns {status:304, body:null, etag:currentTag}. Otherwise return {status:200, body:{title:\"Public note\"}, etag:currentTag}. Test matching, changed, and missing tags."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the requirement.",
+        "Make one change to the starter.",
+        "Run the checks.",
+        "Explain why a changed input produces its result."
+      ],
+      "after": [
+        "Compare the supplied tag with the current tag.",
+        "Return status 304 and no body for a match.",
+        "Otherwise return status 200 with the current public note.",
+        "Run the checks with matching, changed, and missing tags."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Trace the changed case using the primary lesson before editing."
+      ],
+      "after": [
+        "Use exact equality for this exercise's single-tag rule.",
+        "Include the current tag in both kinds of result.",
+        "Return body:null only with status 304."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "The current tag is \"v4\", but a client supplies \"v3\". Why would a304 response be wrong here?",
+        "choices": [
+          "Every tag is automatically a timestamp.",
+          "It would tell the client to reuse an older representation even though the version changed.",
+          "A304 response should carry a new full JSON body."
+        ],
+        "answer": 1,
+        "explanation": "304 means the matching stored representation can be reused; a different version requires a response carrying current content."
+      },
+      "after": {
+        "question": "The current tag is \"v4\", but the browser sends \"v3\". Why is status 304 wrong here?",
+        "choices": [
+          "Every tag must be a time.",
+          "It would tell the browser to reuse an older copy.",
+          "Status 304 must include a new full JSON body."
+        ],
+        "answer": 1,
+        "explanation": "The tags differ, so the saved copy is old. This helper must send status 200 with the current content."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Browser checks verify only the explicitly bounded policy helper, not complete HTTP validator parsing or a live server.",
+      "after": "This browser exercise checks one exact strong tag or a missing tag. Full HTTP rules also cover weak tags, lists, and wildcards. The content here is public; an ETag does not grant permission to read private content."
+    }
+  ],
+  "headings": [
+    "Label the version",
+    "Ask whether it changed",
+    "Reuse a matching copy",
+    "Send a changed copy",
+    "One example",
+    "Send no body for 304",
+    "Try both tags"
+  ],
+  "project": {
+    "title": "Revalidate a public response",
+    "task": "Complete conditionalReply(currentTag, suppliedTag). An exact match returns {status:304,body:null,etag:currentTag}. Otherwise return {status:200,body:{title:\"Public note\"},etag:currentTag}. Inputs use one exact strong tag or a missing tag.",
+    "done_when": "The checks pass for matching, changed, and missing tags. Explain why status 304 has no response body."
+  }
+}

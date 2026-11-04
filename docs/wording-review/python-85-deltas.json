@@ -1,0 +1,77 @@
+{
+  "lesson": "python-85",
+  "sourceHash": "b4866dee20b939056f978d9d39bd36d762397848a599af4223b0e83ecefc6b7e",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Complete route_errors(errors, handled): for a flat list of Exception instances, append ValueError messages to handled, preserve input order, and allow all other failures to propagate as a group. Empty input does nothing. Leave observe unchanged.",
+      "after": "Handle one kind of error from a group and let the other errors pass outward."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "ExceptionGroup(message, exceptions) constructs one exception containing a nonempty sequence of ordinary exceptions. ValueError(\"bad minutes\") and TypeError(\"wrong shape\") construct failures with diagnostic messages; construction alone does not raise them. This lesson uses a flat group so its direct exceptions are individual failures, not nested groups.",
+        "except* ValueError selects only matching failures from the group. group.exceptions is their tuple; str(error) returns each message. route_errors(errors, handled) appends those messages to the supplied list and returns None when nothing remains. Unmatched failures propagate as an ExceptionGroup; they are not converted into success. A plain except ExceptionGroup around the call can observe that remaining group. Do not mix except and except* clauses on the same try, and do not return from an except* block.",
+        "observe(errors) calls the router with a fresh list and returns (handled_messages, remaining_type_names). type(error).__name__ reads a diagnostic class name; it is not used to decide which failures to handle. The outer handler records the unmatched TypeError rather than hiding it.\n```python\ndef route_errors(errors, handled):\n    if not errors:\n        return\n    try:\n        raise ExceptionGroup(\"batch\", errors)\n    except* ValueError as group:\n        for error in group.exceptions:\n            handled.append(str(error))\ndef observe(errors):\n    handled = []\n    remaining = []\n    try:\n        route_errors(errors, handled)\n    except ExceptionGroup as group:\n        remaining = [type(error).__name__ for error in group.exceptions]\n    return handled, remaining\nprint(observe([ValueError(\"bad minutes\"), TypeError(\"wrong shape\")]))\n```\nOutput: (['bad minutes'], ['TypeError']).",
+        "If both failures are ValueError, both messages reach handled and no exception remains. With an empty input, return before constructing a group because an empty ExceptionGroup is invalid. The observe helper is supplied test scaffolding; implement route_errors, not a catch-all. Optional practice: replace one ValueError with RuntimeError and explain why it must still propagate."
+      ],
+      "after": [
+        "An `ExceptionGroup` holds several errors together. It must contain at least one error.\n\n`ValueError(\"bad minutes\")` creates an error with a message; `raise` reports it. This lesson uses a flat group: each item is one error, not another group.",
+        "`except* ValueError` picks out the group's `ValueError` items. Read them through `group.exceptions` and add each message to `handled` in order.\n\nOther errors remain in a group and pass outward. If none remain, the function returns `None`.\n\nDo not put `except` and `except*` on the same `try`, or use `return` inside an `except*` block.",
+        "The supplied `observe` helper reports which messages were handled and which kinds of errors remain:\n```python\ndef route_errors(errors, handled):\n    if not errors:\n        return\n    try:\n        raise ExceptionGroup(\"batch\", errors)\n    except* ValueError as group:\n        for error in group.exceptions:\n            handled.append(str(error))\ndef observe(errors):\n    handled = []\n    remaining = []\n    try:\n        route_errors(errors, handled)\n    except ExceptionGroup as group:\n        remaining = [type(error).__name__ for error in group.exceptions]\n    return handled, remaining\nprint(observe([ValueError(\"bad minutes\"), TypeError(\"wrong shape\")]))\n```\nOutput:\n```text\n(['bad minutes'], ['TypeError'])\n```\nThe `ValueError` message was saved. The `TypeError` passed outward, where `observe` caught and reported it.",
+        "If all errors are `ValueError`, save all their messages. If the input is empty, return before making a group.\n\nComplete only `route_errors`; leave `observe` unchanged. Try a `RuntimeError` and explain why it must still pass outward."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the requirement.",
+        "Make one change to the starter.",
+        "Run the checks.",
+        "Explain why a changed input produces its result."
+      ],
+      "after": [
+        "Keep the early return for an empty list.",
+        "Raise the group inside `try`.",
+        "Use `except* ValueError` to get only matching errors.",
+        "Append each matching message to `handled` and let the other errors pass outward."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If ValueError and RuntimeError are grouped but only except* ValueError handles them, what happens to RuntimeError?",
+        "choices": [
+          "It is silently handled because one subgroup matched.",
+          "It becomes a ValueError automatically.",
+          "It remains in a propagated ExceptionGroup after the matching subgroup is handled."
+        ],
+        "answer": 2,
+        "explanation": "except* selects failures by their exception type. Handling the ValueError subgroup does not discharge a different failure in the same batch."
+      },
+      "after": {
+        "question": "A group contains ValueError and RuntimeError. If only ValueError is handled, what happens to RuntimeError?",
+        "choices": [
+          "It is handled too.",
+          "It changes into ValueError.",
+          "It stays in a group that passes outward."
+        ],
+        "answer": 2,
+        "explanation": "`except* ValueError` handles that kind of error. It leaves the different kind for code outside the block to handle."
+      }
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Trace the visible worked calls before changing the starter."
+      ],
+      "after": [
+        "Use `str(error)` to get its message.",
+        "Handle only ValueError; another error in the group must not disappear."
+      ]
+    }
+  ],
+  "reviewNotes": [
+    "Reviewed directly by the host, one lesson at a time. Plain wording, specific guidance, preserved exercise behavior."
+  ]
+}

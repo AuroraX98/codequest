@@ -1,0 +1,94 @@
+{
+  "lesson": "csharp-54",
+  "position": 54,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Remove source.Cancel(), leaving everything else unchanged. What is printed?",
+      "after": "Request a stop and let the work notice the request."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A CancellationTokenSource issues a cancellation request. Code receives its Token and cooperates by checking it or passing it to a cancellable operation.",
+        "ThrowIfCancellationRequested throws OperationCanceledException when the token has been canceled. It does not undo earlier writes or forcibly kill another thread.",
+        "The example cancels first, then checks before printing Working. The catch reports cancellation rather than treating it as successful work. A using declaration disposes the source afterward.",
+        "Complete local C# example; the app does not execute it:\n```csharp\nusing System;\nusing System.Threading;\nusing var source = new CancellationTokenSource();\nsource.Cancel();\ntry\n{\n    DoWork(source.Token);\n}\ncatch (OperationCanceledException) { Console.WriteLine(\"Canceled\"); }\nstatic void DoWork(CancellationToken token)\n{\n    token.ThrowIfCancellationRequested();\n    Console.WriteLine(\"Working\");\n}\n```",
+        "Expected behavior from this example: Canceled only. This expected result is a reasoned prediction until a compiler test is recorded.",
+        "Optional local transfer: Pass source.Token to Task.Delay and cancel before awaiting it. Explain why canceling after a completed file write would not restore the old file. This is a separate local practice task, not a requirement to mark the reading complete."
+      ],
+      "after": [
+        "A CancellationTokenSource can request that work stop. Calling Cancel sends that request; creating the source alone does not cancel anything.",
+        "A cancellation token lets work check whether a stop was requested. Pass the source's Token to code that needs to notice cancellation.",
+        "ThrowIfCancellationRequested throws OperationCanceledException if the token is canceled. Otherwise it returns normally and the next statement can run.",
+        "Follow the cancellation request before DoWork checks its token.\n\n```csharp\nusing System;\nusing System.Threading;\nusing var source = new CancellationTokenSource();\nsource.Cancel();\ntry\n{\n    DoWork(source.Token);\n}\ncatch (OperationCanceledException) { Console.WriteLine(\"Canceled\"); }\nstatic void DoWork(CancellationToken token)\n{\n    token.ThrowIfCancellationRequested();\n    Console.WriteLine(\"Working\");\n}\n```",
+        "The program prints Canceled only. The check throws before Working can print. The using declaration cleans up the source when its scope ends.",
+        "Cancellation is cooperative: the work must check the token or use an operation that checks it. It does not forcibly stop another thread or undo changes that already happened."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Trace the changed case before choosing an answer.",
+        "Explain the consequence, then optionally try the local transfer task."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Trace the inputs through the visible rule, then compare the changed case."
+      ],
+      "after": [
+        "A new token starts without a cancellation request."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Remove source.Cancel(), leaving everything else unchanged. What is printed?",
+        "choices": [
+          "Canceled: creating a token cancels it",
+          "Working: no cancellation request was made",
+          "Nothing: a token prevents all method calls"
+        ],
+        "answer": 1,
+        "explanation": "A token source begins uncanceled. The check returns normally, allowing the work line to execute."
+      },
+      "after": {
+        "question": "Remove source.Cancel() and keep everything else. What prints?",
+        "choices": [
+          "Canceled",
+          "Working",
+          "Nothing"
+        ],
+        "answer": 1,
+        "explanation": "No cancellation was requested. The check returns normally, and DoWork prints Working."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "C#14/.NET10 core syllabus. Concept-mode reading and understanding check; no in-app C# execution and no claim of mastery. Full example and optional local transfer task are supplied. Actual compiler validation, if available, is reported separately.",
+      "after": "The browser shows C# code and checks your understanding; it does not run C#. Optional local examples use a .NET 10 console project with C# 14."
+    }
+  ],
+  "headings": [
+    "Create a cancellation source",
+    "Pass along the token",
+    "Check before doing work",
+    "One example",
+    "What appears",
+    "Cancellation does not undo finished work"
+  ],
+  "project": {
+    "title": "Cooperate with cancellation",
+    "task": "Follow how the work notices a cancellation request before continuing.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local C# example is optional."
+  }
+}

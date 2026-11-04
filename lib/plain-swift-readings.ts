@@ -1,4 +1,4 @@
-export default [
+const readings = [
   {"source": "Swift is a programming language: you write instructions, and a compiler checks and turns them into a program the computer can run.", "simple": "You write instructions in Swift. A tool called a compiler checks them and turns them into a program the computer can run.", "runtime": "swift", "lesson": "swift-01"},
   {"source": "A declaration gives a value a name. let creates a constant whose assigned value cannot be replaced. var creates a variable you can change later.", "simple": "Giving a value a name is called a declaration. Use let if that name must keep its assigned value, or var if you want to replace the value later.", "runtime": "swift", "lesson": "swift-01"},
   {"source": "Choose let for a destination you do not intend to change.", "simple": "Use let for the destination if it should keep the same value.", "runtime": "swift", "lesson": "swift-01"},
@@ -539,3 +539,5 @@ export default [
   {"source": "The fixture measures growth under two sizes, not an optimized before-and-after UI.", "simple": "This test setup compares growth across two list sizes. It does not show an app screen before and after an optimization.", "runtime": "swift", "lesson": "swift-12"},
   {"source": "Explain those limits, run the core behavior checks, and use equivalent conditions if you later compare another implementation in the Apple environment.", "simple": "Explain what these tests can and cannot prove, and run the basic behavior checks. If you later compare a different method in the Apple environment, give both methods equivalent test conditions.", "runtime": "swift", "lesson": "swift-12"},
 ];
+
+export default readings;

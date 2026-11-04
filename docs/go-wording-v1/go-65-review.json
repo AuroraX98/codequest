@@ -1,0 +1,91 @@
+{
+  "lesson": "go-65",
+  "position": 65,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "If the first input changes from 15 to 70, what is the total?",
+      "after": "Pass only valid minute counts to a worker that totals them."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "This producer considers a fixed list of minute counts. It sends only values 1 through 60, choosing to skip invalid inputs rather than convert them to zero. The send-only chan<- int parameter documents that the producer sends and closes but does not receive.",
+        "The producer defers closing the values channel and a completion channel. The consumer ranges until values is closed, then waits for done before printing its total. A fixed source bounds this exercise; a consumer that exits early would need a cancellation-aware send so the producer cannot remain blocked. No early-exit consumer is used here.",
+        "Complete local Go example; the app itself does not execute it:\n```go\npackage main\n\nimport (\n\"fmt\"\n)\n\nfunc produce(input []int, out chan<- int, done chan<- struct{}) {\n    defer close(done)\n    defer close(out)\n    for _, minutes := range input {\n        if minutes >= 1 && minutes <= 60 { out <- minutes }\n    }\n}\nfunc main() {\n    values := make(chan int)\n    done := make(chan struct{})\n    go produce([]int{15, -1, 20, 0}, values, done)\n    total := 0\n    for minutes := range values { total += minutes }\n    <-done\n    fmt.Println(total)\n}\n```",
+        "Expected output or behavior: 35. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Design an early-consumer-exit variant on paper using context-aware select rather than leaving a blocked producer. You may trace it without a Go compiler; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "A producer sends items; a consumer uses them. This producer checks a fixed list and sends minute counts from 1 through 60. `chan<- int` means it can send integers on that channel but cannot receive from it.",
+        "The producer closes the values channel when it finishes sending. The consumer's range loop then ends. A separate done signal lets main wait for completion before displaying the total.",
+        "Follow each input through the check before adding it.\n```go\npackage main\n\nimport (\n\"fmt\"\n)\n\nfunc produce(input []int, out chan<- int, done chan<- struct{}) {\n    defer close(done)\n    defer close(out)\n    for _, minutes := range input {\n        if minutes >= 1 && minutes <= 60 { out <- minutes }\n    }\n}\nfunc main() {\n    values := make(chan int)\n    done := make(chan struct{})\n    go produce([]int{15, -1, 20, 0}, values, done)\n    total := 0\n    for minutes := range values { total += minutes }\n    <-done\n    fmt.Println(total)\n}\n```",
+        "The screen shows `35`. Only 15 and 20 are accepted. The values -1 and 0 are skipped.",
+        "This consumer reads until the end. If a different consumer could stop early, the producer would need a way to stop a waiting send, such as selecting a cancellation signal."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Apply both limits to each input independently."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If the first input changes from 15 to 70, what is the total?",
+        "choices": [
+          "20",
+          "0 because one rejected input cancels all later values.",
+          "90 because every positive number is accepted"
+        ],
+        "answer": 0,
+        "explanation": "Seventy fails the upper-bound check, negative one and zero also fail, and twenty is the only accepted value."
+      },
+      "after": {
+        "question": "Change the first input from 15 to 70. What total appears?",
+        "choices": [
+          "20",
+          "0, because one rejected input cancels the whole list.",
+          "90, because every positive number is accepted."
+        ],
+        "answer": 0,
+        "explanation": "70 is too large. -1 and 0 are too small. Only 20 is accepted."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Go Core v1 uses the verified Go1.27.3 toolchain and standard library. The app supplies concept reading and an understanding check, not a Go browser runner. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "The browser shows Go code and checks your understanding; it does not run Go. Optional local examples use Go 1.27."
+    }
+  ],
+  "headings": [
+    "Send only allowed values",
+    "Close the stream and wait",
+    "One example",
+    "Read the accepted total",
+    "Plan for an early stop"
+  ],
+  "project": {
+    "title": "A bounded study pipeline",
+    "task": "Find the total after replacing one valid input with an invalid one.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local Go example is optional."
+  }
+}

@@ -1,0 +1,88 @@
+{
+  "lesson": "sql-41",
+  "position": 25,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Create open_tasks(project_id,task_id) showing every project and only unfinished task matches. Preserve projects and tasks.",
+      "after": "Choose which tasks match without removing projects that have none."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "To show every project alongside its unfinished tasks, put t.done=0 inside the LEFT JOIN’s ON condition. That condition decides which right-side rows count as matches. If none qualify, the project still gets a row with NULL right-side columns.",
+        "Moving t.done=0 to WHERE changes the question. It filters rows after the join. A finished matched task fails; a NULL-extended task produces NULL rather than true. Both are removed, so projects without an unfinished task disappear. A project with several unfinished tasks can legitimately produce several rows.",
+        "\n```sql\nCREATE TABLE projects(id INTEGER PRIMARY KEY,title TEXT);\nCREATE TABLE tasks(id INTEGER PRIMARY KEY,project_id INTEGER,done INTEGER);\nINSERT INTO projects VALUES(1,'Map'),(2,'Song'),(3,'Garden');\nINSERT INTO tasks VALUES(10,1,1),(11,1,0),(12,2,1);\nSELECT p.id AS project_id,t.id AS task_id\nFROM projects AS p\nLEFT JOIN tasks AS t ON t.project_id=p.id AND t.done=0\nORDER BY p.id,t.id;\n```\nResults are (1,11), (2,NULL), (3,NULL). Song has only a finished task; Garden has none. Both projects remain.",
+        "\n```sql\nCREATE TABLE projects(id INTEGER PRIMARY KEY,title TEXT);\nCREATE TABLE tasks(id INTEGER PRIMARY KEY,project_id INTEGER,done INTEGER);\nINSERT INTO projects VALUES(1,'Map'),(2,'Song'),(3,'Garden');\nINSERT INTO tasks VALUES(10,1,1),(11,1,0),(12,2,1);\nSELECT p.id AS project_id,t.id AS task_id\nFROM projects AS p\nLEFT JOIN tasks AS t ON t.project_id=p.id\nWHERE t.done=0\nORDER BY p.id,t.id;\n```\nOnly (1,11) remains. Even the project with no task is lost because NULL=0 is not true.",
+        "Optional practice: add a second unfinished task to Map. Predict why it produces another row instead of replacing task 11."
+      ],
+      "after": [
+        "In a LEFT JOIN, `ON` decides which right-side rows count as matches. Put the unfinished-task check there when every project must stay in the result.",
+        "If no task passes the ON checks, the project still appears with NULL task columns. A project with two unfinished tasks gets two result rows.",
+        "Run this example in a fresh database:\n```sql\nCREATE TABLE projects(id INTEGER PRIMARY KEY, title TEXT);\nCREATE TABLE tasks(id INTEGER PRIMARY KEY, project_id INTEGER, done INTEGER);\nINSERT INTO projects VALUES (1, 'Map'), (2, 'Song'), (3, 'Garden');\nINSERT INTO tasks VALUES (10, 1, 1), (11, 1, 0), (12, 2, 1);\nSELECT p.id AS project_id, t.id AS task_id\nFROM projects AS p\nLEFT JOIN tasks AS t\n  ON t.project_id = p.id AND t.done = 0\nORDER BY p.id, t.id;\n```\nThe pairs are `(1, 11)`, `(2, NULL)`, and `(3, NULL)`. Song has only a finished task; Garden has no task. Both projects stay.",
+        "`WHERE t.done = 0` would filter the joined rows afterward. It removes finished tasks and also removes rows where done is NULL. Projects with no unfinished task would disappear.",
+        "Create `open_tasks(project_id, task_id)` from the supplied projects and tasks. Keep every project and match only unfinished tasks. Leave both source tables unchanged."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the small example and explain its inputs and effects.",
+        "Complete the starter for this lesson.",
+        "Run the behavior checks, then predict a changed case."
+      ],
+      "after": [
+        "Start with projects on the left.",
+        "Put the ID match and done = 0 together in ON.",
+        "Save the project and task IDs in open_tasks."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Trace the supplied rows and resulting rows before changing the query."
+      ],
+      "after": [
+        "Use LEFT JOIN, not INNER JOIN.",
+        "The unfinished check belongs in ON for this task.",
+        "Keep NULL task IDs when no unfinished task matches."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "A fourth project has only finished tasks. With done=0 in LEFT JOIN ON, what happens?",
+        "choices": [
+          "It appears with NULL task columns",
+          "Its finished tasks are returned as unfinished",
+          "It disappears"
+        ],
+        "answer": 0,
+        "explanation": "No right row qualifies, so LEFT JOIN supplies a NULL-extended row for that parent."
+      },
+      "after": {
+        "question": "A project has only finished tasks. What happens when done = 0 is in LEFT JOIN ON?",
+        "choices": [
+          "The project appears with NULL task columns.",
+          "Its finished tasks become unfinished.",
+          "The project disappears."
+        ],
+        "answer": 0,
+        "explanation": "No task matches the rule, but LEFT JOIN keeps the project."
+      }
+    }
+  ],
+  "headings": [
+    "Filter the matching side",
+    "Keep every project",
+    "Try an unfinished-task join",
+    "Understand why WHERE differs",
+    "Build the open-task report"
+  ],
+  "project": {
+    "title": "Filter matches without losing parents",
+    "task": "Create open_tasks(project_id, task_id), keeping every project and matching only unfinished tasks.",
+    "done_when": "Projects without unfinished tasks have NULL task IDs, all valid matches remain, and both source tables stay unchanged."
+  }
+}

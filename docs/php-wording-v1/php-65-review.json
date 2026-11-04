@@ -1,0 +1,91 @@
+{
+  "lesson": "php-65",
+  "position": 65,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "If the topic contains SQL-looking text with a quote and DROP TABLE, what does the bound insertion do?",
+      "after": "SQL gives a database instructions. A parameter is a place reserved for a data value in one of those instructions."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "PDO prepared statements separate SQL structure from parameter data. A placeholder represents a value, not a table name, column identifier or arbitrary SQL fragment. Dynamic identifiers require a separate trusted allowlist. Parameter binding does not replace domain validation or database permissions.",
+        "in_array with its third argument true uses strict matching in the driver availability check. This fixture requires PDO plus pdo_sqlite and uses a real SQLite in-memory database, not a pretend query result or external service. Exception mode exposes database failures. Here exec creates the known table, prepare fixes the INSERT template, execute supplies its bound values, query runs SELECT to read data, and fetchColumn retrieves the first column from a result row. The stored value is read back exactly, and a second query confirms the table still exists. This does not establish compatibility with a production MySQL or PostgreSQL deployment.\n\nPDO::getAvailableDrivers() takes no arguments and returns an array of driver-name Strings loaded in this PHP process; the strict in_array check looks for \"sqlite\". In the second SELECT, SQL COUNT(*) returns the number of selected rows, and fetchColumn reads that single result column. It is a database aggregate, not a PHP function.",
+        "Complete local PHP example; the app itself does not execute it:\n```php\n<?php\ndeclare(strict_types=1);\nif (!in_array(\"sqlite\", PDO::getAvailableDrivers(), true)) { throw new RuntimeException(\"pdo_sqlite required\"); }\n$db = new PDO(\"sqlite::memory:\", null, null, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);\n$db->exec(\"CREATE TABLE logs (topic TEXT NOT NULL)\");\n$topic = \"read\";\n$insert = $db->prepare(\"INSERT INTO logs (topic) VALUES (:topic)\");\n$insert->execute([\"topic\" => $topic]);\n$stored = $db->query(\"SELECT topic FROM logs\")->fetchColumn();\n$count = (int) $db->query(\"SELECT COUNT(*) FROM logs\")->fetchColumn();\necho $count, \"\\n\";\necho $stored === $topic ? \"stored as data\\n\" : \"mismatch\\n\";\n\n```",
+        "Expected output or behavior: 1\nstored as data. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Explain why an ORDER BY column cannot safely be selected by binding its name as a value. You may trace it without a PHP interpreter; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "SQL gives a database instructions. A parameter is a place reserved for a data value in one of those instructions.",
+        "The prepared instruction has a named spot. The next call supplies the topic as a value.",
+        "Follow the labeled parts of this example.\n```php\n<?php\ndeclare(strict_types=1);\nif (!in_array(\"sqlite\", PDO::getAvailableDrivers(), true)) { throw new RuntimeException(\"pdo_sqlite required\"); }\n$db = new PDO(\"sqlite::memory:\", null, null, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);\n$db->exec(\"CREATE TABLE logs (topic TEXT NOT NULL)\");\n$topic = \"read\";\n$insert = $db->prepare(\"INSERT INTO logs (topic) VALUES (:topic)\");\n$insert->execute([\"topic\" => $topic]);\n$stored = $db->query(\"SELECT topic FROM logs\")->fetchColumn();\n$count = (int) $db->query(\"SELECT COUNT(*) FROM logs\")->fetchColumn();\necho $count, \"\\n\";\necho $stored === $topic ? \"stored as data\\n\" : \"mismatch\\n\";\n```",
+        "The output is `1`, then `stored as data`. The example stores one row and reads its text back unchanged in an in-memory database.",
+        "Trace a topic containing quotes through the same parameter."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read one idea.",
+        "Follow the labeled example.",
+        "Try the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Trace a topic containing quotes through the same parameter."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If the topic contains SQL-looking text with a quote and DROP TABLE, what does the bound insertion do?",
+        "choices": [
+          "Executes DROP TABLE because parameters are pasted as SQL.",
+          "Silently removes the quote from user text.",
+          "Stores one exact text value; the table remains queryable."
+        ],
+        "answer": 2,
+        "explanation": "The placeholder is bound as a data value, so SQL-looking characters do not become new statement structure."
+      },
+      "after": {
+        "question": "What if the topic looks like a command to delete a table?",
+        "choices": [
+          "It deletes the table.",
+          "The quotes are removed.",
+          "It is stored as text."
+        ],
+        "answer": 2,
+        "explanation": "The supplied value fills a data slot. It does not become a second SQL instruction."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "PHP Core v1 uses PHP 8.5.12 CLI and explicitly available extensions. The app supplies concept reading and an understanding check, not a PHP browser runner. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "CodeQuest shows the PHP example. Running it on your own computer is optional."
+    }
+  ],
+  "headings": [
+    "Keep data separate from SQL",
+    "Leave a place for data",
+    "Read the example",
+    "What happens",
+    "Try one change"
+  ],
+  "project": {
+    "title": "SQL parameters and database boundaries",
+    "task": "Trace a topic containing quotes through the same parameter.",
+    "done_when": "Read each idea and pass the understanding check. Running the example on your computer is optional."
+  }
+}

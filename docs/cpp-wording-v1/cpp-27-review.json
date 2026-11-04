@@ -1,0 +1,94 @@
+{
+  "lesson": "cpp-27",
+  "position": 27,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Insert return 0 inside the nested scope after work. What prints?",
+      "after": "Tie cleanup to an object's lifetime so leaving a scope releases what it owns."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "RAII means Resource Acquisition Is Initialization: an owning object acquires a resource during construction and releases it during destruction. A destructor is named ~ClassName and takes no arguments.",
+        "This Trace is a lifecycle illustration, not an actual file owner. Its constructor/destructor print when a nested scope begins and ends. Real standard-library owners use this lifetime mechanism to release memory or close handles.",
+        "Use standard containers and smart pointers instead of hand-writing ownership code. Automatic objects are destroyed in reverse construction order on normal scope exit. Cleanup destructors should not allow failures to escape.",
+        "Complete local C++ example; the app itself does not execute it:\n```cpp\n#include <iostream>\nstruct Trace {\n    Trace() { std::cout << \"enter\\n\"; }\n    ~Trace() { std::cout << \"leave\\n\"; }\n};\nint main() {\n    {\n        Trace marker;\n        std::cout << \"work\\n\";\n    }\n    std::cout << \"after\\n\";\n}\n\n```",
+        "Expected output or behavior: enter\nwork\nleave\nafter\n. Local compiler test evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Create two named trace objects and observe the reverse destruction order. You may trace this without a compiler; finishing the reading is not proof of a local run."
+      ],
+      "after": [
+        "A resource is something a program uses and must release, such as memory or an open file. RAII is the C++ pattern of putting that responsibility in an object. When the owner is destroyed, it releases its resource.",
+        "A destructor runs when an object is destroyed. Its name is the class name with ~ in front, and it takes no arguments. Standard containers and smart pointers already use destructors to manage cleanup.",
+        "Trace only prints messages so you can see an object's lifetime. It does not open a file or own another resource. The constructor prints enter; the destructor prints leave.",
+        "Follow marker from its construction to the end of its block.\n\n```cpp\n#include <iostream>\nstruct Trace {\n    Trace() { std::cout << \"enter\\n\"; }\n    ~Trace() { std::cout << \"leave\\n\"; }\n};\nint main() {\n    {\n        Trace marker;\n        std::cout << \"work\\n\";\n    }\n    std::cout << \"after\\n\";\n}\n\n```",
+        "The program prints enter, work, leave, and after on separate lines. marker is destroyed at the closing brace of the inner block, before after prints.",
+        "Returning normally from a function also destroys its ordinary local objects. They are destroyed in reverse construction order. Abruptly stopping the whole process does not give the same cleanup guarantee."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain why, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Find the point where marker's lifetime ends."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Insert return 0 inside the nested scope after work. What prints?",
+        "choices": [
+          "enter, work, after",
+          "enter, work, leave",
+          "enter, work only"
+        ],
+        "answer": 1,
+        "explanation": "Returning still exits the scope and destroys marker. The after statement is not reached. This is normal return, not abrupt process termination."
+      },
+      "after": {
+        "question": "Insert return 0 after the work output, inside the inner block. What prints?",
+        "choices": [
+          "enter, work, after",
+          "enter, work, leave",
+          "enter, work only"
+        ],
+        "answer": 1,
+        "explanation": "Returning leaves the block and destroys marker, so leave prints. The after line is never reached."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "C++ Core v1, standard C++23 features checked against the available GCC14.2 implementation. This app provides concept reading and an understanding check, not a C++ browser runner. Local example tests are separate evidence and do not certify learner mastery.",
+      "after": "The browser shows C++ code and checks your understanding; it does not run C++. Optional local examples use C++23."
+    }
+  ],
+  "headings": [
+    "Let an object manage cleanup",
+    "Run a destructor at the end",
+    "Watch the lifetime",
+    "One example",
+    "What appears",
+    "Normal returns still clean up"
+  ],
+  "project": {
+    "title": "Release resources with RAII",
+    "task": "Trace the constructor and destructor messages around the inner block.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local C++ example is optional."
+  }
+}

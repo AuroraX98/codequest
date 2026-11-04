@@ -1,0 +1,94 @@
+{
+  "lesson": "javascript-55",
+  "position": 65,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Complete taggedRecord(label): create a fresh Symbol(\"note\") key on each call, store label under it plus title:\"public\", and return {token, record}. Do not use a String key as a substitute.",
+      "after": "Use a unique Symbol value as an object's key."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "Symbol(description) returns a new unique primitive Symbol. Two calls with the same description still produce unequal values. Do not use new Symbol. The description is for diagnostics, not a shared-key lookup.",
+        "[token]: label is a computed property name: the Symbol value, rather than the letters token, becomes the key. record[token] retrieves that property. taggedRecord returns the token alongside the record so its caller can perform the lookup.",
+        "Object.keys(record) returns enumerable String keys, excluding Symbols. Reflect.ownKeys(record) includes own String and Symbol keys, so Symbol-keyed data can still be discovered. The Symbol is not encryption or an access-control boundary.\n```javascript\nfunction taggedRecord(label) {\n  const token = Symbol(\"note\");\n  const record = {title: \"public\", [token]: label};\n  return {token, record};\n}\nconst first = taggedRecord(\"hidden label\");\nconst second = taggedRecord(\"hidden label\");\nconsole.log(first.token === second.token);\nconsole.log(first.record[first.token]);\nconsole.log(Object.keys(first.record).join(\",\"));\nconsole.log(Reflect.ownKeys(first.record).length);\n```\nOutput: false, hidden label, title, 2 on separate lines.",
+        "Changing the stored label does not make independently constructed tokens equal. Optional practice: reuse the same token in a second object and explain how sharing a key differs from sharing the stored object."
+      ],
+      "after": [
+        "`Symbol(\"note\")` creates a unique value that can be used as a property key.\n\nTwo Symbol calls make different values, even with the same description. The word note is just a helpful label. Call `Symbol` without `new`.",
+        "In `{ [token]: label }`, the brackets use the value of `token` as the property key.\n\nRead it with `record[token]`. Our function returns both the record and its token, so the caller has the key needed to read that value.",
+        "Here is the complete example.\n```javascript\nfunction taggedRecord(label) {\n  const token = Symbol(\"note\");\n  const record = {title: \"public\", [token]: label};\n  return {token, record};\n}\nconst first = taggedRecord(\"hidden label\");\nconst second = taggedRecord(\"hidden label\");\nconsole.log(first.token === second.token);\nconsole.log(first.record[first.token]);\nconsole.log(Object.keys(first.record).join(\",\"));\nconsole.log(Reflect.ownKeys(first.record).length);\n```\nOutput:\n```text\nfalse\nhidden label\ntitle\n2\n```\nThe tokens are different. `Object.keys` lists only the text key title. `Reflect.ownKeys` finds both own keys, including the Symbol.\n\nA Symbol key is not secret: code can still discover it.",
+        "Complete `taggedRecord(label)` by creating a fresh `Symbol(\"note\")` each time.\n\nKeep the public title and save the supplied label under the Symbol key. Return both `token` and `record`. Equal labels must not make the tokens equal."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the requirement.",
+        "Make one change to the starter.",
+        "Run the checks.",
+        "Explain why a changed input produces its result."
+      ],
+      "after": [
+        "Replace the text token with Symbol(\"note\").",
+        "Keep [token] as the computed property name.",
+        "Return the token and record.",
+        "Check that two calls get different tokens and each token reads its label."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If two Symbol calls use the same description, may they safely be treated as the same key?",
+        "choices": [
+          "Yes. The description is a unique global identifier.",
+          "Only if the associated property values are equal.",
+          "No. Each Symbol call creates a distinct value even when descriptions match."
+        ],
+        "answer": 2,
+        "explanation": "The key identity comes from the Symbol value, not its description or the contents stored under it."
+      },
+      "after": {
+        "question": "If two Symbol calls use the same description, may they safely be treated as the same key?",
+        "choices": [
+          "Yes. The description is a unique global identifier.",
+          "Only if the associated property values are equal.",
+          "No. Each Symbol call creates a distinct value even when descriptions match."
+        ],
+        "answer": 2,
+        "explanation": "Every Symbol call makes a distinct value. Its description does not decide its identity."
+      }
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Trace the visible worked calls before changing the starter."
+      ],
+      "after": [
+        "Do not write new Symbol.",
+        "Using \"note\" as a string would reuse the same key."
+      ]
+    },
+    {
+      "field": "externalNotes",
+      "before": "ECMAScript 2026 core; native Node24 and current app worker/DOM harness evidence are recorded separately. No external service or real-browser claim follows from a local fixture.",
+      "after": ""
+    }
+  ],
+  "headings": [
+    "Make a unique key",
+    "Use the token as a property name",
+    "Compare the keys",
+    "Complete taggedRecord"
+  ],
+  "project": {
+    "title": "Symbols and unique keys",
+    "task": "Complete taggedRecord(label) with a fresh Symbol(\"note\") key. Save the label under that key, keep title: \"public\", and return both the token and record.",
+    "done_when": "Tokens differ between calls, each token reads its label, and the key listings show the expected text and Symbol keys."
+  },
+  "notes": [
+    "Removed an unrelated local-project completion requirement; its useful teaching is in the lesson and technical evidence stays in review documents."
+  ]
+}

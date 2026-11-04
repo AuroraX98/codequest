@@ -1,0 +1,107 @@
+{
+  "lesson": "backend-10",
+  "position": 31,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Complete cachePolicy(scope). Exactly \"public-catalog\" returns \"public, max-age=60\". Every other scope returns \"no-store\". This exercise’s public catalog is explicitly nonpersonalized and contains no sensitive data.",
+      "after": "Allow shared caching only for the explicitly public catalog."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "Caching reuses a previous response instead of always retrieving it again.",
+        "Cache-Control is a response header that tells caches how a response may be stored and reused.",
+        "public permits shared caching. max-age=60 sets a freshness lifetime of sixty seconds for this exercise.",
+        "A personalized or sensitive response must not be treated as the same public resource for everyone.",
+        "no-store asks caches not to store the response. It is not the same as no-cache, which permits storage but requires validation before reuse.",
+        "This server example assigns a header before sending a known public response.\n```javascript\nres.set(\"Cache-Control\", \"public, max-age=60\");\nres.json({title: \"Public catalog\"});\n```",
+        "The practice uses an explicit public-catalog scope. Unknown scopes fall back to no-store rather than accidentally becoming cacheable.",
+        "The helper only chooses a string. A real HTTP test must inspect the actual response headers and ensure the public content is truly nonpersonalized.",
+        "A no-store response is not a complete privacy solution by itself. Authentication, access checks, transport and application storage remain separate responsibilities."
+      ],
+      "after": [
+        "Caching stores a response so it can be reused later. It can reduce repeated work, but reusing the wrong person's response can expose private information.",
+        "Cache-Control is an HTTP response header: a named setting sent with the response. It tells caches how the response may be stored and reused.",
+        "This exercise's public-catalog content is the same for everyone and contains no sensitive data. public permits shared caching, and max-age=60 gives it a freshness lifetime of sixty seconds.",
+        "Personal or sensitive content must not be treated as this shared public catalog. A signed-out request alone does not prove the content is safe to share.",
+        "no-store tells caches not to store the response. no-cache has a different meaning: storage is allowed, but the cache must check with the server before reusing the response.",
+        "```javascript\nfunction cachePolicy(scope) {\n  return scope === \"public-catalog\" ? \"public, max-age=60\" : \"no-store\";\n}\nconsole.log(cachePolicy(\"public-catalog\"));\nconsole.log(cachePolicy(\"account\"));\n```\nThis prints public, max-age=60, then no-store.",
+        "Recognize only the exact public-catalog name. Unknown scope names must fall back to no-store rather than accidentally allowing shared caching.",
+        "The function chooses a string. A real server must put that string in its Cache-Control header before sending the response. Check the actual header and confirm the content is truly public.",
+        "no-store is one storage instruction, not a complete privacy system. A real app still needs identity checks, permission checks, and protected connections."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the requirement.",
+        "Make one change to the starter.",
+        "Run the checks.",
+        "Explain why a changed input produces its result."
+      ],
+      "after": [
+        "Match only the exact public-catalog scope.",
+        "Return public, max-age=60 for that one case.",
+        "Return no-store for every other input."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Recognize only the exact public-catalog scope.",
+        "Use no-store as the fallback.",
+        "Do not infer public safety just because a user is signed out."
+      ],
+      "after": [
+        "Use a strict comparison.",
+        "Do not assume an unknown scope is public."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "A developer wants caches not to store a sensitive response. Why is no-cache not equivalent to no-store?",
+        "choices": [
+          "no-cache may still permit storage, with validation before reuse.",
+          "no-cache always deletes every copy on every device.",
+          "Both directives make authentication unnecessary."
+        ],
+        "answer": 0,
+        "explanation": "The directives have different meanings. Preventing storage is not the same as requiring revalidation before reusing stored content."
+      },
+      "after": {
+        "question": "Why is no-cache different from no-store?",
+        "choices": [
+          "no-cache can allow storage but requires checking before reuse",
+          "no-cache deletes every copy on every device",
+          "Both remove the need for authentication"
+        ],
+        "answer": 0,
+        "explanation": "Preventing storage and checking before reuse are different rules."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "The browser checks a policy function only. No caching proxy or browser persistence behavior is verified here; real endpoint checks must inspect headers and personalized-content boundaries.",
+      "after": "Browser checks test only the policy function. They do not test a browser cache or shared caching service."
+    }
+  ],
+  "headings": [
+    "Explain caching",
+    "Send a cache rule",
+    "Name the public exception",
+    "Keep personal responses separate",
+    "Distinguish no-store and no-cache",
+    "Read one example",
+    "Use a careful fallback",
+    "Check the real response header",
+    "Keep other protections"
+  ],
+  "project": {
+    "title": "Choose a safe cache policy",
+    "task": "Complete cachePolicy(scope): only public-catalog returns public, max-age=60; all other inputs return no-store.",
+    "done_when": "The public exception is exact, and every unknown or private scope uses no-store."
+  }
+}

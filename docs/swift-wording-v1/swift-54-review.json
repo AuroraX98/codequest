@@ -1,0 +1,87 @@
+{
+  "lesson": "swift-54",
+  "position": 52,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Return every word length exactly once, sorted, including zero and duplicate lengths.",
+      "after": "Collect one result from each child task, then sort the results."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A task group creates one structured scope for a number of child tasks chosen at runtime. Its result sequence arrives in completion order, which need not be input order.",
+        "withTaskGroup receives the child result type Int.self and the body result type [Int].self; .self here names a type value, not an instance. group.addTask starts a child closure returning one word’s Character count. Each child captures one immutable String value; no child mutates lengths. The parent consumes each result with for await and append adds it to the array. sorted returns an ascending copy, making the output order deliberate while preserving duplicates. Empty input creates no children and returns []. All children finish before the group scope exits. This example neither promises speed nor demonstrates cancellation; cancellation in Swift is cooperative, not thread killing.",
+        "\n```swift\nfunc collectedLengths(_ words: [String]) async -> [Int] {\n    return await withTaskGroup(of: Int.self, returning: [Int].self) { group in\n        for word in words {\n            group.addTask {\n                word.count\n            }\n        }\n        var lengths: [Int] = []\n        for await length in group {\n            lengths.append(length)\n        }\n        return lengths.sorted()\n    }\n}\nprint(await collectedLengths([\"map\", \"a\", \"sun\"]))\n```\nExpected output:\n```text\n[1, 3, 3]\n```",
+        "\n```swift\nfunc collectedLengths(_ words: [String]) async -> [Int] {\n    return await withTaskGroup(of: Int.self, returning: [Int].self) { group in\n        for word in words {\n            group.addTask {\n                word.count\n            }\n        }\n        var lengths: [Int] = []\n        for await length in group {\n            lengths.append(length)\n        }\n        return lengths.sorted()\n    }\n}\nprint(await collectedLengths([\"\", \"ab\", \"ab\"]))\nprint(await collectedLengths([]))\n```\nExpected output:\n```text\n[0, 2, 2]\n[]\n```",
+        "Optional practice: Return every word length exactly once, sorted, including zero and duplicate lengths. Predict a different input before running."
+      ],
+      "after": [
+        "A task group manages child tasks together. It is useful when the number of tasks depends on the input. Here, each word gets one child task that counts its Swift characters.",
+        "withTaskGroup declares Int as each child's result type and [Int] as the whole group's answer type. .self names these types. addTask starts a child's work. for await reads the results as children finish.",
+        "```swift\nfunc collectedLengths(_ words: [String]) async -> [Int] {\n    return await withTaskGroup(of: Int.self, returning: [Int].self) { group in\n        for word in words {\n            group.addTask {\n                word.count\n            }\n        }\n        var lengths: [Int] = []\n        for await length in group {\n            lengths.append(length)\n        }\n        return lengths.sorted()\n    }\n}\nprint(await collectedLengths([\"map\", \"a\", \"sun\"]))\n```\nThis prints [1, 3, 3]. The words have lengths 3, 1, and 3. Each child contributes one number, and the parent collects them.",
+        "Children may finish in a different order from the words. sorted() gives the final numbers a clear order, from smallest to largest. It keeps repeated lengths. The group waits for all children before its scope ends.",
+        "Complete collectedLengths to return every word's length exactly once, sorted. Keep zero for empty text and keep repeated lengths. With no words, return an empty array. Children return their counts; only the parent changes lengths."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the small example and explain its inputs and effects.",
+        "Complete the starter for the stated contract.",
+        "Use the configured compatible Swift companion or local Swift toolchain, then explain the changed case."
+      ],
+      "after": [
+        "Add one child task for each word.",
+        "Append each returned length in the parent.",
+        "Return the sorted array, keeping zero and repeated values."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Trace the inputs, returned value and changed state before running."
+      ],
+      "after": [
+        "Use an array, not a set: repeated lengths still count.",
+        "Do not assume completion order matches input order."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If two different words both have length 3, how many 3 entries belong in the result?",
+        "choices": [
+          "It depends on completion order.",
+          "One",
+          "Two"
+        ],
+        "answer": 2,
+        "explanation": "Each child contributes one result. Sorting changes order, not multiplicity; using a set would violate this contract."
+      },
+      "after": {
+        "question": "Two words each have length 3. How many 3 entries belong in the answer?",
+        "choices": [
+          "It depends on which task finishes first",
+          "One",
+          "Two"
+        ],
+        "answer": 2,
+        "explanation": "Each word contributes one length. Sorting does not remove repeated values."
+      }
+    }
+  ],
+  "headings": [
+    "Group a changing number of tasks",
+    "Add and collect the work",
+    "Read one example",
+    "Choose the final order",
+    "Try it yourself"
+  ],
+  "project": {
+    "title": "Collect a variable number of child results",
+    "task": "Complete collectedLengths with one result per word. Return the lengths in ascending order, including zero and repeated lengths.",
+    "done_when": "The result contains every input word's length once and handles an empty input array."
+  }
+}

@@ -1,0 +1,91 @@
+{
+  "lesson": "rust-36",
+  "position": 36,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "If use_left is false, what prints while both strings remain alive?",
+      "after": "A lifetime describes how long a borrow may be used."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A lifetime parameter such as 'a relates borrowed inputs to a borrowed output. It does not extend any object’s life or choose how long memory physically exists.",
+        "Both arguments and the returned slice use 'a below because either input may be returned. The caller must keep whichever reference the contract permits valid for the result’s use. Annotations describe the guarantee; they do not make a local String live forever.",
+        "Complete local Rust example; the app itself does not execute it:\n```rust\nfn choose<'a>(left: &'a str, right: &'a str, use_left: bool) -> &'a str {\n    if use_left { left } else { right }\n}\nfn main() {\n    let first = String::from(\"first\");\n    let second = String::from(\"second\");\n    println!(\"{}\", choose(&first, &second, true));\n}\n```",
+        "Expected output or behavior: first. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Place one owner in a smaller block and test whether using the chosen result outside is allowed. You may trace it without a Rust compiler; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "A lifetime describes how long a borrow may be used.",
+        "The same mark on the two inputs and the result means the returned view must work whichever input is picked. It does not keep either String alive longer.",
+        "Follow the labeled parts of this example.\n```rust\nfn choose<'a>(left: &'a str, right: &'a str, use_left: bool) -> &'a str {\n    if use_left { left } else { right }\n}\nfn main() {\n    let first = String::from(\"first\");\n    let second = String::from(\"second\");\n    println!(\"{}\", choose(&first, &second, true));\n}\n```",
+        "The output is `first`. The true flag picks the first String while both Strings are still alive.",
+        "Switch the flag and trace which input is returned."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read one idea.",
+        "Follow the labeled example.",
+        "Try the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Switch the flag and trace which input is returned."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If use_left is false, what prints while both strings remain alive?",
+        "choices": [
+          "A cloned independent String.",
+          "second",
+          "first because lifetime names pick the first argument"
+        ],
+        "answer": 1,
+        "explanation": "The Boolean selects the second borrowed input; the lifetime annotation expresses validity rather than which branch executes."
+      },
+      "after": {
+        "question": "If use_left is false, what prints while both strings remain alive?",
+        "choices": [
+          "A cloned independent String.",
+          "second",
+          "first because lifetime names pick the first argument"
+        ],
+        "answer": 1,
+        "explanation": "False selects the right-hand input, which holds second."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Rust Core v1 uses stable Rust1.99.1 with edition2024 and the standard library. The app supplies concept reading and an understanding check, not a Rust browser runner. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "CodeQuest shows the Rust example. Running it on your own computer is optional."
+    }
+  ],
+  "headings": [
+    "Connect borrowed lifetimes",
+    "Read the shared mark",
+    "Read the example",
+    "What happens",
+    "Try one change"
+  ],
+  "project": {
+    "title": "Lifetime annotations express relationships",
+    "task": "Switch the flag and trace which input is returned.",
+    "done_when": "Read each idea and pass the understanding check. Running the example on your computer is optional."
+  }
+}

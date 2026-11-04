@@ -1,0 +1,91 @@
+{
+  "lesson": "r-67",
+  "position": 67,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "If temporary digits becomes 5, does it leak after the function returns?",
+      "after": "A setting changed for one calculation need not affect later work."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "sessionInfo records the R version, platform and loaded package information. RNGkind describes random-generator configuration; options can also affect behavior and formatting. Saving metadata helps explain a run but does not by itself recreate dependencies, input data or operating-system behavior.\n\nRNGkind() with no arguments returns the current generator, normal-generation and sampling algorithm names without changing them. This is the configuration observed in the tested R 4.5.0 fresh session, not a promise that every session has the same settings.\n```r\ncat(RNGkind(), sep = \" | \")\n```\nIt prints:\n```text\nMersenne-Twister | Inversion | Rejection\n```",
+        "options returns prior values for changed settings, so a function can register on.exit(options(old), add = TRUE). This keeps local formatting from leaking into later analysis. Rscript --vanilla avoids startup files and workspace restoration, but still needs explicit data, package versions and seed policy.\n\ngetOption(\"digits\") receives an option name and returns its current value. In the example it reads 3 inside show_value, then reads the restored value after on.exit has run. It does not change the option.",
+        "Complete local R example; the app itself does not execute it:\n```r\nshow_value <- function() {\n  old <- options(digits = 3)\n  on.exit(options(old), add = TRUE)\n  cat(getOption(\"digits\"), \"\\n\", sep = \"\")\n}\nbefore <- getOption(\"digits\")\nshow_value()\ncat(identical(before, getOption(\"digits\")), \"\\n\", sep = \"\")\ninfo <- sessionInfo()\ncat(is.list(info), \"\\n\", sep = \"\")\n\n```",
+        "Expected output or behavior: 3\nTRUE\nTRUE. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: List one missing ingredient needed to reproduce a run beyond sessionInfo. You may trace it without a R interpreter; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "A setting changed for one calculation need not affect later work.",
+        "Restore the saved options when this function finishes.",
+        "Follow the labeled parts of this example.\n```r\nshow_value <- function() {\n  old <- options(digits = 3)\n  on.exit(options(old), add = TRUE)\n  cat(getOption(\"digits\"), \"\\n\", sep = \"\")\n}\nbefore <- getOption(\"digits\")\nshow_value()\ncat(identical(before, getOption(\"digits\")), \"\\n\", sep = \"\")\ninfo <- sessionInfo()\ncat(is.list(info), \"\\n\", sep = \"\")\n```",
+        "The output is `3`, then `TRUE`, then `TRUE`. The temporary setting prints as three, then the old setting returns. The `sessionInfo()` call records details about the running R setup.",
+        "Choose five as the temporary digits setting and follow the cleanup."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read one idea.",
+        "Follow the labeled example.",
+        "Try the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Choose five as the temporary digits setting and follow the cleanup."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If temporary digits becomes 5, does it leak after the function returns?",
+        "choices": [
+          "Yes; options can never be restored.",
+          "It changes the stored numeric values to five digits permanently.",
+          "No; it prints 5 and then confirms the prior option was restored."
+        ],
+        "answer": 2,
+        "explanation": "The saved prior settings are reapplied on exit; digits is display configuration rather than a transformation of stored values."
+      },
+      "after": {
+        "question": "Does the temporary five stay active after the function returns?",
+        "choices": [
+          "Yes. All settings are permanent.",
+          "Yes. It changes all saved data.",
+          "No. The old setting is restored."
+        ],
+        "answer": 2,
+        "explanation": "The cleanup restores the settings saved before the change."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "R Core v1 uses R 4.5.0 and explicitly available extensions. The app supplies concept reading and an understanding check, not a R browser runner. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "CodeQuest shows the R example. Running it on your own computer is optional."
+    }
+  ],
+  "headings": [
+    "Restore a temporary setting",
+    "Put the old settings back",
+    "Read the example",
+    "What happens",
+    "Try one change"
+  ],
+  "project": {
+    "title": "Reproducible sessions and configuration",
+    "task": "Choose five as the temporary digits setting and follow the cleanup.",
+    "done_when": "Read each idea and pass the understanding check. Running the example on your computer is optional."
+  }
+}

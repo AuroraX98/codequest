@@ -1,0 +1,100 @@
+{
+  "lesson": "sql-12",
+  "position": 30,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Create a view customer_orders with customer_id, name, total_orders, paid_orders and paid_cents. Include every customer, even those without orders. Count all their orders, count only status=\"paid\" orders, and sum only paid amounts. Missing totals must be zero. Amounts are nonnegative integer cents.",
+      "after": "Count all orders and paid orders without losing customers who have none."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A dashboard may need several summaries from the same data. Aggregation combines rows, using functions such as COUNT and SUM. Conditional aggregation adds a decision inside the aggregate so different summary columns can include different rows. Here, a customer can have paid, pending or cancelled orders.",
+        "Start from customers and LEFT JOIN orders using the customer ID. A left join keeps a customer even when no order matches. The unmatched order columns become NULL. COUNT(*) would count that retained row as one, so use COUNT(o.id) to count only real orders; COUNT(column) skips NULL.",
+        "CASE turns a condition into a value before SUM adds it.\n```sql\nWITH orders(status, cents) AS (VALUES ('paid', 300), ('pending', 500), ('paid', 200))\nSELECT SUM(CASE WHEN status = 'paid' THEN 1 ELSE 0 END) AS paid_orders,\n       SUM(CASE WHEN status = 'paid' THEN cents ELSE 0 END) AS paid_cents\nFROM orders;\n```\nThis returns 2 paid orders and 500 paid cents. The pending amount is deliberately excluded.",
+        "GROUP BY chooses which rows belong to each summary. Group by customer ID and name. Names alone are unsafe because two different customers can share a name. Aliases such as c for customers and o for orders shorten qualified column names, including c.id and o.customer_id.",
+        "This example keeps a customer with no order.\n```sql\nWITH customers(id) AS (VALUES (1), (2)),\norders(id, customer_id) AS (VALUES (10, 1))\nSELECT c.id, COUNT(o.id) AS total_orders\nFROM customers AS c LEFT JOIN orders AS o ON o.customer_id = c.id\nGROUP BY c.id\nORDER BY c.id;\n```\nCustomer 1 has one order; customer 2 has zero. An inner join would lose customer 2 entirely.",
+        "Do not place WHERE o.status = 'paid' after the join: it would remove unpaid orders before total_orders is counted and remove customers without paid orders. Put that condition inside each paid aggregate. CASE with ELSE 0 gives the retained no-order row a zero contribution.",
+        "Integer cents avoid floating-point rounding for this small monetary total. The view summarizes orders; it does not charge anyone or infer payment from an amount. Checks include two customers sharing a name, a customer with no orders and unpaid orders that must not count toward revenue. Display the final view ordered by customer_id."
+      ],
+      "after": [
+        "Conditional aggregation means choosing which values go into a summary. A CASE inside SUM can count paid orders while another column counts all orders.",
+        "Start with customers and LEFT JOIN their orders. Use COUNT(o.id) to count real orders. COUNT(*) would also count the unmatched row kept for a customer with no orders.",
+        "Run this example in a fresh database:\n```sql\nCREATE TABLE demo_customers(id INTEGER PRIMARY KEY, name TEXT);\nCREATE TABLE demo_orders(id INTEGER PRIMARY KEY, customer_id INTEGER, status TEXT, cents INTEGER);\nINSERT INTO demo_customers VALUES (1, 'Rin'), (2, 'Sam');\nINSERT INTO demo_orders VALUES\n  (10, 1, 'paid', 300), (11, 1, 'pending', 500), (12, 1, 'paid', 200);\nSELECT c.id, c.name,\n       COUNT(o.id) AS total_orders,\n       SUM(CASE WHEN o.status = 'paid' THEN 1 ELSE 0 END) AS paid_orders,\n       SUM(CASE WHEN o.status = 'paid' THEN o.cents ELSE 0 END) AS paid_cents\nFROM demo_customers AS c\nLEFT JOIN demo_orders AS o ON o.customer_id = c.id\nGROUP BY c.id, c.name\nORDER BY c.id;\n```\nRin has `3` total orders, `2` paid orders, and `500` paid cents. Sam has `0` for all three.",
+        "Group by customer ID and name. Two people can share a name, so grouping by name alone could wrongly combine their orders.",
+        "The CASE choices use ELSE 0. A customer with no order contributes zero to each paid total. COUNT(o.id) also gives zero because the unmatched order ID is NULL.",
+        "Do not filter the whole joined result to paid orders. That would lose unpaid orders from total_orders and could remove customers with no paid orders.",
+        "Create `customer_orders(customer_id, name, total_orders, paid_orders, paid_cents)` from customers and orders. Keep every customer. For paid_cents, use the supplied amount_cents. These small totals use whole cents. Display the view in customer_id order and keep both source tables unchanged."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Use `LEFT JOIN` to match customers to orders by customer ID.",
+        "Count `o.id` to count the orders.",
+        "Use one `CASE` expression to count paid orders.",
+        "Use another `CASE` expression to add paid amounts.",
+        "Group the results by customer ID and name.",
+        "Display the view."
+      ],
+      "after": [
+        "LEFT JOIN orders to customers using the customer ID.",
+        "Count order IDs for total_orders.",
+        "Use CASE inside each paid sum.",
+        "Group by ID and name, then create the view."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Start from customers so people without orders remain.",
+        "Use SUM(CASE WHEN o.status = 'paid' THEN 1 ELSE 0 END).",
+        "For paid_cents, use o.amount_cents instead of 1; do not filter the whole query to paid rows."
+      ],
+      "after": [
+        "Use 1 for a paid order's count and amount_cents for its paid amount.",
+        "Use ELSE 0 for rows that are not paid.",
+        "Keep the paid test out of the query's WHERE."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "After a LEFT JOIN, a customer with no orders has one retained row with o.id = NULL. What does COUNT(o.id) return for them?",
+        "choices": [
+          "NULL",
+          "0",
+          "1"
+        ],
+        "answer": 1,
+        "explanation": "COUNT(o.id) counts non-NULL IDs, so there are zero orders. COUNT(*) would instead count the retained placeholder row."
+      },
+      "after": {
+        "question": "A customer has no orders, so the LEFT JOIN keeps a row with o.id = NULL. What is COUNT(o.id)?",
+        "choices": [
+          "NULL",
+          "0",
+          "1"
+        ],
+        "answer": 1,
+        "explanation": "COUNT(o.id) skips NULL IDs, so it counts zero orders."
+      }
+    }
+  ],
+  "headings": [
+    "Calculate different totals together",
+    "Count real orders",
+    "Try one customer summary",
+    "Keep separate people separate",
+    "Return zero when there are no orders",
+    "Filter inside the calculation",
+    "Build the order dashboard"
+  ],
+  "project": {
+    "title": "An order status dashboard",
+    "task": "Create customer_orders with the requested columns. Keep every customer, count all orders, count paid orders, and total only paid amounts in cents.",
+    "done_when": "Customers with no orders have zeros, same-name customers stay separate, paid totals exclude unpaid orders, and source tables stay unchanged."
+  }
+}

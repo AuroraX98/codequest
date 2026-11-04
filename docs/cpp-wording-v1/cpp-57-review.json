@@ -1,0 +1,94 @@
+{
+  "lesson": "cpp-57",
+  "position": 57,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Change only the function parameter to std::span<const int>. What happens to values[0] = 9?",
+      "after": "Let a function view consecutive items without copying the collection."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "std::span<T> views consecutive elements with a length. Here it borrows a std::array without copying or owning the elements. The storage must remain alive and uninvalidated while the span is used.",
+        "A span<int> permits writes to the original ints. Passing the lightweight span by value copies the view, not the array. The empty check ensures index zero exists; C++23 operator[] does not provide a mandatory bounds-checked exception.",
+        "std::span<const int> forbids changing elements through that view. const std::span<int> would instead make the view object const while leaving its int elements mutable. Neither form takes ownership.",
+        "Complete local C++ example; the app itself does not execute it:\n```cpp\n#include <array>\n#include <iostream>\n#include <span>\nvoid setFirst(std::span<int> values) {\n    if (!values.empty()) values[0] = 9;\n}\nint main() {\n    std::array<int, 3> scores{1, 2, 3};\n    setFirst(scores);\n    std::cout << scores[0] << \" \" << scores.size() << \"\\n\";\n}\n```",
+        "Expected output or behavior: 9 3. Local compiler test evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Write a read-only sum function taking span<const int> and call it with both an array and a vector. You may trace this without a compiler; finishing the reading is not proof of a local run."
+      ],
+      "after": [
+        "std::span describes a sequence of items stored next to one another in memory. It remembers their starting position and count. It does not own them, so their storage must remain alive and valid.",
+        "Passing span<int> by value copies the small view, not the array it refers to. The function can change the original integers through that view.",
+        "empty() checks whether the span has zero items. !values.empty() makes sure index zero exists before assigning to it. C++23 span's [] access does not promise a bounds-checking exception.",
+        "Follow the borrowed view into setFirst and the change back to the original array.\n\n```cpp\n#include <array>\n#include <iostream>\n#include <span>\nvoid setFirst(std::span<int> values) {\n    if (!values.empty()) values[0] = 9;\n}\nint main() {\n    std::array<int, 3> scores{1, 2, 3};\n    setFirst(scores);\n    std::cout << scores[0] << \" \" << scores.size() << \"\\n\";\n}\n```",
+        "The program prints 9 3. setFirst changes the original first item to nine. The array still has three items.",
+        "span<const int> makes the viewed integers read-only through the span. const span<int> instead makes the view object itself const; its int elements can still be changed. The position of const matters."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain why, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Look at whether const applies to the viewed items or to the view itself."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Change only the function parameter to std::span<const int>. What happens to values[0] = 9?",
+        "choices": [
+          "It changes the array just as before.",
+          "It creates a private copy of the array and edits that.",
+          "Compilation rejects writing through the read-only element view."
+        ],
+        "answer": 2,
+        "explanation": "The viewed element type is const int, so assignment is ill-formed; no runtime attempt is needed."
+      },
+      "after": {
+        "question": "Change only the parameter to std::span<const int>. What happens to values[0] = 9?",
+        "choices": [
+          "It changes the original array as before.",
+          "It edits a private copy of the array.",
+          "The compiler rejects writing through the read-only element view."
+        ],
+        "answer": 2,
+        "explanation": "The viewed element type is const int, so assigning a new value through the span is not allowed."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "C++ Core v1, standard C++23 features checked against the available GCC14.2 implementation. This app provides concept reading and an understanding check, not a C++ browser runner. Local example tests are separate evidence and do not certify learner mastery.",
+      "after": "The browser shows C++ code and checks your understanding; it does not run C++. Optional local examples use C++23."
+    }
+  ],
+  "headings": [
+    "Borrow consecutive items",
+    "Copy the view, not the items",
+    "Check before indexing",
+    "One example",
+    "What appears",
+    "Choose read-only elements"
+  ],
+  "project": {
+    "title": "View contiguous values with span",
+    "task": "Trace the checked change through the span to the original array.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local C++ example is optional."
+  }
+}

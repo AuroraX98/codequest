@@ -1,5 +1,5 @@
 // Reviewed React counterparts.
-export default [
+const readings = [
   {
     "source": "React builds interfaces from components.",
     "simple": "React makes screens from reusable pieces called components.",
@@ -1225,3 +1225,5 @@ export default [
     "lesson": "react-06"
   }
 ];
+
+export default readings;

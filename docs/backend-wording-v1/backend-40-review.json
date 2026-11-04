@@ -1,0 +1,97 @@
+{
+  "lesson": "backend-40",
+  "position": 40,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Implement timeoutOutcome(clientTimedOut,receipt). Match the worked contract and the changed-input checks without modifying the supplied input values.",
+      "after": "A timeout means the browser stopped waiting. The server may still have completed the request."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A client timeout means the client stopped waiting. It does not prove whether a remote write completed before or after that point.",
+        "This exercise is a small pure JavaScript model. Its inputs are supplied directly; it does not receive live HTTP requests, operate a database, or deploy a service.",
+        "Worked example:\n\n```javascript\nfunction timeoutOutcome(clientTimedOut,receipt) {\n  if(receipt) return \"confirmed\";\n  return clientTimedOut ? \"unknown\" : \"waiting\";\n}\nconsole.log(timeoutOutcome(true, null));\n```\nThe returned value is \"unknown\".",
+        "The first branch accepts an actual successful operation receipt in this model. Without one, a timeout gives an unknown outcome. Reconcile that outcome before repeating a non-idempotent action.",
+        "Read the function call timeoutOutcome(true, null) from the inside out: the arguments supply the inputs, timeoutOutcome runs the body once, and return sends its result back to the caller. console.log displays that result; it does not change it.",
+        "The client times out after sending a creation request. Is it safe to claim nothing was created? The server may have completed the write while the response was lost or delayed."
+      ],
+      "after": [
+        "A timeout happens when a caller stops waiting for a reply. It does not undo work on the server or prove that the work failed.",
+        "A receipt is confirmation that the operation succeeded. This exercise assumes any supplied receipt is already checked and really confirms success.",
+        "Here the caller timed out and has no receipt.\n\n```javascript\nfunction timeoutOutcome(clientTimedOut,receipt) {\n  if(receipt) return \"confirmed\";\n  return clientTimedOut ? \"unknown\" : \"waiting\";\n}\nconsole.log(timeoutOutcome(true, null));\n```\n\nThe output is \"unknown\". We do not know whether the server finished.",
+        "Check the receipt first. If it exists, return \"confirmed\". Without a receipt, return \"unknown\" after a timeout or \"waiting\" while the caller is still waiting.",
+        "Before repeating a request that creates data, find out whether the original succeeded or use a design that prevents duplicates. A missing reply alone is not enough evidence.",
+        "Try a valid receipt after a timeout. The helper should return \"confirmed\": the receipt settles the result even though the reply arrived late."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the contract and trace the worked example.",
+        "Replace the unfinished return in the starter.",
+        "Run the changed-input checks.",
+        "Explain the boundary in the understanding question."
+      ],
+      "after": [
+        "Return confirmed when a valid receipt exists.",
+        "Without a receipt, check whether the caller timed out.",
+        "Return unknown after a timeout, or waiting before one.",
+        "Run the checks, including a receipt after a timeout."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "The first branch accepts an actual successful operation receipt in this model. Without one, a timeout gives an unknown outcome. Reconcile that outcome before repeating a non-idempotent action."
+      ],
+      "after": [
+        "Test receipt before clientTimedOut.",
+        "The inputs model a checked success receipt or no receipt; do not treat arbitrary data as proof in a real app."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "The client times out after sending a creation request. Is it safe to claim nothing was created?",
+        "choices": [
+          "Yes, timeout rolls back every server",
+          "No, the outcome may be unknown",
+          "Yes, if there is no response body"
+        ],
+        "answer": 1,
+        "explanation": "The server may have completed the write while the response was lost or delayed."
+      },
+      "after": {
+        "question": "A caller times out after asking the server to create a note. Does that prove no note was created?",
+        "choices": [
+          "Yes. A timeout undoes all server work.",
+          "No. The outcome may be unknown.",
+          "Yes, if no response body arrived."
+        ],
+        "answer": 1,
+        "explanation": "The server may have created the note while the reply was delayed or lost."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Runs as a pure JavaScript function in the browser. Passing checks does not establish live HTTP behavior, database durability, concurrency safety, authentication security, queue delivery guarantees, or production readiness.",
+      "after": "This helper receives a checked success receipt or no receipt. It does not contact a server or verify that arbitrary receipt data is authentic."
+    }
+  ],
+  "headings": [
+    "Waiting can end before the work",
+    "Look for confirmation",
+    "One example",
+    "Choose the outcome",
+    "Check before repeating",
+    "Try a late receipt"
+  ],
+  "project": {
+    "title": "Do not infer failure from a client timeout",
+    "task": "Complete timeoutOutcome(clientTimedOut,receipt). A supplied success receipt means \"confirmed\". Otherwise return \"unknown\" after a timeout or \"waiting\" before one.",
+    "done_when": "The checks pass with and without a receipt, including a receipt after a timeout. Explain why a timeout does not prove the server did nothing."
+  }
+}

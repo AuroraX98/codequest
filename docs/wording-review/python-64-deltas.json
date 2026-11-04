@@ -1,0 +1,87 @@
+{
+  "lesson": "python-64",
+  "sourceHash": "163f46d217eca59b44cfca3c45e2caf2abae2a20b712fbc347ae7a6dccc02168",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Complete Countdown as a single-use iterator over start down to 1. __iter__ returns self; __next__ returns one value and advances, or raises StopIteration. Inputs are nonnegative integers.",
+      "after": "Make a countdown that gives one number at a time, then stops."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "An iterable supplies an iterator through __iter__. An iterator supplies successive values through __next__, raises StopIteration when exhausted, and returns itself from __iter__. This Countdown is both iterable and a single-use iterator, not a reusable collection.",
+        "Countdown(start) invokes __init__ to store the nonnegative integer start; construction consumes nothing and __init__ returns None implicitly. iter(counter) invokes __iter__, returning the same object without resetting its remaining state.",
+        "next(counter) invokes __next__ without extra input. It returns one positive integer and decrements remaining, or raises StopIteration when exhausted. Returning None is not a stop signal: None could be an actual data value.",
+        "list(counter) repeatedly requests values until StopIteration and returns a new list. Once exhausted, later list(counter) is empty. A new Countdown(start) has independent state. Do not reset progress in __iter__, which could restart a partly consumed iterator.",
+        "Worked call:\n```python\nclass Countdown:\n    def __init__(self, start):\n        self.remaining = start\n    def __iter__(self):\n        return self\n    def __next__(self):\n        if self.remaining <= 0:\n            raise StopIteration\n        value = self.remaining\n        self.remaining -= 1\n        return value\n\ncounter = Countdown(2)\nprint(iter(counter) is counter)\nprint(next(counter))\nprint(list(counter))\nprint(list(counter))\n```\nExpected stdout:\nTrue\n2\n[1]\n[]",
+        "Optional local practice: Explain how a reusable collection could return a new iterator instead of resetting this one."
+      ],
+      "after": [
+        "An iterable is something you can ask for items. An iterator keeps track of which item comes next.\n\n`__iter__` gives you the iterator. `__next__` gives the next item or raises `StopIteration` when none remain. Here, Countdown does both jobs.",
+        "`Countdown(start)` saves the starting number in `self.remaining`. Use a whole number of 0 or more.\n\nCreating the countdown does not use a number yet. Calling `iter(counter)` gives the same counter; it does not restart it.",
+        "Each `next(counter)` calls `__next__`. It saves the current number, subtracts 1, then returns the saved number.\n\nAt 0, it raises `StopIteration`. Returning `None` would give another item, not stop the countdown.",
+        "`list(counter)` collects the remaining numbers until `StopIteration`. Once they are used up, another `list(counter)` gives `[]`.\n\nMake a new `Countdown(start)` to start again. Keep `__iter__` returning `self` without resetting the count.",
+        "Follow this countdown:\n```python\nclass Countdown:\n    def __init__(self, start):\n        self.remaining = start\n    def __iter__(self):\n        return self\n    def __next__(self):\n        if self.remaining <= 0:\n            raise StopIteration\n        value = self.remaining\n        self.remaining -= 1\n        return value\n\ncounter = Countdown(2)\nprint(iter(counter) is counter)\nprint(next(counter))\nprint(list(counter))\nprint(list(counter))\n```\nOutput:\n```text\nTrue\n2\n[1]\n[]\n```",
+        "Optional local practice: Explain how a reusable collection could make a new iterator each time instead of resetting this one."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the requirement.",
+        "Make one change to the starter.",
+        "Run the checks.",
+        "Explain why a changed input produces its result."
+      ],
+      "after": [
+        "Keep Countdown.__init__ storing start in self.remaining.",
+        "In __next__, raise StopIteration when self.remaining is 0 or less.",
+        "Otherwise save self.remaining as value, subtract 1, and return value.",
+        "Keep __iter__ returning self without resetting progress.",
+        "Check that Countdown(3) gives [3, 2, 1], a partly used Countdown(2) gives [1] when listed, and Countdown(0) gives []."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If the first list(counter) becomes list(Countdown(2)), what does the final list(counter) return?",
+        "choices": [
+          "[1], because a different object was consumed.",
+          "[], because all instances share progress.",
+          "[2,1], because list resets the original."
+        ],
+        "answer": 0,
+        "explanation": "The original yielded 2 once. Consuming a newly constructed Countdown does not advance the original."
+      },
+      "after": {
+        "question": "If the first list(counter) becomes list(Countdown(2)), what does the final list(counter) return?",
+        "choices": [
+          "[1], because a different object was consumed.",
+          "[], because all instances share progress.",
+          "[2, 1], because list resets the original."
+        ],
+        "answer": 0,
+        "explanation": "The earlier next(counter) used 2 from the original, leaving 1. Listing a new Countdown(2) does not change the original, so the final list(counter) returns [1]."
+      }
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Read each purpose, input and result/effect description.",
+        "Trace the changed case and test a boundary."
+      ],
+      "after": [
+        "In __next__, stop when self.remaining is 0 or less.",
+        "Save the value before subtracting 1.",
+        "Keep __iter__ from resetting a partly used Countdown."
+      ]
+    }
+  ],
+  "reviewNotes": [
+    "Kept the six section roles and the worked call's output.",
+    "Preserved single-use progress, independent new instances, and the zero-start case.",
+    "Kept quiz answer index 0 and its meaning.",
+    "Simplified iterator roles and labels; formatted code names clearly."
+  ]
+}

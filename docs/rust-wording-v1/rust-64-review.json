@@ -1,0 +1,91 @@
+{
+  "lesson": "rust-64",
+  "position": 64,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "If drop(future) is replaced by future.await in this ordinary main, what happens?",
+      "after": "A future represents work that can be driven later. Making it does not run the body of this async block."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "An async block produces a Future value describing work. Its body progresses only when the future is polled. Creating the future does not spawn a thread, start a timer or install an executor. This example deliberately drops an unpolled future.",
+        "The .await syntax is allowed inside an async function or block, not this ordinary main. An executor is responsible for polling and wakeups for general asynchronous work. No Tokio or other runtime is used here; the next lesson polls only an already-ready standard-library future once, not arbitrary I/O.",
+        "Complete local Rust example; the app itself does not execute it:\n```rust\n\n\nfn main() {\n    let future = async { println!(\"body\"); 7 };\n    println!(\"created\");\n    drop(future);\n}\n```",
+        "Expected output or behavior: created. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Explain why writing async alone provides neither a thread nor a general I/O runtime. You may trace it without a Rust compiler; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "A future represents work that can be driven later. Making it does not run the body of this async block.",
+        "The program prints created, then drops the future without asking it to run.",
+        "Follow the labeled parts of this example.\n```rust\n\n\nfn main() {\n    let future = async { println!(\"body\"); 7 };\n    println!(\"created\");\n    drop(future);\n}\n```",
+        "The output is `created`. The word body never prints because the future was never run.",
+        "Find which print is inside the future and which is outside."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read one idea.",
+        "Follow the labeled example.",
+        "Try the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Find which print is inside the future and which is outside."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If drop(future) is replaced by future.await in this ordinary main, what happens?",
+        "choices": [
+          "The body has already run before created was printed.",
+          "The compiler installs a general-purpose executor.",
+          "Compilation rejects await outside an async context."
+        ],
+        "answer": 2,
+        "explanation": "A future remains lazy, and .await has a language context requirement; a normal main cannot use it directly."
+      },
+      "after": {
+        "question": "Could this ordinary main function use `.await` directly?",
+        "choices": [
+          "Yes. Every main is async.",
+          "Yes. Dropping a future makes it run.",
+          "No. Await needs an async context."
+        ],
+        "answer": 2,
+        "explanation": "This main function is not async, so Rust rejects await here."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Rust Core v1 uses stable Rust1.99.1 with edition2024 and the standard library. The app supplies concept reading and an understanding check, not a Rust browser runner. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "CodeQuest shows the Rust example. Running it on your own computer is optional."
+    }
+  ],
+  "headings": [
+    "Create work for later",
+    "Drop the unused work",
+    "Read the example",
+    "What happens",
+    "Try one change"
+  ],
+  "project": {
+    "title": "Async futures and execution boundaries",
+    "task": "Find which print is inside the future and which is outside.",
+    "done_when": "Read each idea and pass the understanding check. Running the example on your computer is optional."
+  }
+}

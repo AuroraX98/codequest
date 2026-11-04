@@ -1,0 +1,91 @@
+{
+  "lesson": "ruby-60",
+  "position": 60,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "If the worker raises ArgumentError, \"worker failed\" instead of returning 22, what happens at join?",
+      "after": "A thread is a separate path of work. Joining waits for that path to finish."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "Thread.new starts a concurrent block. join waits for its termination; value waits and returns the block result. Do not let the main program exit while required workers remain unfinished, and do not infer scheduling order from thread creation order.",
+        "A failed worker exception is re-raised to code joining or reading its value, so handle it deliberately. Thread.current.report_on_exception = false disables the automatic background diagnostic for this owned worker, not the exception itself; join still re-raises it. The worked case has no worker failure and prints only after joining. Interpreter scheduling and the GVL do not promise faster CPU execution or replace synchronization.\n\nThread.current takes no explicit arguments and returns the Thread object executing this call. Inside the worker block, the diagnostic-setting assignment therefore affects that worker, not a different thread.",
+        "Complete local Ruby example; the app itself does not execute it:\n```ruby\nworker = Thread.new do\n  Thread.current.report_on_exception = false\n  20 + 2\nend\nworker.join\nputs worker.value\n\n```",
+        "Expected output or behavior: 22. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Describe where you would rescue a worker failure rather than silently abandoning it. You may trace it without a Ruby interpreter; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "A thread is a separate path of work. Joining waits for that path to finish.",
+        "If the worker fails, the join here brings that exception back to the waiting thread.",
+        "Follow the labeled parts of this example.\n```ruby\nworker = Thread.new do\n  Thread.current.report_on_exception = false\n  20 + 2\nend\nworker.join\nputs worker.value\n```",
+        "The output is `22`. The worker finishes normally and its value is twenty-two.",
+        "Compare a worker returning a number with a worker raising an exception."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read one idea.",
+        "Follow the labeled example.",
+        "Try the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Compare a worker returning a number with a worker raising an exception."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If the worker raises ArgumentError, \"worker failed\" instead of returning 22, what happens at join?",
+        "choices": [
+          "The worker exception is re-raised in the joining main thread.",
+          "value returns nil and the program succeeds.",
+          "The failure is swallowed because automatic reporting is disabled."
+        ],
+        "answer": 0,
+        "explanation": "Disabling automatic background diagnostics does not turn failure into a result; joining observes and re-raises the worker exception."
+      },
+      "after": {
+        "question": "If the worker raises ArgumentError instead of returning 22, what happens at join?",
+        "choices": [
+          "The waiting thread receives the error.",
+          "It prints 22 anyway.",
+          "The error turns into zero."
+        ],
+        "answer": 0,
+        "explanation": "Waiting on this failed worker brings back its exception."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Ruby Core v1 uses Ruby 4.0.9 and explicitly available extensions. The app supplies concept reading and an understanding check, not a Ruby browser runner. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "CodeQuest shows the Ruby example. Running it on your own computer is optional."
+    }
+  ],
+  "headings": [
+    "Wait for a worker",
+    "Wait and notice a failure",
+    "Read the example",
+    "What happens",
+    "Try one change"
+  ],
+  "project": {
+    "title": "Threads joining and failure propagation",
+    "task": "Compare a worker returning a number with a worker raising an exception.",
+    "done_when": "Read each idea and pass the understanding check. Running the example on your computer is optional."
+  }
+}

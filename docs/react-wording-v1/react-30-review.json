@@ -1,0 +1,86 @@
+{
+  "lesson": "react-30",
+  "position": 16,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Derive the current total from the array during render; handle adding after Clear.",
+      "after": "Calculate a total from the current list instead of keeping another state value."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A derived value is calculated from existing props or state. Here minutes is the changing source; total is recomputed during each render. Storing both separately would create two values that every edit must keep synchronized. No external system is involved, so no Effect is needed.",
+        "totalMinutes(values) reduces a numeric array to one sum. reduce calls its callback with the running total and next value, starting at the supplied 0. That explicit start also makes an empty array return 0. The function only calculates; it does not update state. The click handler appends to a copied array, or Clear replaces it with an empty array.",
+        "```react\nconst initialMinutes = [5, 8];\nfunction totalMinutes(values) {\n  return values.reduce((total, value) => total + value, 0);\n}\nfunction App() {\n  const [minutes, setMinutes] = React.useState(initialMinutes);\n  const total = totalMinutes(minutes);\n  return <main><p role=\"status\">Total: {total} minutes</p>\n    <button onClick={() => setMinutes(current => [...current, 3])}>Add three</button>\n    <button onClick={() => setMinutes([])}>Clear</button>\n  </main>;\n}\n```\nThe initial total is 13. Add three gives 16; Clear gives 0. The calculation follows the current array on every render.",
+        "```react\nconst initialMinutes = [];\nfunction totalMinutes(values) {\n  return values.reduce((total, value) => total + value, 0);\n}\nfunction App() {\n  const [minutes, setMinutes] = React.useState(initialMinutes);\n  const total = totalMinutes(minutes);\n  return <main><p role=\"status\">Total: {total} minutes</p>\n    <button onClick={() => setMinutes(current => [...current, 3])}>Add three</button>\n    <button onClick={() => setMinutes([])}>Clear</button>\n  </main>;\n}\n```\nThis changed App begins empty and correctly shows 0 because reduce has an initial accumulator.",
+        "Optional practice: Change the record values, then predict the sum before running. Passing behavior checks cannot prove the absence of redundant state; inspect the code too. The checks cover these finite behaviors; a matching DOM alone does not prove every implementation choice. The frame supplies React and mounts App. No imports, server, persistence or network are involved."
+      ],
+      "after": [
+        "A derived value is worked out from data you already have. Here, the list is state and the total is calculated from it. Keeping only the list in state avoids having two values to update separately.",
+        "`reduce` combines the list's numbers into one result. It starts with `0`, then adds each number to the running total. This function calculates a result without changing state.",
+        "```react\nconst initialMinutes = [5, 8];\nfunction totalMinutes(values) {\n  return values.reduce((total, value) => total + value, 0);\n}\nfunction App() {\n  const [minutes, setMinutes] = React.useState(initialMinutes);\n  const total = totalMinutes(minutes);\n  return (\n    <main>\n      <p role=\"status\">Total: {total} minutes</p>\n      <button onClick={() => setMinutes(current => [...current, 3])}>Add three</button>\n      <button onClick={() => setMinutes([])}>Clear</button>\n    </main>\n  );\n}\n```\nThe total starts at 13. Add three makes it 16. Clear makes it 0. React calculates the total again whenever it renders this component.",
+        "An empty list still produces 0 because reduce has a starting sum. Adding three after Clear makes a new list containing 3, so the total becomes 3.",
+        "Calculate the total from the current array during rendering. Keep the total out of state. The checks test the displayed results; also read your code to confirm the total is calculated directly."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the small example and explain its inputs and effects.",
+        "Complete the starter for this lesson.",
+        "Run the behavior checks, then predict a changed case."
+      ],
+      "after": [
+        "Add the values with a starting sum of 0.",
+        "Calculate total from minutes inside App.",
+        "Run the checks, including Add three after Clear."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Trace the visible input, event and resulting screen before changing the code."
+      ],
+      "after": [
+        "The total is a calculation, so it does not need its own useState."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Why does reduce here pass 0 as its second argument?",
+        "choices": [
+          "It supplies the starting sum and defines the empty-array result",
+          "It tells React not to render",
+          "It removes the first array element"
+        ],
+        "answer": 0,
+        "explanation": "The reducer begins with 0, so each value is added once and no values still means a sum of 0. This argument belongs to reduce, not to React."
+      },
+      "after": {
+        "question": "Why does reduce receive 0 as its second argument?",
+        "choices": [
+          "It starts the sum and gives an empty list a result of 0.",
+          "It stops React from rendering.",
+          "It removes the first number."
+        ],
+        "answer": 0,
+        "explanation": "The sum starts at 0. If there are no numbers to add, it stays 0."
+      }
+    }
+  ],
+  "headings": [
+    "Calculate from existing state",
+    "Start the sum at zero",
+    "Follow the current list",
+    "Handle an empty list",
+    "Build your changing total"
+  ],
+  "project": {
+    "title": "Calculate a total from the current records",
+    "task": "Calculate the current total from the minutes array during rendering. Keep Add three and Clear working.",
+    "done_when": "The total follows the list after adding, clearing, and adding again. It is calculated directly rather than stored separately."
+  }
+}

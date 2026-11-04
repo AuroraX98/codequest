@@ -1,0 +1,92 @@
+{
+  "lesson": "c-38",
+  "position": 38,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "If count is zero, what happens?",
+      "after": "Check that an allocation's byte count will fit before multiplying the item count by the item size."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "size_t is an unsigned size type. Multiplying count by element size can wrap to a smaller value. SIZE_MAX from <stdint.h> is its maximum. For nonzero element size, count > SIZE_MAX / element_size detects an unrepresentable product before multiplication.",
+        "This example also rejects zero count as an application policy. A representable byte size is not proof that memory is available; allocation still needs a NULL check.",
+        "Complete local C example; the app itself does not execute it:\n```c\n#include <stdio.h>\n#include <stdint.h>\n#include <stdlib.h>\n\nint main(void) {\n size_t count = 3;\n size_t width = sizeof(int);\n if (count == 0 || count > SIZE_MAX / width) {\n  puts(\"rejected\"); return 0;\n }\n int *a = malloc(count * width);\n if (a == NULL) { return 1; }\n a[0] = 7;\n printf(\"%d\\n\", a[0]);\n free(a);\n}\n```",
+        "Expected output or behavior: 7\n. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Explain why checking the product only after multiplication is too late. You may trace it without a C compiler; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "size_t is an unsigned type for sizes. A product that is too large can wrap into a small number. SIZE_MAX is the largest size_t value. For a nonzero width, `count > SIZE_MAX / width` checks for a product that would be too large without calculating it first.",
+        "This program also chooses to reject zero items. Even a byte count that fits can be too large for available memory, so the malloc result still needs a NULL check.",
+        "Follow the example one line at a time.\n```c\n#include <stdio.h>\n#include <stdint.h>\n#include <stdlib.h>\n\nint main(void) {\n size_t count = 3;\n size_t width = sizeof(int);\n if (count == 0 || count > SIZE_MAX / width) {\n  puts(\"rejected\"); return 0;\n }\n int *a = malloc(count * width);\n if (a == NULL) { return 1; }\n a[0] = 7;\n printf(\"%d\\n\", a[0]);\n free(a);\n}\n```",
+        "The count is 3 and the width is one int's size. The checks pass. If allocation succeeds, the program stores 7 in the first item, prints it, and frees the allocation.",
+        "Set count to 0. The first check rejects it before multiplication, allocation, or any array access."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Read the first part of the if condition before reaching malloc."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If count is zero, what happens?",
+        "choices": [
+          "It prints rejected without allocating.",
+          "It allocates one int and prints 7.",
+          "Unsigned multiplication makes count negative."
+        ],
+        "answer": 0,
+        "explanation": "The zero-count branch returns before either multiplication or malloc; this is the chosen application policy."
+      },
+      "after": {
+        "question": "If count is zero, what happens?",
+        "choices": [
+          "It prints rejected without allocating.",
+          "It allocates one int and prints 7.",
+          "The unsigned count becomes negative."
+        ],
+        "answer": 0,
+        "explanation": "The zero-count check is true, so the program prints rejected and returns before calling malloc."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "C Core v1 uses a portable C17 baseline supported by the verified compiler. C23 exists but is not claimed fully supported here. The app supplies concept reading and an understanding check, not a C browser runner. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "The browser shows C code and checks your understanding; it does not run C. Optional local examples use C17."
+    }
+  ],
+  "headings": [
+    "Check before multiplying",
+    "Check memory availability too",
+    "One example",
+    "Follow the safe allocation",
+    "Reject a zero count"
+  ],
+  "project": {
+    "title": "Guard allocation-size multiplication",
+    "task": "Explain why the size check must happen before the multiplication.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local C example is optional."
+  },
+  "navigationCorrection": "Added a short example introduction so its reviewed heading remains an explicit contents target."
+}

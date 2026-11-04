@@ -1,0 +1,94 @@
+{
+  "lesson": "cpp-67",
+  "position": 67,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Change only the final fetch_add(3) to fetch_add(5). Which pair prints?",
+      "after": "Update one shared counter in a single atomic operation."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "std::atomic<int> supports indivisible accesses to this one counter. fetch_add(1) is an atomic read-modify-write: competing updates do not lose an increment as a separate load followed by store could.",
+        "fetch_add(amount) adds amount but returns the previous value. After both workers finish 100 increments, fetch_add(3) returns 200 while the counter becomes 203.\n\ncount.load() takes no arguments and atomically returns the current counter value without changing it. This call uses the same default sequentially consistent ordering as the fetch-add calls.",
+        "This example keeps the default sequentially consistent ordering. It does not teach custom memory-order or lock-free design. Individual atomic variables do not automatically preserve a multi-variable invariant; mutex-protected groups of operations may still be needed.",
+        "Complete local C++ example; the app itself does not execute it:\n```cpp\n#include <atomic>\n#include <iostream>\n#include <thread>\nint main() {\n    std::atomic<int> count{0};\n    auto work = [&] {\n        for (int i = 0; i < 100; ++i) count.fetch_add(1);\n    };\n    {\n        std::jthread first(work);\n        std::jthread second(work);\n    }\n    int previous = count.fetch_add(3);\n    std::cout << previous << \" \" << count.load() << \"\\n\";\n}\n```",
+        "Expected output or behavior: 200 203. Local compiler test evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Use the returned old value to assign distinct ticket numbers; do not replace fetch_add with a separate load and store. You may trace this without a compiler; finishing the reading is not proof of a local run."
+      ],
+      "after": [
+        "Atomic means an operation is treated as one indivisible step for competing threads. std::atomic<int> supports such operations on one integer. fetch_add reads and adds in one operation, so competing increments do not overwrite each other's work.",
+        "fetch_add(amount) adds the amount but returns the old value. The returned number and the new stored number can therefore differ.",
+        "load() reads the atomic counter without changing it. This example uses the default ordering, called sequential consistency: these atomic operations fit one shared order that respects each thread's order.",
+        "Follow both workers to completion before the final fetch_add and load.\n\n```cpp\n#include <atomic>\n#include <iostream>\n#include <thread>\nint main() {\n    std::atomic<int> count{0};\n    auto work = [&] {\n        for (int i = 0; i < 100; ++i) count.fetch_add(1);\n    };\n    {\n        std::jthread first(work);\n        std::jthread second(work);\n    }\n    int previous = count.fetch_add(3);\n    std::cout << previous << \" \" << count.load() << \"\\n\";\n}\n```",
+        "The program prints 200 203. The workers contribute two hundred increments. The final fetch_add returns the old two hundred and raises the counter to two hundred and three.",
+        "Making individual variables atomic does not make a group of changes one operation. If several values must obey a rule together, a mutex may still be needed around the whole group."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain why, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Keep the returned old value separate from the updated stored value."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Change only the final fetch_add(3) to fetch_add(5). Which pair prints?",
+        "choices": [
+          "203 205",
+          "205 205",
+          "200 205"
+        ],
+        "answer": 2,
+        "explanation": "fetch_add still returns the old 200 and atomically raises the counter by 5 to 205."
+      },
+      "after": {
+        "question": "Change only the final fetch_add(3) to fetch_add(5). Which pair prints?",
+        "choices": [
+          "203 205",
+          "205 205",
+          "200 205"
+        ],
+        "answer": 2,
+        "explanation": "The operation returns the old value, two hundred, then leaves the counter at two hundred and five."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "C++ Core v1, standard C++23 features checked against the available GCC14.2 implementation. This app provides concept reading and an understanding check, not a C++ browser runner. Local example tests are separate evidence and do not certify learner mastery.",
+      "after": "The browser shows C++ code and checks your understanding; it does not run C++. Optional local examples use C++23."
+    }
+  ],
+  "headings": [
+    "Make one update indivisible",
+    "Receive the previous value",
+    "Read the current value",
+    "One example",
+    "What appears",
+    "Several atomic values are still separate"
+  ],
+  "project": {
+    "title": "Update a simple counter atomically",
+    "task": "Trace the atomic increments and the old value returned by the final addition.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local C++ example is optional."
+  }
+}

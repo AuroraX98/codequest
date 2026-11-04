@@ -1,0 +1,84 @@
+{
+  "lesson": "python-80",
+  "sourceHash": "9976da8428b839b1e3a9490db5412c5b8b9120ceb4e5b807815d7b12a565b1c5",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "For integer n in 0..64, return (1, n, n*n, halvings), computing halvings by repeated floor division by 2 while the current value is greater than 1. Zero and one take0 halvings. Use counters to make the work visible.",
+      "after": "Count four kinds of work and see how they grow when the input gets bigger."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "An asymptotic bound describes how work scales as input size grows, ignoring fixed constant factors and smaller-order terms. O(n) is an upper-bound growth class, not an exact count or a timing promise. A tight bound, written Θ(n), also rules out a smaller growth order under the chosen model. We will count simple loop-body events, treating bounded integer operations as unit cost.",
+        "A loop visiting n items counts n events. Nesting a full n-item loop inside another gives n*n ordered pairs, including pairs with equal indices. Doubling n doubles the first count but multiplies the pair count by four. This differs from a nested loop whose inner limit changes with the outer index.",
+        "Repeated integer halving reaches one in about log2(n) steps. Logarithmic growth means one extra halving when a positive power-of-two size doubles. //= 2 replaces remaining by its floor-divided-by-two integer value. This is not ordinary /, which returns a float. We define zero and one to need no halvings.",
+        "growth_counts accepts a nonnegative integer n and returns (fixed, linear, pairs, halvings). range(n) supplies integers from zero through n-1, so it creates n loop visits and is empty for zero. The fixed marker counts one chosen setup event, not all setup instructions.\n```python\ndef growth_counts(n):\n    fixed = 1\n    linear = 0\n    pairs = 0\n    for i in range(n):\n        linear += 1\n        for j in range(n):\n            pairs += 1\n    halvings = 0\n    remaining = n\n    while remaining > 1:\n        remaining //= 2\n        halvings += 1\n    return fixed, linear, pairs, halvings\nprint(growth_counts(4))\nprint(growth_counts(8))\n```\nIt prints (1, 4, 16, 2) and (1, 8, 64, 3). For positive n, the halving count is floor(log2(n)); no logarithm function is needed to compute it.",
+        "Implement the four counters for inputs 0 through 64. Their tight growth classes for large positive n are constant, linear, quadratic, and logarithmic. Bounds describe algorithms beyond these small practice inputs; actual timings also depend on representation, implementation, and environment. Optional local practice: compare n=7 and n=8 to explain why the halving count changes at a power of two."
+      ],
+      "after": [
+        "Here, `n` is the input size. We count simple loop actions and treat each small-integer operation as one unit of work.\n\nBig O gives an upper growth limit. `O(n)` means that, for large inputs, the work is at most a fixed number times `n`. It does not give an exact step count or running time.\n\nTheta (`Θ`) describes a matching growth rate. `Θ(n)` means the work grows roughly in proportion to `n` for large inputs. Fixed starting costs and smaller terms do not decide these growth labels.",
+        "A loop that visits n items counts n events. Put a full n-item loop inside another and they count n*n ordered pairs, including pairs where the two indices are equal. Doubling n doubles the first count but makes the pair count four times larger. This differs from a nested loop where the inner loop's limit changes with the outer index.",
+        "Repeatedly dividing a whole number by 2 reaches 1 in about `log2(n)` steps. `log2(n)` asks which power of 2 gives `n`. For 8, the answer is 3 because `2 × 2 × 2 = 8`.\n\nOur loop takes the whole-number part of that answer: 7 takes 2 halvings, and 8 takes 3. Doubling a positive power of two adds one halving.\n\n`remaining //= 2` divides by 2 and keeps the floor-divided whole number. Using `/` would give a float. Both 0 and 1 need no halvings.",
+        "growth_counts accepts a nonnegative integer n and returns (fixed, linear, pairs, halvings). range(n) gives integers from zero through n-1, so it makes n loop visits and is empty when n is zero. The fixed marker counts one chosen setup event, not every setup instruction.\n```python\ndef growth_counts(n):\n    fixed = 1\n    linear = 0\n    pairs = 0\n    for i in range(n):\n        linear += 1\n        for j in range(n):\n            pairs += 1\n    halvings = 0\n    remaining = n\n    while remaining > 1:\n        remaining //= 2\n        halvings += 1\n    return fixed, linear, pairs, halvings\nprint(growth_counts(4))\nprint(growth_counts(8))\n```\nThe calls print (1, 4, 16, 2) and (1, 8, 64, 3). For positive n, the halving count is floor(log2(n)), meaning the whole-number part of log2(n). The loop computes it without a logarithm function.",
+        "Build the four counters for inputs from 0 through 64. Their names describe how they grow for larger inputs:\n\nConstant work stays about the same. Linear work grows with `n`. Quadratic work grows with `n × n`. Logarithmic work grows like the halving count.\n\nThese are growth rules, not promises about seconds. Actual time also depends on Python, the computer, and the values used.\n\nFor extra practice, compare 7 and 8. Explain why reaching a power of two adds one halving."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the requirement.",
+        "Make one change to the starter.",
+        "Run the checks.",
+        "Explain why a changed input produces its result."
+      ],
+      "after": [
+        "In growth_counts(n), set fixed to 1 and linear, pairs, and halvings to 0.",
+        "Use for i in range(n) to add 1 to linear on each outer-loop visit.",
+        "Inside that loop, use for j in range(n) to add 1 to pairs for every ordered pair, including pairs where i equals j.",
+        "Set remaining to n. While remaining is greater than 1, divide it with remaining //= 2 and add 1 to halvings.",
+        "Return (fixed, linear, pairs, halvings). Check n=0, 1, 7, 8, and 64, including that zero and one have no halvings."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "When n grows from 8 to 16, how do the pair count and halving count change?",
+        "choices": [
+          "64→256 pairs; 3→4 halvings",
+          "64→256 pairs; 3→6 halvings",
+          "64→128 pairs; 3→6 halvings"
+        ],
+        "answer": 0,
+        "explanation": "Both nested loops double their visit counts, multiplying pairs by 4. One more division by 2 handles the doubled power-of-two size."
+      },
+      "after": {
+        "question": "When n grows from 8 to 16, how do the pair count and halving count change?",
+        "choices": [
+          "64→256 pairs; 3→4 halvings",
+          "64→256 pairs; 3→6 halvings",
+          "64→128 pairs; 3→6 halvings"
+        ],
+        "answer": 0,
+        "explanation": "Both nested loops double their visit counts, so the pair count grows from 64 to 256. Doubling a power-of-two size adds one halving, so the count goes from 3 to 4."
+      }
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Trace the visible worked calls before changing the starter."
+      ],
+      "after": [
+        "For n=4, the outer loop visits 4 times and the inner loop visits 4 times for each outer visit, making 16 pairs.",
+        "For n=0, range(0) is empty. The fixed count stays 1, and the other counts stay 0.",
+        "Use //= 2 to keep remaining an integer while halving it."
+      ]
+    }
+  ],
+  "reviewNotes": [
+    "The fixed marker counts one chosen setup event.",
+    "Zero and one take no halvings.",
+    "The halving loop uses integer floor division.",
+    "Explained growth limits and logarithmic halving with plain terms while preserving the Big O versus Theta distinction."
+  ]
+}

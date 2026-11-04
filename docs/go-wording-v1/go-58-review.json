@@ -1,0 +1,91 @@
+{
+  "lesson": "go-58",
+  "position": 58,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "If the worker stores 11, what prints after Wait?",
+      "after": "Wait until registered tasks finish."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "sync.WaitGroup tracks outstanding tasks. Add(1) runs before launching the goroutine; the worker defers Done so its task count decreases when it returns. Wait blocks until the count reaches zero. Do not copy a WaitGroup after first use.",
+        "WaitGroup coordinates lifetime, not arbitrary simultaneous writes. This example has one worker writing result and main reads only after Wait, so there is no competing access. Adding concurrent writers would require a separate synchronization policy.",
+        "Complete local Go example; the app itself does not execute it:\n```go\npackage main\n\nimport (\n\"fmt\"\n\"sync\"\n)\n\n\nfunc main() {\n    var wg sync.WaitGroup\n    result := 0\n    wg.Add(1)\n    go func() { defer wg.Done(); result = 7 }()\n    wg.Wait()\n    fmt.Println(result)\n}\n```",
+        "Expected output or behavior: 7. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Explain why Add inside the new goroutine could let the caller finish Wait too early. You may trace it without a Go compiler; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "A WaitGroup counts unfinished tasks. `Add(1)` registers one before it starts. `defer wg.Done()` removes that count when the worker ends. `Wait()` waits for the count to reach zero. Do not copy a WaitGroup after using it.",
+        "Waiting tells main when the worker is finished. It does not make simultaneous writes by several workers safe. Here, one worker writes result, and main reads only after waiting.",
+        "Follow the count from registration to completion.\n```go\npackage main\n\nimport (\n\"fmt\"\n\"sync\"\n)\n\n\nfunc main() {\n    var wg sync.WaitGroup\n    result := 0\n    wg.Add(1)\n    go func() { defer wg.Done(); result = 7 }()\n    wg.Wait()\n    fmt.Println(result)\n}\n```",
+        "The screen shows `7`. The worker writes 7 before Done lets Wait finish.",
+        "Moving Add into the new goroutine could let main call Wait while the count is still zero. Registering first avoids that early finish."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Follow Add, the write, Done, and Wait in order."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If the worker stores 11, what prints after Wait?",
+        "choices": [
+          "Any value because waiting cannot synchronize completion.",
+          "0 because Done discards the result",
+          "11"
+        ],
+        "answer": 2,
+        "explanation": "The registered worker completes its write before Done lets Wait return."
+      },
+      "after": {
+        "question": "If the worker stores 11, what appears after Wait?",
+        "choices": [
+          "Any value, because waiting cannot signal completion.",
+          "0, because Done discards the result.",
+          "11"
+        ],
+        "answer": 2,
+        "explanation": "The registered worker writes 11 before calling Done. main reads after Wait returns."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Go Core v1 uses the verified Go1.27.3 toolchain and standard library. The app supplies concept reading and an understanding check, not a Go browser runner. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "The browser shows Go code and checks your understanding; it does not run Go. Optional local examples use Go 1.27."
+    }
+  ],
+  "headings": [
+    "Register the task before starting it",
+    "Know what waiting protects",
+    "One example",
+    "Read after Wait returns",
+    "Keep registration in the caller"
+  ],
+  "project": {
+    "title": "WaitGroup lifecycle",
+    "task": "Predict the value after the registered task finishes.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local Go example is optional."
+  }
+}

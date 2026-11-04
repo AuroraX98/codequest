@@ -3,10 +3,11 @@
 import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from "react";
 import { buildLessonSteps, distinctLessonReference, type LessonStep } from "../lib/lesson-step-flow";
 import LessonVisual, { hasLessonVisual } from "./LessonVisual";
-import CodeAnatomy from "./CodeAnatomy";
+import CodeAnatomy, { type ReviewedCodeExample } from "./CodeAnatomy";
 import { codeAnatomy } from "../lib/code-anatomy";
 import LessonContent, { CodeExample, InlineCode } from "./LessonContent";
 import styles from "./LessonStepFlow.module.css";
+import { plainLessonExplanation } from "../lib/plain-language";
 import { GlossaryScope, GlossaryText } from "./LessonGlossary";
 
 export type LessonStage = {
@@ -28,26 +29,32 @@ export type LessonStepFlowProps = {
   completion?: ReactNode;
   startAtEnd?: boolean;
   onStageChange?: (stage: LessonStage) => void;
+  reviewedExample?: ReviewedCodeExample;
+  inlinePractice?: boolean;
+  glossaryTerms?: string[];
+  reviewedLesson?: boolean;
 };
 
 /** Navigation resumes on this device when scoped. Only manual completion saves completed progress. */
 export default function LessonStepFlow(props: LessonStepFlowProps) {
-  return <StepFlow key={JSON.stringify([props.runtime, props.text, props.resumeKey])} {...props} />;
+  return <StepFlow key={JSON.stringify([props.runtime, props.text, props.resumeKey, props.reviewedLesson, props.inlinePractice])} {...props} />;
 }
 
-function StepFlow({ text, runtime, referenceText = text, referenceVisual, resumeKey, title, onNext, onBack, backDisabled, completion, startAtEnd = false, onStageChange }: LessonStepFlowProps) {
-  const steps = useMemo(() => buildLessonSteps(text, runtime), [text, runtime]);
+function StepFlow({ text, runtime, referenceText = text, referenceVisual, resumeKey, title, onNext, onBack, backDisabled, completion, startAtEnd = false, onStageChange, reviewedExample, inlinePractice = true, glossaryTerms, reviewedLesson = false }: LessonStepFlowProps) {
+  const steps = useMemo(() => buildLessonSteps(text, runtime, { authoredOnly: reviewedLesson }).filter(step => inlinePractice || (step.kind !== "practice" && !(step.kind === "explain" && step.purpose === "exercise-preparation"))), [text, runtime, inlinePractice, reviewedLesson]);
   const extraReference = useMemo(() => distinctLessonReference(text, referenceText, runtime), [text, referenceText, runtime]);
   const showReferenceVisual = !!referenceVisual && hasLessonVisual(referenceVisual.unitId, referenceVisual.paragraph);
-  const [index, setIndex] = useState(() => startAtEnd ? steps.length - 1 : 0);
+  const [entryAtEnd] = useState(startAtEnd);
+  const [index, setIndex] = useState(() => entryAtEnd ? steps.length - 1 : 0);
   const [selection, setSelection] = useState<string | null>(null);
   const [result, setResult] = useState<"correct" | "revealed" | null>(null);
   const [resumeReady, setResumeReady] = useState(false);
   useEffect(() => {
-    if (resumeKey && !startAtEnd) {
+    if (resumeKey && !entryAtEnd) {
       try {
         const saved = JSON.parse(localStorage.getItem(resumeKey) ?? "null");
-        if (saved?.flowVersion === 3 && saved.text === text && saved.runtime === runtime && Number.isInteger(saved.index) && saved.index >= 0 && saved.index < steps.length) {
+        if (saved?.flowVersion === 4 && Boolean(saved.reviewedLesson) === reviewedLesson && (saved.inlinePractice !== false) === inlinePractice && saved.text === text && saved.runtime === runtime && Number.isInteger(saved.index) && saved.index >= 0 && saved.index < steps.length) {
+          // eslint-disable-next-line react-hooks/set-state-in-effect -- Restore device storage after server hydration; writes wait for resumeReady.
           setIndex(saved.index);
           const savedStep = steps[saved.index];
           if (savedStep.kind === "practice" && savedStep.options.includes(saved.selection)) {
@@ -59,17 +66,20 @@ function StepFlow({ text, runtime, referenceText = text, referenceVisual, resume
       } catch { /* Private browsing or unavailable storage must not block learning. */ }
     }
     setResumeReady(true);
-  }, [resumeKey, text, runtime, steps, startAtEnd]);
+  }, [resumeKey, text, runtime, steps, entryAtEnd, reviewedLesson, inlinePractice]);
   useEffect(() => {
     if (!resumeReady || !resumeKey) return;
-    try { localStorage.setItem(resumeKey, JSON.stringify({ flowVersion: 3, text, runtime, index, selection, result })); } catch {}
-  }, [resumeReady, resumeKey, text, runtime, index, selection, result]);
+    try { localStorage.setItem(resumeKey, JSON.stringify({ flowVersion: 4, text, runtime, reviewedLesson, inlinePractice, index, selection, result })); } catch {}
+  }, [resumeReady, resumeKey, text, runtime, reviewedLesson, inlinePractice, index, selection, result]);
   const panel = useRef<HTMLDivElement>(null);
   const previousIndex = useRef(index);
   const stageCallback = useRef(onStageChange);
   const id = useId();
   const step = steps[index];
-  const glossaryText = useMemo(() => step.kind === "explain" ? step.text : step.kind === "practice" ? step.question + " " + (result ? step.explanation : "") : step.kind === "output" ? "output code" : codeAnatomy(step.code, step.language).lines.flatMap(line => line.tokens.map(token => token.label + " " + token.explanation)).join(" "), [step, result, runtime]);
+  const glossaryText = useMemo(() => step.kind === "explain" ? step.text : step.kind === "practice" ? step.question + " " + (result ? step.explanation : "") : step.kind === "output" ? "output code" : codeAnatomy(step.code, step.language).lines.flatMap(line => line.tokens.map(token => token.label + " " + token.explanation)).join(" "), [step, result]);
+  // Keep the user's preferred definition. Use reviewed source-matched wording elsewhere.
+  const simpleThought = !reviewedLesson && step.kind === "explain" && step.text !== "A program is a list of instructions the computer follows."
+    ? plainLessonExplanation(step.text, runtime) : null;
   const isLast = index === steps.length - 1;
   const canContinue = step.kind !== "practice" || result !== null;
   const stageLabel = step.kind === "explain" ? "One idea" : step.kind === "example" ? "See it" : step.kind === "practice" ? "Your turn" : "The result";
@@ -102,17 +112,19 @@ function StepFlow({ text, runtime, referenceText = text, referenceVisual, resume
       <span>{stageLabel}</span>
       <span title={resumeKey ? "Your place is saved on this device, not synced across devices." : undefined}>Step {index + 1} of {steps.length}</span>
     </div>
-    <GlossaryScope scopeKey={index} runtime={runtime} text={glossaryText}>
+    <GlossaryScope scopeKey={index} runtime={runtime} text={glossaryText} includedTerms={glossaryTerms}>
     <div className={styles.panel} key={index} ref={panel} tabIndex={-1} data-step-kind={step.kind} aria-label={`${stageLabel}, step ${index + 1} of ${steps.length}`}>
       {step.kind === "explain" && <>
-        <p className={styles.thought} data-technical-reading><InlineCode text={step.text} /></p>
+        <p className={styles.thought} data-technical-reading data-simple-reading={simpleThought ? true : undefined}><InlineCode text={simpleThought ?? step.text} /></p>
+        {simpleThought && <details className={styles.reference} data-original-wording><summary>Original wording</summary><p><InlineCode text={step.text} /></p></details>}
       </>}
       {step.kind === "example" && <>
         <p className={styles.hint}>See what each part does.</p>
-        <CodeAnatomy code={step.code} language={step.language} collapseExplanations />
+        <CodeAnatomy code={step.code} language={step.language} collapseExplanations reviewedExample={reviewedExample} />
+        <details className={styles.reference}><summary>Full example and copy</summary><CodeExample code={step.code} language={step.language} /></details>
       </>}
       {step.kind === "output" && <>
-        <p className={styles.hint}>This is the output, not code to type.</p>
+        <p className={styles.hint}>{step.caption ?? "This is the output, not code to type."}</p>
         <CodeExample code={step.code} language={step.language} />
       </>}
       {step.kind === "practice" && <>

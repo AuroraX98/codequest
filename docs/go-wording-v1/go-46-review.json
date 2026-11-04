@@ -1,0 +1,91 @@
+{
+  "lesson": "go-46",
+  "position": 46,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "If the implementation caps at 11 instead of 10, what does seed 11 reveal?",
+      "after": "Check a rule across several test inputs."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "This fuzz target checks that clamp always returns a value from zero through ten. f.Add records seed inputs, and f.Fuzz supplies the function exercised by the testing engine. A property can be incomplete: a function that always returns zero passes this range invariant while still being a wrong clamp.",
+        "Save as main_test.go and run go test -run FuzzClamp -v to execute only the seed corpus. An active search needs an explicit command such as go test -fuzz FuzzClamp -fuzztime 2s and has different resource costs. The lesson’s deterministic verification runs seeds only; it does not claim a long fuzzing campaign or proof for all integers.",
+        "Complete local Go example; the app itself does not execute it:\n```go\npackage study\nimport \"testing\"\nfunc clamp(n int) int {\n    if n < 0 { return 0 }; if n > 10 { return 10 }; return n\n}\n\nfunc FuzzClamp(f *testing.F) {\n    f.Add(-1); f.Add(7); f.Add(11)\n    f.Fuzz(func(t *testing.T, n int) {\n        got := clamp(n)\n        if got < 0 || got > 10 { t.Fatalf(\"outside range: %d\", got) }\n    })\n}\n```",
+        "Expected output or behavior: All three seed cases PASS; runner timings vary. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Add an idempotence property: clamping an already clamped value leaves it unchanged. Explain why multiple independent properties can be stronger. You may trace it without a Go compiler; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "Fuzz testing tries inputs to look for broken rules. A seed is a starting input. `f.Add` records three seeds here. `f.Fuzz` gives the test tool the check to run: clamp's answer must stay from 0 through 10.",
+        "Save the example as main_test.go in a local module. `go test -run FuzzClamp -v` runs the seeds. A separate fuzz run can search for more inputs. Passing these three seeds does not prove every input works.",
+        "Follow each seed through the same range check.\n```go\npackage study\nimport \"testing\"\nfunc clamp(n int) int {\n    if n < 0 { return 0 }; if n > 10 { return 10 }; return n\n}\n\nfunc FuzzClamp(f *testing.F) {\n    f.Add(-1); f.Add(7); f.Add(11)\n    f.Fuzz(func(t *testing.T, n int) {\n        got := clamp(n)\n        if got < 0 || got > 10 { t.Fatalf(\"outside range: %d\", got) }\n    })\n}\n```",
+        "All three seeds pass. Their answers stay between 0 and 10.",
+        "A function that always returns 0 also passes this range rule, even though it is a wrong clamp. Another useful check asks whether an input already inside the range stays unchanged."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Compare the result with the rule's highest allowed value."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If the implementation caps at 11 instead of 10, what does seed 11 reveal?",
+        "choices": [
+          "Fuzzing automatically repairs the cap.",
+          "The invariant fails because the result is outside 0 through 10.",
+          "The invariant passes because seeds are only comments."
+        ],
+        "answer": 1,
+        "explanation": "The existing seed reaches the changed bad boundary and produces eleven, which the invariant rejects."
+      },
+      "after": {
+        "question": "If clamp uses 11 as its upper limit, what does the seed 11 reveal?",
+        "choices": [
+          "The test automatically repairs clamp.",
+          "The rule fails because 11 is outside 0 through 10.",
+          "The rule passes because seeds are only comments."
+        ],
+        "answer": 1,
+        "explanation": "The changed function returns 11. The range check rejects that answer."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Go Core v1 uses the verified Go1.27.3 toolchain and standard library. The app supplies concept reading and an understanding check, not a Go browser runner. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "The browser shows Go code and checks your understanding; it does not run Go. Optional local examples use Go 1.27."
+    }
+  ],
+  "headings": [
+    "Set a rule and choose starting inputs",
+    "Run the seeds first",
+    "One example",
+    "Read the seed results",
+    "Know what the rule misses"
+  ],
+  "project": {
+    "title": "Fuzz seeds and invariants",
+    "task": "Identify the rule broken by the changed upper limit.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local Go example is optional."
+  }
+}

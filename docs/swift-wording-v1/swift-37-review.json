@@ -1,0 +1,90 @@
+{
+  "lesson": "swift-37",
+  "position": 48,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Complete DeferredNote.store(_:) and read(). A new note reads \"empty\"; storing replaces the previous callback; read returns the current callback’s result. Keep @escaping where the closure parameter is stored.",
+      "after": "Save a closure now and call it later."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A closure escapes when it can outlive the call that receives it. Storing this nonoptional function parameter for later use needs @escaping. That annotation allows a longer lifetime; it does not run the callback in the background. Here store only saves the closure, and read calls it later, synchronously.",
+        "(() -> String)? is an optional no-input function returning text. DeferredNote() creates a value with action initially nil. mutating permits store to change this struct; self.action names the stored property, while action alone names the parameter. read uses if let to unwrap the saved function, then saved() invokes it. [label] is a capture list: it saves the current String value when the closure is created. Without that list, this example captures the variable and sees its later value. The earlier ARC lesson covers class-reference cycles; this value example is not a new memory-management guarantee.",
+        "Follow this complete example.\n```swift\nstruct DeferredNote {\n    var action: (() -> String)? = nil\n    mutating func store(_ action: @escaping () -> String) {\n        self.action = action\n    }\n    func read() -> String {\n        if let saved = action {\n            return saved()\n        }\n        return \"empty\"\n    }\n}\nvar note = DeferredNote()\nvar label = \"draft\"\nnote.store { [label] in return label }\nlabel = \"revised\"\nprint(note.read())\n```\nOutput:\n```text\ndraft\n```",
+        "Change the input or declaration and trace the result.\n```swift\nstruct DeferredNote {\n    var action: (() -> String)? = nil\n    mutating func store(_ action: @escaping () -> String) {\n        self.action = action\n    }\n    func read() -> String {\n        if let saved = action {\n            return saved()\n        }\n        return \"empty\"\n    }\n}\nvar note = DeferredNote()\nvar label = \"first\"\nnote.store { return label }\nlabel = \"second\"\nprint(note.read())\n```\nOutput:\n```text\nsecond\n```",
+        "Complete DeferredNote.store(_:) and read(). A new note reads \"empty\"; storing replaces the previous callback; read returns the current callback’s result. Keep @escaping where the closure parameter is stored. Optional local practice: choose one more input, predict the outcome, then run it. The checks observe the stated values and effects; they do not require one exact implementation spelling.",
+        "Removing @escaping contradicts storing the parameter in a property for later use. The complete example otherwise has the same valid declarations. This complete local compiler example is intentionally rejected. It is not a runtime exercise; do not repair it with unsafe access.\n```swift\nstruct DeferredNote {\n    var action: (() -> String)? = nil\n    mutating func store(_ action: () -> String) {\n        self.action = action\n    }\n    func read() -> String {\n        if let saved = action {\n            return saved()\n        }\n        return \"empty\"\n    }\n}\nvar note = DeferredNote()\nvar label = \"draft\"\nnote.store { [label] in return label }\nlabel = \"revised\"\nprint(note.read())\n```"
+      ],
+      "after": [
+        "A closure is a function value. It escapes when it can remain available after the receiving function ends. @escaping allows this function parameter to be saved for later. It does not start background work.",
+        "(() -> String)? means an optional function that takes no inputs and returns text. DeferredNote starts with no saved function. store saves one; read calls it later or returns empty if none exists.",
+        "```swift\nstruct DeferredNote {\n    var action: (() -> String)? = nil\n    mutating func store(_ action: @escaping () -> String) {\n        self.action = action\n    }\n    func read() -> String {\n        if let saved = action {\n            return saved()\n        }\n        return \"empty\"\n    }\n}\nvar note = DeferredNote()\nvar label = \"draft\"\nnote.store { [label] in return label }\nlabel = \"revised\"\nprint(note.read())\n```\nThis prints draft. store saves the closure without calling it. Later, read finds the saved function and calls saved().",
+        "[label] is a capture list. Here it saves label's current String value when the closure is made. Changing label afterwards does not change that saved text. Without this capture list, this example's closure would read the variable's later value.",
+        "Complete store(_:) and read(). A new note returns empty. Saving a callback replaces the previous one. read must return the current callback's result, so call it when read runs.",
+        "Keep @escaping on the parameter that store saves. Without it, Swift rejects this assignment to a property. mutating is also needed because store changes a property of the struct."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the small example and explain its inputs and effects.",
+        "Complete the starter for the stated contract.",
+        "Use the configured compatible Swift companion or local Swift toolchain, then explain the changed case."
+      ],
+      "after": [
+        "Save the supplied callback in action.",
+        "In read, unwrap action and call the saved function.",
+        "Return empty when no callback has been saved."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Trace the inputs, returned value and changed state before running."
+      ],
+      "after": [
+        "self.action is the stored property; action is the input parameter.",
+        "Saving a function and calling it are separate actions."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "With [label] capturing \"open\", label later becomes \"closed\". What does the stored callback return?",
+        "choices": [
+          "closed",
+          "open",
+          "The callback runs automatically when label changes"
+        ],
+        "answer": 1,
+        "explanation": "The capture list saves the String value at closure creation. Storing and calling are separate actions."
+      },
+      "after": {
+        "question": "[label] saves the text open. label later becomes closed. What does this saved callback return?",
+        "choices": [
+          "closed",
+          "open",
+          "It runs by itself when label changes"
+        ],
+        "answer": 1,
+        "explanation": "The capture list saves the current String value, which was open."
+      }
+    }
+  ],
+  "headings": [
+    "Allow a function to be saved",
+    "Store an optional callback",
+    "Read one example",
+    "Capture the text now",
+    "Try it yourself",
+    "Keep @escaping"
+  ],
+  "project": {
+    "title": "Store an escaping closure",
+    "task": "Complete DeferredNote.store(_:) and read(). Save and replace the callback with @escaping, call it when read runs, and return empty when none exists.",
+    "done_when": "New notes return empty, and later reads use the latest saved callback."
+  }
+}

@@ -1,0 +1,92 @@
+{
+  "lesson": "c-34",
+  "position": 34,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "If the stored value becomes 19, what prints on successful allocation?",
+      "after": "malloc asks for storage while the program runs. Check that it worked, fill the storage, and free it when finished."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "malloc from <stdlib.h> requests a number of bytes and returns NULL on failure. In C, its void * result converts to an object pointer without a cast. sizeof *p requests the size of the pointed-to type without reading an uninitialized value.",
+        "Successful malloc storage is not initialized. Store a value before reading it. free releases an allocation exactly once; do not use its former contents afterward. Allocation failure here returns a failure status, not the successful output.",
+        "Complete local C example; the app itself does not execute it:\n```c\n#include <stdio.h>\n#include <stdlib.h>\n\nint main(void) {\n int *p = malloc(sizeof *p);\n if (p == NULL) { return 1; }\n *p = 12;\n printf(\"%d\\n\", *p);\n free(p);\n}\n```",
+        "Expected output or behavior: 12\n. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Add a second read before free, never after it. You may trace it without a C compiler; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "Allocation means setting aside storage. `malloc` asks for a number of bytes. `sizeof *p` requests enough for the int p will point to; it measures the type without reading an int. In C, malloc's pointer result can be assigned to int * without a cast.",
+        "malloc returns NULL if the request fails. Check before using the pointer. New malloc storage has no starting value you can rely on. Write a value before reading it, then use free once to release the allocation.",
+        "Follow the example one line at a time.\n```c\n#include <stdio.h>\n#include <stdlib.h>\n\nint main(void) {\n int *p = malloc(sizeof *p);\n if (p == NULL) { return 1; }\n *p = 12;\n printf(\"%d\\n\", *p);\n free(p);\n}\n```",
+        "If allocation succeeds, the program stores 12 and prints 12 before freeing the storage. If allocation fails, it returns status 1 without using p. After free, the old storage must not be read or written.",
+        "Change the stored value to 19. The printed value comes from that assignment, not from malloc."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Find the write to *p that happens after the NULL check and before the print."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If the stored value becomes 19, what prints on successful allocation?",
+        "choices": [
+          "19",
+          "12",
+          "An automatically zero-initialized value"
+        ],
+        "answer": 0,
+        "explanation": "The successful allocation is explicitly assigned nineteen before reading; malloc itself does not choose that value."
+      },
+      "after": {
+        "question": "Store 19 instead of 12. What prints if allocation succeeds?",
+        "choices": [
+          "19",
+          "12",
+          "An automatically chosen zero."
+        ],
+        "answer": 0,
+        "explanation": "The assignment writes 19 into the new storage. The print reads it before the storage is freed."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "C Core v1 uses a portable C17 baseline supported by the verified compiler. C23 exists but is not claimed fully supported here. The app supplies concept reading and an understanding check, not a C browser runner. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "The browser shows C code and checks your understanding; it does not run C. Optional local examples use C17."
+    }
+  ],
+  "headings": [
+    "Ask for enough storage",
+    "Check, fill, and release it",
+    "One example",
+    "Read only while storage is live",
+    "Change the stored value"
+  ],
+  "project": {
+    "title": "Allocate storage with malloc",
+    "task": "Identify the allocation, failure check, first write, read, and release in order.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local C example is optional."
+  },
+  "navigationCorrection": "Added a short example introduction so its reviewed heading remains an explicit contents target."
+}

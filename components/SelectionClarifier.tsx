@@ -55,6 +55,7 @@ export default function SelectionClarifier({
     setPassage(null);
   };
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Dismiss the old DOM selection when its lesson context changes.
     setPassage(null);
     dismissed.current = "";
     interacting.current = false;

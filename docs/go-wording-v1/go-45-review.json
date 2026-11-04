@@ -1,0 +1,91 @@
+{
+  "lesson": "go-45",
+  "position": 45,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "If the above row expects 11 instead of 10, what happens?",
+      "after": "Use one test rule for several named cases."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A table-driven test stores named inputs and expected results in a slice of struct values. Here []struct declares a slice whose element type is an anonymous structure; each row fills name, input and want in order. The same assertion runs for every row.",
+        "Save this complete example as main_test.go in a local module and run go test -run TestClamp -v. t.Run names each subtest; its callback receives that subtest’s *testing.T. t.Fatalf reports the actual and wanted values and ends the failing subtest. PASS and timing lines come from the test runner, not a hardcoded program print.",
+        "Complete local Go example; the app itself does not execute it:\n```go\npackage study\nimport \"testing\"\nfunc clamp(n int) int {\n    if n < 0 { return 0 }; if n > 10 { return 10 }; return n\n}\n\nfunc TestClamp(t *testing.T) {\n    cases := []struct { name string; input, want int }{\n        {\"below\", -1, 0}, {\"inside\", 7, 7}, {\"above\", 11, 10},\n    }\n    for _, tc := range cases {\n        t.Run(tc.name, func(t *testing.T) {\n            if got := clamp(tc.input); got != tc.want {\n                t.Fatalf(\"input %d: got %d, want %d\", tc.input, got, tc.want)\n            }\n        })\n    }\n}\n```",
+        "Expected output or behavior: All three named subtests PASS; runner timings vary. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Add exact zero and ten boundary rows without duplicating the assertion. You may trace it without a Go compiler; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "A table-driven test stores its cases as rows. Each row here has a name, an input, and a wanted answer. `[]struct` makes a slice of records with those fields.",
+        "`t.Run` gives each row its own named test. The test calls clamp, compares the actual answer with the wanted answer, and reports a failure if they differ. clamp keeps a number between 0 and 10.",
+        "Save this file as main_test.go in a local Go module. `go test -run TestClamp -v` runs the named test and shows its subtests.\n```go\npackage study\nimport \"testing\"\nfunc clamp(n int) int {\n    if n < 0 { return 0 }; if n > 10 { return 10 }; return n\n}\n\nfunc TestClamp(t *testing.T) {\n    cases := []struct { name string; input, want int }{\n        {\"below\", -1, 0}, {\"inside\", 7, 7}, {\"above\", 11, 10},\n    }\n    for _, tc := range cases {\n        t.Run(tc.name, func(t *testing.T) {\n            if got := clamp(tc.input); got != tc.want {\n                t.Fatalf(\"input %d: got %d, want %d\", tc.input, got, tc.want)\n            }\n        })\n    }\n}\n```",
+        "The below, inside, and above cases all pass. The test tool reports those results; the program does not print a fixed PASS message.",
+        "Changing a row's wanted answer does not change clamp. It changes what the test expects to see."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "The row supplies an expectation, not the function's instructions."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If the above row expects 11 instead of 10, what happens?",
+        "choices": [
+          "The function changes to satisfy the row.",
+          "Every named subtest is skipped automatically.",
+          "The above subtest fails because clamp(11) returns 10."
+        ],
+        "answer": 2,
+        "explanation": "The changed expectation disagrees with the unchanged upper-bound behavior; the failure is localized by its subtest name."
+      },
+      "after": {
+        "question": "Change the above row's wanted answer from 10 to 11. What happens?",
+        "choices": [
+          "The function changes to match the row.",
+          "Every named case is skipped.",
+          "The above case fails because clamp(11) returns 10."
+        ],
+        "answer": 2,
+        "explanation": "The function still limits 11 to 10. The changed row expects 11, so that named case fails."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Go Core v1 uses the verified Go1.27.3 toolchain and standard library. The app supplies concept reading and an understanding check, not a Go browser runner. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "The browser shows Go code and checks your understanding; it does not run Go. Optional local examples use Go 1.27."
+    }
+  ],
+  "headings": [
+    "Put test cases in rows",
+    "Run the same check for each row",
+    "One example",
+    "Read the named results",
+    "Change one expected answer"
+  ],
+  "project": {
+    "title": "Table-driven tests",
+    "task": "Find the case that fails after its wanted answer changes.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local Go example is optional."
+  }
+}

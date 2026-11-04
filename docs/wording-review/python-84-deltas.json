@@ -1,0 +1,62 @@
+{
+  "lesson": "python-84",
+  "sourceHash": "0b4d57e49bef5dde170ee9f006ca41d70ebcd63aadeef9f12e92786bc2240763",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Using the supplied merge_counted helper, return (sorted_copy, total_merge_comparisons) for an integer list. Split at len(values)//2, recurse on each half, and add the two child counts to the final merge count. Empty/single input returns a new list and count 0; preserve the original.",
+      "after": "Use merge_counted to build merge_sort that returns a sorted copy and comparison count."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "Merge sort splits a list into two smaller lists, sorts each recursively, then merges their sorted results. A list with zero or one element is already sorted: that is the base case. Every longer list splits into strictly smaller parts, so these bounded inputs eventually reach that base case.",
+        "merge_counted uses the previous lesson’s merge algorithm, adding one counter event for each left[i] <= right[j] test. It takes two sorted integer lists and returns (new_merged_list, comparisons); no tests are counted when copying the remaining tail. append adds one element; extend copies a suffix into the result, and both return None.\n```python\ndef merge_counted(left, right):\n    result = []\n    i = 0\n    j = 0\n    comparisons = 0\n    while i < len(left) and j < len(right):\n        comparisons += 1\n        if left[i] <= right[j]:\n            result.append(left[i])\n            i += 1\n        else:\n            result.append(right[j])\n            j += 1\n    result.extend(left[i:])\n    result.extend(right[j:])\n    return result, comparisons\n```\nFor example, this explicit call prints ([1, 2, 3], 1):\n```python\nprint(merge_counted([1], [2, 3]))\n```",
+        "merge_sort takes an integer list and returns (new_sorted_list, total_value_comparisons). values[:mid] and values[mid:] copy the two halves. Each recursive call returns a pair; tuple unpacking assigns the sorted list and its count to separate names. Add both child counts and the final merge count. The base-case copy avoids returning the caller’s list itself.\n```python\ndef merge_sort(values):\n    if len(values) <= 1:\n        return values.copy(), 0\n    mid = len(values) // 2\n    left, left_count = merge_sort(values[:mid])\n    right, right_count = merge_sort(values[mid:])\n    result, merge_count = merge_counted(left, right)\n    return result, left_count + right_count + merge_count\nprint(merge_sort([4, 1, 3, 2]))\nprint(merge_sort([]))\n```\nWith merge_counted defined above, it prints ([1, 2, 3, 4], 5) and ([], 0). The two length-two halves each need one comparison; the final merge needs three.",
+        "For a power-of-two size n, repeated splitting creates log2(n) merge levels. Across one level the merged lengths total n, so combining levels gives O(n log n) work under constant-cost comparisons. The exact comparison count still depends on value order. This implementation also copies slices and builds lists; it does not use constant extra space. Small input timings can differ from these growth classes.",
+        "Keep merge_counted as supplied and implement merge_sort with its base case, smaller recursive calls and count sum. Inputs may be empty, duplicated, already sorted or reversed. Optional local practice: trace the two halves of a five-item list, then compare comparison counts for two different orders of the same values without making a stopwatch claim. The supplied __sort_preserved helper is test infrastructure: it checks the stated preservation contract. Leave it unchanged; the learning task is the main function, not writing this helper."
+      ],
+      "after": [
+        "Merge sort splits a list into two smaller lists. It sorts each smaller list the same way, then merges the two sorted results.\n\nA list with zero or one item is already sorted. That is the base case. Every longer list splits into smaller parts. These smaller parts keep shrinking until they reach the base case.",
+        "merge_counted uses the merge algorithm from the earlier lesson. It takes two sorted integer lists. It returns a new merged list and a comparison count. The count increases once for each left[i] <= right[j] test. Copying the remaining items needs no more value comparisons. `append` adds one item. `extend` adds the remaining items to the result. Both return `None`.\n```python\ndef merge_counted(left, right):\n    result = []\n    i = 0\n    j = 0\n    comparisons = 0\n    while i < len(left) and j < len(right):\n        comparisons += 1\n        if left[i] <= right[j]:\n            result.append(left[i])\n            i += 1\n        else:\n            result.append(right[j])\n            j += 1\n    result.extend(left[i:])\n    result.extend(right[j:])\n    return result, comparisons\n```\nFor example, this explicit call prints ([1, 2, 3], 1):\n```python\nprint(merge_counted([1], [2, 3]))\n```",
+        "merge_sort takes an integer list and returns (new_sorted_list, total_value_comparisons). values[:mid] and values[mid:] make new half lists. Each recursive call returns two things: a sorted list and a count. Store them in separate names. Add the counts from both halves and the final merge. Even the base case returns a copy, so the result is a new list.\n```python\ndef merge_sort(values):\n    if len(values) <= 1:\n        return values.copy(), 0\n    mid = len(values) // 2\n    left, left_count = merge_sort(values[:mid])\n    right, right_count = merge_sort(values[mid:])\n    result, merge_count = merge_counted(left, right)\n    return result, left_count + right_count + merge_count\nprint(merge_sort([4, 1, 3, 2]))\nprint(merge_sort([]))\n```\nWith merge_counted defined above, it prints ([1, 2, 3, 4], 5) and ([], 0). The two length-two halves each need one comparison. The final merge needs three.",
+        "For a list size n that is a power of two, repeated splitting makes log2(n) levels of merging. Across one level, the merged lengths total n. So the work grows like O(n log n) when each comparison costs the same. The exact comparison count still depends on the value order. This version also copies slices and builds new lists. It does not use constant extra space. Timings on small inputs can differ from these growth rules.",
+        "Keep merge_counted exactly as supplied. Implement merge_sort with a base case, two smaller recursive calls, and adding both child counts to the final merge count. Inputs may be empty, have duplicates, already be sorted, or be reversed. Optional local practice: trace the two halves of a five-item list. Then compare comparison counts for two different orders of the same values. Comparison counts alone do not tell you the running time. The supplied __sort_preserved helper is test code. It checks that the original list is preserved and that the result is a new list. Leave it unchanged. The learning task is the main function, not writing this helper."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the requirement.",
+        "Make one change to the starter.",
+        "Run the checks.",
+        "Explain why a changed input produces its result."
+      ],
+      "after": [
+        "Keep merge_counted exactly as supplied; it merges two sorted lists and counts the left[i] <= right[j] tests.",
+        "In merge_sort, handle the base case first: if len(values) <= 1, return values.copy() and 0.",
+        "Find mid = len(values) // 2, then recursively call merge_sort on values[:mid] and values[mid:] and keep each child count.",
+        "Call merge_counted(left, right) to get the merged result and final merge count.",
+        "Return the merged result with left_count + right_count + merge_count, and check empty, single, duplicate, sorted, and reversed inputs.",
+        "Check that the original list is unchanged and the returned list is not the same object; leave __sort_preserved unchanged."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Trace the visible worked calls before changing the starter."
+      ],
+      "after": [
+        "Start merge_sort with the base case: if len(values) <= 1, return values.copy(), 0.",
+        "Split the list at len(values) // 2. Sort the left half and right half with the same function.",
+        "After merge_counted returns, add left_count + right_count + merge_count before returning."
+      ]
+    }
+  ],
+  "reviewNotes": [
+    "Kept all five original section roles and the supplied code examples.",
+    "Simplified wording for age 10 while preserving base cases, count behavior, growth limit, and preservation checks.",
+    "Quiz answer index 0 and its meaning are unchanged; steps and hints now name concrete merge_sort actions.",
+    "Replaced child, tail and suffix jargon with the two halves and remaining items."
+  ]
+}

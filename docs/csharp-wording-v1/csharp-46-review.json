@@ -1,0 +1,94 @@
+{
+  "lesson": "csharp-46",
+  "position": 46,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Move Done -= handler to before both Finish calls. How many times is Saved printed?",
+      "after": "Subscribe to a message, then stop receiving it."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "An event lets an object announce a change. The publisher owns when it is raised; outside code subscribes a compatible handler. Action is a delegate taking no arguments and returning no result; () => starts a zero-argument lambda.",
+        "+= adds a handler. Done?.Invoke() calls it when a subscriber exists; ?. avoids calling through null when there are no subscribers.",
+        "-= removes the matching handler. Keep the delegate in a variable when using a lambda so you can remove that same subscription. Long-lived publishers can otherwise keep subscribers reachable.",
+        "Complete local C# example; the app does not execute it:\n```csharp\nusing System;\nvar tracker = new Tracker();\nAction handler = () => Console.WriteLine(\"Saved\");\ntracker.Done += handler;\ntracker.Finish();\ntracker.Done -= handler;\ntracker.Finish();\npublic class Tracker\n{\n    public event Action? Done;\n    public void Finish() => Done?.Invoke();\n}\n```",
+        "Expected behavior from this example: Saved once. This expected result is a reasoned prediction until a compiler test is recorded.",
+        "Optional local transfer: Add two named handlers, remove only one, and predict which messages remain. Do not recreate a lambda to unsubscribe it. This is a separate local practice task, not a requirement to mark the reading complete."
+      ],
+      "after": [
+        "An event lets an object announce that something happened. The object raising the event is the publisher. Here, Tracker announces Done when Finish runs.",
+        "A handler is code called when an event is raised. += subscribes it. Action describes a delegate with no inputs and no result; () => starts this handler's lambda.",
+        "-= removes the matching handler. Store the lambda in a variable so you can remove the same subscription later.",
+        "Follow the subscription before each Finish call.\n\n```csharp\nusing System;\nvar tracker = new Tracker();\nAction handler = () => Console.WriteLine(\"Saved\");\ntracker.Done += handler;\ntracker.Finish();\ntracker.Done -= handler;\ntracker.Finish();\npublic class Tracker\n{\n    public event Action? Done;\n    public void Finish() => Done?.Invoke();\n}\n```",
+        "The program prints Saved once. The first Finish calls the handler. After removal, Done has no handler, so ?.Invoke() safely does nothing.",
+        "An event subscription can keep a listener in memory while the publisher stays alive. Remove subscriptions when they are no longer needed. The publisher controls when to raise its event; outside code subscribes or unsubscribes."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Trace the changed case before choosing an answer.",
+        "Explain the consequence, then optionally try the local transfer task."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Trace the inputs through the visible rule, then compare the changed case."
+      ],
+      "after": [
+        "Check whether the handler is subscribed at the moment Finish runs."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Move Done -= handler to before both Finish calls. How many times is Saved printed?",
+        "choices": [
+          "Twice: removing a handler changes nothing",
+          "Zero: neither call has this subscriber",
+          "Once: events always fire once"
+        ],
+        "answer": 1,
+        "explanation": "Removing the subscription before either raise leaves no handler for Done to invoke. The publisher may still run Finish."
+      },
+      "after": {
+        "question": "Move the removal after the subscription but before both Finish calls. How often does Saved print?",
+        "choices": [
+          "Twice",
+          "Zero times",
+          "Once"
+        ],
+        "answer": 1,
+        "explanation": "The handler has already been removed when either Finish call raises the event."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "C#14/.NET10 core syllabus. Concept-mode reading and understanding check; no in-app C# execution and no claim of mastery. Full example and optional local transfer task are supplied. Actual compiler validation, if available, is reported separately.",
+      "after": "The browser shows C# code and checks your understanding; it does not run C#. Optional local examples use a .NET 10 console project with C# 14."
+    }
+  ],
+  "headings": [
+    "An event announces something",
+    "Subscribe a handler",
+    "Remove the same handler",
+    "One example",
+    "What appears",
+    "Keep cleanup in mind"
+  ],
+  "project": {
+    "title": "Publish and unsubscribe an event",
+    "task": "Follow how subscribing and unsubscribing changes which event messages are received.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local C# example is optional."
+  }
+}

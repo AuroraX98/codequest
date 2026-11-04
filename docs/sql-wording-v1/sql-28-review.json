@@ -1,0 +1,87 @@
+{
+  "lesson": "sql-28",
+  "position": 7,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Create chosen(id) for tags with colour green or violet. Preserve tags and retain both separate green rows.",
+      "after": "Use IN to match any value in a short list."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "IN asks whether a value matches a member of a list. colour IN ('blue','gold') expresses the same membership choice as colour = 'blue' OR colour = 'gold' for these non-missing values.",
+        "The list contains values, not column names. Repeating a value in the list does not duplicate a matching source row. IN filters each source row; it is not a join that creates a row for each matching list entry. Nullable subqueries need additional care in the later NOT IN lesson.",
+        "Run this complete example in a fresh database.\n```sql\nCREATE TABLE tiles(colour TEXT);\nINSERT INTO tiles VALUES('blue'),('red'),('gold');\nCREATE TEMP VIEW shown AS\nSELECT colour\nFROM tiles\nWHERE colour IN('blue','gold');\nSELECT *\nFROM shown\nORDER BY colour;\n```",
+        "Change the supplied values and trace the result. This is a separate complete example.\n```sql\nCREATE TABLE tiles(colour TEXT);\nINSERT INTO tiles VALUES('blue'),('red'),('gold');\nCREATE TEMP VIEW shown AS\nSELECT colour\nFROM tiles\nWHERE colour IN('blue','blue');\nSELECT *\nFROM shown;\n```",
+        "Application: Create chosen(id) for tags with colour green or violet. Preserve tags and retain both separate green rows."
+      ],
+      "after": [
+        "`IN` asks whether a value matches anything in a list. For known colors, checking for blue or gold can be written as `colour IN ('blue', 'gold')`.",
+        "The list holds values to match. `IN` checks each source row once. Two different blue rows can both pass, but repeating blue in the list does not make extra copies of either row.",
+        "Run this example in a fresh database:\n```sql\nCREATE TABLE tiles(id INTEGER, colour TEXT);\nINSERT INTO tiles VALUES\n  (1, 'blue'), (2, 'blue'), (3, 'gold'), (4, 'red');\nSELECT id, colour\nFROM tiles\nWHERE colour IN ('blue', 'gold')\nORDER BY id;\n```\nIDs `1`, `2`, and `3` pass. Both separate blue rows remain.",
+        "Repeating `'blue'` in the list would not change this result. A match is just a yes-or-no choice for each row. Missing values need extra care, which the later NOT IN lesson covers.",
+        "Create `chosen(id)` from `tags`. Keep colors `'green'` or `'violet'`. Keep both separate green rows and leave the tags unchanged."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the small example and explain its inputs and effects.",
+        "Complete the starter for this lesson.",
+        "Run the behavior checks, then predict a changed case."
+      ],
+      "after": [
+        "Use IN with the two wanted colors.",
+        "Select each matching tag's id.",
+        "Save those IDs in chosen."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Trace the supplied rows and resulting rows before changing the query."
+      ],
+      "after": [
+        "Put text values in single quotes.",
+        "Do not remove separate rows just because their colors match."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "One source row is blue. How many rows does its match against IN ('blue','blue','blue') contribute?",
+        "choices": [
+          "Three",
+          "Zero",
+          "One"
+        ],
+        "answer": 2,
+        "explanation": "Membership is a condition on that source row, not one output per repeated list item."
+      },
+      "after": {
+        "question": "One source row is blue. How many copies does IN ('blue','blue','blue') return for that row?",
+        "choices": [
+          "Three",
+          "Zero",
+          "One"
+        ],
+        "answer": 2,
+        "explanation": "IN tests whether the row matches. Repeating a choice does not copy the row."
+      }
+    }
+  ],
+  "headings": [
+    "Match a value from a list",
+    "Keep each source row once",
+    "Choose two colors",
+    "Understand repeated values",
+    "Choose the project tags"
+  ],
+  "project": {
+    "title": "Membership in a small set",
+    "task": "Create chosen(id) for green or violet tags, keeping both separate green rows.",
+    "done_when": "All matching IDs appear once per source row, and tags stays unchanged."
+  }
+}

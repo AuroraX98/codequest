@@ -1,0 +1,92 @@
+{
+  "lesson": "swift-19",
+  "position": 27,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Record old and new values after a counter is changed, without treating initialization as an update.",
+      "after": "Run a small action after a stored property is assigned."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "An initializer gives a new instance its starting stored values. init is called when the instance is created.",
+        "A didSet observer runs after a stored property is assigned a new value. Its oldValue name gives the value from before that assignment.",
+        "```swift\nfinal class Meter {\n    var value: Int {\n        didSet { print(\"\\(oldValue) -> \\(value)\") }\n    }\n    init(value: Int) { self.value = value }\n}\nlet meter = Meter(value: 2)\nmeter.value = 5\n```\nThis prints 2 -> 5. Directly setting this property in its own initializer does not trigger its observer.",
+        "An observer runs on assignment even if the new value equals the old value. If you want only actual changes, compare the values inside the observer.",
+        "For the exercise, Counter stores value and a changes array. didSet appends \"old -> new\" after every later assignment. Initial construction must leave changes empty."
+      ],
+      "after": [
+        "An initializer sets up a new object. `init(value:)` receives its starting value, and `self.value` names the object's property.",
+        "A property observer is code that runs when a property is set. `didSet` runs after the assignment. Its built-in `oldValue` name gives the value from before the assignment.",
+        "```swift\nfinal class Meter {\n    var value: Int {\n        didSet { print(\"\\(oldValue) -> \\(value)\") }\n    }\n    init(value: Int) { self.value = value }\n}\nlet meter = Meter(value: 2)\nmeter.value = 5\n```\nThe output is `2 -> 5`. Setting the property directly inside its own initializer creates the starting value without running this observer.",
+        "didSet runs after an assignment even when the new value equals the old one. If only unequal changes should count, the observer needs a comparison. This exercise records every later assignment.",
+        "Complete Counter with a value and a changes array. After each later assignment, append text in the form `old -> new`. Creating the object must leave changes empty."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read oldValue and the newly stored value.",
+        "Append one trace entry without changing value again."
+      ],
+      "after": [
+        "Set the starting value in the initializer.",
+        "In didSet, read oldValue and the newly stored value.",
+        "Append one change record and run the checks."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Read oldValue and the newly stored value.",
+        "Append one trace entry without changing value again."
+      ],
+      "after": [
+        "Do not add a change record while initializing.",
+        "Record the assignment without assigning to value again."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Counter starts at 3 with no recorded changes. You assign value = 3 again. What should this didSet record?",
+        "choices": [
+          "3 -> 3, because assignment triggers the observer even when equal",
+          "Nothing, because observers run only for unequal values",
+          "0 -> 3, because each assignment creates a new instance"
+        ],
+        "answer": 0,
+        "explanation": "didSet observes assignment. The initializer created the starting value, but this later assignment runs the observer even though the value is unchanged."
+      },
+      "after": {
+        "question": "The counter starts at 3. You assign 3 again. What should this observer record?",
+        "choices": [
+          "3 -> 3, because the assignment still happened",
+          "Nothing, because observers require unequal values",
+          "0 -> 3, because a new object is created"
+        ],
+        "answer": 0,
+        "explanation": "didSet observes the later assignment, even when the value stays equal."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "This narrow exercise directly initializes a property in its own class; it does not cover inheritance or observer reentrancy.",
+      "after": "This exercise initializes a property directly in its own class. Inherited properties and assignments made by observers need separate rules."
+    }
+  ],
+  "headings": [
+    "Give the object a starting value",
+    "Watch later assignments",
+    "One example",
+    "An equal assignment still counts",
+    "Record the counter's updates"
+  ],
+  "project": {
+    "title": "Observe a stored value changing",
+    "task": "Complete Counter so didSet records each later assignment as `old -> new` in changes. Keep changes empty when the object is first created.",
+    "done_when": "The checks pass for initial construction, changed values, and repeated equal assignments."
+  }
+}

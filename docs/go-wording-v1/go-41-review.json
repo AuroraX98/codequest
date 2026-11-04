@@ -1,0 +1,91 @@
+{
+  "lesson": "go-41",
+  "position": 41,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "If Label is renamed label in both helper.go and the caller, what happens?",
+      "after": "Use an exported name from another package."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "Files in a directory normally belong to one package. An identifier beginning with an uppercase letter is exported from its package. Lowercase names are not accessible through an import from another package.",
+        "Save these separate files.\n```text\n// go.mod\nmodule example.test/lesson\ngo 1.27.0\n```\n```go\n// helper/helper.go\npackage helper\nfunc Label() string { return \"review\" }\n```\nFrom the root, go run . builds the main package and this local helper; the import path is the module path plus /helper, not a download request in this fixture.",
+        "Complete local Go example; the app itself does not execute it:\n```go\npackage main\nimport (\"fmt\"; \"example.test/lesson/helper\")\nfunc main() { fmt.Println(helper.Label()) }\n```",
+        "Expected output or behavior: review. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Add an exported helper that calls an unexported helper internally. You may trace it without a Go compiler; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "A package groups Go code, usually in one directory. An exported name can be used from another package. Label begins with an uppercase letter, so another package can call it. A lowercase label stays inside its package.",
+        "go.mod gives this group of packages a module path. Add `/helper` to that path to import the local helper package. From the folder containing go.mod, `go run .` builds and runs this program with its helper.",
+        "Save each labeled part in the named file. The three files form one program.\n```go\n// File: go.mod\nmodule example.test/lesson\ngo 1.27.0\n\n// File: helper/helper.go\npackage helper\nfunc Label() string { return \"review\" }\n\n// File: main.go\npackage main\nimport (\"fmt\"; \"example.test/lesson/helper\")\nfunc main() { fmt.Println(helper.Label()) }\n```",
+        "The screen shows `review`. main calls helper.Label, and Label returns that text.",
+        "A package can use its own lowercase names. Another package cannot reach them through an import, even when both packages belong to the same module."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Check the first letter of the helper's name."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If Label is renamed label in both helper.go and the caller, what happens?",
+        "choices": [
+          "Compilation rejects access to the unexported helper name.",
+          "Go automatically exports imported lowercase names.",
+          "It works because the files share one module."
+        ],
+        "answer": 0,
+        "explanation": "Sharing a module does not bypass package export rules; the caller is in package main rather than helper."
+      },
+      "after": {
+        "question": "Rename Label to label in both the helper and the caller. What happens?",
+        "choices": [
+          "Go rejects the caller's use of the unexported name.",
+          "Go automatically exports lowercase names on import.",
+          "It works because both packages share one module."
+        ],
+        "answer": 0,
+        "explanation": "The caller is in package main. It cannot use helper's lowercase label through the import."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Go Core v1 uses the verified Go1.27.3 toolchain and standard library. The app supplies concept reading and an understanding check, not a Go browser runner. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "The browser shows Go code and checks your understanding; it does not run Go. Optional local examples use Go 1.27."
+    }
+  ],
+  "headings": [
+    "Export a name from a package",
+    "Find the local helper package",
+    "One example in three labeled files",
+    "Read the helper's result",
+    "Keep a name within its package"
+  ],
+  "project": {
+    "title": "Packages and exported names",
+    "task": "Predict whether another package can call the renamed helper.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local Go example is optional."
+  }
+}

@@ -1,0 +1,91 @@
+{
+  "lesson": "php-41",
+  "position": 41,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "If second is assigned first without clone, what prints?",
+      "after": "Cloning makes a new outer object. Objects held inside it may still be shared."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "For objects, === tests whether both variables refer to the same instance. == compares objects of the same class using corresponding property values with loose equality, so coercion can affect that comparison. Neither operator automatically performs a deep independent clone.",
+        "clone creates a different outer object and copies its properties. Nested object properties still refer to the same nested objects unless __clone deliberately replaces them. This example mutates a shared nested Note after cloning its Box.",
+        "Complete local PHP example; the app itself does not execute it:\n```php\n<?php\ndeclare(strict_types=1);\nclass Note { public string $text = 'first'; }\nclass Box { public function __construct(public Note $note) {} }\n$first = new Box(new Note());\n$second = clone $first;\n$second->note->text = 'second';\necho $first->note->text, ' ', $first === $second ? 'same' : 'different', \"\\n\";\n```",
+        "Expected output or behavior: second different. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Implement __clone to clone the Note explicitly and predict first.text. You may trace it without a PHP interpreter; reading completion is not proof of a local run.\n\nPHP invokes __clone on the new outer object after copying its properties. This no-argument hook replaces that copy’s nested Note with a cloned Note; $this is the new Box. It returns no value. The later edit therefore no longer changes first.note.\n```php\n<?php\ndeclare(strict_types=1);\nclass Note { public string $text = 'first'; }\nclass Box {\n    public function __construct(public Note $note) {}\n    public function __clone(): void { $this->note = clone $this->note; }\n}\n$first = new Box(new Note());\n$second = clone $first;\n$second->note->text = 'second';\necho $first->note->text, ' ', $second->note->text, \"\\n\";\n```\nExpected output: first second."
+      ],
+      "after": [
+        "Cloning makes a new outer object. Objects held inside it may still be shared.",
+        "Both boxes still point to the same Note inside.",
+        "Follow the labeled parts of this example.\n```php\n<?php\ndeclare(strict_types=1);\nclass Note { public string $text = 'first'; }\nclass Box { public function __construct(public Note $note) {} }\n$first = new Box(new Note());\n$second = clone $first;\n$second->note->text = 'second';\necho $first->note->text, ' ', $first === $second ? 'same' : 'different', \"\\n\";\n```",
+        "The output is `second different`. The shared note changes, but the two boxes have different identities.",
+        "Replace the clone with ordinary assignment and compare the boxes."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read one idea.",
+        "Follow the labeled example.",
+        "Try the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Replace the clone with ordinary assignment and compare the boxes."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If second is assigned first without clone, what prints?",
+        "choices": [
+          "second same",
+          "second different",
+          "first different"
+        ],
+        "answer": 0,
+        "explanation": "Ordinary assignment keeps the same outer object identity; the nested Note is shared in either case."
+      },
+      "after": {
+        "question": "If the second Box is assigned the first Box without cloning, what prints?",
+        "choices": [
+          "second same",
+          "second different",
+          "first different"
+        ],
+        "answer": 0,
+        "explanation": "Both names now point to the very same Box."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "PHP Core v1 uses PHP 8.5.12 CLI and explicitly available extensions. The app supplies concept reading and an understanding check, not a PHP browser runner. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "CodeQuest shows the PHP example. Running it on your own computer is optional."
+    }
+  ],
+  "headings": [
+    "Copy the outside object",
+    "Make a second Box",
+    "Read the example",
+    "What happens",
+    "Try one change"
+  ],
+  "project": {
+    "title": "Object identity and cloning",
+    "task": "Replace the clone with ordinary assignment and compare the boxes.",
+    "done_when": "Read each idea and pass the understanding check. Running the example on your computer is optional."
+  }
+}

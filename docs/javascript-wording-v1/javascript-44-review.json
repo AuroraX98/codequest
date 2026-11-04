@@ -1,0 +1,94 @@
+{
+  "lesson": "javascript-44",
+  "position": 38,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Double each own enumerable string-keyed finite numeric property into a new object. Preserve the source; exclude inherited properties. Empty input returns an empty object.",
+      "after": "Turn an object's values into pairs, change them, and build a new object."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "Object.entries(object) returns an array of [key,value] pairs for own enumerable string-keyed properties. Inherited properties and symbol keys are excluded. Here the input is a plain data object with finite numeric own values; no getters or hostile proxies are part of the contract.",
+        "Object.fromEntries(pairs) takes an iterable of key/value pairs and returns a new ordinary object. Repeated keys keep the last supplied value. This builds an object; it does not modify the source or install a sanitization policy. The loop’s [key,value] syntax destructures each pair; pairs.push(pair) appends one pair and returns the array’s new length, which we ignore.",
+        "doubleOwn returns doubled own values in a new object. Object.create(proto) creates an object with that prototype, letting the example distinguish inherited data from assigned own properties. JSON.stringify serializes this small data object for readable output.\n```javascript\nfunction doubleOwn(source) {\n  const pairs = [];\n  for (const [key, value] of Object.entries(source)) {\n    pairs.push([key, value * 2]);\n  }\n  return Object.fromEntries(pairs);\n}\nconst source = Object.create({inherited: 90});\nsource.read = 2;\nsource.write = 3;\nconst result = doubleOwn(source);\nconsole.log(JSON.stringify(result));\nconsole.log(source.read);\n```\nOutput: {\"read\":4,\"write\":6} then 2. The inherited value is absent and the source remains unchanged.",
+        "Implement doubleOwn by transforming entries, not by iterating inherited names. Optional practice: call Object.fromEntries([[\"read\",1],[\"read\",5]]) and explain why the resulting own read value is 5."
+      ],
+      "after": [
+        "`Object.entries(source)` gives an array of `[key, value]` pairs.\n\nIt includes own properties: ones stored directly on the object. They must have text keys and be enumerable, meaning marked to appear when listing properties this way. It leaves out inherited properties and symbol keys.\n\nThis exercise uses ordinary stored numbers, not properties that run code when read.",
+        "`Object.fromEntries(pairs)` builds a new object from key-value pairs. If a key appears twice, the later value wins.\n\nIn the loop, `[key, value]` gives a name to each part of a pair. `pairs.push(...)` adds a new pair to the end of the array.",
+        "This example doubles the object's own values.\n```javascript\nfunction doubleOwn(source) {\n  const pairs = [];\n  for (const [key, value] of Object.entries(source)) {\n    pairs.push([key, value * 2]);\n  }\n  return Object.fromEntries(pairs);\n}\nconst source = Object.create({inherited: 90});\nsource.read = 2;\nsource.write = 3;\nconst result = doubleOwn(source);\nconsole.log(JSON.stringify(result));\nconsole.log(source.read);\n```\nOutput:\n```text\n{\"read\":4,\"write\":6}\n2\n```\n`Object.create({inherited: 90})` gives the source an inherited property. The loop leaves that property out. The source's own `read` value stays 2.\n\n`JSON.stringify` turns the result into text for display.",
+        "Complete `doubleOwn(source)`. Read its entries, double each number, and build a new object from the changed pairs.\n\nKeep the source unchanged. Empty input should return a new empty object. The supplied values are finite numbers."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the requirement.",
+        "Make one change to the starter.",
+        "Run the checks.",
+        "Explain why a changed input produces its result."
+      ],
+      "after": [
+        "Read Object.entries(source).",
+        "Make a new pair with each key and twice its value.",
+        "Build the result with Object.fromEntries.",
+        "Check that inherited values are left out and the source is unchanged."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If Object.fromEntries receives [[\"x\", 2], [\"x\", 7]], what is the final x value?",
+        "choices": [
+          "[2, 7]",
+          "7",
+          "2"
+        ],
+        "answer": 1,
+        "explanation": "Both pairs define the same own key; the later supplied value replaces the earlier one."
+      },
+      "after": {
+        "question": "If Object.fromEntries receives [[\"x\", 2], [\"x\", 7]], what is the final x value?",
+        "choices": [
+          "[2, 7]",
+          "7",
+          "2"
+        ],
+        "answer": 1,
+        "explanation": "The later pair uses the same key, so its value 7 replaces 2."
+      }
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Trace the visible worked calls before changing the starter."
+      ],
+      "after": [
+        "Object.entries leaves out inherited properties.",
+        "Keep each key while changing its numeric value."
+      ]
+    },
+    {
+      "field": "externalNotes",
+      "before": "ECMAScript 2026 core; native Node24 and current app worker/DOM harness evidence are recorded separately. No external service or real-browser claim follows from a local fixture.",
+      "after": ""
+    }
+  ],
+  "headings": [
+    "Read an object's own entries",
+    "Build an object from pairs",
+    "Double values in a new object",
+    "Build doubleOwn"
+  ],
+  "project": {
+    "title": "Object entries and reconstruction",
+    "task": "Complete doubleOwn(source). Double the numbers in its own enumerable text-keyed properties into a new object. Leave inherited properties out and keep the source unchanged.",
+    "done_when": "Own values are doubled, inherited values are absent, the source is unchanged, and empty input produces an empty object."
+  },
+  "notes": [
+    "Removed an unrelated local-project completion requirement; its useful teaching is in the lesson and technical evidence stays in review documents."
+  ]
+}

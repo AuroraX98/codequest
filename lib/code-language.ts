@@ -2,7 +2,13 @@ import { javascript } from "@codemirror/lang-javascript";
 import { python } from "@codemirror/lang-python";
 import { html } from "@codemirror/lang-html";
 import { css } from "@codemirror/lang-css";
-import { sql } from "@codemirror/lang-sql";
+import { sql, SQLDialect, SQLite } from "@codemirror/lang-sql";
+// The runner uses SQLite. Include its window and write-result words, which
+// the installed parser's older keyword list omits.
+const courseSQLite = SQLDialect.define({
+  ...SQLite.spec,
+  keywords: SQLite.spec.keywords + " over partition range unbounded preceding following filter returning strict window exclude groups ties generated always materialized",
+});
 // Use the same language parsers for lesson examples and the editable project.
 export function codeLanguage(language: string) {
   switch (language.toLowerCase()) {
@@ -14,7 +20,7 @@ export function codeLanguage(language: string) {
     case "css":
       return css();
     case "sql":
-      return sql();
+      return sql({ dialect: courseSQLite });
     case "javascript":
     case "js":
       return javascript();
@@ -53,6 +59,8 @@ export function codeLabel(language: string) {
     jsx: "React · JSX",
     tsx: "React · TypeScript",
     html: "HTML",
+    vtt: "WebVTT captions",
+    webvtt: "WebVTT captions",
     css: "CSS",
     sql: "SQL",
     swift: "Swift",

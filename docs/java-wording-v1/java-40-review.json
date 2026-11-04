@@ -1,0 +1,94 @@
+{
+  "lesson": "java-40",
+  "position": 40,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Change boxed to null while keeping the guard. What happens?",
+      "after": "Check a boxed number before converting it back to int."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "Autoboxing converts an int value to an Integer reference; unboxing retrieves the primitive int. Collections use reference types, so ArrayList<Integer> relies on these conversions when storing or retrieving ints.",
+        "An Integer reference can be null; int cannot. Unboxing null throws NullPointerException. A presence check must occur before the conversion, not after it.",
+        "== on two wrapper references tests identity, and caching can make results misleading. Use equals for non-null logical wrapper equality or compare deliberately unboxed primitives when safe.\n\nFor a non-null Integer receiver, equals(other) returns whether the other object is an Integer with the same int value. It does not ask whether wrapper references share an object:\n```java\nInteger left = 400;\nInteger same = 400;\nInteger other = 401;\nSystem.out.println(left.equals(same));\nSystem.out.println(left.equals(other));\n```\nOutput: true, then false.",
+        "Complete local Java example; the app itself does not execute it:\n```java\npublic class Main {\n    public static void main(String[] args) {\n        Integer boxed = 4;\n        if (boxed != null) {\n            int value = boxed;\n            System.out.println(value + 1);\n        } else {\n            System.out.println(\"missing\");\n        }\n    }\n}\n\n```",
+        "Expected output or behavior: 5\n. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Compare null-safe branching with an intentional local unboxing failure after exceptions are covered. You may trace it without a JDK; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "Boxing wraps a primitive number, such as int, as an object value, such as Integer. Unboxing gets the primitive value back. Java often performs these conversions automatically, including when integer values enter or leave collections.",
+        "An Integer reference can be null, but an int cannot. Trying to unbox null throws NullPointerException. Check for null before reaching the conversion.",
+        "For two Integer references, == checks whether they point to the same object. Java may reuse wrapper objects, so do not use this to compare their numbers. For a non-null wrapper, equals compares its number with another wrapper of the same type.",
+        "Find the null check before the assignment to the int variable.\n\n```java\npublic class Main {\n    public static void main(String[] args) {\n        Integer boxed = 4;\n        if (boxed != null) {\n            int value = boxed;\n            System.out.println(value + 1);\n        } else {\n            System.out.println(\"missing\");\n        }\n    }\n}\n\n```",
+        "The program prints 5. boxed is present, so Java unboxes four into value and then adds one.",
+        "The quiz makes boxed null. The check chooses the other branch before any unboxing is attempted."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Find which branch contains the conversion to int."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Change boxed to null while keeping the guard. What happens?",
+        "choices": [
+          "It prints 1 because null becomes zero",
+          "The missing branch runs and no unboxing occurs",
+          "Unboxing throws before the if"
+        ],
+        "answer": 1,
+        "explanation": "The reference is tested first. The declaration int value = boxed is reached only in the non-null branch."
+      },
+      "after": {
+        "question": "Change boxed to null and keep the if check. What happens?",
+        "choices": [
+          "It prints 1 because null becomes zero.",
+          "It prints missing without unboxing.",
+          "Unboxing throws an error before the if check."
+        ],
+        "answer": 1,
+        "explanation": "The null check runs first. It sends execution to else, so the int assignment is skipped."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Java Core v1 uses stable Java25 LTS features without preview flags. The app supplies concept reading and an understanding check, not a Java browser runner. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "The browser shows Java code and checks your understanding; it does not run Java. Optional local examples use Java25."
+    }
+  ],
+  "headings": [
+    "Boxing wraps a primitive value",
+    "A wrapper reference can be missing",
+    "Compare wrapper values carefully",
+    "One example",
+    "What appears",
+    "Use a missing wrapper"
+  ],
+  "project": {
+    "title": "Box primitive values deliberately",
+    "task": "Explain how checking for null prevents an unboxing error.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local Java example is optional."
+  }
+}

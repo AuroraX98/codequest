@@ -1,0 +1,91 @@
+{
+  "lesson": "kotlin-46",
+  "position": 46,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "If the second toList call is removed, what is the final calls count?",
+      "after": "A sequence waits to process its items, and reading it again can repeat the work."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "asSequence creates a lazy processing view over the list. map runs as a terminal operation such as toList requests elements. It can avoid intermediate lists, but overhead means it is not automatically faster for small workloads.",
+        "This list-backed sequence can be traversed repeatedly; each traversal applies the mapping again. Not all sequences are reusable: some are constrained to one traversal. The counter below is a deliberate local illustration of repeated work, not a recommendation to depend on side effects in transformations.",
+        "Complete local Kotlin/JVM example; the app itself does not execute it:\n```kotlin\n\n\nfun main() {\n    var calls = 0\n    val values = listOf(1, 2).asSequence().map { n -> calls++; n * 2 }\n    println(calls)\n    println(values.toList())\n    println(values.toList())\n    println(calls)\n}\n```",
+        "Expected output or behavior: 0\n[2, 4]\n[2, 4]\n4. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Materialize the sequence once into a list and explain how subsequent reads differ from new traversals. You may trace it without a Kotlin compiler; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "A sequence processes values when they are requested. `asSequence()` creates this lazy view. Adding map describes the work but does not run it yet. A finishing operation such as `toList()` requests the values and starts that work.",
+        "This sequence comes from a list and can be read again. Each toList call repeats the mapping. The instruction `calls++` adds 1 to a counter each time the lambda runs, letting us see that work.",
+        "Follow the example one line at a time.\n```kotlin\n\n\nfun main() {\n    var calls = 0\n    val values = listOf(1, 2).asSequence().map { n -> calls++; n * 2 }\n    println(calls)\n    println(values.toList())\n    println(values.toList())\n    println(calls)\n}\n```",
+        "The screen shows `0`, `[2, 4]`, `[2, 4]`, then `4`. Creating the sequence makes no calls. Each of the two reads maps two items, making four calls in total.",
+        "Saving one toList result lets you reuse that finished list without mapping again. Some other sequences allow only one read. Sequences can avoid temporary lists, but they are not automatically faster for small jobs. The counter here is only a way to observe the work."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Count requested items, not sequence declarations."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If the second toList call is removed, what is the final calls count?",
+        "choices": [
+          "4 because constructing a sequence already runs map",
+          "0 because a terminal operation never traverses.",
+          "2"
+        ],
+        "answer": 2,
+        "explanation": "Only one traversal maps the two source elements; sequence construction does not increment the counter."
+      },
+      "after": {
+        "question": "Remove the second toList call. What is the final calls count?",
+        "choices": [
+          "4, because creating the sequence already runs map.",
+          "0, because toList does not read the sequence.",
+          "2"
+        ],
+        "answer": 2,
+        "explanation": "One toList call reads the two items. The lambda runs once per item, so calls reaches 2."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Kotlin JVM Core v1 uses Kotlin2.4.21 stable syntax and a verified JVM toolchain. The app supplies concept reading and an understanding check, not a Kotlin browser runner. Coroutine libraries are separate dependencies. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "The browser shows Kotlin code and checks your understanding; it does not run Kotlin. Optional local examples use Kotlin/JVM."
+    }
+  ],
+  "headings": [
+    "Wait until values are requested",
+    "Count each mapping call",
+    "One example",
+    "Read the work count",
+    "Choose when to save the result"
+  ],
+  "project": {
+    "title": "Lazy sequences and repeated work",
+    "task": "Count the work caused by one sequence read.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local Kotlin example is optional."
+  }
+}

@@ -1,0 +1,86 @@
+{
+  "lesson": "typescript-39",
+  "position": 43,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Implement badge(text) and badge(text,count) returning the text unchanged or text + \" (\" + count + \")\". Explicit undefined as the second argument is not a public call.",
+      "after": "Overloads list the allowed ways to call one function."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "An overload lists an allowed way to call a function. Here a badge can receive text alone or text plus a number. The two declarations ending in semicolons are public call signatures; the final function body is the one implementation.",
+        "The implementation’s optional count can be undefined, and it checks that case. In its runtime expression condition ? yes : no, a true condition selects yes and a false condition selects no: count === undefined chooses the text alone, otherwise it chooses the counted string. Its signature is not an extra callable overload: badge(\"Stars\", undefined) is rejected even though the body could handle it. The calls below return Stars and Stars (4). Parentheses pass arguments; the return type after : describes the result. Prefer one union parameter when all alternatives share one call/result shape, rather than adding needless overloads.",
+        "```typescript\nfunction badge(text: string): string;\nfunction badge(text: string, count: number): string;\nfunction badge(text: string, count?: number): string {\n  return count === undefined ? text : text + \" (\" + count + \")\";\n}\nconsole.log(badge(\"Stars\"));\nconsole.log(badge(\"Stars\", 4));\n```",
+        "Optional local practice: Add a new text example and explain which overload accepts it.",
+        "Changed case — trace this independently before checking the result.\n```typescript\nfunction badge(text: string): string;\nfunction badge(text: string, count: number): string;\nfunction badge(text: string, count?: number): string {\n  return count === undefined ? text : text + \" (\" + count + \")\";\n}\nbadge(\"Map\", undefined);\n```\nCompiler result: No public overload accepts undefined as a second argument. Diagnostic 2345. This intentionally failing example is separate from the runnable solution."
+      ],
+      "after": [
+        "An overload is one allowed way to call a function. This function allows text alone, or text followed by a number. Each overload is written as a function declaration ending with a semicolon.",
+        "The overloads share one function body. Inside that body, `count` may be missing. The body checks for `undefined` to choose which result to return.",
+        "```typescript\nfunction badge(text: string): string;\nfunction badge(text: string, count: number): string;\nfunction badge(text: string, count?: number): string {\n  if (count === undefined) return text;\n  return text + \" (\" + count + \")\";\n}\nconsole.log(badge(\"Stars\"));\nconsole.log(badge(\"Stars\", 4));\n```\nThis prints `Stars`, then `Stars (4)`. Both calls use the same body. The first leaves out the count; the second supplies `4`.",
+        "Complete `badge` with these two allowed calls. With no count, return the text unchanged. With a count, add a space and the number in parentheses.",
+        "Passing `undefined` as a second argument is not allowed here. The public overloads allow one argument, or two arguments with a number second. The body's wider type does not create another allowed call. Use overloads only when different call shapes are useful."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the example and its input/output contract.",
+        "Complete the starter without turning off compiler diagnostics.",
+        "Run the compiler and behavior checks, then explain a changed case."
+      ],
+      "after": [
+        "Keep the two public overloads.",
+        "Check whether the count is missing inside the body.",
+        "Run the checks for one argument and two arguments."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Compare the public input/output types and trace the visible call before editing."
+      ],
+      "after": [
+        "Check `count === undefined` so a count of `0` still appears."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Would badge(\"Map\", undefined) compile under these public declarations?",
+        "choices": [
+          "Yes; undefined is a number.",
+          "Yes; the implementation signature is a third overload.",
+          "No; no overload accepts undefined as the second argument."
+        ],
+        "answer": 2,
+        "explanation": "Only the two declared overloads are visible to callers; implementation compatibility does not add a public call shape."
+      },
+      "after": {
+        "question": "Is `badge(\"Map\", undefined)` allowed by these overloads?",
+        "choices": [
+          "Yes. undefined is a number.",
+          "Yes. The body adds a third overload.",
+          "No. The second argument must be a number."
+        ],
+        "answer": 2,
+        "explanation": "Only the two overload declarations list allowed calls. The function body's type does not add another one."
+      }
+    }
+  ],
+  "headings": [
+    "List the allowed calls",
+    "Share one function body",
+    "Read the badge example",
+    "Build your badge function",
+    "Check a call that is not allowed"
+  ],
+  "project": {
+    "title": "Choose public call shapes with overloads",
+    "task": "Complete `badge(text)` and `badge(text, count)`. Return the text alone, or the text followed by a space and the count in parentheses. Keep the two public overloads.",
+    "done_when": "Both allowed calls return the right text, including a count of zero. Passing undefined as the second argument is rejected."
+  }
+}

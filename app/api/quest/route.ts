@@ -1,5 +1,6 @@
 import { projectChecks, hasTypeContracts } from "../../../lib/project-checks";
 import { z } from "zod";
+import { isProvider, isProviderModel } from "../../../lib/ai-providers";
 import {
   db,
   owner,
@@ -56,8 +57,11 @@ const bodySchema = z.object({
     .regex(/^[\x21-\x7E]+$/)
     .optional(),
   provider: z.enum(["deepseek", "openai", "anthropic"]).optional(),
+  model: z.string().max(100).optional(),
   settings: z
     .object({
+      aiModels: z.record(z.string().max(30), z.string().max(100)).refine(models =>
+        Object.entries(models).every(([provider, model]) => isProvider(provider) && isProviderModel(provider, model))),
       courseBookmarks: z.record(z.string().max(40), z.object({
         view: z.enum(["quest", "studio"]), studioMode: z.literal("course"),
         phase: z.enum(["learn", "practice", "build", "done"]),
@@ -200,13 +204,17 @@ export async function POST(req: Request) {
     } else if (body.action === "key") {
       if (!body.key)
         return json({ error: "Enter an API key." }, { status: 400 });
+      const provider = body.provider ?? "deepseek";
+      if (body.model !== undefined && !isProviderModel(provider, body.model))
+        return json({ error: "Choose a model for this provider." }, { status: 400 });
       await profile(user);
       await db()
         .prepare(
-          "UPDATE profiles SET encrypted_key=?, settings=json_patch(settings,'{\"aiDisconnected\":false}') WHERE user_id=?",
+          "UPDATE profiles SET encrypted_key=?, settings=json_patch(settings,?) WHERE user_id=?",
         )
         .bind(
-          await encryptConnection(body.provider ?? "deepseek", body.key, user),
+          await encryptConnection(provider, body.key, user),
+          JSON.stringify({ aiDisconnected: false, ...(body.model ? { aiModels: { [provider]: body.model } } : {}) }),
           user,
         )
         .run();

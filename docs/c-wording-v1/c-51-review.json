@@ -1,0 +1,92 @@
+{
+  "lesson": "c-51",
+  "position": 51,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "If text becomes \"12\", what prints?",
+      "after": "errno reports certain library errors. It is not a general yes-or-no answer for whether an operation succeeded."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "errno is an error indicator, not a success Boolean. A successful library call need not clear an earlier value. Set it to zero immediately before a conversion whose contract uses errno, then inspect it together with the return value and end pointer.",
+        "strtol reports range failure using ERANGE. A partial parse such as 12x need not set errno; the end pointer reveals the trailing x. The code checks that at least one character was consumed and that no trailing characters remain before accepting a whole-number setting.",
+        "Complete local C example; the app itself does not execute it:\n```c\n#include <stdio.h>\n#include <stdlib.h>\n#include <errno.h>\n\nint main(void) {\n    const char *text = \"12x\";\n    char *end;\n    errno = 0;\n    long value = strtol(text, &end, 10);\n    if (errno == ERANGE) puts(\"out of range\");\n    else if (end == text || *end != '\\0') puts(\"invalid integer\");\n    else printf(\"%ld\\n\", value);\n    return 0;\n}\n```",
+        "Expected output or behavior: invalid integer. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Try no digits and an out-of-range decimal; distinguish syntax failure from ERANGE without relying on localized error messages. You may trace it without a C compiler; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "errno can keep an error from an earlier library call. A successful call does not always clear it. Before a strtol conversion, set errno to 0 so an old error cannot be mistaken for a new range failure.",
+        "For strtol, ERANGE reports a number outside long's range. Leftover text is a different problem and may not set errno. Check the end pointer too: at least one digit must be read, and this program accepts no trailing characters.",
+        "Follow the example one line at a time.\n```c\n#include <stdio.h>\n#include <stdlib.h>\n#include <errno.h>\n\nint main(void) {\n    const char *text = \"12x\";\n    char *end;\n    errno = 0;\n    long value = strtol(text, &end, 10);\n    if (errno == ERANGE) puts(\"out of range\");\n    else if (end == text || *end != '\\0') puts(\"invalid integer\");\n    else printf(\"%ld\\n\", value);\n    return 0;\n}\n```",
+        "strtol reads 12, then stops at x. The number fits, but the whole input is not a valid integer under this rule. The program prints invalid integer.",
+        "Change the text to 12. The digits are read, the ending zero is reached, and no range failure is reported. The program can now print the value."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "A range error and leftover text need different checks."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If text becomes \"12\", what prints?",
+        "choices": [
+          "12",
+          "invalid integer because errno is always nonzero",
+          "An unpredictable platform error message."
+        ],
+        "answer": 0,
+        "explanation": "The complete valid parse leaves no trailing characters and does not signal range failure."
+      },
+      "after": {
+        "question": "Change the input text from 12x to 12. What prints?",
+        "choices": [
+          "12",
+          "invalid integer, because errno is always nonzero.",
+          "An unpredictable error message."
+        ],
+        "answer": 0,
+        "explanation": "12 fits in long and has no leftover text. Both checks pass, so its value prints."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "C Core v1 uses a portable C17 baseline supported by the verified compiler. C23 exists but is not claimed fully supported here. The app supplies concept reading and an understanding check, not a C browser runner. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "The browser shows C code and checks your understanding; it does not run C. Optional local examples use C17."
+    }
+  ],
+  "headings": [
+    "Clear the old error before this conversion",
+    "Check all the needed results",
+    "One example",
+    "Identify this input problem",
+    "Accept complete valid text"
+  ],
+  "project": {
+    "title": "errno and error reporting",
+    "task": "Explain why checking errno alone would miss the leftover x in 12x.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local C example is optional."
+  },
+  "navigationCorrection": "Added a short example introduction so its reviewed heading remains an explicit contents target."
+}

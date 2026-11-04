@@ -1,0 +1,92 @@
+{
+  "lesson": "c-27",
+  "position": 27,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "If n = 8 becomes *p = 8, what happens?",
+      "after": "const can prevent writes through a pointer without freezing the original variable."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "const int *p allows reading the pointed-to int but not assigning through *p. It does not freeze a separate non-const object against all other access paths.",
+        "int * const p instead prevents changing the pointer itself, while permitting writes to its non-const target. Combining both const positions restricts both operations. Never cast away const to modify an object actually defined const.",
+        "Complete local C example; the app itself does not execute it:\n```c\n#include <stdio.h>\n\nint main(void) {\n int n = 3;\n const int *p = &n;\n n = 8;\n printf(\"%d\\n\", *p);\n}\n```",
+        "Expected output or behavior: 8\n. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Try a separate int * const pointer and compare which assignment is rejected. You may trace it without a C compiler; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "In `const int *p`, const means you cannot change the int through p. You can still read it. If the original variable was not declared const, another allowed path can still change it.",
+        "In `int * const p`, const is placed after the star. That prevents changing p itself to a different address. It still allows writes to a writable target. If the actual target was declared const, never remove that protection to write to it.",
+        "Follow the example one line at a time.\n```c\n#include <stdio.h>\n\nint main(void) {\n int n = 3;\n const int *p = &n;\n n = 8;\n printf(\"%d\\n\", *p);\n}\n```",
+        "n is an ordinary writable int. `n = 8` changes it through its own name. p points to that same value, so reading through p prints 8.",
+        "Replace the write to n with a write through `*p`. That tries to use a read-only path, so the compiler must report the invalid assignment."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "The restriction applies to writing through p, not to reading through it."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If n = 8 becomes *p = 8, what happens?",
+        "choices": [
+          "Compilation rejects assignment through the const-qualified access path.",
+          "It prints 8 normally.",
+          "It changes the pointer address."
+        ],
+        "answer": 0,
+        "explanation": "The const qualifier on the pointed-to int prevents assignment through *p even though n itself remains modifiable through n."
+      },
+      "after": {
+        "question": "Replace `n = 8;` with `*p = 8;`. What happens?",
+        "choices": [
+          "The compiler reports an invalid write through p.",
+          "The program prints 8 normally.",
+          "The pointer changes to a new address."
+        ],
+        "answer": 0,
+        "explanation": "p points to const int, so assigning through *p is not allowed. n itself is still writable through its own name."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "C Core v1 uses a portable C17 baseline supported by the verified compiler. C23 exists but is not claimed fully supported here. The app supplies concept reading and an understanding check, not a C browser runner. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "The browser shows C code and checks your understanding; it does not run C. Optional local examples use C17."
+    }
+  ],
+  "headings": [
+    "Read through a const pointer target",
+    "Notice where const is placed",
+    "One example",
+    "Read the updated value",
+    "Try a forbidden write"
+  ],
+  "project": {
+    "title": "Const-qualified pointer access",
+    "task": "Explain why n = 8 is allowed here but *p = 8 is not.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local C example is optional."
+  },
+  "navigationCorrection": "Added a short example introduction so its reviewed heading remains an explicit contents target."
+}

@@ -1,0 +1,91 @@
+{
+  "lesson": "kotlin-55",
+  "position": 55,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "If the expected upper-bound result changes from 10 to 11, what happens?",
+      "after": "Use small repeatable checks to confirm that a function gives the expected answers."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "check tests a Boolean and throws IllegalStateException on failure. Unlike JVM assertions that may depend on -ea, this standard-library check is active in an ordinary run. The trailing lambda supplies a failure message only when needed.",
+        "coerceIn(0, 10) clamps a value into the inclusive range. The tests cover below, inside and above the range. The final success message appears only if every check passes; no external test framework is required for this small unit-style example.",
+        "Complete local Kotlin/JVM example; the app itself does not execute it:\n```kotlin\n\nfun clamp(value: Int): Int = value.coerceIn(0, 10)\nfun main() {\n    check(clamp(-1) == 0) { \"lower boundary\" }\n    check(clamp(7) == 7) { \"inside range\" }\n    check(clamp(11) == 10) { \"upper boundary\" }\n    println(\"checks passed\")\n}\n```",
+        "Expected output or behavior: checks passed. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Add exact-boundary checks and explain what regression each protects. You may trace it without a Kotlin compiler; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "A deterministic check gives the same answer for the same input. The function `check` tests a Boolean condition. A false condition throws IllegalStateException. Its message lambda runs only when the check fails.",
+        "To clamp a number means to keep it within chosen limits. The call `coerceIn(0, 10)` returns 0 below the range, 10 above it, and the original number inside it. These checks try all three cases.",
+        "Follow the example one line at a time.\n```kotlin\n\nfun clamp(value: Int): Int = value.coerceIn(0, 10)\nfun main() {\n    check(clamp(-1) == 0) { \"lower boundary\" }\n    check(clamp(7) == 7) { \"inside range\" }\n    check(clamp(11) == 10) { \"upper boundary\" }\n    println(\"checks passed\")\n}\n```",
+        "The screen shows `checks passed`. All three expected results match, so the program reaches the final printing instruction.",
+        "A failed check stops this program before its success message. These standard-library checks run normally without enabling JVM assertions. Adding checks for exact limits can help catch a later change that breaks the boundary rule."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Changing an expected answer does not change the function being tested."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If the expected upper-bound result changes from 10 to 11, what happens?",
+        "choices": [
+          "check throws with upper boundary before the success message.",
+          "The check is ignored unless -ea is enabled.",
+          "coerceIn changes itself to meet the test."
+        ],
+        "answer": 0,
+        "explanation": "The actual clamped value is ten, so the explicit false condition throws."
+      },
+      "after": {
+        "question": "Change the last check to expect 11 instead of 10. What happens?",
+        "choices": [
+          "Check throws with upper boundary before the success message.",
+          "The check is ignored unless assertions are enabled.",
+          "CoerceIn changes its result to satisfy the check."
+        ],
+        "answer": 0,
+        "explanation": "Clamp still returns 10 for input 11. The new expectation is false, so check throws before the success message."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Kotlin JVM Core v1 uses Kotlin2.4.21 stable syntax and a verified JVM toolchain. The app supplies concept reading and an understanding check, not a Kotlin browser runner. Coroutine libraries are separate dependencies. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "The browser shows Kotlin code and checks your understanding; it does not run Kotlin. Optional local examples use Kotlin/JVM."
+    }
+  ],
+  "headings": [
+    "Make a repeatable check",
+    "Test below, inside, and above a range",
+    "One example",
+    "Read the success message",
+    "Keep success behind every check"
+  ],
+  "project": {
+    "title": "Deterministic unit-style checks",
+    "task": "Identify what happens when a check expects the wrong result.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local Kotlin example is optional."
+  }
+}

@@ -1,0 +1,87 @@
+{
+  "lesson": "swift-46",
+  "position": 41,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Keep NamedCard.caption() as a declared requirement. PlainCard must use the \"Card: \" default; SpecialCard must return \"Special: \" plus its own name. show(_:) must call the requirement on its supplied conforming value.",
+      "after": "Give a protocol a default method that a type can replace."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A protocol declares a capability that conforming types promise to provide. A protocol extension can supply a default implementation of a declared requirement. A conforming type may use that default or supply its own implementation. Declare caption() in the protocol itself so calls through the protocol use the conformer’s implementation when it has one.",
+        "var name: String { get } requires readable text; a let property can satisfy it. extension NamedCard adds the default method body. PlainCard uses that body; SpecialCard implements the requirement itself without an override keyword. any NamedCard can hold a conforming value without naming its concrete type. show takes that protocol value and returns card.caption(). This lesson is about declared requirements, not methods added only in extensions, which have different dispatch rules.",
+        "Follow this complete example.\n```swift\nprotocol NamedCard {\n    var name: String { get }\n    func caption() -> String\n}\nextension NamedCard {\n    func caption() -> String {\n        return \"Card: \" + name\n    }\n}\nstruct PlainCard: NamedCard {\n    let name: String\n}\nstruct SpecialCard: NamedCard {\n    let name: String\n    func caption() -> String {\n        return \"Special: \" + name\n    }\n}\nfunc show(_ card: any NamedCard) -> String {\n    return card.caption()\n}\nprint(show(PlainCard(name: \"oak\")))\nprint(show(SpecialCard(name: \"ash\")))\n```\nOutput:\n```text\nCard: oak\nSpecial: ash\n```",
+        "Change the input or declaration and trace the result.\n```swift\nprotocol NamedCard {\n    var name: String { get }\n    func caption() -> String\n}\nextension NamedCard {\n    func caption() -> String {\n        return \"Card: \" + name\n    }\n}\nstruct PlainCard: NamedCard {\n    let name: String\n}\nstruct SpecialCard: NamedCard {\n    let name: String\n    func caption() -> String {\n        return \"Featured: \" + name\n    }\n}\nfunc show(_ card: any NamedCard) -> String {\n    return card.caption()\n}\nprint(show(PlainCard(name: \"oak\")))\nprint(show(SpecialCard(name: \"elm\")))\n```\nOutput:\n```text\nCard: oak\nFeatured: elm\n```",
+        "Keep NamedCard.caption() as a declared requirement. PlainCard must use the \"Card: \" default; SpecialCard must return \"Special: \" plus its own name. show(_:) must call the requirement on its supplied conforming value. Optional local practice: choose one more input, predict the outcome, then run it. The checks observe the stated values and effects; they do not require one exact implementation spelling. A supplied check also creates a third conforming test card with its own caption. That small test helper verifies that show calls the requirement rather than guessing from the two familiar type names."
+      ],
+      "after": [
+        "A protocol lists features that a type promises to provide. NamedCard requires readable name text and a caption() method. A type that meets these requirements conforms to NamedCard.",
+        "An extension can give a required method a default body. PlainCard uses this default. SpecialCard provides its own caption() instead. It does not need override, because this is a protocol requirement, not an inherited class method.",
+        "```swift\nprotocol NamedCard {\n    var name: String { get }\n    func caption() -> String\n}\nextension NamedCard {\n    func caption() -> String {\n        return \"Card: \" + name\n    }\n}\nstruct PlainCard: NamedCard {\n    let name: String\n}\nstruct SpecialCard: NamedCard {\n    let name: String\n    func caption() -> String {\n        return \"Special: \" + name\n    }\n}\nfunc show(_ card: any NamedCard) -> String {\n    return card.caption()\n}\nprint(show(PlainCard(name: \"oak\")))\nprint(show(SpecialCard(name: \"ash\")))\n```\nThis prints Card: oak, then Special: ash. PlainCard uses the default caption. SpecialCard uses its own caption.",
+        "any NamedCard means a value whose type meets NamedCard's requirements. show calls that value's caption(). Keep caption() listed inside the protocol: methods added only in an extension follow different rules about which body runs.",
+        "Keep the caption() requirement. Supply Card: followed by the name as the default. Let SpecialCard return Special: followed by its name. Make show(_:) call card.caption() so other types that meet NamedCard's requirements work too."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the small example and explain its inputs and effects.",
+        "Complete the starter for the stated contract.",
+        "Use the configured compatible Swift companion or local Swift toolchain, then explain the changed case."
+      ],
+      "after": [
+        "Declare caption() in NamedCard.",
+        "Provide its default body in an extension.",
+        "Call card.caption() inside show."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Trace the inputs, returned value and changed state before running."
+      ],
+      "after": [
+        "PlainCard can use the default without writing caption().",
+        "Do not choose a caption by checking the card's type name."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If SpecialCard supplies caption(), what does show receive from a SpecialCard named \"fir\"?",
+        "choices": [
+          "A compile error because extensions cannot provide defaults",
+          "Card: fir",
+          "Special: fir"
+        ],
+        "answer": 2,
+        "explanation": "caption is a protocol requirement, so the conforming type’s implementation is used; the default fills the gap only when appropriate."
+      },
+      "after": {
+        "question": "What does show return for a SpecialCard named fir?",
+        "choices": [
+          "A compiler error",
+          "Card: fir",
+          "Special: fir"
+        ],
+        "answer": 2,
+        "explanation": "SpecialCard provides its own body for the required caption() method."
+      }
+    }
+  ],
+  "headings": [
+    "Promise a shared ability",
+    "Supply a default",
+    "Read one example",
+    "Call the promised method",
+    "Try it yourself"
+  ],
+  "project": {
+    "title": "Provide a default protocol requirement",
+    "task": "Keep NamedCard.caption() as a requirement. Give it a Card: default, let SpecialCard use Special:, and make show(_:) call the supplied card's caption().",
+    "done_when": "The default works for PlainCard, and each custom caption works through show."
+  }
+}

@@ -1,0 +1,94 @@
+{
+  "lesson": "cpp-66",
+  "position": 66,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Remove only the finalLock line, keeping every worker lock and both joins. Is the final read safe?",
+      "after": "Protect a shared counter so two workers do not change it at the same time."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "Concurrent conflicting access to a non-atomic object, without the required synchronization, can be a data race and undefined behavior. We do not run an unlocked competing-write example.",
+        "The lambda capture [&] borrows the surrounding locals it uses by reference; count and mutex remain alive beyond both joins. Every worker increment here holds the same mutex. lock_guard locks on construction and unlocks on destruction, including when its scope exits. Its lifetime covers the entire ++count operation, not only a separate read.",
+        "Both jthreads are destroyed and joined before the final read. Therefore no worker still writes count at that point. The final read’s extra lock is harmless but unnecessary here; removing the worker locks would be a different, unsafe change.",
+        "Complete local C++ example; the app itself does not execute it:\n```cpp\n#include <iostream>\n#include <mutex>\n#include <thread>\nint main() {\n    int count = 0;\n    std::mutex mutex;\n    auto work = [&] {\n        for (int i = 0; i < 100; ++i) {\n            std::lock_guard<std::mutex> lock(mutex);\n            ++count;\n        }\n    };\n    {\n        std::jthread first(work);\n        std::jthread second(work);\n    }\n    {\n        std::lock_guard<std::mutex> finalLock(mutex);\n        std::cout << count << \"\\n\";\n    }\n}\n```",
+        "Expected output or behavior: 200. Local compiler test evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Protect two related counters with one mutex and explain which invariant needs the shared lock. You may trace this without a compiler; finishing the reading is not proof of a local run."
+      ],
+      "after": [
+        "A data race can happen when threads access the same ordinary object without suitable coordination and at least one writes. C++ gives no valid-result guarantee for that situation. The counter needs protection during competing updates.",
+        "A mutex is a lock that one thread can hold at a time. Both workers use the same mutex to protect count. The [&] capture borrows the surrounding variables they use, which remain alive until both workers finish.",
+        "lock_guard locks its mutex when created and unlocks when destroyed. Here it protects the entire ++count operation. Protecting only a separate read would not protect the whole update.",
+        "Follow the shared lock around each increment, then the joins before the output.\n\n```cpp\n#include <iostream>\n#include <mutex>\n#include <thread>\nint main() {\n    int count = 0;\n    std::mutex mutex;\n    auto work = [&] {\n        for (int i = 0; i < 100; ++i) {\n            std::lock_guard<std::mutex> lock(mutex);\n            ++count;\n        }\n    };\n    {\n        std::jthread first(work);\n        std::jthread second(work);\n    }\n    {\n        std::lock_guard<std::mutex> finalLock(mutex);\n        std::cout << count << \"\\n\";\n    }\n}\n```",
+        "The program prints 200. Each worker safely performs one hundred increments. Leaving their block joins both workers before the final read.",
+        "The extra finalLock is harmless but unnecessary here because both writers have finished. The locks inside the workers are still needed while those workers may run together."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain why, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Separate the time when workers compete from the time after both have joined."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Remove only the finalLock line, keeping every worker lock and both joins. Is the final read safe?",
+        "choices": [
+          "No: every read requires a lock forever, even after all writers join.",
+          "Yes: both workers have finished, and count is 200.",
+          "It necessarily prints 0."
+        ],
+        "answer": 1,
+        "explanation": "Joining both workers ends the concurrent writes before the final read. The worker increments remain synchronized."
+      },
+      "after": {
+        "question": "Remove only finalLock, keeping both worker locks and both joins. Is the final read safe?",
+        "choices": [
+          "No. Every read needs a lock forever, even after all writers finish.",
+          "Yes. Both workers have finished, and count is 200.",
+          "The program must print zero."
+        ],
+        "answer": 1,
+        "explanation": "The worker increments remain protected. Joining both workers finishes their writes before the final read."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "C++ Core v1, standard C++23 features checked against the available GCC14.2 implementation. This app provides concept reading and an understanding check, not a C++ browser runner. Local example tests are separate evidence and do not certify learner mastery.",
+      "after": "The browser shows C++ code and checks your understanding; it does not run C++. Optional local examples use C++23."
+    }
+  ],
+  "headings": [
+    "Avoid a data race",
+    "Share one mutex",
+    "Hold the lock for the whole update",
+    "One example",
+    "What appears",
+    "A joined worker no longer competes"
+  ],
+  "project": {
+    "title": "Protect shared state with a mutex",
+    "task": "Trace the lock protecting each update and the joins protecting the final read.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local C++ example is optional."
+  }
+}

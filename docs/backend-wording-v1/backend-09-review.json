@@ -1,0 +1,111 @@
+{
+  "lesson": "backend-09",
+  "position": 30,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Migrate the supplied notes table from version 1 to version 2. Add done INTEGER NOT NULL DEFAULT 0, preserve every existing row, and set PRAGMA user_version to 2 only as part of the successful migration.",
+      "after": "Add a database field while keeping the records that already exist."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A migration changes an existing database schema without pretending it is a fresh empty database.",
+        "Dropping and recreating a table may erase saved data. Adding a column can preserve rows when that change fits the database’s supported rules.",
+        "A default tells existing rows what value to use for the new field. Here unfinished notes should begin with done equal to 0.",
+        "This separate example adds a column.\n```sql\nALTER TABLE tasks ADD COLUMN archived INTEGER NOT NULL DEFAULT 0;\n```",
+        "A schema version records which migration has been applied. SQLite offers user_version as an application-controlled integer.",
+        "Group the schema change and version update in a transaction.\n```sql\nBEGIN;\nALTER TABLE tasks ADD COLUMN archived INTEGER NOT NULL DEFAULT 0;\nPRAGMA user_version = 2;\nCOMMIT;\n```",
+        "If a migration fails, the application should roll back rather than report the new version as complete. Test the failure path before changing real stored data.",
+        "This fixture starts at version 1. The exercise runs once in a new isolated database; running the same ADD COLUMN twice is not an automatic no-op.",
+        "A production migration runner checks the current version, applies the next supported change, and records success. It also needs a tested backup and recovery plan.",
+        "After migration, verify the old IDs and titles, the default values, and the new version."
+      ],
+      "after": [
+        "A schema describes a database's tables and columns. A migration is a planned change to that schema. It must account for records that are already saved.",
+        "Dropping and rebuilding a table can erase its rows. ALTER TABLE can add a supported new column while preserving the existing data.",
+        "DEFAULT gives old rows a value for the new field. NOT NULL requires a known value. Here, 0 means the old task is not archived.",
+        "```sql\nCREATE TABLE tasks(id INTEGER PRIMARY KEY, title TEXT NOT NULL);\nINSERT INTO tasks VALUES (1, 'Read');\nPRAGMA user_version = 1;\nBEGIN;\nALTER TABLE tasks ADD COLUMN archived INTEGER NOT NULL DEFAULT 0;\nPRAGMA user_version = 2;\nCOMMIT;\nSELECT id, title, archived FROM tasks;\nPRAGMA user_version;\n```\nThe saved task remains 1, Read, with archived set to 0. The version is now 2.",
+        "SQLite's user_version is a number the application controls. It records which schema change has been completed. It does not perform the change itself.",
+        "A transaction groups related database changes. BEGIN starts it, and COMMIT makes its changes final. Keep the added column and version update in the same successful transaction.",
+        "If a migration fails, its runner should roll back the unfinished transaction. Do not report version 2 as installed when the needed column was not successfully added.",
+        "This exercise starts with version 1 in a fresh, isolated database. Run its change once. Adding the same column twice is an error, not an automatic no-change operation.",
+        "A real upgrade runner checks the current version before choosing a migration. Test the upgrade and recovery with a backup before applying it to important stored data.",
+        "Migrate the supplied notes table by adding done INTEGER NOT NULL DEFAULT 0. Preserve every old ID and title. Set user_version to 2 in the same successful transaction, then check the old rows and new default values."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the requirement.",
+        "Make one change to the starter.",
+        "Run the checks.",
+        "Explain why a changed input produces its result."
+      ],
+      "after": [
+        "Start a transaction and add the done column with its default.",
+        "Set user_version to 2 and commit.",
+        "Check the preserved IDs, titles, done values, and version."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Use ALTER TABLE, not DROP TABLE.",
+        "Add the default and NOT NULL with the new column.",
+        "Keep the version update in the same successful transaction."
+      ],
+      "after": [
+        "Use ALTER TABLE rather than deleting the table.",
+        "Keep DEFAULT 0 and NOT NULL.",
+        "The version update belongs with the schema change."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "A migration fails before its transaction commits. Why must the runner avoid reporting version 2 as successfully installed?",
+        "choices": [
+          "Later code could assume a schema change that never completed.",
+          "Version numbers automatically repair missing columns.",
+          "A failed migration deletes every backup."
+        ],
+        "answer": 0,
+        "explanation": "A version marker is evidence of completed schema work. Advancing it separately can make future code skip a change the database still needs."
+      },
+      "after": {
+        "question": "A migration fails before commit. Why must the runner avoid reporting version 2 as installed?",
+        "choices": [
+          "Later code could expect a change that never completed",
+          "The version number repairs missing columns",
+          "A failed migration deletes every backup"
+        ],
+        "answer": 0,
+        "explanation": "The version must describe completed work, or later code may rely on a missing column."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Only the isolated SQLite fixture is migrated. This lesson does not change any live database. Real migration systems need version checks, backups, rollback/recovery tests and toolchain-specific transaction behavior.",
+      "after": "Only an isolated SQLite database is changed in the browser. A real migration needs version checks and tested backup and recovery steps."
+    }
+  ],
+  "headings": [
+    "Change an existing database",
+    "Keep saved rows",
+    "Give old rows a default",
+    "Read one example",
+    "Track the schema version",
+    "Keep the change together",
+    "Handle a failed migration",
+    "Run each migration once",
+    "Check before a real upgrade",
+    "Complete the notes migration"
+  ],
+  "project": {
+    "title": "Add a field without losing saved notes",
+    "task": "Migrate the supplied notes table from version 1 to 2. Add done INTEGER NOT NULL DEFAULT 0, preserve all rows, and update user_version inside the successful transaction.",
+    "done_when": "Old data remains, the added column has the expected default, and the stored version is 2."
+  }
+}

@@ -36,9 +36,7 @@ function global(name, value) {
 try {
   await symlink(
     path.join(repo, "node_modules"),
-    path.join(temp, "node_modules"),
-    "dir",
-  );
+    path.join(temp, "node_modules"), process.platform === "win32" ? "junction" : "dir");
   for (const file of [
     "lib/python-csv-scene.ts",
     "components/PythonCsvScene.tsx",

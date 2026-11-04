@@ -1,0 +1,94 @@
+{
+  "lesson": "python-37",
+  "sourceHash": "0ca5648e3a5a2fbde50aee714bc2f0c0ac912e28db462c445eed4497381a3355",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Complete double_result(function). Return a wrapped one-argument function that calls the original once, doubles its numeric result, and preserves the original function name with functools.wraps.",
+      "after": "Build a wrapper that doubles a function’s result while keeping its original name."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A decorator receives a function and returns the function that should be used in its place.",
+        "A wrapper can add behavior while calling the original function for its main work.",
+        "This example adds one to a result.\n```python\ndef plus_one(function):\n    def wrapped(value):\n        return function(value) + 1\n    return wrapped\n\ndef square(value):\n    return value * value\n\nchanged = plus_one(square)\nprint(changed(3))\n```",
+        "The output is 10: square returns 9, then the wrapper adds one.",
+        "Writing @plus_one above a definition applies that decoration to the function name. It does not call the function with an input at definition time.",
+        "functools.wraps copies useful metadata from the original function to its wrapper, including the original name.",
+        "Use @wraps(function) above the nested wrapper. This helps inspection tools describe the wrapped operation accurately.\n\nHere is a complete metadata-preserving wrapper. wraps receives the original function and returns a decorator that updates the wrapper's metadata. @ applies that decorator to wrapped. __name__ is the function's name attribute; preserving metadata does not change the calculation.\n```python\nfrom functools import wraps\n\ndef keep_name(function):\n    @wraps(function)\n    def wrapped(value):\n        return function(value)\n    return wrapped\n\ndef square(value):\n    return value * value\n\nnamed = keep_name(square)\nprint(named.__name__)\nprint(named(3))\n```\nIt prints square and then 9. keep_name receives one callable and returns its wrapper; wrapped forwards its one input and returns the original result.",
+        "The practice contract is one positional input and a numeric result. A general-purpose wrapper would also need to forward other supported arguments.",
+        "Double the returned value, not the input. Those are different for functions that do more than multiply."
+      ],
+      "after": [
+        "A function decorator receives a function and returns a replacement. In this lesson, that replacement is another function.",
+        "A wrapper adds behavior around a function while still calling it to do the main work.",
+        "This example adds one to a result.\n```python\ndef plus_one(function):\n    def wrapped(value):\n        return function(value) + 1\n    return wrapped\n\ndef square(value):\n    return value * value\n\nchanged = plus_one(square)\nprint(changed(3))\n```",
+        "The output is 10: square returns 9, then the wrapper adds one.",
+        "Writing `@plus_one` above the function tells Python to wrap it with `plus_one` and use the returned wrapper under that name.\n\nHere, this setup does not run the original function with a sample number. The wrapped function runs when you call it.",
+        "functools.wraps copies useful information from the original function to its wrapper, including the original name.",
+        "Put `@wraps(function)` above the nested wrapper. `wraps` receives the original function and returns a decorator that copies useful information onto `wrapped`.\n\nThat includes `__name__`, which holds the function's name. Copying the name helps tools identify it; it does not change the calculation.\n```python\nfrom functools import wraps\n\ndef keep_name(function):\n    @wraps(function)\n    def wrapped(value):\n        return function(value)\n    return wrapped\n\ndef square(value):\n    return value * value\n\nnamed = keep_name(square)\nprint(named.__name__)\nprint(named(3))\n```\nIt prints square and then 9. keep_name receives one function and returns its wrapper. wrapped passes along its one input and returns the original result.",
+        "This exercise uses one positional input and expects a number back. A wrapper for other kinds of functions would also need to pass along their supported inputs.",
+        "Double the returned value, not the input. Those are different for functions that do more than multiply."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the requirement.",
+        "Make one change to the starter.",
+        "Run the checks.",
+        "Explain why a changed input produces its result."
+      ],
+      "after": [
+        "In double_result, define a nested wrapped(value) function and return it instead of returning function unchanged.",
+        "Inside wrapped, call function(value) once with the original input, then multiply its result by 2.",
+        "Put @wraps(function) above wrapped to keep the original function’s name.",
+        "Check that an input of 4 to a function that adds 3 gives 14, and that squaring 3 then doubling gives 18.",
+        "Check that double_result(abs).__name__ is \"abs\" and that the original function is called once with its unchanged input."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "The original function returns input + 3. For input 4, why should the wrapper return 14 rather than 11?",
+        "choices": [
+          "It doubles the original result 7; doubling the input first would be a different operation.",
+          "Decorators always add ten.",
+          "The original function is called twice and its inputs are added."
+        ],
+        "answer": 0,
+        "explanation": "The contract says call the original once, then double what it returns. The order of these operations matters."
+      },
+      "after": {
+        "question": "The original function returns input + 3. For input 4, why should the wrapper return 14 rather than 11?",
+        "choices": [
+          "It doubles the original result 7; doubling the input first would be a different operation.",
+          "Decorators always add ten.",
+          "The original function is called twice and its inputs are added."
+        ],
+        "answer": 0,
+        "explanation": "Call the original once, then double what it returns. The order of these operations matters."
+      }
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Create a nested wrapper rather than returning the original unchanged.",
+        "Call the original with the unchanged input once.",
+        "Apply wraps to preserve metadata."
+      ],
+      "after": [
+        "Create a nested wrapped(value) function instead of returning function unchanged.",
+        "Call function(value) once with the same input.",
+        "Use @wraps(function) to keep the original function’s name."
+      ]
+    }
+  ],
+  "reviewNotes": [
+    "Kept all nine sections in their original order and preserved the worked code and output.",
+    "Made the exercise steps specific to doubling the result, preserving the name, and calling the function once.",
+    "Preserved the quiz choices and answer index 0.",
+    "Explained decorating and wraps without the abstract phrase applying decoration, and separated names from the actual calculation."
+  ]
+}

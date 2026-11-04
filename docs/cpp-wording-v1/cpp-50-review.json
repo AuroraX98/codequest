@@ -1,0 +1,94 @@
+{
+  "lesson": "cpp-50",
+  "position": 50,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Initialize message with std::string{\"ready\"} instead of 7. What prints?",
+      "after": "Store one of several allowed types and check which type is active."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "std::variant<int,std::string> normally owns one of those two alternatives at a time. Assigning a string replaces the int alternative; it does not retain both payloads.",
+        "std::get_if<int>(&message) returns a pointer to the int when it is active, otherwise nullptr. The if checks that pointer before dereferencing it.",
+        "std::get<T> throws std::bad_variant_access for the wrong active alternative. This example’s else knows the other alternative because these simple assignments succeed. A variant can become valueless after certain throwing operations; general code must account for that possibility.",
+        "Complete local C++ example; the app itself does not execute it:\n```cpp\n#include <iostream>\n#include <string>\n#include <variant>\nint main() {\n    std::variant<int, std::string> message = 7;\n    if (const auto* number = std::get_if<int>(&message))\n        std::cout << \"number \" << *number << \"\\n\";\n    else std::cout << \"text \" << std::get<std::string>(message) << \"\\n\";\n}\n```",
+        "Expected output or behavior: number 7. Local compiler test evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Add a visitor that formats either alternative, then compare it with the get_if branch. You may trace this without a compiler; finishing the reading is not proof of a local run."
+      ],
+      "after": [
+        "std::variant<int, std::string> can hold an integer or a string. The type currently held is called the active alternative. It normally holds one alternative at a time, not both.",
+        "std::get_if<int>(&message) checks for the integer alternative. It returns a pointer to that integer when present, or nullptr otherwise. The if condition checks the pointer before *number reads it.",
+        "std::get<T> reads the requested alternative or throws std::bad_variant_access if that alternative is not active. Here the successful initialization leaves either an int or a string, so the else branch can read the string.",
+        "Follow the active integer alternative through the pointer check.\n\n```cpp\n#include <iostream>\n#include <string>\n#include <variant>\nint main() {\n    std::variant<int, std::string> message = 7;\n    if (const auto* number = std::get_if<int>(&message))\n        std::cout << \"number \" << *number << \"\\n\";\n    else std::cout << \"text \" << std::get<std::string>(message) << \"\\n\";\n}\n```",
+        "The program prints number 7. message holds an int, so get_if returns a valid pointer and the first branch reads seven.",
+        "Some operations that throw while replacing an alternative can leave a variant without a value. General code may need to check valueless_by_exception(). This example performs no such replacement."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain why, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Find the active alternative before deciding which accessor can read it."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Initialize message with std::string{\"ready\"} instead of 7. What prints?",
+        "choices": [
+          "text ready",
+          "number 0",
+          "Both number 7 and text ready"
+        ],
+        "answer": 0,
+        "explanation": "The string is now active, so get_if<int> returns null and the string branch prints its value."
+      },
+      "after": {
+        "question": "Initialize message with std::string{\"ready\"} instead of 7. What prints?",
+        "choices": [
+          "text ready",
+          "number 0",
+          "Both number 7 and text ready"
+        ],
+        "answer": 0,
+        "explanation": "The string alternative is active. get_if<int> returns nullptr, so the else branch reads the string."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "C++ Core v1, standard C++23 features checked against the available GCC14.2 implementation. This app provides concept reading and an understanding check, not a C++ browser runner. Local example tests are separate evidence and do not certify learner mastery.",
+      "after": "The browser shows C++ code and checks your understanding; it does not run C++. Optional local examples use C++23."
+    }
+  ],
+  "headings": [
+    "Choose among allowed types",
+    "Check the active type",
+    "Read a known alternative",
+    "One example",
+    "What appears",
+    "Handle an empty exceptional state"
+  ],
+  "project": {
+    "title": "Store alternatives in a variant",
+    "task": "Trace the active type and the checked access to its value.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local C++ example is optional."
+  }
+}

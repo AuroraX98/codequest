@@ -1,0 +1,98 @@
+{
+  "lesson": "c-21",
+  "position": 21,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Change input text to \"12x\". What happens with this strict validation?",
+      "after": "strtol turns the start of text into a long integer. Check where it stopped before accepting the number."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "const char *text points to text that this code will not modify through that pointer. strtol converts the initial number into long and stores a pointer to the first unconverted character through an end-pointer argument. char *end declares such a pointer; &end passes its address so strtol can update it.",
+        "end==text means no digits were converted. *end reads the character at that position; requiring it to be '\\0' rejects trailing nonnumeric text in this strict policy.",
+        "Set errno=0 before calling strtol. ERANGE reports an out-of-range conversion. errno belongs to errno.h; do not infer failure from a legitimate numeric zero result alone.",
+        "Base 10 requests decimal. A cast to int would still need a separate int-range check; this program keeps the long result.",
+        "Complete local C example; the app itself does not execute it:\n```c\n#include <stdio.h>\n#include <stdlib.h>\n#include <errno.h>\nint main(void) {\n    const char *text = \"12\";\n    char *end;\n    errno = 0;\n    long value = strtol(text, &end, 10);\n    if (end == text || *end != '\\0' || errno == ERANGE) { puts(\"invalid\"); }\n    else { printf(\"%ld\\n\", value); }\n    return 0;\n}\n\n```",
+        "Expected output or behavior: 12. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Trace \"0\", \"x\", and \"12x\" separately. Distinguish a legitimate zero from missing digits. You may trace it without a C compiler; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "`strtol` reads a number from text. It returns a long value. `const char *text` is a pointer to characters this code will not change through that pointer. `char *end` will point to where number reading stopped.",
+        "`&end` gives strtol the address of end so it can update that pointer. If `end == text`, no digits were read. `*end` reads the character where it stopped. This program accepts the text only if that character is the ending zero.",
+        "`errno` stores certain library error reports. Set it to 0 before calling strtol. `ERANGE` means the number is outside long's range. A returned value of zero alone does not mean failure; zero is a valid number too.",
+        "The input 10 selects decimal numbers, the usual base-ten system. Keep the answer as long here. To store it in int, you would first need to check that it fits int's smaller or equal range.",
+        "Follow the example one line at a time.\n```c\n#include <stdio.h>\n#include <stdlib.h>\n#include <errno.h>\nint main(void) {\n    const char *text = \"12\";\n    char *end;\n    errno = 0;\n    long value = strtol(text, &end, 10);\n    if (end == text || *end != '\\0' || errno == ERANGE) { puts(\"invalid\"); }\n    else { printf(\"%ld\\n\", value); }\n    return 0;\n}\n\n```",
+        "The text contains only the number 12. Digits were read, the ending was reached, and the value fits. The program prints 12.",
+        "Change the text to 12x. strtol reads 12 but stops at x. This program rejects any leftover character, including a space after the number."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Check whether end points to the ending zero or to leftover text."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Change input text to \"12x\". What happens with this strict validation?",
+        "choices": [
+          "12 is accepted and x silently ignored.",
+          "The code reads arbitrary memory.",
+          "invalid prints because the first unconverted character is x."
+        ],
+        "answer": 2,
+        "explanation": "The conversion stops at x, and the complete-input check rejects it."
+      },
+      "after": {
+        "question": "Change the input text to 12x. What happens?",
+        "choices": [
+          "12 is accepted and x is ignored.",
+          "The program always reads past the string.",
+          "invalid prints because reading stopped at x."
+        ],
+        "answer": 2,
+        "explanation": "strtol stops at x. The check sees that this is not the ending zero and prints invalid."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "C Core v1 uses a portable C17 baseline supported by the verified compiler. C23 exists but is not claimed fully supported here. The app supplies concept reading and an understanding check, not a C browser runner. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "The browser shows C code and checks your understanding; it does not run C. Optional local examples use C17."
+    }
+  ],
+  "headings": [
+    "Convert text into a number",
+    "Check where the reading stopped",
+    "Check the number's range",
+    "Keep the right number type",
+    "One example",
+    "Read the valid result",
+    "Reject leftover letters"
+  ],
+  "project": {
+    "title": "Validated strtol conversion",
+    "task": "Explain why the input 12x is rejected even though its beginning is a number.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local C example is optional."
+  },
+  "navigationCorrection": "Added a short example introduction so its reviewed heading remains an explicit contents target."
+}

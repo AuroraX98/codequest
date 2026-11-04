@@ -1,0 +1,91 @@
+{
+  "lesson": "go-59",
+  "position": 59,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "If each worker increments 25 times, what is the final count?",
+      "after": "Let only one worker update a shared counter at a time."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "count++ is not atomic. Every concurrent update here locks the same sync.Mutex, changes count and unlocks it. A mutex’s zero value is usable; never copy it after use. Different mutex objects would not protect this one shared counter.",
+        "Two workers each make 100 protected increments. WaitGroup counts both before launch and each worker defers Done. After Wait, neither worker accesses count again, so the final observation is safe. The fixture does not run an intentionally racy unlocked variant.",
+        "Complete local Go example; the app itself does not execute it:\n```go\npackage main\n\nimport (\n\"fmt\"\n\"sync\"\n)\n\n\nfunc main() {\n    var mu sync.Mutex\n    var wg sync.WaitGroup\n    count := 0\n    wg.Add(2)\n    for worker := 0; worker < 2; worker++ {\n        go func() {\n            defer wg.Done()\n            for i := 0; i < 100; i++ { mu.Lock(); count++; mu.Unlock() }\n        }()\n    }\n    wg.Wait()\n    fmt.Println(count)\n}\n```",
+        "Expected output or behavior: 200. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Explain which fields would need the same lock if one invariant spanned multiple values. You may trace it without a Go compiler; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "A mutex is a lock. `count++` reads and changes count, so two workers must not do that unprotected at the same time. Both use the same mutex: Lock before changing count, Unlock after. Its zero value is ready to use; do not copy it after use.",
+        "Each of two workers adds 1 one hundred times. A WaitGroup keeps main waiting until both workers finish. main then reads count after the updates are complete.",
+        "Follow one worker's lock, update, and unlock.\n```go\npackage main\n\nimport (\n\"fmt\"\n\"sync\"\n)\n\n\nfunc main() {\n    var mu sync.Mutex\n    var wg sync.WaitGroup\n    count := 0\n    wg.Add(2)\n    for worker := 0; worker < 2; worker++ {\n        go func() {\n            defer wg.Done()\n            for i := 0; i < 100; i++ { mu.Lock(); count++; mu.Unlock() }\n        }()\n    }\n    wg.Wait()\n    fmt.Println(count)\n}\n```",
+        "The screen shows `200`. Both workers' one hundred updates are counted.",
+        "When several shared values must change together, protect those related changes with the same lock. Separate locks do not coordinate access to the same counter."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Add the completed updates from both workers."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If each worker increments 25 times, what is the final count?",
+        "choices": [
+          "25 because a mutex discards a worker",
+          "An arbitrary count despite the shared lock and completion wait.",
+          "50"
+        ],
+        "answer": 2,
+        "explanation": "Both workers contribute twenty-five serialized updates before the final read."
+      },
+      "after": {
+        "question": "If each worker increments 25 times, what is the final count?",
+        "choices": [
+          "25, because the lock discards one worker.",
+          "An arbitrary count even with the same lock and a wait.",
+          "50"
+        ],
+        "answer": 2,
+        "explanation": "Two workers each add 25. The shared lock protects every update, and main waits for both workers."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Go Core v1 uses the verified Go1.27.3 toolchain and standard library. The app supplies concept reading and an understanding check, not a Go browser runner. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "The browser shows Go code and checks your understanding; it does not run Go. Optional local examples use Go 1.27."
+    }
+  ],
+  "headings": [
+    "Protect the update with one lock",
+    "Wait for both workers",
+    "One example",
+    "Read all the increments",
+    "Use the same lock for related changes"
+  ],
+  "project": {
+    "title": "Mutex-protected state",
+    "task": "Count the protected updates after both workers finish.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local Go example is optional."
+  }
+}

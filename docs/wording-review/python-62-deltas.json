@@ -1,0 +1,86 @@
+{
+  "lesson": "python-62",
+  "sourceHash": "b973f76f242ecfa08cbfd41b19d75c9decd3da366590ac17974a5193a9fb6b89",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Complete Session.from_minutes as a class method returning cls(\"Study\", minutes), and Session.valid_minutes as a static method returning minutes >= 0. Preserve the provided initializer and SpecialSession subclass. Factory inputs are nonnegative numeric values; the predicate also checks negative numeric values.",
+      "after": "Use class and static methods to create sessions and check their minutes."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "@classmethod changes method binding: the first argument, conventionally cls, receives the class used for the call, not an instance. from_minutes takes a number and returns cls(\"Study\", minutes), creating the appropriate class through its constructor.",
+        "@staticmethod leaves valid_minutes as a function stored on the class: it receives only the explicit minutes argument and returns whether it is nonnegative. It does not automatically receive self or cls. This predicate checks a value; it does not modify or validate already constructed sessions by itself.",
+        "```python\nclass Session:\n    def __init__(self, title, minutes):\n        self.title = title\n        self.minutes = minutes\n\n    @classmethod\n    def from_minutes(cls, minutes):\n        return cls(\"Study\", minutes)\n\n    @staticmethod\n    def valid_minutes(minutes):\n        return minutes >= 0\n\nclass SpecialSession(Session):\n    pass\n\nitem = SpecialSession.from_minutes(12)\nprint(item.title, item.minutes)\nprint(isinstance(item, SpecialSession))\nprint(Session.valid_minutes(0))\nprint(Session.valid_minutes(-1))\n```\nIt prints Study 12, True, True, False. SpecialSession inherits the methods and initializer. Calling its class method passes SpecialSession as cls, so the resulting object is a SpecialSession. isinstance checks that result explicitly.",
+        "Replacing cls(\"Study\", minutes) with Session(\"Study\", minutes) always constructs the base class, even when called through SpecialSession. A factory using cls preserves the receiving subclass when its constructor has the compatible argument contract.",
+        "Implement the methods exactly as shown by their contracts. from_minutes accepts supplied nonnegative numeric minutes; valid_minutes separately reports a Boolean for numeric inputs. Optional local transfer: call the static predicate through a Session instance and explain why no receiver argument is added."
+      ],
+      "after": [
+        "@classmethod gives the method the class used for the call. Its first argument is usually named cls. A factory method creates and returns a new object. Here, from_minutes returns cls(\"Study\", minutes), so cls decides which class to create.",
+        "@staticmethod receives only the arguments you pass. Here, valid_minutes receives minutes and returns whether it is zero or more. Python does not add self or cls. This method checks a number. It does not change existing sessions or automatically check their minutes.",
+        "```python\nclass Session:\n    def __init__(self, title, minutes):\n        self.title = title\n        self.minutes = minutes\n\n    @classmethod\n    def from_minutes(cls, minutes):\n        return cls(\"Study\", minutes)\n\n    @staticmethod\n    def valid_minutes(minutes):\n        return minutes >= 0\n\nclass SpecialSession(Session):\n    pass\n\nitem = SpecialSession.from_minutes(12)\nprint(item.title, item.minutes)\nprint(isinstance(item, SpecialSession))\nprint(Session.valid_minutes(0))\nprint(Session.valid_minutes(-1))\n```\nOutput:\n```text\nStudy 12\nTrue\nTrue\nFalse\n```\nSpecialSession inherits the methods and initializer. SpecialSession.from_minutes(12) passes SpecialSession as cls, so the new object is a SpecialSession. isinstance checks this.",
+        "Replacing cls(\"Study\", minutes) with Session(\"Study\", minutes) always creates a Session, even when called through SpecialSession. Using cls creates an object of the class used for the call, as long as that class's initializer accepts the supplied arguments.",
+        "Add both methods to Session. Keep the provided __init__ and SpecialSession unchanged. from_minutes receives nonnegative numbers and creates a session. valid_minutes separately returns True or False for numbers, including negative numbers. Optional practice: call valid_minutes through a Session object and explain why Python adds neither self nor cls."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the requirement.",
+        "Make one change to the starter.",
+        "Run the checks.",
+        "Explain why a changed input produces its result."
+      ],
+      "after": [
+        "Add from_minutes to Session with @classmethod, the arguments cls and minutes, and return cls(\"Study\", minutes).",
+        "Add valid_minutes to Session with @staticmethod, the argument minutes, and return minutes >= 0.",
+        "Keep the provided __init__ and the empty SpecialSession subclass unchanged.",
+        "Check that Session.from_minutes(8) creates an object with title \"Study\" and minutes 8.",
+        "Check that SpecialSession.from_minutes(2) creates a SpecialSession.",
+        "Check that Session.valid_minutes returns True for 0 and 2.5, and False for -1.",
+        "Check that Session(\"X\", 1).valid_minutes(3) returns True. The method receives 3 as minutes."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If the factory uses Session(...) instead of cls(...), what does SpecialSession.from_minutes(12) return?",
+        "choices": [
+          "A SpecialSession because call spelling forces it",
+          "A Session, not a SpecialSession",
+          "No object because class methods cannot construct instances"
+        ],
+        "answer": 1,
+        "explanation": "The explicit constructor name selects the base class. cls is what allowed the original factory to use the receiving subclass."
+      },
+      "after": {
+        "question": "If the factory uses Session(...) instead of cls(...), what does SpecialSession.from_minutes(12) return?",
+        "choices": [
+          "A SpecialSession because call spelling forces it",
+          "A Session, not a SpecialSession",
+          "No object because class methods cannot construct instances"
+        ],
+        "answer": 1,
+        "explanation": "Session(...) always creates a Session. Using cls(...) lets the method create an object of the class used for the call."
+      }
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Trace the visible worked calls before changing the starter."
+      ],
+      "after": [
+        "In SpecialSession.from_minutes(12), cls is SpecialSession and minutes is 12.",
+        "Zero counts as nonnegative, so valid_minutes(0) returns True.",
+        "Calling valid_minutes through an object still passes only the minutes argument you supply."
+      ]
+    }
+  ],
+  "reviewNotes": [
+    "Preserved the worked code and its output.",
+    "Factory inputs are nonnegative numbers; the static check also handles negative numbers.",
+    "Subclass creation requires an initializer that accepts the supplied arguments.",
+    "Preserved quiz answer index 1."
+  ]
+}

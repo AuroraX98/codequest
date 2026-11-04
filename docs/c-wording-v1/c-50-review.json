@@ -1,0 +1,92 @@
+{
+  "lesson": "c-50",
+  "position": 50,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "If the two encoded bytes are swapped to {2, 1}, what value is decoded?",
+      "after": "A portable binary format gives each byte a clear meaning instead of copying a machine's internal layout."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "Writing sizeof(struct) raw bytes exposes padding, native byte order and representation choices. A portable format specifies each field’s encoding instead. This example decodes two eight-bit octets in high-byte-first order; it requires CHAR_BIT == 8 explicitly. _Static_assert checks this condition during compilation and rejects an unsupported byte width.",
+        "unsigned long is guaranteed enough range for this two-octet value. Converting the high octet before shifting avoids signed-int shift overflow on a narrow-int implementation. The bitwise OR combines nonoverlapping fields; it does not perform logical Boolean OR.",
+        "Complete local C example; the app itself does not execute it:\n```c\n#include <stdio.h>\n#include <limits.h>\n_Static_assert(CHAR_BIT == 8, \"format requires 8-bit bytes\");\n\nint main(void) {\n    unsigned char bytes[2] = {1, 2};\n    unsigned long value = ((unsigned long)bytes[0] << 8) | bytes[1];\n    printf(\"%lu\\n\", value);\n    return 0;\n}\n```",
+        "Expected output or behavior: 258. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Write the inverse encoding for values 0 through 65535, retaining the explicit eight-bit-byte requirement. You may trace it without a C compiler; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "Encoding means choosing how data is stored. Copying a struct's raw storage can include padding, extra space between its members, and machine-specific ordering. This example instead defines a two-byte format with the high part first. `_Static_assert` requires each byte to have 8 bits before the program can compile.",
+        "The first byte counts groups of 256. Convert it to unsigned long before shifting it left by 8 bits. Then `|` joins the low byte into the remaining bits. unsigned long is wide enough for this two-byte number.",
+        "Follow the example one line at a time.\n```c\n#include <stdio.h>\n#include <limits.h>\n_Static_assert(CHAR_BIT == 8, \"format requires 8-bit bytes\");\n\nint main(void) {\n    unsigned char bytes[2] = {1, 2};\n    unsigned long value = ((unsigned long)bytes[0] << 8) | bytes[1];\n    printf(\"%lu\\n\", value);\n    return 0;\n}\n```",
+        "The bytes are 1 and 2. The rule gives 1 times 256 plus 2, so the program prints 258. The explicit formula determines the order, not the machine's usual storage order.",
+        "Swap the byte values to 2 and 1. The first now contributes two groups of 256, and the second contributes 1."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Multiply the first byte by 256, then add the second byte."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If the two encoded bytes are swapped to {2, 1}, what value is decoded?",
+        "choices": [
+          "513",
+          "258 because host byte order always overrides the formula",
+          "3 because | means addition of the original bytes."
+        ],
+        "answer": 0,
+        "explanation": "The explicit format treats the first octet as units of 256: 2*256+1=513."
+      },
+      "after": {
+        "question": "Swap the two bytes to {2, 1}. What value is decoded?",
+        "choices": [
+          "513",
+          "258, because the machine overrides the formula.",
+          "3, because | adds the original values."
+        ],
+        "answer": 0,
+        "explanation": "The format gives 2 times 256 plus 1, which is 513."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "C Core v1 uses a portable C17 baseline supported by the verified compiler. C23 exists but is not claimed fully supported here. The app supplies concept reading and an understanding check, not a C browser runner. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "The browser shows C code and checks your understanding; it does not run C. Optional local examples use C17."
+    }
+  ],
+  "headings": [
+    "Specify the byte meaning",
+    "Join the high and low parts",
+    "One example",
+    "Read the decoded number",
+    "Swap the byte values"
+  ],
+  "project": {
+    "title": "Explicit binary encodings",
+    "task": "Explain why the same two byte values give a different number when their positions swap.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local C example is optional."
+  },
+  "navigationCorrection": "Added a short example introduction so its reviewed heading remains an explicit contents target."
+}

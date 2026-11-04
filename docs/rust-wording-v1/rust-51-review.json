@@ -1,0 +1,91 @@
+{
+  "lesson": "rust-51",
+  "position": 51,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "If the shared guard is dropped before try_borrow_mut, what is printed?",
+      "after": "A RefCell checks borrowing rules while the program runs."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "RefCell permits interior mutability through a shared reference, while enforcing the usual one-mutable-or-many-shared borrow rule at runtime. borrow and borrow_mut panic if the rule is violated; try_borrow_mut instead returns a Result so a conflict can be handled without a panic.\n\nRefCell::new(3) wraps that initial integer in a new RefCell; construction does not yet borrow the value. is_err() then takes the try_borrow_mut Result as receiver and returns true exactly when it is Err, without extracting its error payload.",
+        "The value returned by borrow is a guard. While read remains alive, a mutable borrow cannot be granted. Explicitly dropping it ends that shared borrow, allowing the later mutable guard to change the value. RefCell is not a thread synchronization primitive.",
+        "Complete local Rust example; the app itself does not execute it:\n```rust\nuse std::cell::RefCell;\n\nfn main() {\n    let value = RefCell::new(3);\n    let read = value.borrow();\n    println!(\"{}\", value.try_borrow_mut().is_err());\n    drop(read);\n    *value.borrow_mut() = 9;\n    println!(\"{}\", value.borrow());\n}\n```",
+        "Expected output or behavior: true\n9. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Explain how handling try_borrow_mut differs from catching a panic after borrow_mut. You may trace it without a Rust compiler; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "A RefCell checks borrowing rules while the program runs.",
+        "While read is active, a request to borrow for writing fails. After the reader is dropped, writing is allowed.",
+        "Follow the labeled parts of this example.\n```rust\nuse std::cell::RefCell;\n\nfn main() {\n    let value = RefCell::new(3);\n    let read = value.borrow();\n    println!(\"{}\", value.try_borrow_mut().is_err());\n    drop(read);\n    *value.borrow_mut() = 9;\n    println!(\"{}\", value.borrow());\n}\n```",
+        "The output is `true`, then `9`. The first check detects a conflict. After the reader goes away, the value can change to 9.",
+        "Move the end of the read above the first request to write."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read one idea.",
+        "Follow the labeled example.",
+        "Try the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Move the end of the read above the first request to write."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If the shared guard is dropped before try_borrow_mut, what is printed?",
+        "choices": [
+          "false then 9",
+          "true then 9 because RefCell never permits mutation",
+          "A required undefined-behavior demonstration."
+        ],
+        "answer": 0,
+        "explanation": "With no live shared guard, the temporary mutable borrow succeeds; the later update still stores nine."
+      },
+      "after": {
+        "question": "If the shared guard is dropped before try_borrow_mut, what is printed?",
+        "choices": [
+          "false then 9",
+          "true then 9 because RefCell never permits mutation",
+          "A required undefined-behavior demonstration."
+        ],
+        "answer": 0,
+        "explanation": "Without the reader, writing is allowed. The error check is false, and the later assignment stores nine."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Rust Core v1 uses stable Rust1.99.1 with edition2024 and the standard library. The app supplies concept reading and an understanding check, not a Rust browser runner. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "CodeQuest shows the Rust example. Running it on your own computer is optional."
+    }
+  ],
+  "headings": [
+    "Check a borrow while running",
+    "Wait for the reader",
+    "Read the example",
+    "What happens",
+    "Try one change"
+  ],
+  "project": {
+    "title": "RefCell and runtime borrow checks",
+    "task": "Move the end of the read above the first request to write.",
+    "done_when": "Read each idea and pass the understanding check. Running the example on your computer is optional."
+  }
+}

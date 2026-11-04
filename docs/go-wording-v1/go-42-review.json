@@ -1,0 +1,91 @@
+{
+  "lesson": "go-42",
+  "position": 42,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "If Double is implemented as n * 3 instead, what prints after rebuilding?",
+      "after": "Use a Go module from a local folder."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "go.mod records the module path and Go language requirement. Imports use module paths, while package names are identifiers used in source. A module can contain several packages.",
+        "A require records a dependency version; replace can redirect that module to a local directory. Save the files below and run go run . with GOTOOLCHAIN=local and GOPROXY=off to prevent toolchain or dependency downloads. A replacement needs the local module’s own go.mod; it is not copied into the main module automatically.\n```text\n// go.mod\nmodule example.test/app\ngo 1.27.0\nrequire example.test/math v0.0.0\nreplace example.test/math => ./localmath\n// localmath/go.mod\nmodule example.test/math\ngo 1.27.0\n// localmath/math.go (Go source)\npackage math\nfunc Double(n int) int { return n * 2 }\n```",
+        "Complete local Go example; the app itself does not execute it:\n```go\npackage main\nimport (\"fmt\"; \"example.test/math\")\nfunc main() { fmt.Println(math.Double(6)) }\n```",
+        "Expected output or behavior: 12. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Change the local implementation and rebuild without fetching any external package. You may trace it without a Go compiler; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "A module is a group of Go packages managed together. Its go.mod file gives its module path and required Go version. An import uses a path to find a package; code uses the package name to call its functions.",
+        "A dependency is another module the program needs. `require` names its version. `replace` tells Go to use the localmath folder here. That folder needs its own go.mod file.",
+        "Keep the shown file names and folders. From the main folder, `go run .` builds this one example with the supplied local module.\n```go\n// File: go.mod\nmodule example.test/app\ngo 1.27.0\nrequire example.test/math v0.0.0\nreplace example.test/math => ./localmath\n\n// File: localmath/go.mod\nmodule example.test/math\ngo 1.27.0\n\n// File: localmath/math.go\npackage math\nfunc Double(n int) int { return n * 2 }\n\n// File: main.go\npackage main\nimport (\"fmt\"; \"example.test/math\")\nfunc main() { fmt.Println(math.Double(6)) }\n```",
+        "The screen shows `12`. main calls Double from the local math module, which multiplies 6 by 2.",
+        "Edit the local Double function and rebuild. The new program uses the changed local source. The replacement points to a folder; it does not freeze the old program."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Follow the source in the folder named by replace."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If Double is implemented as n * 3 instead, what prints after rebuilding?",
+        "choices": [
+          "12 because replace freezes compiled code",
+          "18",
+          "6"
+        ],
+        "answer": 1,
+        "explanation": "The import resolves to the supplied local module source, so rebuilding uses its changed implementation."
+      },
+      "after": {
+        "question": "Change Double to return n * 3 and rebuild. What appears?",
+        "choices": [
+          "12, because replace freezes the old code.",
+          "18",
+          "6"
+        ],
+        "answer": 1,
+        "explanation": "The rebuilt program calls the changed local function. 6 times 3 is 18."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Go Core v1 uses the verified Go1.27.3 toolchain and standard library. The app supplies concept reading and an understanding check, not a Go browser runner. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "The browser shows Go code and checks your understanding; it does not run Go. Optional local examples use Go 1.27."
+    }
+  ],
+  "headings": [
+    "Name a module",
+    "Point a dependency to a local folder",
+    "One example in four labeled files",
+    "Read the local function's result",
+    "Rebuild after changing the helper"
+  ],
+  "project": {
+    "title": "Modules and local dependencies",
+    "task": "Predict the result after changing the local module.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local Go example is optional."
+  }
+}

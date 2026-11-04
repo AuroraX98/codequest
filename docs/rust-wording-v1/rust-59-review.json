@@ -1,0 +1,91 @@
+{
+  "lesson": "rust-59",
+  "position": 59,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "If a third valid line is appended, what does this bounded parser report?",
+      "after": "A program can reject input that is too long before using it."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "BufRead::lines yields Result<String> values with line endings removed. Use ? for each line read, not just when creating the reader. enumerate pairs each item with its zero-based index. Cursor makes this example read a fixed in-memory byte sequence, with no file or network access.\n\ninput.as_bytes() borrows the UTF-8 bytes of the String slice as &[u8]. It does not allocate another String or change the input; Cursor receives that borrowed byte sequence.",
+        "The helper checks the entire supplied input is at most thirty-two bytes before constructing the reader, then accepts at most two lines and minute values 1 through 60. Thus the sum is at most 120. On an unbounded external stream, checking a String length after lines allocated it would be too late; this lesson’s fixed input cap is part of its contract.\n\nio::Error::new takes an error kind and message and returns an io::Error value. The invalid helper chooses InvalidData and the supplied message; constructing the error does not throw it, and Err/? control its propagation.",
+        "Complete local Rust example; the app itself does not execute it:\n```rust\nuse std::io::{self, BufRead, Cursor};\nfn invalid(message: &str) -> io::Error { io::Error::new(io::ErrorKind::InvalidData, message) }\nfn total(input: &str) -> io::Result<u32> {\n    if input.len() > 32 { return Err(invalid(\"input too long\")); }\n    let mut sum = 0;\n    for (index, line) in Cursor::new(input.as_bytes()).lines().enumerate() {\n        if index >= 2 { return Err(invalid(\"too many lines\")); }\n        let n: u32 = line?.parse().map_err(|_| invalid(\"invalid integer\"))?;\n        if !(1..=60).contains(&n) { return Err(invalid(\"invalid minutes\")); }\n        sum += n;\n    }\n    Ok(sum)\n}\nfn main() {\n    match total(\"15\\n20\\n\") {\n        Ok(n) => println!(\"{n}\"),\n        Err(error) => println!(\"{error}\"),\n    }\n}\n```",
+        "Expected output or behavior: 35. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Explain how streaming input limits must be enforced before allocating an arbitrarily long line. You may trace it without a Rust compiler; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "A program can reject input that is too long before using it.",
+        "Here the input may have at most 32 bytes and two lines. Each line must hold a whole number from 1 through 60.",
+        "Follow the labeled parts of this example.\n```rust\nuse std::io::{self, BufRead, Cursor};\nfn invalid(message: &str) -> io::Error { io::Error::new(io::ErrorKind::InvalidData, message) }\nfn total(input: &str) -> io::Result<u32> {\n    if input.len() > 32 { return Err(invalid(\"input too long\")); }\n    let mut sum = 0;\n    for (index, line) in Cursor::new(input.as_bytes()).lines().enumerate() {\n        if index >= 2 { return Err(invalid(\"too many lines\")); }\n        let n: u32 = line?.parse().map_err(|_| invalid(\"invalid integer\"))?;\n        if !(1..=60).contains(&n) { return Err(invalid(\"invalid minutes\")); }\n        sum += n;\n    }\n    Ok(sum)\n}\nfn main() {\n    match total(\"15\\n20\\n\") {\n        Ok(n) => println!(\"{n}\"),\n        Err(error) => println!(\"{error}\"),\n    }\n}\n```",
+        "The output is `35`. The two accepted lines hold 15 and 20, which add to 35.",
+        "Add a short third line and find the first rule it breaks."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read one idea.",
+        "Follow the labeled example.",
+        "Try the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Add a short third line and find the first rule it breaks."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If a third valid line is appended, what does this bounded parser report?",
+        "choices": [
+          "The extra line is silently counted despite the cap.",
+          "too many lines",
+          "An unbounded allocation is required for every line."
+        ],
+        "answer": 1,
+        "explanation": "Enumeration reaches index two for the third line, triggering the explicit line-count rejection."
+      },
+      "after": {
+        "question": "If a third valid line is appended, what does this bounded parser report?",
+        "choices": [
+          "The extra line is silently counted despite the cap.",
+          "too many lines",
+          "An unbounded allocation is required for every line."
+        ],
+        "answer": 1,
+        "explanation": "The third line reaches index two. The line-count check returns too many lines."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Rust Core v1 uses stable Rust1.99.1 with edition2024 and the standard library. The app supplies concept reading and an understanding check, not a Rust browser runner. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "CodeQuest shows the Rust example. Running it on your own computer is optional."
+    }
+  ],
+  "headings": [
+    "Put a limit on input",
+    "Check one line at a time",
+    "Read the example",
+    "What happens",
+    "Try one change"
+  ],
+  "project": {
+    "title": "Buffered lines and bounded parsing",
+    "task": "Add a short third line and find the first rule it breaks.",
+    "done_when": "Read each idea and pass the understanding check. Running the example on your computer is optional."
+  }
+}

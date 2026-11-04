@@ -1,0 +1,91 @@
+{
+  "lesson": "kotlin-59",
+  "position": 59,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "If the right async result is 10, what is the total?",
+      "after": "Use async to start work with a result, then await that result before using it."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "async starts a child coroutine and returns Deferred<T>. await suspends until that result is ready, then returns it or propagates its failure. async is a scope extension, not a keyword and not part of the Kotlin standard library.",
+        "Both results are created inside coroutineScope and awaited before addition. The order in which workers happen to execute is irrelevant to this output. The simple arithmetic proves result composition, not a performance gain or parallel execution guarantee.",
+        "Complete local Kotlin/JVM example; the app itself does not execute it:\n```kotlin\nimport kotlinx.coroutines.runBlocking\nimport kotlinx.coroutines.coroutineScope\nimport kotlinx.coroutines.async\n\nfun main() {\n    runBlocking {\n        val total = coroutineScope {\n            val left = async { 6 }\n            val right = async { 7 }\n            left.await() + right.await()\n        }\n        println(total)\n    }\n}\n```",
+        "Expected output or behavior: 13. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Return a small typed value from each async block and explain where an exception would be observed. You may trace it without a Kotlin compiler; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "The coroutine-library function `async` starts a child task and returns a Deferred. A Deferred holds a result that may not be ready yet. Its type tells you what kind of answer to expect.",
+        "The call `await()` returns the finished answer. If it is not ready, await suspends until it is. A failed task can make await throw its failure. Here, both children belong to the same coroutineScope.",
+        "Follow the example one line at a time.\n```kotlin\nimport kotlinx.coroutines.runBlocking\nimport kotlinx.coroutines.coroutineScope\nimport kotlinx.coroutines.async\n\nfun main() {\n    runBlocking {\n        val total = coroutineScope {\n            val left = async { 6 }\n            val right = async { 7 }\n            left.await() + right.await()\n        }\n        println(total)\n    }\n}\n```",
+        "The screen shows `13`. The two await calls get 6 and 7, then the expression adds them.",
+        "This result does not depend on which child runs first. Async does not guarantee that tasks run at the same instant or make a tiny calculation faster. The lesson is about waiting for the answers before combining them."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Await reads each child's result; it does not cancel the other child here."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If the right async result is 10, what is the total?",
+        "choices": [
+          "10 because awaiting the right result cancels the left.",
+          "13 because Deferred always keeps seven",
+          "16"
+        ],
+        "answer": 2,
+        "explanation": "await retrieves six and ten; the final expression adds those results."
+      },
+      "after": {
+        "question": "Change the right child's result from 7 to 10. What is the total?",
+        "choices": [
+          "10, because awaiting right cancels left.",
+          "13, because Deferred always keeps seven.",
+          "16"
+        ],
+        "answer": 2,
+        "explanation": "The left answer is still 6. The right answer is now 10. Adding them gives 16."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Kotlin JVM Core v1 uses Kotlin2.4.21 stable syntax and a verified JVM toolchain. The app supplies concept reading and an understanding check, not a Kotlin browser runner. Coroutine libraries are separate dependencies. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "The browser shows Kotlin code and checks your understanding; it does not run Kotlin. Optional local examples use Kotlin/JVM."
+    }
+  ],
+  "headings": [
+    "Start a child with an answer",
+    "Wait for its result",
+    "One example",
+    "Combine the answers",
+    "Separate results from execution order"
+  ],
+  "project": {
+    "title": "Async results and awaiting",
+    "task": "Combine the results returned by two awaited tasks.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local Kotlin example is optional."
+  }
+}

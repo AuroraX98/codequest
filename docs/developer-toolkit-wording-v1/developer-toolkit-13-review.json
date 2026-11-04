@@ -1,0 +1,112 @@
+{
+  "lesson": "developer-toolkit-13",
+  "position": 13,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Complete blockingChecks(required, results, revision). Return required check names that do not have a success result for the exact requested revision, keeping required order. Names in required and results are unique in this contract.",
+      "after": "A passing check applies to the code version it tested. New code needs its own result."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "Continuous integration runs automated checks when code changes. A passing result belongs to the revision that was checked.",
+        "A green test from yesterday’s commit does not prove today’s changed code passes.",
+        "A workflow groups steps into jobs. A job might install dependencies, run a compiler, run tests, and build the app.",
+        "Checks can fail, be skipped, still be running, or have no result yet. None of those is confirmed success.",
+        "This simplified record includes the revision alongside the status.\n```javascript\nconst result = {name: \"tests\", status: \"success\", revision: \"abc123\"};\nconsole.log(result.revision === \"def456\");\n```",
+        "The comparison is false. Even a success status is stale for def456.",
+        "For each required name, find its result. Keep the name in the blocked list if it is missing, not successful, or belongs to another revision.\n\nresults.find(item => item.name === wantedName) returns the first matching result, or undefined when none matches. Check for that missing value before reading its status or revision. filter keeps each required name for which your blocking condition is true.\n\n```javascript\nconst results = [{name:\"tests\",status:\"success\"}];\nconsole.log(results.find(item => item.name === \"tests\").status);\nconsole.log(results.find(item => item.name === \"build\"));\nconsole.log([\"tests\", \"build\"].filter(name => name === \"build\"));\n```\nThe outputs are success, undefined, and [\"build\"]. find returns the first matching element or undefined; filter returns a new array of all matching elements. Each receives a predicate callback and leaves the source array unchanged. These calls show selection only; the full exercise also checks revision and status.",
+        "An unrelated successful check cannot replace a missing required one. Evaluate the stated requirements, not merely whether any result is green.",
+        "The browser exercise evaluates supplied result data. It does not start a hosted CI job or prove the source repository has a workflow.",
+        "A real workflow must run meaningful tests and protect any deployment credentials. Passing a weak or empty test suite is still weak evidence."
+      ],
+      "after": [
+        "Continuous integration, or CI, runs checks when code changes. Each result belongs to a revision: one exact version of the source.",
+        "A passing test from yesterday does not prove that today's changed code passes.",
+        "A workflow lists jobs to run. One job might install packages, check types, run tests, or build the app.",
+        "Failed, skipped, running, and missing results are not confirmed success.",
+        "This result passed for abc123, but we need evidence for def456.\n\n```javascript\nconst result = {name: \"tests\", status: \"success\", revision: \"abc123\"};\nconsole.log(result.revision === \"def456\");\n```\n\nThe comparison prints false.",
+        "The status says success, but the revision is wrong. The result is too old for the requested version.",
+        "For each required check name, use find to look for its result. Keep the name in the blocked list if no result exists, status is not \"success\", or revision differs.",
+        "A successful result for another check cannot replace a required one. Start with the required names and keep their original order.",
+        "Complete blockingChecks(required, results, revision). This exercise supplies unique check names and asks for a new array of names still blocking release.",
+        "The browser checks supplied records. It does not run a hosted workflow. A real workflow also needs useful tests that can catch broken behavior."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the requirement.",
+        "Make one change to the starter.",
+        "Run the checks.",
+        "Explain why a changed input produces its result."
+      ],
+      "after": [
+        "Start with the required names in order.",
+        "Find the result for each name.",
+        "Keep names whose result is missing, unsuccessful, or from another revision.",
+        "Run the checks with missing and stale results."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Start from required names, not whichever results happen to exist.",
+        "Match both success status and exact revision.",
+        "A missing result is not a pass."
+      ],
+      "after": [
+        "Use required.filter to keep blocked names in order.",
+        "Check a found result exists before reading its fields.",
+        "Both status and revision must match."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Tests passed for revision A. Revision B changes the code and has no result yet. Can the A result establish that B passes?",
+        "choices": [
+          "Yes; the test name is unchanged.",
+          "No; B needs evidence for its own revision.",
+          "Yes; every successful result remains valid forever."
+        ],
+        "answer": 1,
+        "explanation": "The test name alone does not identify the code that ran. A changed revision can introduce behavior the earlier result never tested."
+      },
+      "after": {
+        "question": "Tests passed for revision A. Changed revision B has no result yet. Does A's result prove B passes?",
+        "choices": [
+          "Yes, because the test name is unchanged.",
+          "No. B needs a result for its own version.",
+          "Yes. A passing result stays valid forever."
+        ],
+        "answer": 1,
+        "explanation": "A's test ran different code. It did not check the change in B."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "This is a CI evidence model, not execution of GitHub Actions. No workflow, repository setting, credential or hosted runner is modified. Integration testing is also covered by the existing real local API exercises and React UI-testing lessons; this does not duplicate them.",
+      "after": "This browser exercise reads CI result records. It does not create a workflow, start a hosted job, or change repository settings."
+    }
+  ],
+  "headings": [
+    "Checks belong to a version",
+    "Do not reuse an old pass",
+    "Group the work into jobs",
+    "Recognize unfinished checks",
+    "One example",
+    "Notice the version mismatch",
+    "Find every required result",
+    "Ignore unrelated successes",
+    "Check the supplied records",
+    "Keep tests meaningful"
+  ],
+  "project": {
+    "title": "Do not trust an old green result",
+    "task": "Complete blockingChecks(required,results,revision). Return required names without a success result for that exact revision, preserving their order. Check names are unique.",
+    "done_when": "The checks pass for missing, failed, stale, and unrelated results. Explain why a previous revision's pass is insufficient."
+  }
+}

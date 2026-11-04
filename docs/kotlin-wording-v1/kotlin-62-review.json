@@ -1,0 +1,91 @@
+{
+  "lesson": "kotlin-62",
+  "position": 62,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "If each worker repeats 25 increments, what prints?",
+      "after": "Use the same mutex to protect every shared counter update."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "count++ reads and writes a mutable Int; multiple workers need coordination. Mutex.withLock holds the same coroutine mutex around that entire update and releases it on exit. Waiting for this mutex suspends a coroutine rather than using a JVM monitor wait; a mutex is not reentrant.",
+        "Dispatchers.Default permits work on a shared pool of worker threads. coroutineScope waits for both launched children before the final print. repeat(2) runs its lambda twice, creating two workers; each performs 100 protected increments. No timing measurement or unprotected counter variant is used.",
+        "Complete local Kotlin/JVM example; the app itself does not execute it:\n```kotlin\nimport kotlinx.coroutines.runBlocking\nimport kotlinx.coroutines.coroutineScope\nimport kotlinx.coroutines.launch\nimport kotlinx.coroutines.Dispatchers\nimport kotlinx.coroutines.sync.Mutex\nimport kotlinx.coroutines.sync.withLock\n\nfun main() {\n    runBlocking {\n        val mutex = Mutex()\n        var count = 0\n        coroutineScope {\n            repeat(2) {\n                launch(Dispatchers.Default) {\n                    repeat(100) { mutex.withLock { count++ } }\n                }\n            }\n        }\n        println(count)\n    }\n}\n```",
+        "Expected output or behavior: 200. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Explain why locking different Mutex instances would not protect this shared count. You may trace it without a Kotlin compiler; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "The instruction `count++` reads the old number and writes a new one. Two tasks doing that together could overwrite each other's work. A mutex allows only one task at a time into a protected block. WithLock releases it when that block exits.",
+        "`Dispatchers.Default` lets the tasks use a shared group of worker threads. The outer repeat starts two tasks. Each task performs 100 updates through the same mutex. CoroutineScope waits for both tasks before the final read.",
+        "Follow the example one line at a time.\n```kotlin\nimport kotlinx.coroutines.runBlocking\nimport kotlinx.coroutines.coroutineScope\nimport kotlinx.coroutines.launch\nimport kotlinx.coroutines.Dispatchers\nimport kotlinx.coroutines.sync.Mutex\nimport kotlinx.coroutines.sync.withLock\n\nfun main() {\n    runBlocking {\n        val mutex = Mutex()\n        var count = 0\n        coroutineScope {\n            repeat(2) {\n                launch(Dispatchers.Default) {\n                    repeat(100) { mutex.withLock { count++ } }\n                }\n            }\n        }\n        println(count)\n    }\n}\n```",
+        "The screen shows `200`. Both tasks finish their 100 protected additions before println reads the total.",
+        "Every competing update must follow the same protection rule. Different mutex objects would not protect one shared count together. Waiting for this coroutine mutex can suspend the task. Do not try to take the same mutex again while already holding it; it is not reentrant."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Multiply the number of tasks by the updates made by each one."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If each worker repeats 25 increments, what prints?",
+        "choices": [
+          "25 because a mutex discards one worker",
+          "An arbitrary value even though every update uses the same mutex.",
+          "50"
+        ],
+        "answer": 2,
+        "explanation": "Both workers contribute twenty-five protected updates and finish before the final observation."
+      },
+      "after": {
+        "question": "Make each of the two tasks repeat 25 updates. What appears?",
+        "choices": [
+          "25, because a mutex discards one task.",
+          "An unpredictable number even though every update uses the same mutex.",
+          "50"
+        ],
+        "answer": 2,
+        "explanation": "Each task adds 25. The shared mutex protects every update, and both tasks finish before the read. The total is 50."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Kotlin JVM Core v1 uses Kotlin2.4.21 stable syntax and a verified JVM toolchain. The app supplies concept reading and an understanding check, not a Kotlin browser runner. Coroutine libraries are separate dependencies. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "The browser shows Kotlin code and checks your understanding; it does not run Kotlin. Optional local examples use Kotlin/JVM."
+    }
+  ],
+  "headings": [
+    "Protect the whole update",
+    "Share one lock between tasks",
+    "One example",
+    "Read after both tasks finish",
+    "Use the same protection everywhere"
+  ],
+  "project": {
+    "title": "Mutexes and shared state",
+    "task": "Count protected updates after all workers finish.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local Kotlin example is optional."
+  }
+}

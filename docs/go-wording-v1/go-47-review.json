@@ -1,0 +1,91 @@
+{
+  "lesson": "go-47",
+  "position": 47,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "If the join separator becomes \"-\" but the expected result stays \"ab\", what happens?",
+      "after": "Use a benchmark to measure work while checking its answer."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "BenchmarkJoin accepts *testing.B. strings.Join(parts, separator) combines the strings with that separator between neighboring items. The b.N loop repeats the operation a count chosen by the runner; a package variable sink keeps the result observable. Benchmarks are not automatically a realistic application workload, and allocation patterns and machine conditions affect measurements.",
+        "Save as main_test.go and run go test -run ^$ -bench BenchmarkJoin -benchtime=1x. The anchored empty test pattern skips ordinary tests; 1x requests one measured iteration, useful as a smoke check, not a stable performance comparison. Timing output varies. A correctness guard still rejects an unexpected joined string.\n\nb.Fatalf takes the benchmark receiver, a format String and any formatting arguments. It records a benchmark failure and stops the current benchmark function. This is the benchmark counterpart of the earlier t.Fatalf test operation; the changed separator reaches this failure path.",
+        "Complete local Go example; the app itself does not execute it:\n```go\npackage study\nimport (\"testing\"; \"strings\")\nvar sink string\nfunc BenchmarkJoin(b *testing.B) {\n    parts := []string{\"a\", \"b\"}\n    for i := 0; i < b.N; i++ { sink = strings.Join(parts, \"\") }\n    if sink != \"ab\" { b.Fatalf(\"wrong result: %s\", sink) }\n}\n```",
+        "Expected output or behavior: BenchmarkJoin completes and PASS is reported; no fixed timing is expected. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Explain why one iteration cannot establish a reliable speed difference. You may trace it without a Go compiler; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "A benchmark measures an operation. Here, `strings.Join` puts text pieces together with a separator between them. The benchmark repeats that work b.N times, a count chosen by the test tool. The variable sink keeps the result available to check.",
+        "Save this as main_test.go in a local module. `go test -run ^$ -bench BenchmarkJoin -benchtime=1x` skips ordinary tests and asks for one measured turn. `b.Fatalf` reports a wrong answer and stops this benchmark.",
+        "Follow the join and the check after the loop.\n```go\npackage study\nimport (\"testing\"; \"strings\")\nvar sink string\nfunc BenchmarkJoin(b *testing.B) {\n    parts := []string{\"a\", \"b\"}\n    for i := 0; i < b.N; i++ { sink = strings.Join(parts, \"\") }\n    if sink != \"ab\" { b.Fatalf(\"wrong result: %s\", sink) }\n}\n```",
+        "BenchmarkJoin passes because the result is `ab`. Its timing varies with the machine and run. One turn checks the setup but cannot establish a reliable speed difference.",
+        "Changing the separator changes the text. A fast wrong answer still fails the check."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Check the joined text before interpreting any timing."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If the join separator becomes \"-\" but the expected result stays \"ab\", what happens?",
+        "choices": [
+          "Benchmark mode disables all checks.",
+          "The benchmark proves the new operation faster.",
+          "The correctness guard fails regardless of the measured speed."
+        ],
+        "answer": 2,
+        "explanation": "The new result is a-b, so the unchanged correctness condition fails; a timing number cannot repair wrong behavior."
+      },
+      "after": {
+        "question": "Use \"-\" as the separator but keep the wanted result \"ab\". What happens?",
+        "choices": [
+          "Benchmark mode skips the check.",
+          "The benchmark proves the new operation is faster.",
+          "The result check fails regardless of speed."
+        ],
+        "answer": 2,
+        "explanation": "The new result is a-b, which does not match ab. The benchmark reports that failure."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Go Core v1 uses the verified Go1.27.3 toolchain and standard library. The app supplies concept reading and an understanding check, not a Go browser runner. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "The browser shows Go code and checks your understanding; it does not run Go. Optional local examples use Go 1.27."
+    }
+  ],
+  "headings": [
+    "Repeat the work to measure it",
+    "Run a small benchmark",
+    "One example",
+    "Read the result without assuming a speed",
+    "Keep correctness separate from timing"
+  ],
+  "project": {
+    "title": "Benchmarks and measurement limits",
+    "task": "Predict the benchmark check after the separator changes.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local Go example is optional."
+  }
+}

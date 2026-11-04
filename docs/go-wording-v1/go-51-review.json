@@ -1,0 +1,91 @@
+{
+  "lesson": "go-51",
+  "position": 51,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "If the JSON minutes value is 0, what prints?",
+      "after": "Read JSON data, then check whether its value is allowed."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "encoding/json.Unmarshal decodes into exported fields. The backtick tag `json:\"minutes\"` maps the field to a JSON key; a raw Go string literal uses backticks to hold JSON without escaping its quotes. Successful decoding does not enforce application ranges.",
+        "The Session struct holds an integer minute count, and the separate check allows only 1 through 60. A missing field becomes the zero value and is rejected by this policy. Unmarshal ignores unknown fields by default; stricter schemas need an explicit decoder policy.",
+        "Complete local Go example; the app itself does not execute it:\n```go\npackage main\n\nimport (\n\"fmt\"\n\"encoding/json\"\n)\n\ntype Session struct { Minutes int `json:\"minutes\"` }\nfunc main() {\n    var session Session\n    err := json.Unmarshal([]byte(`{\"minutes\":15}`), &session)\n    if err != nil { fmt.Println(\"invalid JSON\"); return }\n    if session.Minutes < 1 || session.Minutes > 60 { fmt.Println(\"invalid minutes\"); return }\n    fmt.Println(session.Minutes)\n}\n```",
+        "Expected output or behavior: 15. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Compare a missing field, a wrong JSON type and an unknown field without assuming decoding enforces every rule. You may trace it without a Go compiler; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "JSON is a text format for sharing data. `json.Unmarshal` reads it into a Go value. The tag on Minutes matches the JSON name minutes to that exported field. The backticks around the input let its quotation marks stay as written.",
+        "This program accepts minute counts from 1 through 60. Reading a number successfully does not prove it is in that range. A missing minutes field leaves this new struct's field at 0, which is rejected.",
+        "Follow the data-reading check before the range check.\n```go\npackage main\n\nimport (\n\"fmt\"\n\"encoding/json\"\n)\n\ntype Session struct { Minutes int `json:\"minutes\"` }\nfunc main() {\n    var session Session\n    err := json.Unmarshal([]byte(`{\"minutes\":15}`), &session)\n    if err != nil { fmt.Println(\"invalid JSON\"); return }\n    if session.Minutes < 1 || session.Minutes > 60 { fmt.Println(\"invalid minutes\"); return }\n    fmt.Println(session.Minutes)\n}\n```",
+        "The screen shows `15`. The JSON was read successfully, and 15 is in the allowed range.",
+        "A wrong JSON type can cause a decoding error. An unknown field is ignored by default. A valid integer such as 0 can still fail the separate minutes rule."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Check the allowed range after decoding."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If the JSON minutes value is 0, what prints?",
+        "choices": [
+          "invalid JSON because JSON forbids zero",
+          "15 because struct tags supply a default.",
+          "invalid minutes after successful decoding"
+        ],
+        "answer": 2,
+        "explanation": "Zero is valid JSON and decodes as an int, but the application’s range check rejects it."
+      },
+      "after": {
+        "question": "Set the JSON minutes value to 0. What appears?",
+        "choices": [
+          "invalid JSON, because JSON forbids zero.",
+          "15, because the field tag supplies a default.",
+          "invalid minutes, after the JSON is read successfully."
+        ],
+        "answer": 2,
+        "explanation": "0 is a valid JSON number, but the program requires at least 1 minute."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Go Core v1 uses the verified Go1.27.3 toolchain and standard library. The app supplies concept reading and an understanding check, not a Go browser runner. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "The browser shows Go code and checks your understanding; it does not run Go. Optional local examples use Go 1.27."
+    }
+  ],
+  "headings": [
+    "Read text into a field",
+    "Check the program's own rule",
+    "One example",
+    "Read accepted minutes",
+    "Separate decoding from validation"
+  ],
+  "project": {
+    "title": "JSON encoding and validation",
+    "task": "Find the check that rejects zero minutes.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local Go example is optional."
+  }
+}

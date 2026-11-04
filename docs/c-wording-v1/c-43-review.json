@@ -1,0 +1,91 @@
+{
+  "lesson": "c-43",
+  "position": 43,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "If score.c is omitted from this fresh build, what happens?",
+      "after": "Put a shared declaration in a header and its function body in a source file. The build needs both."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A header lets callers and the implementation agree on a function prototype. The #ifndef/#define/#endif guard makes repeated inclusion harmless. These preprocessing directives select text before C compilation; the guard is not a runtime if.",
+        "Save score.h with the guarded declaration and score.c with its definition below. Each .c file plus included headers forms a translation unit. Compile gcc -std=c17 -Wall -Wextra -Wpedantic -Werror main.c score.c -o app, then run ./app. A declaration alone does not provide the linked function body.\n```c\n#ifndef SCORE_H\n#define SCORE_H\nint score(int value);\n#endif\n\n/* score.c */\n#include \"score.h\"\nint score(int value) { return value * 2; }\n```",
+        "Complete local C example; the app itself does not execute it:\n```c\n#include <stdio.h>\n#include \"score.h\"\n#include \"score.h\"\n\nint main(void) {\n    printf(\"%d\\n\", score(6));\n    return 0;\n}\n```",
+        "Expected output or behavior: 12. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Build with and without the implementation; distinguish compiler declarations from linker definitions. You may trace it without a C compiler; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "A header is a file included by other source files. score.h declares the function's types. Its include guard uses `#ifndef`, `#define`, and `#endif` to include that declaration section only once per compilation, even if the header is included twice.",
+        "A translation unit is one .c file together with the headers it includes. Save each labeled part below in its own named file. Build main.c and score.c together so the linker can find score's body.",
+        "Save the three parts as score.h, score.c, and main.c. They make one program.\n```c\n// File: score.h\n#ifndef SCORE_H\n#define SCORE_H\nint score(int value);\n#endif\n\n// File: score.c\n#include \"score.h\"\nint score(int value) { return value * 2; }\n\n// File: main.c\n#include <stdio.h>\n#include \"score.h\"\n#include \"score.h\"\n\nint main(void) {\n    printf(\"%d\\n\", score(6));\n    return 0;\n}\n```",
+        "With GCC, build using `gcc -std=c17 -Wall -Wextra -Wpedantic -Werror main.c score.c -o app`. Run `./app` on Linux or macOS, or `.\\app.exe` in Windows PowerShell. The linked program prints 12.",
+        "If you leave score.c out of a fresh build, the caller still knows score's types from the header. But the linker cannot find its body, so the build fails."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "The header describes the function. score.c supplies the instructions."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If score.c is omitted from this fresh build, what happens?",
+        "choices": [
+          "Linking fails because score has no supplied definition.",
+          "The header automatically generates the body.",
+          "The call returns zero."
+        ],
+        "answer": 0,
+        "explanation": "The prototype permits compiling the call, but the linker still needs a definition."
+      },
+      "after": {
+        "question": "Leave score.c out of this fresh build. What happens?",
+        "choices": [
+          "Linking fails because score's body is missing.",
+          "The header creates the missing body.",
+          "The call returns zero."
+        ],
+        "answer": 0,
+        "explanation": "The declaration lets the compiler check the call. The linker still needs the function definition from score.c."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "C Core v1 uses a portable C17 baseline supported by the verified compiler. C23 exists but is not claimed fully supported here. The app supplies concept reading and an understanding check, not a C browser runner. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "The browser shows C code and checks your understanding; it does not run C. Optional local examples use C17."
+    }
+  ],
+  "headings": [
+    "Share the declaration in a header",
+    "Build the source files together",
+    "One example in three labeled files",
+    "Read the linked result",
+    "Know what the header cannot supply"
+  ],
+  "project": {
+    "title": "Separate headers and source files",
+    "task": "Explain what score.h provides and why score.c must be included in the build.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local C example is optional."
+  }
+}

@@ -1,0 +1,86 @@
+{
+  "lesson": "react-29",
+  "position": 15,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Remove only the selected record by ID, preserving the old array and handling the last item.",
+      "after": "Remove one record by making a new array of the records you want to keep."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "filter returns a new array containing the elements whose callback returns true. To remove one selected ID, keep records with a different ID. This changes membership without splicing the old state array. Existing kept objects are shared; filter does not deep-copy them.",
+        "without(tasks, id) accepts the old array and an ID, then returns the filtered array. task.id !== id means keep this record if its ID is not strictly equal to the target. Each remove callback captures its own task ID, not its label or position. setTasks uses pending state; map renders the remaining records with stable keys.",
+        "```react\nconst initialTasks = [{id: \"a\", text: \"Pack\"}, {id: \"b\", text: \"Check\"}];\nfunction without(tasks, id) {\n  return tasks.filter(task => task.id !== id);\n}\nfunction App() {\n  const [tasks, setTasks] = React.useState(initialTasks);\n  return <main><ul>{tasks.map(task => <li key={task.id}>{task.text}\n    <button onClick={() => setTasks(current => without(current, task.id))}>Remove {task.text}</button>\n  </li>)}</ul><p role=\"status\">Remaining: {tasks.length}</p></main>;\n}\n```\nRemove Pack, then Check. The array becomes empty and the status reads zero; initialTasks still has two entries.",
+        "```react\nconst initialTasks = [{id: \"a\", text: \"Pack\"}, {id: \"b\", text: \"Pack\"}];\nfunction without(tasks, id) {\n  return tasks.filter(task => task.id !== id);\n}\nfunction App() {\n  const [tasks, setTasks] = React.useState(initialTasks);\n  return <main><ul>{tasks.map(task => <li key={task.id}>{task.text}\n    <button onClick={() => setTasks(current => without(current, task.id))}>Remove {task.text}</button>\n  </li>)}</ul><p role=\"status\">Remaining: {tasks.length}</p></main>;\n}\n```\nBoth labels now say Pack. Removing ID a keeps record b, despite the duplicate text.",
+        "Optional practice: Call without with an absent ID and explain why all records remain. The checks cover these finite behaviors; a matching DOM alone does not prove every implementation choice. The frame supplies React and mounts App. No imports, server, persistence or network are involved."
+      ],
+      "after": [
+        "`filter` makes a new array. Its test decides which items to keep. To remove a chosen ID, keep each record whose ID is different.",
+        "`task.id !== id` means the record's ID does not equal the selected ID. Each button uses its own task's ID, so a label or position change will not select the wrong record.",
+        "```react\nconst initialTasks = [\n  { id: \"a\", text: \"Pack\" },\n  { id: \"b\", text: \"Check\" }\n];\nfunction without(tasks, id) {\n  return tasks.filter(task => task.id !== id);\n}\nfunction App() {\n  const [tasks, setTasks] = React.useState(initialTasks);\n  return (\n    <main>\n      <ul>{tasks.map(task => (\n        <li key={task.id}>\n          {task.text}\n          <button onClick={() => setTasks(current => without(current, task.id))}>\n            Remove {task.text}\n          </button>\n        </li>\n      ))}</ul>\n      <p role=\"status\">Remaining: {tasks.length}</p>\n    </main>\n  );\n}\n```\nRemove Pack, then Check. The list becomes empty and the count becomes 0. `initialTasks` still has both records.",
+        "Two records may have the same text. Their IDs still let you remove only the chosen record. If the ID is absent, every record is kept in a new array.",
+        "Complete `without` and connect it to each remove button. Keep the old array unchanged. `filter` makes a new array but shares the kept record objects; it does not copy their contents."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the small example and explain its inputs and effects.",
+        "Complete the starter for this lesson.",
+        "Run the behavior checks, then predict a changed case."
+      ],
+      "after": [
+        "Filter by the selected ID.",
+        "Use the resulting array as the next state.",
+        "Run the checks, including removing the last item."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Trace the visible input, event and resulting screen before changing the code."
+      ],
+      "after": [
+        "The filter test should be true for each record you want to keep."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If the selected ID is absent from the array, what does this filter return?",
+        "choices": [
+          "An empty array",
+          "A new array containing all original elements",
+          "The original array object itself"
+        ],
+        "answer": 1,
+        "explanation": "Every record has a different ID and passes the predicate. filter creates a new array, while retaining references to its kept objects."
+      },
+      "after": {
+        "question": "What does this filter return when the selected ID is absent?",
+        "choices": [
+          "An empty array.",
+          "A new array containing all the original items.",
+          "The original array itself."
+        ],
+        "answer": 1,
+        "explanation": "Every record has a different ID and is kept. filter still makes a new array."
+      }
+    }
+  ],
+  "headings": [
+    "Keep the other records",
+    "Choose by ID",
+    "Remove one task",
+    "Handle matching labels",
+    "Build your remove action"
+  ],
+  "project": {
+    "title": "Remove a record by keeping the others",
+    "task": "Remove the selected task by ID. Preserve the old array and allow removal of the last task.",
+    "done_when": "Only the selected record disappears. The remaining count is correct, including zero."
+  }
+}

@@ -1,0 +1,91 @@
+{
+  "lesson": "c-56",
+  "position": 56,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "What happens if the final link omits the score implementation?",
+      "after": "Record the files and settings needed for a build. Compile each source, then link the required parts."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A reproducible build specifies source files, headers, compiler version, language mode and flags. The command below lists both implementation files; an IDE having remembered an old object file is not a reliable build specification.",
+        "With score.h and score.c from the visible definitions below, compile gcc -std=c17 -Wall -Wextra -Wpedantic -Werror -c main.c score.c, then link gcc main.o score.o -o app. -c stops before linking. Omitting score.o at link time leaves the definition unresolved. A real incremental build must also rebuild affected objects when included headers change.\n```c\n#ifndef SCORE_H\n#define SCORE_H\nint score(int value);\n#endif\n\n/* score.c */\n#include \"score.h\"\nint score(int value) { return value * 2; }\n```",
+        "Complete local C example; the app itself does not execute it:\n```c\n#include <stdio.h>\n#include \"score.h\"\n\nint main(void) {\n    printf(\"%d\\n\", score(4));\n    return 0;\n}\n```",
+        "Expected output or behavior: 8. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Write an explicit two-stage command sequence and explain which objects a changed header invalidates. You may trace it without a C compiler; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "A repeatable build has a clear list of source files, headers, compiler version, language mode, and flags. Do not depend on an editor quietly reusing an old compiled file.",
+        "An object file holds a compiled part before final linking. With GCC, `-c` compiles without linking. Build main.c and score.c into main.o and score.o, then link both to supply the complete program.",
+        "Save each part in the named file. Together they form one example.\n```c\n// File: score.h\n#ifndef SCORE_H\n#define SCORE_H\nint score(int value);\n#endif\n\n// File: score.c\n#include \"score.h\"\nint score(int value) { return value * 2; }\n\n// File: main.c\n#include <stdio.h>\n#include \"score.h\"\n\nint main(void) {\n    printf(\"%d\\n\", score(4));\n    return 0;\n}\n```",
+        "First run `gcc -std=c17 -Wall -Wextra -Wpedantic -Werror -c main.c score.c`. Then run `gcc main.o score.o -o app`. The resulting program prints 8. Leaving score.o out of that final link leaves score's definition missing.",
+        "If score.h changes, recompile each source file that includes it before linking again. A build that reuses only unchanged parts is called an incremental build. It still needs to track header changes."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "main.o has a call to score, but score.o supplies its body."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "What happens if the final link omits the score implementation?",
+        "choices": [
+          "The main object already contains every imported function body.",
+          "Linking fails with an unresolved score reference.",
+          "Header changes never affect a compiled object."
+        ],
+        "answer": 1,
+        "explanation": "Separate compilation creates object files; linking must still combine all required definitions."
+      },
+      "after": {
+        "question": "Leave score.o out of the final link. What happens?",
+        "choices": [
+          "main.o already contains every called function's body.",
+          "Linking fails because score's definition is missing.",
+          "The header changes can never matter."
+        ],
+        "answer": 1,
+        "explanation": "Compiling main.c does not copy score's body into it. Linking must include score.o to provide that definition."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "C Core v1 uses a portable C17 baseline supported by the verified compiler. C23 exists but is not claimed fully supported here. The app supplies concept reading and an understanding check, not a C browser runner. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "The browser shows C code and checks your understanding; it does not run C. Optional local examples use C17."
+    }
+  ],
+  "headings": [
+    "Make the build repeatable",
+    "Separate compilation from linking",
+    "One example in three labeled files",
+    "Build both parts into the program",
+    "Rebuild when a header changes"
+  ],
+  "project": {
+    "title": "Reproducible multi-file builds",
+    "task": "Identify the compile step, the link step, and which sources need rebuilding after score.h changes.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local C example is optional."
+  }
+}

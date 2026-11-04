@@ -1,0 +1,94 @@
+{
+  "lesson": "cpp-60",
+  "position": 60,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Build only main.cpp, with bonus.hpp present but without compiling/linking bonus.cpp. What fails?",
+      "after": "Compile separate source files and link their function calls to one definition."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A translation unit is a source file after preprocessing its includes. Compiling main.cpp can succeed because the compiler sees addBonus’s declaration; that alone does not supply its executable definition.",
+        "Put int addBonus(int score); in bonus.hpp. Put the definition in bonus.cpp:\n```cpp\n#include \"bonus.hpp\"\nint addBonus(int score) { return score + 3; }\n```\nThis ordinary non-inline function has one definition in the program. Its header declaration may be seen by multiple translation units.",
+        "Build this example with g++ -std=c++23 main.cpp bonus.cpp -o example. Omitting bonus.cpp leaves the call without a supplied definition at link time. Giving the same ordinary function multiple definitions in separate files also violates the intended one-definition arrangement.",
+        "Complete local C++ example; the app itself does not execute it:\n```cpp\n#include <iostream>\n#include \"bonus.hpp\"\nint main() {\n    std::cout << addBonus(4) << \"\\n\";\n}\n```",
+        "Expected output or behavior: 7. Local compiler test evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Add a second caller in another source file while keeping the single bonus.cpp definition. You may trace this without a compiler; finishing the reading is not proof of a local run."
+      ],
+      "after": [
+        "A function declaration tells the compiler the function's name, inputs, and result type. bonus.hpp declares addBonus so main.cpp can compile a call to it.",
+        "A definition supplies the function's body. bonus.cpp contains the single definition of this ordinary function. Other source files can see its declaration without repeating that body.",
+        "Linking connects compiled parts into a program. With GCC, build both source files using g++ -std=c++23 main.cpp bonus.cpp -o example. Including a header does not automatically build another source file.",
+        "Save each labeled part in the named file, in one folder. Follow the declaration, the definition, and the call as three parts of this one example.\n\n```cpp\n// File: bonus.hpp\nint addBonus(int score);\n\n// File: bonus.cpp\n#include \"bonus.hpp\"\nint addBonus(int score) { return score + 3; }\n\n// File: main.cpp\n#include <iostream>\n#include \"bonus.hpp\"\nint main() {\n    std::cout << addBonus(4) << \"\\n\";\n}\n```",
+        "The program prints 7. The call in main.cpp reaches the definition in bonus.cpp, which adds three to four.",
+        "Compiling a call can succeed with only a declaration visible. Linking still needs the actual definition. Supplying this ordinary function's body in multiple source files also breaks the required single-definition arrangement."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain why, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Separate knowing how to call a function from having its executable body."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Build only main.cpp, with bonus.hpp present but without compiling/linking bonus.cpp. What fails?",
+        "choices": [
+          "The declaration is enough, so it prints 7.",
+          "The header automatically compiles bonus.cpp.",
+          "Linking cannot find the supplied definition of addBonus."
+        ],
+        "answer": 2,
+        "explanation": "The declaration lets the call compile. The missing definition leaves an unresolved reference during linking."
+      },
+      "after": {
+        "question": "Build only main.cpp, with bonus.hpp present but without compiling and linking bonus.cpp. What fails?",
+        "choices": [
+          "Nothing; the declaration is enough to print 7.",
+          "The header automatically builds bonus.cpp.",
+          "Linking cannot find addBonus's definition."
+        ],
+        "answer": 2,
+        "explanation": "The declaration lets the call compile, but the missing compiled definition leaves the linker unable to complete the program."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "C++ Core v1, standard C++23 features checked against the available GCC14.2 implementation. This app provides concept reading and an understanding check, not a C++ browser runner. Local example tests are separate evidence and do not certify learner mastery.",
+      "after": "The browser shows C++ code and checks your understanding; it does not run C++. Optional local examples use C++23."
+    }
+  ],
+  "headings": [
+    "Declare a function before calling it",
+    "Define the function in one source file",
+    "Link the compiled parts",
+    "One example in three files",
+    "What appears",
+    "A declaration does not supply the body"
+  ],
+  "project": {
+    "title": "Link translation units without duplicate definitions",
+    "task": "Trace the declaration, definition, and call across the three labeled files.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local C++ example is optional."
+  }
+}

@@ -1,0 +1,97 @@
+{
+  "lesson": "backend-43",
+  "position": 43,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Implement shutdownState(active,elapsed,deadline). Match the worked contract and the changed-input checks without modifying the supplied input values.",
+      "after": "Before a server stops, let current work finish within a set time limit."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "Graceful shutdown stops accepting new work and gives active work a bounded chance to finish. An unbounded wait can leave a process stuck forever.",
+        "This exercise is a small pure JavaScript model. Its inputs are supplied directly; it does not receive live HTTP requests, operate a database, or deploy a service.",
+        "Worked example:\n\n```javascript\nfunction shutdownState(active,elapsed,deadline) {\n  if(active === 0) return \"stop\";\n  return elapsed >= deadline ? \"deadline\" : \"drain\";\n}\nconsole.log(shutdownState(0, 0, 100));\n```\nThe returned value is \"stop\".",
+        "The first branch stops when no active work remains. Otherwise the deadline comparison distinguishes waiting from timeout. A deadline result does not prove unfinished work succeeded; the surrounding service must define cancellation and recovery.",
+        "Read the function call shutdownState(0, 0, 100) from the inside out: the arguments supply the inputs, shutdownState runs the body once, and return sends its result back to the caller. console.log displays that result; it does not change it.",
+        "The deadline arrives while two jobs remain active. What can this helper honestly report? The deadline bounds waiting. It provides no success receipt for unfinished work."
+      ],
+      "after": [
+        "Graceful shutdown means stopping new requests while giving current work a chance to finish. This waiting stage is called draining.",
+        "Set a deadline so the server cannot wait forever. Here elapsed is the time already spent waiting. deadline is the allowed wait, in the same units.",
+        "No work remains in this example.\n\n```javascript\nfunction shutdownState(active,elapsed,deadline) {\n  if(active === 0) return \"stop\";\n  return elapsed >= deadline ? \"deadline\" : \"drain\";\n}\nconsole.log(shutdownState(0, 0, 100));\n```\n\nThe output is \"stop\". There is nothing left to wait for.",
+        "Return \"stop\" when active is 0. Otherwise return \"deadline\" when elapsed >= deadline, or \"drain\" while there is still time.",
+        "Reaching the deadline does not mean every job succeeded. The service must decide how to stop or recover unfinished work.",
+        "Try two active jobs exactly at the time limit. The result is \"deadline\". Try zero active jobs at the same time: the result is \"stop\" because no work remains."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the contract and trace the worked example.",
+        "Replace the unfinished return in the starter.",
+        "Run the changed-input checks.",
+        "Explain the boundary in the understanding question."
+      ],
+      "after": [
+        "Check whether active is 0 first.",
+        "If work remains, compare elapsed with deadline.",
+        "Return stop, deadline, or drain for the matching case.",
+        "Run the checks just before and exactly at the deadline."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "The first branch stops when no active work remains. Otherwise the deadline comparison distinguishes waiting from timeout. A deadline result does not prove unfinished work succeeded; the surrounding service must define cancellation and recovery."
+      ],
+      "after": [
+        "Use >= so the exact limit counts as reached.",
+        "A deadline result reports the wait limit, not successful completion."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "The deadline arrives while two jobs remain active. What can this helper honestly report?",
+        "choices": [
+          "Every job succeeded",
+          "The deadline was reached",
+          "There was no active work"
+        ],
+        "answer": 1,
+        "explanation": "The deadline bounds waiting. It provides no success receipt for unfinished work."
+      },
+      "after": {
+        "question": "The deadline arrives while two jobs remain active. What can this helper report?",
+        "choices": [
+          "Every job succeeded.",
+          "The deadline was reached.",
+          "There was no active work."
+        ],
+        "answer": 1,
+        "explanation": "The time limit ends the wait. It does not prove that unfinished jobs succeeded."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Runs as a pure JavaScript function in the browser. Passing checks does not establish live HTTP behavior, database durability, concurrency safety, authentication security, queue delivery guarantees, or production readiness.",
+      "after": "This helper receives valid counts and times in matching units. It does not stop a server, cancel work, or recover unfinished jobs."
+    }
+  ],
+  "headings": [
+    "Stop accepting new work",
+    "Set a waiting limit",
+    "One example",
+    "Choose one of three states",
+    "Keep unfinished work distinct",
+    "Try the deadline"
+  ],
+  "project": {
+    "title": "Drain active work before stopping",
+    "task": "Complete shutdownState(active,elapsed,deadline). Return \"stop\" when active is 0. Otherwise return \"deadline\" if elapsed >= deadline, or \"drain\" if time remains.",
+    "done_when": "The checks pass at the deadline and with no active jobs. Explain why reaching a deadline is different from finishing every job."
+  }
+}

@@ -1,0 +1,84 @@
+{
+  "lesson": "sql-48",
+  "position": 47,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Delete folder 1 using the supplied cascade relationship, preserving folder 2 and its note 12. Do not turn foreign-key enforcement off.",
+      "after": "Choose whether deleting a parent row also deletes rows linked to it."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "With foreign-key enforcement enabled, the default deletion action is NO ACTION. For the ordinary immediate constraint used here, deleting a referenced parent fails unless the references are repaired in the statement. ON DELETE CASCADE instead removes dependent child rows automatically. Choose this policy deliberately: deleting a folder will also delete its notes in this small model.",
+        "\n```sql\nPRAGMA foreign_keys=ON;\nCREATE TABLE folders(id INTEGER PRIMARY KEY);\nCREATE TABLE notes(id INTEGER PRIMARY KEY, folder_id INTEGER NOT NULL REFERENCES folders(id) ON DELETE CASCADE);\nINSERT INTO folders VALUES (1),(2);\nINSERT INTO notes VALUES (10,1),(11,1),(12,2);\nDELETE\nFROM folders\nWHERE id=1;\nSELECT id,folder_id\nFROM notes\nORDER BY id;\n```\nOnly note 12 in folder 2 remains. PRAGMA foreign_keys=ON must run before opening a transaction; changing it inside a transaction does not enable enforcement. The child REFERENCES clause names folders(id), and ON DELETE CASCADE states the deletion action. No unrelated folder or note is removed.",
+        "\n```sql\nPRAGMA foreign_keys=ON;\nCREATE TABLE folders(id INTEGER PRIMARY KEY);\nCREATE TABLE notes(id INTEGER PRIMARY KEY, folder_id INTEGER NOT NULL REFERENCES folders(id) ON DELETE CASCADE);\nINSERT INTO folders VALUES (1),(2);\nINSERT INTO notes VALUES (10,1),(11,1),(12,2);\nDELETE\nFROM folders\nWHERE id=2;\nSELECT id,folder_id\nFROM notes\nORDER BY id;\n```\nNotes 10 and 11 remain, both in folder 1. Optional practice: predict deleting a folder with no notes. If CASCADE is omitted, our separately validated failed DELETE reports FOREIGN KEY constraint failed and preserves all rows. Current learner checks inspect successful state, not expected-error handling. NO ACTION is not interchangeable with RESTRICT for deferred constraints: RESTRICT acts as soon as the key change occurs even if its constraint is deferred; deferred timing is outside this exercise.",
+        "Author-validated rejection example, separate from the normal successful project. Use a fresh disposable database and run this complete setup plus intentional failing statement:\n```sql\nPRAGMA foreign_keys=ON;\nCREATE TABLE folders(id INTEGER PRIMARY KEY);\nCREATE TABLE notes(id INTEGER PRIMARY KEY, folder_id INTEGER NOT NULL REFERENCES folders(id));\nINSERT INTO folders VALUES (1),(2);\nINSERT INTO notes VALUES (10,1),(11,1),(12,2);\nDELETE\nFROM folders\nWHERE id=1;\n```\nExpected diagnostic in the pinned engine: FOREIGN KEY constraint failed. After catching the statement error, run the following separately to inspect preserved data:\n```sql\nSELECT id\nFROM folders\nORDER BY id;\nSELECT id,folder_id\nFROM notes\nORDER BY id;\n```\nBoth parents and all three original notes remain. This is the ordinary immediate NO ACTION case, not a deferred RESTRICT demonstration. Current learner SELECT grades do not run expected-error assertions; an error in your normal solution is still an error, not a pass."
+      ],
+      "after": [
+        "A foreign key links a child row to a parent row. Here, each note points to its folder. `ON DELETE CASCADE` means deleting a folder also deletes the notes that point to it. Choose this rule only when those rows should disappear together.",
+        "```sql\nPRAGMA foreign_keys = ON;\nCREATE TABLE demo_folders(id INTEGER PRIMARY KEY);\nCREATE TABLE demo_notes(\n  id INTEGER PRIMARY KEY,\n  folder_id INTEGER NOT NULL REFERENCES demo_folders(id) ON DELETE CASCADE\n);\nINSERT INTO demo_folders VALUES (1), (2);\nINSERT INTO demo_notes VALUES (10, 1), (11, 1), (12, 2);\nDELETE FROM demo_folders WHERE id = 1;\nSELECT id, folder_id FROM demo_notes ORDER BY id;\n```\nOnly note 12, in folder 2, remains. Notes 10 and 11 were linked to the deleted folder.",
+        "`PRAGMA foreign_keys = ON` enables foreign-key checks for this database connection. Run it before opening a transaction; changing it inside one does not turn the checks on. `REFERENCES` names the parent table and key.",
+        "Without `CASCADE`, this ordinary immediate foreign-key rule would reject deleting a folder that still has notes. With `CASCADE`, check both the deleted folder's notes and the unrelated rows. Folder 2 and note 12 must stay."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the small example and explain its inputs and effects.",
+        "Complete the starter for this lesson.",
+        "Run the behavior checks, then predict a changed case."
+      ],
+      "after": [
+        "Keep foreign-key enforcement on.",
+        "Delete only folder 1 from the supplied table.",
+        "Run the checks for the removed notes and the unchanged folder 2."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Trace the supplied rows and resulting rows before changing the query."
+      ],
+      "after": [
+        "The supplied relationship already has `ON DELETE CASCADE`.",
+        "Use `DELETE FROM folders WHERE id = 1`; the database removes its linked notes."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Under the same cascade policy, delete folder 2 from the original setup. How many notes remain?",
+        "choices": [
+          "2",
+          "0",
+          "1"
+        ],
+        "answer": 0,
+        "explanation": "Only note 12 references folder 2, so notes 10 and 11 remain."
+      },
+      "after": {
+        "question": "In the example's original data, delete folder 2 instead. How many notes remain?",
+        "choices": [
+          "2",
+          "0",
+          "1"
+        ],
+        "answer": 0,
+        "explanation": "Only note 12 belongs to folder 2. Notes 10 and 11 stay in folder 1."
+      }
+    }
+  ],
+  "headings": [
+    "Delete linked rows together",
+    "One example",
+    "Turn the rule on",
+    "Check what remains"
+  ],
+  "project": {
+    "title": "Choose the parent-deletion policy",
+    "task": "Delete folder 1 using the supplied cascade rule. Keep folder 2 and its note 12. Leave foreign-key enforcement on.",
+    "done_when": "The checks pass: folder 1 and its notes are gone, while folder 2 and note 12 remain."
+  }
+}

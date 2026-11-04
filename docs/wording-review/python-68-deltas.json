@@ -1,0 +1,84 @@
+{
+  "lesson": "python-68",
+  "sourceHash": "8d06d8a0b4fef16c8ce560a3ff1fb847f4292a167fb5f62fbbf18a433299fd6b",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Complete run_case(case_class): load a fresh unittest suite, execute it using an in-memory text stream, and return (testsRun,wasSuccessful()). Do not hardcode success. Native file discovery is a separate optional local exercise.",
+      "after": "Run a group of tests and report both how many ran and whether they passed."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "unittest.TestCase is the base class for tests. Methods starting with test_ are selected by the loader. self.assertEqual(actual,expected) checks equality and records failure if unequal. In the worked call, AdditionTest.test_total runs through the loader, checks 2 + 3 against 5 and returns None implicitly.",
+        "Purpose: run_case(case_class) executes a supplied TestCase subclass and returns the executed count plus success. unittest.TestLoader() constructs a loader; loadTestsFromTestCase(case_class) returns a suite of that class’s test methods. This browser exercise loads a supplied class, not host files.",
+        "io.StringIO() creates an in-memory text buffer. TextTestRunner(stream=output,verbosity=0) constructs a runner writing there; runner.run(suite) executes tests and returns a result. result.testsRun is the executed count and result.wasSuccessful() returns a Boolean. Zero tests can report success, so check the count. Make a fresh suite on every call rather than reuse a consumed suite.",
+        "For a local discovery exercise save the following as test_sample.py:\n```python\nimport unittest\n\nclass AdditionTest(unittest.TestCase):\n    def test_total(self):\n        self.assertEqual(2 + 3, 5)\n```\nFrom its disposable directory run python -m unittest discover -s . -p \"test_*.py\" -v. -m runs the unittest module, -s selects a start directory, -p selects filenames and -v displays test names. Discovery imports matching files, which must be importable. Only discover trusted code. A filename outside the pattern yields zero discovered tests, not evidence its assertion passed. In the verified native Python 3.12.14 command, this reports NO TESTS RAN and exit status 5. That command-level behavior differs from an in-memory empty suite whose result.wasSuccessful() is True; inspect both counts and the actual invocation outcome.",
+        "The app runs a suite in Pyodide’s isolated runtime; it neither scans host files nor proves a native installation. Native discovery has separate execution evidence. Failures and unexpected errors make wasSuccessful false. Supplied __PassingCase, __FailingCase, __EmptyCase and __TwoCases are test infrastructure, not classes to change.",
+        "Worked call:\n```python\nimport io\nimport unittest\n\ndef run_case(case_class):\n    suite = unittest.TestLoader().loadTestsFromTestCase(case_class)\n    output = io.StringIO()\n    runner = unittest.TextTestRunner(stream=output, verbosity=0)\n    result = runner.run(suite)\n    return (result.testsRun, result.wasSuccessful())\n\nclass AdditionTest(unittest.TestCase):\n    def test_total(self):\n        self.assertEqual(2 + 3, 5)\n\nprint(run_case(AdditionTest))\n```\nExpected stdout:\n(1, True)",
+        "Optional local practice: Optionally rename a disposable native test file outside the pattern and verify the discovered count."
+      ],
+      "after": [
+        "A test class inherits from `unittest.TestCase`. Its methods starting with `test_` are chosen as tests.\n\n`self.assertEqual(actual, expected)` compares the two values and records a failure if they differ. Here, `test_total` checks that 2 + 3 equals 5.",
+        "A suite is a group of tests. `TestLoader().loadTestsFromTestCase(case_class)` builds a suite from the supplied class.\n\nMake a fresh suite each time `run_case` is called. This browser exercise reads the supplied class, not files on your computer.",
+        "`io.StringIO()` holds text in memory. Give it to `TextTestRunner` to collect the test report.\n\n`runner.run(suite)` runs the tests and returns their results. Read the count with `result.testsRun` and success with `result.wasSuccessful()`.\n\nCheck both: a suite with no tests can report success even though nothing was tested.",
+        "Optional practice on your computer: save this in a new practice folder as `test_sample.py`:\n```python\nimport unittest\n\nclass AdditionTest(unittest.TestCase):\n    def test_total(self):\n        self.assertEqual(2 + 3, 5)\n```\nFrom that folder, run `python -m unittest discover -s . -p \"test_*.py\" -v`.\n\n`-s` chooses the folder. `-p` chooses filename patterns. `-v` shows the test names. Discovery imports the matching files, so use code you trust.\n\nA file whose name does not match is skipped. Check the test count and the command's exit code. A command that finds no tests can report a different outcome from an empty in-memory suite.",
+        "The app runs these tests inside its browser Python. It does not search your computer's files.\n\nA failed check or an unexpected error makes `wasSuccessful()` return `False`. Leave the four supplied test classes unchanged; use them to check your runner.",
+        "Run one named test:\n```python\nimport io\nimport unittest\n\ndef run_case(case_class):\n    suite = unittest.TestLoader().loadTestsFromTestCase(case_class)\n    output = io.StringIO()\n    runner = unittest.TextTestRunner(stream=output, verbosity=0)\n    result = runner.run(suite)\n    return (result.testsRun, result.wasSuccessful())\n\nclass AdditionTest(unittest.TestCase):\n    def test_total(self):\n        self.assertEqual(2 + 3, 5)\n\nprint(run_case(AdditionTest))\n```\nOutput:\n```text\n(1, True)\n```",
+        "Optional practice: rename a test file in your practice folder so it no longer matches `test_*.py`. Run discovery again and compare the count. Rename it back afterward."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the requirement.",
+        "Make one change to the starter.",
+        "Run the checks.",
+        "Explain why a changed input produces its result."
+      ],
+      "after": [
+        "Load a fresh suite from `case_class`.",
+        "Make a `StringIO` buffer and give it to `TextTestRunner`.",
+        "Run the suite and return `(result.testsRun, result.wasSuccessful())`.",
+        "Check a passing class, a failing class, an empty class, and a repeated call."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If test_total becomes check_total, why is the result (0, True)?",
+        "choices": [
+          "No test_ method was selected; empty success does not mean the assertion ran.",
+          "Every method runs twice when renamed.",
+          "The renamed assertion ran and passed."
+        ],
+        "answer": 0,
+        "explanation": "The default loader selects test_ methods; no selected tests means no recorded failures, but the zero count exposes the absence of execution."
+      },
+      "after": {
+        "question": "If `test_total` is renamed `check_total`, why does the result become `(0, True)`?",
+        "choices": [
+          "No test was selected. No failures were recorded, but the check did not run.",
+          "Every method runs twice after renaming.",
+          "The renamed check ran and passed."
+        ],
+        "answer": 0,
+        "explanation": "The loader looks for names starting with `test_`. The count of 0 shows that the renamed check was skipped."
+      }
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Read each purpose, input and result/effect description.",
+        "Trace the changed case and test a boundary."
+      ],
+      "after": [
+        "Return the real result instead of always returning `(0, True)`.",
+        "A zero count means no selected test ran."
+      ]
+    }
+  ],
+  "reviewNotes": [
+    "Reviewed directly by the host, one lesson at a time. Plain wording, specific guidance, preserved exercise behavior."
+  ]
+}

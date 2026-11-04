@@ -24,6 +24,7 @@ export type Action = {
   backup?: { unitId: string; code: string }[];
   key?: string;
   provider?: AIProvider;
+  model?: string;
   deviceScope?: string;
   expectedCode?: string;
   completedAt?: string;

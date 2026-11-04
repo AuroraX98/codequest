@@ -1,0 +1,91 @@
+{
+  "lesson": "ruby-53",
+  "position": 53,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "If the suffix becomes .log, what changes?",
+      "after": "A temporary file gives a task its own file that can be removed when the task ends."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "require \"tempfile\" loads the available library. Tempfile.create with a block creates a uniquely named temporary file and closes and removes it on block exit; do not construct predictable global temporary filenames yourself.\n\nThe array [\"study\", \".txt\"] passed to Tempfile.create supplies a filename prefix and suffix. The block receives the open temporary file object; its generated name is not a stable value to assert.",
+        "File.basename extracts the final path component; File.join assembles components but does not prevent traversal or authorize a user-supplied path. rewind resets the file position to the beginning before read; otherwise reading immediately after writing would start at the end. end_with? tests a string suffix. The generated temporary path stays local here and is not printed.\n\nFile.exist?(path) receives a path and returns true when that path exists, otherwise false. The final call below therefore checks removal after the temporary-file block, rather than merely checking whether the handle is closed.",
+        "Complete local Ruby example; the app itself does not execute it:\n```ruby\nrequire \"tempfile\"\nsaved_path = nil\nTempfile.create([\"study\", \".txt\"]) do |file|\n  saved_path = file.path\n  file.write(\"ok\")\n  file.rewind\n  puts file.read\n  puts File.basename(file.path).end_with?(\".txt\")\nend\nputs File.exist?(saved_path)\n\n```",
+        "Expected output or behavior: ok\ntrue\nfalse. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Explain why File.join is not a path-traversal defense. You may trace it without a Ruby interpreter; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "A temporary file gives a task its own file that can be removed when the task ends.",
+        "Here Ruby closes and removes the temporary file when the block finishes.",
+        "Follow the labeled parts of this example.\n```ruby\nrequire \"tempfile\"\nsaved_path = nil\nTempfile.create([\"study\", \".txt\"]) do |file|\n  saved_path = file.path\n  file.write(\"ok\")\n  file.rewind\n  puts file.read\n  puts File.basename(file.path).end_with?(\".txt\")\nend\nputs File.exist?(saved_path)\n```",
+        "The output is `ok`, then `true`, then `false`. Inside the block the file can be read and its name ends in .txt. After the block its saved path no longer exists.",
+        "Change the requested ending to .log but keep the .txt check."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read one idea.",
+        "Follow the labeled example.",
+        "Try the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Change the requested ending to .log but keep the .txt check."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If the suffix becomes .log, what changes?",
+        "choices": [
+          "Temporary files cannot use .log.",
+          "The file remains after the block.",
+          "The suffix test is false; removal still occurs."
+        ],
+        "answer": 2,
+        "explanation": "Only the generated suffix changes; the unchanged .txt predicate is false while block cleanup still removes the file."
+      },
+      "after": {
+        "question": "What changes if the file name ends in .log?",
+        "choices": [
+          "The file stays forever.",
+          "The read no longer works.",
+          "The .txt check is false; the file is still removed."
+        ],
+        "answer": 2,
+        "explanation": "The name check changes. Block cleanup does not."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Ruby Core v1 uses Ruby 4.0.9 and explicitly available extensions. The app supplies concept reading and an understanding check, not a Ruby browser runner. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "CodeQuest shows the Ruby example. Running it on your own computer is optional."
+    }
+  ],
+  "headings": [
+    "Use a temporary file",
+    "Use a file for this block",
+    "Read the example",
+    "What happens",
+    "Try one change"
+  ],
+  "project": {
+    "title": "Paths temporary files and cleanup",
+    "task": "Change the requested ending to .log but keep the .txt check.",
+    "done_when": "Read each idea and pass the understanding check. Running the example on your computer is optional."
+  }
+}

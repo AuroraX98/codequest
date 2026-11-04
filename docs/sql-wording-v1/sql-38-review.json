@@ -1,0 +1,91 @@
+{
+  "lesson": "sql-38",
+  "position": 23,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "With supplied people and clubs, create membership with the two required foreign keys and composite key. Insert the three worked relationships; leave both parent tables unchanged.",
+      "after": "Store one row for each person-and-club connection."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A person can join several clubs, and a club can contain several people. Store each person and club once. A junction table stores one row for each relationship instead of a comma-separated list inside one cell.",
+        "membership has two required IDs. Each REFERENCES clause points to a parent primary key; the composite key forbids the same relationship twice. PRAGMA foreign_keys=ON enables enforcement on this SQLite connection before writes. The two JOIN operations follow the stored IDs to readable names; aliases p, c and m name each role. The project checks successful rows; the local error example below separately demonstrates the rejected write.",
+        "\n```sql\nPRAGMA foreign_keys=ON;\nCREATE TABLE people(id INTEGER PRIMARY KEY,name TEXT NOT NULL);\nCREATE TABLE clubs(id INTEGER PRIMARY KEY,title TEXT NOT NULL);\nINSERT INTO people VALUES(1,'Mira'),(2,'Oren');\nINSERT INTO clubs VALUES(10,'Art'),(20,'Music');\nCREATE TABLE membership(person_id INTEGER NOT NULL REFERENCES people(id), club_id INTEGER NOT NULL REFERENCES clubs(id), PRIMARY KEY(person_id,club_id));\nINSERT INTO membership VALUES(1,10),(1,20),(2,10);\nSELECT p.name,c.title\nFROM membership AS m\nJOIN people AS p ON p.id=m.person_id\nJOIN clubs AS c ON c.id=m.club_id\nORDER BY p.name,c.title;\n```\nThe ordered pairs are Mira/Art, Mira/Music and Oren/Art. Mira is stored only once in people.",
+        "\n```sql\nPRAGMA foreign_keys=ON;\nCREATE TABLE people(id INTEGER PRIMARY KEY,name TEXT NOT NULL);\nCREATE TABLE clubs(id INTEGER PRIMARY KEY,title TEXT NOT NULL);\nINSERT INTO people VALUES(1,'Mira'),(2,'Oren');\nINSERT INTO clubs VALUES(10,'Art'),(20,'Music');\nCREATE TABLE membership(person_id INTEGER NOT NULL REFERENCES people(id), club_id INTEGER NOT NULL REFERENCES clubs(id), PRIMARY KEY(person_id,club_id));\nINSERT INTO membership VALUES(1,10),(1,20),(2,10),(2,20);\nSELECT p.name,c.title\nFROM membership AS m\nJOIN people AS p ON p.id=m.person_id\nJOIN clubs AS c ON c.id=m.club_id\nORDER BY p.name,c.title;\n```\nOren/Music is added without adding another person or club. Four membership rows describe four relationships.",
+        "Optional practice: add a new club parent, then connect one existing person to its ID. Explain why an unknown club ID is not a valid relationship.",
+        "Local rejection demonstration, not the normal project solution: run each following block in its own fresh SQLite database. The final INSERT intentionally fails. The app’s current SELECT checks do not catch expected errors; this is a separately verified boundary, not a successful Run checks script.\n```sql\nPRAGMA foreign_keys=ON;\nCREATE TABLE people(id INTEGER PRIMARY KEY,name TEXT NOT NULL);\nCREATE TABLE clubs(id INTEGER PRIMARY KEY,title TEXT NOT NULL);\nINSERT INTO people VALUES(1,'Mira'),(2,'Oren');\nINSERT INTO clubs VALUES(10,'Art'),(20,'Music');\nCREATE TABLE membership(person_id INTEGER NOT NULL REFERENCES people(id), club_id INTEGER NOT NULL REFERENCES clubs(id), PRIMARY KEY(person_id,club_id));\nINSERT INTO membership VALUES(1,99);\n```\nExpected diagnostic: FOREIGN KEY constraint failed. The failing statement adds no row; previously accepted rows remain."
+      ],
+      "after": [
+        "One person can join several clubs, and one club can have several people. A junction table stores these connections: one row for each person-and-club pair.",
+        "Require both IDs and make the pair a primary key. Foreign keys make each ID point to an existing parent row. Turn on SQLite's foreign-key checks before adding the relationships.",
+        "Run this example in a fresh database:\n```sql\nPRAGMA foreign_keys = ON;\nCREATE TABLE people(id INTEGER PRIMARY KEY, name TEXT NOT NULL);\nCREATE TABLE clubs(id INTEGER PRIMARY KEY, title TEXT NOT NULL);\nINSERT INTO people VALUES (1, 'Mira'), (2, 'Oren');\nINSERT INTO clubs VALUES (10, 'Art'), (20, 'Music');\nCREATE TABLE membership (\n  person_id INTEGER NOT NULL REFERENCES people(id),\n  club_id INTEGER NOT NULL REFERENCES clubs(id),\n  PRIMARY KEY(person_id, club_id)\n);\nINSERT INTO membership VALUES (1, 10), (1, 20), (2, 10);\nSELECT p.name, c.title\nFROM membership AS m\nJOIN people AS p ON p.id = m.person_id\nJOIN clubs AS c ON c.id = m.club_id\nORDER BY p.name, c.title;\n```\nThe result is Mira/Art, Mira/Music, and Oren/Art. The joins turn the stored IDs into names.",
+        "If Oren joins Music, add the pair `(2, 20)` to membership. Oren and Music already exist, so neither parent table needs another copy.",
+        "The project supplies people and clubs. Create only the membership table, enable foreign-key checks, and store `(1, 10)`, `(1, 20)`, and `(2, 10)`. Keep both parent tables unchanged.",
+        "A relationship pointing to club 99 fails because that club does not exist. Missing IDs and repeated pairs also break the declared rules. Keep intentional failures out of the normal project run."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the small example and explain its inputs and effects.",
+        "Complete the starter for this lesson.",
+        "Run the behavior checks, then predict a changed case."
+      ],
+      "after": [
+        "Enable foreign-key checks.",
+        "Create membership with two required references and a primary key using both IDs.",
+        "Insert the three requested pairs."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Trace the supplied rows and resulting rows before changing the query."
+      ],
+      "after": [
+        "The pair identifies a membership.",
+        "Create a parent record before referring to it.",
+        "Do not store a list of club IDs in one cell."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If Oren joins Music too, which table needs the new relationship row?",
+        "choices": [
+          "membership",
+          "people with a repeated Oren row",
+          "clubs with a repeated Music row"
+        ],
+        "answer": 0,
+        "explanation": "The two existing parent identities stay the same. The new pair belongs in the junction table."
+      },
+      "after": {
+        "question": "Oren joins Music too. Which table gets a new row?",
+        "choices": [
+          "membership",
+          "people, with another Oren row",
+          "clubs, with another Music row"
+        ],
+        "answer": 0,
+        "explanation": "The person and club already exist. Only their new connection needs a row."
+      }
+    }
+  ],
+  "headings": [
+    "Keep relationships in their own table",
+    "Protect each pair",
+    "Connect people and clubs",
+    "Add a relationship without copying people",
+    "Build the membership table",
+    "Reject missing parent records"
+  ],
+  "project": {
+    "title": "Connect many people to many clubs",
+    "task": "Using the supplied people and clubs, create membership with required foreign keys and a primary key using both IDs. Insert (1,10), (1,20), and (2,10).",
+    "done_when": "The three relationships are stored with the requested rules, foreign-key checks are on, and both parent tables stay unchanged."
+  }
+}

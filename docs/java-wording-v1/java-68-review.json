@@ -1,0 +1,91 @@
+{
+  "lesson": "java-68",
+  "position": 68,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "If this executor is replaced with newFixedThreadPool(1), what prints?",
+      "after": "Check whether a submitted task is running on a virtual thread."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A virtual thread is scheduled by the Java runtime and can be useful for many tasks that mostly wait, often for I/O. It does not make CPU-bound arithmetic inherently faster. Use one per task rather than pooling virtual threads to limit their number.",
+        "newVirtualThreadPerTaskExecutor creates a virtual thread for each task. The task reports its own isVirtual flag. Future.get and executor close give explicit completion; the tiny example proves thread kind, not workload scalability.\n\nThread.currentThread() takes no arguments and returns the Thread executing that call. Inside this submitted task, it refers to the task thread rather than main.",
+        "Complete local Java example; the app itself does not execute it:\n```java\nimport java.util.concurrent.*;\npublic class Main {\n\n  public static void main(String[] args) throws InterruptedException, ExecutionException {\n    try (ExecutorService pool = Executors.newVirtualThreadPerTaskExecutor()) {\n      System.out.println(pool.submit(() -> Thread.currentThread().isVirtual()).get());\n    }\n  }\n}\n```",
+        "Expected output or behavior: true. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Explain why this identity check is not evidence of faster CPU calculations. You may trace it without a JDK; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "A virtual thread is a thread managed and scheduled by Java. It can help when many tasks spend time waiting, such as for network data. It does not make calculation work automatically faster. Use a virtual thread for each task rather than keeping a pool of reusable virtual threads.",
+        "newVirtualThreadPerTaskExecutor starts each task on its own virtual thread. Inside the task, Thread.currentThread returns the thread running that call, and isVirtual checks its kind. get waits for the answer; leaving try closes the executor.",
+        "Follow the thread check inside the submitted task, not inside main.\n\n```java\nimport java.util.concurrent.*;\npublic class Main {\n\n  public static void main(String[] args) throws InterruptedException, ExecutionException {\n    try (ExecutorService pool = Executors.newVirtualThreadPerTaskExecutor()) {\n      System.out.println(pool.submit(() -> Thread.currentThread().isVirtual()).get());\n    }\n  }\n}\n```",
+        "The program prints true. The submitted task runs on a virtual thread. This checks the thread kind; it does not measure speed.",
+        "The quiz uses a normal fixed pool instead. Its default workers are platform threads, managed with operating-system threads."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "The executor determines which kind of worker runs the submitted task."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If this executor is replaced with newFixedThreadPool(1), what prints?",
+        "choices": [
+          "true because every Java 25 thread is virtual",
+          "false",
+          "The program must use a preview flag."
+        ],
+        "answer": 1,
+        "explanation": "The fixed pool uses platform threads; virtual threads are a stable feature and need no preview flag."
+      },
+      "after": {
+        "question": "Replace the executor with Executors.newFixedThreadPool(1). What prints?",
+        "choices": [
+          "true, because all Java 25 threads are virtual.",
+          "false",
+          "Nothing, because a preview flag is required."
+        ],
+        "answer": 1,
+        "explanation": "The default fixed pool uses platform threads, so the task's isVirtual check returns false."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Java Core v1 uses stable Java25 LTS features without preview flags. The app supplies concept reading and an understanding check, not a Java browser runner. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "The browser shows Java code and checks your understanding; it does not run Java. Optional local examples use Java25."
+    }
+  ],
+  "headings": [
+    "Virtual threads suit many waiting tasks",
+    "Ask the task's own thread what kind it is",
+    "One example",
+    "What appears",
+    "Use a platform-thread pool"
+  ],
+  "project": {
+    "title": "Use virtual threads for suitable waiting work",
+    "task": "Explain why the thread check runs inside the submitted task.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local Java example is optional."
+  }
+}

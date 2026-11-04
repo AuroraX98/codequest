@@ -1,0 +1,91 @@
+{
+  "lesson": "php-66",
+  "position": 66,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "If resume supplies next instead of ok, what is the final return value?",
+      "after": "A fiber is a piece of work that can pause and let its caller take a turn."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "Fiber receives a callback. start begins it and returns the value passed to Fiber::suspend; resume continues execution and supplies a value back to that suspension point. This is explicit cooperative control transfer, not parallel execution.",
+        "After the callback terminates, getReturn obtains its return value. resume itself does not return that final callback value in this example. Fibers do not make blocking file or network calls nonblocking and do not install an asynchronous runtime automatically.",
+        "Complete local PHP example; the app itself does not execute it:\n```php\n<?php\ndeclare(strict_types=1);\n$fiber = new Fiber(function (): string {\n    $reply = Fiber::suspend(\"paused\");\n    return \"done:\" . $reply;\n});\necho $fiber->start(), \"\\n\";\n$fiber->resume(\"ok\");\necho $fiber->getReturn(), \"\\n\";\n\n```",
+        "Expected output or behavior: paused\ndone:ok. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Explain why getReturn is available only after the Fiber terminates. You may trace it without a PHP interpreter; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "A fiber is a piece of work that can pause and let its caller take a turn.",
+        "Send paused to the caller. When resumed, this spot receives the caller's reply.",
+        "Follow the labeled parts of this example.\n```php\n<?php\ndeclare(strict_types=1);\n$fiber = new Fiber(function (): string {\n    $reply = Fiber::suspend(\"paused\");\n    return \"done:\" . $reply;\n});\necho $fiber->start(), \"\\n\";\n$fiber->resume(\"ok\");\necho $fiber->getReturn(), \"\\n\";\n```",
+        "The output is `paused`, then `done:ok`. The caller resumes with ok, which becomes part of the final answer.",
+        "Give the paused fiber a different reply."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read one idea.",
+        "Follow the labeled example.",
+        "Try the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Give the paused fiber a different reply."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If resume supplies next instead of ok, what is the final return value?",
+        "choices": [
+          "done:next",
+          "A newly created parallel thread.",
+          "paused because the callback never continues"
+        ],
+        "answer": 0,
+        "explanation": "The resume argument becomes the value of the suspended expression, so the callback returns done:next."
+      },
+      "after": {
+        "question": "If the reply is next, what is the final answer?",
+        "choices": [
+          "done:next",
+          "paused:next",
+          "done:ok"
+        ],
+        "answer": 0,
+        "explanation": "The resumed call supplies next to the saved reply variable."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "PHP Core v1 uses PHP 8.5.12 CLI and explicitly available extensions. The app supplies concept reading and an understanding check, not a PHP browser runner. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "CodeQuest shows the PHP example. Running it on your own computer is optional."
+    }
+  ],
+  "headings": [
+    "Pause and resume work",
+    "Pause and send a value",
+    "Read the example",
+    "What happens",
+    "Try one change"
+  ],
+  "project": {
+    "title": "Fibers and cooperative suspension",
+    "task": "Give the paused fiber a different reply.",
+    "done_when": "Read each idea and pass the understanding check. Running the example on your computer is optional."
+  }
+}

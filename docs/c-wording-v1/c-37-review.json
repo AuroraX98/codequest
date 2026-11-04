@@ -1,0 +1,92 @@
+{
+  "lesson": "c-37",
+  "position": 37,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "If release(&p) is called a second time before printing, what happens?",
+      "after": "Choose one owner to release allocated storage. Clear that owner's pointer after releasing it."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "An owning pointer is responsible for eventually freeing an allocation. C does not enforce this responsibility. A borrowed pointer may access a live allocation but must not free it under this contract.",
+        "The release contract requires owner itself to point to a live int * variable; owner must not be NULL. int **owner points to that int * variable. *owner accesses that pointer variable; free(*owner) releases its allocation, then *owner = NULL clears the caller’s pointer. free(NULL) is allowed, so a second call with this cleared owner is safe. Other aliases are not automatically cleared.",
+        "Complete local C example; the app itself does not execute it:\n```c\n#include <stdio.h>\n#include <stdlib.h>\n\nvoid release(int **owner) {\n free(*owner);\n *owner = NULL;\n}\nint main(void) {\n int *p = malloc(sizeof *p);\n if (p == NULL) { return 1; }\n release(&p);\n printf(\"%d\\n\", p == NULL);\n}\n```",
+        "Expected output or behavior: 1\n. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Explain why an old borrowed alias must not be used after release. You may trace it without a C compiler; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "An owner is the part of your code responsible for releasing an allocation. A borrowed pointer may use that allocation while it is alive but does not release it. These are rules your code follows; C does not enforce them.",
+        "`int **owner` is a pointer to an int pointer. Passing `&p` lets release update p itself. owner must point to a live pointer variable. release frees the allocation, then stores NULL in that variable. Other copies of the old pointer are not cleared.",
+        "Follow the example one line at a time.\n```c\n#include <stdio.h>\n#include <stdlib.h>\n\nvoid release(int **owner) {\n free(*owner);\n *owner = NULL;\n}\nint main(void) {\n int *p = malloc(sizeof *p);\n if (p == NULL) { return 1; }\n release(&p);\n printf(\"%d\\n\", p == NULL);\n}\n```",
+        "After release, p is NULL, so the comparison prints 1. The allocation was freed exactly once. Any other pointer that referred to it must stop being used.",
+        "Calling release with `&p` again is safe here because p was cleared. `free(NULL)` does nothing. Passing NULL as owner itself would be invalid, because release needs to follow owner."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "After the first call, inspect p before deciding what the second call frees."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If release(&p) is called a second time before printing, what happens?",
+        "choices": [
+          "It necessarily double-frees the allocation.",
+          "It still prints 1: the second free receives NULL.",
+          "It restores the old allocation."
+        ],
+        "answer": 1,
+        "explanation": "The first release stores NULL in the caller pointer. The second call therefore passes NULL to free rather than passing the old allocation again."
+      },
+      "after": {
+        "question": "Call release(&p) a second time before printing. What happens?",
+        "choices": [
+          "The same allocation is always freed twice.",
+          "It still prints 1; the second free receives NULL.",
+          "The old allocation is restored."
+        ],
+        "answer": 1,
+        "explanation": "The first call clears p. The second call passes that NULL value to free, which does nothing."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "C Core v1 uses a portable C17 baseline supported by the verified compiler. C23 exists but is not claimed fully supported here. The app supplies concept reading and an understanding check, not a C browser runner. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "The browser shows C code and checks your understanding; it does not run C. Optional local examples use C17."
+    }
+  ],
+  "headings": [
+    "Decide who owns the storage",
+    "Let a function clear the caller's pointer",
+    "One example",
+    "Check that the pointer was cleared",
+    "Release the cleared owner again"
+  ],
+  "project": {
+    "title": "Ownership and freeing exactly once",
+    "task": "Explain why clearing p makes a second release(&p) safe but does not repair another old pointer.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local C example is optional."
+  },
+  "navigationCorrection": "Added a short example introduction so its reviewed heading remains an explicit contents target."
+}

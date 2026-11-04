@@ -1,0 +1,96 @@
+{
+  "lesson": "sql-01",
+  "position": 1,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Select book titles from a supplied table and put the results in order.",
+      "after": "Ask a table for the book titles you want to see."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "SQL is a language for asking a database questions. A database stores organized data. A table contains rows, one for each thing, and columns, one for each detail. In the exercise, each books row describes one book. Its id identifies it, title stores its name, and status tells whether it has been read. Reading rows with SELECT does not edit those saved books.",
+        "Here is a complete separate SQLite example. Run this block once in a fresh database. TEXT stores text; INTEGER stores whole numbers. PRIMARY KEY makes each id identify one row. Parentheses group columns or values; commas separate them; a semicolon finishes each SQL statement. Single quotes mark text values.\n```sql\nCREATE TABLE demo_books (\n  id INTEGER PRIMARY KEY,\n  title TEXT,\n  status TEXT\n);\nINSERT INTO demo_books VALUES\n  (1, 'Ocean Map', 'unread'),\n  (2, 'Apple Tree', 'read'),\n  (3, 'Cloud Diary', 'unread');\nSELECT title, status\nFROM demo_books;\n```\nThe final query returns all three books and both selected columns. INSERT supplies values in the table's column order.",
+        "SELECT chooses the columns to return. FROM names the table to read. WHERE tests each row and keeps only rows whose test is true. The equals sign in SQL compares values: status = 'unread' asks whether the status text matches unread. This equals sign does not assign a new status. Capitalized keywords make the query easier to scan; their capitalization does not change its meaning.",
+        "Now run this query after the previous setup:\n```sql\nSELECT title\nFROM demo_books\nWHERE status = 'unread'\nORDER BY title ASC;\n```\nFROM reads demo_books; WHERE keeps Ocean Map and Cloud Diary; SELECT returns only their titles. ORDER BY title arranges the returned titles alphabetically. ASC means ascending, and is the default: Cloud Diary appears before Ocean Map. The read book Apple Tree is excluded even though its title would sort first.",
+        "Without ORDER BY, the database promises no particular result order. The order may look stable on a small table and change later. DESC requests descending order instead. Sorting changes the order of the answer, not the order in which the books are stored. For numbers, ascending goes from smaller to larger; for these English titles, it goes alphabetically.\n\nFor a numeric example, sorting 11, 3, 7 in ascending order produces 3, 7, 11: choose the smallest first, then the next smallest. Sorting text uses text comparison, not numeric arithmetic.",
+        "The exercise wants a temporary answer table. CREATE TEMP TABLE answer AS followed by SELECT saves that query's result in a table named answer for this database session. AS here connects the table to the query that fills it. The starter has WHERE 0: zero is false, so it creates an empty answer table. Replace that false condition with the actual status test, and select just title. Saving rows in a table does not give that table an inherent display order. After creating answer, use SELECT title FROM answer ORDER BY title to display it.",
+        "Before running your exercise, inspect setup.sql. River Notes and Small Atlas are unread; Moon Garden and Quiet Room are read. Keep only the unread rows. In your final display query, ORDER BY title puts River Notes first. Use single quotes for text values. The checks verify saved result membership, not a table's physical row order; inspect the explicitly ordered display separately."
+      ],
+      "after": [
+        "SQL is a language for working with stored information. A database keeps that information in tables. A table has rows and columns: one row can describe a book, and each column holds a detail about it.",
+        "This lesson already has a `books` table. This query shows the titles of books marked `read`:\n```sql\nSELECT title\nFROM books\nWHERE status = 'read'\nORDER BY title;\n```\nThe result is `Moon Garden`, then `Quiet Room`. This query reads the books; it does not change them.",
+        "`SELECT title` chooses the detail to show. `FROM books` names the table to read. The semicolon ends the instruction. SQL words such as `SELECT` work in lower case too.",
+        "`WHERE` keeps rows that pass a check. Here, `status = 'read'` checks whether a book is marked read. The equals sign compares values. Single quotes mark the text to match.",
+        "`ORDER BY title` sorts the returned titles. Here, that puts them in alphabetical order. Without `ORDER BY`, the result has no promised order. Sorting an answer does not rearrange the stored books.",
+        "The exercise saves its result in a temporary table named `answer`. Keep `CREATE TEMP TABLE answer AS` before your query. Temporary means the table lasts for this database session. The starter's `WHERE 0` keeps no rows, so replace that check.",
+        "For your project, keep books marked `unread`. Return only `title`. After creating `answer`, display its titles with `ORDER BY title`. You should see `River Notes`, then `Small Atlas`. The checks inspect the saved rows; use the displayed result to check their order."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Start with `SELECT title FROM books`.",
+        "Use `WHERE` to keep only unread books.",
+        "Add `ORDER BY title` to sort the results."
+      ],
+      "after": [
+        "Select `title` from `books`.",
+        "Keep rows where `status = 'unread'`, and save them in `answer`.",
+        "Display the answer's titles in alphabetical order."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Open setup.sql and note which books have status unread.",
+        "Filter on status=\"unread\".",
+        "Sort by title and save the result as answer."
+      ],
+      "after": [
+        "The ready-made books are listed in setup.sql.",
+        "Use single quotes around `'unread'`.",
+        "A table has no built-in display order. Sort the query that displays it."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "A SELECT query has no ORDER BY. It appeared alphabetically once. Can the app rely on that order next time?",
+        "choices": [
+          "Yes; the first displayed order becomes permanent",
+          "Yes; selecting title always sorts by title",
+          "No; add ORDER BY title when that order is required"
+        ],
+        "answer": 2,
+        "explanation": "A result without ORDER BY has no promised presentation order. Selecting a column does not request sorting by it."
+      },
+      "after": {
+        "question": "A query has no ORDER BY. Its titles happened to appear alphabetically. Can you count on that next time?",
+        "choices": [
+          "Yes. That order is saved forever.",
+          "Yes. Selecting title always sorts it.",
+          "No. Use ORDER BY title to request that order."
+        ],
+        "answer": 2,
+        "explanation": "SELECT chooses what to show. ORDER BY chooses the result order."
+      }
+    }
+  ],
+  "headings": [
+    "Store details in a table",
+    "Read one small query",
+    "Choose the columns",
+    "Choose the rows",
+    "Put the answer in order",
+    "Save the exercise answer",
+    "Find the unread books"
+  ],
+  "project": {
+    "title": "Find books you want to read",
+    "task": "Save the unread book titles in answer, then display them in alphabetical order.",
+    "done_when": "answer contains only River Notes and Small Atlas in a title column. The final display shows River Notes first."
+  }
+}

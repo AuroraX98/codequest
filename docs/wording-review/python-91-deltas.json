@@ -1,0 +1,81 @@
+{
+  "lesson": "python-91",
+  "sourceHash": "41c16baa08af54f54b266e2e14fb0b049411b224b666801713b389d72b2668fc",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Complete profile_work(count): profile workload(count), inspect the collected stats, and return the result plus the total calls to the known square helper. Missing square entry means zero calls. Keep square and workload unchanged; use small nonnegative integer counts.",
+      "after": "Profile a small workload, return its result, and count calls to square."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "square(value) returns value multiplied by itself. workload(count) calls square for integers from zero up to count-1 and returns their total. Keep count a small nonnegative integer. A profiler records calls and measured time during a run; it does not establish a growth-rate proof or remove measurement overhead.",
+        "cProfile.Profile() creates a profiler. profiler.runcall(workload, count) profiles that call, returns workload’s result and stops profiling afterward. pstats.Stats(profiler) reads the collected statistics. This lesson inspects its stats mapping instead of depending on a machine-specific formatted timing table.",
+        "Each stats key is (filename, line_number, function_name). Its value is (primitive_calls, total_calls, own_time, cumulative_time, callers). own_time excludes subcalls; cumulative_time includes them. We select the known local name square and read entry[1], the total call count. The dictionary items() method supplies each key/value pair. The filter is scoped to this tiny workload, not a unique identifier for arbitrary large programs.\n```python\nimport cProfile\nimport pstats\n\ndef square(value):\n    return value * value\n\ndef workload(count):\n    total = 0\n    for value in range(count):\n        total += square(value)\n    return total\n\ndef profile_work(count):\n    profiler = cProfile.Profile()\n    result = profiler.runcall(workload, count)\n    stats = pstats.Stats(profiler)\n    calls = 0\n    for key, entry in stats.stats.items():\n        if key[2] == \"square\":\n            calls += entry[1]\n    return result, calls\nprint(profile_work(3))\n```\nOutput: (5, 3): the result is 0+1+4 and square ran three times.",
+        "The function returns (result, square_calls). Empty work has no square entry, so its initialized count remains zero. More calls do not automatically mean a function is the bottleneck; inspect accumulated time with workload context, and use timeit for focused timing. Optional practice: predict the result and count for four inputs before running. Do not assert exact own_time or cumulative_time values in either runtime."
+      ],
+      "after": [
+        "`square(value)` returns `value * value`. `workload(count)` calls `square` for integers from zero up to `count - 1`, then returns their total. Keep `count` a small nonnegative integer. A profiler records calls and measured time during a run. It does not prove how work grows, and it adds some measurement work.",
+        "`cProfile.Profile()` creates a profiler. `profiler.runcall(workload, count)` profiles that call, returns its result, and then stops profiling. `pstats.Stats(profiler)` reads the collected information. This lesson checks the stats dictionary instead of relying on a printed timing table that can vary by machine.",
+        "Each stats key is `(filename, line_number, function_name)`. Its value is `(primitive_calls, total_calls, own_time, cumulative_time, callers)`. `own_time` leaves out time in functions that were called. `cumulative_time` includes it. We find the known local name `square` and read `entry[1]` for its total calls. The dictionary's `items()` method gives each key and its value. This name check is for this tiny workload; it may not identify a function uniquely in a large program.\n```python\nimport cProfile\nimport pstats\n\ndef square(value):\n    return value * value\n\ndef workload(count):\n    total = 0\n    for value in range(count):\n        total += square(value)\n    return total\n\ndef profile_work(count):\n    profiler = cProfile.Profile()\n    result = profiler.runcall(workload, count)\n    stats = pstats.Stats(profiler)\n    calls = 0\n    for key, entry in stats.stats.items():\n        if key[2] == \"square\":\n            calls += entry[1]\n    return result, calls\nprint(profile_work(3))\n```\nOutput:\n```text\n(5, 3)\n```\nThe result is `0 + 1 + 4`, and `square` ran three times.",
+        "`profile_work` returns `(result, square_calls)`. With no work, there is no `square` entry, so the count stays zero. A call count alone does not show which function takes the most time. Check the measured time in context, or use `timeit` to time a focused operation. Predict the result and call count for four inputs as practice. Exact `own_time` and `cumulative_time` values can vary between runs."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the requirement.",
+        "Make one change to the starter.",
+        "Run the checks.",
+        "Explain why a changed input produces its result."
+      ],
+      "after": [
+        "In `profile_work`, loop through `stats.stats.items()` to get each key and entry.",
+        "When `key[2]` is `\"square\"`, add `entry[1]` to `calls`.",
+        "Return `(result, calls)` and check the results for counts 3, 4, 0, and 1.",
+        "Leave `square` and `workload` unchanged; make sure a call that returns zero is still counted."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If count is four, what result and square call count should be observed?",
+        "choices": [
+          "(14, 3): the profiler ignores the zero-valued call.",
+          "A fixed elapsed time that must match every machine.",
+          "(14, 4): four helper calls compute 0+1+4+9."
+        ],
+        "answer": 2,
+        "explanation": "Call counts record execution even when a call returns zero. The changed workload adds one square call and its value nine; timing remains environment-dependent."
+      },
+      "after": {
+        "question": "If count is four, what result and square call count should be observed?",
+        "choices": [
+          "(14, 3): the profiler ignores the zero-valued call.",
+          "A fixed elapsed time that must match every machine.",
+          "(14, 4): four helper calls compute 0+1+4+9."
+        ],
+        "answer": 2,
+        "explanation": "The count includes every call, even one that returns zero. With count 4, square computes 0+1+4+9. Measured time can vary by machine."
+      }
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Trace the visible worked calls before changing the starter."
+      ],
+      "after": [
+        "For count 3, `workload` calls `square` with 0, 1, and 2.",
+        "With count 0, the loop does not run, so no `square` entry appears and `calls` stays zero.",
+        "Add `entry[1]` to count all calls to `square`."
+      ]
+    }
+  ],
+  "reviewNotes": [
+    "Kept all four section roles, project behavior, and timing limits.",
+    "Preserved quiz answer index 2 and its meaning.",
+    "Kept the worked code and output in Markdown fences.",
+    "Corrected the shown stdout so the explanation is outside the output block."
+  ]
+}

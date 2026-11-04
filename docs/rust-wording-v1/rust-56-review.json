@@ -1,0 +1,91 @@
+{
+  "lesson": "rust-56",
+  "position": 56,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "If this example uses Rc instead of Arc, what happens?",
+      "after": "Rust checks whether a value can move to another thread. This rule is called Send."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "Send means a value’s ownership may be transferred between threads; Sync means sharing &T between threads is safe. These are marker traits, usually derived automatically from a type’s contents. Do not write unsafe implementations merely to suppress a compiler error.",
+        "The worked value is Arc<i32>, which satisfies the relevant bounds. Replacing Arc with Rc asks thread::spawn to capture a non-Send reference-counted pointer; the compiler rejects that boundary before any thread executes. The correct repair depends on ownership and access needs, not just silencing a diagnostic.",
+        "Complete local Rust example; the app itself does not execute it:\n```rust\nuse std::sync::Arc;\nuse std::thread;\n\nfn main() {\n    let value = Arc::new(7);\n    let worker = thread::spawn(move || *value);\n    println!(\"{}\", worker.join().expect(\"worker panicked\"));\n}\n```",
+        "Expected output or behavior: 7. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Explain the separate questions of sharing ownership and protecting mutable payloads. You may trace it without a Rust compiler; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "Rust checks whether a value can move to another thread. This rule is called Send.",
+        "Arc keeps its owner count safe across threads. Rc does not. Sync is the related rule for sharing references across threads.",
+        "Follow the labeled parts of this example.\n```rust\nuse std::sync::Arc;\nuse std::thread;\n\nfn main() {\n    let value = Arc::new(7);\n    let worker = thread::spawn(move || *value);\n    println!(\"{}\", worker.join().expect(\"worker panicked\"));\n}\n```",
+        "The output is `7`. The worker can take this Arc and read its number.",
+        "Find the value that crosses into the worker thread."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read one idea.",
+        "Follow the labeled example.",
+        "Try the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Find the value that crosses into the worker thread."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If this example uses Rc instead of Arc, what happens?",
+        "choices": [
+          "It silently changes Rc reference counts into atomics.",
+          "It always runs safely because the inner value is an integer.",
+          "Compilation rejects transferring Rc into the spawned thread."
+        ],
+        "answer": 2,
+        "explanation": "Rc itself lacks Send; a safe inner integer does not repair its non-atomic shared ownership mechanism."
+      },
+      "after": {
+        "question": "Would the same program build if it used Rc instead of Arc?",
+        "choices": [
+          "Yes. Every owner can move between threads.",
+          "Yes. The worker would just receive zero.",
+          "No. This Rc cannot move to the worker thread."
+        ],
+        "answer": 2,
+        "explanation": "Rc cannot safely move into this new thread. Rust rejects the program before it runs."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Rust Core v1 uses stable Rust1.99.1 with edition2024 and the standard library. The app supplies concept reading and an understanding check, not a Rust browser runner. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "CodeQuest shows the Rust example. Running it on your own computer is optional."
+    }
+  ],
+  "headings": [
+    "Choose an owner safe to send",
+    "Share safely",
+    "Read the example",
+    "What happens",
+    "Try one change"
+  ],
+  "project": {
+    "title": "Send Sync and type boundaries",
+    "task": "Find the value that crosses into the worker thread.",
+    "done_when": "Read each idea and pass the understanding check. Running the example on your computer is optional."
+  }
+}

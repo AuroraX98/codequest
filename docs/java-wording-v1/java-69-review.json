@@ -1,0 +1,91 @@
+{
+  "lesson": "java-69",
+  "position": 69,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "If the initial completed value is 5, what prints?",
+      "after": "Pass a completed result through two transformations."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "CompletableFuture.thenApply transforms a successful result; it produces a new future. The non-Async variant does not promise a separate thread. thenCompose is appropriate when the transformation itself returns a future and you want to flatten it.",
+        "join obtains the final result and reports exceptional completion through an unchecked CompletionException. Here completedFuture is already complete, isolating composition without scheduling assumptions. Composition can also be attached before completion.",
+        "Complete local Java example; the app itself does not execute it:\n```java\nimport java.util.concurrent.CompletableFuture;\npublic class Main {\n\n  public static void main(String[] args) {\n    var result = CompletableFuture.completedFuture(4)\n        .thenApply(n -> n * 2).thenApply(n -> \"score=\" + n);\n    System.out.println(result.join());\n  }\n}\n```",
+        "Expected output or behavior: score=8. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Explain why thenApply does not by itself promise a background thread. You may trace it without a JDK; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "CompletableFuture can carry a result that becomes ready later. thenApply makes a new future by transforming a successful result. It does not promise a separate thread. When a transformation itself returns a future, thenCompose can connect to its result without leaving a future nested inside another future.",
+        "completedFuture starts with an answer already available. The chained steps can use it right away; steps can also be attached before a future finishes. join gets the final answer and reports failed completion through an unchecked CompletionException.",
+        "Follow the number through multiplication and then into the text result.\n\n```java\nimport java.util.concurrent.CompletableFuture;\npublic class Main {\n\n  public static void main(String[] args) {\n    var result = CompletableFuture.completedFuture(4)\n        .thenApply(n -> n * 2).thenApply(n -> \"score=\" + n);\n    System.out.println(result.join());\n  }\n}\n```",
+        "The program prints score=8. The first transformation doubles four, and the second puts the answer after score=.",
+        "The quiz starts from five. Apply both transformations in the same order to that new value."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "The result of the first transformation becomes the input to the second."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If the initial completed value is 5, what prints?",
+        "choices": [
+          "A nested future string because thenApply always flattens futures.",
+          "score=10",
+          "score=8 because stages run only once per source file"
+        ],
+        "answer": 1,
+        "explanation": "The integer passes through multiplication and then string construction."
+      },
+      "after": {
+        "question": "Start with a completed value of 5. What prints?",
+        "choices": [
+          "score=5, because the transformations are skipped.",
+          "score=10",
+          "score=8, because stages keep the earlier starting value."
+        ],
+        "answer": 1,
+        "explanation": "Five is doubled to ten, then turned into the text score=10."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Java Core v1 uses stable Java25 LTS features without preview flags. The app supplies concept reading and an understanding check, not a Java browser runner. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "The browser shows Java code and checks your understanding; it does not run Java. Optional local examples use Java25."
+    }
+  ],
+  "headings": [
+    "Chain work after a successful result",
+    "Read the last stage's result",
+    "One example",
+    "What appears",
+    "Change the starting value"
+  ],
+  "project": {
+    "title": "Compose asynchronous stages",
+    "task": "Trace the value passed from one future stage to the next.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local Java example is optional."
+  }
+}

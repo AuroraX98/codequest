@@ -1,0 +1,86 @@
+{
+  "lesson": "typescript-47",
+  "position": 47,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Keep prefix protected and make public render return the prefixed text.",
+      "after": "Use `protected` to share a class helper with classes that extend it."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A protected member can be used inside its declaring class and its subclasses, but not through ordinary outside typed access. LabelBase supplies prefix for subclasses; TopicLabel extends it and exposes render as a public operation.",
+        "new TopicLabel() constructs an instance; its inherited helper can be called by this.prefix(text) inside render. prefix accepts text and returns a prefixed string; render delegates to it. The call below prints Topic: Stars. TypeScript protected is a compiler access rule, not JavaScript # private storage or a security boundary. It is erased from the generated JavaScript.",
+        "```typescript\nclass LabelBase {\n  protected prefix(text: string): string { return \"Topic: \" + text; }\n}\nclass TopicLabel extends LabelBase {\n  render(text: string): string { return this.prefix(text); }\n}\nconst label = new TopicLabel();\nconsole.log(label.render(\"Stars\"));\n```",
+        "Optional local practice: Add another subclass method that uses prefix internally; keep outside calls on the public API.",
+        "Changed case — trace this independently before checking the result.\n```typescript\nclass LabelBase {\n  protected prefix(text: string): string { return \"Topic: \" + text; }\n}\nclass TopicLabel extends LabelBase {\n  render(text: string): string { return this.prefix(text); }\n}\nnew TopicLabel().prefix(\"Map\");\n```\nCompiler result: Outside code cannot access the protected helper through ordinary typed access. Diagnostic 2445. This intentionally failing example is separate from the runnable solution."
+      ],
+      "after": [
+        "A subclass is a class that extends another class. A `protected` method can be used inside its class and subclasses. Ordinary outside code cannot call it through TypeScript's checked access.",
+        "`LabelBase` supplies a helper named `prefix`. `TopicLabel` extends that class, so it can use the helper inside `render`. Outside code calls `render`, which is public.",
+        "```typescript\nclass LabelBase {\n  protected prefix(text: string): string {\n    return \"Topic: \" + text;\n  }\n}\nclass TopicLabel extends LabelBase {\n  render(text: string): string {\n    return this.prefix(text);\n  }\n}\nconst label = new TopicLabel();\nconsole.log(label.render(\"Stars\"));\n```\nThis prints `Topic: Stars`. `render` passes the text to the inherited helper and returns its result.",
+        "Keep `prefix` protected. Complete `render` so it calls `this.prefix(text)` and returns the result. Different text should keep the same `Topic: ` beginning.",
+        "An outside call such as `label.prefix(\"Map\")` causes a type error. The `protected` word is removed from the generated JavaScript. It is a code-checking rule, not a way to hide secret data."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the example and its input/output contract.",
+        "Complete the starter without turning off compiler diagnostics.",
+        "Run the compiler and behavior checks, then explain a changed case."
+      ],
+      "after": [
+        "Keep the helper marked `protected`.",
+        "Use the helper inside `render`.",
+        "Run the checks using the public render method."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Compare the public input/output types and trace the visible call before editing."
+      ],
+      "after": [
+        "`this.prefix(text)` calls the helper on the current object."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Would new TopicLabel().prefix(\"Map\") compile as an ordinary outside call?",
+        "choices": [
+          "No; protected encrypts the method at runtime.",
+          "No; prefix is protected, though its generated JavaScript is not runtime-secret.",
+          "Yes; subclasses make every inherited member public."
+        ],
+        "answer": 1,
+        "explanation": "A public render call is allowed, while protected prefix is only available in the class hierarchy under the compiler access rules."
+      },
+      "after": {
+        "question": "Can outside TypeScript code call `new TopicLabel().prefix(\"Map\")` normally?",
+        "choices": [
+          "No, because protected encrypts the method.",
+          "No. The type checker blocks it, but protected is not runtime secrecy.",
+          "Yes. Extending a class makes every method public."
+        ],
+        "answer": 1,
+        "explanation": "Outside code can call `render`. The protected helper is for use inside the class family."
+      }
+    }
+  ],
+  "headings": [
+    "Share a helper inside a class family",
+    "Call the public method",
+    "Read the shared helper",
+    "Build your topic label",
+    "Know what protected checks"
+  ],
+  "project": {
+    "title": "Share a helper with subclasses",
+    "task": "Keep `prefix` protected. Make public `render(text)` return the result of the inherited prefix helper.",
+    "done_when": "render returns the prefixed text. Ordinary outside access to prefix is rejected by the type checker."
+  }
+}

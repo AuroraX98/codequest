@@ -1,0 +1,97 @@
+{
+  "lesson": "csharp-42",
+  "position": 42,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Replace the second WriteAllText with AppendAllText(path, \"second\"). What does the successful read return?",
+      "after": "Write text to a temporary file and read it back."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A file path tells File where to read or write. Use a temporary file for this experiment so you do not overwrite your notes.",
+        "File.WriteAllText(path, text) writes the entire text and closes the file. If the file exists, its previous contents are replaced. File.AppendAllText adds text instead.",
+        "File.ReadAllText returns the file contents as a string. A successful write followed by a read can verify the value you stored; printing a path alone cannot.\n\nThis separate temporary-file example appends B after A. AppendAllText(path, text) returns no value; a read-back observes the stored result. The finally block attempts cleanup even if I/O fails:\n```csharp\nusing System;\nusing System.IO;\nstring samplePath = Path.GetTempFileName();\ntry {\n    File.WriteAllText(samplePath, \"A\");\n    File.AppendAllText(samplePath, \"B\");\n    Console.WriteLine(File.ReadAllText(samplePath));\n}\nfinally { File.Delete(samplePath); }\n```\nOutput: AB.",
+        "File operations can fail because of permissions or I/O problems. The try catches failures from its read/write body; finally attempts cleanup. The initial temporary-file creation is before try, and cleanup itself can fail, so those errors are not covered by these catches.",
+        "Complete local C# example; the app does not execute it:\n```csharp\nusing System;\nusing System.IO;\nstring path = Path.GetTempFileName();\ntry\n{\n    File.WriteAllText(path, \"first\");\n    File.WriteAllText(path, \"second\");\n    Console.WriteLine(File.ReadAllText(path));\n}\ncatch (IOException) { Console.WriteLine(\"File operation failed\"); }\ncatch (UnauthorizedAccessException) { Console.WriteLine(\"Access denied\"); }\nfinally { File.Delete(path); }\n```",
+        "Expected behavior from this example: second when file operations succeed; an environment failure may print the error message instead; cleanup can itself fail. This expected result is a reasoned prediction until a compiler test is recorded.",
+        "Optional local transfer: In a disposable folder, compare replacement and appending. Add an explicit newline and explain why the output changes. This is a separate local practice task, not a requirement to mark the reading complete."
+      ],
+      "after": [
+        "A file path identifies a file's location. Path.GetTempFileName() creates a temporary file and returns its path. The example uses that file for its work.",
+        "File.WriteAllText writes the supplied text and closes the file. If the file already has contents, this method replaces them.",
+        "File.ReadAllText reads the contents into a string. Reading back checks what was saved; printing the path alone would only show the location.",
+        "File operations can fail. The catches handle read or write failures inside try. finally attempts to delete the temporary file. Creating the file happens before try, and deletion can also fail; these catches do not cover those two steps.",
+        "Follow the two writes to the same temporary file.\n\n```csharp\nusing System;\nusing System.IO;\nstring path = Path.GetTempFileName();\ntry\n{\n    File.WriteAllText(path, \"first\");\n    File.WriteAllText(path, \"second\");\n    Console.WriteLine(File.ReadAllText(path));\n}\ncatch (IOException) { Console.WriteLine(\"File operation failed\"); }\ncatch (UnauthorizedAccessException) { Console.WriteLine(\"Access denied\"); }\nfinally { File.Delete(path); }\n```",
+        "When the file operations succeed, the program prints second. The second write replaces first. Cleanup then deletes the temporary file.",
+        "File.AppendAllText adds text after existing contents instead of replacing them. It adds only the supplied text, so a new line appears only if you include one."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Trace the changed case before choosing an answer.",
+        "Explain the consequence, then optionally try the local transfer task."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Trace the inputs through the visible rule, then compare the changed case."
+      ],
+      "after": [
+        "Write replaces. Append adds after what is already there."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Replace the second WriteAllText with AppendAllText(path, \"second\"). What does the successful read return?",
+        "choices": [
+          "second",
+          "firstsecond",
+          "first followed by an automatic newline and second"
+        ],
+        "answer": 1,
+        "explanation": "Append adds the supplied characters after first. No newline was included, so the result is firstsecond."
+      },
+      "after": {
+        "question": "Use AppendAllText(path, \"second\") for the second write. What does a successful read return?",
+        "choices": [
+          "second",
+          "firstsecond",
+          "first and second on separate lines"
+        ],
+        "answer": 1,
+        "explanation": "Appending adds second after first. No new-line character was supplied, so the text is firstsecond."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "C#14/.NET10 core syllabus. Concept-mode reading and understanding check; no in-app C# execution and no claim of mastery. Full example and optional local transfer task are supplied. Actual compiler validation, if available, is reported separately.",
+      "after": "The browser shows C# code and checks your understanding; it does not run C#. Optional local examples use a .NET 10 console project with C# 14."
+    }
+  ],
+  "headings": [
+    "Choose a temporary file",
+    "Write replaces the contents",
+    "Read back the stored text",
+    "Handle file errors",
+    "One example",
+    "What appears",
+    "Append keeps the old text"
+  ],
+  "project": {
+    "title": "Read and write a small file",
+    "task": "Follow the example's replacement write, read-back, and temporary-file cleanup.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local C# example is optional."
+  }
+}

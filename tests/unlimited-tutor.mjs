@@ -12,7 +12,7 @@ const database = path.join(temp, "fixture.sqlite");
 const query = (sql, params = []) => {
   const py =
     "import sys,json,sqlite3\nsql,params=json.loads(sys.stdin.read())\nc=sqlite3.connect(sys.argv[1]);c.row_factory=sqlite3.Row\nr=c.execute(sql,params);rows=[dict(x) for x in r.fetchall()];c.commit();print(json.dumps(rows));c.close()";
-  const r = spawnSync("python3", ["-c", py, database], {
+  const r = spawnSync(process.env.PYTHON ?? "python3", ["-c", py, database], {
     input: JSON.stringify([sql, params]),
     encoding: "utf8",
   });
@@ -79,14 +79,15 @@ try {
     "../../../lib/server": server,
     "../../../lib/ai-transport": {
       AssistantError,
-      askProvider: async (provider, key, system, messages) => {
-        calls.push({ provider, system, messages });
+      askProvider: async (provider, key, system, messages, send, options) => {
+        calls.push({ provider, system, messages, options });
         if (providerFailure)
           throw new AssistantError("Provider rate limit", 429);
         return "A plain explanation.";
       },
     },
     "../../../lib/ai-providers": {
+      selectedModel: (provider, model) => ({ id: model ?? "test-" + provider }),
       providers: {
         deepseek: { model: "test-deepseek" },
         openai: { model: "test-openai" },
@@ -109,6 +110,7 @@ try {
       require: (id) => (id in mapped ? mapped[id] : require(id)),
       Request,
       Response,
+      fetch,
       crypto,
       Date,
       console,
@@ -186,6 +188,20 @@ try {
   );
   assert.equal(calls.at(-1).messages.at(-1).content, q);
   assert.match(calls.at(-1).system, /Quoted passages/);
+  for (const [provider, model] of [
+    ['openai', 'gpt-6-astra'], ['anthropic', 'claude-opus-5-5'],
+    ['anthropic', 'claude-sonnet-5-5'], ['anthropic', 'claude-fable-5-1'],
+  ]) {
+    connection = {provider, key:'synthetic-test-only'};
+    settings.aiModels = {[provider]:model};
+    const result = await send({expectedProvider:provider, expectedModel:model});
+    assert.equal(result.status,200);
+    assert.equal((await result.json()).model,model);
+    assert.equal(calls.at(-1).options.model,model);
+    const before = calls.length;
+    assert.equal((await send({expectedModel:'stale-model'})).status,409);
+    assert.equal(calls.length,before,'A stale model choice makes no paid call');
+  }
   console.log(
     `Passed ${checked} former-cap boundary/provider cases, concurrent atomic counts, AI-off/account/provider gates, external rate-limit propagation and selected-passage routing. No real provider calls.`,
   );

@@ -1,0 +1,87 @@
+{
+  "lesson": "sql-31",
+  "position": 10,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Create prefixes(id,prefix,size) with the first three characters and length of each name. Keep NULL as NULL, and preserve names.",
+      "after": "Count simple letters and take a short piece of text."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "length(text) returns the number of Unicode code points before any zero character in ordinary SQLite text, not its rendered width or number of user-perceived graphemes. An empty text has length zero; length(NULL) is NULL. These examples use simple letters without embedded zero characters.",
+        "substr(text,start,count) returns a section of text. For a positive start, position 1 is the first character; count says how many characters to take. Asking beyond the end returns an empty text. substr(NULL,...) returns NULL. Parentheses hold the arguments and commas separate them.",
+        "Run this complete example in a fresh database.\n```sql\nCREATE TEMP VIEW shown AS\nSELECT length('Lantern') AS size,substr('Lantern',2,3) AS piece;\nSELECT *\nFROM shown;\n```",
+        "Change the supplied values and trace the result. This is a separate complete example.\n```sql\nCREATE TEMP VIEW shown AS\nSELECT length('') AS empty_size,substr('Map',5,2) AS beyond,substr(NULL,1,2) AS missing;\nSELECT *\nFROM shown;\n```",
+        "Application: Create prefixes(id,prefix,size) with the first three characters and length of each name. Keep NULL as NULL, and preserve names."
+      ],
+      "after": [
+        "`length` counts the parts of a text value. For simple letters, this is the letter count. Empty text has length `0`. A missing value gives `NULL`, not zero.",
+        "`substr(text, start, count)` takes a piece of text. A positive start begins counting at `1`. The count says how many characters to take. Commas separate these three inputs.",
+        "Run this query:\n```sql\nSELECT length('Lantern') AS size,\n       substr('Lantern', 2, 3) AS piece;\n```\nIt returns size `7` and piece `ant`. Start at the second letter, then take three letters.",
+        "SQLite counts Unicode code points: the numbered pieces used to store text. One visible symbol can use several of these pieces, so this is not a screen-width measurement. An embedded zero character stops the length count. Taking text past its end returns empty text; taking it from NULL returns NULL.",
+        "Create `prefixes(id, prefix, size)` from `names`. For each name, take the first three characters and count its length. Keep missing values as NULL and leave the names unchanged."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the small example and explain its inputs and effects.",
+        "Complete the starter for this lesson.",
+        "Run the behavior checks, then predict a changed case."
+      ],
+      "after": [
+        "Take each name from position 1 for 3 characters.",
+        "Use length to calculate size.",
+        "Keep id and save the results in prefixes."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Trace the supplied rows and resulting rows before changing the query."
+      ],
+      "after": [
+        "The first position is 1, not 0.",
+        "Do not replace NULL with empty text; the project keeps the difference."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "What does substr('Orbit',2,2) return?",
+        "choices": [
+          "bi",
+          "Or",
+          "rb"
+        ],
+        "answer": 2,
+        "explanation": "Positive positions start at 1: O is first, so positions 2 and 3 are r and b."
+      },
+      "after": {
+        "question": "What does substr('Orbit', 2, 2) return?",
+        "choices": [
+          "bi",
+          "Or",
+          "rb"
+        ],
+        "answer": 2,
+        "explanation": "O is at position 1. Starting at position 2 and taking two letters gives rb."
+      }
+    }
+  ],
+  "headings": [
+    "Count text",
+    "Choose a piece of text",
+    "Slice one word",
+    "Know what the count means",
+    "Build the name prefixes"
+  ],
+  "project": {
+    "title": "Measure and slice text",
+    "task": "Create prefixes(id, prefix, size) with each name's first three characters and length.",
+    "done_when": "The prefix and size are correct, missing values stay NULL, and names stays unchanged."
+  }
+}

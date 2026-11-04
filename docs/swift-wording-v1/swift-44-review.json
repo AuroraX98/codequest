@@ -1,0 +1,87 @@
+{
+  "lesson": "swift-44",
+  "position": 38,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Define Priority with low=1, normal=4 and high=8. Implement priorityText(_:) to return each case name or \"unknown\" for any unrecognized Int; do not silently round to a nearby case.",
+      "after": "Give each enum case a fixed number and check numbers safely."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A raw value is a fixed value attached to each enum case. Here each Priority case has one distinct Int code. This differs from an associated value: an associated value can carry different data each time a case is constructed. Raw values let you convert a known case to a code and attempt the reverse conversion safely.",
+        "Priority.high.rawValue reads 8. Priority(rawValue: raw) uses a synthesized failable initializer and returns Priority?; not every Int is a valid code. guard let unwraps a recognized case or returns \"unknown\". switch handles all three cases, so no fallback case is needed for an already valid Priority. The leading dot uses the known enum type.",
+        "Follow this complete example.\n```swift\nenum Priority: Int {\n    case low = 1\n    case normal = 4\n    case high = 8\n}\nfunc priorityText(_ raw: Int) -> String {\n    guard let value = Priority(rawValue: raw) else {\n        return \"unknown\"\n    }\n    switch value {\n    case .low: return \"low\"\n    case .normal: return \"normal\"\n    case .high: return \"high\"\n    }\n}\nprint(Priority.high.rawValue)\nprint(priorityText(4))\nprint(priorityText(5))\n```\nOutput:\n```text\n8\nnormal\nunknown\n```",
+        "Change the input or declaration and trace the result.\n```swift\nenum Priority: Int {\n    case low = 1\n    case normal = 4\n    case high = 8\n}\nfunc priorityText(_ raw: Int) -> String {\n    guard let value = Priority(rawValue: raw) else {\n        return \"unknown\"\n    }\n    switch value {\n    case .low: return \"low\"\n    case .normal: return \"normal\"\n    case .high: return \"high\"\n    }\n}\nprint(Priority.high.rawValue)\nprint(priorityText(8))\nprint(priorityText(0))\n```\nOutput:\n```text\n8\nhigh\nunknown\n```",
+        "Define Priority with low=1, normal=4 and high=8. Implement priorityText(_:) to return each case name or \"unknown\" for any unrecognized Int; do not silently round to a nearby case. Optional local practice: choose one more input, predict the outcome, then run it. The checks observe the stated values and effects; they do not require one exact implementation spelling."
+      ],
+      "after": [
+        "An enum's raw value is a fixed code attached to one of its cases. Priority uses 1 for low, 4 for normal, and 8 for high. Unlike an associated value, this code stays the same every time you use that case.",
+        "Priority.high.rawValue reads its code. Priority(rawValue: raw) tries to find a case with the supplied code. The result may be nil, meaning no case matches. guard let continues only when a match exists.",
+        "```swift\nenum Priority: Int {\n    case low = 1\n    case normal = 4\n    case high = 8\n}\nfunc priorityText(_ raw: Int) -> String {\n    guard let value = Priority(rawValue: raw) else {\n        return \"unknown\"\n    }\n    switch value {\n    case .low: return \"low\"\n    case .normal: return \"normal\"\n    case .high: return \"high\"\n    }\n}\nprint(Priority.high.rawValue)\nprint(priorityText(4))\nprint(priorityText(5))\n```\nThis prints 8, normal, and unknown. The code 4 matches normal. The code 5 does not match any case.",
+        "A raw-value lookup needs an exact match. It does not round to the nearest code or create a new case. After a match is found, switch chooses the name of that case.",
+        "Define Priority with low = 1, normal = 4, and high = 8. Complete priorityText(_:) to return the matching name. Return unknown for every other whole number."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the small example and explain its inputs and effects.",
+        "Complete the starter for the stated contract.",
+        "Use the configured compatible Swift companion or local Swift toolchain, then explain the changed case."
+      ],
+      "after": [
+        "Declare the three fixed codes.",
+        "Try Priority(rawValue:) and handle nil.",
+        "Return the name of the matched case."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Trace the inputs, returned value and changed state before running."
+      ],
+      "after": [
+        "guard let can return unknown when the lookup fails.",
+        "Use switch only after finding a valid Priority."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "What does Priority(rawValue: 7) return?",
+        "choices": [
+          "An extra Priority case holding 7",
+          "nil",
+          "Priority.high"
+        ],
+        "answer": 1,
+        "explanation": "Only the three declared raw codes are recognized. A raw-value initializer does not invent a new case."
+      },
+      "after": {
+        "question": "What does Priority(rawValue: 7) return?",
+        "choices": [
+          "A new case with the code 7",
+          "nil",
+          "Priority.high"
+        ],
+        "answer": 1,
+        "explanation": "7 is not one of the three allowed codes, so there is no matching case."
+      }
+    }
+  ],
+  "headings": [
+    "Give a case a code",
+    "Check an incoming code",
+    "Read one example",
+    "Accept only known codes",
+    "Try it yourself"
+  ],
+  "project": {
+    "title": "Convert enum raw values safely",
+    "task": "Define Priority codes 1, 4, and 8 for low, normal, and high. Make priorityText(_:) return the matching name or unknown.",
+    "done_when": "Known codes return their names, and all other numbers return unknown."
+  }
+}

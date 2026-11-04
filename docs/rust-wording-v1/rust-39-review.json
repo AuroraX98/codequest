@@ -1,0 +1,91 @@
+{
+  "lesson": "rust-39",
+  "position": 39,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "If a println!(\"{count}\") is inserted between the two increment calls, what happens?",
+      "after": "A closure is a small function that can use values from the place where it was made."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A closure can borrow captured variables. || denotes a closure with no explicit parameters. A closure that increments count needs a mutable borrow of count and a mutable closure binding when called.",
+        "While the closure will still be used, the captured mutable borrow prevents conflicting reads or writes of count. After its last use, non-lexical lifetime analysis can let the outer code access count again. This is not a separate copied counter.",
+        "Complete local Rust example; the app itself does not execute it:\n```rust\nfn main() {\n    let mut count = 0;\n    let mut increment = || { count += 1; };\n    increment();\n    increment();\n    println!(\"{count}\");\n}\n```",
+        "Expected output or behavior: 2. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Remove the second call and identify when reading count becomes valid. You may trace it without a Rust compiler; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "A closure is a small function that can use values from the place where it was made.",
+        "This closure needs permission to change count. That borrow is still needed until its last call.",
+        "Follow the labeled parts of this example.\n```rust\nfn main() {\n    let mut count = 0;\n    let mut increment = || { count += 1; };\n    increment();\n    increment();\n    println!(\"{count}\");\n}\n```",
+        "The output is `2`. Each call adds one to the same counter.",
+        "Find the last call that needs to write to count."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read one idea.",
+        "Follow the labeled example.",
+        "Try the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Find the last call that needs to write to count."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If a println!(\"{count}\") is inserted between the two increment calls, what happens?",
+        "choices": [
+          "The closure automatically releases its capture between every call.",
+          "It safely prints an unrelated copied counter.",
+          "Compilation rejects the conflicting borrow while the closure still needs mutable access."
+        ],
+        "answer": 2,
+        "explanation": "The later closure call keeps its mutable capture live across the inserted shared read."
+      },
+      "after": {
+        "question": "Can main print count between the two calls here?",
+        "choices": [
+          "Yes. Each call makes a fresh count.",
+          "Yes. Reading always ends the borrow.",
+          "No. The closure still needs its borrow for writing."
+        ],
+        "answer": 2,
+        "explanation": "The later closure call still needs to write count. The extra read conflicts with that borrow."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Rust Core v1 uses stable Rust1.99.1 with edition2024 and the standard library. The app supplies concept reading and an understanding check, not a Rust browser runner. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "CodeQuest shows the Rust example. Running it on your own computer is optional."
+    }
+  ],
+  "headings": [
+    "Remember a nearby name",
+    "Borrow the counter",
+    "Read the example",
+    "What happens",
+    "Try one change"
+  ],
+  "project": {
+    "title": "Closures and captured access",
+    "task": "Find the last call that needs to write to count.",
+    "done_when": "Read each idea and pass the understanding check. Running the example on your computer is optional."
+  }
+}

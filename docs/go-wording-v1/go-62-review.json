@@ -1,0 +1,91 @@
+{
+  "lesson": "go-62",
+  "position": 62,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "If the request method becomes POST, what status and body result?",
+      "after": "Build an HTTP reply in the right order."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "An HTTP handler receives an http.ResponseWriter and *http.Request. Set headers before WriteHeader or the first body write; the first body write would otherwise imply status 200. Once headers are committed, later header edits generally cannot change the response already sent.\n\nw.Header() takes no arguments and returns the mutable header map associated with this pending response. Set updates that map; do so before committing status or body, not after the response has begun.",
+        "httptest.NewRequest constructs an in-memory incoming request, and NewRecorder records handler output. Calling handler directly performs no HTTP network request. This example accepts GET and returns a 405 rejection with an Allow: GET header for other methods; fmt.Fprint’s write error is checked, although the in-memory recorder does not simulate a broken network connection.",
+        "Complete local Go example; the app itself does not execute it:\n```go\npackage main\n\nimport (\n\"fmt\"\n\"net/http\"\n\"net/http/httptest\"\n)\n\nfunc handler(w http.ResponseWriter, r *http.Request) {\n    if r.Method != http.MethodGet {\n        w.Header().Set(\"Allow\", http.MethodGet)\n        http.Error(w, \"method not allowed\", http.StatusMethodNotAllowed); return\n    }\n    w.Header().Set(\"Content-Type\", \"text/plain; charset=utf-8\")\n    w.WriteHeader(http.StatusOK)\n    if _, err := fmt.Fprint(w, \"ready\"); err != nil { return }\n}\nfunc main() {\n    request := httptest.NewRequest(http.MethodGet, \"/study\", nil)\n    recorder := httptest.NewRecorder()\n    handler(recorder, request)\n    fmt.Println(recorder.Code)\n    fmt.Print(recorder.Body.String())\n}\n```",
+        "Expected output or behavior: 200\nready. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Add a supported method deliberately and explain when the status becomes committed. You may trace it without a Go compiler; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "HTTP is a set of rules for requests and replies. A handler reads a request and writes a response. Headers describe the reply; the status code gives its outcome; the body holds its content. Set headers before writing the status or body. A first body write would otherwise imply status 200.",
+        "httptest makes a request and records the handler's reply in memory. GET is allowed here. Other methods receive status 405 and an Allow header naming GET. The handler checks its body-write error, though this recorder does not test a broken network connection.",
+        "Follow the request method to the matching reply.\n```go\npackage main\n\nimport (\n\"fmt\"\n\"net/http\"\n\"net/http/httptest\"\n)\n\nfunc handler(w http.ResponseWriter, r *http.Request) {\n    if r.Method != http.MethodGet {\n        w.Header().Set(\"Allow\", http.MethodGet)\n        http.Error(w, \"method not allowed\", http.StatusMethodNotAllowed); return\n    }\n    w.Header().Set(\"Content-Type\", \"text/plain; charset=utf-8\")\n    w.WriteHeader(http.StatusOK)\n    if _, err := fmt.Fprint(w, \"ready\"); err != nil { return }\n}\nfunc main() {\n    request := httptest.NewRequest(http.MethodGet, \"/study\", nil)\n    recorder := httptest.NewRecorder()\n    handler(recorder, request)\n    fmt.Println(recorder.Code)\n    fmt.Print(recorder.Body.String())\n}\n```",
+        "The screen shows `200`, then `ready`. The GET request takes the success path.",
+        "For an unsupported method, the handler sets Allow, writes the 405 error response, and returns. It never reaches the success body."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Follow the method check before the success path."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If the request method becomes POST, what status and body result?",
+        "choices": [
+          "200 and ready because methods are ignored",
+          "A real network connection is opened automatically.",
+          "405 and method not allowed"
+        ],
+        "answer": 2,
+        "explanation": "The method guard writes the 405 error and returns before the success path."
+      },
+      "after": {
+        "question": "Change the request method to POST. What status and body result?",
+        "choices": [
+          "200 and ready, because methods are ignored.",
+          "A real network connection opens.",
+          "405 and method not allowed."
+        ],
+        "answer": 2,
+        "explanation": "POST is not allowed here. The handler reports 405 and returns before writing ready."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Go Core v1 uses the verified Go1.27.3 toolchain and standard library. The app supplies concept reading and an understanding check, not a Go browser runner. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "The browser shows Go code and checks your understanding; it does not run Go. Optional local examples use Go 1.27."
+    }
+  ],
+  "headings": [
+    "Set the reply's details before sending it",
+    "Test a handler without a network",
+    "One example",
+    "Read the status and body",
+    "Reject an unsupported method"
+  ],
+  "project": {
+    "title": "HTTP handler contracts",
+    "task": "Predict the reply to an unsupported request method.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local Go example is optional."
+  }
+}

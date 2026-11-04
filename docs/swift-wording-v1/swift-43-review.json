@@ -1,0 +1,87 @@
+{
+  "lesson": "swift-43",
+  "position": 36,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Keep the two class declarations and implement describe(_:) so BookEntry values produce \"pages=\" followed by their page count; other Entry objects produce \"other\". Use a safe check rather than a forced cast.",
+      "after": "Check an object's type before using its extra features."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "is asks whether an object has a particular type or one of its subclasses, returning Bool. as? attempts a safe downcast and returns an optional reference. A successful cast gives access to subclass members; a failed cast produces nil rather than a crash. Neither operation creates a replacement object.",
+        "entry as? BookEntry returns BookEntry?. if let binds book only on success, so book.pages is safe there. BookEntry(pages:) initializes its stored Int. String(book.pages) converts that integer to decimal text, and + joins it to the label. This is different from a forced as! cast, which this lesson does not use. Entry() creates a plain base-class instance with no input fields. An Entry reference can hold either kind of object.",
+        "Follow this complete example.\n```swift\nclass Entry {}\nclass BookEntry: Entry {\n    let pages: Int\n    init(pages: Int) {\n        self.pages = pages\n    }\n}\nfunc describe(_ entry: Entry) -> String {\n    if let book = entry as? BookEntry {\n        return \"pages=\" + String(book.pages)\n    }\n    return \"other\"\n}\nlet entry: Entry = BookEntry(pages: 80)\nprint(entry is BookEntry)\nprint(describe(entry))\nprint(describe(Entry()))\n```\nOutput:\n```text\ntrue\npages=80\nother\n```",
+        "Change the input or declaration and trace the result.\n```swift\nclass Entry {}\nclass BookEntry: Entry {\n    let pages: Int\n    init(pages: Int) {\n        self.pages = pages\n    }\n}\nfunc describe(_ entry: Entry) -> String {\n    if let book = entry as? BookEntry {\n        return \"pages=\" + String(book.pages)\n    }\n    return \"other\"\n}\nlet entry: Entry = Entry()\nprint(entry is BookEntry)\nprint(describe(entry))\nprint(describe(Entry()))\n```\nOutput:\n```text\nfalse\nother\nother\n```",
+        "Keep the two class declarations and implement describe(_:) so BookEntry values produce \"pages=\" followed by their page count; other Entry objects produce \"other\". Use a safe check rather than a forced cast. Optional local practice: choose one more input, predict the outcome, then run it. The checks observe the stated values and effects; they do not require one exact implementation spelling."
+      ],
+      "after": [
+        "An Entry can hold different kinds of objects. A BookEntry has a pages property that a plain Entry does not. Check the kind of object before trying to read pages.",
+        "A cast lets you use a value as a more specific type. as? BookEntry succeeds when the object is a BookEntry or one of its subclasses. It returns nil if the check fails. if let gives book a value only when the cast succeeds.",
+        "```swift\nclass Entry {}\nclass BookEntry: Entry {\n    let pages: Int\n    init(pages: Int) {\n        self.pages = pages\n    }\n}\nfunc describe(_ entry: Entry) -> String {\n    if let book = entry as? BookEntry {\n        return \"pages=\" + String(book.pages)\n    }\n    return \"other\"\n}\nlet entry: Entry = BookEntry(pages: 80)\nprint(entry is BookEntry)\nprint(describe(entry))\nprint(describe(Entry()))\n```\nThis prints true, pages=80, and other. is asks whether the object is a BookEntry. describe reads pages for the book, and uses other for the plain entry.",
+        "A successful cast gives access to the same object. It does not copy it or change its class. as? makes failure safe by returning nil. A forced as! cast can crash when the type is wrong.",
+        "Keep Entry and BookEntry. Complete describe(_:) so books return pages= followed by their page count. Return other for other entries. Use a safe cast before reading pages."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the small example and explain its inputs and effects.",
+        "Complete the starter for the stated contract.",
+        "Use the configured compatible Swift companion or local Swift toolchain, then explain the changed case."
+      ],
+      "after": [
+        "Try casting the entry with as? BookEntry.",
+        "Read pages only inside the successful if let branch.",
+        "Return other when the cast fails."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Trace the inputs, returned value and changed state before running."
+      ],
+      "after": [
+        "String(book.pages) turns the page count into text.",
+        "as? returns nil when the object is not a book."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Does a successful as? BookEntry cast duplicate the object?",
+        "choices": [
+          "It changes the class of the original object",
+          "Yes; it copies all fields into a new instance",
+          "No; it provides an optional reference to the same object"
+        ],
+        "answer": 2,
+        "explanation": "The cast checks the existing object’s type. Success changes what members the reference can access, not the object’s identity."
+      },
+      "after": {
+        "question": "Does a successful as? BookEntry cast make a copy of the object?",
+        "choices": [
+          "It changes the object's class",
+          "Yes, it creates a new object",
+          "No, it gives access to the same object"
+        ],
+        "answer": 2,
+        "explanation": "The cast checks the existing object's type. It does not create another object."
+      }
+    }
+  ],
+  "headings": [
+    "Check before using",
+    "Try a safe cast",
+    "Read one example",
+    "Keep the same object",
+    "Try it yourself"
+  ],
+  "project": {
+    "title": "Check and safely downcast a value",
+    "task": "Complete describe(_:). For a BookEntry, return pages= followed by its page count. For any other Entry, return other. Use as? to check safely.",
+    "done_when": "Books show their page counts, and other entries return other without crashing."
+  }
+}

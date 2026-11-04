@@ -1,0 +1,17 @@
+{
+  "id": "backend-13",
+  "field": "extraFiles",
+  "before": [
+    {
+      "name": "backup-demo.py",
+      "code": "import sqlite3, tempfile\nfrom pathlib import Path\nwith tempfile.TemporaryDirectory() as folder:\n    backup_path = Path(folder) / \"backup.sqlite\"\n    source = sqlite3.connect(\":memory:\")\n    source.executescript(\"CREATE TABLE notes(id INTEGER PRIMARY KEY,title TEXT); INSERT INTO notes VALUES(1,'Moon'),(2,'Ocean');\")\n    source.commit()\n    with sqlite3.connect(backup_path) as saved:\n        source.backup(saved)\n    source.close()\n    with sqlite3.connect(backup_path) as restored:\n        assert restored.execute(\"PRAGMA integrity_check\").fetchone()[0] == \"ok\"\n        assert restored.execute(\"SELECT id,title FROM notes ORDER BY id\").fetchall() == [(1,\"Moon\"),(2,\"Ocean\")]\n    print(\"Disposable backup reopened and verified\")\n"
+    }
+  ],
+  "after": [
+    {
+      "name": "backup-demo.py",
+      "code": "import sqlite3, tempfile\nfrom contextlib import closing\nfrom pathlib import Path\n\nwith tempfile.TemporaryDirectory() as folder:\n    backup_path = Path(folder) / \"backup.sqlite\"\n    with closing(sqlite3.connect(\":memory:\")) as source:\n        source.executescript(\"CREATE TABLE notes(id INTEGER PRIMARY KEY,title TEXT); INSERT INTO notes VALUES(1,'Moon'),(2,'Ocean');\")\n        source.commit()\n        with closing(sqlite3.connect(backup_path)) as saved:\n            source.backup(saved)\n    with closing(sqlite3.connect(backup_path)) as restored:\n        assert restored.execute(\"PRAGMA integrity_check\").fetchone()[0] == \"ok\"\n        assert restored.execute(\"SELECT id,title FROM notes ORDER BY id\").fetchall() == [(1,\"Moon\"),(2,\"Ocean\")]\n    print(\"Disposable backup reopened and verified\")\n"
+    }
+  ],
+  "reason": "Windows runtime exposed unclosed SQLite connections during temporary-directory cleanup. contextlib.closing closes source and both backup connections even if assertions fail."
+}

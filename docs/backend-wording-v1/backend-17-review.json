@@ -1,0 +1,96 @@
+{
+  "lesson": "backend-17",
+  "position": 3,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Implement readLimit(target). Match the worked contract and the changed-input checks without modifying the supplied input values.",
+      "after": "Accept a query setting only when it appears exactly once."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "Some query settings should occur once. Silently choosing the first or last repeated value can make two layers interpret a request differently.",
+        "This exercise is a small pure JavaScript model. Its inputs are supplied directly; it does not receive live HTTP requests, operate a database, or deploy a service.",
+        "Worked example:\n\n```javascript\nfunction readLimit(target) {\n  const values = new URL(target, \"https://example.test\").searchParams.getAll(\"limit\");\n  return values.length === 1 ? values[0] : null;\n}\nconsole.log(readLimit(\"/notes?limit=2\"));\n```\nThe returned value is \"2\".",
+        "searchParams.getAll(\"limit\") returns every occurrence as an array. length checks how many were supplied. This step checks multiplicity, not whether the text is a valid number.",
+        "Read the function call readLimit(\"/notes?limit=2\") from the inside out: the arguments supply the inputs, readLimit runs the body once, and return sends its result back to the caller. console.log displays that result; it does not change it.",
+        "A request contains limit=2&limit=8. What does this contract return? Two values violate the exactly-one rule. Number validation is a separate step."
+      ],
+      "after": [
+        "Some query settings should have one value. If a setting appears twice, different parts of a system might choose different values. This rule rejects the repeated setting instead of guessing.",
+        "searchParams holds the query settings from a URL. getAll(\"limit\") returns an array containing every limit value, in order. An array can be empty if no limit was supplied.",
+        "```javascript\nfunction readLimit(target) {\n  const values = new URL(target, \"https://example.test\").searchParams.getAll(\"limit\");\n  return values.length === 1 ? values[0] : null;\n}\nconsole.log(readLimit(\"/notes?limit=2\"));\n```\nThis prints 2 as text. The target has exactly one limit value, so the function returns that value.",
+        "values.length counts how many values were found. If the count is 1, values[0] reads that only value. Otherwise, return null to mean no single value was accepted.",
+        "This function only checks the number of occurrences. It does not check whether the text is a valid number. One supplied value can still contain invalid numeric text; that needs a separate check.",
+        "Complete readLimit(target). Return the supplied limit text only when it appears once. Return null when it is missing or repeated. Keep the original target unchanged."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the contract and trace the worked example.",
+        "Replace the unfinished return in the starter.",
+        "Run the changed-input checks.",
+        "Explain the boundary in the understanding question."
+      ],
+      "after": [
+        "Get all limit values from the parsed URL.",
+        "Require the array length to be exactly 1.",
+        "Return its only value or null."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "searchParams.getAll(\"limit\") returns every occurrence as an array. length checks how many were supplied. This step checks multiplicity, not whether the text is a valid number."
+      ],
+      "after": [
+        "Use getAll so repeated values stay visible.",
+        "Do not convert the accepted text into a number in this step."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "A request contains limit=2&limit=8. What does this contract return?",
+        "choices": [
+          "8",
+          "2",
+          "null"
+        ],
+        "answer": 2,
+        "explanation": "Two values violate the exactly-one rule. Number validation is a separate step."
+      },
+      "after": {
+        "question": "What does this rule return for limit=2&limit=8?",
+        "choices": [
+          "8",
+          "2",
+          "null"
+        ],
+        "answer": 2,
+        "explanation": "There are two limit values, so the exactly-one rule rejects them."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Runs as a pure JavaScript function in the browser. Passing checks does not establish live HTTP behavior, database durability, concurrency safety, authentication security, queue delivery guarantees, or production readiness.",
+      "after": "This browser exercise checks repeated query settings. Checking whether the accepted text is a valid number is a separate step."
+    }
+  ],
+  "headings": [
+    "Require one value",
+    "Read every occurrence",
+    "Read one example",
+    "Count before choosing",
+    "Keep text validation separate",
+    "Try it yourself"
+  ],
+  "project": {
+    "title": "Reject repeated single-value queries",
+    "task": "Complete readLimit(target). Accept exactly one limit value as text, and return null for missing or repeated values.",
+    "done_when": "Only one supplied limit value is accepted, without changing the target."
+  }
+}

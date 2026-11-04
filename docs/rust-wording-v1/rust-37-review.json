@@ -1,0 +1,91 @@
+{
+  "lesson": "rust-37",
+  "position": 37,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "If view creates a local String and returns &local instead, what happens?",
+      "after": "A function can return borrowed text only if its owner is still there when the caller uses it."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "Returning &str borrowed from an input can be valid because the caller owns the underlying String. With one input reference, lifetime elision relates that input to the returned reference.",
+        "A String created inside a function is dropped when that function returns unless ownership leaves the function. Returning a slice into that local would dangle, so safe Rust rejects it. Adding a lifetime label cannot repair the owner’s early destruction; return an owned String instead when appropriate.",
+        "Complete local Rust example; the app itself does not execute it:\n```rust\nfn view(text: &str) -> &str { text }\nfn main() {\n    let owner = String::from(\"alive\");\n    println!(\"{}\", view(&owner));\n}\n```",
+        "Expected output or behavior: alive. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Change the helper to return String by value and explain who then owns it. You may trace it without a Rust compiler; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "A function can return borrowed text only if its owner is still there when the caller uses it.",
+        "Here the caller owns the String. The function returns a view into that String.",
+        "Follow the labeled parts of this example.\n```rust\nfn view(text: &str) -> &str { text }\nfn main() {\n    let owner = String::from(\"alive\");\n    println!(\"{}\", view(&owner));\n}\n```",
+        "The output is `alive`. The owner still exists when the caller prints the view.",
+        "Compare the owner's block with the block where the view is used."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read one idea.",
+        "Follow the labeled example.",
+        "Try the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Compare the owner's block with the block where the view is used."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If view creates a local String and returns &local instead, what happens?",
+        "choices": [
+          "The lifetime annotation keeps local alive automatically.",
+          "Compilation rejects returning a reference to the local owner.",
+          "The reference becomes an empty slice."
+        ],
+        "answer": 1,
+        "explanation": "The local String would be destroyed before the caller could use its slice; returning ownership would be a different valid design."
+      },
+      "after": {
+        "question": "Could the function return a borrow of a new String that belongs only to the function?",
+        "choices": [
+          "Yes. Returning a borrow copies the text.",
+          "No. That String goes away when the function ends.",
+          "Yes. Every local String lives forever."
+        ],
+        "answer": 1,
+        "explanation": "The local String would disappear before the caller could use the borrowed view."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Rust Core v1 uses stable Rust1.99.1 with edition2024 and the standard library. The app supplies concept reading and an understanding check, not a Rust browser runner. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "CodeQuest shows the Rust example. Running it on your own computer is optional."
+    }
+  ],
+  "headings": [
+    "Return a view that stays valid",
+    "Find the owner",
+    "Read the example",
+    "What happens",
+    "Try one change"
+  ],
+  "project": {
+    "title": "Return references only to live data",
+    "task": "Compare the owner's block with the block where the view is used.",
+    "done_when": "Read each idea and pass the understanding check. Running the example on your computer is optional."
+  }
+}

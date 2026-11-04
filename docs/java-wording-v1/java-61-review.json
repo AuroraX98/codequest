@@ -1,0 +1,91 @@
+{
+  "lesson": "java-61",
+  "position": 61,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "If retention becomes CLASS, what does this runtime query report?",
+      "after": "Make a custom annotation visible while the program runs."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "@interface declares an annotation type, not an ordinary method-bearing interface. The static nested class Tagged belongs inside Main but needs no enclosing Main instance. An annotation is metadata, not executable behavior by itself. @Retention(RetentionPolicy.RUNTIME) makes this custom marker available to reflection. @Target(ElementType.TYPE) limits it to type declarations.",
+        "isAnnotationPresent asks whether Mark is visible on Tagged. No private field access or setAccessible override is needed. Reflection does not make encapsulation or module boundaries disappear.",
+        "Complete local Java example; the app itself does not execute it:\n```java\nimport java.lang.annotation.*;\npublic class Main {\n  @Retention(RetentionPolicy.RUNTIME)\n  @Target(ElementType.TYPE)\n  @interface Mark {}\n  @Mark static class Tagged {}\n  public static void main(String[] args) {\n    System.out.println(Tagged.class.isAnnotationPresent(Mark.class));\n  }\n}\n```",
+        "Expected output or behavior: true. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Explain why a marker needs a consumer before it can affect behavior. You may trace it without a JDK; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "An annotation is metadata: information attached to code. @interface declares an annotation type. This Mark annotation is allowed on type declarations by @Target. @Retention(RUNTIME) keeps it available while the program runs. The marker does not perform an action by itself.",
+        "Reflection lets running code inspect information about classes. isAnnotationPresent checks whether the requested marker is visible on a class. It does not bypass private access or module rules. Tagged is a static class nested inside Main, so it needs no enclosing Main object.",
+        "Find where Mark is declared, where it is attached, and where it is checked.\n\n```java\nimport java.lang.annotation.*;\npublic class Main {\n  @Retention(RetentionPolicy.RUNTIME)\n  @Target(ElementType.TYPE)\n  @interface Mark {}\n  @Mark static class Tagged {}\n  public static void main(String[] args) {\n    System.out.println(Tagged.class.isAnnotationPresent(Mark.class));\n  }\n}\n```",
+        "The program prints true. Tagged has the Mark annotation, and RUNTIME retention makes that marker visible to the check.",
+        "The quiz changes retention to CLASS. That stores the marker in the compiled class file without making it visible to this check while running."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "The marker can exist in a file without being visible to reflection."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If retention becomes CLASS, what does this runtime query report?",
+        "choices": [
+          "true because all annotations are runtime-visible",
+          "false",
+          "Compilation always fails for CLASS retention."
+        ],
+        "answer": 1,
+        "explanation": "CLASS retains metadata in the class file but does not expose it as a runtime annotation to this query."
+      },
+      "after": {
+        "question": "Change the retention from RUNTIME to CLASS. What does the query print?",
+        "choices": [
+          "true, because every annotation is visible while running.",
+          "false",
+          "Nothing, because CLASS retention always causes a compilation error."
+        ],
+        "answer": 1,
+        "explanation": "CLASS keeps the metadata in the class file, but this reflection check needs RUNTIME visibility."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Java Core v1 uses stable Java25 LTS features without preview flags. The app supplies concept reading and an understanding check, not a Java browser runner. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "The browser shows Java code and checks your understanding; it does not run Java. Optional local examples use Java25."
+    }
+  ],
+  "headings": [
+    "An annotation adds information to code",
+    "Reflection reads information about a class",
+    "One example",
+    "What appears",
+    "Change how long the marker is visible"
+  ],
+  "project": {
+    "title": "Read annotations and reflection boundaries",
+    "task": "Trace the marker from its declaration to its use and runtime check.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local Java example is optional."
+  }
+}

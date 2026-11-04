@@ -1,0 +1,95 @@
+{
+  "lesson": "ai-29",
+  "position": 29,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Should a held-out test value help determine the training normalization mean?",
+      "after": "Learn data-preparation settings from training data, then reuse them on held-out examples."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "Data leakage occurs when evaluation information influences training or model selection in a way that would not be available for a genuinely new case.",
+        "Suppose you standardize a numeric feature by subtracting its mean. Learn that mean from the training split, then apply the same value to validation and test cases. Computing it from the whole dataset lets held-out data influence preparation.",
+        "Worked example: training values are 2 and 4, so the training mean is 3. A held-out value 100 is transformed using 3. Recomputing the mean with 100 would change the transformation using evaluation information.",
+        "Fit preprocessing on training data inside each evaluation split. Transform held-out data using the fitted preprocessing. Similar leakage can occur through duplicate examples or information recorded after the prediction time.",
+        "Changed situation: Should a held-out test value help determine the training normalization mean?",
+        "The held-out set is meant to measure generalization. Its information must not shape fitted preprocessing."
+      ],
+      "after": [
+        "Preprocessing means preparing data before a model uses it. Some preparation steps learn settings from the data. These steps can leak evaluation information too.",
+        "The mean is the average: add the values and divide by how many there are. Centering means subtracting that mean from each value. For a fresh evaluation, learn this mean from training data only.",
+        "The training values are 2 and 4. The separate test value is 100.\n\n```javascript\nconst training = [2, 4];\nconst mean = (training[0] + training[1]) / training.length;\nconst testValue = 100;\nconsole.log(mean);\nconsole.log(testValue - mean);\n```\n\nIt prints 3, then 97. The test value did not help choose the mean.",
+        "Apply the same learned mean to training, validation, and test examples. Do not recalculate it from the test set. Subtracting the mean is centering; full standardization also scales by how spread out the values are.",
+        "Held-out means kept separate from fitting the model and its preparation steps. Including the test value in the mean would let held-out information influence those steps.",
+        "For each evaluation split, fit the preparation settings on that split's training data. Also keep out information that would only become available after the prediction was needed."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one idea at a time.",
+        "Trace the worked example.",
+        "Apply the distinction to the changed situation.",
+        "Choose an answer and explain why."
+      ],
+      "after": [
+        "Read each idea.",
+        "Use the labels to follow the example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Fit preprocessing on training data inside each evaluation split. Transform held-out data using the fitted preprocessing. Similar leakage can occur through duplicate examples or information recorded after the prediction time."
+      ],
+      "after": [
+        "Learn the setting on training data. Reuse it on the held-out data."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Should a held-out test value help determine the training normalization mean?",
+        "choices": [
+          "Yes, more data always makes evaluation fair",
+          "No, fit the mean using training data",
+          "Only when the test score is low"
+        ],
+        "answer": 1,
+        "explanation": "The held-out set is meant to measure generalization. Its information must not shape fitted preprocessing."
+      },
+      "after": {
+        "question": "Should a held-out test value help choose the mean used to center training data?",
+        "choices": [
+          "Yes. Using more data always makes a test fair.",
+          "No. Learn the mean from training data.",
+          "Only if the test score is low."
+        ],
+        "answer": 1,
+        "explanation": "The test is meant to check handling of new data. Its values should not shape fitted preparation settings."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Concept-only lesson: no API key, programming, model training, or live service is required. Numeric examples are illustrative, not performance claims about any product.",
+      "after": "The code visual is a small teaching example. You do not need to write code, connect an AI account, or use an API key."
+    }
+  ],
+  "headings": [
+    "Prepare data before learning",
+    "Learn a setting from training data",
+    "One example",
+    "Reuse the same setting",
+    "Keep held-out data separate",
+    "Repeat the rule for every split"
+  ],
+  "project": {
+    "title": "Keep evaluation information out of preprocessing",
+    "task": "Choose which data may determine the centering mean.",
+    "done_when": "Read the ideas, then pass the understanding check. No coding task is required."
+  }
+}

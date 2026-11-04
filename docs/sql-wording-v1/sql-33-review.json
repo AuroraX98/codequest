@@ -1,0 +1,87 @@
+{
+  "lesson": "sql-33",
+  "position": 14,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Create an ordinary table readings(id INTEGER PRIMARY KEY,value INTEGER). Insert ID1 text 17 and ID2 text unknown. Create observed(id,kind) exposing typeof(value). This task deliberately observes flexible affinity rather than rejecting text.",
+      "after": "Check the kind of value SQLite actually stored."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "Ordinary SQLite tables use flexible value types. A column declared INTEGER has integer affinity: it tries suitable numeric conversion when storing a value, but its declaration alone does not reject every nonnumeric text. This differs from rigid typing in many other database systems.",
+        "typeof(value) returns the stored value's storage-class name, such as integer, real, text, blob or null. It inspects a value, not the column declaration. In an INTEGER-affinity column, '12' can be stored as integer 12, while 'twelve' remains text. Use STRICT or appropriate constraints when that flexibility is not your intended contract.",
+        "Run this complete example in a fresh database.\n```sql\nCREATE TABLE readings(id INTEGER PRIMARY KEY,value INTEGER);\nINSERT INTO readings VALUES(1,'12'),(2,'twelve');\nCREATE TEMP VIEW shown AS\nSELECT id,value,typeof(value) AS kind\nFROM readings;\nSELECT *\nFROM shown\nORDER BY id;\n```",
+        "Change the supplied values and trace the result. This is a separate complete example.\n```sql\nCREATE TABLE readings(id INTEGER PRIMARY KEY,value TEXT);\nINSERT INTO readings VALUES(1,12),(2,NULL);\nCREATE TEMP VIEW shown AS\nSELECT id,value,typeof(value) AS kind\nFROM readings;\nSELECT *\nFROM shown\nORDER BY id;\n```",
+        "Application: Create an ordinary table readings(id INTEGER PRIMARY KEY,value INTEGER). Insert ID1 text 17 and ID2 text unknown. Create observed(id,kind) exposing typeof(value). This task deliberately observes flexible affinity rather than rejecting text."
+      ],
+      "after": [
+        "An ordinary SQLite column has a preferred type, called its affinity. An INTEGER column tries to store suitable values as whole numbers. That declaration alone does not refuse every other kind of value.",
+        "`typeof(value)` reports the kind of value actually stored, such as `integer`, `real`, `text`, or `null`. It does not just repeat the column's declared type.",
+        "Run this example in a fresh database:\n```sql\nCREATE TABLE demo_readings (\n  id INTEGER PRIMARY KEY,\n  value INTEGER\n);\nINSERT INTO demo_readings VALUES (1, '12'), (2, 'twelve');\nSELECT id, value, typeof(value) AS kind\nFROM demo_readings\nORDER BY id;\n```\nRow 1 stores integer `12`. Row 2 stores the text `twelve`.",
+        "The numeric text can be converted; the word cannot. Ordinary SQLite tables allow this flexibility. Use stricter table rules when accepting text would break your program. The next lesson shows one way.",
+        "Create ordinary `readings(id INTEGER PRIMARY KEY, value INTEGER)`. Insert quoted text `'17'` at id `1` and `'unknown'` at id `2`. Create `observed(id, kind)` using typeof to show how each value was stored."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the small example and explain its inputs and effects.",
+        "Complete the starter for this lesson.",
+        "Run the behavior checks, then predict a changed case."
+      ],
+      "after": [
+        "Create the ordinary readings table.",
+        "Insert the two supplied text values.",
+        "Use typeof(value) for the kind column in observed."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Trace the supplied rows and resulting rows before changing the query."
+      ],
+      "after": [
+        "Keep quotes around both inserted values.",
+        "This exercise allows flexible types; do not add STRICT."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "An ordinary INTEGER-affinity column receives the text cloudy. What can SQLite store without an additional constraint?",
+        "choices": [
+          "Only NULL",
+          "The text cloudy",
+          "The integer zero in every case"
+        ],
+        "answer": 1,
+        "explanation": "A nonnumeric text that cannot be converted may remain text in an ordinary flexible table."
+      },
+      "after": {
+        "question": "An ordinary INTEGER column has no extra rule. What can SQLite store when given the text cloudy?",
+        "choices": [
+          "Only NULL",
+          "The text cloudy",
+          "Always the integer zero"
+        ],
+        "answer": 1,
+        "explanation": "The word cannot become a number, so it can remain text in an ordinary SQLite table."
+      }
+    }
+  ],
+  "headings": [
+    "A column has a preferred type",
+    "Inspect the stored value",
+    "Store a number and a word",
+    "Know when stricter rules matter",
+    "Inspect the project readings"
+  ],
+  "project": {
+    "title": "Stored values and column affinity",
+    "task": "Create readings with the requested columns. Insert text '17' and 'unknown' at IDs 1 and 2, then create observed(id, kind) using typeof(value).",
+    "done_when": "observed reports integer for ID 1 and text for ID 2. Both supplied readings are kept."
+  }
+}

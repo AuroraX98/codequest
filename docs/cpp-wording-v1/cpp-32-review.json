@@ -1,0 +1,94 @@
+{
+  "lesson": "cpp-32",
+  "position": 32,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Omit second.reset(). What does expired() report?",
+      "after": "Share an object's lifetime and check it through a weak observer."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "Copies of std::shared_ptr participate in shared ownership. The object remains alive while at least one owning shared_ptr remains. std::make_shared constructs the object and shared ownership state.",
+        "std::weak_ptr does not own the object. lock() returns a temporary shared_ptr if the object is still alive, or an empty one otherwise. reset() releases one owner, not all owners. In if (auto live = observer.lock()), the condition declares live, tests whether it is nonempty, and limits its lifetime to that if statement. expired() reports whether no owning shared_ptr remains.",
+        "If objects own one another through shared_ptr, the cycle can prevent destruction. A weak back-reference can break the cycle. Prefer unique ownership when sharing is unnecessary.",
+        "Complete local C++ example; the app itself does not execute it:\n```cpp\n#include <iostream>\n#include <memory>\nint main() {\n    auto owner = std::make_shared<int>(8);\n    std::weak_ptr<int> observer = owner;\n    auto second = owner;\n    owner.reset();\n    if (auto live = observer.lock()) std::cout << *live << '\\n';\n    second.reset();\n    std::cout << std::boolalpha << observer.expired() << '\\n';\n}\n\n```",
+        "Expected output or behavior: 8\ntrue\n. Local compiler test evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Move both resets before lock and handle its empty result without dereferencing. You may trace this without a compiler; finishing the reading is not proof of a local run."
+      ],
+      "after": [
+        "Copies of std::shared_ptr share ownership of one object. The object stays alive while an owner remains. make_shared creates the object and its first owner. reset() gives up only that pointer's ownership.",
+        "A std::weak_ptr observes without keeping the object alive. Its lock() operation tries to obtain an owning shared_ptr. If the object has already been destroyed, lock() returns an empty pointer.",
+        "The if statement creates live from lock() and checks it before reading *live. live keeps the object alive while that statement runs. Its ownership ends when the if statement ends.",
+        "Follow the owners as each reset gives up one share.\n\n```cpp\n#include <iostream>\n#include <memory>\nint main() {\n    auto owner = std::make_shared<int>(8);\n    std::weak_ptr<int> observer = owner;\n    auto second = owner;\n    owner.reset();\n    if (auto live = observer.lock()) std::cout << *live << '\\n';\n    second.reset();\n    std::cout << std::boolalpha << observer.expired() << '\\n';\n}\n\n```",
+        "The program prints 8, then true. second keeps the integer alive for the first output. After second.reset(), no owner remains. expired() then reports true, meaning the weak observer's object is no longer alive.",
+        "An ownership circle can keep objects alive forever: each object owns another that leads back to it. A weak reference on the return path can break that circle. Use unique ownership when sharing is not needed."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain why, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Count the owning pointers that still remain, including any temporary owner."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Omit second.reset(). What does expired() report?",
+        "choices": [
+          "true, because the first owner reset",
+          "false, because second still owns the object",
+          "It cannot be checked safely"
+        ],
+        "answer": 1,
+        "explanation": "The weak observer does not own the int, but second does. The temporary live owner is scoped to the if statement."
+      },
+      "after": {
+        "question": "Remove second.reset(). What does expired() report at the final output?",
+        "choices": [
+          "true, because the first owner was reset.",
+          "false, because second still owns the object.",
+          "It cannot be checked safely."
+        ],
+        "answer": 1,
+        "explanation": "second still keeps the integer alive. The weak pointer does not own it, but it can report that an owner remains."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "C++ Core v1, standard C++23 features checked against the available GCC14.2 implementation. This app provides concept reading and an understanding check, not a C++ browser runner. Local example tests are separate evidence and do not certify learner mastery.",
+      "after": "The browser shows C++ code and checks your understanding; it does not run C++. Optional local examples use C++23."
+    }
+  ],
+  "headings": [
+    "Share cleanup responsibility",
+    "Observe without keeping alive",
+    "Hold a temporary owner",
+    "One example",
+    "What appears",
+    "Avoid ownership circles"
+  ],
+  "project": {
+    "title": "Share ownership deliberately and observe weakly",
+    "task": "Trace when the integer still has an owner and when its lifetime ends.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local C++ example is optional."
+  }
+}

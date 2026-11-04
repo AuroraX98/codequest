@@ -1,0 +1,82 @@
+{
+  "lesson": "python-60",
+  "sourceHash": "7bbe9e37ce55ff2d70dd0e19005a3d0db6124d5e60082818ea63a0016fd74127",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Complete Label and FramedLabel. Label(text) stores text and render() returns it. FramedLabel inherits the initializer; its render returns the base render result inside square brackets using super(). Preserve the stored text and independent instances.",
+      "after": "Reuse a class's method, then add your own finishing touch."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "class FramedLabel(Label) makes Label a base class. FramedLabel inherits its initializer and can replace render with its own implementation. Creating FramedLabel(\"Map\") therefore still initializes self.text on that new instance.",
+        "Inside the overriding render method, super() returns a proxy for continuing method lookup after the current class. Calling .render() on that proxy reaches Label.render in this single-inheritance example, with the same instance. It is not a new Label object and does not mean \"call every parent\".",
+        "```python\nclass Label:\n    def __init__(self, text):\n        self.text = text\n\n    def render(self):\n        return self.text\n\nclass FramedLabel(Label):\n    def render(self):\n        return \"[\" + super().render() + \"]\"\n\nplain = Label(\"Map\")\nframed = FramedLabel(\"Map\")\nprint(plain.render())\nprint(framed.render())\n```\nThe outputs are Map and [Map]. Label.render returns its stored string. FramedLabel.render returns a new framed string, leaving self.text unchanged.",
+        "Replacing super().render() with self.render() inside FramedLabel.render calls that same overriding method again. With no stopping condition, it eventually raises RecursionError rather than reaching the base implementation.",
+        "Keep the base initializer and render method, and complete FramedLabel.render using super. Optional local transfer: make a second subclass with a different outer decoration and confirm neither changes the base object’s output."
+      ],
+      "after": [
+        "A class can reuse another class's methods. This is called inheritance.\n\nIn `class FramedLabel(Label):`, `Label` is the base class we build on. `FramedLabel` reuses its setup method and gives `render` a new version. This replacement is called overriding.\n\n`FramedLabel(\"Map\")` still saves `\"Map\"` as the new object's `self.text`.",
+        "Inside `FramedLabel.render`, `super().render()` looks for the next `render` method after `FramedLabel` in Python's class order. Here it finds `Label.render`.\n\nBoth methods work on the same object. `super()` does not create another `Label`, and it does not call every parent class.",
+        "```python\nclass Label:\n    def __init__(self, text):\n        self.text = text\n\n    def render(self):\n        return self.text\n\nclass FramedLabel(Label):\n    def render(self):\n        return \"[\" + super().render() + \"]\"\n\nplain = Label(\"Map\")\nframed = FramedLabel(\"Map\")\nprint(plain.render())\nprint(framed.render())\n```\nIt prints `Map`, then `[Map]`. The base method returns the saved text. The new method puts brackets around it. The saved `self.text` stays unchanged.",
+        "Using `self.render()` here would call `FramedLabel.render` again. That method would keep calling itself. With no stopping rule, Python eventually raises `RecursionError`.\n\nUse `super().render()` to reach the next method instead.",
+        "Keep `Label`'s setup and `render` methods. Complete `FramedLabel.render` with `super()`.\n\nFor extra practice, make another class based on `Label` that adds a different decoration. Check that a plain `Label` still returns its original text."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "What happens if the overriding method calls self.render() instead of super().render()?",
+        "choices": [
+          "It re-enters itself until RecursionError",
+          "It returns the unframed text once",
+          "It automatically skips to Label.render"
+        ],
+        "answer": 0,
+        "explanation": "self still refers to the FramedLabel receiver, so ordinary lookup selects the same override on every call."
+      },
+      "after": {
+        "question": "What happens if the overriding method calls self.render() instead of super().render()?",
+        "choices": [
+          "It re-enters itself until RecursionError",
+          "It returns the unframed text once",
+          "It automatically skips to Label.render"
+        ],
+        "answer": 0,
+        "explanation": "self still refers to the FramedLabel instance, so method lookup selects the same override on every call."
+      }
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Trace the visible worked calls before changing the starter."
+      ],
+      "after": [
+        "Use `super().render()`, not `self.render()`, to avoid calling the same method again."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the requirement.",
+        "Make one change to the starter.",
+        "Run the checks.",
+        "Explain why a changed input produces its result."
+      ],
+      "after": [
+        "Keep the base `Label` class as supplied.",
+        "In `FramedLabel.render`, get the text from `super().render()`.",
+        "Return that text with brackets around it.",
+        "Check that `Label(\"Map\")` still renders as `\"Map\"`."
+      ]
+    }
+  ],
+  "reviewNotes": [
+    "Preserves the same instance when super().render() reaches Label.render.",
+    "Keeps the worked code and Map outputs.",
+    "Quiz answer remains index 0.",
+    "Explained inheritance and overriding in plain language while retaining accurate super lookup and recursion limits.",
+    "Made the summary and practice guidance concrete to this lesson, replacing generic review directions."
+  ]
+}

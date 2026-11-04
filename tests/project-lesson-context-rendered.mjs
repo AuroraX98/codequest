@@ -38,6 +38,8 @@ return function Harness(){
  const [state,setState]=useState({profile:{activeUnit:'javascript-01',track:'javascript'},progress:[]});
  const [activeId,setActiveId]=useState('javascript-01'),[view,setView]=useState('path'),[studioMode,setStudioMode]=useState('course'),[phase,setPhase]=useState('learn'),[paragraph,setParagraph]=useState(0),[error,setError]=useState('');
  const navigationSequence=useRef(0),navigationPending=useRef(''),navigationPreferences=useRef(Promise.resolve()),completionLock=useRef(false),abort=useRef(null);
+ const bookmarksRef=useRef({});
+ const [,setResumeOffer]=useState(null);
  const setConceptTarget=()=>{},setNoteSection=()=>{},setSearch=()=>{};
  const request=async({settings})=>({profile:{...state.profile,...settings},progress:[]});
  ${handlers}
@@ -78,10 +80,12 @@ try{
    assert.equal(route.activeId,unit.id);assert.equal(route.view,'studio');assert.equal(route.phase,'build');
    const branch=lesson.learningMode==='concept'?(localProjectExamples(unit,lesson).length?'local':'exploration'):(projectsForLesson(unit.id).length?'guided':'ordinary');counts[branch]++;
   }
-  await act(async()=>exposed.setStudioMode('practice'));
-  assert.equal(document.querySelector('.lesson-heading'),null,'AI practice is not mislabeled as the current course project');
-  await act(async()=>exposed.setStudioMode('course'));verify(orderedUnits.filter(u=>u.track===track).at(-1));
  }
- assert.ok(Object.values(counts).every(n=>n>0));assert.equal(saves,1242);assert.equal(loads,1242);
- console.log('PASS production selection handlers and rendered heading: 21 course switches, 1221 lesson switches, all route round-trips, 21 practice/course toggles; branches '+JSON.stringify(counts));
+ // Every authored concept now has a local example. Exploration is a fallback for future lessons.
+ assert.equal(counts.ordinary+counts.guided+counts.local+counts.exploration,units.length);
+ assert.ok(counts.ordinary>0 && counts.guided>0 && counts.local>0);
+ assert.equal(counts.exploration,0,'Every current concept lesson offers a local code example');
+ assert.equal(saves,units.length+tracks.length);
+ assert.equal(loads,saves);
+ console.log('PASS rendered project headings and lesson links for 21 courses and 1221 lessons; branches '+JSON.stringify(counts));
 }finally{await act(async()=>root.unmount());dom.window.close();}

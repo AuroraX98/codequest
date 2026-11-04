@@ -1,0 +1,97 @@
+{
+  "lesson": "cpp-46",
+  "position": 46,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Replace the find/first-print statements with std::cout << scores[\"Zed\"] << \" \" << scores.size() << \"\\n\";. What changes?",
+      "after": "Store values under keys and look them up without adding missing keys."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A std::map<Key,Value> keeps one value for each distinct key and visits keys in comparator order. Here strings use their usual lexicographic ordering, so Ada comes before Mina, regardless of insertion order.",
+        "find(key) returns an iterator or end() when absent. Comparing with end() before dereferencing avoids using a missing element. find does not add a key.",
+        "operator[] is different: scores[\"Zed\"] inserts the missing key with a value-initialized int, which is 0. Use find or contains for observation; use [] when insertion is intended.\n\ncontains(key) returns a Boolean without inserting. In this separate example, indexing the absent key then inserts the default int value zero:\n```cpp\nstd::map<std::string,int> sample{{\"Ada\",2}};\nstd::cout << std::boolalpha << sample.contains(\"Zed\") << \"\\n\";\nstd::cout << sample[\"Zed\"] << \" \" << sample.size() << \"\\n\";\n```\nOutput: false, then 0 2.",
+        "The structured binding const auto& [name, score] gives names to the existing pair’s key and value. It does not copy the whole map. The map key cannot be reassigned through this pair.",
+        "Complete local C++ example; the app itself does not execute it:\n```cpp\n#include <iostream>\n#include <map>\n#include <string>\nint main() {\n    std::map<std::string, int> scores{{\"Mina\", 4}, {\"Ada\", 2}};\n    auto found = scores.find(\"Zed\");\n    std::cout << (found == scores.end()) << \" \" << scores.size() << \"\\n\";\n    for (const auto& [name, score] : scores)\n        std::cout << name << \":\" << score << \"\\n\";\n}\n```",
+        "Expected output or behavior: 1 2\nAda:2\nMina:4. Local compiler test evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Compare find, contains and [] on an absent key, recording size before and after. You may trace this without a compiler; finishing the reading is not proof of a local run."
+      ],
+      "after": [
+        "A map stores key-value pairs. A key identifies a value, like a name identifying a score. std::map keeps one value for each distinct key and visits keys in its comparison order.",
+        "find(key) returns the matching item's position, or end() when the key is absent. It does not insert anything. contains(key) simply reports true or false without inserting either.",
+        "Square brackets behave differently. Reading a missing key through [] adds that key with a default value. For this int map, the new value is zero. Use brackets when that possible insertion is intended.",
+        "const auto& [name, score] gives names to the two parts of each existing pair. This is a structured binding. The reference avoids copying the pair, and const makes this access read-only.",
+        "Follow the unsuccessful search before the loop visits the stored pairs.\n\n```cpp\n#include <iostream>\n#include <map>\n#include <string>\nint main() {\n    std::map<std::string, int> scores{{\"Mina\", 4}, {\"Ada\", 2}};\n    auto found = scores.find(\"Zed\");\n    std::cout << (found == scores.end()) << \" \" << scores.size() << \"\\n\";\n    for (const auto& [name, score] : scores)\n        std::cout << name << \":\" << score << \"\\n\";\n}\n```",
+        "The program prints 1 2, then Ada:2 and Mina:4 on separate lines. One means the missing-key check is true. The size remains two because find did not insert Zed.",
+        "The map visits Ada before Mina because its string keys are ordered by comparison. This is independent of the order in which those two pairs were written in the initializer."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain why, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "find observes; [] may insert a missing key."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Replace the find/first-print statements with std::cout << scores[\"Zed\"] << \" \" << scores.size() << \"\\n\";. What changes?",
+        "choices": [
+          "It throws because Zed is absent.",
+          "It prints 0 2 and leaves the map unchanged.",
+          "It prints 0 3, then the loop also visits Zed:0."
+        ],
+        "answer": 2,
+        "explanation": "Indexing inserts Zed with int value 0. The later size is 3, and ordered iteration now includes that key."
+      },
+      "after": {
+        "question": "Replace the search and first output with a read of scores[\"Zed\"], followed by the map's size. What happens?",
+        "choices": [
+          "The missing key throws an exception.",
+          "The first line is 0 2 and the map stays unchanged.",
+          "The first line is 0 3, and the loop also visits Zed:0."
+        ],
+        "answer": 2,
+        "explanation": "The bracket access inserts Zed with an int value of zero. The map then has three pairs, and the loop includes the new one."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "C++ Core v1, standard C++23 features checked against the available GCC14.2 implementation. This app provides concept reading and an understanding check, not a C++ browser runner. Local example tests are separate evidence and do not certify learner mastery.",
+      "after": "The browser shows C++ code and checks your understanding; it does not run C++. Optional local examples use C++23."
+    }
+  ],
+  "headings": [
+    "Pair keys with values",
+    "Look up without inserting",
+    "Indexing can add a key",
+    "Name the parts of each pair",
+    "One example",
+    "What appears",
+    "Visit keys in order"
+  ],
+  "project": {
+    "title": "Associate ordered keys with values",
+    "task": "Trace the missing-key check, unchanged size, and ordered pairs.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local C++ example is optional."
+  }
+}

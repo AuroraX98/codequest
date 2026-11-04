@@ -1,0 +1,94 @@
+{
+  "lesson": "java-29",
+  "position": 29,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Replace the element assignment with scores = new int[]{9}. What happens?",
+      "after": "Separate a shared class field from a variable that cannot be reassigned."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A static field belongs to the class rather than each instance. Ticket.issued counts constructor calls in this single-threaded example. Each Ticket still has its own final number assigned once by its constructor.",
+        "A final variable cannot be reassigned after initialization. If it holds an object or array reference, the referenced contents may still be mutable. final int[] scores fixes the array reference, not every array element.",
+        "static controls whether a field is class-wide; final controls assignment to the variable. Neither alone is a synchronization policy for concurrent mutation.",
+        "Complete local Java example; the app itself does not execute it:\n```java\nclass Ticket {\n    static int issued = 0;\n    final int number;\n    Ticket() {\n        issued++;\n        number = issued;\n    }\n}\npublic class Main {\n    public static void main(String[] args) {\n        Ticket first = new Ticket();\n        Ticket second = new Ticket();\n        final int[] scores = {1};\n        scores[0] = 9;\n        System.out.println(first.number + \" \" + second.number + \" \" + Ticket.issued);\n        System.out.println(scores[0]);\n    }\n}\n\n```",
+        "Expected output or behavior: 1 2 2\n9\n. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Contrast a final StringBuilder reference with its mutable text content. You may trace it without a JDK; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "A static field belongs to the class, so the Ticket objects here share issued. Each constructor call increases that shared count. This example makes the tickets one at a time.",
+        "A final variable can be assigned only once. Each Ticket has its own final number, set by its constructor. Later code cannot assign a different number to that field.",
+        "For an array reference, final fixes which array the variable points to. It does not freeze the array's items. Changing scores[0] is allowed; assigning a different array to scores is not.",
+        "Track the shared ticket count, then look at what the array assignment changes.\n\n```java\nclass Ticket {\n    static int issued = 0;\n    final int number;\n    Ticket() {\n        issued++;\n        number = issued;\n    }\n}\npublic class Main {\n    public static void main(String[] args) {\n        Ticket first = new Ticket();\n        Ticket second = new Ticket();\n        final int[] scores = {1};\n        scores[0] = 9;\n        System.out.println(first.number + \" \" + second.number + \" \" + Ticket.issued);\n        System.out.println(scores[0]);\n    }\n}\n\n```",
+        "The first line prints 1 2 2: the two ticket numbers and the shared count. The next line prints 9 because the array item changed while its reference stayed the same.",
+        "The quiz replaces the whole scores reference instead of changing one item. Apply final's rule to the variable being assigned."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Check what is on the left of the equals sign: one item, or the variable itself?"
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Replace the element assignment with scores = new int[]{9}. What happens?",
+        "choices": [
+          "The original array is silently copied",
+          "It compiles because arrays are mutable",
+          "Compilation rejects reassigning the final reference"
+        ],
+        "answer": 2,
+        "explanation": "Mutating an element was permitted, but replacing the reference stored in final scores is a different, forbidden assignment."
+      },
+      "after": {
+        "question": "Replace scores[0] = 9; with scores = new int[]{9};. What happens?",
+        "choices": [
+          "Java silently copies the original array.",
+          "It compiles because array items can change.",
+          "Compilation fails because scores is a final reference."
+        ],
+        "answer": 2,
+        "explanation": "The original line changes an item. The new line tries to assign a second reference to the final variable scores, which is not allowed."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Java Core v1 uses stable Java25 LTS features without preview flags. The app supplies concept reading and an understanding check, not a Java browser runner. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "The browser shows Java code and checks your understanding; it does not run Java. Optional local examples use Java25."
+    }
+  ],
+  "headings": [
+    "static makes the field belong to the class",
+    "final prevents another assignment",
+    "A final reference can reach changeable contents",
+    "One example",
+    "What appears",
+    "Try replacing the final reference"
+  ],
+  "project": {
+    "title": "Separate static state and final bindings",
+    "task": "Explain why changing an array item is allowed even when its reference is final.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local Java example is optional."
+  }
+}

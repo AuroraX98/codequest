@@ -1,0 +1,91 @@
+{
+  "lesson": "r-62",
+  "position": 62,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "If type becomes link, is the printed -1.099 a negative probability?",
+      "after": "A logistic model can describe the chance of success. Its internal number uses a different scale from probability."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "glm with family = binomial() uses the logit link by default for a binary response. A 0/1 vector records failures/successes. The linear predictor is log-odds, log(p / (1 - p)); it is not itself a probability.\n\nbinomial() takes no explicit argument here and returns a family-configuration object with the default logit link. glm uses that configuration to fit the binary-response model; binomial() does not itself fit a model or return predicted probabilities.\n\nlog(x) uses the natural logarithm when no base is supplied. With probability p = 0.25, log(p / (1 - p)) converts the odds to a negative log-odds value; it does not return a probability.\n```r\np <- 0.25\ncat(sprintf(\"%.3f\", log(p / (1 - p))), \"\\n\", sep = \"\")\n```\nIt prints:\n```text\n-1.099\n```",
+        "predict(type = \"response\") converts the linear predictor to probabilities, while type = \"link\" returns log-odds here. This intercept-only example estimates one shared probability. Separation, convergence, sample size and calibration matter in real models; four synthetic outcomes cannot validate risk predictions.",
+        "Complete local R example; the app itself does not execute it:\n```r\ndata <- data.frame(success = c(0, 0, 0, 1))\nfit <- glm(success ~ 1, data = data, family = binomial())\nvalue <- predict(fit, newdata = data.frame(row = 1), type = \"response\")\ncat(sprintf(\"%.3f\", value), \"\\n\", sep = \"\")\n\n```",
+        "Expected output or behavior: 0.250. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Explain why a classification threshold is a separate decision from fitting probabilities. You may trace it without a R interpreter; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "A logistic model can describe the chance of success. Its internal number uses a different scale from probability.",
+        "Convert the model's internal number into a probability from zero to one.",
+        "Follow the labeled parts of this example.\n```r\ndata <- data.frame(success = c(0, 0, 0, 1))\nfit <- glm(success ~ 1, data = data, family = binomial())\nvalue <- predict(fit, newdata = data.frame(row = 1), type = \"response\")\ncat(sprintf(\"%.3f\", value), \"\\n\", sep = \"\")\n```",
+        "The output is `0.250`. One success in four trials gives 0.250 here.",
+        "Ask for the link scale instead. This scale is called log-odds. Zero means success and failure are equally likely; a negative value means success is less likely."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read one idea.",
+        "Follow the labeled example.",
+        "Try the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Ask for the link scale instead. This scale is called log-odds. Zero means success and failure are equally likely; a negative value means success is less likely."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If type becomes link, is the printed -1.099 a negative probability?",
+        "choices": [
+          "No; it is the log-odds scale corresponding to probability 0.25.",
+          "No; it means a probability of 1.099.",
+          "Yes; the model violates probability rules."
+        ],
+        "answer": 0,
+        "explanation": "The link scale is unbounded and can be negative; transforming back through the inverse logit gives a probability between zero and one."
+      },
+      "after": {
+        "question": "Does a link-scale answer of −1.099 mean a negative probability?",
+        "choices": [
+          "No. It corresponds to a probability of 0.25.",
+          "Yes. The model failed.",
+          "Yes. Probabilities can be below zero."
+        ],
+        "answer": 0,
+        "explanation": "Log-odds can be negative. Probabilities cannot."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "R Core v1 uses R 4.5.0 and explicitly available extensions. The app supplies concept reading and an understanding check, not a R browser runner. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "CodeQuest shows the R example. Running it on your own computer is optional."
+    }
+  ],
+  "headings": [
+    "Read a probability on the right scale",
+    "Show the probability",
+    "Read the example",
+    "What happens",
+    "Try one change"
+  ],
+  "project": {
+    "title": "Logistic models and link scales",
+    "task": "Ask for the link scale instead. This scale is called log-odds. Zero means success and failure are equally likely; a negative value means success is less likely.",
+    "done_when": "Read each idea and pass the understanding check. Running the example on your computer is optional."
+  }
+}

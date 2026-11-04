@@ -1,0 +1,92 @@
+{
+  "lesson": "c-62",
+  "position": 62,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "If the first request is 0 minutes, what are the three results and final count?",
+      "after": "Check a new item before storing it. Rejected input must not change the store or use up a slot."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "This in-memory Store has two slots and used counts initialized entries. The constructor-like initializer {{0}, 0} zeroes the array and count. C does not enforce a private constructor; callers must start with a valid store and use the checked operation rather than corrupting fields directly.",
+        "add_session accepts minutes 1 through 60 only while used is below capacity. On rejection it changes neither the array nor the count. It checks capacity before indexing, preventing out-of-bounds writes. The example assumes a valid non-null store pointer and is not a file database, concurrent service or complete application.",
+        "Complete local C example; the app itself does not execute it:\n```c\n#include <stdio.h>\n#include <stddef.h>\nenum { CAPACITY = 2 };\nstruct Store { int minutes[CAPACITY]; size_t used; };\nstatic int add_session(struct Store *store, int minutes) {\n    if (minutes < 1 || minutes > 60 || store->used >= CAPACITY) return 0;\n    store->minutes[store->used] = minutes;\n    store->used++;\n    return 1;\n}\nint main(void) {\n    struct Store store = {{0}, 0};\n    printf(\"%d\\n\", add_session(&store, 15));\n    printf(\"%d\\n\", add_session(&store, 20));\n    printf(\"%d\\n\", add_session(&store, 30));\n    printf(\"used=%zu\\n\", store.used);\n    return 0;\n}\n```",
+        "Expected output or behavior: 1\n1\n0\nused=2. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Add explicit tests for negative minutes, 60, 61 and a full store; assert rejection preserves used and existing entries. You may trace it without a C compiler; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "This Store holds up to two study sessions in memory. minutes contains their lengths, and used counts the filled slots. `{{0}, 0}` starts both the array and count at zero. Use the checked add_session function to keep the fields consistent.",
+        "add_session accepts 1 through 60 minutes only if space remains. It checks before indexing the array. On rejection it returns 0 without changing anything. It expects a valid pointer to a correctly initialized store.",
+        "Follow the example one line at a time.\n```c\n#include <stdio.h>\n#include <stddef.h>\nenum { CAPACITY = 2 };\nstruct Store { int minutes[CAPACITY]; size_t used; };\nstatic int add_session(struct Store *store, int minutes) {\n    if (minutes < 1 || minutes > 60 || store->used >= CAPACITY) return 0;\n    store->minutes[store->used] = minutes;\n    store->used++;\n    return 1;\n}\nint main(void) {\n    struct Store store = {{0}, 0};\n    printf(\"%d\\n\", add_session(&store, 15));\n    printf(\"%d\\n\", add_session(&store, 20));\n    printf(\"%d\\n\", add_session(&store, 30));\n    printf(\"used=%zu\\n\", store.used);\n    return 0;\n}\n```",
+        "The 15-minute request succeeds, then the 20-minute request succeeds. The store is full, so 30 minutes is rejected. The outputs are 1, 1, 0, then used=2. These values live in this running program; they are not saved to a file.",
+        "Change the first request to 0 minutes. That request is rejected without taking a slot, so both later requests fit. Check rejected inputs as well as accepted ones when testing a store."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Only a successful add increases used."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If the first request is 0 minutes, what are the three results and final count?",
+        "choices": [
+          "1, 1, 0 and used=2 because zero is accepted.",
+          "0, 1, 0 and used=2 because rejection consumes a slot",
+          "0, 1, 1 and used=2"
+        ],
+        "answer": 2,
+        "explanation": "The invalid first request leaves the store unchanged, so both later valid requests fit."
+      },
+      "after": {
+        "question": "Change the first request to 0 minutes. What are the three results and final count?",
+        "choices": [
+          "1, 1, 0 and used=2, because zero is allowed.",
+          "0, 1, 0 and used=2, because rejection takes a slot.",
+          "0, 1, 1 and used=2"
+        ],
+        "answer": 2,
+        "explanation": "The invalid first request changes nothing. The 20-minute and 30-minute requests then fill the two available slots."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "C Core v1 uses a portable C17 baseline supported by the verified compiler. C23 exists but is not claimed fully supported here. The app supplies concept reading and an understanding check, not a C browser runner. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "The browser shows C code and checks your understanding; it does not run C. Optional local examples use C17."
+    }
+  ],
+  "headings": [
+    "Keep the store's count accurate",
+    "Check before writing",
+    "One example",
+    "Follow the three requests",
+    "Reject without using a slot"
+  ],
+  "project": {
+    "title": "A bounded study-session store",
+    "task": "Explain why rejected requests must preserve both used and the existing session values.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local C example is optional."
+  },
+  "navigationCorrection": "Added a short example introduction so its reviewed heading remains an explicit contents target."
+}

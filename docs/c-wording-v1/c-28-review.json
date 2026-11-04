@@ -1,0 +1,92 @@
+{
+  "lesson": "c-28",
+  "position": 28,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "If measure(&n) becomes measure(NULL), what prints?",
+      "after": "A function can allow NULL to mean that you do not want its optional output."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "NULL is a null pointer constant provided by standard headers. A null pointer points to no object; comparing it is allowed, dereferencing it is not.",
+        "A function may accept NULL for an optional output only if its documented contract allows it. Here result receives the number only when non-null; the return value independently reports success. A caller-provided output must also point to a live writable int.",
+        "Complete local C example; the app itself does not execute it:\n```c\n#include <stdio.h>\n\nint measure(int *result) {\n if (result != NULL) { *result = 6; }\n return 1;\n}\nint main(void) {\n int n = 0;\n int ok = measure(&n);\n printf(\"%d %d\\n\", ok, n);\n}\n```",
+        "Expected output or behavior: 1 6\n. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Make a caller ignore the output but still inspect the status. You may trace it without a C compiler; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "NULL is a standard way to write a null pointer value. It points to no object. You may compare a pointer with NULL, but you must not follow a null pointer to read or write.",
+        "This measure function allows NULL for its output. It checks before writing. A non-null output must point to a live, writable int. Do not assume other functions allow NULL; check their rules.",
+        "Follow the example one line at a time.\n```c\n#include <stdio.h>\n\nint measure(int *result) {\n if (result != NULL) { *result = 6; }\n return 1;\n}\nint main(void) {\n int n = 0;\n int ok = measure(&n);\n printf(\"%d %d\\n\", ok, n);\n}\n```",
+        "The call passes the address of n, so measure stores 6 there. It also returns 1 as its success status. The print shows 1 6: status first, output second.",
+        "Change the call to `measure(NULL)`. The function skips the output write and still returns 1. n keeps the starting value it had before the call."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "The returned status and the optional output are two separate results."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If measure(&n) becomes measure(NULL), what prints?",
+        "choices": [
+          "1 6",
+          "0 0",
+          "1 0"
+        ],
+        "answer": 2,
+        "explanation": "The null check skips the output assignment, leaving n at zero; the function still returns its independent success status of one."
+      },
+      "after": {
+        "question": "Replace measure(&n) with measure(NULL). What prints?",
+        "choices": [
+          "1 6",
+          "0 0",
+          "1 0"
+        ],
+        "answer": 2,
+        "explanation": "measure returns 1 but skips the write because the output pointer is NULL. n remains 0."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "C Core v1 uses a portable C17 baseline supported by the verified compiler. C23 exists but is not claimed fully supported here. The app supplies concept reading and an understanding check, not a C browser runner. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "The browser shows C code and checks your understanding; it does not run C. Optional local examples use C17."
+    }
+  ],
+  "headings": [
+    "NULL means no target",
+    "Make the output optional",
+    "One example",
+    "Read status and output separately",
+    "Skip the optional output"
+  ],
+  "project": {
+    "title": "Null pointers and optional outputs",
+    "task": "Explain how the call can report success without storing an output number.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local C example is optional."
+  },
+  "navigationCorrection": "Added a short example introduction so its reviewed heading remains an explicit contents target."
+}

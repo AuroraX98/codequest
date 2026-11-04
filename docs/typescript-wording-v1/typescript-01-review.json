@@ -1,0 +1,101 @@
+{
+  "lesson": "typescript-01",
+  "position": 4,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Give player data clear types and format a small score summary.",
+      "after": "Describe a player and turn their score into a sentence."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "TypeScript is JavaScript with extra descriptions of the kinds of values your code expects. A compiler checks those descriptions before producing JavaScript to run. number describes numbers such as 14; string describes text such as '14'; boolean describes true or false. Quoted '14' is text even though it looks like a number. These differences help catch mistakes before you see a broken screen.\n\nFor example, a numeric score that gains 5 points and then 2 more becomes 5 + 2 = 7. Subtracting 2 from 5 gives 3; multiplying 5 by 2 gives 10. JavaScript uses +, -, and * for those numeric operations. Choosing number makes that arithmetic intention clear.",
+        "This complete TypeScript example needs a TypeScript compiler or this lesson's TypeScript runner; ordinary JavaScript cannot read interface declarations.\n```typescript\ninterface Runner {\n  name: string;\n  laps: number;\n}\nfunction describeRunner(runner: Runner): string {\n  return `${runner.name} completed ${runner.laps} laps.`;\n}\nconst runner: Runner = { name: 'Ivy', laps: 4 };\nconsole.log(describeRunner(runner));\n```\nThe result is Ivy completed 4 laps. An interface describes an object's fields: name must be text and laps must be a number. It does not create the object itself.",
+        "Read the punctuation as instructions. The colon after a field gives its type; runner: Runner gives the parameter's type; ): string says the function returns text. Parentheses hold a function's inputs. return sends a result back to its caller. runner.name uses a dot to read a field. Backticks start a template string, and ${...} inserts the value of the expression inside. Curly braces describe an object or enclose the function body, depending on their location.",
+        "Add this second example after the first block:\n```typescript\nconst another = { name: 'Sol', laps: 9 };\nconst sentence = describeRunner(another);\nconsole.log(sentence);\nconsole.log(typeof another.laps);\n```\nThe outputs are Sol completed 9 laps. and number. TypeScript infers another's field types from their values: inference means it works out a type without an explicit annotation. The function uses the supplied object, so it works for different runners rather than hard-coding Ivy's name.",
+        "An object with laps: '9' does not meet Runner because that value is text. To practice type errors, temporarily change a numeric laps value to quoted text and run the full compiler check. Expect a reported error, then restore the number. A runtime test that checks the sentence is useful but does not establish that the compiler rejects incorrect types.",
+        "In the exercise, Player has name: string and score: number. scoreSummary accepts a Player and must return a sentence in the form name has score points. Include the final period and spaces. The player, summary, and function names connect to the supplied checks. Reading player.score gives the actual score, while the text 'player.score' would literally print those characters.",
+        "Types disappear from the JavaScript that runs. An interface cannot clean or validate a network response. If unchecked outside data says score is '12', the runtime still receives text unless you check it. Keep compile-time checking and runtime validation distinct. For this fixture the values are already supplied correctly, so concentrate on the typed function and formatting."
+      ],
+      "after": [
+        "TypeScript adds type checking to JavaScript. A compiler is a tool that checks the code and turns it into JavaScript. `number` means a number, `string` means text, and `boolean` means true or false.",
+        "An interface describes an object's required parts. This Runner needs a text name and a numeric lap count.\n```typescript\ninterface Runner {\n  name: string;\n  laps: number;\n}\nfunction describeRunner(runner: Runner): string {\n  return `${runner.name} completed ${runner.laps} laps.`;\n}\nconsole.log(describeRunner({ name: \"Ivy\", laps: 4 }));\n```\nThe output is Ivy completed 4 laps.",
+        "`runner: Runner` describes the input. The final `: string` describes the returned text. Backticks make a text template. Each `${...}` inserts a value into it.",
+        "Inference means working out a type from the code. TypeScript can work out that an object with name as text and laps as a number matches Runner. You do not have to write every type label yourself.",
+        "A lap count of `\"9\"` is text because it has quotes. It does not match the number type. TypeScript reports this before the app runs the code.",
+        "For the project, Player has a text name and a numeric score. Make scoreSummary return a sentence such as Mina has 12 points. Use the supplied player's values and include the spaces and final period.",
+        "Type descriptions disappear from the JavaScript that runs. They do not check data arriving from outside the program. Such data needs checks while the program runs; the values in this practice are already supplied."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Define a Player interface with name and score.",
+        "Write a function that formats one player into a summary.",
+        "Use player { name: \"Mina\", score: 12 }; summary should be \"Mina has 12 points.\" Try Bo with score 3 as a second case."
+      ],
+      "after": [
+        "Define Player with a string name and number score.",
+        "Make scoreSummary return the player's name and score in the requested sentence.",
+        "Create Mina with 12 points, store the sentence in summary, and run the checks."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "The score is numeric, so declare it as `number`.",
+        "Return one template string from the function.",
+        "Include both `player.name` and `player.score` in the summary."
+      ],
+      "after": [
+        "Keep score as a number.",
+        "Use a text template to insert values into the sentence.",
+        "Read `player.name` and `player.score` instead of writing fixed values."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "A field is declared score: number. You assign \"12\" with quotes. What does TypeScript report?",
+        "choices": [
+          "No mismatch: digits inside quotes are numbers",
+          "A mismatch only if the score is negative",
+          "A type mismatch: quoted \"12\" is a string"
+        ],
+        "answer": 2,
+        "explanation": "Quoted digits form a string, so they do not satisfy number. The numeric value 12 without quotes has the required type."
+      },
+      "after": {
+        "question": "Score must be a number. What happens if you give it \"12\" with quotes?",
+        "choices": [
+          "It is accepted because it contains digits",
+          "It fails only if the score is negative",
+          "TypeScript reports that text does not match number"
+        ],
+        "answer": 2,
+        "explanation": "Quoted digits are text. Use 12 without quotes for a number."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Type-error practice: after the valid solution compiles, temporarily append this line and run the full TypeScript check: scoreSummary({ name: \"Mina\", score: \"12\" }); The compiler should report an error. Remove the line before completing the lesson. Runtime checks alone cannot establish rejection of an incorrect type.",
+      "after": "To try a type error, temporarily pass a quoted score to scoreSummary. Run the check, read the error, then restore the number."
+    }
+  ],
+  "headings": [
+    "Check kinds of values",
+    "Describe an object's fields",
+    "Read the function",
+    "Let TypeScript work out a type",
+    "Spot a quoted number",
+    "Write the score sentence",
+    "Types do not check outside data"
+  ],
+  "project": {
+    "title": "A typed score card",
+    "task": "Give player details clear types and return the requested score sentence.",
+    "done_when": "Valid player details work, a quoted score is rejected, and the checks pass."
+  }
+}

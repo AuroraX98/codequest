@@ -1,0 +1,91 @@
+{
+  "lesson": "go-61",
+  "position": 61,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "If cancellation happens before starting the goroutine instead, what prints after done?",
+      "after": "Cancel a worker, then wait for it to finish."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "Cancellation alone does not wait for a goroutine to exit. This owner supplies a context, cancels it and then waits for a separate done channel. The worker owns closing done using defer, so main returns only after cleanup and result assignment.",
+        "The worker receives from ctx.Done; if cancellation already happened, that receive is immediately ready. This handles both cancellation before start and cancellation while waiting without a timing assumption. A worker doing other blocking work would also need cancellation-aware operations at those boundaries.",
+        "Complete local Go example; the app itself does not execute it:\n```go\npackage main\n\nimport (\n\"fmt\"\n\"context\"\n)\n\n\nfunc main() {\n    ctx, cancel := context.WithCancel(context.Background())\n    defer cancel()\n    done := make(chan struct{})\n    result := \"waiting\"\n    go func() {\n        defer close(done)\n        <-ctx.Done()\n        result = \"stopped\"\n    }()\n    cancel()\n    <-done\n    fmt.Println(result)\n}\n```",
+        "Expected output or behavior: stopped. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Explain how a sender blocked on a data channel could select on ctx.Done to avoid an abandoned send. You may trace it without a Go compiler; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "cancel asks the worker to stop. It does not wait for the worker to finish. A separate done channel tells main when the worker has set its result and is leaving.",
+        "The worker waits on ctx.Done. If cancellation already happened, that wait can finish immediately. The signal is still there even if the worker started later.",
+        "Follow the stop request and the separate completion signal.\n```go\npackage main\n\nimport (\n\"fmt\"\n\"context\"\n)\n\n\nfunc main() {\n    ctx, cancel := context.WithCancel(context.Background())\n    defer cancel()\n    done := make(chan struct{})\n    result := \"waiting\"\n    go func() {\n        defer close(done)\n        <-ctx.Done()\n        result = \"stopped\"\n    }()\n    cancel()\n    <-done\n    fmt.Println(result)\n}\n```",
+        "The screen shows `stopped`. The worker sets the result before closing done, and main waits for done before reading it.",
+        "A worker waiting on some other operation also needs a way to notice cancellation. For a channel send, select can let the worker choose the stop signal when the send cannot proceed."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "The cancellation signal does not disappear."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If cancellation happens before starting the goroutine instead, what prints after done?",
+        "choices": [
+          "stopped because the already-closed Done channel is still observable.",
+          "The context reopens when the worker starts.",
+          "waiting because cancellation is lost when no worker is present."
+        ],
+        "answer": 0,
+        "explanation": "Context cancellation is a persistent signal; the later receiver does not need to have been waiting at the instant of cancellation."
+      },
+      "after": {
+        "question": "Cancel before starting the worker. What appears after main waits for done?",
+        "choices": [
+          "stopped, because the worker can still observe cancellation.",
+          "The context reopens when the worker starts.",
+          "waiting, because nobody was listening at the moment of cancellation."
+        ],
+        "answer": 0,
+        "explanation": "The canceled context stays canceled. The worker sees it, sets stopped, and signals completion."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Go Core v1 uses the verified Go1.27.3 toolchain and standard library. The app supplies concept reading and an understanding check, not a Go browser runner. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "The browser shows Go code and checks your understanding; it does not run Go. Optional local examples use Go 1.27."
+    }
+  ],
+  "headings": [
+    "Separate stop from finished",
+    "Notice an earlier cancellation",
+    "One example",
+    "Read the final worker result",
+    "Handle work that might block"
+  ],
+  "project": {
+    "title": "Cancellation-aware worker lifetime",
+    "task": "Explain how a late-starting worker still sees the request to stop.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local Go example is optional."
+  }
+}

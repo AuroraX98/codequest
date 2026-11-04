@@ -1,0 +1,106 @@
+{
+  "lesson": "react-05",
+  "position": 34,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Filter a large fixed list, count examined rows, and preserve the same results while reducing repeated work.",
+      "after": "Reuse an unchanged search result while keeping the matching items correct."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "Filtering a list examines each item to decide whether it matches. If there are n items and you inspect each once, that is linear work, written O(n). The O notation describes how work grows, not an exact clock time. Growing a list from 1,000 to 8,000 items means roughly eight times as many comparisons for the same full scan.",
+        "This standalone JavaScript example makes the work count visible:\n```javascript\nconst items = ['Cedar', 'Maple', 'Cedar guide', 'Oak'];\nfunction measure(query) {\n  let examined = 0;\n  const matches = items.filter(item => {\n    examined += 1;\n    return item.toLowerCase().includes(query.toLowerCase());\n  });\n  return { matches, examined };\n}\nconsole.log(measure('cedar'));\n```\nThe result has matches ['Cedar', 'Cedar guide'] and examined 4. filter visits each item, retaining ones whose callback returns true. toLowerCase makes both texts lowercase for a case-insensitive comparison; includes checks for the query anywhere inside the item.",
+        "React may render again for a state update that does not affect the query or list. useMemo remembers a calculated result while its dependency values remain the same. A dependency is an input that can change the answer. It does not make a new query constant-time; a changed query still needs a scan. React compares each dependency with its previous value, so keeping the array itself stable matters too.",
+        "This complete App needs the React/JSX runner:\n```react\nfunction App() {\n  const items = React.useMemo(() => ['Cedar', 'Maple', 'Cedar guide'], []);\n  const [query, setQuery] = React.useState('cedar');\n  const [repeat, setRepeat] = React.useState(0);\n  function measure() {\n    let examined = 0;\n    const matches = items.filter(item => {\n      examined += 1;\n      return item.toLowerCase().includes(query.toLowerCase());\n    });\n    return { matches, examined };\n  }\n  const baseline = React.useMemo(measure, [items, query, repeat]);\n  const cached = React.useMemo(measure, [items, query]);\n  return <main>\n    <label>Search <input value={query}\n      onChange={e => setQuery(e.target.value)} /></label>\n    <button onClick={() => setRepeat(value => value + 1)}>Repeat</button>\n    <p>Matches: {cached.matches.length}</p>\n    <p>Same count: {baseline.matches.length === cached.matches.length ? 'yes' : 'no'}</p>\n  </main>;\n}\n```\nInitially there are two matches. Repeat changes repeat, so the baseline recalculates while cached can reuse its result. Editing query recalculates both. [] gives the list creation no changing dependencies.",
+        "To compare work across renders, the exercise records each newly committed calculation result. A ref stores previous baseline and memoized object references and running counts. Its effect depends on the two result objects. If a result reference changed, add that result's examined count; then store the new references and put totals into state. The totals render does not change items, query, or repeat, so it does not create a measuring loop.",
+        "The exercise's list uses Array.from({length: 1000}, (_, i) => `Book ${i}`). It creates indexes 0 through 999; _ is a parameter name for an unused value and i is the index. Book 99 matches Book 99 and Book 990 through Book 999: 11 matches. slice(0, 10) displays the first ten without changing the full match array. Check every matching value as well as equal lengths: equal counts alone can hide different results.\n\n```javascript\nconst matches = [\"A\", \"B\", \"C\"];\nconsole.log(matches.slice(0, 2));\nconsole.log(matches);\n```\nThe arrays are [\"A\", \"B\"] and [\"A\", \"B\", \"C\"]. slice receives a start index and an excluded end index, returning a new shallow array without changing matches.",
+        "Exclude repeat from the memoized dependencies but retain items and query. Initially each calculation represents 1,000 comparisons. After repeating unchanged inputs once, the baseline total becomes 2,000 while the memoized total stays 1,000, with identical match arrays. The check's totals assume this supplied run without development StrictMode. Extra development or discarded renders can make raw execution counts different. useMemo is a performance aid whose cache React may discard; correct results must not depend on retaining it."
+      ],
+      "after": [
+        "A full filter checks every item once. This is linear work, written `O(n)`: the work grows with the number of items. The notation describes growth, not a promised running time.",
+        "Count one examined item each time the filter tests it. Lowercase both texts for a search that ignores capital letters. `includes` checks whether the search text appears anywhere in an item.",
+        "A render caused by unrelated state may not need a new search. `useMemo` can reuse a result while its dependencies stay the same. A changed query still needs the list to be searched again.",
+        "```react\nfunction App() {\n  const items = React.useMemo(() => [\"Cedar\", \"Maple\", \"Cedar guide\"], []);\n  const [query, setQuery] = React.useState(\"cedar\");\n  const [repeat, setRepeat] = React.useState(0);\n  function measure() {\n    let examined = 0;\n    const matches = items.filter(item => {\n      examined += 1;\n      return item.toLowerCase().includes(query.toLowerCase());\n    });\n    return { matches, examined };\n  }\n  const baseline = React.useMemo(measure, [items, query, repeat]);\n  const cached = React.useMemo(measure, [items, query]);\n  return (\n    <main>\n      <label>Search <input value={query} onChange={e => setQuery(e.target.value)} /></label>\n      <button onClick={() => setRepeat(value => value + 1)}>Repeat</button>\n      <p>Matches: {cached.matches.length}</p>\n      <p>Same count: {baseline.matches.length === cached.matches.length ? \"yes\" : \"no\"}</p>\n    </main>\n  );\n}\n```\nThe page starts with two matches. Repeat recalculates the baseline while the cached version can reuse its result. Editing the query recalculates both.",
+        "The exercise adds up the examined counts from new calculation results. Its Effect notices a new result object, adds its count once, and remembers that object. Showing the new totals does not change the search inputs.",
+        "The supplied list has Book 0 through Book 999. Searching `Book 99` matches 11 items: Book 99 and Book 990 through Book 999. `slice(0, 10)` shows only the first ten. Compare the actual matches too; equal counts alone do not prove equal results.",
+        "Keep items and query in both dependency lists. Include repeat only in the baseline. In the supplied run, one unchanged repeat brings the baseline total to 2,000 and leaves the memoized total at 1,000. These count completed calculation results, not page-drawing time. React may discard caches or run extra development checks, so correctness must not depend on keeping a cache."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Keep the supplied 1,000 strings, Book 0 through Book 999, and initial query \"Book 99\". There are 11 matches; display the first 10.",
+        "Keep the baseline filter dependent on items, query, and repeat. It should search again when any of those values changes.",
+        "Make the memoized filter depend only on items and query. It should reuse its saved result when only repeat changes.",
+        "Count every item each filter checks.",
+        "Make Repeat same search change the repeat counter, not the query.",
+        "Use the effect to add up the actual comparisons after each new calculation.",
+        "After one repeat, expect a baseline total of 2,000 and a memoized total of 1,000.",
+        "Check that both filters still return the same matches."
+      ],
+      "after": [
+        "Keep the 1,000 supplied books and the initial query Book 99.",
+        "Make baseline depend on items, query, and repeat; make cached depend on items and query.",
+        "Count examined items and add each new result's count once.",
+        "Run the checks. Compare matching values as well as totals."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Each filter calculation should return both its matches and the count of actual rows examined.",
+        "Keep repeat in the baseline dependencies and omit it from the memoized dependencies. Both calculations still depend on items and query.",
+        "Record a calculation once when its returned object changes, inside useEffect. One unrelated repeat runs only the baseline filter, leaving total memoized comparisons at 1,000."
+      ],
+      "after": [
+        "An unchanged repeat should change repeat, not query.",
+        "Keep the supplied effect that records each new calculation result."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "A component rerenders, but items and query are the same dependencies as before. What can useMemo do with the previous filtered result?",
+        "choices": [
+          "Reuse it without running that calculation again",
+          "Make all future filtering constant-time",
+          "Update the original items array automatically"
+        ],
+        "answer": 0,
+        "explanation": "useMemo reuses a cached result while dependencies remain equal. It does not change the algorithm’s complexity or mutate the input."
+      },
+      "after": {
+        "question": "Items and query have not changed. What can useMemo do?",
+        "choices": [
+          "Reuse the earlier result without recalculating.",
+          "Make every future search take constant work.",
+          "Update the original array automatically."
+        ],
+        "answer": 0,
+        "explanation": "It can reuse the matching result while the inputs stay equal. A changed search still needs its own calculation."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "These totals measure the filter work represented by committed calculation results, not DOM painting time or every speculative/discarded render. Run the supplied comparison without development StrictMode; React can call calculations extra times during development. useMemo is a performance aid, and correctness must not depend on React retaining its cache.",
+      "after": "The counts describe completed calculation results in the supplied run without development StrictMode. They do not measure total drawing time or promise a speedup."
+    }
+  ],
+  "headings": [
+    "Count the work of a search",
+    "Measure one pass",
+    "Reuse an unchanged calculation",
+    "Compare two search calculations",
+    "Count completed calculation results",
+    "Keep the full result correct",
+    "Build your large-list comparison"
+  ],
+  "project": {
+    "title": "A responsive large-list explorer",
+    "task": "Compare the counted work for repeated and changed searches while keeping both result lists correct.",
+    "done_when": "An unchanged repeat reuses the memoized result. Changed inputs refresh the matches. The displayed totals describe actual counted comparisons."
+  }
+}

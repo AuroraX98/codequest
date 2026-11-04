@@ -1,0 +1,99 @@
+{
+  "lesson": "sql-10",
+  "position": 12,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Create a view named category_directory with one column, category. Read supplies, omit NULL and empty-string categories, and keep each remaining category once. Display the view sorted by category. Keep spaces and capitalization as stored; the supplied categories need no cleanup.",
+      "after": "List each usable category once, even when many items share it."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A directory should list each category once even when many supplies belong to it. A SQL table stores rows under named columns. SELECT chooses columns; FROM chooses a table. DISTINCT removes duplicate result rows. This lesson builds a reusable directory from the supplies table rather than manually typing the category names.",
+        "SELECT DISTINCT category returns each different category value once. DISTINCT applies to the whole selected row. If you also select item_name, two rows with the same category and different items remain different rows. Choose only the column that defines the directory entry.",
+        "This self-contained example uses a temporary set of values.\n```sql\nWITH supplies(category) AS (\n  VALUES ('paper'), ('tools'), ('paper')\n)\nSELECT DISTINCT category\nFROM supplies\nORDER BY category;\n```\nThe result has paper and tools once each. WITH gives this query a named input; it does not create a permanent table.",
+        "NULL represents missing information. It differs from the empty string, which is present text of length zero. Use category IS NOT NULL to omit missing values and category <> '' to omit empty text. The AND keyword requires both conditions to hold. Neither condition trims spaces or changes spelling.",
+        "A filter can run before duplicate removal.\n```sql\nWITH labels(name) AS (VALUES ('A'), (NULL), (''), ('A'), ('B'))\nSELECT DISTINCT name\nFROM labels\nWHERE name IS NOT NULL AND name <> ''\nORDER BY name;\n```\nThe result is A and B. ORDER BY requests output order explicitly; SQL does not promise a useful row order when it is omitted.",
+        "A view is a saved query, not a separate copy of its results. CREATE VIEW category_directory AS followed by SELECT defines the reusable query. Later, SELECT * FROM category_directory ORDER BY category displays it. If a new category is added to supplies, the view reads the new data without rebuilding a manual list.",
+        "The setup file creates supplies for each run. Your query should create the view without changing those source rows, then display the sorted directory. Checks look for duplicates and omitted empty values in the supplied data. After passing, add a new category in setup.sql and rerun: a real view derives its results from the source instead of storing a manually typed list."
+      ],
+      "after": [
+        "`DISTINCT` removes repeated result rows. A category directory can use it to show each category once, even when many items have that category.",
+        "SQL compares the whole selected row. If you select only category, repeated categories become one result. If you also select different item names, those rows are different and both remain.",
+        "Run this example in a fresh database:\n```sql\nCREATE TABLE demo_supplies(category TEXT);\nINSERT INTO demo_supplies VALUES\n  ('paper'), ('tools'), ('paper'), (NULL), ('');\nSELECT DISTINCT category\nFROM demo_supplies\nWHERE category IS NOT NULL AND category <> ''\nORDER BY category;\n```\nThe result is `paper`, then `tools`, with each shown once.",
+        "`IS NOT NULL` leaves out missing values. `<> ''` leaves out empty text; `<>` means not equal. These checks do not remove spaces or change capital letters.",
+        "`ORDER BY category` asks for a sorted display. DISTINCT removes repeats but does not promise an order by itself.",
+        "A view saves a query instead of saving a separate copy of its results. Define it with `CREATE VIEW category_directory AS` followed by your SELECT. Reading the view uses the current supply rows.",
+        "Build `category_directory(category)` from `supplies`. Omit NULL and empty text, keep each other category once, and leave source rows unchanged. Display the view sorted by category. Keep spaces and capital letters as stored."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the `supplies` table in `setup.sql`.",
+        "Create `category_directory` with `SELECT DISTINCT category` so each category appears once.",
+        "Leave out `NULL` and empty text.",
+        "Display the view with `ORDER BY category`.",
+        "Run the checks."
+      ],
+      "after": [
+        "Select only DISTINCT category from supplies.",
+        "Filter out NULL and empty text.",
+        "Save the query as category_directory.",
+        "Display its category column in order."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Keep only category in the view's SELECT list.",
+        "Use WHERE category IS NOT NULL AND category <> ''.",
+        "Place DISTINCT immediately after SELECT."
+      ],
+      "after": [
+        "DISTINCT comes just after SELECT.",
+        "Keep only category in the view's result.",
+        "The view should read supplies, not list category names by hand."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Two rows are (\"Tools\", \"Hammer\") and (\"Tools\", \"Saw\"). How many rows does SELECT DISTINCT category return?",
+        "choices": [
+          "1",
+          "2",
+          "0"
+        ],
+        "answer": 0,
+        "explanation": "Only category is selected, so both result rows would be Tools. DISTINCT removes that duplicate; selecting the item name too would keep the rows different."
+      },
+      "after": {
+        "question": "Hammer and Saw both have category Tools. How many rows does SELECT DISTINCT category return for them?",
+        "choices": [
+          "1",
+          "2",
+          "0"
+        ],
+        "answer": 0,
+        "explanation": "Only category is selected. Both values are Tools, so DISTINCT keeps one."
+      }
+    }
+  ],
+  "headings": [
+    "Remove repeated results",
+    "Choose what makes a duplicate",
+    "Build a small directory",
+    "Leave out missing and empty text",
+    "Request a display order",
+    "Save the query as a view",
+    "Build the supply directory"
+  ],
+  "project": {
+    "title": "A supply category directory",
+    "task": "Create category_directory(category) as a view of supplies. Omit NULL and empty text, keep each other category once, and display it in category order.",
+    "done_when": "The view uses the source data, has no repeated categories, preserves spaces and capitalization, and leaves supplies unchanged."
+  }
+}

@@ -1,0 +1,92 @@
+{
+  "lesson": "c-59",
+  "position": 59,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "If both loop bounds change from 1000 to 250, what is the final count?",
+      "after": "A mutex is a lock that lets one thread at a time update shared data."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "The file-scope static int count has static storage duration and is initialized to zero even without a written initializer. count++ reads and writes shared state; a mutex must protect the entire operation. Both main and the worker call increment using the same mtx_t. mtx_plain requests an ordinary nonrecursive mutex. A failed lock must not be ignored before touching shared state.",
+        "Initialize the mutex before starting work. Join the worker before reading the final count and destroying the mutex. The cast (void)unused explicitly discards the required callback argument. Checked failures abort rather than continuing unprotected; failed thread creation destroys the initialized mutex.\n\nmtx_unlock(&lock) releases that same mutex after the protected update; it returns thrd_success on success. The calling thread must own the lock before unlocking it.",
+        "Complete local C example; the app itself does not execute it:\n```c\n#include <stdio.h>\n#include <stdlib.h>\n#if defined(__STDC_NO_THREADS__) && __STDC_NO_THREADS__\n#error C threads unavailable on this implementation\n#endif\n#include <threads.h>\nstatic mtx_t lock;\nstatic int count;\nstatic void increment(void) {\n    if (mtx_lock(&lock) != thrd_success) abort();\n    count++;\n    if (mtx_unlock(&lock) != thrd_success) abort();\n}\nstatic int work(void *unused) {\n    (void)unused;\n    for (int i = 0; i < 1000; i++) increment();\n    return 0;\n}\nint main(void) {\n    thrd_t worker;\n    if (mtx_init(&lock, mtx_plain) != thrd_success) return 1;\n    if (thrd_create(&worker, work, NULL) != thrd_success) {\n      mtx_destroy(&lock); return 1;\n    }\n    for (int i = 0; i < 1000; i++) increment();\n    if (thrd_join(worker, NULL) != thrd_success) abort();\n    printf(\"%d\\n\", count);\n    mtx_destroy(&lock);\n    return 0;\n}\n```",
+        "Expected output or behavior: 2000. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Explain why a different lock for each participant would not protect this one counter. You may trace it without a C compiler; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "A mutex is a lock held by at most one thread at a time. count++ reads a number, adds 1, then writes it back. Protect that whole operation with the same mutex in every thread. The file-scope count starts at 0 because it has static storage.",
+        "Initialize the mutex before either thread uses it. Lock, update, then unlock. A thread must own the lock before unlocking it. After the worker is joined, read the final count and destroy the mutex. The example stops on a failed lock, unlock, or join.",
+        "Follow the example one line at a time.\n```c\n#include <stdio.h>\n#include <stdlib.h>\n#if defined(__STDC_NO_THREADS__) && __STDC_NO_THREADS__\n#error C threads unavailable on this implementation\n#endif\n#include <threads.h>\nstatic mtx_t lock;\nstatic int count;\nstatic void increment(void) {\n    if (mtx_lock(&lock) != thrd_success) abort();\n    count++;\n    if (mtx_unlock(&lock) != thrd_success) abort();\n}\nstatic int work(void *unused) {\n    (void)unused;\n    for (int i = 0; i < 1000; i++) increment();\n    return 0;\n}\nint main(void) {\n    thrd_t worker;\n    if (mtx_init(&lock, mtx_plain) != thrd_success) return 1;\n    if (thrd_create(&worker, work, NULL) != thrd_success) {\n      mtx_destroy(&lock); return 1;\n    }\n    for (int i = 0; i < 1000; i++) increment();\n    if (thrd_join(worker, NULL) != thrd_success) abort();\n    printf(\"%d\\n\", count);\n    mtx_destroy(&lock);\n    return 0;\n}\n```",
+        "main adds 1 a thousand times, and the worker does the same. Their shared lock protects every update. After joining, the count is 2000. `(void)unused` marks the callback's required but unused input as deliberately ignored.",
+        "Change both loops to 250 turns. Each successful turn still adds exactly 1. The lock protects the work; it does not remove either thread's updates."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Add the two loop counts after confirming that both use the same lock."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If both loop bounds change from 1000 to 250, what is the final count?",
+        "choices": [
+          "500",
+          "Any number, because the protected updates still have a data race.",
+          "250 because the mutex discards one participant"
+        ],
+        "answer": 0,
+        "explanation": "All 500 increments use the shared mutex, and observation happens after the worker finishes."
+      },
+      "after": {
+        "question": "Change both loop limits from 1000 to 250. What is the final count after success?",
+        "choices": [
+          "500",
+          "Any number, because the protected updates still clash.",
+          "250, because the lock discards one thread's work."
+        ],
+        "answer": 0,
+        "explanation": "Both sets of 250 updates are protected by the same mutex. After the worker finishes, the total is 500."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "C Core v1 uses a portable C17 baseline supported by the verified compiler. C23 exists but is not claimed fully supported here. The app supplies concept reading and an understanding check, not a C browser runner. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "The browser shows C code and checks your understanding; it does not run C. Optional local examples use C17."
+    }
+  ],
+  "headings": [
+    "Use one lock for the shared counter",
+    "Set up and finish the lock's lifetime",
+    "One example",
+    "Count every protected update",
+    "Change both loop lengths"
+  ],
+  "project": {
+    "title": "Mutex-protected shared state",
+    "task": "Explain why two different locks would not protect the same shared counter.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local C example is optional."
+  },
+  "navigationCorrection": "Added a short example introduction so its reviewed heading remains an explicit contents target."
+}

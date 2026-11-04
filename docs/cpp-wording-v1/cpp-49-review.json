@@ -1,0 +1,94 @@
+{
+  "lesson": "cpp-49",
+  "position": 49,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Change reward(true) to reward(false). Which branch runs, and why?",
+      "after": "Represent a value that may be missing without confusing missing with zero."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "std::optional<int> holds either an int or no value. std::nullopt constructs the empty state; it does not mean the integer zero.",
+        "In if(result), optional converts to true when a value is present, even when that value is 0. Only dereference *result after establishing presence; dereferencing an empty optional is not a safe fallback.",
+        "value_or(defaultValue) can supply a fallback without altering the optional. It is useful only when treating absence as that fallback fits the application.\n\nvalue_or(9) returns the contained int or the supplied fallback. has_value() takes no arguments and reports whether a value is present; it confirms the fallback did not fill the empty optional:\n```cpp\nstd::optional<int> present{0};\nstd::optional<int> absent;\nstd::cout << present.value_or(9) << \" \" << absent.value_or(9) << \"\\n\";\nstd::cout << std::boolalpha << absent.has_value() << \"\\n\";\n```\nOutput: 0 9, then false.",
+        "Complete local C++ example; the app itself does not execute it:\n```cpp\n#include <iostream>\n#include <optional>\nstd::optional<int> reward(bool earned) {\n    if (earned) return 0;\n    return std::nullopt;\n}\nint main() {\n    auto result = reward(true);\n    if (result) std::cout << \"value \" << *result << \"\\n\";\n    else std::cout << \"missing\\n\";\n}\n```",
+        "Expected output or behavior: value 0. Local compiler test evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Return an optional position from a search and handle both found-at-zero and not-found cases. You may trace this without a compiler; finishing the reading is not proof of a local run."
+      ],
+      "after": [
+        "std::optional<int> holds either an integer or no value. std::nullopt means no value is present. Zero is still a real integer value, so it is different from missing.",
+        "if (result) checks whether the optional contains a value. It does not test whether the contained integer is nonzero. has_value() asks the same presence question directly.",
+        "*result reads the contained value. First establish that a value is present. An empty optional must not be dereferenced as if it contained a default integer.",
+        "Follow the returned zero through the presence check.\n\n```cpp\n#include <iostream>\n#include <optional>\nstd::optional<int> reward(bool earned) {\n    if (earned) return 0;\n    return std::nullopt;\n}\nint main() {\n    auto result = reward(true);\n    if (result) std::cout << \"value \" << *result << \"\\n\";\n    else std::cout << \"missing\\n\";\n}\n```",
+        "The program prints value 0. reward(true) returns an optional containing zero, so the presence check succeeds.",
+        "value_or supplies a fallback when an optional is empty. It returns a value without filling the optional. Use a fallback only when treating absence that way makes sense for the task."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain why, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Ask whether there is a value before asking what that value is."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Change reward(true) to reward(false). Which branch runs, and why?",
+        "choices": [
+          "missing: there is no contained int.",
+          "value 1: optional converts the payload to a bool first.",
+          "value 0: absence and zero are the same."
+        ],
+        "answer": 0,
+        "explanation": "false selects nullopt. The condition checks presence, not the numeric truthiness of an int."
+      },
+      "after": {
+        "question": "Change reward(true) to reward(false). Which branch runs?",
+        "choices": [
+          "missing, because no integer is contained.",
+          "value 1, because the contained value is converted to true.",
+          "value 0, because missing and zero mean the same thing."
+        ],
+        "answer": 0,
+        "explanation": "false makes reward return nullopt. The optional is empty, so the presence check chooses the missing branch."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "C++ Core v1, standard C++23 features checked against the available GCC14.2 implementation. This app provides concept reading and an understanding check, not a C++ browser runner. Local example tests are separate evidence and do not certify learner mastery.",
+      "after": "The browser shows C++ code and checks your understanding; it does not run C++. Optional local examples use C++23."
+    }
+  ],
+  "headings": [
+    "Store a value or nothing",
+    "Check for presence",
+    "Read only a present value",
+    "One example",
+    "What appears",
+    "Choose a fallback when appropriate"
+  ],
+  "project": {
+    "title": "Represent an optional result",
+    "task": "Trace why a present zero passes the optional's condition.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local C++ example is optional."
+  }
+}

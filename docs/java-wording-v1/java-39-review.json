@@ -1,0 +1,95 @@
+{
+  "lesson": "java-39",
+  "position": 39,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Add input.add(1) inside total. Why is the changed program rejected?",
+      "after": "Use wildcards to say what a method can safely read or add."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "List<? extends Number> accepts a List<Integer> for reading as Number values. The ? stands for an unknown particular type. You cannot safely add an arbitrary non-null Number: the actual list might require Integer.",
+        "List<? super Integer> can receive Integer values; its actual element type is Integer or a supertype. Reading from that unknown list gives only Object without additional checks. The mnemonic is producer extends, consumer super.",
+        "List<Integer> is not a subtype of List<Number>. Wildcards express the particular flexibility an operation needs instead of pretending all lists accept the same additions. List.of creates an unmodifiable list; our output ArrayList is mutable.",
+        "Complete local Java example; the app itself does not execute it:\n```java\nimport java.util.ArrayList;\nimport java.util.List;\npublic class Main {\n    static double total(List<? extends Number> input) {\n        double sum = 0;\n        for (Number value : input) sum += value.doubleValue();\n        return sum;\n    }\n    static void addOne(List<? super Integer> output) { output.add(1); }\n    public static void main(String[] args) {\n        List<Integer> input = List.of(2, 3);\n        List<Number> output = new ArrayList<>();\n        addOne(output);\n        System.out.println(total(input));\n        System.out.println(output.size());\n    }\n}\n\n```",
+        "Expected output or behavior: 5.0\n1\n. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Pass an ArrayList<Object> to addOne, then explain why reading its element has type Object. You may trace it without a JDK; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "The wildcard `?` means an unknown type. In `List<? extends Number>`, each item can be read as Number. The exact item type is unknown, so adding an arbitrary non-null number is not safe: the real list may need a different Number child type.",
+        "`List<? super Integer>` means the list's item type is Integer or one of its parent types. This view allows adding an Integer. Reading gives only Object, because the list may also hold other kinds of objects.",
+        "List<Integer> is not a List<Number>: a list of integers cannot accept every kind of number. Wildcards allow just the flexibility needed. Separately, List.of makes a list that cannot be changed; new ArrayList makes a changeable list.",
+        "Follow what total reads and what addOne adds.\n\n```java\nimport java.util.ArrayList;\nimport java.util.List;\npublic class Main {\n    static double total(List<? extends Number> input) {\n        double sum = 0;\n        for (Number value : input) sum += value.doubleValue();\n        return sum;\n    }\n    static void addOne(List<? super Integer> output) { output.add(1); }\n    public static void main(String[] args) {\n        List<Integer> input = List.of(2, 3);\n        List<Number> output = new ArrayList<>();\n        addOne(output);\n        System.out.println(total(input));\n        System.out.println(output.size());\n    }\n}\n\n```",
+        "The program prints 5.0, then 1 on the next line. total adds the input numbers. addOne places one Integer in the output list, whose size becomes one.",
+        "The quiz tries to add inside total through its extends view. Java must reject an addition that might not fit the unknown item type, even if a supplied list could be changed."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "total knows a parent type it can read, not the exact type it can add."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Add input.add(1) inside total. Why is the changed program rejected?",
+        "choices": [
+          "Every List is always immutable",
+          "An unknown extends subtype cannot safely accept that non-null element",
+          "Number has no numeric subclasses"
+        ],
+        "answer": 1,
+        "explanation": "The compile-time wildcard restriction is enough to reject this addition, independently of whether a particular supplied list is mutable."
+      },
+      "after": {
+        "question": "Add input.add(1) inside total. Why does compilation fail?",
+        "choices": [
+          "Every List is unchangeable.",
+          "The unknown item type might not accept an Integer.",
+          "Number has no child types."
+        ],
+        "answer": 1,
+        "explanation": "The extends bound allows reading as Number, but the exact item type is unknown. Java cannot promise that adding an Integer is safe."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Java Core v1 uses stable Java25 LTS features without preview flags. The app supplies concept reading and an understanding check, not a Java browser runner. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "The browser shows Java code and checks your understanding; it does not run Java. Optional local examples use Java25."
+    }
+  ],
+  "headings": [
+    "extends lets you read through a known parent type",
+    "super lets you add a known child type",
+    "List types still keep their own rules",
+    "One example",
+    "What appears",
+    "Try adding through an extends view"
+  ],
+  "project": {
+    "title": "Use bounded wildcards safely",
+    "task": "Explain why total reads through extends while addOne adds through super.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local Java example is optional."
+  },
+  "browserCorrection": "Mark punctuation-bearing code notation as inline code so reading steps keep the thought whole."
+}

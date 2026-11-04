@@ -1,0 +1,94 @@
+{
+  "lesson": "javascript-62",
+  "position": 64,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Complete checkEqual so runChecks actually rejects an incorrect candidate using a strict comparison and named Error. Return true for equal values. Keep clamp, runChecks and the supplied catchesError helper unchanged; native Node testing is a separately labeled companion.",
+      "after": "Make a test detect a wrong answer instead of always saying it passed."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "checkEqual(actual, expected, name) compares with strict inequality, throws an Error naming a failed case, and returns true otherwise. runChecks(candidate) calls that assertion after invoking the supplied function at three boundaries. Math.min selects the smaller number and Math.max the larger, so clamp bounds its result to zero through ten.\n```javascript\nfunction clamp(value) {\n  return Math.max(0, Math.min(10, value));\n}\nfunction checkEqual(actual, expected, name) {\n  if (actual !== expected) throw new Error(\"failed: \" + name);\n  return true;\n}\nfunction runChecks(candidate) {\n  checkEqual(candidate(-1), 0, \"lower\");\n  checkEqual(candidate(7), 7, \"inside\");\n  checkEqual(candidate(11), 10, \"upper\");\n  return \"passed 3\";\n}\nconsole.log(runChecks(clamp));\n```\nOutput: passed 3. The browser exercise runs these explicit checks, not Node’s test runner.",
+        "The following companion is native Node only. Save it as clamp.test.mjs. The imports load Node built-ins, not browser packages or network dependencies. test(name, callback) registers a test whose callback is executed by the runner; assert.strictEqual(actual, expected) returns undefined when equal or throws AssertionError.\n```javascript\nimport test from \"node:test\";\nimport assert from \"node:assert/strict\";\nfunction clamp(value) { return Math.max(0, Math.min(10, value)); }\ntest(\"lower boundary\", () => {\n  assert.strictEqual(clamp(-1), 0);\n});\n```\nRun node --test --test-reporter=tap in that isolated directory. Node discovers the .test.mjs file and reports one passing lower boundary test. Timing lines vary. This is separate from the in-app function check.",
+        "Changing the expected zero in the native assertion to one makes that discovered test fail and the process exit nonzero. Merely printing passed would not establish that any assertion ran. The native fixture checks both the named test and the runner’s test count. Its modules and CLI are not executed by the browser worker.",
+        "The application task asks you to complete the real checking function, not return a canned passed String. Optional practice: add an exact upper-bound case in the native test file, rerun it, then intentionally change one expectation and inspect the failure. No claim about coverage percentage or production correctness follows from three small checks. The supplied catchesError helper is test infrastructure; keep it unchanged while implementing checkEqual."
+      ],
+      "after": [
+        "A test compares the actual answer with the expected answer. Our `checkEqual` throws an error when they differ.\n```javascript\nfunction clamp(value) {\n  return Math.max(0, Math.min(10, value));\n}\nfunction checkEqual(actual, expected, name) {\n  if (actual !== expected) throw new Error(\"failed: \" + name);\n  return true;\n}\nfunction runChecks(candidate) {\n  checkEqual(candidate(-1), 0, \"lower\");\n  checkEqual(candidate(7), 7, \"inside\");\n  checkEqual(candidate(11), 10, \"upper\");\n  return \"passed 3\";\n}\nconsole.log(runChecks(clamp));\n```\nOutput:\n```text\npassed 3\n```\n`clamp` keeps a number between 0 and 10. `runChecks` tests below, inside, and above that range. It reaches the final message only if all three checks succeed.",
+        "Node also has a built-in test runner. For this separate local example, save `clamp.test.mjs` in a practice folder.\n```javascript\nimport test from \"node:test\";\nimport assert from \"node:assert/strict\";\nfunction clamp(value) { return Math.max(0, Math.min(10, value)); }\ntest(\"lower boundary\", () => {\n  assert.strictEqual(clamp(-1), 0);\n});\n```\nRun `node --test --test-reporter=tap` in that folder. Node finds the file and runs the named test.\n\n`assert.strictEqual` throws if the values differ. The imports use tools built into Node, so no package download is needed. This file does not run in the app's browser exercise.",
+        "To see a real test failure, change the expected value from 0 to 1 in the local test. The function still returns 0, so Node reports that the named test failed and ends with a failure status.\n\nPrinting the word passed alone would not check anything. A useful test must reject a wrong result.",
+        "Complete `checkEqual(actual, expected, name)` in the app. Use `!==` so text and numbers are not treated as equal.\n\nFor a mismatch, throw `new Error(\"failed: \" + name)`. Otherwise return `true`. Keep `clamp`, `runChecks`, and `catchesError` unchanged so they can test your checker."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the requirement.",
+        "Make one change to the starter.",
+        "Run the checks.",
+        "Explain why a changed input produces its result."
+      ],
+      "after": [
+        "Compare actual and expected with strict inequality.",
+        "Throw an Error beginning with failed: and followed by the case name when they differ.",
+        "Return true when they are equal.",
+        "Run the supplied checks without changing the helper functions."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If a Node test assertion expects 1 while clamp(-1) returns 0, what is meaningful evidence of the failure?",
+        "choices": [
+          "A console message saying passed overrides the assertion.",
+          "The discovered named test fails and the test process exits nonzero.",
+          "The runner changes clamp to satisfy the expected value."
+        ],
+        "answer": 1,
+        "explanation": "Assertions compare observed behavior with the written expectation. A failed test is reported as failure rather than modifying the implementation."
+      },
+      "after": {
+        "question": "If a Node test assertion expects 1 while clamp(-1) returns 0, what is meaningful evidence of the failure?",
+        "choices": [
+          "A console message saying passed overrides the assertion.",
+          "The discovered named test fails and the test process exits nonzero.",
+          "The runner changes clamp to satisfy the expected value."
+        ],
+        "answer": 1,
+        "explanation": "The assertion sees 0 instead of 1. The named test fails, and the runner reports a failure status."
+      }
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Trace the visible worked calls before changing the starter."
+      ],
+      "after": [
+        "Use actual !== expected.",
+        "The error text must be \"failed: \" + name, including the space."
+      ]
+    },
+    {
+      "field": "externalNotes",
+      "before": "ECMAScript 2026 core; native Node24 and current app worker/DOM harness evidence are recorded separately. No external service or real-browser claim follows from a local fixture.",
+      "after": ""
+    }
+  ],
+  "headings": [
+    "Compare answers in a real check",
+    "Try Node's test runner",
+    "Make a failure visible",
+    "Complete checkEqual"
+  ],
+  "project": {
+    "title": "Actual test execution and failure evidence",
+    "task": "Complete checkEqual. Throw a named Error when actual and expected differ strictly; return true when they match. Keep the supplied function and test helpers unchanged.",
+    "done_when": "Correct results pass, wrong results throw a named error, and text \"3\" does not pass as the number 3."
+  },
+  "notes": [
+    "Removed an unrelated local-project completion requirement; its useful teaching is in the lesson and technical evidence stays in review documents."
+  ]
+}

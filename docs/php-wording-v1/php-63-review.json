@@ -1,0 +1,91 @@
+{
+  "lesson": "php-63",
+  "position": 63,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "If the request field is the string 0, what contract is produced?",
+      "after": "A response can carry a status number and a body that explains the answer."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "Actual request fields may be absent or arrays rather than strings. This pure function first checks the minutes field is a String, then validates an integer from 1 through 60 using the filter extension. Treating all request values as trustworthy scalars can cause type errors or bypass intended rules.",
+        "The return value explicitly contains status, headers and body. The CLI fixture inspects that contract only: it does not call header(), emit a browser response or verify a server adapter. A web adapter must apply status and headers before body output; authentication and CSRF checks are additional concerns.",
+        "Complete local PHP example; the app itself does not execute it:\n```php\n<?php\ndeclare(strict_types=1);\nfunction respond(array $input): array {\n    $raw = $input[\"minutes\"] ?? null;\n    $minutes = is_string($raw) ? filter_var($raw, FILTER_VALIDATE_INT, [\"options\" => [\"min_range\" => 1, \"max_range\" => 60]]) : false;\n    $valid = $minutes !== false;\n    return [\n        \"status\" => $valid ? 200 : 422,\n        \"headers\" => [\"Content-Type\" => \"application/json; charset=utf-8\"],\n        \"body\" => json_encode($valid ? [\"minutes\" => $minutes] : [\"error\" => \"invalid minutes\"], JSON_THROW_ON_ERROR),\n    ];\n}\n$response = respond([\"minutes\" => \"15\"]);\necho $response[\"status\"], \"\\n\", $response[\"body\"], \"\\n\";\n\n```",
+        "Expected output or behavior: 200\n{\"minutes\":15}. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Add tests for missing and array-valued request fields without pretending CLI checks deliver HTTP. You may trace it without a PHP interpreter; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "A response can carry a status number and a body that explains the answer.",
+        "Use 200 for accepted minutes or 422 when the supplied field fails the rule.",
+        "Follow the labeled parts of this example.\n```php\n<?php\ndeclare(strict_types=1);\nfunction respond(array $input): array {\n    $raw = $input[\"minutes\"] ?? null;\n    $minutes = is_string($raw) ? filter_var($raw, FILTER_VALIDATE_INT, [\"options\" => [\"min_range\" => 1, \"max_range\" => 60]]) : false;\n    $valid = $minutes !== false;\n    return [\n        \"status\" => $valid ? 200 : 422,\n        \"headers\" => [\"Content-Type\" => \"application/json; charset=utf-8\"],\n        \"body\" => json_encode($valid ? [\"minutes\" => $minutes] : [\"error\" => \"invalid minutes\"], JSON_THROW_ON_ERROR),\n    ];\n}\n$response = respond([\"minutes\" => \"15\"]);\necho $response[\"status\"], \"\\n\", $response[\"body\"], \"\\n\";\n```",
+        "The output is `200`, then `{\"minutes\":15}`. The input is valid, so the program builds a success response. This example builds data without sending it to a real browser.",
+        "Follow the invalid path for the text zero."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read one idea.",
+        "Follow the labeled example.",
+        "Try the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Follow the invalid path for the text zero."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If the request field is the string 0, what contract is produced?",
+        "choices": [
+          "200 with minutes 0 because syntax alone is enough",
+          "422 with an invalid minutes JSON body",
+          "A verified browser response despite running only CLI."
+        ],
+        "answer": 1,
+        "explanation": "The value fails the minimum and the pure response function chooses its explicit validation-error contract."
+      },
+      "after": {
+        "question": "If the request sends minutes as the text \"0\", which response is built?",
+        "choices": [
+          "200 and zero minutes",
+          "422 and an invalid-minutes message",
+          "No response"
+        ],
+        "answer": 1,
+        "explanation": "Zero is outside the allowed range."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "PHP Core v1 uses PHP 8.5.12 CLI and explicitly available extensions. The app supplies concept reading and an understanding check, not a PHP browser runner. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "CodeQuest shows the PHP example. Running it on your own computer is optional."
+    }
+  ],
+  "headings": [
+    "Build a response",
+    "Choose the response status",
+    "Read the example",
+    "What happens",
+    "Try one change"
+  ],
+  "project": {
+    "title": "Request validation and response contracts",
+    "task": "Follow the invalid path for the text zero.",
+    "done_when": "Read each idea and pass the understanding check. Running the example on your computer is optional."
+  }
+}

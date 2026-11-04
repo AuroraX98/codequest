@@ -1,0 +1,91 @@
+{
+  "lesson": "ruby-46",
+  "position": 46,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "If the failure guard becomes attempts < 1, how many attempts occur?",
+      "after": "Retry restarts this begin block after a handled problem. A count keeps the retries limited."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "ensure runs when leaving its begin region through normal completion or an exception. Use it to release resources, not to return a replacement result or raise a new error that masks the original.",
+        "retry inside rescue restarts the associated begin region. Bare raise inside rescue re-raises the current exception. Already performed side effects are not undone. This example counts attempts outside begin and retries at most once; never turn every error into an infinite retry.",
+        "Complete local Ruby example; the app itself does not execute it:\n```ruby\nattempts = 0\nbegin\n  attempts += 1\n  raise IOError, \"temporary\" if attempts < 2\n  puts \"ready\"\nrescue IOError\n  retry if attempts < 2\n  raise\nensure\n  puts \"cleanup\"\nend\nputs attempts\n\n```",
+        "Expected output or behavior: ready\ncleanup\n2. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Describe a side effect that must be idempotent (repeating it has the same effect) or compensated before retrying. You may trace it without a Ruby interpreter; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "Retry restarts this begin block after a handled problem. A count keeps the retries limited.",
+        "Retry only while fewer than two attempts have been made.",
+        "Follow the labeled parts of this example.\n```ruby\nattempts = 0\nbegin\n  attempts += 1\n  raise IOError, \"temporary\" if attempts < 2\n  puts \"ready\"\nrescue IOError\n  retry if attempts < 2\n  raise\nensure\n  puts \"cleanup\"\nend\nputs attempts\n```",
+        "The output is `ready`, then `cleanup`, then `2`. The first attempt fails. The second succeeds; cleanup runs as the block finally exits.",
+        "Change the failure test so the first try succeeds."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read one idea.",
+        "Follow the labeled example.",
+        "Try the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Change the failure test so the first try succeeds."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If the failure guard becomes attempts < 1, how many attempts occur?",
+        "choices": [
+          "Two because retry is automatic.",
+          "One; cleanup still prints once.",
+          "Zero because ensure skips the body."
+        ],
+        "answer": 1,
+        "explanation": "The first attempt no longer raises; rescue does not execute, but leaving begin still executes ensure."
+      },
+      "after": {
+        "question": "If the test is attempts below one, how many attempts run?",
+        "choices": [
+          "Two",
+          "One",
+          "None"
+        ],
+        "answer": 1,
+        "explanation": "On the first turn attempts is already one. Cleanup still runs."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Ruby Core v1 uses Ruby 4.0.9 and explicitly available extensions. The app supplies concept reading and an understanding check, not a Ruby browser runner. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "CodeQuest shows the Ruby example. Running it on your own computer is optional."
+    }
+  ],
+  "headings": [
+    "Try again with a limit",
+    "Allow one more attempt",
+    "Read the example",
+    "What happens",
+    "Try one change"
+  ],
+  "project": {
+    "title": "Ensure cleanup and retry boundaries",
+    "task": "Change the failure test so the first try succeeds.",
+    "done_when": "Read each idea and pass the understanding check. Running the example on your computer is optional."
+  }
+}

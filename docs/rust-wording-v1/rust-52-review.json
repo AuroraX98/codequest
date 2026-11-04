@@ -1,0 +1,91 @@
+{
+  "lesson": "rust-52",
+  "position": 52,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "If other is a separate Arc::new(7) rather than a clone, what is printed?",
+      "after": "An Arc lets more than one owner keep the same value alive, even across threads."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "Arc<T> uses atomic reference counting for shared ownership. Arc can be sent and shared only when its inner type satisfies the required Send and Sync bounds. Arc alone does not make arbitrary inner mutation thread-safe; a Mutex or atomic payload may still be necessary.\n\nArc::clone(&value) receives a borrowed Arc and returns another strong owner of the same allocation. It does not copy the inner integer into a separate allocation.",
+        "Arc::get_mut returns an optional mutable reference only when there are no other Arc or Weak pointers to that allocation. With two strong owners it returns None. After dropping the other owner, this example has unique ownership and receives Some. No threads are started yet; the next lessons separate mutation and thread lifetime.\n\nis_some() takes the returned Option as receiver and reports whether it is Some. It does not extract the mutable reference or change the stored integer.",
+        "Complete local Rust example; the app itself does not execute it:\n```rust\nuse std::sync::Arc;\n\nfn main() {\n    let mut value = Arc::new(7);\n    let other = Arc::clone(&value);\n    println!(\"{}\", Arc::get_mut(&mut value).is_some());\n    drop(other);\n    println!(\"{}\", Arc::get_mut(&mut value).is_some());\n}\n```",
+        "Expected output or behavior: false\ntrue. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Explain why Arc<RefCell<T>> does not automatically become a safe shared mutable value across threads. You may trace it without a Rust compiler; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "An Arc lets more than one owner keep the same value alive, even across threads.",
+        "Here `get_mut` asks for permission to change the value directly. With the clone still present, that request fails.",
+        "Follow the labeled parts of this example.\n```rust\nuse std::sync::Arc;\n\nfn main() {\n    let mut value = Arc::new(7);\n    let other = Arc::clone(&value);\n    println!(\"{}\", Arc::get_mut(&mut value).is_some());\n    drop(other);\n    println!(\"{}\", Arc::get_mut(&mut value).is_some());\n}\n```",
+        "The output is `false`, then `true`. Dropping the clone leaves just one owner, so the second request succeeds.",
+        "Compare cloning the Arc with making a separate Arc."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read one idea.",
+        "Follow the labeled example.",
+        "Try the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Compare cloning the Arc with making a separate Arc."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If other is a separate Arc::new(7) rather than a clone, what is printed?",
+        "choices": [
+          "true then true",
+          "false then false because Arc never permits unique access.",
+          "false then true because equal integers share an allocation"
+        ],
+        "answer": 0,
+        "explanation": "The independent allocation adds no owner of value, so value remains uniquely owned at both observations."
+      },
+      "after": {
+        "question": "If other is a separate Arc::new(7) rather than a clone, what is printed?",
+        "choices": [
+          "true then true",
+          "false then false because Arc never permits unique access.",
+          "false then true because equal integers share an allocation"
+        ],
+        "answer": 0,
+        "explanation": "A separate Arc does not share the first value. Both requests find just one owner."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Rust Core v1 uses stable Rust1.99.1 with edition2024 and the standard library. The app supplies concept reading and an understanding check, not a Rust browser runner. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "CodeQuest shows the Rust example. Running it on your own computer is optional."
+    }
+  ],
+  "headings": [
+    "Count owners across threads",
+    "Ask for sole access",
+    "Read the example",
+    "What happens",
+    "Try one change"
+  ],
+  "project": {
+    "title": "Arc and shared thread-safe ownership",
+    "task": "Compare cloning the Arc with making a separate Arc.",
+    "done_when": "Read each idea and pass the understanding check. Running the example on your computer is optional."
+  }
+}

@@ -1,0 +1,94 @@
+{
+  "lesson": "cpp-54",
+  "position": 54,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Replace run.txt with run.dat. Does this create a file, and which extension prints?",
+      "after": "Work with a path's spelling without creating or opening a file."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "std::filesystem::path represents a filesystem path. Constructing it does not create, open or verify a file. generic_string uses a generic slash-separated spelling for display.",
+        "lexically_normal simplifies dot and dot-dot components without consulting the filesystem. It does not resolve symlinks or prove the destination exists; real canonicalization and access checks are separate operations.",
+        "extension() inspects the final filename’s extension. Filesystem operations that touch disk can fail or race with other processes; choosing a path object is not permission to overwrite a real file.",
+        "Complete local C++ example; the app itself does not execute it:\n```cpp\n#include <filesystem>\n#include <iostream>\nint main() {\n    std::filesystem::path path = \"saves/./slot/../run.txt\";\n    auto cleaned = path.lexically_normal();\n    std::cout << cleaned.generic_string() << \"\\n\";\n    std::cout << cleaned.extension().generic_string() << \"\\n\";\n}\n```",
+        "Expected output or behavior: saves/run.txt\n.txt. Local compiler test evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Join a directory path and a filename with /, then compare filename, parent_path and extension without writing anything. You may trace this without a compiler; finishing the reading is not proof of a local run."
+      ],
+      "after": [
+        "A path describes a location in a filesystem. std::filesystem::path stores and works with that description. Creating a path object does not create a file.",
+        "lexically_normal simplifies the spelling without checking the disk. A dot means the current folder; dot-dot moves back one folder in this spelling. This is a text-level simplification, not a check of where filesystem links lead.",
+        "extension() gets the final filename's extension, such as .txt here. generic_string() turns a path into text using forward slashes for separators.",
+        "Follow the path's components as the spelling is simplified.\n\n```cpp\n#include <filesystem>\n#include <iostream>\nint main() {\n    std::filesystem::path path = \"saves/./slot/../run.txt\";\n    auto cleaned = path.lexically_normal();\n    std::cout << cleaned.generic_string() << \"\\n\";\n    std::cout << cleaned.extension().generic_string() << \"\\n\";\n}\n```",
+        "The program prints saves/run.txt, then .txt on the next line. The dot is removed, and slot followed by dot-dot cancels out in the path's spelling.",
+        "The result does not prove that the folder or file exists. Opening, creating, and checking real files are separate operations that can fail. This example performs none of those disk operations."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain why, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "A description of a file location is different from an operation on the file."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Replace run.txt with run.dat. Does this create a file, and which extension prints?",
+        "choices": [
+          "A directory is created; extension is empty.",
+          "No file is created; .dat prints.",
+          "A file is created; .txt still prints."
+        ],
+        "answer": 1,
+        "explanation": "Only lexical path manipulation occurs. The final filename ends in .dat, but no I/O operation has been requested."
+      },
+      "after": {
+        "question": "Replace run.txt with run.dat. Is a file created, and which extension prints?",
+        "choices": [
+          "A folder is created, and the extension is empty.",
+          "No file is created, and .dat prints.",
+          "A file is created, and .txt still prints."
+        ],
+        "answer": 1,
+        "explanation": "Only the path's spelling is examined. The new filename ends in .dat, but no file is created."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "C++ Core v1, standard C++23 features checked against the available GCC14.2 implementation. This app provides concept reading and an understanding check, not a C++ browser runner. Local example tests are separate evidence and do not certify learner mastery.",
+      "after": "The browser shows C++ code and checks your understanding; it does not run C++. Optional local examples use C++23."
+    }
+  ],
+  "headings": [
+    "Represent a location",
+    "Simplify the path's spelling",
+    "Read the filename ending",
+    "One example",
+    "What appears",
+    "A path does not prove a file exists"
+  ],
+  "project": {
+    "title": "Work with filesystem paths",
+    "task": "Trace the path's simplified spelling and extracted extension.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local C++ example is optional."
+  }
+}

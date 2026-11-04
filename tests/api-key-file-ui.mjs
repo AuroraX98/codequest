@@ -1,3 +1,4 @@
+import { pathToFileURL } from "node:url";
 import assert from "node:assert/strict";
 import {
   mkdtemp,
@@ -63,9 +64,7 @@ try {
   await mkdir(path.join(temp, "components"));
   await symlink(
     path.resolve("node_modules"),
-    path.join(temp, "node_modules"),
-    "dir",
-  );
+    path.join(temp, "node_modules"), process.platform === "win32" ? "junction" : "dir");
   await writeFile(
     path.join(temp, "lib/device-db.mjs"),
     `
@@ -88,9 +87,7 @@ export async function writeDevice(store, key, value) { globalThis.__keyFileUIFix
       .outputText.replace(/from "(\.\.?\/[^\"]+)"/g, 'from "$1.mjs"');
     await writeFile(path.join(temp, file.replace(/\.tsx?$/, ".mjs")), js);
   }
-  const { default: Settings } = await import(
-    path.join(temp, "components/APIKeyFileSettings.mjs")
-  );
+  const { default: Settings } = await import(pathToFileURL(path.join(temp, "components/APIKeyFileSettings.mjs")).href);
   const ref = React.createRef();
   let props = {
     ref,

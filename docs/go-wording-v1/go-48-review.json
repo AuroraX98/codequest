@@ -1,0 +1,91 @@
+{
+  "lesson": "go-48",
+  "position": 48,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "If the source text becomes \"go\", what prints?",
+      "after": "Copy bytes from a reader to a writer."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "io.Reader fills a supplied byte slice and returns a byte count plus an error. A reader may return data and an error together, so process n bytes before deciding what the error means. io.Writer must report how much it accepted; a short write requires an error.\n\nHere Read receives a two-byte destination slice and returns how many bytes it filled plus an error. Write receives only those n bytes and returns how many it accepted plus an error. The explicit calls use an in-memory strings.Reader and bytes.Buffer; process returned bytes before interpreting a possible read error. The printed nil comparisons describe this particular successful read/write, not a promise that every Reader behaves identically.\n```go\npackage main\nimport (\"fmt\"; \"strings\"; \"bytes\")\nfunc main() {\n    src := strings.NewReader(\"go\")\n    buf := make([]byte, 2)\n    n, readErr := src.Read(buf)\n    var dst bytes.Buffer\n    written, writeErr := dst.Write(buf[:n])\n    fmt.Println(n, readErr == nil)\n    fmt.Println(written, writeErr == nil, dst.String())\n}\n```\nExpected output: 2 true; 2 true go.",
+        "io.Copy transfers until EOF or another failure and returns the total bytes written plus an error. strings.NewReader supplies text bytes and bytes.Buffer collects them, so this example uses no files or network. Normal source exhaustion is not returned as an io.Copy error.",
+        "Complete local Go example; the app itself does not execute it:\n```go\npackage main\n\nimport (\n\"fmt\"\n\"io\"\n\"bytes\"\n\"strings\"\n)\n\n\nfunc main() {\n    var dst bytes.Buffer\n    n, err := io.Copy(&dst, strings.NewReader(\"read\"))\n    if err != nil { panic(err) }\n    fmt.Println(n, dst.String())\n}\n```",
+        "Expected output or behavior: 4 read. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Explain why a manual Reader loop must not discard n bytes merely because err is non-nil. You may trace it without a Go compiler; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "A Reader places bytes in a supplied slice and reports how many it read, plus any error. A Writer reports how many bytes it accepted. If it accepts fewer than requested, it must also return an error.",
+        "`io.Copy` transfers bytes from a Reader to a Writer until the input ends or an error occurs. Here, strings.NewReader supplies text and bytes.Buffer collects it in memory. A normal end of input is not an io.Copy error.",
+        "Follow the bytes from the text reader to the buffer.\n```go\npackage main\n\nimport (\n\"fmt\"\n\"io\"\n\"bytes\"\n\"strings\"\n)\n\n\nfunc main() {\n    var dst bytes.Buffer\n    n, err := io.Copy(&dst, strings.NewReader(\"read\"))\n    if err != nil { panic(err) }\n    fmt.Println(n, dst.String())\n}\n```",
+        "The screen shows `4 read`. Four bytes were copied, and the buffer contains read.",
+        "When reading by hand, use any returned bytes before handling a read error. One read can return both data and an error."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Count the bytes in go."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If the source text becomes \"go\", what prints?",
+        "choices": [
+          "4 go because the original byte count is cached",
+          "2 go",
+          "An EOF error instead of the copied text."
+        ],
+        "answer": 1,
+        "explanation": "The two source bytes are copied successfully; normal EOF finishes io.Copy without an error."
+      },
+      "after": {
+        "question": "Change the source text to \"go\". What appears?",
+        "choices": [
+          "4 go, because the old count is kept.",
+          "2 go",
+          "An error instead of the copied text."
+        ],
+        "answer": 1,
+        "explanation": "The two bytes are copied. Reaching the normal end of the text finishes io.Copy successfully."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Go Core v1 uses the verified Go1.27.3 toolchain and standard library. The app supplies concept reading and an understanding check, not a Go browser runner. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "The browser shows Go code and checks your understanding; it does not run Go. Optional local examples use Go 1.27."
+    }
+  ],
+  "headings": [
+    "Read and write counted bytes",
+    "Let io.Copy handle the transfer",
+    "One example",
+    "Read the byte count and text",
+    "Keep data returned with an error"
+  ],
+  "project": {
+    "title": "Reader and Writer contracts",
+    "task": "Predict the copied byte count for the shorter text.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local Go example is optional."
+  }
+}

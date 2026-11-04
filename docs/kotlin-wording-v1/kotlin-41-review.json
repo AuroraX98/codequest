@@ -1,0 +1,91 @@
+{
+  "lesson": "kotlin-41",
+  "position": 41,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "If source is set to \"second\" before the first println(title), what are both outputs?",
+      "after": "A lazy property waits until its first read, then keeps its successful result."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "val title by lazy { ... } declares a delegated property. Its initializer runs on the first access, then a successful result is cached. It is not rerun for every access.",
+        "The initializer reads captured state at initialization time. Later changes to that state do not replace the cached result. Default lazy initialization is synchronized on JVM, but that does not make arbitrary operations on a mutable result thread-safe; this example is sequential.",
+        "Complete local Kotlin/JVM example; the app itself does not execute it:\n```kotlin\nfun main() {\n    var source = \"first\"\n    val title by lazy { source }\n    println(title)\n    source = \"second\"\n    println(title)\n}\n```",
+        "Expected output or behavior: first\nfirst. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Add an initializer print to count how often successful initialization occurs. You may trace it without a Kotlin compiler; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "In `val title by lazy { source }`, lazy manages the property's starting value. The block waits until code first reads title. A successful result is cached, meaning saved for later reads.",
+        "The block reads source at that first access. Later changes to source do not replace the saved title. Creating the lazy property and reading it for the first time are separate moments.",
+        "Follow the example one line at a time.\n```kotlin\nfun main() {\n    var source = \"first\"\n    val title by lazy { source }\n    println(title)\n    source = \"second\"\n    println(title)\n}\n```",
+        "Both lines show `first`. The first read saves first as title. Changing source afterward does not change that saved result.",
+        "This example runs one instruction path at a time. The default JVM lazy setup coordinates its first initialization across threads, but that does not make all later changes to a mutable result safe to share."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Find source's value at the first read of title."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If source is set to \"second\" before the first println(title), what are both outputs?",
+        "choices": [
+          "second, then second",
+          "first, then first",
+          "first, then second"
+        ],
+        "answer": 0,
+        "explanation": "The lazy initializer first runs after the changed assignment, captures second as its successful result, and caches it."
+      },
+      "after": {
+        "question": "Set source to `\"second\"` before the first read of title. What do both lines show?",
+        "choices": [
+          "second, then second",
+          "first, then first",
+          "first, then second"
+        ],
+        "answer": 0,
+        "explanation": "The first read now finds second. Lazy saves that result, so both reads return second."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Kotlin JVM Core v1 uses Kotlin2.4.21 stable syntax and a verified JVM toolchain. The app supplies concept reading and an understanding check, not a Kotlin browser runner. Coroutine libraries are separate dependencies. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "The browser shows Kotlin code and checks your understanding; it does not run Kotlin. Optional local examples use Kotlin/JVM."
+    }
+  ],
+  "headings": [
+    "Wait for the first read",
+    "Save the value at that moment",
+    "One example",
+    "Read the cached result",
+    "Separate setup from later shared changes"
+  ],
+  "project": {
+    "title": "Lazy properties and initialization",
+    "task": "Identify which value a lazy property saves on its first read.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local Kotlin example is optional."
+  }
+}

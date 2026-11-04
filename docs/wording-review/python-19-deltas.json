@@ -1,0 +1,90 @@
+{
+  "lesson": "python-19",
+  "sourceHash": "356a111667083d0ffe47394d8935bf076d14bdb28eb8779808ab07f50fc49b21",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Record and install the dependencies for a small Python tool.",
+      "after": "Describe a Python tool’s requirements so someone can set up an environment to run it."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A reproducible environment lets someone run the same tool with the needed interpreter and packages. The interpreter is the program that reads and runs Python code. A dependency is another package your code needs. Python's built-in functions and standard library come with Python; third-party packages are installed separately. Project metadata is information describing the project, its version, Python requirements, and dependencies.",
+        "First understand the small tool's actual behavior. Max is a built-in function that finds the largest input value. It needs at least one value, so define what the tool returns for an empty list before calling max. None is an explicit no-result marker, rather than a guessed number such as zero. Zero could be lower than or higher than a legitimate largest reading.",
+        "Here is a complete nonempty and empty example.\n```python\ndef highest_reading(values):\n    if not values:\n        return None\n    return max(values)\n\nprint(highest_reading([14, 21, 16]))\nprint(highest_reading([]))\n```\nIt prints 21 and None. An empty list counts as false in a condition; not reverses it, making the first branch true. Return exits the function before max receives the empty list. This code uses only Python's built-in capabilities, so no third-party dependency is needed.",
+        "The same behavior can be written as a conditional expression.\n```python\ndef highest_reading(values):\n    return max(values) if values else None\n\nprint(highest_reading([-8, -3, -6]))\nprint(highest_reading([0]))\nprint(highest_reading([]) is None)\n```\nIt prints -3, 0, and True. Read the return as: use max(values) if the list is nonempty, otherwise use None. Negative readings are not replaced with a guessed zero. The final is None checks the exact no-result marker rather than a string saying \"None\".",
+        "The supplied metadata file is pyproject.toml. TOML is a configuration format, not Python code. This example describes the tool:\n```toml\n[project]\nname = \"practice-tool\"\nversion = \"0.1.0\"\nrequires-python = \">=3.10\"\ndependencies = []\n```\nThe project table groups metadata. The name identifies the package, version identifies its release, and requires-python says the interpreter must be at least version 3.10. An empty dependencies list declares no third-party runtime packages. It does not say that Python itself is unnecessary, and it does not install anything.",
+        "A virtual environment is a separate local place for a project's installed packages. The venv module creates one; pip installs packages into the Python environment it is run with. For a third-party tool, record its actual dependency names and compatible versions, then install those declared requirements in the environment. Keep a README with the entry point and example inputs. This lesson's function needs no extra package and can run from its saved Python file with a compatible interpreter.",
+        "Optional local installation proof (POSIX shell, not the browser): save the visible function in readings.py beside the pyproject.toml below. Use a Python build environment that already has setuptools and wheel; these commands do not download them. Run from that project directory:\n```toml\n[build-system]\nrequires = [\"setuptools\", \"wheel\"]\nbuild-backend = \"setuptools.build_meta\"\n\n[project]\nname = \"practice-readings-example\"\nversion = \"0.1.0\"\nrequires-python = \">=3.10\"\ndependencies = []\n\n[tool.setuptools]\npy-modules = [\"readings\"]\n```\n```sh\npython -c 'from setuptools.build_meta import build_wheel; build_wheel(\"dist\")'\npython -m venv .venv\n.venv/bin/python -m pip install --no-index --no-deps dist/practice_readings_example-0.1.0-py3-none-any.whl\nmkdir verify-installed\ncd verify-installed\n../.venv/bin/python -I -c 'from readings import highest_reading; print(highest_reading([14, 21, 16])); print(highest_reading([]))'\n```\nThe final output is 21 then None. build_wheel(\"dist\") creates a wheel in dist and returns its filename; the printed build log is not the function result. python -m venv creates an isolated environment using the chosen interpreter. Running pip through that environment’s Python installs only the named local wheel: --no-index disables index lookup and --no-deps disables dependency installation. The distribution name practice-readings-example and import name readings serve different purposes. The final -I interpreter flag ignores the current directory and user site packages, so this import tests the installed copy rather than a nearby source file. A directory named verify-installed must not already exist when using mkdir as shown. On Windows the environment executable is .venv\\Scripts\\python.exe and shell quoting differs; these exact commands were prepared for a POSIX terminal. This optional workflow is independent of the browser behavior checks.",
+        "For the required fixture, [18, 23, 19] should return 23 and an empty list should return None. An empty dependencies=[] declaration means no third-party runtime dependencies are required. Explain that result precisely rather than claiming a local install happened. A successful local reproduction would require the same example to work in a clean environment; that remains a separate practical activity beyond these in-browser checks."
+      ],
+      "after": [
+        "To run the same tool on another computer, someone needs a suitable Python version and any required packages. The interpreter is the program that runs Python code. A dependency is another package your code needs. Built-in functions and the standard library come with Python. Third-party packages come from outside Python and are installed separately. Project metadata records details such as the project’s name, version, Python requirements, and dependencies.",
+        "First decide how the tool should behave. The built-in function `max(values)` finds the largest value in the list. Used this way, it needs a nonempty list. Our tool returns `None` for an empty list, meaning there is no result. Returning zero instead could give a false answer: real readings might all be negative, or they might all be positive.",
+        "This function handles both nonempty and empty lists:\n```python\ndef highest_reading(values):\n    if not values:\n        return None\n    return max(values)\n\nprint(highest_reading([14, 21, 16]))\nprint(highest_reading([]))\n```\nIt prints `21` and `None`. An empty list counts as false, so `not values` is true when the list is empty. `return` ends the function before `max` receives that empty list. The function uses only Python’s built-in features, so it needs no third-party package.",
+        "A conditional expression chooses between two values in one expression:\n```python\ndef highest_reading(values):\n    return max(values) if values else None\n\nprint(highest_reading([-8, -3, -6]))\nprint(highest_reading([0]))\nprint(highest_reading([]) is None)\n```\nIt prints `-3`, `0`, and `True`. Read the return as: use `max(values)` if the list is nonempty; otherwise, use `None`. Negative readings keep their correct largest value, and a list containing zero returns zero. The final `is None` checks for the no-result marker itself, rather than the text `\"None\"`.",
+        "The supplied `pyproject.toml` file records the project’s details. TOML is a format for settings, not Python code:\n```toml\n[project]\nname = \"practice-tool\"\nversion = \"0.1.0\"\nrequires-python = \">=3.10\"\ndependencies = []\n```\n`[project]` groups the project details. `name` identifies the package, and `version` identifies its release. `requires-python` says it needs Python 3.10 or newer. The empty `dependencies` list means no third-party packages are needed to run this tool. Python is still required. Writing this file does not install anything.",
+        "A virtual environment is a separate local place for a project’s installed packages. Python’s `venv` module creates one. `pip` installs packages into the Python environment it runs with. If a tool needs third-party packages, record their names and compatible versions, then install those requirements in its environment. Keep a README that says which file or command starts the tool and gives example inputs. This lesson’s function needs no extra package. It can run from its saved Python file with a compatible Python version.",
+        "Optional: build and install the tool locally. These commands use a POSIX shell, a terminal command language common on Linux and macOS. They do not run in the browser.\n\nSave the function in `readings.py` beside the `pyproject.toml` shown below. The Python environment used to build the package must already have `setuptools` and `wheel`, tools that prepare packages for installation. These commands do not download them.\n```toml\n[build-system]\nrequires = [\"setuptools\", \"wheel\"]\nbuild-backend = \"setuptools.build_meta\"\n\n[project]\nname = \"practice-readings-example\"\nversion = \"0.1.0\"\nrequires-python = \">=3.10\"\ndependencies = []\n\n[tool.setuptools]\npy-modules = [\"readings\"]\n```\nRun these commands from the project directory. A directory named `verify-installed` must not already exist.\n```sh\npython -c 'from setuptools.build_meta import build_wheel; build_wheel(\"dist\")'\npython -m venv .venv\n.venv/bin/python -m pip install --no-index --no-deps dist/practice_readings_example-0.1.0-py3-none-any.whl\nmkdir verify-installed\ncd verify-installed\n../.venv/bin/python -I -c 'from readings import highest_reading; print(highest_reading([14, 21, 16])); print(highest_reading([]))'\n```\nA wheel is a package file ready to install. `build_wheel(\"dist\")` creates one in `dist` and returns its filename. The build messages are separate from the function’s output.\n\n`python -m venv .venv` creates a virtual environment using the chosen Python interpreter. The next command uses that environment’s Python to install the named local wheel. `--no-index` stops pip from searching package websites. `--no-deps` stops it from installing dependencies. The build tools are needed to prepare the package; the function still needs no third-party packages to run.\n\n`practice-readings-example` names the package being installed. `readings` names the module used in an import. The final command’s `-I` flag makes Python ignore the current directory and packages installed just for your user account. This checks the installed copy. Its expected output is `21`, then `None`.\n\nOn Windows, the environment’s Python is at `.venv\\Scripts\\python.exe`, and shell quoting differs. The commands above are written for a POSIX terminal.",
+        "For this exercise, `highest_reading([18, 23, 19])` should return `23`, and `highest_reading([])` should return `None`. The supplied `dependencies = []` declares that no third-party packages are needed to run the tool. A compatible Python installation is still required. Running the same example in a clean environment—with only the required Python and packages—is a separate local activity. The browser checks the function; it does not install packages or create a virtual environment."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Check whether `values` is empty.",
+        "Return `None` if it is empty.",
+        "Otherwise, use `max(values)` to find the largest value."
+      ],
+      "after": [
+        "Complete `highest_reading(values)` in `reading_tool.py`: return `None` for an empty list and `max(values)` otherwise.",
+        "Check that `[18, 23, 19]` returns `23` and `[]` returns `None`.",
+        "Check that `[-8, -3, -6]` returns `-3` and `[0]` returns `0`.",
+        "Read the supplied `pyproject.toml` and README. Identify the minimum Python version and explain why this function needs no third-party packages."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "A project declares dependencies=[] and uses only the standard library. What must another computer have to run it?",
+        "choices": [
+          "A compatible Python installation, but no third-party packages for this project",
+          "No Python installation, because the dependency list is empty",
+          "Every package installed on the author’s computer"
+        ],
+        "answer": 0,
+        "explanation": "The empty list concerns third-party dependencies, not the Python runtime. Standard-library modules come with the compatible Python installation."
+      },
+      "after": {
+        "question": "A project declares dependencies=[] and uses only the standard library. What must another computer have to run it?",
+        "choices": [
+          "A compatible Python installation, but no third-party packages for this project",
+          "No Python installation, because the dependency list is empty",
+          "Every package installed on the author’s computer"
+        ],
+        "answer": 0,
+        "explanation": "The empty list means no third-party packages are required. Python is still needed, and its standard library comes with the compatible Python installation."
+      }
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return None for an empty values list.",
+        "Use max(values) otherwise.",
+        "Review the supplied pyproject.toml and README."
+      ],
+      "after": [
+        "Use `if not values` to check for an empty list.",
+        "Return `None` before calling `max` on an empty list.",
+        "For a nonempty list, return `max(values)` without replacing negative values or zero.",
+        "In `pyproject.toml`, `requires-python` gives the Python version requirement, and `dependencies` lists third-party packages."
+      ]
+    }
+  ],
+  "reviewNotes": [
+    "Kept all eight section roles, supplied code, project values, and quiz answer 0.",
+    "Explained installation terms and removed reporting instructions.",
+    "Kept local installation optional and separate from browser checks."
+  ]
+}

@@ -1,0 +1,107 @@
+{
+  "lesson": "developer-toolkit-09",
+  "position": 9,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Review permissions, secrets, input handling, dependency risks, and keyboard access.",
+      "after": "Approve a release using real checks, with a record of what passed and what still needs work."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A release review compares requirements with actual evidence. Check record permissions, secret handling, input validation, safe output, dependencies, and keyboard access. A checked box without a real observation proves little. Record findings, fixes, and remaining limits so someone reading the review can understand what was verified.",
+        "Displaying untrusted text safely matters. This complete browser HTML example uses textContent:\n```html\n<!doctype html>\n<html lang=\"en\">\n<head><meta charset=\"utf-8\"><title>Safe text demo</title></head>\n<body>\n  <p id=\"message\"></p>\n  <script>\n    const incoming = '<strong>Hello</strong>';\n    const message = document.getElementById('message');\n    message.textContent = incoming;\n  </script>\n</body>\n</html>\n```\nThe paragraph shows the literal characters <strong>Hello</strong>. textContent treats the string as text. innerHTML would interpret the tags as markup. eval would interpret suitable text as JavaScript. Use a reviewed sanitizer when a feature truly requires supplied HTML.",
+        "Server validation checks input shape, size, and allowed ranges before a write. Permission tests should use two users and attempt access to another user's records. Keep secrets outside browser code, repository history, and logs: anything shipped to the browser can be read by its user. Dependency review compares declared packages and shipped versions with current advisories; a past clean report may be stale.",
+        "Accessibility review checks whether people can identify and use controls. Inputs need meaningful labels, keyboard focus should be visible, Tab order should follow the task, and errors should explain what to fix. This complete HTML example supplies a label and native keyboard-accessible button:\n```html\n<!doctype html>\n<html lang=\"en\">\n<head><meta charset=\"utf-8\"><title>Label demo</title></head>\n<body>\n  <form>\n    <label for=\"minutes\">Practice minutes</label>\n    <input id=\"minutes\" type=\"number\" min=\"1\" max=\"180\" required>\n    <button type=\"submit\">Save practice</button>\n  </form>\n</body>\n</html>\n```\nTab reaches the field and then the button. The label's for matches the input id. Browser number bounds assist input but do not replace server validation. This page has no save server, so it demonstrates labeling and keyboard controls rather than persistence.",
+        "The coding exercise combines three mandatory boolean review results. Here is a separate complete JavaScript example:\n```javascript\nfunction ready(review) {\n  return review.permissions === true\n    && review.secrets === true\n    && review.keyboard === true;\n}\nconsole.log(ready({ permissions: true, secrets: true, keyboard: true }));\nconsole.log(ready({ permissions: true, secrets: false, keyboard: true }));\nconsole.log(ready({ permissions: 'true', secrets: true, keyboard: true }));\nconsole.log(ready({ permissions: true }));\n```\nThe outputs are true, false, false, false. === true requires an actual true boolean. A missing field is undefined and fails. && allows release only when all three comparisons pass.",
+        "Three independent true/false requirements create 2 × 2 × 2 = 8 combinations. Only true/true/true passes, so there is one allowed combination. One missing or false requirement is enough to fail. A truthy string is not a completed review; strict comparison prevents 'true' from being treated as evidence. The function assumes it receives a review object; validating an entirely missing argument would be an additional input contract.",
+        "For canRelease, check permissionChecks, secretChecks, and keyboardChecks with === true, joined by &&. Then use the supplied REVIEW.md against a real private project: test account separation, inspect shipped code and logs for secrets, try invalid and oversized input, inspect dependencies, and complete the core task with keyboard alone. Include safe output, labels, errors, and recoverability. The browser verifies your decision function; it cannot establish the real project's security or accessibility review."
+      ],
+      "after": [
+        "A release review checks whether an app meets its requirements. Record what was tested, what happened, and what was fixed. A ticked box alone does not show that a check happened.",
+        "When displaying a note as plain text, textContent keeps its characters as text.\n\n```html\n<!doctype html>\n<html lang=\"en\">\n<head><meta charset=\"utf-8\"><title>Safe text demo</title></head>\n<body>\n  <p id=\"message\"></p>\n  <script>\n    const incoming = '<strong>Hello</strong>';\n    const message = document.getElementById('message');\n    message.textContent = incoming;\n  </script>\n</body>\n</html>\n```\n\nThe page shows <strong>Hello</strong> exactly. It does not turn the note into a bold text or run it as code.",
+        "Test that one user cannot read or change another user's private records. Reject invalid input before saving it. Keep secrets out of browser files and logs. Review the packages actually shipped with the release.",
+        "Use the main task with the keyboard alone. Check that controls have clear names, Tab moves in a useful order, focus is visible, and errors explain what to fix.",
+        "The browser exercise uses three review results: permissionChecks, secretChecks, and keyboardChecks. canRelease returns true only when all three are the boolean true.",
+        "Compare each field with === true. A missing value or the text \"true\" must fail. The function expects a review object; it does not perform the reviews itself.",
+        "Use the supplied REVIEW.md on a private test project. Fill it with actual observations about permissions, secrets, input handling, dependencies, and keyboard use. Record unresolved problems before deciding to release."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Write canRelease(review). Return true only when permissionChecks, secretChecks, and keyboardChecks are all the Boolean value true.",
+        "Do not accept missing values or the string \"true\" as a passed review.",
+        "Run cases where one requirement is false or missing.",
+        "Use the supplied checklist on a private project you are allowed to test.",
+        "Check that one test user cannot read or change another test user’s private records.",
+        "Inspect the JavaScript sent to the browser and check that it contains no secrets.",
+        "Try using the whole app with only the keyboard.",
+        "Before releasing, write down what you checked, what happened, what you fixed, and what still does not work."
+      ],
+      "after": [
+        "Require all three review fields to be exactly true.",
+        "Run checks with a false field, a missing field, and text instead of a boolean.",
+        "Use REVIEW.md to record actual checks on a project you may test.",
+        "Fix findings and record any remaining limits before release."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "There are three mandatory conditions, joined by AND.",
+        "Compare every required value with true using ===.",
+        "Missing values and strings must produce false."
+      ],
+      "after": [
+        "Join the three required comparisons with &&.",
+        "Use === true for each field.",
+        "Do not treat a missing field or text as a passed check."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "An untrusted note contains \"<b>Hello</b>\". You must display those exact characters, not interpret HTML. Which change is safe for that display?",
+        "choices": [
+          "Assign the note to textContent",
+          "Assign the note to innerHTML",
+          "Run the note through eval first"
+        ],
+        "answer": 0,
+        "explanation": "textContent inserts literal text. innerHTML interprets markup, and eval executes JavaScript rather than safely displaying the note."
+      },
+      "after": {
+        "question": "A note contains \"<b>Hello</b>\". Which choice displays those exact characters as plain text?",
+        "choices": [
+          "Set textContent to the note.",
+          "Set innerHTML to the note.",
+          "Run the note with eval."
+        ],
+        "answer": 0,
+        "explanation": "textContent displays the characters. innerHTML interprets tags, while eval tries to run code."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "The browser checks the release decision function. A real security and accessibility review requires the specific project and current dependency information; fill the checklist with actual evidence.",
+      "after": "The browser checks a release decision function. A real security and accessibility review needs observations from the actual app and current information about its dependencies."
+    }
+  ],
+  "headings": [
+    "Use evidence for a release",
+    "One example",
+    "Check private data and inputs",
+    "Try the keyboard path",
+    "Require every result",
+    "Reject missing evidence",
+    "Review a real project"
+  ],
+  "project": {
+    "title": "A reviewed release",
+    "task": "Complete canRelease(review), requiring permissionChecks, secretChecks, and keyboardChecks to be exactly true. Use the review checklist to collect real evidence on a test project.",
+    "done_when": "The function passes its checks. The separate project review records results, fixes, and remaining limits."
+  }
+}

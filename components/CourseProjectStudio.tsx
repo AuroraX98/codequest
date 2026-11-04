@@ -8,6 +8,7 @@ import { loadCourseProject, saveCourseProject, type CourseProjectDraft } from ".
 
 type Props = { finishBlockedReason?: string; project: CourseProject; lesson: Lesson; scope: string; initialCode?: string; onCompleteCore: (code: string, checks: RunResult["checks"]) => Promise<void> };
 export default function CourseProjectStudio({ project, lesson, scope, initialCode, onCompleteCore, finishBlockedReason }: Props) {
+  const [seed] = useState(() => ({ project, initialCode }));
   const [draft, setDraft] = useState<CourseProjectDraft | null>(null);
   const [result, setResult] = useState<RunResult | null>(null);
   const [running, setRunning] = useState(false);
@@ -21,10 +22,9 @@ export default function CourseProjectStudio({ project, lesson, scope, initialCod
   const saveQueue = useRef<Promise<unknown>>(Promise.resolve());
   useEffect(() => {
     const id = ++generation.current;
-    setDraft(null); latest.current = null; setResult(null); setError(""); setRunning(false); setFinishing(false);
-    loadCourseProject(scope, project, initialCode).then(value => { if (id === generation.current) { latest.current = value; setDraft(value); setStatus("Saved on this device"); } }).catch(() => { if (id === generation.current) setError("Could not load your saved project. Reload before editing."); });
-    return () => { generation.current++; abort.current?.abort(); };
-  }, [scope, project.id, project.version]);
+    loadCourseProject(scope, seed.project, seed.initialCode).then(value => { if (id === generation.current) { latest.current = value; setDraft(value); setStatus("Saved on this device"); } }).catch(() => { if (id === generation.current) setError("Could not load your saved project. Reload before editing."); });
+    return () => { generation.current = id + 1; abort.current?.abort(); };
+  }, [scope, seed]);
   const persist = async (next: CourseProjectDraft) => {
     latest.current = next; setDraft(next); setStatus("Saving on this device…");
     const id = generation.current;

@@ -1,0 +1,72 @@
+{
+  "lesson": "python-15",
+  "sourceHash": "ff9512f04a4079ff4ecd4b0e9942eb8bdacff94b1195cad9088998d787b18f48",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Summarize values in one pass, then compare the shallow sizes of a list and a generator.",
+      "after": "Summarize values in one pass while comparing the shallow sizes of a list and a generator."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "An algorithm is a sequence of steps for solving a problem. This summary algorithm visits numbers, doubles each one, counts how many were processed, and adds a total. It uses a single pass: each original number is read just once. A separate helper measures the shallow sizes of a transformed list and a generator. Keeping measurement separate lets the summary work even when its input cannot be read twice.",
+        "A generator produces values one at a time as they are requested. A generator expression looks like a comprehension but uses parentheses: `(n * 2 for n in values)`. It describes the transformation without immediately building a full list. A loop requests successive values from it. A list comprehension `[n * 2 for n in values]` instead creates all transformed entries up front.",
+        "Here is a complete incremental summary.\n```python\ndef summarize(values):\n    count = 0\n    total = 0\n    for value in (n * 2 for n in values):\n        count += 1\n        total += value\n    return count, total\n\nprint(summarize([1, 4, 6]))\nprint(summarize([]))\n```\nIt displays `(3, 22)` and `(0, 0)`. The yielded values are 2, 8, and 12. Each increments count by one and adds to total. The comma in return makes a tuple of count and total. Empty input yields nothing, leaving both starting values at zero.",
+        "`count += 1` is short for count = count + 1, and total += value updates the running sum. `count = total = 0` assigns zero to both names. Keep the return after the loop so every input is processed before the answer is returned. An iterator supplies the next value when asked. A one-shot iterator, unlike a reusable list, cannot automatically start again after its values are consumed.\n\nHere is a complete changed-input example showing why one pass matters.\n```python\ndef summarize(values):\n    count = total = 0\n    for value in (n * 2 for n in values):\n        count += 1\n        total += value\n    return count, total\n\none_shot = iter([3, 5])\nprint(summarize(one_shot))\nprint(summarize(one_shot))\n```\nIt prints `(2, 16)` and then `(0, 0)`. The built-in iter function makes an iterator from the list. The first call doubles 3 and 5 into 6 and 10, counts two values, and totals 16. The second call sees the same already-exhausted iterator, so it receives no values. This is expected iterator behavior, not a reason to add a second reading pass inside summarize.",
+        "Use a separate helper for the size comparison, and pass it a reusable sequence such as a list. A sequence is an ordered collection; a reusable list can be read again from its beginning. The helper deliberately builds a transformed list for comparison, while the summary function never needs that allocation.\n```python\nimport sys\n\ndef measure_sizes(values):\n    whole_list = [n * 2 for n in values]\n    stream = (n * 2 for n in values)\n    return sys.getsizeof(whole_list), sys.getsizeof(stream)\n\nsmall_list_size, small_generator_size = measure_sizes([1, 4, 6])\nlarge_list_size, large_generator_size = measure_sizes([1] * 1000)\nprint(small_list_size > 0)\nprint(large_list_size > small_list_size)\nprint(small_generator_size > 0)\nprint(large_generator_size > 0)\n```\nOn the usual Python implementation, all four lines print True. The list expression `[1] * 1000` repeats the one-entry list's contents a thousand times. Import loads the standard-library sys module. Getsizeof returns an object's shallow size in bytes. The comma in return creates a tuple, and the two names on the left unpack its list and generator measurements. The helper returns both measurements so the caller can inspect them; they are not unused local values.",
+        "Big O notation describes how work grows with input size. Here n means the number of input entries, not a particular loop variable's value. O(n), called linear growth, means doubling the number of entries roughly doubles this per-entry work. O(1) is constant work with respect to n; O(n squared) can roughly quadruple when n doubles. Timing one run does not prove a growth law because machine load and fixed overhead also affect time.",
+        "When doubling the input size doubles the repeated work, that fits linear O(n) growth. If ten inputs required about ten repeated steps, twenty would require about twenty in the same simple model. The running count-and-total state remains a fixed number of variables, but a stored input list still occupies memory. A generator does not make its source list disappear, and large integer totals can themselves grow in size. In the measurement helper, getsizeof for the list includes its shallow storage but not a full count of all referenced objects. The generator measurement likewise excludes the full source data and everything its future processing may use. Exact byte counts depend on the interpreter, so the exercise compares size growth rather than requiring one exact number.",
+        "The required summary for [2, 3, 5] is count 3 and doubled total 20; empty input is (0, 0). Write summarize as the one-pass generator loop, and check it with both a list and a one-shot iterator. Write measure_sizes separately: build the transformed list, create the generator expression, and return the pair of shallow sizes. Supply that helper with a reusable list rather than an iterator already consumed by summarize. Check that a much longer transformed list has a larger shallow size without guessing an exact byte count. For a real large-file experiment, read lazily, compare identical data, record the interpreter and measurement method, and measure the relevant memory over the whole operation. This local exercise does not read a large file, and shallow object sizes are not a complete memory benchmark."
+      ],
+      "after": [
+        "An algorithm is a series of steps for solving a problem. This one visits numbers, doubles each one, counts them, and adds a total. Each original number is read once. A separate helper compares the size of the list and generator objects themselves. This is called their shallow size; it leaves out other objects they refer to. Keeping the size check separate lets the summary work even when its input cannot be read twice.",
+        "A generator produces values one at a time when asked. A generator expression uses parentheses: `(n * 2 for n in values)`. It describes a change without building a full list right away. A loop asks for each next value. A list comprehension, `[n * 2 for n in values]`, builds all the changed entries up front.",
+        "Here is a complete summary that works one value at a time.\n```python\ndef summarize(values):\n    count = 0\n    total = 0\n    for value in (n * 2 for n in values):\n        count += 1\n        total += value\n    return count, total\n\nprint(summarize([1, 4, 6]))\nprint(summarize([]))\n```\nIt displays `(3, 22)` and `(0, 0)`. The generated values are 2, 8, and 12. Each adds one to `count` and adds its value to `total`. The comma in `return` makes a tuple with both answers. Empty input gives no values, so both starting values stay zero.",
+        "`count += 1` means `count = count + 1`. `total += value` adds to the running sum. `count = total = 0` gives zero to both names. Keep `return` after the loop so every value is processed first. An iterator gives the next value when asked. An iterator cannot start again after it has given out all its values. This is why it is called single-use, or one-shot. A list can be read again from the beginning.\n\nThis shows what happens when the same one-shot iterator is used twice.\n```python\ndef summarize(values):\n    count = total = 0\n    for value in (n * 2 for n in values):\n        count += 1\n        total += value\n    return count, total\n\none_shot = iter([3, 5])\nprint(summarize(one_shot))\nprint(summarize(one_shot))\n```\nIt prints `(2, 16)` and then `(0, 0)`. The built-in `iter` makes an iterator from the list. The first call doubles 3 and 5 into 6 and 10, counts two values, and totals 16. The second call gets no values because the iterator has already given them all. That is expected; `summarize` does not need a second pass.",
+        "Use a separate helper to compare sizes. Give it a reusable sequence, such as a list, that can be read again from the beginning. The helper builds a transformed list for the comparison. The summary function does not need to build that list.\n```python\nimport sys\n\ndef measure_sizes(values):\n    whole_list = [n * 2 for n in values]\n    stream = (n * 2 for n in values)\n    return sys.getsizeof(whole_list), sys.getsizeof(stream)\n\nsmall_list_size, small_generator_size = measure_sizes([1, 4, 6])\nlarge_list_size, large_generator_size = measure_sizes([1] * 1000)\nprint(small_list_size > 0)\nprint(large_list_size > small_list_size)\nprint(small_generator_size > 0)\nprint(large_generator_size > 0)\n```\nOn the usual Python implementation, all four lines print `True`. `[1] * 1000` repeats the one-item list a thousand times. `import sys` loads Python's standard `sys` module. `sys.getsizeof` gives an object's shallow size in bytes. The comma in `return` makes a tuple, and the two names on the left receive the list and generator sizes. The helper returns both sizes so the code that called it can inspect them.",
+        "Big O describes how the amount of work grows as the input gets bigger. Here, `n` means the number of input entries. `O(n)`, called linear growth, means twice as many entries take roughly twice as much per-entry work. `O(1)` means the work stays about the same as the input grows. `O(n squared)` can take roughly four times as much work when the input doubles. One timed run cannot prove how work grows, since computer speed and other work can affect the time.",
+        "If doubling the input doubles the repeated work, that fits linear `O(n)` growth. In the same simple model, 20 inputs take about twice the repeated steps of 10. The count and total use a fixed number of variables, but a stored input list still takes memory. A generator does not remove its source list, and large totals can take more space as their numbers grow. `getsizeof` measures the list's shallow storage, not every object it refers to. The generator's size also leaves out its source data and future processing. Exact byte counts depend on the Python version, so compare how sizes grow instead of expecting an exact number.",
+        "For `[2, 3, 5]`, the summary should return count 3 and doubled total 20. Empty input should return `(0, 0)`. Write `summarize` as a one-pass generator loop, then check it with a list and a one-shot iterator. Write `measure_sizes` separately: make the transformed list and generator from the same reusable sequence, then return both shallow sizes. Check that a much longer transformed list has a larger shallow size; do not guess an exact byte count. This exercise does not read a large file or measure all memory used during a whole operation."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "In `summarize`, use a generator expression to double the values one at a time.",
+        "Count the doubled values and add them up during the same pass.",
+        "Return both the count and the total.",
+        "In `measure_sizes`, make a doubled list and a generator from the same reusable sequence.",
+        "Return their sizes using `sys.getsizeof`. This measures the objects themselves, not everything they refer to.",
+        "Compare the sizes for small and larger inputs."
+      ],
+      "after": [
+        "In `summarize`, loop over `(n * 2 for n in values)` to request each doubled value once.",
+        "During that loop, add 1 to `count` and add the doubled value to `total`.",
+        "Return `count` and `total` after the loop.",
+        "In `measure_sizes`, build a doubled list and a generator expression from the same reusable sequence.",
+        "Return both sizes with `sys.getsizeof`; these are shallow object sizes.",
+        "Check `[2, 3, 5]`, empty input, a one-shot iterator, and whether a longer list has a larger shallow size."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Initialize count and total at zero.",
+        "Loop over (n * 2 for n in values).",
+        "Return count and total after the summarize loop. In measure_sizes, use a fresh list and generator from a reusable sequence, and return their sys.getsizeof values."
+      ],
+      "after": [
+        "Set `count` and `total` to zero before looping.",
+        "Loop over `(n * 2 for n in values)`.",
+        "Return `count` and `total` after the `summarize` loop. In `measure_sizes`, use a reusable sequence and return the `sys.getsizeof` values for its transformed list and generator."
+      ]
+    }
+  ],
+  "reviewNotes": [
+    "Kept all eight sections in their original order.",
+    "Preserved the examples, outputs, and quiz answer.",
+    "Kept the limits of shallow size measurements clear.",
+    "Defined shallow size on first use and simplified single-use iterator wording."
+  ]
+}

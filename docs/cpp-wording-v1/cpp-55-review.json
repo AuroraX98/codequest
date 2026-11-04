@@ -1,0 +1,94 @@
+{
+  "lesson": "cpp-55",
+  "position": 55,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Open only the second output stream with std::ios::app. What text is read after both writes succeed?",
+      "after": "Write a file, check for failure, and read its text back."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "This example creates or overwrites practice.txt in the current working directory. Run it only in a disposable folder; the test harness supplies one. Existing personal files are never needed.",
+        "An ofstream opened this way truncates an existing file. std::ios::app instead writes at the end. Neither insertion of a string nor opening in append mode adds a newline automatically.",
+        "if(!out) checks stream failure. Explicit close followed by a state check can detect a failed final write; destruction still closes resources through RAII, but does not report successful persistence to the caller. ifstream and getline also need success checks.\n\nstd::ifstream in(\"practice.txt\") opens that file for input. std::getline(in, text) reads into text until a newline or end-of-file; it consumes a found newline without storing it. Its returned stream can be tested for success before using text.",
+        "Complete local C++ example; the app itself does not execute it:\n```cpp\n#include <fstream>\n#include <iostream>\n#include <string>\nint main() {\n    {\n        std::ofstream out(\"practice.txt\");\n        if (!out) return 1;\n        out << \"first\";\n        out.close();\n        if (!out) return 1;\n    }\n    {\n        std::ofstream out(\"practice.txt\");\n        if (!out) return 1;\n        out << \"second\";\n        out.close();\n        if (!out) return 1;\n    }\n    std::ifstream in(\"practice.txt\");\n    std::string text;\n    if (!in || !std::getline(in, text)) return 1;\n    std::cout << text << \"\\n\";\n}\n```",
+        "Expected output or behavior: second. Local compiler test evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Try explicit newlines and read all lines in a loop; keep the file inside a disposable folder. You may trace this without a compiler; finishing the reading is not proof of a local run."
+      ],
+      "after": [
+        "A file stream connects the program to a file. std::ofstream writes, and std::ifstream reads. This example creates or overwrites practice.txt in the current folder. Run it in a disposable practice folder without a file you need to keep.",
+        "Opening ofstream this way clears an existing file before writing. std::ios::app would instead append, meaning add at the end. Writing text does not add a newline unless the text includes one.",
+        "if (!out) detects stream failure. Checking after close() can catch a failed final write. RAII still closes streams during destruction, but automatic cleanup alone does not confirm that writing succeeded.",
+        "Follow the first write, the replacing second write, and the checked read.\n\n```cpp\n#include <fstream>\n#include <iostream>\n#include <string>\nint main() {\n    {\n        std::ofstream out(\"practice.txt\");\n        if (!out) return 1;\n        out << \"first\";\n        out.close();\n        if (!out) return 1;\n    }\n    {\n        std::ofstream out(\"practice.txt\");\n        if (!out) return 1;\n        out << \"second\";\n        out.close();\n        if (!out) return 1;\n    }\n    std::ifstream in(\"practice.txt\");\n    std::string text;\n    if (!in || !std::getline(in, text)) return 1;\n    std::cout << text << \"\\n\";\n}\n```",
+        "When the operations succeed, the program prints second. The second output stream clears the earlier contents before writing its own text.",
+        "std::getline(in, text) reads up to a newline or the end of the file. It removes a found newline from the input without storing it in text. The returned stream is checked before the program prints the result."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain why, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Check the opening mode before deciding whether old contents remain."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Open only the second output stream with std::ios::app. What text is read after both writes succeed?",
+        "choices": [
+          "firstsecond",
+          "first followed by an automatic newline and second",
+          "second"
+        ],
+        "answer": 0,
+        "explanation": "Appending preserves first and adds the exact characters second. Neither write supplied a newline."
+      },
+      "after": {
+        "question": "Open only the second output stream with std::ios::app. After successful writes, what text is read?",
+        "choices": [
+          "firstsecond",
+          "first, then an automatically added newline, then second",
+          "second"
+        ],
+        "answer": 0,
+        "explanation": "Appending keeps first and adds second directly after it. Neither write supplies a newline."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "C++ Core v1, standard C++23 features checked against the available GCC14.2 implementation. This app provides concept reading and an understanding check, not a C++ browser runner. Local example tests are separate evidence and do not certify learner mastery.",
+      "after": "The browser shows C++ code and checks your understanding; it does not run C++. Optional local examples use C++23."
+    }
+  ],
+  "headings": [
+    "Write in a practice folder",
+    "Choose replace or append",
+    "Check the stream's state",
+    "One example",
+    "What appears",
+    "Read a line safely"
+  ],
+  "project": {
+    "title": "Read and write files with streams",
+    "task": "Trace why the second write replaces the first and how failures are checked.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local C++ example is optional."
+  }
+}

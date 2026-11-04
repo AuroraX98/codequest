@@ -1,0 +1,96 @@
+{
+  "lesson": "backend-33",
+  "position": 21,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Implement accessDecision(session,allowed). Match the worked contract and the changed-input checks without modifying the supplied input values.",
+      "after": "Check who is signed in before checking what they may do."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "Authentication establishes who is making a request. Authorization decides whether that identity may perform the requested action.",
+        "This exercise is a small pure JavaScript model. Its inputs are supplied directly; it does not receive live HTTP requests, operate a database, or deploy a service.",
+        "Worked example:\n\n```javascript\nfunction accessDecision(session,allowed) {\n  if(!session) return \"sign-in\";\n  return allowed ? \"allow\" : \"forbid\";\n}\nconsole.log(accessDecision(null, true));\n```\nThe returned value is \"sign-in\".",
+        "The first branch handles a missing trusted session. Only after an identity exists does the allowed decision matter. This helper does not create or validate session tokens.",
+        "Read the function call accessDecision(null, true) from the inside out: the arguments supply the inputs, accessDecision runs the body once, and return sends its result back to the caller. console.log displays that result; it does not change it.",
+        "A signed-in user lacks permission. Which result fits? Being signed in does not grant every permission. The identity is known, but this action is forbidden."
+      ],
+      "after": [
+        "Authentication checks who is making a request. Authorization checks whether that person may perform this action. Knowing who someone is does not give them every permission.",
+        "A session represents a sign-in the server has already verified. This function receives that trusted session or a missing value, plus an allowed decision made by trusted code.",
+        "```javascript\nfunction accessDecision(session,allowed) {\n  if(!session) return \"sign-in\";\n  return allowed ? \"allow\" : \"forbid\";\n}\nconsole.log(accessDecision(null, true));\n```\nThis prints sign-in. There is no session, so the function stops there even though allowed is true.",
+        "if (!session) detects the missing session in this model. Return sign-in before considering permission. The helper does not create or verify a session itself.",
+        "With a session present, return allow when allowed is true and forbid when it is false. A signed-in person can still be forbidden from performing this action.",
+        "Complete accessDecision(session, allowed). Keep the identity check first, then use the supplied permission decision. Do not change either input."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the contract and trace the worked example.",
+        "Replace the unfinished return in the starter.",
+        "Run the changed-input checks.",
+        "Explain the boundary in the understanding question."
+      ],
+      "after": [
+        "Return sign-in when the trusted session is missing.",
+        "With a session, choose allow or forbid from allowed.",
+        "Check all three outcomes."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "The first branch handles a missing trusted session. Only after an identity exists does the allowed decision matter. This helper does not create or validate session tokens."
+      ],
+      "after": [
+        "The missing-session branch comes first.",
+        "Treat identity and permission as separate requirements."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "A signed-in user lacks permission. Which result fits?",
+        "choices": [
+          "allow",
+          "sign-in",
+          "forbid"
+        ],
+        "answer": 2,
+        "explanation": "Being signed in does not grant every permission. The identity is known, but this action is forbidden."
+      },
+      "after": {
+        "question": "A signed-in person does not have permission. Which result fits?",
+        "choices": [
+          "allow",
+          "sign-in",
+          "forbid"
+        ],
+        "answer": 2,
+        "explanation": "Their identity is known, but this action is not permitted."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Runs as a pure JavaScript function in the browser. Passing checks does not establish live HTTP behavior, database durability, concurrency safety, authentication security, queue delivery guarantees, or production readiness.",
+      "after": "This browser exercise models a decision. A real server must verify the session and determine permission itself, rather than trust caller-supplied claims."
+    }
+  ],
+  "headings": [
+    "Separate two questions",
+    "Use a trusted session",
+    "Read one example",
+    "Handle missing identity first",
+    "Check permission next",
+    "Try it yourself"
+  ],
+  "project": {
+    "title": "Separate identity from permission",
+    "task": "Complete accessDecision: missing session gives sign-in; otherwise allowed selects allow or forbid.",
+    "done_when": "Identity is checked first, and signed-in callers still need permission."
+  }
+}

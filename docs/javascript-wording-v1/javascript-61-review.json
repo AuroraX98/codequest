@@ -1,0 +1,94 @@
+{
+  "lesson": "javascript-61",
+  "position": 59,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Complete topicURL(topic, tags): construct the fixed /study URL, set the topic parameter and append one tag parameter per String in tags, preserving order. Return href and do not perform any request.",
+      "after": "Build a web address with a topic and several tags."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "new URL(relative, base) resolves a relative reference against an absolute base and returns a URL object. new URL(absolute) parses an absolute URL. These calls do not open a network connection. The fixed example.invalid host is only data here.",
+        "url.searchParams is a URLSearchParams object. set(name, value) replaces that name’s existing values; append(name, value) adds another entry without removing earlier ones. Both mutate the parameters and return undefined. Spaces serialize as + in this query format, while a slash inside a value is encoded rather than becoming URL structure.",
+        "href is the serialized full URL. get(name) returns the first decoded value or null when absent; getAll(name) returns all decoded values in an array, or an empty array. topicURL builds the value using explicit topic and tag inputs.\n```javascript\nfunction topicURL(topic, tags) {\n  const url = new URL(\"/study\", \"https://example.invalid\");\n  url.searchParams.set(\"topic\", topic);\n  for (const tag of tags) url.searchParams.append(\"tag\", tag);\n  return url.href;\n}\nconst text = topicURL(\"read maps\", [\"a/b\", \"next\"]);\nconsole.log(text);\nconst parsed = new URL(text);\nconsole.log(parsed.searchParams.get(\"topic\"));\nconsole.log(JSON.stringify(parsed.searchParams.getAll(\"tag\")));\n```\nOutput: https://example.invalid/study?topic=read+maps&tag=a%2Fb&tag=next, then read maps, then [\"a/b\",\"next\"].",
+        "Parsing or encoding a URL does not approve its destination or scheme. Real applications need an explicit destination policy before navigation or requests. Optional practice: replace an existing query name using set and contrast it with append; do not concatenate unchecked data into structural separators."
+      ],
+      "after": [
+        "`new URL(path, base)` combines a path with a full base address. `new URL(address)` reads a full address on its own.\n\nThese calls build or read an address. They do not visit it. Our example uses the placeholder host `example.invalid`.",
+        "`url.searchParams` holds the address's query parameters: named values after the question mark.\n\n`set(name, value)` replaces that name's values. `append(name, value)` adds another value, keeping earlier ones.\n\nThe URL tools encode special characters. A space becomes `+` here, and a slash inside a value becomes `%2F`.",
+        "Here is the complete example.\n```javascript\nfunction topicURL(topic, tags) {\n  const url = new URL(\"/study\", \"https://example.invalid\");\n  url.searchParams.set(\"topic\", topic);\n  for (const tag of tags) url.searchParams.append(\"tag\", tag);\n  return url.href;\n}\nconst text = topicURL(\"read maps\", [\"a/b\", \"next\"]);\nconsole.log(text);\nconst parsed = new URL(text);\nconsole.log(parsed.searchParams.get(\"topic\"));\nconsole.log(JSON.stringify(parsed.searchParams.getAll(\"tag\")));\n```\nOutput:\n```text\nhttps://example.invalid/study?topic=read+maps&tag=a%2Fb&tag=next\nread maps\n[\"a/b\",\"next\"]\n```\n`href` gives the full address as text. `get` reads one decoded value. `getAll` reads every value for that name, in order.",
+        "Complete `topicURL(topic, tags)`. Set the topic once, then append each tag and return `url.href`.\n\nUse the URL tools so characters such as `&` stay part of a value. This function only builds an address; it sends no request. Building a valid address alone does not make an unknown destination trustworthy."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the requirement.",
+        "Make one change to the starter.",
+        "Run the checks.",
+        "Explain why a changed input produces its result."
+      ],
+      "after": [
+        "Keep the fixed /study address and topic parameter.",
+        "Loop through tags in order.",
+        "Append each tag with searchParams.append.",
+        "Return href and check repeated tags and special characters."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If append(\"tag\", value) is replaced with set(\"tag\", value) inside the loop, what happens with two tags?",
+        "choices": [
+          "The URL constructor sends both tags to the network immediately.",
+          "Only the final tag value remains because each set replaces that name’s earlier values.",
+          "Both remain because set always appends."
+        ],
+        "answer": 1,
+        "explanation": "set and append have different multiplicity policies; neither performs a request."
+      },
+      "after": {
+        "question": "If append(\"tag\", value) is replaced with set(\"tag\", value) inside the loop, what happens with two tags?",
+        "choices": [
+          "The URL constructor sends both tags to the network immediately.",
+          "Only the final tag value remains because each set replaces that name’s earlier values.",
+          "Both remain because set always appends."
+        ],
+        "answer": 1,
+        "explanation": "Each set replaces the existing values for tag, so only the last one remains. append keeps them all."
+      }
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Trace the visible worked calls before changing the starter."
+      ],
+      "after": [
+        "Use append inside the loop so earlier tags remain.",
+        "Do not build the query by joining raw text with &."
+      ]
+    },
+    {
+      "field": "externalNotes",
+      "before": "ECMAScript 2026 core; native Node24 and current app worker/DOM harness evidence are recorded separately. No external service or real-browser claim follows from a local fixture.",
+      "after": ""
+    }
+  ],
+  "headings": [
+    "Build an address",
+    "Set or append query values",
+    "Read the finished URL",
+    "Complete topicURL"
+  ],
+  "project": {
+    "title": "URLs and query parameters",
+    "task": "Complete topicURL(topic, tags). Build the fixed study URL, set topic, append every tag in order, and return the address as text.",
+    "done_when": "Repeated tags stay in order, an empty tag list works, and special characters remain part of their values."
+  },
+  "notes": [
+    "Removed an unrelated local-project completion requirement; its useful teaching is in the lesson and technical evidence stays in review documents."
+  ]
+}

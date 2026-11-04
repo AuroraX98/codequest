@@ -1,0 +1,97 @@
+{
+  "lesson": "backend-37",
+  "position": 37,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Implement logSummary(event). Match the worked contract and the changed-input checks without modifying the supplied input values.",
+      "after": "Keep useful error details in a log without copying private request data into it."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A diagnostic log can help connect a failed request with a status without copying the whole request. Explicitly select the fields needed for that investigation.",
+        "This exercise is a small pure JavaScript model. Its inputs are supplied directly; it does not receive live HTTP requests, operate a database, or deploy a service.",
+        "Worked example:\n\n```javascript\nfunction logSummary(event) {\n  return {requestId:event.requestId,status:event.status};\n}\nconsole.log(logSummary({\"requestId\":\"r1\",\"status\":500,\"token\":\"secret\",\"body\":\"private\"}));\n```\nThe returned value is {\"requestId\":\"r1\",\"status\":500}.",
+        "The object literal copies only requestId and status. This example assumes requestId is an application-generated safe identifier. It is not a universal sanitizer for arbitrary nested event objects.",
+        "Read the function call logSummary({\"requestId\":\"r1\",\"status\":500,\"token\":\"secret\",\"body\":\"private\"}) from the inside out: the arguments supply the inputs, logSummary runs the body once, and return sends its result back to the caller. console.log displays that result; it does not change it.",
+        "The incoming event gains a password field. What will this summary contain? The explicit projection excludes additional fields. Real logging also needs appropriate access and retention policies."
+      ],
+      "after": [
+        "A log is a record of what an app did. It can help you find a failed request and see its result.",
+        "For this exercise, keep requestId and status. requestId identifies the request. status shows its HTTP result, such as 500 for a server error.",
+        "This event also contains private fields. The summary leaves them out.\n\n```javascript\nfunction logSummary(event) {\n  return {requestId:event.requestId,status:event.status};\n}\nconsole.log(logSummary({\"requestId\":\"r1\",\"status\":500,\"token\":\"secret\",\"body\":\"private\"}));\n```\n\nThe result is {requestId:\"r1\", status:500}. It has no token or body field.",
+        "The new object names the two fields to keep. Do not copy the entire event and hope that it contains nothing private.",
+        "Reading event.requestId and event.status does not remove them from event. The function returns a new, smaller object.",
+        "Add a password field to an input. The result should still contain only requestId and status. This exercise assumes the app supplies a safe request ID."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the contract and trace the worked example.",
+        "Replace the unfinished return in the starter.",
+        "Run the changed-input checks.",
+        "Explain the boundary in the understanding question."
+      ],
+      "after": [
+        "Create a new result object.",
+        "Copy only requestId and status.",
+        "Leave the input event unchanged.",
+        "Run the checks with extra private fields."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "The object literal copies only requestId and status. This example assumes requestId is an application-generated safe identifier. It is not a universal sanitizer for arbitrary nested event objects."
+      ],
+      "after": [
+        "Name the two result fields explicitly.",
+        "Using {...event} would copy fields this summary should exclude."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "The incoming event gains a password field. What will this summary contain?",
+        "choices": [
+          "The password too",
+          "Only requestId and status",
+          "No fields at all"
+        ],
+        "answer": 1,
+        "explanation": "The explicit projection excludes additional fields. Real logging also needs appropriate access and retention policies."
+      },
+      "after": {
+        "question": "An input event gains a password field. What should the summary contain?",
+        "choices": [
+          "The password too.",
+          "Only requestId and status.",
+          "No fields at all."
+        ],
+        "answer": 1,
+        "explanation": "The function names exactly two fields to copy. Adding another input field does not add it to the result."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Runs as a pure JavaScript function in the browser. Passing checks does not establish live HTTP behavior, database durability, concurrency safety, authentication security, queue delivery guarantees, or production readiness.",
+      "after": "This helper selects two fields from a supplied event. It assumes requestId and status are suitable to log; it does not make arbitrary input safe or control who can read stored logs."
+    }
+  ],
+  "headings": [
+    "Keep a small record",
+    "Choose two fields",
+    "One example",
+    "Copy only what is needed",
+    "Leave the event alone",
+    "Try an extra field"
+  ],
+  "project": {
+    "title": "Log only diagnostic fields",
+    "task": "Complete logSummary(event). Return a new object containing only requestId and status. Keep the input unchanged, even when it has extra fields.",
+    "done_when": "The checks pass with extra private fields. Explain why listing the two fields is safer than copying the whole event."
+  }
+}

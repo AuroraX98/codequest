@@ -1,0 +1,94 @@
+{
+  "lesson": "cpp-45",
+  "position": 45,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Use a vector containing only 2, then erase it. What prints?",
+      "after": "Use the fresh iterator returned after removing a vector item."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A vector operation can invalidate iterators, references and pointers into its elements. Reallocation during growth invalidates all of them. erase invalidates positions at and after the erased element.",
+        "vector::erase returns a fresh iterator to the element following the erased one, or end if there is none. Replace the old iterator with that result and check end before dereferencing.",
+        "Using an invalidated iterator is not a reliable way to see an old value; it can be undefined behavior. This example only reads the newly returned valid position.",
+        "Complete local C++ example; the app itself does not execute it:\n```cpp\n#include <iostream>\n#include <vector>\nint main() {\n    std::vector<int> values{2, 4, 6};\n    auto position = values.begin();\n    position = values.erase(position);\n    if (position != values.end()) std::cout << *position << '\\n';\n    else std::cout << \"end\\n\";\n}\n\n```",
+        "Expected output or behavior: 4\n. Local compiler test evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Build an erase-while-iterating loop that removes even values, always using erase’s returned iterator. You may trace this without a compiler; finishing the reading is not proof of a local run."
+      ],
+      "after": [
+        "Invalidate means make something no longer valid to use in its old way. Erasing a vector item invalidates iterators and references at that position and after it. Do not keep using the old position to read an item.",
+        "erase returns a fresh iterator to the following item. If no following item exists, it returns the vector's new end position. Assign that result back to position.",
+        "The returned iterator may be end(), so compare before reading *position. This handles removing the last remaining item too.",
+        "Follow the removal and the replacement of the old iterator.\n\n```cpp\n#include <iostream>\n#include <vector>\nint main() {\n    std::vector<int> values{2, 4, 6};\n    auto position = values.begin();\n    position = values.erase(position);\n    if (position != values.end()) std::cout << *position << '\\n';\n    else std::cout << \"end\\n\";\n}\n\n```",
+        "The program prints 4. Erasing the first item removes two. The returned iterator identifies the following item, four, which is now first.",
+        "Growing a vector can move its items to new storage. When that reallocation happens, all old iterators, references, and pointers into its items become invalid. Use each operation's rules before keeping a saved position."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain why, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Use erase's returned iterator, then check whether it is end()."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Use a vector containing only 2, then erase it. What prints?",
+        "choices": [
+          "2 through the old iterator",
+          "end, because erase returns the new end position",
+          "An invalid dereference is unavoidable"
+        ],
+        "answer": 1,
+        "explanation": "After erasing the sole element the vector is empty. The returned iterator equals end, so the guard selects the end branch."
+      },
+      "after": {
+        "question": "Start with a vector containing only 2, then erase it. What prints?",
+        "choices": [
+          "2, read through the old iterator.",
+          "end, because erase returns the empty vector's end position.",
+          "An invalid read is unavoidable."
+        ],
+        "answer": 1,
+        "explanation": "No item remains after the removal. The check detects end() and avoids reading an item."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "C++ Core v1, standard C++23 features checked against the available GCC14.2 implementation. This app provides concept reading and an understanding check, not a C++ browser runner. Local example tests are separate evidence and do not certify learner mastery.",
+      "after": "The browser shows C++ code and checks your understanding; it does not run C++. Optional local examples use C++23."
+    }
+  ],
+  "headings": [
+    "A change can invalidate a position",
+    "Use the returned iterator",
+    "Check for the new end",
+    "One example",
+    "What appears",
+    "Growth can also invalidate positions"
+  ],
+  "project": {
+    "title": "Avoid invalidated iterators",
+    "task": "Trace how the old position is replaced with a valid result after erasing.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local C++ example is optional."
+  }
+}

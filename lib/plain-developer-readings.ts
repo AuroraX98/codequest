@@ -1,5 +1,5 @@
 // Reviewed plain-language counterparts. Keep technical source text unchanged.
-export default [
+const readings = [
   {
     "source": "A project is a folder containing files that belong together.",
     "simple": "A project keeps related files together in one folder.",
@@ -2017,3 +2017,5 @@ export default [
     "lesson": "developer-toolkit-09"
   }
 ];
+
+export default readings;

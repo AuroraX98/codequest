@@ -1,0 +1,99 @@
+{
+  "lesson": "swift-13",
+  "position": 37,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Return a useful message for each delivery state, including the minutes carried by a travelling state.",
+      "after": "Use a named state to choose the right message."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "An enum defines a type with a fixed set of named cases. A value of that type holds one case at a time.",
+        "```swift\nenum Door {\n    case open\n    case closed\n}\nlet entrance = Door.closed\n```\nThe value is a Door case, not the text \"closed\".",
+        "A switch selects behavior for the current case. Covering every case makes the switch exhaustive.",
+        "```swift\nenum Door {\n    case open\n    case closed\n}\nfunc sign(_ door: Door) -> String {\n    switch door {\n    case .open: return \"Come in\"\n    case .closed: return \"Please wait\"\n    }\n}\nprint(sign(.closed))\n```\nThis prints Please wait. Changing the argument to .open selects the other branch.",
+        "An associated value is information carried by one case. It can differ each time you create that case.",
+        "```swift\nenum Download {\n    case idle\n    case receiving(bytes: Int)\n}\nfunc description(_ download: Download) -> String {\n    switch download {\n    case .idle: return \"Not started\"\n    case .receiving(let bytes): return \"Received \\(bytes) bytes\"\n    }\n}\nprint(description(.receiving(bytes: 24)))\n```\nThe let bytes pattern reads the number carried by receiving. It does not create a new download.",
+        "For the delivery exercise, waiting returns \"Waiting\", arrived returns \"Arrived\", and travelling returns \"Arriving in N minutes\" using its supplied number. The input contract permits nonnegative minutes, including zero."
+      ],
+      "after": [
+        "An enum is a type with a fixed set of named choices, called cases. Download has two cases: idle and receiving.",
+        "One Download value holds one case at a time. idle means no download has started. receiving means data is arriving. These are named choices in code, not strings of text.",
+        "switch chooses what to do for the current case. Handle every possible case so a value always has a matching path.",
+        "```swift\nenum Download {\n    case idle\n    case receiving(bytes: Int)\n}\nfunc description(_ download: Download) -> String {\n    switch download {\n    case .idle: return \"Not started\"\n    case .receiving(let bytes): return \"Received \\(bytes) bytes\"\n    }\n}\nprint(description(.receiving(bytes: 24)))\n```\nThis prints Received 24 bytes. A byte is a small unit of computer data. The download is receiving, and it carries the number 24.",
+        "An associated value is extra information held by a case. receiving carries a byte count. Different receiving values can carry different counts; idle needs no count.",
+        "case .receiving(let bytes) reads the number stored with this case. The name bytes lets that branch use the number in its message. Reading it does not change the state.",
+        "Complete deliveryMessage. Return Waiting for waiting and Arrived for arrived. For travelling, return Arriving in N minutes, replacing N with its carried number. Minutes may be zero; zero does not change the case to arrived."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Write a switch inside deliveryMessage.",
+        "Return the message for each case.",
+        "Use the carried minutes rather than one fixed number."
+      ],
+      "after": [
+        "Use switch to choose the delivery case.",
+        "Return that case's message.",
+        "Read the carried minutes for travelling."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Match the case before choosing its message.",
+        "A let pattern can give the associated number a local name."
+      ],
+      "after": [
+        "Use a let pattern to name the number held by travelling.",
+        "Keep zero as zero; do not change the delivery state."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "A delivery is .travelling(minutes: 0). Does Swift automatically change it to .arrived?",
+        "choices": [
+          "Yes; zero changes the enum case automatically",
+          "No; it remains travelling until code chooses another case",
+          "No; associated values must always be positive"
+        ],
+        "answer": 1,
+        "explanation": "The case and its associated number are separate information. Zero is allowed by this contract; no automatic transition changes the case."
+      },
+      "after": {
+        "question": "A delivery is .travelling(minutes: 0). Does Swift change it to .arrived by itself?",
+        "choices": [
+          "Yes, zero changes the case",
+          "No, code must choose a different case",
+          "No, but minutes must be greater than zero"
+        ],
+        "answer": 1,
+        "explanation": "The state stays travelling until code changes it. This exercise allows zero minutes."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "This standard Swift enum exercise does not require SwiftUI.",
+      "after": "This exercise uses ordinary Swift. It does not need SwiftUI."
+    }
+  ],
+  "headings": [
+    "Name each possible state",
+    "Hold one state",
+    "Choose with switch",
+    "Read one example",
+    "Carry extra information",
+    "Read the carried number",
+    "Try it yourself"
+  ],
+  "project": {
+    "title": "Describe a delivery state",
+    "task": "Complete deliveryMessage for waiting, arrived, and travelling. Use the carried minutes in the travelling message, including zero.",
+    "done_when": "Every delivery state returns the right message and uses the supplied minutes."
+  }
+}

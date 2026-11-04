@@ -1,0 +1,86 @@
+{
+  "lesson": "typescript-42",
+  "position": 30,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Define EachList<T> distributively. names must hold Oak and Elm, counts must hold 2 and 7.",
+      "after": "Apply a type choice to each member of a union separately."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "When a conditional checks a bare type parameter T, a union input is considered one member at a time. EachList<T> uses T extends unknown, a condition that accepts every ordinary member here, to produce an array for each member separately. unknown is the broad safe type; never contributes no possible member.",
+        "EachList<string | number> becomes string[] | number[], not (string | number)[]. The first allows an all-string array or an all-number array. A mixed array is not assignable to either member. No arrays are created by this type alias; the example writes the arrays explicitly and prints their lengths, 2 and 2.",
+        "```typescript\ntype EachList<T> = T extends unknown ? T[] : never;\nconst names: EachList<string | number> = [\"Oak\", \"Elm\"];\nconst counts: EachList<string | number> = [2, 7];\nconsole.log(names.length);\nconsole.log(counts.length);\n```",
+        "Optional local practice: Compare an explicitly typed (string | number)[] containing both kinds with the union of arrays.",
+        "Changed case — trace this independently before checking the result.\n```typescript\ntype EachList<T> = T extends unknown ? T[] : never;\nconst mixed: EachList<string|number> = [\"Map\",3];\n```\nCompiler result: The mixed array fits neither string[] nor number[]. Diagnostic 2322. This intentionally failing example is separate from the runnable solution."
+      ],
+      "after": [
+        "When a conditional type checks T directly, it can apply to each member of a union separately. This is called distribution. Here, string becomes string[] and number becomes number[].",
+        "EachList<string | number> becomes string[] or number[]. That means an all-text list or an all-number list. The type does not create either list for you.",
+        "This example creates one list of each allowed kind.\n```typescript\ntype EachList<T> = T extends unknown ? T[] : never;\nconst names: EachList<string | number> = [\"Oak\", \"Elm\"];\nconst counts: EachList<string | number> = [2, 7];\nconsole.log(names.length);\nconsole.log(counts.length);\n```\nThe output is 2, then 2. Each list has two items.",
+        "`(string | number)[]` means something different: each item can be text or a number, so one list can mix both kinds.",
+        "A list containing Map and 3 does not fit EachList<string | number>. It is neither all text nor all numbers."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the example and its input/output contract.",
+        "Complete the starter without turning off compiler diagnostics.",
+        "Run the compiler and behavior checks, then explain a changed case."
+      ],
+      "after": [
+        "Define EachList so its conditional checks T directly.",
+        "Create names with Oak and Elm, and counts with 2 and 7.",
+        "Run the checks."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Compare the public input/output types and trace the visible call before editing."
+      ],
+      "after": [
+        "Use T[] for each selected union member."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Does [\"Map\", 3] fit EachList<string | number>?",
+        "choices": [
+          "Yes; distribution puts both element kinds in one array type.",
+          "No; it is neither an all-string nor an all-number array.",
+          "No; conditional types cannot accept union inputs."
+        ],
+        "answer": 1,
+        "explanation": "Distribution produces a union of separate arrays. A mixed array needs a different type relationship."
+      },
+      "after": {
+        "question": "Does [\"Map\", 3] fit EachList<string | number>?",
+        "choices": [
+          "Yes, it allows both kinds in the same list",
+          "No, it is neither all text nor all numbers",
+          "No, conditional types cannot use unions"
+        ],
+        "answer": 1,
+        "explanation": "This type produces a union of separate array types, not an array whose items can mix the two types."
+      }
+    }
+  ],
+  "headings": [
+    "Check each member in turn",
+    "Make a union of arrays",
+    "Create the two lists",
+    "Compare a mixed list",
+    "Reject the wrong mixture"
+  ],
+  "project": {
+    "title": "Distribute a conditional across a union",
+    "task": "Build a distributed array type, then create the supplied text and number lists.",
+    "done_when": "Each list keeps one item kind, a mixed list is rejected, and the checks pass."
+  }
+}

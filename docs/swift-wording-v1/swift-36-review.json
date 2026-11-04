@@ -1,0 +1,88 @@
+{
+  "lesson": "swift-36",
+  "position": 25,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Define apply(_:to:) and makeCounter(start:) with the shown signatures. apply must use its supplied operation. Each newly created counter increases by one per call, independently of other factory calls.",
+      "after": "Use a function as a value, including one that remembers its own count."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A function value can be stored, passed to another function, or returned. A closure is a block of code used as a function value. It can remember variables from the place where it was created; this is capture. Each call to the factory below creates its own current variable. Assigning an existing closure to another name shares that closure’s captured state; it is not another factory call.",
+        "(Int) -> Int means one Int input and one Int result. () -> Int takes no inputs. apply calls the supplied operation and returns its result. In { value in return value * 2 }, value names the input and in starts the body. makeCounter(start:) returns a closure, not an Int; counter() then calls it, increments its captured current, and returns the new Int. A let binding can hold a closure that changes captured state; the binding itself is not reassigned.",
+        "Follow this complete example.\n```swift\nfunc apply(_ operation: (Int) -> Int, to value: Int) -> Int {\n    return operation(value)\n}\nfunc makeCounter(start: Int) -> () -> Int {\n    var current = start\n    return {\n        current += 1\n        return current\n    }\n}\nlet twice: (Int) -> Int = { value in return value * 2 }\nprint(apply(twice, to: 6))\nlet counter = makeCounter(start: 2)\nlet alias = counter\nlet other = makeCounter(start: 2)\nprint(counter())\nprint(alias())\nprint(other())\n```\nOutput:\n```text\n12\n3\n4\n3\n```",
+        "Change the input or declaration and trace the result.\n```swift\nfunc apply(_ operation: (Int) -> Int, to value: Int) -> Int {\n    return operation(value)\n}\nfunc makeCounter(start: Int) -> () -> Int {\n    var current = start\n    return {\n        current += 1\n        return current\n    }\n}\nlet twice: (Int) -> Int = { value in return value + 5 }\nprint(apply(twice, to: 1))\nlet counter = makeCounter(start: 10)\nlet alias = counter\nlet other = makeCounter(start: 10)\nprint(counter())\nprint(alias())\nprint(other())\n```\nOutput:\n```text\n6\n11\n12\n11\n```",
+        "Define apply(_:to:) and makeCounter(start:) with the shown signatures. apply must use its supplied operation. Each newly created counter increases by one per call, independently of other factory calls. Optional local practice: choose one more input, predict the outcome, then run it. The checks observe the stated values and effects; they do not require one exact implementation spelling."
+      ],
+      "after": [
+        "You can store a function, pass it as an input, or return it as a result. A closure is one way to write a function value. Passing it does not call it; the receiving code chooses when to run it.",
+        "`(Int) -> Int` means one whole-number input and one whole-number result. `() -> Int` means no inputs and a whole-number result. `apply` calls the function it receives with the supplied value.",
+        "```swift\nfunc apply(_ operation: (Int) -> Int, to value: Int) -> Int {\n    return operation(value)\n}\nfunc makeCounter(start: Int) -> () -> Int {\n    var current = start\n    return {\n        current += 1\n        return current\n    }\n}\nlet twice: (Int) -> Int = { value in return value * 2 }\nprint(apply(twice, to: 6))\nlet counter = makeCounter(start: 2)\nlet alias = counter\nlet other = makeCounter(start: 2)\nprint(counter())\nprint(alias())\nprint(other())\n```\nThe output is `12`, `3`, `4`, `3`. The first call doubles 6. The counter and its alias share a count, while the separately created counter has its own count.",
+        "Capture means a closure remembers a variable from where it was created. The returned closure remembers `current` and adds 1 on each call. A `let` can hold this closure: the function value is not replaced, even though its remembered count changes.",
+        "Complete `apply(_:to:)` and `makeCounter(start:)`. Every call to makeCounter creates a separate count. Giving an existing counter another name shares its count; it does not create a new counter."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the small example and explain its inputs and effects.",
+        "Complete the starter for the stated contract.",
+        "Use the configured compatible Swift companion or local Swift toolchain, then explain the changed case."
+      ],
+      "after": [
+        "Make apply call its supplied operation with the supplied number.",
+        "Have makeCounter create a local current value and return a closure.",
+        "Increment and return current inside the closure.",
+        "Run the checks for repeated calls, aliases, and separate counters."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Trace the inputs, returned value and changed state before running."
+      ],
+      "after": [
+        "Return the closure itself from makeCounter, not its first answer.",
+        "Keep current inside makeCounter so each new counter gets its own state."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "A counter starts at 7. After a() returns 8, you assign let b = a and call b(). What does it return?",
+        "choices": [
+          "7",
+          "9",
+          "8"
+        ],
+        "answer": 1,
+        "explanation": "b refers to the already-created closure and its current value. Only another factory call creates independent captured state."
+      },
+      "after": {
+        "question": "A counter starts at 7. a() returns 8. After let b = a, what does b() return?",
+        "choices": [
+          "7",
+          "9",
+          "8"
+        ],
+        "answer": 1,
+        "explanation": "b refers to the same counter and remembered value. The next call increases 8 to 9."
+      }
+    }
+  ],
+  "headings": [
+    "A function can be a value",
+    "Read a function's type",
+    "One example",
+    "A closure can remember a variable",
+    "Build and use separate counters"
+  ],
+  "project": {
+    "title": "Pass and return a function value",
+    "task": "Complete `apply(_:to:)` and `makeCounter(start:)`. Use the supplied operation in apply. Make each newly created counter increase its own count by one per call.",
+    "done_when": "The checks pass for supplied functions, repeated calls, shared aliases, and independent counters."
+  }
+}

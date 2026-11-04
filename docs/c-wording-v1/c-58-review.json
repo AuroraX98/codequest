@@ -1,0 +1,92 @@
+{
+  "lesson": "c-58",
+  "position": 58,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "If compute writes 11 instead, what is printed after a successful join?",
+      "after": "A thread is a separate path of work. Join it before reading its result or ending the storage it uses."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "C11 introduced threads.h; a C17 implementation may declare it unavailable using __STDC_NO_THREADS__. These fixtures require the facility and were designed for the installed GCC/runtime combination, not every C implementation. On this toolchain use -pthread when compiling and linking.",
+        "thrd_create starts a function with signature int worker(void *). The argument points to main’s still-live int; converting void * back to int * recovers its type. thrd_join waits for termination and provides synchronization before main reads the result. It also writes the worker’s return status. If join fails, abort from stdlib.h terminates the program abnormally rather than continuing with a worker whose lifetime is uncertain.",
+        "Complete local C example; the app itself does not execute it:\n```c\n#include <stdio.h>\n#include <stdlib.h>\n#if defined(__STDC_NO_THREADS__) && __STDC_NO_THREADS__\n#error C threads unavailable on this implementation\n#endif\n#include <threads.h>\nstatic int compute(void *arg) {\n    int *result = arg;\n    *result = 7;\n    return 0;\n}\nint main(void) {\n    int result = 0, status = 0;\n    thrd_t worker;\n    if (thrd_create(&worker, compute, &result) != thrd_success) return 1;\n    if (thrd_join(worker, &status) != thrd_success) abort();\n    printf(\"%d %d\\n\", result, status);\n    return 0;\n}\n```",
+        "Expected output or behavior: 7 0. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Explain why returning from the owning function before the worker finishes would invalidate its pointer. You may trace it without a C compiler; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "A thread lets another path of work run alongside main. C provides thread tools in threads.h on implementations that support them. Support is optional in C17; this example refuses to build when the compiler reports threads unavailable. Follow your compiler's thread setup instructions, such as GCC's `-pthread` option where required.",
+        "thrd_create starts compute and passes it the address of result. The void * input is a general pointer; compute reads it as int *. thrd_join waits for the worker to finish and makes its completed writes available before main reads them. The join also collects the worker's returned status.",
+        "Follow the example one line at a time.\n```c\n#include <stdio.h>\n#include <stdlib.h>\n#if defined(__STDC_NO_THREADS__) && __STDC_NO_THREADS__\n#error C threads unavailable on this implementation\n#endif\n#include <threads.h>\nstatic int compute(void *arg) {\n    int *result = arg;\n    *result = 7;\n    return 0;\n}\nint main(void) {\n    int result = 0, status = 0;\n    thrd_t worker;\n    if (thrd_create(&worker, compute, &result) != thrd_success) return 1;\n    if (thrd_join(worker, &status) != thrd_success) abort();\n    printf(\"%d %d\\n\", result, status);\n    return 0;\n}\n```",
+        "The worker writes 7 and returns status 0. After a successful join, main prints 7 0. If starting fails, main returns failure. If joining fails, abort stops the program rather than continuing with an uncertain worker state.",
+        "result must stay alive while the worker uses its pointer. Do not return from main before the worker finishes. Change the worker's stored number to 11 and keep the join in place."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "The join happens after the worker's write and before the print."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If compute writes 11 instead, what is printed after a successful join?",
+        "choices": [
+          "Either 0 or 11, because joining never synchronizes",
+          "7 0 because void pointers copy the pointed-to value.",
+          "11 0"
+        ],
+        "answer": 2,
+        "explanation": "The shared int remains alive through join, and the synchronized read observes the worker write."
+      },
+      "after": {
+        "question": "If compute writes 11, what prints after a successful join?",
+        "choices": [
+          "Either 0 or 11, because join does not make the write visible.",
+          "7 0, because the pointer copies the stored number.",
+          "11 0"
+        ],
+        "answer": 2,
+        "explanation": "The worker stores 11 in the shared result and returns 0. A successful join finishes before main reads and prints both."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "C Core v1 uses a portable C17 baseline supported by the verified compiler. C23 exists but is not claimed fully supported here. The app supplies concept reading and an understanding check, not a C browser runner. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "The browser shows C code and checks your understanding; it does not run C. Optional local examples use C17."
+    }
+  ],
+  "headings": [
+    "Start another path of work",
+    "Wait before reading its result",
+    "One example",
+    "Read the joined result",
+    "Keep shared storage alive"
+  ],
+  "project": {
+    "title": "Create and join C threads",
+    "task": "Explain why result must stay alive until the worker has finished and been joined.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local C example is optional."
+  },
+  "navigationCorrection": "Added a short example introduction so its reviewed heading remains an explicit contents target."
+}

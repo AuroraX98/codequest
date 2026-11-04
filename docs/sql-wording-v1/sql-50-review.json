@@ -1,0 +1,84 @@
+{
+  "lesson": "sql-50",
+  "position": 43,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Create open_priority on jobs(priority,id) restricted to status='open', then create answer(id,priority) for open jobs. Preserve every job. Metadata checks confirm named index properties; output checks do not prove a particular plan or speed.",
+      "after": "Build an index for only the rows a search needs."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A partial index includes only rows for which its WHERE condition is true. CREATE INDEX open_priority ON jobs(priority,id) WHERE status='open' indexes the two named keys for open rows. Closed rows and NULL statuses remain in the table but are absent from this index. The index changes an access option, not the query’s meaning.",
+        "\n```sql\nCREATE TABLE jobs(id INTEGER PRIMARY KEY, status TEXT, priority INTEGER);\nINSERT INTO jobs VALUES (1,'open',2),(2,'closed',1),(3,'open',1),(4,NULL,0);\nCREATE INDEX open_priority ON jobs(priority,id)\nWHERE status='open';\nSELECT id,priority\nFROM jobs\nWHERE status='open'\nORDER BY priority,id;\n```\nThe result is (3,1),(1,2). The query explicitly requires status=open, so it can use the index without losing a required closed row. An index is not a guarantee of speed: the planner chooses using the query and available statistics. EXPLAIN QUERY PLAN followed by the SELECT can display its chosen access strategy; the plan text is diagnostic, not a stable application interface.",
+        "\n```sql\nCREATE TABLE jobs(id INTEGER PRIMARY KEY, status TEXT, priority INTEGER);\nINSERT INTO jobs VALUES (1,'open',2),(2,'closed',1),(3,'open',1),(4,NULL,0);\nCREATE INDEX open_priority ON jobs(priority,id)\nWHERE status='open';\nSELECT id,priority\nFROM jobs\nWHERE status='closed'\nORDER BY priority,id;\n```\nThis query returns (2,1), even though that closed row is not in open_priority. SQLite must choose a strategy that can find the required rows. A partial index cannot serve as a complete list of closed jobs. Optional practice: inspect plans for both queries locally; do not infer that a tiny timing difference proves a general speedup. The project checks confirm result rows, source preservation, a partial-index flag and indexed columns. They do not prove the exact index WHERE predicate or a chosen execution plan; inspect that declaration and explain why open rows are eligible.",
+        "A complete local plan inspection uses the same fresh setup:\n```sql\nCREATE TABLE jobs(id INTEGER PRIMARY KEY, status TEXT, priority INTEGER);\nINSERT INTO jobs VALUES (1,'open',2),(2,'closed',1),(3,'open',1),(4,NULL,0);\nCREATE INDEX open_priority ON jobs(priority,id)\nWHERE status='open';\nEXPLAIN QUERY PLAN\nSELECT id,priority\nFROM jobs\nWHERE status='open'\nORDER BY priority,id;\n```\nIn the tested SQLite 3.49.1 build the detail is SCAN jobs USING COVERING INDEX open_priority. Covering means this index contains the values needed by this query, so a separate table lookup is unnecessary for those values. The numeric plan fields and detail wording are version-specific diagnostics, not stable output contracts or measured performance. The ordinary SELECT remains the behavior contract."
+      ],
+      "after": [
+        "A partial index lists only rows that pass its `WHERE` condition. An index for open jobs leaves closed jobs out of the index. It does not delete them from the table.",
+        "```sql\nCREATE TABLE demo_jobs(id INTEGER PRIMARY KEY, status TEXT, priority INTEGER);\nINSERT INTO demo_jobs VALUES\n  (1, 'open', 2), (2, 'closed', 1), (3, 'open', 1), (4, NULL, 0);\nCREATE INDEX demo_open_priority ON demo_jobs(priority, id)\nWHERE status = 'open';\nSELECT id, priority\nFROM demo_jobs\nWHERE status = 'open'\nORDER BY priority, id;\nEXPLAIN QUERY PLAN\nSELECT id, priority\nFROM demo_jobs\nWHERE status = 'open'\nORDER BY priority, id;\n```\nThe answer is `(3, 1)`, then `(1, 2)`. The plan report shows how SQLite chooses to find that answer.",
+        "Only jobs whose status is `open` enter this index. A `NULL` status does not pass that test. A query for closed jobs still works, but SQLite must find those rows another way.",
+        "SQLite decides whether to use an index. A covering index holds all the values that a query needs, so it can avoid a separate table lookup for them. Plan wording may change between versions. The exercise checks some index properties and the answer; inspect the index's `WHERE` condition too. Neither proves a speed gain."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the small example and explain its inputs and effects.",
+        "Complete the starter for this lesson.",
+        "Run the behavior checks, then predict a changed case."
+      ],
+      "after": [
+        "Create `open_priority` on `jobs(priority, id)`, with `WHERE status = 'open'`.",
+        "Create `answer(id, priority)` for open jobs and show them in `priority, id` order.",
+        "Run the checks and inspect the plan."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Trace the supplied rows and resulting rows before changing the query."
+      ],
+      "after": [
+        "The `WHERE` after `CREATE INDEX` chooses which rows enter the index.",
+        "The query needs its own `WHERE status = 'open'` to choose its answer."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If job 4 has status=NULL, is it included in this partial index?",
+        "choices": [
+          "No",
+          "Yes, every table row must be indexed",
+          "Yes, NULL means open"
+        ],
+        "answer": 0,
+        "explanation": "The predicate status=open is unknown for NULL, not true. Only true-predicate rows enter the partial index."
+      },
+      "after": {
+        "question": "Does a job with status = NULL enter an index restricted to status = 'open'?",
+        "choices": [
+          "No",
+          "Yes, every table row must be indexed",
+          "Yes, NULL means open"
+        ],
+        "answer": 0,
+        "explanation": "NULL means the status is not known. It does not make the condition status = 'open' true."
+      }
+    }
+  ],
+  "headings": [
+    "Index part of a table",
+    "One example",
+    "The table still keeps every row",
+    "Inspect the plan"
+  ],
+  "project": {
+    "title": "Index only the relevant rows",
+    "task": "Create `open_priority` on `jobs(priority, id)` for rows where `status = 'open'`. Create `answer(id, priority)` for open jobs. Keep every job in `jobs`.",
+    "done_when": "The checks pass, and the index declaration includes `WHERE status = 'open'`. Inspect the plan without treating it as a speed measurement."
+  }
+}

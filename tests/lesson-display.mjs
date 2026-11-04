@@ -3,7 +3,7 @@ import { readFile, writeFile, rm } from 'node:fs/promises';
 import ts from 'typescript';
 import React from 'react';import { renderToStaticMarkup } from 'react-dom/server';import { JSDOM } from 'jsdom';
 // Use a disposable local module bundle so the same renderer is exercised in Node.
-const files=['lib/code-language.ts','lib/lesson-markup.ts','lib/lesson-ideas.ts','lib/code-anatomy.ts','components/CodeAnatomy.tsx', 'components/LessonGlossary.tsx', 'lib/lesson-glossary.ts','components/LessonContent.tsx'];
+const files=['lib/code-language.ts','lib/lesson-markup.ts','lib/lesson-ideas.ts','lib/code-anatomy.ts', 'lib/swift-code-words.ts', 'lib/csharp-reviewed-anatomy.ts', 'lib/cpp-reviewed-anatomy.ts', 'lib/java-reviewed-anatomy.ts', 'lib/c-reviewed-anatomy.ts', 'lib/kotlin-reviewed-anatomy.ts', 'lib/rust-reviewed-anatomy.ts', 'lib/php-reviewed-anatomy.ts', 'lib/ruby-reviewed-anatomy.ts', 'lib/r-reviewed-anatomy.ts', 'lib/go-reviewed-anatomy.ts','components/CodeAnatomy.tsx', 'components/LessonGlossary.tsx', 'lib/lesson-glossary.ts','components/LessonContent.tsx'];
 try {
  await writeFile('components/CodeAnatomy.module.css.display-test.mjs', 'export default new Proxy({}, {get: (_, key) => String(key)});');
  await writeFile('components/LessonGlossary.module.css.display-test.mjs', 'export default new Proxy({}, {get: (_, key) => String(key)});');

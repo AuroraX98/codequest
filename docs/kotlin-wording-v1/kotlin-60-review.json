@@ -1,0 +1,91 @@
+{
+  "lesson": "kotlin-60",
+  "position": 60,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "If the finally message changes to \"released\", which order is guaranteed?",
+      "after": "Request cancellation, then wait for the task's cleanup to finish."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A Job cancellation is a request, not a forced thread kill. Suspending library functions check cancellation; CPU-bound work must also cooperate. ensureActive is an optional reference for a later CPU-loop design, not an additional call required in this suspending handshake example. Do not swallow CancellationException as an ordinary successful result.",
+        "CompletableDeferred<Unit> is a one-shot completion signal: complete(Unit) releases await without carrying useful data. The child then waits in awaitCancellation, which suspends until cancelled and never returns normally. cancelAndJoin requests cancellation and waits for cleanup. finally runs during this exit; it must not start suspending cleanup without an appropriate explicit policy.",
+        "Complete local Kotlin/JVM example; the app itself does not execute it:\n```kotlin\nimport kotlinx.coroutines.runBlocking\nimport kotlinx.coroutines.CompletableDeferred\nimport kotlinx.coroutines.launch\nimport kotlinx.coroutines.awaitCancellation\nimport kotlinx.coroutines.cancelAndJoin\n\nfun main() {\n    runBlocking {\n        val ready = CompletableDeferred<Unit>()\n        val job = launch {\n            try {\n                ready.complete(Unit)\n                awaitCancellation()\n            } finally {\n                println(\"cleanup\")\n            }\n        }\n        ready.await()\n        job.cancelAndJoin()\n        println(\"done\")\n    }\n}\n```",
+        "Expected output or behavior: cleanup\ndone. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Explain why removing cancellation and merely joining this never-ending child would not complete. You may trace it without a Kotlin compiler; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "Cancellation asks a coroutine to stop. It does not forcibly kill a thread. Suspending library calls can notice the request. Long calculations must also check for cancellation instead of ignoring it.",
+        "Here, CompletableDeferred is a signal that can be completed once. Unit means it carries no useful data. The child signals ready, then awaitCancellation waits for a cancellation request. A finally block contains cleanup that runs as the child exits.",
+        "Follow the example one line at a time.\n```kotlin\nimport kotlinx.coroutines.runBlocking\nimport kotlinx.coroutines.CompletableDeferred\nimport kotlinx.coroutines.launch\nimport kotlinx.coroutines.awaitCancellation\nimport kotlinx.coroutines.cancelAndJoin\n\nfun main() {\n    runBlocking {\n        val ready = CompletableDeferred<Unit>()\n        val job = launch {\n            try {\n                ready.complete(Unit)\n                awaitCancellation()\n            } finally {\n                println(\"cleanup\")\n            }\n        }\n        ready.await()\n        job.cancelAndJoin()\n        println(\"done\")\n    }\n}\n```",
+        "The screen shows `cleanup`, then `done`. The parent first waits for ready. CancelAndJoin then requests cancellation and waits for the child, including its finally block, to finish. Only then can done print.",
+        "Do not catch a cancellation signal and treat it as a successful result. Cleanup that itself needs to suspend requires a deliberate cancellation policy. Simply waiting for this child without cancelling it would leave it waiting indefinitely."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Join waits for the whole child task, including its cleanup."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If the finally message changes to \"released\", which order is guaranteed?",
+        "choices": [
+          "The finally block cannot run on cancellation.",
+          "done before released",
+          "released before done"
+        ],
+        "answer": 2,
+        "explanation": "cancelAndJoin waits for the child to finish its finally block before main prints done."
+      },
+      "after": {
+        "question": "Change the finally message to `\"released\"`. Which order is guaranteed?",
+        "choices": [
+          "Finally cannot run during cancellation.",
+          "done before released",
+          "released before done"
+        ],
+        "answer": 2,
+        "explanation": "CancelAndJoin waits for the child's finally block to finish. The parent prints done afterward."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Kotlin JVM Core v1 uses Kotlin2.4.21 stable syntax and a verified JVM toolchain. The app supplies concept reading and an understanding check, not a Kotlin browser runner. Coroutine libraries are separate dependencies. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "The browser shows Kotlin code and checks your understanding; it does not run Kotlin. Optional local examples use Kotlin/JVM."
+    }
+  ],
+  "headings": [
+    "Ask a task to stop",
+    "Signal readiness before cancellation",
+    "One example",
+    "Wait for cleanup before continuing",
+    "Keep cancellation cooperative"
+  ],
+  "project": {
+    "title": "Cooperative cancellation",
+    "task": "Explain why cleanup finishes before the parent continues.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local Kotlin example is optional."
+  }
+}

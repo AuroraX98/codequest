@@ -4,14 +4,14 @@ import { createContext, useContext, useEffect, useId, useRef, useState, type Rea
 import { glossaryMatches, type GlossaryTerm } from "../lib/lesson-glossary";
 import styles from "./LessonGlossary.module.css";
 
-type Help = { active: string | null; panelId: string; scopeId: string; runtime: string; toggle: (term: GlossaryTerm, button: HTMLButtonElement) => void };
+type Help = { active: string | null; panelId: string; scopeId: string; runtime: string; includedTerms?: string[]; toggle: (term: GlossaryTerm, button: HTMLButtonElement) => void };
 const GlossaryContext = createContext<Help | null>(null);
 
 /** Text is never rewritten, evaluated, or sent anywhere. Code stays unlinked. */
 export function GlossaryText({ text }: { text: string }) {
   const context = useContext(GlossaryContext);
   if (!context) return <>{text}</>;
-  const matches = glossaryMatches(text, context.runtime);
+  const matches = glossaryMatches(text, context.runtime).filter(match => !context.includedTerms || context.includedTerms.includes(match.term.id));
   const parts: ReactNode[] = [];
   let start = 0;
   for (const match of matches) {
@@ -25,10 +25,10 @@ export function GlossaryText({ text }: { text: string }) {
   return <>{parts}</>;
 }
 
-export function GlossaryScope({ children, text, runtime, scopeKey = text, wordsLabel = "Words in this step" }: { children: ReactNode; text: string; runtime: string; scopeKey?: string | number; wordsLabel?: string }) {
-  return <Scope key={scopeKey} text={text} runtime={runtime} wordsLabel={wordsLabel}>{children}</Scope>;
+export function GlossaryScope({ children, text, runtime, scopeKey = text, wordsLabel = "Words in this step", includedTerms }: { children: ReactNode; text: string; runtime: string; scopeKey?: string | number; wordsLabel?: string; includedTerms?: string[] }) {
+  return <Scope key={scopeKey} text={text} runtime={runtime} wordsLabel={wordsLabel} includedTerms={includedTerms}>{children}</Scope>;
 }
-function Scope({ children, text, runtime, wordsLabel }: { children: ReactNode; text: string; runtime: string; wordsLabel: string }) {
+function Scope({ children, runtime, includedTerms }: { children: ReactNode; text: string; runtime: string; wordsLabel: string; includedTerms?: string[] }) {
   const [active, setActive] = useState<GlossaryTerm | null>(null);
   const region = useRef<HTMLDivElement>(null);
   const trigger = useRef<HTMLButtonElement | null>(null);
@@ -53,7 +53,7 @@ function Scope({ children, text, runtime, wordsLabel }: { children: ReactNode; t
     document.addEventListener("click", outside);
     return () => { document.removeEventListener("keydown", key); document.removeEventListener("pointerdown", outside); document.removeEventListener("click", outside); };
   }, [active, id]);
-  const context: Help = { active: active?.id ?? null, panelId: `${id}-definition`, scopeId: id, runtime, toggle: (term, button) => {
+  const context: Help = { active: active?.id ?? null, panelId: `${id}-definition`, scopeId: id, runtime, includedTerms, toggle: (term, button) => {
     trigger.current = button;
     setActive(current => current?.id === term.id ? null : term);
   } };

@@ -1,0 +1,107 @@
+{
+  "lesson": "backend-04",
+  "position": 24,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Add request validation, authorization, middleware, and failure handling.",
+      "after": "Change a record only after identity, ownership, and input checks pass."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "Authentication asks who is signed in. Authorization asks whether that person may act on a particular record. Validation asks whether the proposed values are acceptable. A protected update needs all three. Being signed in does not grant access to someone else's record, and owning a record does not make an invalid duration acceptable.",
+        "This complete standalone JavaScript example uses a verified-session fixture, not an actual sign-in system:\n```javascript\nfunction update(session, entry, minutes) {\n  if (!session) return { status: 401 };\n  if (session.userId !== entry.ownerId) return { status: 403 };\n  if (!Number.isInteger(minutes) || minutes < 1 || minutes > 180) {\n    return { status: 400 };\n  }\n  entry.minutes = minutes;\n  return { status: 200, entry };\n}\nconst entry = { id: 9, ownerId: 'nora', minutes: 40 };\nconsole.log(update(null, entry, 50));\nconsole.log(update({ userId: 'luis' }, entry, 50));\nconsole.log(entry.minutes);\n```\nThe statuses are 401 and 403; minutes remains 40. 401 asks for valid sign-in, 403 denies this authenticated user's permission, and 400 rejects bad input.",
+        "The order makes the write safe. Return before assignment whenever a requirement fails. A request body can claim ownerId: 'nora', but anyone can submit that text. The trusted identity must come from a server-verified session, then be compared with the record's stored owner. The permission helper accepts that verified result; it must not be treated as proof that an arbitrary supplied object really represents a signed-in person.",
+        "Continue after the update helper with these separate record copies:\n```javascript\nconst original = { id: 9, ownerId: 'nora', minutes: 40 };\nconst invalid = { ...original };\nconst allowed = { ...original };\nconsole.log(update({ userId: 'nora' }, invalid, 0).status);\nconsole.log(invalid.minutes);\nconsole.log(update({ userId: 'nora' }, allowed, 50).status);\nconsole.log(allowed.minutes);\nconsole.log(original.minutes);\n```\nThe outputs are 400, 40, 200, 50, 40. {...original} copies these flat fields, letting us verify a rejected update without changing the baseline. A successful assignment changes only the allowed copy.",
+        "A session is a server-recognized sign-in state. In a real flow, the server verifies credentials, issues an unpredictable token, and checks that token and its expiry on later requests. A cookie can carry the token. The browser's claim to be a user is not trusted without that verification. Middleware runs before the route, validates the session, and attaches a trusted identity such as req.user; the route then performs record-specific authorization.",
+        "An Express middleware function typically receives req, res, and next. It either sends an error response and returns, or calls next() to continue to the route. Validation middleware can reject a malformed body before writing. A final error handler can report a useful failure without exposing private records, passwords, or internal credentials. Responses and logs must not reveal another user's data just to explain permission denial.\n\nA minimal continuation callback example is:\n```javascript\nfunction requireSession(req, res, next) {\n  if (!req.session) return res.status(401).json({error: \"Sign in\"});\n  next();\n}\n```\nExpress supplies next; calling it without an argument continues to later middleware. The missing-session branch returns before that call. This fragment requires an Express route and verified-session middleware; it is not a sign-in implementation.\n\nCalling requireSession({session:{}}, {}, () => console.log(\"Continue\")) prints Continue through the supplied callback. This local call demonstrates continuation only; the verified-session fixture is not authentication.",
+        "For the exercise, authorizeUpdate receives verified-session fixtures and mutates entry.minutes only after all checks pass. Null session returns 401; mismatched ownership returns 403; invalid minutes returns 400; a valid owner update returns 200 with entry. True AND false AND true is false: valid sign-in and input cannot overcome failed ownership. To finish actual protection locally, connect real session verification before using this helper; the next full-stack project supplies a localhost sign-in flow."
+      ],
+      "after": [
+        "A protected update needs three things: a verified identity, permission to change this record, and valid new data. Passing one check does not make up for failing another.",
+        "```javascript\nfunction update(session, entry, minutes) {\n  if (!session) return { status: 401 };\n  if (session.userId !== entry.ownerId) return { status: 403 };\n  if (!Number.isInteger(minutes) || minutes < 1 || minutes > 180) {\n    return { status: 400 };\n  }\n  entry.minutes = minutes;\n  return { status: 200, entry };\n}\nconst entry = { id: 9, ownerId: 'nora', minutes: 40 };\nconsole.log(update(null, entry, 50));\nconsole.log(update({ userId: 'luis' }, entry, 50));\nconsole.log(entry.minutes);\n```\nThis returns statuses 401 and 403, then prints 40. Neither request is allowed to change the entry, so its minutes stay unchanged. The session objects here represent already-verified sign-ins.",
+        "Check the session before reading its userId. Compare that ID with the record's stored ownerId. Return immediately when a check fails, before assigning entry.minutes. A caller's ownerId claim in the request body is not proof of ownership.",
+        "Even the owner must supply whole-number minutes from 1 through 180. Invalid minutes return 400 and leave the record unchanged. A valid owner update changes minutes and returns 200 with the entry.",
+        "A real server must verify the sign-in, recognize its session token, and check expiry before supplying the identity. This helper does none of that. Its simple session objects are practice inputs, not a working authentication system.",
+        "Middleware is code that runs before the route handler. It can reject an invalid session or pass a trusted identity to the route. In Express, next() continues to later code. Return after sending a rejection so that later writing code does not run.",
+        "Complete authorizeUpdate in this order: no session gives 401, wrong owner gives 403, and invalid minutes gives 400. Only then assign minutes and return 200 with entry. Check that every rejected call preserves the original record."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Use sessions {userId:\"a\"} and {userId:\"b\"}, and record {id:1,ownerId:\"a\",minutes:25}.",
+        "Write authorizeUpdate. Return 401 when there is no session.",
+        "Return 403 when the signed-in user does not own the record.",
+        "Return 400 unless minutes is a whole number from 1 to 180. Return 200 when the update is allowed.",
+        "If an update is refused, leave the original record unchanged.",
+        "Optional follow-on after the next full-stack lesson: in your local Express route, verify the session before running this permission check.",
+        "Never use req.body.ownerId as proof of who the user is.",
+        "Optional follow-on with that local app: test no session, the wrong owner, boundary values, and a valid owner update. The current browser exercise tests the permission helper with verified-session fixtures."
+      ],
+      "after": [
+        "Check the verified session and stored ownership.",
+        "Reject invalid minutes before assignment.",
+        "Update only after every check passes.",
+        "Check both returned statuses and unchanged data after rejection."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Check for a session before reading session.userId.",
+        "Compare session.userId with entry.ownerId before changing entry.",
+        "Return immediately on every failed check, then update only the permitted record."
+      ],
+      "after": [
+        "Return immediately after each failed check.",
+        "Never use the request body's ownerId to establish identity.",
+        "Check the record after a rejected update."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Which source should a protected route trust to learn who the user is?",
+        "choices": [
+          "ownerId from the request body",
+          "user ID from a verified server session",
+          "the first record in the database"
+        ],
+        "answer": 1,
+        "explanation": "The server must verify the session and then compare that identity with record ownership."
+      },
+      "after": {
+        "question": "What should a protected route use to learn who the caller is?",
+        "choices": [
+          "ownerId from the request body",
+          "The user ID from a verified server session",
+          "The first stored record"
+        ],
+        "answer": 1,
+        "explanation": "The server verifies the session, then uses that trusted identity for the permission check."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "This project checks permission logic with verified-session fixtures. In your local server, provide real sign-in and session validation before using it. The next full-stack project supplies a local sign-in flow; fixtures are not authentication.",
+      "after": "The browser tests this permission helper with supplied, verified-session examples. A real server must perform sign-in and session verification before calling it."
+    }
+  ],
+  "headings": [
+    "Require all three checks",
+    "Read one example",
+    "Stop before a rejected write",
+    "Check the allowed value",
+    "Verify the session on the server",
+    "Put checks before the route",
+    "Complete authorizeUpdate"
+  ],
+  "project": {
+    "title": "A protected practice API",
+    "task": "Complete authorizeUpdate with identity, ownership, and minutes checks before any write. Return the specified status for each result.",
+    "done_when": "Rejected requests leave the record unchanged; a valid owner update changes only the permitted record."
+  }
+}

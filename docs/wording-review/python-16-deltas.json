@@ -1,0 +1,76 @@
+{
+  "lesson": "python-16",
+  "sourceHash": "3c0524cc201cdd39618bbac2f73bd75429593b2b3b4941a3bf7140c6c6e6f28f",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Collect supplied data asynchronously with timeouts and bounded retries.",
+      "after": "Let tasks take turns while waiting, with limits on retries and a way to cancel."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "Asynchronous work can wait without preventing other asynchronous tasks from making progress. Python's asyncio module coordinates this. Define an asynchronous function with async def. Calling it creates a coroutine object, an operation that still needs to be awaited or scheduled to run. Await pauses that coroutine while its awaited operation finishes, letting the event loop coordinate other work. This is concurrency, not a promise that CPU-heavy Python code runs on several processors.",
+        "A coroutine normally runs inside an event loop. `asyncio.run(main())` starts a loop, runs the main coroutine, and finishes the local program's asynchronous work. Inside an async function, `await asyncio.sleep(seconds)` creates a nonblocking practice wait. These examples are standalone scripts, so run them in a setting where no event loop is already running. They simulate delays locally rather than opening sockets or contacting a service.",
+        "This complete example shows a timeout.\n```python\nimport asyncio\n\nasync def timed_wait(delay, timeout):\n    try:\n        await asyncio.wait_for(asyncio.sleep(delay), timeout=timeout)\n    except asyncio.TimeoutError:\n        return \"timed out\"\n    return \"finished\"\n\nasync def main():\n    print(await timed_wait(0.001, 0.2))\n    print(await timed_wait(0.6, 0.2))\n\nasyncio.run(main())\n```\nUnder ordinary scheduling it prints finished, then timed out. Wait_for limits the intended wait and raises TimeoutError if the awaited operation is too slow. It requests cancellation of the awaited work; completing cancellation can make the total wall-clock wait exceed the stated timeout.",
+        "Bounded retries put a limit on how many attempts are allowed. `outcomes[:attempts]` slices from the beginning and excludes entries past that limit. A default parameter such as attempts=2 supplies a value when the caller omits that argument. Inside a loop, continue skips to the next attempt. Return exits the entire coroutine call, so it can immediately report an ordinary success or a non-timeout failure.",
+        "Here is a complete retrying fixture with concurrent collection.\n```python\nimport asyncio\n\nasync def collect(outcomes, attempts=2, timeout=0.2):\n    for outcome in outcomes[:attempts]:\n        delay = 0.6 if outcome == \"timeout\" else 0.001\n        try:\n            await asyncio.wait_for(asyncio.sleep(delay), timeout=timeout)\n        except asyncio.TimeoutError:\n            continue\n        if outcome == \"error\":\n            return \"failed\"\n        return outcome\n    return \"timed out\"\n\nasync def main():\n    results = await asyncio.gather(\n        collect([\"timeout\", \"complete\"]),\n        collect([\"error\"])\n    )\n    print(results)\n\nasyncio.run(main())\n```\nUnder ordinary scheduling it prints `['complete', 'failed']`. Gather runs the awaitable operations concurrently and returns results in input order. The first collector retries after its first timeout; the second reports the supplied error without retrying forever. The fixture leaves a wide timing gap: ordinary responses wait 0.001 seconds, each attempt allows 0.2 seconds, and a deliberately slow response waits 0.6 seconds. Operating-system timers are not exact, so this gap keeps a normal response well away from the timeout boundary.",
+        "Cancellation asks scheduled work to stop. Create_task schedules a coroutine and returns a task object. Cancel requests cancellation; awaiting the task lets you observe that outcome. Here is a complete cancellation example.\n```python\nimport asyncio\n\nasync def main():\n    task = asyncio.create_task(asyncio.sleep(10))\n    task.cancel()\n    try:\n        await task\n    except asyncio.CancelledError:\n        print(\"Cancellation observed\")\n\nasyncio.run(main())\n```\nIt prints Cancellation observed. The example catches cancellation to demonstrate observation. In ordinary application code, cleanup often uses finally and cancellation is usually allowed to propagate after cleanup instead of being mistaken for a successful result.",
+        "The matching probability assumes independent tries: one outcome does not change the next try's chance. If each try succeeds with chance 0.5, each fails with chance 0.5. Two failures together have chance 0.5 times 0.5, or 0.25. At least one success is the complement: 1 minus 0.25 equals 0.75. This calculation is valid only under the stated independence and fixed-probability assumptions; it is not a guarantee for any particular run.",
+        "Your checks require ready after timeout then ready, failed after error, and timed out when two allowed attempts both time out even if a third outcome exists. Collect_pair must await gather and return [\"ready\", \"timed out\"]. Cancellation_observed must cancel and await a task, catch CancelledError, and return True. A timeout ends waiting according to the async mechanism; it does not prove a remote server did no work. These delays remain local fixtures, and unusually delayed scheduling can affect timing demonstrations."
+      ],
+      "after": [
+        "Asynchronous code lets other tasks move forward while one task waits. Python's `asyncio` helps coordinate this.\n\n`async def` defines an asynchronous function. Calling it creates a coroutine: work ready to be run. `await` waits for that work's result while other tasks can take their turns. It does not promise that heavy calculations run on several processors.",
+        "An event loop manages these turns. `asyncio.run(main())` starts one and runs `main`.\n\n`await asyncio.sleep(seconds)` makes a practice wait that lets other tasks run. These examples are standalone scripts: run them where another event loop is not already running. Their delays are local; they do not contact a service.",
+        "A timeout limits how long an attempt should wait:\n```python\nimport asyncio\n\nasync def timed_wait(delay, timeout):\n    try:\n        await asyncio.wait_for(asyncio.sleep(delay), timeout=timeout)\n    except asyncio.TimeoutError:\n        return \"timed out\"\n    return \"finished\"\n\nasync def main():\n    print(await timed_wait(0.001, 0.2))\n    print(await timed_wait(0.6, 0.2))\n\nasyncio.run(main())\n```\nWith normal timing, the output is:\n```text\nfinished\ntimed out\n```\n`wait_for` requests cancellation if the work takes too long. Finishing that cancellation can take extra time, so the total wait may exceed the timeout.",
+        "A retry is another attempt. Keep the number of retries limited.\n\n`outcomes[:attempts]` selects only the allowed attempts. `continue` moves to the next one. `return` ends the whole call as soon as it has an answer.",
+        "Run two collectors and wait for both:\n```python\nimport asyncio\n\nasync def collect(outcomes, attempts=2, timeout=0.2):\n    for outcome in outcomes[:attempts]:\n        delay = 0.6 if outcome == \"timeout\" else 0.001\n        try:\n            await asyncio.wait_for(asyncio.sleep(delay), timeout=timeout)\n        except asyncio.TimeoutError:\n            continue\n        if outcome == \"error\":\n            return \"failed\"\n        return outcome\n    return \"timed out\"\n\nasync def main():\n    results = await asyncio.gather(\n        collect([\"timeout\", \"complete\"]),\n        collect([\"error\"])\n    )\n    print(results)\n\nasyncio.run(main())\n```\nWith normal timing, the output is:\n```text\n['complete', 'failed']\n```\n`gather` lets the two calls move forward together and keeps their results in the order supplied. The first retries after a timeout. The second returns `\"failed\"` for its supplied error.\n\nThe practice delays are far apart: 0.001 seconds is quick, 0.2 is the limit, and 0.6 is deliberately slow. Real timers are not exact.",
+        "Cancellation asks work to stop. `create_task` schedules work and gives you a task object. Call `cancel()`, then await the task to observe what happened:\n```python\nimport asyncio\n\nasync def main():\n    task = asyncio.create_task(asyncio.sleep(10))\n    task.cancel()\n    try:\n        await task\n    except asyncio.CancelledError:\n        print(\"Cancellation observed\")\n\nasyncio.run(main())\n```\nOutput:\n```text\nCancellation observed\n```\nThis example catches `CancelledError` to show it happened. In an app, use `finally` for cleanup and usually let cancellation pass outward afterward.",
+        "Suppose each try has a 50% chance of success, and one try does not change the next try's chance. These are independent tries.\n\nThe chance both fail is `0.5 × 0.5 = 0.25`. So the chance at least one succeeds is `1 − 0.25 = 0.75`, or 75%.\n\nThis uses the stated chances. It does not guarantee success in any one run.",
+        "In `collect`, retry a timeout up to the allowed limit. Return `\"failed\"` for `\"error\"`; otherwise return the supplied result. If every allowed attempt times out, return `\"timed out\"`.\n\nAdd `collect_pair` to gather the two calls in the checks. Add `cancellation_observed` to cancel and await a task, returning `True` when it catches `CancelledError`.\n\nThese are local practice waits. In a real service, a timeout would not prove that the service did no work."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Add a loop that stops after the allowed number of attempts.",
+        "For a timeout outcome, make the simulated delay longer than `timeout`.",
+        "Catch the timeout error.",
+        "Return the timed-out message when no attempts remain."
+      ],
+      "after": [
+        "In `collect`, loop only over `outcomes[:attempts]`.",
+        "Use the longer practice delay for a timeout and catch it to try again.",
+        "Return a result or `\"failed\"` as shown; return `\"timed out\"` only when attempts are used up.",
+        "Add `collect_pair` with `await asyncio.gather(...)`.",
+        "Add `cancellation_observed`: cancel a task, await it, and return True when cancellation is caught."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "A coroutine is still unfinished after wait_for’s 0.2-second timeout. Is total waiting time guaranteed to be exactly 0.2 seconds?",
+        "choices": [
+          "No; cancellation is requested, and finishing cancellation can take longer",
+          "Yes; the coroutine is forcibly destroyed at exactly 0.2 seconds",
+          "No; wait_for retries the work forever"
+        ],
+        "answer": 0,
+        "explanation": "wait_for requests cancellation at the timeout and waits for it to finish. Cleanup can make the total wait exceed the timeout; this is not an automatic retry."
+      },
+      "after": {
+        "question": "Does a 0.2-second timeout guarantee that the total wait is exactly 0.2 seconds?",
+        "choices": [
+          "No; cancellation is requested, and finishing cancellation can take longer",
+          "Yes; the coroutine is forcibly destroyed at exactly 0.2 seconds",
+          "No; wait_for retries the work forever"
+        ],
+        "answer": 0,
+        "explanation": "Cancellation can need extra time to finish, including cleanup. A timeout does not automatically retry the work."
+      }
+    }
+  ],
+  "reviewNotes": [
+    "Reviewed directly by the host, one lesson at a time. Plain wording, specific guidance, preserved exercise behavior."
+  ]
+}

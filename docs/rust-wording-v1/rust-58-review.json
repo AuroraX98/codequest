@@ -1,0 +1,91 @@
+{
+  "lesson": "rust-58",
+  "position": 58,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "If the file is inside a nonexistent parent directory in this fixture, what happens?",
+      "after": "Writing a file can fail. The question mark sends a write error back before the program tries to read."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "std::fs::write and read_to_string return Results. io::Result<T> aliases Result<T, io::Error>. The ? operator returns an error immediately from the helper when an operation fails. The caller decides how to report it. read_to_string also requires valid UTF-8, not merely a readable file.",
+        "Run only in a disposable working directory: this example creates or replaces notes.txt. These convenience functions manage their file handles, but successful writing is not a promise of durable storage after a power failure. Dropping a File does not provide a returned close error; durability and explicit synchronization require a separate policy.",
+        "Complete local Rust example; the app itself does not execute it:\n```rust\nuse std::{fs, io};\nfn save_and_read(path: &str) -> io::Result<String> {\n    fs::write(path, \"ready\")?;\n    fs::read_to_string(path)\n}\nfn main() {\n    match save_and_read(\"notes.txt\") {\n        Ok(text) => println!(\"{text}\"),\n        Err(_) => println!(\"I/O failed\"),\n    }\n}\n```",
+        "Expected output or behavior: ready. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Decide whether a real caller needs to preserve the error kind, path context or durability requirements. You may trace it without a Rust compiler; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "Writing a file can fail. The question mark sends a write error back before the program tries to read.",
+        "When the write succeeds, the function reads from the same file path.",
+        "Follow the labeled parts of this example.\n```rust\nuse std::{fs, io};\nfn save_and_read(path: &str) -> io::Result<String> {\n    fs::write(path, \"ready\")?;\n    fs::read_to_string(path)\n}\nfn main() {\n    match save_and_read(\"notes.txt\") {\n        Ok(text) => println!(\"{text}\"),\n        Err(_) => println!(\"I/O failed\"),\n    }\n}\n```",
+        "The output is `ready`. With a writable folder, the file contains ready and the read returns that text.",
+        "Follow the error path for a file in a folder that does not exist."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read one idea.",
+        "Follow the labeled example.",
+        "Try the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Follow the error path for a file in a folder that does not exist."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If the file is inside a nonexistent parent directory in this fixture, what happens?",
+        "choices": [
+          "The read succeeds with a fabricated empty file.",
+          "The helper automatically creates all missing directories.",
+          "The write error propagates and main prints I/O failed."
+        ],
+        "answer": 2,
+        "explanation": "fs::write cannot create the missing parent directory; ? returns that error before reading."
+      },
+      "after": {
+        "question": "What prints if the write fails because the folder does not exist?",
+        "choices": [
+          "ready",
+          "Nothing; the program retries forever.",
+          "I/O failed"
+        ],
+        "answer": 2,
+        "explanation": "The failed write returns an error immediately. The caller prints I/O failed."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Rust Core v1 uses stable Rust1.99.1 with edition2024 and the standard library. The app supplies concept reading and an understanding check, not a Rust browser runner. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "CodeQuest shows the Rust example. Running it on your own computer is optional."
+    }
+  ],
+  "headings": [
+    "Return a file error",
+    "Read what was saved",
+    "Read the example",
+    "What happens",
+    "Try one change"
+  ],
+  "project": {
+    "title": "File IO and propagated errors",
+    "task": "Follow the error path for a file in a folder that does not exist.",
+    "done_when": "Read each idea and pass the understanding check. Running the example on your computer is optional."
+  }
+}

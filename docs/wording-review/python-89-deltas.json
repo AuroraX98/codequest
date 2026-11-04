@@ -1,0 +1,82 @@
+{
+  "lesson": "python-89",
+  "sourceHash": "7f8a6d43ddf66fcfbced2f1243e47a224fbaf3ee90dbd89eaacd3ae7efa78164",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Complete first_title(groups, key) with the given annotations: return the first String in the keyed list, or None for a missing key or empty list. Inputs follow the annotated types. Keep identity_count as the visible non-enforcement demonstration.",
+      "after": "Add type notes, then see what those notes do and do not check."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "dict[str, list[str]] describes a dictionary with String keys and lists of Strings as values. key: str describes the second parameter. -> str | None describes either a String result or no title. These annotations communicate intended types; they do not loop through incoming data and validate it at runtime.",
+        "first_title(groups, key) reads the named list using get(key, []), which returns the stored list or the supplied empty-list default. It returns the first title, or None when the list is empty/missing. The data lookup and branch enforce that behavior; the annotations do not implement it. identity_count(value: int) -> int simply returns its argument.\n```python\ndef first_title(groups: dict[str, list[str]], key: str) -> str | None:\n    titles = groups.get(key, [])\n    return titles[0] if titles else None\n\ndef identity_count(value: int) -> int:\n    return value\nprint(first_title({\"today\": [\"Read\", \"Draw\"]}, \"today\"))\nprint(first_title({\"today\": []}, \"today\"))\nprint(identity_count(\"text\"))\n```\nOutput: Read, None, text on separate lines. The final call deliberately violates the annotation yet Python still returns its String.",
+        "A static type checker analyzes annotated code and can reject the String argument to identity_count without executing that call. Python execution is a different check: annotations alone are not an input validator. This lesson’s runnable checks verify behavior, not a checker’s result. No third-party checker is installed or run by the browser exercise; any separate native checker evidence must be reported explicitly.",
+        "For the practice function, inputs follow the annotated dictionary/list/String types. A real external-data boundary would need explicit shape checks before calling it. Optional practice: write down the expected type of groups[\"today\"] and the two possible return types; do not use a successful runtime call as proof of a static contract."
+      ],
+      "after": [
+        "Type annotations are notes about the kinds of values your code expects.\n\n`dict[str, list[str]]` means a dictionary whose keys are strings and whose values are lists of strings. `key: str` says the second input should be a string. `-> str | None` says the result should be a string or `None`.\n\nThese notes do not check the data while Python runs.",
+        "`first_title` uses `get(key, [])` to find the saved list, or an empty list if the key is missing. It returns the first title, or `None` if there is no title.\n\nThose instructions do the work. The type notes do not do it for us.\n\nThe second function, `identity_count`, simply returns whatever it receives.\n```python\ndef first_title(groups: dict[str, list[str]], key: str) -> str | None:\n    titles = groups.get(key, [])\n    return titles[0] if titles else None\n\ndef identity_count(value: int) -> int:\n    return value\nprint(first_title({\"today\": [\"Read\", \"Draw\"]}, \"today\"))\nprint(first_title({\"today\": []}, \"today\"))\nprint(identity_count(\"text\"))\n```\nOutput:\n```text\nRead\nNone\ntext\n```\nThe final call supplies text where the note says `int`. Python still returns the text.",
+        "A static type checker is a tool that reads your code without running it. It can flag the text passed to `identity_count` because that does not match the `int` note.\n\nRunning Python follows the function's instructions. Type notes alone do not reject the input.\n\nThis browser exercise runs your code. It does not run a separate type checker.",
+        "For this exercise, the inputs follow the written type notes. Data from elsewhere would need checks before the function uses it.\n\nFor extra practice, name the type of `groups[\"today\"]` and the two possible result types. A call that runs successfully does not prove it follows the type notes."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Why does identity_count(\"text\") still return \"text\" despite its int annotation?",
+        "choices": [
+          "Annotations are ignored by every static analysis tool.",
+          "Python automatically converts text into an integer.",
+          "The annotation states a static contract but the function body returns the value without runtime validation."
+        ],
+        "answer": 2,
+        "explanation": "A checker can flag the mismatched call, while ordinary Python execution still follows the body. These are distinct kinds of evidence."
+      },
+      "after": {
+        "question": "Why does identity_count(\"text\") still return \"text\" despite its int annotation?",
+        "choices": [
+          "Annotations are ignored by every static analysis tool.",
+          "Python automatically converts text into an integer.",
+          "The annotation is a type note. The function returns its input without checking its type."
+        ],
+        "answer": 2,
+        "explanation": "A type checker can flag this call. Python itself still follows the function's instructions and returns the text."
+      }
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the requirement.",
+        "Make one change to the starter.",
+        "Run the checks.",
+        "Explain why a changed input produces its result."
+      ],
+      "after": [
+        "In `first_title`, read the list for the given key, using `[]` when it is missing.",
+        "Return the first title when that list is not empty; otherwise return `None`.",
+        "Keep `identity_count` returning its input as supplied.",
+        "Try a missing key and notice that the type notes do not reject text passed to `identity_count`."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Trace the visible worked calls before changing the starter."
+      ],
+      "after": [
+        "Check whether `titles` is empty before using position 0.",
+        "Type notes describe expected values; the function's instructions decide what runs."
+      ]
+    }
+  ],
+  "reviewNotes": [
+    "Annotations show intended types but do not validate inputs at runtime.",
+    "The lookup and branch enforce first-title behavior, including empty or missing keys.",
+    "A static checker and normal Python execution are different checks.",
+    "Practice inputs follow annotations; outside data needs explicit structure checks.",
+    "Replaced capitalized String and audit-process language, explained annotations simply, and kept the distinction between a type checker and running Python.",
+    "Made the summary and practice guidance concrete to this lesson, replacing generic review directions."
+  ]
+}

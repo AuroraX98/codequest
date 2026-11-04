@@ -1,0 +1,77 @@
+{
+  "lesson": "python-86",
+  "sourceHash": "6ab693cae70a55ca026c40b518fc631538d5474ee1602608b68ae4a563407ba5",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Complete the finally cleanup in run_pair(label). Keep the two Event signals, TaskGroup, and matching ValueError handler. Return cleanup, the supplied label, then done only after all children have finished.",
+      "after": "Let a group of tasks finish cleanup before handling a failed task."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "async with asyncio.TaskGroup() creates and enters a task group. group.create_task(coroutine) schedules that coroutine as a child and returns its Task. Exiting the context waits for the children. A child failure other than cancellation requests cancellation of siblings and is reported after their cleanup as grouped failures.",
+        "asyncio.Event() constructs an initially unset signal. ready.set() sets it and wakes waiters; await ready.wait() pauses until set and then returns True. blocked is never set: its wait is deliberately ended by sibling cancellation. The failing child waits for ready, ensuring the waiting child has entered its try/finally before failure. These are coroutine signals, not thread locks.",
+        "run_pair(label) returns the recorded event list after the group exits. waiting() and failing() create child coroutines; create_task schedules them. asyncio.run(run_pair()) runs the top-level coroutine and returns its list in this course runner. finally records cleanup without swallowing CancelledError; the matching except* runs only after the group has finished its children.\n```python\nimport asyncio\n\nasync def run_pair(label=\"handled\"):\n    events = []\n    ready = asyncio.Event()\n    blocked = asyncio.Event()\n    async def waiting():\n        try:\n            ready.set()\n            await blocked.wait()\n        finally:\n            events.append(\"cleanup\")\n    async def failing():\n        await ready.wait()\n        raise ValueError(\"worker failed\")\n    try:\n        async with asyncio.TaskGroup() as group:\n            group.create_task(waiting())\n            group.create_task(failing())\n    except* ValueError:\n        events.append(label)\n    events.append(\"done\")\n    return events\nprint(asyncio.run(run_pair()))\n```\nOutput: ['cleanup', 'handled', 'done'].",
+        "Replacing the handler with except* TypeError leaves the ValueError group unhandled, so the final done append is skipped. No sleep or scheduler speed establishes this ordering; the Event and group lifetime do. Optional practice: change the cleanup label and trace why it still appears before the handler. On a normal already-running async loop, await run_pair() rather than nesting asyncio.run; the course worker adapts its top-level execution boundary."
+      ],
+      "after": [
+        "A `TaskGroup` manages tasks together. `group.create_task(...)` schedules one task in the group.\n\nLeaving the `async with` block waits for those tasks. If one fails with an error other than cancellation, the group asks the others to stop. It waits for their cleanup, then reports the failures as a group.",
+        "An `Event` is a signal for asynchronous tasks. It starts unset. `set()` sends the signal, and `await event.wait()` waits for it.\n\nHere, `ready` makes the failing task wait until the other task has entered `try`. `blocked` stays unset, so cancellation ends that wait. These signals coordinate coroutines; they are not locks for threads.",
+        "The waiting task records cleanup in `finally`. Only after it finishes does the error handler record the label:\n```python\nimport asyncio\n\nasync def run_pair(label=\"handled\"):\n    events = []\n    ready = asyncio.Event()\n    blocked = asyncio.Event()\n    async def waiting():\n        try:\n            ready.set()\n            await blocked.wait()\n        finally:\n            events.append(\"cleanup\")\n    async def failing():\n        await ready.wait()\n        raise ValueError(\"worker failed\")\n    try:\n        async with asyncio.TaskGroup() as group:\n            group.create_task(waiting())\n            group.create_task(failing())\n    except* ValueError:\n        events.append(label)\n    events.append(\"done\")\n    return events\nprint(asyncio.run(run_pair()))\n```\nOutput:\n```text\n['cleanup', 'handled', 'done']\n```\nCleanup lets cancellation pass outward. The handler catches the `ValueError`, then normal code can add `\"done\"`.",
+        "If the handler catches `TypeError` instead, it misses this `ValueError`. Cleanup still runs, but the error passes outward before `\"done\"` is added.\n\nThe signal and task group control the order; guessing a wait time is unnecessary. Try changing the recorded cleanup text and follow the same order.\n\nInside an already-running asynchronous function, use `await run_pair()` instead of starting another loop with `asyncio.run`."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the requirement.",
+        "Make one change to the starter.",
+        "Run the checks.",
+        "Explain why a changed input produces its result."
+      ],
+      "after": [
+        "In `waiting`, replace the `pass` inside `finally` with an append of `\"cleanup\"`.",
+        "Keep both Event signals and the ValueError handler as supplied.",
+        "Check the order: cleanup, the chosen label, then done.",
+        "Try another label and a repeated call."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If the handler changes to except* TypeError, does the final done append run after the ValueError child fails?",
+        "choices": [
+          "No cleanup runs because cancellation forcibly kills the thread.",
+          "Yes. TaskGroup converts every child failure into success.",
+          "No. Cleanup runs, but the unmatched ValueError group propagates before done."
+        ],
+        "answer": 2,
+        "explanation": "TaskGroup waits for cancellation cleanup, then raises the failure group. A handler for the wrong subgroup type does not recover normal flow."
+      },
+      "after": {
+        "question": "If the handler changes to `except* TypeError`, is `\"done\"` added after the ValueError?",
+        "choices": [
+          "No cleanup happens because the task is instantly destroyed.",
+          "Yes. TaskGroup turns every failure into success.",
+          "No. Cleanup runs, but the unhandled ValueError passes outward before done."
+        ],
+        "answer": 2,
+        "explanation": "The group waits for cleanup, then reports the failure. A TypeError handler does not catch this ValueError."
+      }
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Trace the visible worked calls before changing the starter."
+      ],
+      "after": [
+        "Put the cleanup append inside `finally`.",
+        "Do not catch and hide cancellation in the waiting task."
+      ]
+    }
+  ],
+  "reviewNotes": [
+    "Reviewed directly by the host, one lesson at a time. Plain wording, specific guidance, preserved exercise behavior."
+  ]
+}

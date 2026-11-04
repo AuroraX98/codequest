@@ -1,0 +1,101 @@
+{
+  "lesson": "sql-13",
+  "position": 49,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Create a view folder_paths with id, path and depth from folders(id, name, parent_id). Roots have NULL parent_id, path equal to their name and depth 0. Children append \"/\" plus their name and increase depth by 1. Include every folder in the supplied acyclic forest. Names contain no slash; keep the source unchanged.",
+      "after": "Build folder paths by repeating the same step for each level."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A folder tree stores one row per folder and the ID of its parent. A root has no parent. A forest is a collection of separate trees, so there can be several roots. A recursive query repeatedly uses earlier results to find the next level. It can build full paths even when the depth varies.",
+        "A common table expression, or CTE, gives a query a temporary name after WITH. WITH RECURSIVE allows a CTE to refer to itself. It has an anchor query that provides starting rows and a recursive query that expands from them. UNION ALL combines the starting and later rows without removing duplicates.",
+        "This complete recursive example counts upward.\n```sql\nWITH RECURSIVE numbers(n) AS (\n  SELECT 0\n  UNION ALL\n  SELECT n + 1 FROM numbers WHERE n < 3\n)\nSELECT n FROM numbers ORDER BY n;\n```\nIt produces 0, 1, 2 and 3. The WHERE condition prevents further expansion after 3. A recursive query needs a reason to stop.",
+        "For folder paths, the anchor selects rows whose parent_id IS NULL. Give each root its own name as the path and zero as the depth. The recursive part joins a child folder to an already discovered parent path using child.parent_id = parent.id. When no undiscovered descendants remain to expand, the supplied acyclic tree is finished.",
+        "SQLite joins text with ||. Here is a small one-level example.\n```sql\nWITH parent(id, path, depth) AS (VALUES (1, 'Home', 0)),\nchild(id, name, parent_id) AS (VALUES (2, 'Notes', 1))\nSELECT child.id, parent.path || '/' || child.name AS path, parent.depth + 1 AS depth\nFROM child JOIN parent ON child.parent_id = parent.id;\n```\nThe output is ID 2, Home/Notes and depth 1. The full recursive query repeats that same expansion at every level.",
+        "The input contract guarantees an acyclic forest and existing parents. General untrusted graphs need cycle detection or another explicit bound; this exercise does not claim to handle arbitrary cycles. Start from every root so a second tree is not lost. Repeated folder names under different parents are allowed because IDs, not names, connect the rows.",
+        "Wrap the CTE query in CREATE VIEW folder_paths AS and select id, path and depth from its result. Display the view ORDER BY path. Checks include two roots, a deeper descendant and repeated names in different branches. A fixed number of self-joins would solve only a fixed depth; recursion expresses the repeated operation directly."
+      ],
+      "after": [
+        "A root folder has no parent. A folder tree starts at a root and branches into children. A recursive query repeats a step using rows it has already found, so it can follow folders through many levels.",
+        "A common table expression, or CTE, is a query given a temporary name with `WITH`. `WITH RECURSIVE` lets that query use its own earlier results. First it finds starting rows. Then it finds the next level.",
+        "```sql\nCREATE TABLE demo_folders(id INTEGER PRIMARY KEY, name TEXT, parent_id INTEGER);\nINSERT INTO demo_folders VALUES\n  (1, 'Home', NULL), (2, 'Notes', 1), (3, 'Ideas', 2);\nWITH RECURSIVE paths(id, path, depth) AS (\n  SELECT id, name, 0 FROM demo_folders WHERE parent_id IS NULL\n  UNION ALL\n  SELECT child.id, parent.path || '/' || child.name, parent.depth + 1\n  FROM demo_folders AS child\n  JOIN paths AS parent ON child.parent_id = parent.id\n)\nSELECT id, path, depth FROM paths ORDER BY path;\n```\nThe paths are `Home` at depth 0, `Home/Notes` at depth 1, and `Home/Notes/Ideas` at depth 2.",
+        "The first `SELECT` is the starting part, called the anchor. It finds every root with `parent_id IS NULL`. Each root starts with its own name and depth 0. Choosing every root also handles several separate trees.",
+        "The second `SELECT` finds children of a path already found. `||` joins the parent path, a slash, and the child's name. Adding 1 gives the child's depth. `UNION ALL` includes the new rows without removing repeated values.",
+        "This exercise's folders have valid parents and no loops. Each branch ends when it has no more children. Other data may need checks for loops or a depth limit. Link folders by ID, because different folders can share a name.",
+        "Put the repeating query after `CREATE VIEW folder_paths AS`. Return `id`, `path`, and `depth`. Show the view with `ORDER BY path`. The source folders stay unchanged."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Make a recursive CTE with `id`, `path`, and `depth`. A CTE is a named query used by the main query.",
+        "Start with the root folders at depth zero.",
+        "Match each child folder to a parent already found.",
+        "Add the child’s name to the path.",
+        "Add one to the depth for each level.",
+        "Make this result available as `folder_paths`.",
+        "Display the paths in order."
+      ],
+      "after": [
+        "Start a recursive CTE with every root at depth 0.",
+        "Join each child to a parent path already found.",
+        "Append the child name and add 1 to the depth.",
+        "Save the query as `folder_paths`, show the paths in order, and run the checks."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Use UNION ALL between anchor and recursive SELECT.",
+        "Join child.parent_id to parent.id, not the other way around.",
+        "Build parent.path || '/' || child.name and parent.depth + 1."
+      ],
+      "after": [
+        "Join `child.parent_id` to `parent.id`.",
+        "Build `parent.path || '/' || child.name` and `parent.depth + 1`.",
+        "Use `UNION ALL` between the starting query and the repeating query."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "A forest has two roots, Home and Work, both with parent_id NULL. Which starting rows keep both trees in the recursive result?",
+        "choices": [
+          "Both roots",
+          "Only Home, because it appears first",
+          "Only children whose parent_id is not NULL"
+        ],
+        "answer": 0,
+        "explanation": "Every root must be an anchor row. Starting from just one root loses the other tree; recursive expansion then follows each selected root’s descendants."
+      },
+      "after": {
+        "question": "Home and Work are both root folders. Which starting rows keep both trees?",
+        "choices": [
+          "Both roots",
+          "Only Home, because it appears first",
+          "Only folders that have a parent"
+        ],
+        "answer": 0,
+        "explanation": "The query can follow only the trees it starts from. Select both roots, then follow each one's children."
+      }
+    }
+  ],
+  "headings": [
+    "Follow a folder's children",
+    "Name a repeating query",
+    "One example",
+    "Start at every root",
+    "Add one child at a time",
+    "Know when to stop",
+    "Save the path query"
+  ],
+  "project": {
+    "title": "A folder path explorer",
+    "task": "Create `folder_paths(id, path, depth)` from `folders`. Start every root with its name and depth 0. Append `/` and each child name, adding 1 to the depth. The supplied folders have no loops or slashes in their names. Keep them unchanged.",
+    "done_when": "The checks pass for both roots, deep folders, and repeated names in different branches."
+  }
+}

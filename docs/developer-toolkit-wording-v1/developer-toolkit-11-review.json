@@ -1,0 +1,112 @@
+{
+  "lesson": "developer-toolkit-11",
+  "position": 11,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Complete readMode(env). Missing APP_MODE defaults to \"development\". Exactly \"development\" and \"production\" are accepted; all other values return null. Do not change env or log its contents.",
+      "after": "Use a default only when a setting is missing. Reject values the app does not understand."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "Environment variables are configuration values supplied outside your source code.",
+        "In Node.js, process.env reads the process environment. Values such as \"false\" arrive as text, not Boolean false.",
+        "This example reads a label without printing the entire environment.\n```javascript\nconst label = process.env.APP_LABEL ?? \"Local app\";\nconsole.log(label);\n```",
+        "process.env belongs to Node, not the browser. The browser practice receives an ordinary object instead, so the reading logic can be tested safely.",
+        "A default answers what to do when a value is missing. It should not silently replace a present but invalid value.",
+        "Check allowed values after choosing the missing-value default.\n```javascript\nfunction readSize(env) {\n  const size = env.SIZE === undefined ? \"small\" : env.SIZE;\n  return size === \"small\" || size === \"large\" ? size : null;\n}\n```",
+        "This accepts small and large. A present empty string is invalid, not the default.",
+        "Configuration can contain secrets. Do not print the entire environment, paste secrets into lessons, or commit a real secret file to Git.",
+        "For this practice, APP_MODE is not a secret. Still, return only the selected mode rather than exposing unrelated settings.",
+        "Use a missing value, both accepted values, and an unknown value to test the decision. Preserve the input object."
+      ],
+      "after": [
+        "An environment variable is a setting supplied when a program starts. It lets you change a setting without editing the source code.",
+        "Node reads these settings through process.env. Their values are text: \"false\" is text, not the boolean false.",
+        "A default is the value used when a setting was not supplied. Choose it deliberately.",
+        "The browser has no Node process.env. Our practice receives an ordinary object instead, so the decision can be tested.",
+        "Only undefined counts as missing in this exercise. A present but unrecognized value must return null.",
+        "This example accepts a small or large size.\n\n```javascript\nfunction readSize(env) {\n  const size = env.SIZE === undefined ? \"small\" : env.SIZE;\n  return size === \"small\" || size === \"large\" ? size : null;\n}\nconsole.log(readSize({}));\nconsole.log(readSize({SIZE: \"\"}));\n```\n\nThe outputs are small and null.",
+        "An empty string is still a supplied value. It is not one of the allowed sizes, so it is rejected.",
+        "An environment may contain secrets. Do not print or copy the whole environment just to inspect one setting.",
+        "For the exercise, read only APP_MODE. Return the mode and leave the input object unchanged.",
+        "Complete readMode(env). Missing APP_MODE becomes \"development\". Accept exactly \"development\" or \"production\". Return null for every other value."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the requirement.",
+        "Make one change to the starter.",
+        "Run the checks.",
+        "Explain why a changed input produces its result."
+      ],
+      "after": [
+        "Use development only when APP_MODE is undefined.",
+        "Check the result against the two allowed names.",
+        "Return null for an invalid value.",
+        "Run the checks without changing or logging env."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Distinguish undefined from a present empty string.",
+        "Compare exactly with the two accepted names.",
+        "Do not mutate or print the input object."
+      ],
+      "after": [
+        "Compare with undefined rather than testing whether the value is truthy.",
+        "Use exact comparisons with the two allowed names.",
+        "Return only the selected result."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "APP_MODE is an empty string, not missing. Under this contract, should readMode use development?",
+        "choices": [
+          "Yes; empty and missing always mean the same thing.",
+          "No; the present empty value is invalid and should return null.",
+          "No; empty text means production."
+        ],
+        "answer": 1,
+        "explanation": "The default is only for an omitted setting. Treating every falsy value as missing would conceal invalid configuration."
+      },
+      "after": {
+        "question": "APP_MODE is an empty string. Should this rule use development?",
+        "choices": [
+          "Yes. Empty and missing always mean the same thing.",
+          "No. The present empty value is invalid, so return null.",
+          "No. Empty text means production."
+        ],
+        "answer": 1,
+        "explanation": "Only a missing setting gets the default. Empty text is present but not accepted."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Only the reading logic runs in the browser. In a local Node project, call readMode(process.env). Environment values are supplied by the operating system or launcher; this lesson does not configure your device.",
+      "after": "The browser uses a supplied object. A local Node program can call readMode(process.env). This lesson does not change your computer's environment settings."
+    }
+  ],
+  "headings": [
+    "Supply settings outside the code",
+    "Read text values",
+    "Choose a missing-value default",
+    "Use a test object",
+    "Keep missing and invalid separate",
+    "One example",
+    "Check empty text",
+    "Keep other settings private",
+    "Read only the requested field",
+    "Try the mode rule"
+  ],
+  "project": {
+    "title": "Read a setting without hard-coding it",
+    "task": "Complete readMode(env). Default missing APP_MODE to development. Accept exactly development or production; return null otherwise. Do not change or log env.",
+    "done_when": "Checks pass for missing, valid, empty, and unknown values. Explain why empty text is not the same as a missing setting."
+  }
+}

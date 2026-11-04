@@ -1,0 +1,88 @@
+{
+  "lesson": "javascript-24",
+  "position": 48,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Write readTitle(text): return a record’s string title, or null for malformed JSON or the wrong data shape.",
+      "after": "Read JSON text and check that it contains a text title."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "JSON stores data as text. Parsing converts that text into a JavaScript value.",
+        "JSON object keys and string values use double quotes.\n```javascript\nconst text = '{\"city\":\"Oslo\"}';\nconst place = JSON.parse(text);\nconsole.log(place.city);\n```\nThis prints Oslo.",
+        "Parsing can succeed without giving you the shape you need.\n```javascript\nconsole.log(JSON.parse(\"null\"));\nconsole.log(JSON.parse(\"[2, 5]\"));\n```\nThe first value is null; the second is an array, not a city record.",
+        "Check the value before reading its fields. `typeof value === \"object\"` alone is not enough: null and arrays also have that typeof result.",
+        "A guard can reject those cases before reading a property.\n```javascript\nfunction hasCity(value) {\n  if (value === null || typeof value !== \"object\" || Array.isArray(value)) return false;\n  return typeof value.city === \"string\";\n}\n```\n\nAfter defining hasCity, inspect both paths directly:\n```javascript\nconsole.log(hasCity({city:\"Oslo\"}));\nconsole.log(hasCity(null));\nconsole.log(hasCity([]));\n```\nThe results are true, false, false. The helper receives an unknown value and returns whether it is a non-array record with a string city; it does not parse JSON or change the input.",
+        "Malformed JSON throws an error. A catch block can handle it instead of stopping the program.\n```javascript\ntry {\n  JSON.parse(\"not JSON\");\n} catch (error) {\n  console.log(\"Could not read the text\");\n}\n```",
+        "The practice accepts a title even when it is an empty string. It rejects missing or numeric titles; it does not convert them into text.",
+        "`JSON.stringify` goes the other direction for ordinary JSON-compatible data.\n```javascript\nconsole.log(JSON.stringify({ city: \"Oslo\" }));\n```\nIt returns JSON text. Not every JavaScript value can be preserved by JSON."
+      ],
+      "after": [
+        "JSON is a way to store data as text. Parsing reads that text and turns it into a JavaScript value.\n\nAfter parsing, we still need to check that the value contains the information our app needs.",
+        "JSON uses double quotes for object keys and text values.\n```javascript\nconst text = '{\"city\":\"Oslo\"}';\nconst place = JSON.parse(text);\nconsole.log(place.city);\n```\nOutput:\n```text\nOslo\n```\n`JSON.parse` turns the text into an object. `place.city` reads its city.",
+        "Valid JSON can describe many kinds of values.\n```javascript\nconsole.log(JSON.parse(\"null\"));\nconsole.log(JSON.parse(\"[2, 5]\"));\n```\nThe first call gives `null`. The second gives an array containing 2 and 5. Neither is a record with a city property.",
+        "Check the kind of value before reading its fields.\n\n`typeof value === \"object\"` is not enough. JavaScript also reports `object` for `null` and arrays. Check for those separately.",
+        "This guard checks for a record with a text city.\n```javascript\nfunction hasCity(value) {\n  if (value === null || typeof value !== \"object\" || Array.isArray(value)) return false;\n  return typeof value.city === \"string\";\n}\nconsole.log(hasCity({city:\"Oslo\"}));\nconsole.log(hasCity(null));\nconsole.log(hasCity([]));\n```\nOutput:\n```text\ntrue\nfalse\nfalse\n```\nThe first line inside `hasCity` rejects null, nonobjects, and arrays. The next line checks the city property's type. The helper does not change its input.",
+        "Broken JSON text makes `JSON.parse` throw an error. Handle it with `try` and `catch`.\n```javascript\ntry {\n  JSON.parse(\"not JSON\");\n} catch (error) {\n  console.log(\"Could not read the text\");\n}\n```\nOutput:\n```text\nCould not read the text\n```",
+        "Complete `readTitle(text)` using the same pattern, but check `title` instead of `city`.\n\nReturn the title if it is a string, including an empty string. Return `null` for broken JSON, a wrong outer value, or a missing or nontext title. Do not turn numbers into text.",
+        "`JSON.stringify` goes the other way: it turns ordinary JSON-compatible data into JSON text.\n```javascript\nconsole.log(JSON.stringify({ city: \"Oslo\" }));\n```\nOutput:\n```text\n{\"city\":\"Oslo\"}\n```\nJSON cannot preserve every JavaScript value. This example uses only a plain object containing text."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Write readTitle(text): return a record’s string title, or null for malformed JSON or the wrong data shape.",
+        "Run the checks and inspect the result.",
+        "Change one input or rule and explain what changes."
+      ],
+      "after": [
+        "Parse the text inside try.",
+        "Reject null, arrays, and nonobjects.",
+        "Return title only if it is a string; otherwise return null.",
+        "Return null from catch when the JSON is broken."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "JSON.parse('{\"title\":17}') succeeds. Your app needs a text title. What should readTitle return under this lesson’s contract?",
+        "choices": [
+          "17, because parsing succeeded",
+          "\"17\", because JSON converts every field to text",
+          "null, because the parsed title is not a string"
+        ],
+        "answer": 2,
+        "explanation": "Parsing verifies JSON syntax, not the app’s required record shape. The number 17 is valid JSON but fails the string-title requirement."
+      },
+      "after": {
+        "question": "The JSON has a title of 17, but the app needs text. What should readTitle return?",
+        "choices": [
+          "17, because parsing succeeded",
+          "\"17\", because JSON converts every field to text",
+          "null, because the parsed title is not a string"
+        ],
+        "answer": 2,
+        "explanation": "17 is valid JSON, but it is a number. This function accepts only a string title, so it returns null."
+      }
+    }
+  ],
+  "headings": [
+    "Read data from text",
+    "Parse a JSON object",
+    "Parsing does not check the shape",
+    "Check before reading fields",
+    "Use a guard",
+    "Handle broken JSON",
+    "Build readTitle",
+    "Turn data back into JSON"
+  ],
+  "project": {
+    "title": "Read a title from JSON",
+    "task": "Complete readTitle(text). Return a record's string title, including empty text. Return null for broken JSON or data that does not have the required shape.",
+    "done_when": "Text titles stay unchanged. Broken JSON, wrong outer values, and missing or nontext titles return null."
+  },
+  "notes": []
+}

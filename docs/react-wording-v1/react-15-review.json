@@ -1,0 +1,103 @@
+{
+  "lesson": "react-15",
+  "position": 37,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Wrap a lazy report in a Suspense boundary and observe pending, ready, and reused states.",
+      "after": "Show fallback content while React waits for a lazy component to become ready."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "React.lazy(load) declares a component whose loader runs when React first tries to render it. Declare the lazy component outside App so normal App renders reuse the same declaration.",
+        "The loader returns a Promise: an object representing a result that may arrive later. A pending Promise has no result yet. Resolving it supplies a result; rejecting it supplies an error.",
+        "For lazy, the resolved result must be an object whose default property contains a component. For example, React.lazy(() => Promise.resolve({ default: Greeting })) makes Greeting the loaded component. Promise.resolve creates an already-resolved Promise, so that small example need not visibly wait.",
+        "A Suspense boundary surrounds children that can suspend while waiting. fallback is replacement UI, not an error handler. Here is a complete App using a controlled local Promise, with no downloaded module:\n```react\nlet finishGreeting;\nconst greetingModule = new Promise(resolve => {\n  finishGreeting = () => resolve({default: Greeting});\n});\nfunction Greeting() { return <p data-greeting>Hello, explorer</p>; }\nconst LazyGreeting = React.lazy(() => greetingModule);\nfunction App() {\n  return <main><button onClick={() => finishGreeting()}>Finish local load</button>\n    <React.Suspense fallback={<p role=\"status\">Preparing greeting</p>}>\n      <LazyGreeting />\n    </React.Suspense>\n  </main>;\n}\n```\nThe frame mounts App. React first tries LazyGreeting, invokes its loader and receives the pending greetingModule Promise. Preparing greeting appears until the button calls finishGreeting(). That resolves an object whose default is the Greeting component, allowing React to show Hello, explorer. Greeting’s code was already in this file.\n\nThis changed version resolves the same local Promise before the frame mounts App:\n```react\nlet finishGreeting;\nconst greetingModule = new Promise(resolve => {\n  finishGreeting = () => resolve({default: Greeting});\n});\nfunction Greeting() { return <p data-greeting>Hello, explorer</p>; }\nconst LazyGreeting = React.lazy(() => greetingModule);\nfinishGreeting();\nfunction App() {\n  return <main><button onClick={() => finishGreeting()}>Finish local load</button>\n    <React.Suspense fallback={<p role=\"status\">Preparing greeting</p>}>\n      <LazyGreeting />\n    </React.Suspense>\n  </main>;\n}\n```\nThe greeting becomes available without clicking. Do not promise an observable loading frame for an already-settled Promise; the check waits for the greeting instead.",
+        "React caches the loader Promise and its resolved component for that lazy declaration. Hiding and showing it again does not reload the component code. This does not preserve the child's local state after unmounting, and it is not a general data cache.",
+        "If loading rejects, the nearest Error Boundary handles the error; Suspense is for waiting, not a replacement for error handling. Ordinary fetching inside useEffect does not automatically activate Suspense.",
+        "This exercise controls a Promise manually so you can inspect waiting without relying on network timing. new Promise(resolve => { ... }) immediately provides a resolve function; finishLoading saves a callback that resolves it with { default: Report }. The Report code is already present: this simulates a pending module and does not split or download a real file.\n\nThis smaller Promise example exposes the callback and its effect:\n```javascript\nlet finish;\nconst pending = new Promise(resolve => { finish = resolve; });\npending.then(value => console.log(value));\nfinish(\"Ready\");\n```\nThe constructor takes an executor callback and returns a pending Promise. It immediately gives the callback a resolve function, stored here as finish. Calling finish supplies the eventual result, so the reaction later prints Ready. No network request or downloaded module is involved.",
+        "The supplied Toggle report button shows or hides the child. Finish simulated load settles the Promise. Replace the TODO paragraph with a Suspense boundary whose fallback is <p role=\"status\">Loading report</p>, and put <LazyReport /> inside. role=\"status\" identifies a status message for assistive technology and our check.",
+        "In a real bundler-supported app, React.lazy(() => import(\"./Report.js\")) can load a separate module whose default export is the component. That dynamic import is not run by this single-file exercise. Reset the runner to get a fresh pending Promise."
+      ],
+      "after": [
+        "`React.lazy` declares a component whose loader runs when React first tries to show it. Declare it outside App so later App renders reuse the same declaration.",
+        "A Promise represents a result that may arrive later. Pending means it is still waiting. Resolving supplies the result; rejecting reports a failure.",
+        "A lazy loader must return a Promise whose result has a `default` property containing the component. Here, the result will be `{default: Greeting}`.",
+        "```react\nlet finishGreeting;\nconst greetingModule = new Promise(resolve => {\n  finishGreeting = () => resolve({ default: Greeting });\n});\nfunction Greeting() {\n  return <p data-greeting>Hello, explorer</p>;\n}\nconst LazyGreeting = React.lazy(() => greetingModule);\nfunction App() {\n  return (\n    <main>\n      <button onClick={() => finishGreeting()}>Finish local load</button>\n      <React.Suspense fallback={<p role=\"status\">Preparing greeting</p>}>\n        <LazyGreeting />\n      </React.Suspense>\n    </main>\n  );\n}\n```\nSuspense shows `Preparing greeting` while the Promise is pending. Clicking Finish local load resolves it, and React shows `Hello, explorer`.",
+        "React remembers the Promise and loaded component for this lazy declaration. Hiding and showing it again does not need to load the code again. Removing a component can still discard its local state.",
+        "Suspense handles waiting. If the loader rejects, use an Error Boundary for the failure. Ordinary fetching inside an Effect does not automatically make Suspense show its fallback.",
+        "`new Promise` immediately gives its callback a resolve function. This example saves a function that calls resolve later. The button controls when it becomes ready; no network request or download happens.",
+        "Wrap `<LazyReport />` in Suspense. Use `<p role=\"status\">Loading report</p>` as the fallback. Toggle report shows or hides it, and Finish simulated load makes it ready.",
+        "In a bundled app, lazy can use a dynamic import to load another file. This single-file exercise already contains the component code and only imitates the wait. Reset the runner to get a fresh pending Promise."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Replace the TODO with a Suspense boundary around LazyReport.",
+        "Use the required status fallback.",
+        "Run the checks and trace pending, ready, and reused states."
+      ],
+      "after": [
+        "Put LazyReport inside a Suspense boundary.",
+        "Use the required Loading report status message.",
+        "Run the checks for waiting, ready, and showing it again."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Compare the changed situation with the rule, not just the spelling."
+      ],
+      "after": [
+        "Suspense's fallback is the content shown while the lazy child is waiting."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "A lazily loaded HelpPanel finishes loading successfully. You hide it, then show it again using the same lazy declaration. What should you expect?",
+        "choices": [
+          "React calls the loader again every time because the panel was hidden.",
+          "React reuses the loaded component; its code need not load again.",
+          "The panel can never appear again after it has been hidden."
+        ],
+        "answer": 1,
+        "explanation": "The Promise and loaded component are cached for that lazy declaration. Reusing its code does not guarantee preservation of a previously unmounted component's local state."
+      },
+      "after": {
+        "question": "A lazy HelpPanel has loaded. It is hidden and shown again with the same lazy declaration. What happens?",
+        "choices": [
+          "The loader must run again every time.",
+          "React reuses the loaded component code.",
+          "The panel cannot appear again."
+        ],
+        "answer": 1,
+        "explanation": "React keeps the loaded component for that declaration. Keeping its code does not preserve local state after removal."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Actual React18.3.1 controlled-Promise fixture. Exercises waiting/reveal/cache semantics, not real network code splitting or React19 APIs. The supplied loader controls are instructional scaffolding.",
+      "after": "The supplied Promise lets you control the waiting step. This exercise does not download or split a real module."
+    }
+  ],
+  "headings": [
+    "Load a component when needed",
+    "Wait for a promised result",
+    "Supply the component as default",
+    "Read one controlled loading example",
+    "Reuse the loaded component",
+    "Keep waiting separate from failure",
+    "Control the wait locally",
+    "Build your report fallback",
+    "Recognize the local example's limit"
+  ],
+  "project": {
+    "title": "Show a fallback while a component loads",
+    "task": "Wrap LazyReport in Suspense with the Loading report status fallback.",
+    "done_when": "The fallback appears while waiting, the report appears after finishing the load, and the loaded code is reused when shown again."
+  }
+}

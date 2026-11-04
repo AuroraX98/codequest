@@ -1,0 +1,96 @@
+{
+  "lesson": "python-36",
+  "sourceHash": "f62d50c334994509dc972f99fa062a0f4ee9a6ff509d1b6910ce065fa93b69ef",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Complete make_counter(start). Return a function that increases its own saved count by 1 and returns it each time it is called. Separate counters must keep independent counts.",
+      "after": "Complete make_counter(start) so each returned function increases and returns its own saved count."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A closure is a function that keeps access to names from its enclosing function scope.",
+        "Returning a nested function lets the caller use it after the outer call has finished.",
+        "This example remembers a fixed prefix.\n```python\ndef make_label(prefix):\n    def label(text):\n        return prefix + text\n    return label\n\nstar_label = make_label(\"Star: \")\nprint(star_label(\"Sirius\"))\n```",
+        "The nested label still reads prefix when called later.",
+        "To rebind a saved enclosing name, declare it nonlocal inside the nested function. Without that declaration, an assignment would make the name local to the nested call.",
+        "This separate example increases saved points by two.\n```python\ndef make_points():\n    points = 0\n    def add_two():\n        nonlocal points\n        points = points + 2\n        return points\n    return add_two\n```\n\nAfter the make_points definition:\n```python\nfirst = make_points()\nsecond = make_points()\nprint(first())\nprint(first())\nprint(second())\n```\nThis prints 2, 4, 2. make_points takes no arguments and returns a fresh zero-argument closure. Each returned add_two call changes its own saved points and returns the new number.",
+        "Each call to make_points creates a new enclosing scope. Two returned add_two functions from different calls do not share points.",
+        "For your counter, begin at the supplied start and increase by one per call. Return the function itself, not the result of calling it immediately.",
+        "This is in-memory state. It does not survive restarting the program."
+      ],
+      "after": [
+        "A closure is a function that keeps access to names from the function that made it.",
+        "A function defined inside another function is called nested. Returning it lets other code use it after the outer function has finished.",
+        "This example remembers a fixed prefix.\n```python\ndef make_label(prefix):\n    def label(text):\n        return prefix + text\n    return label\n\nstar_label = make_label(\"Star: \")\nprint(star_label(\"Sirius\"))\n```",
+        "The nested label can still read prefix when it is called later.",
+        "Use `nonlocal` inside a nested function to change a name from the surrounding function.\n\nWithout `nonlocal points`, Python treats `points` as a local name inside `add_two`. Then `points + 2` tries to read that local name before it has a value. This causes `UnboundLocalError`.",
+        "This example adds two to the saved points. Each call to `make_points()` makes a separate counter.\n```python\ndef make_points():\n    points = 0\n    def add_two():\n        nonlocal points\n        points = points + 2\n        return points\n    return add_two\n\nfirst = make_points()\nsecond = make_points()\nprint(first())\nprint(first())\nprint(second())\n```\nIt prints `2`, `4`, then `2`. The second counter still starts from its own zero.\n\n`make_points()` needs no input and returns a function. Calling that returned function adds two to its saved points and returns the new total.",
+        "Each call to make_points creates its own saved points. Two add_two functions from different calls do not share points.",
+        "For your counter, start at the supplied start and increase by one on each call. Return the function itself, not the result of calling it right away.",
+        "The count is kept in memory. It does not stay saved after the program restarts."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the requirement.",
+        "Make one change to the starter.",
+        "Run the checks.",
+        "Explain why a changed input produces its result."
+      ],
+      "after": [
+        "Save `start` as `count` inside `make_counter`.",
+        "Inside `increment`, use `nonlocal count`, add one, and return the new count.",
+        "Return `increment` itself without `()`.",
+        "Check that one counter remembers its calls and two counters keep separate counts.",
+        "Try a negative starting value too: `make_counter(-2)()` should return `-1`."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Two counters are created by separate calls to make_counter(0). After calling the first three times, what does the second return on its first call?",
+        "choices": [
+          "4, because all closures share one counter.",
+          "1, because it has its own enclosing state.",
+          "0, because closures cannot update state."
+        ],
+        "answer": 1,
+        "explanation": "Each outer call created a different saved count. The first counter’s updates do not change the second counter’s scope."
+      },
+      "after": {
+        "question": "Two counters are created by separate calls to make_counter(0). After calling the first three times, what does the second return on its first call?",
+        "choices": [
+          "4, because all counters share one count.",
+          "1, because it has its own saved count.",
+          "0, because a function cannot change a saved count."
+        ],
+        "answer": 1,
+        "explanation": "Each outer call made its own saved count. The first counter's calls do not change the second counter's count."
+      }
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Keep count in the outer function.",
+        "Use nonlocal before rebinding it inside increment.",
+        "Return increment without parentheses."
+      ],
+      "after": [
+        "Keep count in the outer function, make_counter.",
+        "Use nonlocal count before changing it inside increment.",
+        "Return increment without parentheses."
+      ]
+    }
+  ],
+  "reviewNotes": [
+    "Keeps all 9 explanation sections in order.",
+    "Uses plain words for closure and nonlocal.",
+    "Preserves both Python examples with fences.",
+    "Keeps separate-counter and negative-start checks.",
+    "Quiz answer index stays 1.",
+    "Defined nested functions, explained the actual UnboundLocalError without nonlocal, and joined the dependent snippets into one runnable example."
+  ]
+}

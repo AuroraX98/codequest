@@ -33,6 +33,7 @@ export default function PythonInputLesson({
           saved.part >= 0 &&
           saved.part <= lesson.explanation.length
         )
+          // eslint-disable-next-line react-hooks/set-state-in-effect -- Restore device storage after hydration; persistence waits for ready.
           setPart(saved.part);
         if (typeof saved?.answer === "string") setAnswer(saved.answer);
         if (typeof saved?.submitted === "string") setSubmitted(saved.submitted);
@@ -48,6 +49,7 @@ export default function PythonInputLesson({
   useEffect(() => {
     if (ready && part < lesson.explanation.length) onParagraphChange?.(part);
   }, [ready, part, lesson.explanation.length, onParagraphChange]);
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- Respond to an explicit table-of-contents navigation command.
   useEffect(()=>{if(ready && jumpTo && jumpTo.index>=0 && jumpTo.index<lesson.explanation.length)setPart(jumpTo.index);},[ready,jumpTo,lesson.explanation.length]);
   if (!ready) return <p>Opening your tiny lesson…</p>;
   if (part < lesson.explanation.length)
@@ -56,6 +58,7 @@ export default function PythonInputLesson({
         title="input()"
         text={lesson.explanation[part]}
         runtime="python"
+        reviewedLesson
         resumeKey={resumeScope ? `${key}:part-${part}` : undefined}
         onNext={() => setPart(part + 1)}
         onBack={() => setPart(Math.max(0, part - 1))}
@@ -66,7 +69,7 @@ export default function PythonInputLesson({
   return (
     <section className="panel" aria-label="Try input">
       <p className="eyebrow">TRY IT · TYPED-INPUT SIMULATION</p>
-      <p>This models a terminal exchange. It does not run Python.</p>
+      <p>Try typing an answer here. This practice area imitates input(); it does not run Python.</p>
       <pre>
         <code>{'topic = input("What interests you? ")\nprint(topic)'}</code>
       </pre>
@@ -93,8 +96,8 @@ export default function PythonInputLesson({
       {submitted !== null && (
         <div role="status">
           <p>
-            <code>input()</code> returns{" "}
-            <code>{JSON.stringify(submitted)}</code> — a string stored in{" "}
+            <code>input()</code> gives back{" "}
+            <code>{JSON.stringify(submitted)}</code> as text. Here, that text gets the name{" "}
             <code>topic</code>.
           </p>
           <p>
@@ -105,7 +108,7 @@ export default function PythonInputLesson({
           </pre>
           <p>
             The question is the prompt, not the returned answer. Try typing 42:
-            the answer is still text, <code>"42"</code>, not the number{" "}
+            the answer is still text, <code>{'"42"'}</code>, not the number{" "}
             <code>42</code>.
           </p>
         </div>

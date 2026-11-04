@@ -4,16 +4,16 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import ts from 'typescript';
-import React, { act } from 'react';
-import { createRoot } from 'react-dom/client';
+import React, { act as _act } from 'react';
+import { createRoot as _createRoot } from 'react-dom/client';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { JSDOM } from 'jsdom';
 
 const cwd = fileURLToPath(new URL('..', import.meta.url));
 const temp = await mkdtemp(path.join(tmpdir(), 'codequest-step-flow-'));
-const compiled = new Set(), reports = [], externalCalls = [];
+const compiled = new Set(), reports = [], _externalCalls = [];
 const check = async (name, run) => { await run(); reports.push(name); };
-const normalize = text => text.replace(/\s+/g, ' ').trim();
+const _normalize = text => text.replace(/\s+/g, ' ').trim();
 async function compile(file) {
   if (compiled.has(file)) return;
   compiled.add(file);
@@ -41,13 +41,13 @@ async function compile(file) {
 const importFile = file => import(pathToFileURL(path.join(temp, file.replace(/\.tsx?$/, '.mjs'))).href);
 const dom = new JSDOM('<div id="root"></div>', { url: 'https://fixture.example/', pretendToBeVisual: true });
 const savedGlobals = new Map();
-function install(name, value) {
+function _install(name, value) {
   savedGlobals.set(name, Object.getOwnPropertyDescriptor(globalThis, name));
   Object.defineProperty(globalThis, name, { configurable: true, writable: true, value });
 }
-let root;
+let _root;
 try {
- await symlink(path.join(cwd,'node_modules'),path.join(temp,'node_modules'),'dir');
+ await symlink(path.join(cwd,'node_modules'),path.join(temp,'node_modules'),process.platform==='win32'?'junction':'dir');
  await compile('components/LessonStepFlow.tsx'); await compile('lib/python-concepts.ts'); await compile('components/PairedLessonText.tsx');
  const {default:Flow}=await importFile('components/LessonStepFlow.tsx');
  const {buildLessonSteps,shortLessonThoughts}=await importFile('lib/lesson-step-flow.ts');

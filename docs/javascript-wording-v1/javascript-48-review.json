@@ -1,0 +1,94 @@
+{
+  "lesson": "javascript-48",
+  "position": 44,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Implement Session with a minutes getter/setter. Accept only integers 0..60; throw RangeError before changing state otherwise. Constructor initialization must use the same validation. Backing field _minutes is conventional, not private.",
+      "after": "Check a value whenever someone assigns it to a property."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A getter runs when a property is read; a setter runs when it is assigned. session.minutes uses property syntax, not session.minutes(). get minutes() returns a value; set minutes(value) receives the assigned value. A setter’s return value is not how the assigned value is read.",
+        "The setter uses Number.isInteger(value), which returns a Boolean without converting strings, then enforces the inclusive 0..60 range. new RangeError(message) constructs an error and throw transfers control to the caller. Only after validation do we store _minutes, so a rejected assignment preserves the old state. The underscore is just a naming convention, not access control.",
+        "new Session(minutes) initializes by assigning through the same setter, so invalid construction also fails. The getter reads the backing field; assigning this.minutes inside its own setter would recursively invoke that setter instead.\n```javascript\nclass Session {\n  constructor(minutes) { this.minutes = minutes; }\n  get minutes() { return this._minutes; }\n  set minutes(value) {\n    if (!Number.isInteger(value) || value < 0 || value > 60) {\n      throw new RangeError(\"minutes must be an integer from 0 to 60\");\n    }\n    this._minutes = value;\n  }\n}\nconst session = new Session(10);\nsession.minutes = 20;\nconsole.log(session.minutes);\ntry { session.minutes = -1; }\ncatch (error) { console.log(error instanceof RangeError); }\nconsole.log(session.minutes);\n```\nOutput: 20, true,20. The failed negative assignment does not replace the accepted value.",
+        "Implement the class with one validation path used for initialization and later assignment. Optional practice: try the string \"5\" and explain why it is rejected rather than silently converted."
+      ],
+      "after": [
+        "A getter runs when a property is read. A setter runs when a property is assigned.\n\nRead `session.minutes` to use the getter. Assign `session.minutes = 20` to use the setter. These look like property operations, even though they run code.",
+        "Our setter accepts only whole numbers from 0 through 60. `Number.isInteger(value)` checks for a whole number without converting text.\n\nCheck the value before saving it. If it fails, throw a `RangeError` with a clear message. The old value must stay unchanged.\n\n`_minutes` holds the saved value. The underscore is just a naming choice; it does not make the field private.",
+        "Here is the complete example.\n```javascript\nclass Session {\n  constructor(minutes) { this.minutes = minutes; }\n  get minutes() { return this._minutes; }\n  set minutes(value) {\n    if (!Number.isInteger(value) || value < 0 || value > 60) {\n      throw new RangeError(\"minutes must be an integer from 0 to 60\");\n    }\n    this._minutes = value;\n  }\n}\nconst session = new Session(10);\nsession.minutes = 20;\nconsole.log(session.minutes);\ntry { session.minutes = -1; }\ncatch (error) { console.log(error instanceof RangeError); }\nconsole.log(session.minutes);\n```\nOutput:\n```text\n20\ntrue\n20\n```\nThe constructor assigns through `this.minutes`, so it uses the same setter. The setter saves accepted values in `_minutes`.\n\nDo not assign to `this.minutes` inside its own setter: that would call the setter again.",
+        "Complete `Session`. Use the same check when creating a session and when changing its minutes.\n\nAccept 0 and 60. Reject fractions, text such as `\"5\"`, and numbers outside the range. A rejected change must leave the old value intact."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the requirement.",
+        "Make one change to the starter.",
+        "Run the checks.",
+        "Explain why a changed input produces its result."
+      ],
+      "after": [
+        "Make the constructor assign through this.minutes.",
+        "Check the setter's input before saving it.",
+        "Throw RangeError for anything other than a whole number from 0 to 60.",
+        "Save valid values in _minutes and return that field from the getter."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "After a Session accepts 12, assigning 61 throws. What does reading minutes return afterward?",
+        "choices": [
+          "12",
+          "61",
+          "undefined"
+        ],
+        "answer": 0,
+        "explanation": "Validation throws before the backing-field assignment, leaving the earlier accepted value in place."
+      },
+      "after": {
+        "question": "After a Session accepts 12, assigning 61 throws. What does reading minutes return afterward?",
+        "choices": [
+          "12",
+          "61",
+          "undefined"
+        ],
+        "answer": 0,
+        "explanation": "The setter throws before saving 61, so the accepted value 12 stays in place."
+      }
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Trace the visible worked calls before changing the starter."
+      ],
+      "after": [
+        "Check first; assign to _minutes afterward.",
+        "The constructor must not bypass the setter."
+      ]
+    },
+    {
+      "field": "externalNotes",
+      "before": "ECMAScript 2026 core; native Node24 and current app worker/DOM harness evidence are recorded separately. No external service or real-browser claim follows from a local fixture.",
+      "after": ""
+    }
+  ],
+  "headings": [
+    "Run code when a property is used",
+    "Check before saving",
+    "See the getter and setter",
+    "Build Session"
+  ],
+  "project": {
+    "title": "Getters and setters",
+    "task": "Complete Session with a minutes getter and setter. Accept only whole numbers from 0 through 60. Use the same check during construction and throw RangeError before saving an invalid value.",
+    "done_when": "Valid reads and assignments work, both endpoints are accepted, invalid construction fails, and rejected changes preserve the old value."
+  },
+  "notes": [
+    "Removed an unrelated local-project completion requirement; its useful teaching is in the lesson and technical evidence stays in review documents."
+  ]
+}

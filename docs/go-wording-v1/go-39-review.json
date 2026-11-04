@@ -1,0 +1,91 @@
+{
+  "lesson": "go-39",
+  "position": 39,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "If Add is called with two float64 values, what happens?",
+      "after": "Limit a generic function to types that support its work."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "An interface used as a constraint may specify a type set. The union ~int | ~int64 permits types whose underlying type is int or int64. ~ includes defined types with that underlying type; plain int alone would not include a distinct defined type. An interface with these type-set terms is used as a constraint, not as an ordinary variable type.",
+        "The compiler permits + because every allowed type supports it. type Count int defines a distinct type with underlying int, so Count satisfies this constraint. These small values avoid overflow; the constraint does not provide checked arithmetic.",
+        "Complete local Go example; the app itself does not execute it:\n```go\npackage main\nimport (\"fmt\")\ntype Integer interface { ~int | ~int64 }\ntype Count int\nfunc Add[T Integer](a, b T) T { return a + b }\nfunc main() { fmt.Println(Add(Count(2), Count(3))) }\n```",
+        "Expected output or behavior: 5. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Remove ~ and observe whether the defined Count type is still accepted. You may trace it without a Go compiler; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "A constraint is a rule for which types a function accepts. `~int | ~int64` allows types based on int or int64. The `|` means either group is allowed. The `~` includes distinct named types based on that type.",
+        "`type Count int` creates a new type based on int, so Count fits this rule. Every allowed type supports `+`, so Add can add its inputs. This constraint is a rule for type parameters, not a type for ordinary variables.",
+        "Follow the two Count values through Add.\n```go\npackage main\nimport (\"fmt\")\ntype Integer interface { ~int | ~int64 }\ntype Count int\nfunc Add[T Integer](a, b T) T { return a + b }\nfunc main() { fmt.Println(Add(Count(2), Count(3))) }\n```",
+        "The screen shows `5`. Both Count inputs fit the constraint, and 2 plus 3 is 5.",
+        "float64 is outside this set. A constraint checks allowed types; it does not convert them or check whether a large sum overflows its type."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Read the two type groups joined by |."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If Add is called with two float64 values, what happens?",
+        "choices": [
+          "It accepts every numeric type.",
+          "It silently truncates both arguments.",
+          "Compilation rejects float64 because it is outside the constraint."
+        ],
+        "answer": 2,
+        "explanation": "The permitted set contains only types with underlying int or int64, not floating types."
+      },
+      "after": {
+        "question": "Call Add with two float64 values. What happens?",
+        "choices": [
+          "It accepts every number type.",
+          "It silently changes both values to integers.",
+          "Go rejects float64 because the constraint does not allow it."
+        ],
+        "answer": 2,
+        "explanation": "float64 is not based on int or int64, so it cannot be used for T here."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Go Core v1 uses the verified Go1.27.3 toolchain and standard library. The app supplies concept reading and an understanding check, not a Go browser runner. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "The browser shows Go code and checks your understanding; it does not run Go. Optional local examples use Go 1.27."
+    }
+  ],
+  "headings": [
+    "List the allowed types",
+    "Use an operation all allowed types support",
+    "One example",
+    "Read the allowed result",
+    "Check a type outside the set"
+  ],
+  "project": {
+    "title": "Type sets and constraints",
+    "task": "Decide whether float64 fits the function's constraint.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local Go example is optional."
+  }
+}

@@ -1,0 +1,94 @@
+{
+  "lesson": "cpp-30",
+  "position": 30,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Make b a Notebook& alias. How do the reported sizes change?",
+      "after": "Let standard members handle copying and cleanup for your class."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "The rule of zero: when standard owning members already manage resources, avoid defining custom destructors, copy operations or move operations just to repeat that work.",
+        "Notebook contains a std::string and std::vector. Their generated memberwise copy gives an independent name and vector. A struct makes members public by default; braces supply members in declaration order.",
+        "Rule of zero is a design preference, not a ban on destructors. A class directly managing a special handle needs deliberate ownership design. Merely adding a destructor can also affect automatic move generation.",
+        "Complete local C++ example; the app itself does not execute it:\n```cpp\n#include <iostream>\n#include <string>\n#include <vector>\nstruct Notebook {\n    std::string name;\n    std::vector<int> pages;\n};\nint main() {\n    Notebook a{\"Ideas\", {1, 2}};\n    Notebook b = a;\n    b.pages.push_back(3);\n    std::cout << a.pages.size() << ' ' << b.pages.size() << '\\n';\n}\n\n```",
+        "Expected output or behavior: 2 3\n. Local compiler test evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Add a string note member and verify that copying then editing the copy preserves the original. You may trace this without a compiler; finishing the reading is not proof of a local run."
+      ],
+      "after": [
+        "The rule of zero means relying on members that already handle their own resources. You then need zero custom functions just to repeat their copying, moving, or cleanup work.",
+        "Notebook contains a string and a vector. The compiler's generated copy copies each member. Here that gives the new Notebook its own name and its own vector of page numbers.",
+        "std::string and std::vector already release their storage when destroyed. Notebook does not need a custom destructor to repeat that cleanup.",
+        "Follow the Notebook copy, then the page added to b.\n\n```cpp\n#include <iostream>\n#include <string>\n#include <vector>\nstruct Notebook {\n    std::string name;\n    std::vector<int> pages;\n};\nint main() {\n    Notebook a{\"Ideas\", {1, 2}};\n    Notebook b = a;\n    b.pages.push_back(3);\n    std::cout << a.pages.size() << ' ' << b.pages.size() << '\\n';\n}\n\n```",
+        "The program prints 2 3. a keeps its two page numbers. b has its own vector, which grows to three items.",
+        "The rule of zero is a useful design choice, not a ban on custom cleanup. A class that directly owns a special resource may need its own design. Writing a destructor can also stop the compiler from generating move operations automatically."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain why, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "A value copy copies the members; a reference gives the same object another name."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Make b a Notebook& alias. How do the reported sizes change?",
+        "choices": [
+          "Both become 3",
+          "Only b becomes 3",
+          "Both stay 2"
+        ],
+        "answer": 0,
+        "explanation": "An alias does not copy the member vector. push_back then changes the single original Notebook."
+      },
+      "after": {
+        "question": "Declare b as Notebook& b = a instead. What sizes print after push_back?",
+        "choices": [
+          "Both sizes are 3.",
+          "Only b's size is 3.",
+          "Both sizes stay 2."
+        ],
+        "answer": 0,
+        "explanation": "b is now another name for a. There is one Notebook, and its vector grows to three items."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "C++ Core v1, standard C++23 features checked against the available GCC14.2 implementation. This app provides concept reading and an understanding check, not a C++ browser runner. Local example tests are separate evidence and do not certify learner mastery.",
+      "after": "The browser shows C++ code and checks your understanding; it does not run C++. Optional local examples use C++23."
+    }
+  ],
+  "headings": [
+    "Use members that manage themselves",
+    "Copy each member",
+    "Avoid unnecessary cleanup code",
+    "One example",
+    "What appears",
+    "Choose ownership deliberately"
+  ],
+  "project": {
+    "title": "Prefer the rule of zero",
+    "task": "Trace how the generated copy keeps the two Notebook objects independent.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local C++ example is optional."
+  }
+}

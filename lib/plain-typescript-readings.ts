@@ -1,5 +1,5 @@
 // Reviewed TypeScript counterparts.
-export default [
+const readings = [
   {
     "source": "TypeScript is JavaScript with extra descriptions of the kinds of values your code expects.",
     "simple": "TypeScript adds descriptions of expected values to JavaScript, such as “this should be a number.”",
@@ -1585,3 +1585,5 @@ export default [
     "lesson": "typescript-07"
   }
 ];
+
+export default readings;

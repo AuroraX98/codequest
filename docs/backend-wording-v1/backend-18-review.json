@@ -1,0 +1,96 @@
+{
+  "lesson": "backend-18",
+  "position": 4,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Implement parseBody(text). Match the worked contract and the changed-input checks without modifying the supplied input values.",
+      "after": "Return a clear failure result when JSON text cannot be read."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "JSON parsing turns text into a JavaScript value. Invalid syntax causes JSON.parse to throw. A request handler needs an explicit failure path.",
+        "This exercise is a small pure JavaScript model. Its inputs are supplied directly; it does not receive live HTTP requests, operate a database, or deploy a service.",
+        "Worked example:\n\n```javascript\nfunction parseBody(text) {\n  try { return {ok:true,value:JSON.parse(text)}; }\n  catch { return {ok:false}; }\n}\nconsole.log(parseBody(\"{\\\"minutes\\\":5}\"));\n```\nThe returned value is {\"ok\":true,\"value\":{\"minutes\":5}}.",
+        "try contains the operation that can fail. catch handles a parsing failure. Successful parsing can still produce null, a number, or an array; it does not prove a valid request shape.",
+        "Read the function call parseBody(\"{\\\"minutes\\\":5}\") from the inside out: the arguments supply the inputs, parseBody runs the body once, and return sends its result back to the caller. console.log displays that result; it does not change it.",
+        "The text null parses successfully. Does that prove it is a valid note object? Parsing verifies syntax. A later validator must check the value required by the application."
+      ],
+      "after": [
+        "JSON is a text format used to send or save data. JSON.parse reads that text and turns it into a JavaScript value. Incorrect JSON syntax makes it throw an error.",
+        "try marks work that may throw. catch handles a thrown error. This lets parseBody report failure instead of letting a parsing error escape from the function.",
+        "```javascript\nfunction parseBody(text) {\n  try { return {ok:true,value:JSON.parse(text)}; }\n  catch { return {ok:false}; }\n}\nconsole.log(parseBody(\"{\\\"minutes\\\":5}\"));\n```\nThe result has ok set to true and value set to an object whose minutes is 5. The backslashes in the input let quotation marks appear inside a JavaScript string.",
+        "When parsing succeeds, return an object with ok: true and the parsed value. When parsing fails, return {ok: false}. The caller can check ok before using value.",
+        "Valid JSON can contain null, a number, or an array, as well as an object. Parsing only checks whether the text follows JSON's rules. Later code must still check that the value has the fields the app needs.",
+        "Complete parseBody(text) using try and catch. Keep every successfully parsed value, including null. Return the failure object for invalid JSON text without changing the input."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the contract and trace the worked example.",
+        "Replace the unfinished return in the starter.",
+        "Run the changed-input checks.",
+        "Explain the boundary in the understanding question."
+      ],
+      "after": [
+        "Call JSON.parse inside try.",
+        "Return the parsed value with ok: true.",
+        "Catch a parsing error and return ok: false."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "try contains the operation that can fail. catch handles a parsing failure. Successful parsing can still produce null, a number, or an array; it does not prove a valid request shape."
+      ],
+      "after": [
+        "Do not treat a parsed null as a parsing error.",
+        "Parsing and checking the required fields are different steps."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "The text null parses successfully. Does that prove it is a valid note object?",
+        "choices": [
+          "Yes, every JSON value is an object",
+          "No, shape validation is still needed",
+          "No, JSON cannot contain null"
+        ],
+        "answer": 1,
+        "explanation": "Parsing verifies syntax. A later validator must check the value required by the application."
+      },
+      "after": {
+        "question": "The text null parses successfully. Does that prove it is a valid note object?",
+        "choices": [
+          "Yes, every JSON value is an object",
+          "No, the app must still check its shape",
+          "No, JSON cannot contain null"
+        ],
+        "answer": 1,
+        "explanation": "null is valid JSON, but it does not contain a note's fields."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Runs as a pure JavaScript function in the browser. Passing checks does not establish live HTTP behavior, database durability, concurrency safety, authentication security, queue delivery guarantees, or production readiness.",
+      "after": "This browser exercise parses supplied text. It does not receive a real HTTP request."
+    }
+  ],
+  "headings": [
+    "Read JSON text",
+    "Catch a reading error",
+    "Read one example",
+    "Keep success and failure clear",
+    "Check the value afterwards",
+    "Try it yourself"
+  ],
+  "project": {
+    "title": "Handle malformed JSON text",
+    "task": "Complete parseBody(text). Return {ok: true, value: parsedValue} for valid JSON and {ok: false} when parsing throws.",
+    "done_when": "Valid JSON values are kept, and invalid JSON produces a clear failure result."
+  }
+}

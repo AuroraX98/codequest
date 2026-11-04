@@ -1,0 +1,91 @@
+{
+  "lesson": "php-64",
+  "position": 64,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "If minutes is unset before saving, what is read after reopening?",
+      "after": "A session stores values for later use. Its ID tells PHP which saved session to reopen."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "The session extension persists server-side data associated with an identifier; the cookie normally carries that identifier, not the entire session array. The $_SESSION superglobal array holds the active session data; unset($_SESSION[\"minutes\"]) removes that key. session_start acquires state, and session_write_close saves it and releases the lock. Avoid retaining a session lock while unrelated slow work runs.\n\nThis isolated array-only companion shows unset removing the specified key without ending a session or destroying other data. Its input is the selected entry, and the null-coalescing read then uses the missing-key fallback. The session fixture separately verifies saving and reopening that deletion.\n```php\n<?php\n$_SESSION = [\"minutes\" => 15];\nunset($_SESSION[\"minutes\"]);\necho $_SESSION[\"minutes\"] ?? \"missing\", \"\\n\";\n```\nExpected output: missing.",
+        "This isolated CLI fixture disables cookie emission, uses a private disposable file directory, writes state, closes and reopens the same session, then destroys it. Cookie settings are discussed separately, not applied to this cookie-disabled CLI session or browser-verified. The cookie-configuration API session_set_cookie_params is deferred to a real cookie-enabled web integration. Such an integration must choose Secure, HttpOnly and SameSite settings before starting the session, then verify actual Set-Cookie and browser behavior; this cookie-disabled CLI example does not demonstrate that API. Real HTTPS deployments must choose Secure, HttpOnly, SameSite, strict-mode and identifier-regeneration policy, prevent fixation and protect state-changing requests; SameSite alone is not a complete CSRF defense.\n\nis_dir(path) returns whether the supplied path names a directory. mkdir(path, 0700) attempts directory creation and returns success/failure; permissions are affected by the process umask and platform, so this is not a portable sandbox guarantee. ini_set(name, value) changes a configurable directive for this process and returns its previous value or false on failure. session_save_path(directory) selects file-session storage before starting the session and returns the previous path (or false on failure); setting it alone does not create the directory.\n\nsession_id() without an argument reads the current identifier; session_id($id) selects that identifier before the next session_start. session_destroy() destroys the stored data for the active session and returns success/failure, but does not automatically erase the in-memory $_SESSION array or delete a browser cookie. Those are separate responsibilities in a real web application.",
+        "Complete local PHP example; the app itself does not execute it:\n```php\n<?php\ndeclare(strict_types=1);\nif (!extension_loaded(\"session\")) { throw new RuntimeException(\"session required\"); }\n$directory = __DIR__ . \"/session-files\";\nif (!is_dir($directory) && !mkdir($directory, 0700)) { throw new RuntimeException(\"directory failed\"); }\nini_set(\"session.use_cookies\", \"0\");\nini_set(\"session.cache_limiter\", \"\");\nini_set(\"session.use_strict_mode\", \"1\");\nsession_save_path($directory);\nif (!session_start()) { throw new RuntimeException(\"start failed\"); }\n$id = session_id();\n$_SESSION[\"minutes\"] = 15;\nif (!session_write_close()) { throw new RuntimeException(\"save failed\"); }\n$_SESSION = [];\nsession_id($id);\nif (!session_start()) { throw new RuntimeException(\"reload failed\"); }\n$value = $_SESSION[\"minutes\"] ?? \"missing\";\nif (!session_destroy()) { throw new RuntimeException(\"destroy failed\"); }\necho $value, \"\\n\";\n\n```",
+        "Expected output or behavior: 15. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Describe which cookie and fixation checks require an actual HTTPS/browser integration test. You may trace it without a PHP interpreter; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "A session stores values for later use. Its ID tells PHP which saved session to reopen.",
+        "Write the current values before reopening the same session by its ID.",
+        "Follow the labeled parts of this example.\n```php\n<?php\ndeclare(strict_types=1);\nif (!extension_loaded(\"session\")) { throw new RuntimeException(\"session required\"); }\n$directory = __DIR__ . \"/session-files\";\nif (!is_dir($directory) && !mkdir($directory, 0700)) { throw new RuntimeException(\"directory failed\"); }\nini_set(\"session.use_cookies\", \"0\");\nini_set(\"session.cache_limiter\", \"\");\nini_set(\"session.use_strict_mode\", \"1\");\nsession_save_path($directory);\nif (!session_start()) { throw new RuntimeException(\"start failed\"); }\n$id = session_id();\n$_SESSION[\"minutes\"] = 15;\nif (!session_write_close()) { throw new RuntimeException(\"save failed\"); }\n$_SESSION = [];\nsession_id($id);\nif (!session_start()) { throw new RuntimeException(\"reload failed\"); }\n$value = $_SESSION[\"minutes\"] ?? \"missing\";\nif (!session_destroy()) { throw new RuntimeException(\"destroy failed\"); }\necho $value, \"\\n\";\n```",
+        "The output is `15`. The saved minutes return after reopening. This local example uses no browser cookie.",
+        "Remove minutes before the save and trace the lookup after reopening."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read one idea.",
+        "Follow the labeled example.",
+        "Try the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Remove minutes before the save and trace the lookup after reopening."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If minutes is unset before saving, what is read after reopening?",
+        "choices": [
+          "15 because server-side session data cannot be removed",
+          "The browser cookie value is verified as minutes.",
+          "missing"
+        ],
+        "answer": 2,
+        "explanation": "The deletion is saved; reopening the same session finds no minutes key and uses the fallback."
+      },
+      "after": {
+        "question": "If minutes was not saved, what prints?",
+        "choices": [
+          "15",
+          "0",
+          "missing"
+        ],
+        "answer": 2,
+        "explanation": "The key is absent, so the program uses its fallback word."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "PHP Core v1 uses PHP 8.5.12 CLI and explicitly available extensions. The app supplies concept reading and an understanding check, not a PHP browser runner. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "CodeQuest shows the PHP example. Running it on your own computer is optional."
+    }
+  ],
+  "headings": [
+    "Reopen saved session data",
+    "Save and close the session",
+    "Read the example",
+    "What happens",
+    "Try one change"
+  ],
+  "project": {
+    "title": "Sessions cookies and deployment boundaries",
+    "task": "Remove minutes before the save and trace the lookup after reopening.",
+    "done_when": "Read each idea and pass the understanding check. Running the example on your computer is optional."
+  }
+}

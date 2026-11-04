@@ -1,0 +1,87 @@
+{
+  "lesson": "sql-32",
+  "position": 13,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Create shares(id,average) using real division of total by people. A row with zero people must have NULL average. Preserve supplies.",
+      "after": "Choose division that keeps a fractional result."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "In SQLite, division of two integers uses integer arithmetic and truncates the fractional part toward zero. 7 / 2 produces 3, not 3.5. If either operand is real, the result uses real arithmetic. CAST(value AS REAL) explicitly requests a real value.",
+        "CAST is language syntax: the value comes before AS and the target type after it. CAST(7 AS REAL) / 2 produces 3.5. SQLite division by zero returns NULL. Binary floating-point values are approximate; converting to REAL is not a guarantee of exact decimal-money arithmetic.",
+        "Run this complete example in a fresh database.\n```sql\nCREATE TEMP VIEW shown AS\nSELECT 7/2 AS whole,CAST(7 AS REAL)/2 AS fraction,-7/2 AS negative;\nSELECT *\nFROM shown;\n```",
+        "Change the supplied values and trace the result. This is a separate complete example.\n```sql\nCREATE TEMP VIEW shown AS\nSELECT 5/2 AS whole,5/2.0 AS fraction,5/0 AS missing;\nSELECT *\nFROM shown;\n```",
+        "Application: Create shares(id,average) using real division of total by people. A row with zero people must have NULL average. Preserve supplies."
+      ],
+      "after": [
+        "In SQLite, dividing small whole-number values uses integer division. It drops the fractional part toward zero. So `7 / 2` gives `3`, while `-7 / 2` gives `-3`.",
+        "A REAL value can hold a fractional part. `CAST(value AS REAL)` asks SQLite to convert the value to that number type before doing the division.",
+        "Run this query:\n```sql\nSELECT 7 / 2 AS whole,\n       CAST(7 AS REAL) / 2 AS fraction,\n       -7 / 2 AS negative;\n```\nThe result is `3`, `3.5`, and `-3`. Converting before dividing keeps the half.",
+        "SQLite returns NULL for division by zero. REAL values can also have small rounding differences because some fractions cannot be stored exactly.",
+        "Create `shares(id, average)` from `supplies`. Divide total by people using real-number division. A row with zero people must have a NULL average. Leave supplies unchanged."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the small example and explain its inputs and effects.",
+        "Complete the starter for this lesson.",
+        "Run the behavior checks, then predict a changed case."
+      ],
+      "after": [
+        "Convert total to REAL before dividing.",
+        "Divide by people and name the result average.",
+        "Keep id and save the results in shares."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Trace the supplied rows and resulting rows before changing the query."
+      ],
+      "after": [
+        "Converting after integer division cannot bring back a lost fraction.",
+        "Keep NULL for a zero divisor instead of inventing an average."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "What does -9 / 2 return when both values are integers?",
+        "choices": [
+          "-5",
+          "-4.5",
+          "-4"
+        ],
+        "answer": 2,
+        "explanation": "Integer division truncates toward zero, so the fractional part of -4.5 is removed."
+      },
+      "after": {
+        "question": "What does -9 / 2 return when both values are integers?",
+        "choices": [
+          "-5",
+          "-4.5",
+          "-4"
+        ],
+        "answer": 2,
+        "explanation": "The fraction is dropped toward zero: -4.5 becomes -4."
+      }
+    }
+  ],
+  "headings": [
+    "Notice integer division",
+    "Request a real number",
+    "Compare the results",
+    "Handle zero and rounding",
+    "Calculate each share"
+  ],
+  "project": {
+    "title": "Choose numeric division deliberately",
+    "task": "Create shares(id, average) by dividing each total by people with real-number division.",
+    "done_when": "Fractional averages are kept, zero people gives NULL, and supplies stays unchanged."
+  }
+}

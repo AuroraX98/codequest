@@ -1,0 +1,85 @@
+{
+  "lesson": "python-61",
+  "sourceHash": "498e68ee64b21cb99d159bb456d9a7b16691e3e23410bfa9fe83fe7f85fdfddc",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Implement Duration(minutes) with a minutes property. Numeric nonnegative values are accepted; negative initialization or assignment raises ValueError before changing stored state. Getter returns the current numeric value. Keep the supplied test helper unchanged.",
+      "after": "Check new minutes before saving them on an object."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "@property decorates the getter function so duration.minutes calls that getter through attribute syntax; callers do not write duration.minutes(). The getter returns the current stored value. A leading underscore in _minutes marks an internal convention, not enforced security.",
+        "@minutes.setter adds a setter to that same named property. Assignment duration.minutes = value invokes the setter with the receiver and new value. Here it checks the value before storing it in _minutes. Raising ValueError rejects a negative value without changing the old state; a property setter does not supply an assignment return value to the caller.",
+        "```python\nclass Duration:\n    def __init__(self, minutes):\n        self.minutes = minutes\n\n    @property\n    def minutes(self):\n        return self._minutes\n\n    @minutes.setter\n    def minutes(self, value):\n        if value < 0:\n            raise ValueError(\"minutes must be nonnegative\")\n        self._minutes = value\n\nduration = Duration(10)\nprint(duration.minutes)\nduration.minutes = 15\nprint(duration.minutes)\ntry:\n    duration.minutes = -1\nexcept ValueError:\n    print(duration.minutes)\n```\nIt prints 10, 15, 15. Construction uses self.minutes = minutes, so the same setter validates initialization too. The project supplies numeric values; deciding which other types to accept is a separate contract.",
+        "The getter reads self._minutes, not self.minutes. Reading self.minutes inside its own getter would re-enter the property recursively. The setter similarly stores the backing attribute instead of assigning the managed name again.",
+        "Complete the property with numeric nonnegative minutes. The supplied test helpers attempt a known invalid initialization and assignment; __rejects_negative checks that ValueError leaves the prior value intact; it is test infrastructure, not a general input evaluator. Optional local transfer: add a second explicit validation boundary, then show a successful and rejected assignment."
+      ],
+      "after": [
+        "A getter is a method that supplies a value when you read a property. With `@property`, reading `duration.minutes` calls the getter. You leave off `()`.\n\nThe getter reads the saved `_minutes`. Its leading underscore is a hint that this is internal data. Python does not make it private.",
+        "A setter is a method that handles a new property value. `@minutes.setter` adds one for `minutes`.\n\nAssigning `duration.minutes = value` calls it with the object and the new value. It checks before saving to `_minutes`. A negative value raises `ValueError`, so the old minutes stay unchanged.\n\nThe assignment does not give back the setter's return value.",
+        "```python\nclass Duration:\n    def __init__(self, minutes):\n        self.minutes = minutes\n\n    @property\n    def minutes(self):\n        return self._minutes\n\n    @minutes.setter\n    def minutes(self, value):\n        if value < 0:\n            raise ValueError(\"minutes must be nonnegative\")\n        self._minutes = value\n\nduration = Duration(10)\nprint(duration.minutes)\nduration.minutes = 15\nprint(duration.minutes)\ntry:\n    duration.minutes = -1\nexcept ValueError:\n    print(duration.minutes)\n```\nIt prints 10, 15, 15. During construction, self.minutes = minutes uses the same setter, so it checks the starting value too. This exercise supplies ordinary numbers. Other inputs, such as text or the special float value NaN, need separate rules.",
+        "The getter reads self._minutes, not self.minutes. Reading self.minutes inside the getter would call the getter again and again. The setter also stores the value in self._minutes instead of assigning to the managed name again.",
+        "Complete the property. Accept the exercise's zero and positive numbers. Reject negative starting values and updates with `ValueError` before changing the saved minutes.\n\nLeave the supplied helpers unchanged. They try known negative inputs, and `__rejects_negative` checks that the old minutes remain. They do not test every possible input.\n\nFor extra practice, give another property its own value check. Try one allowed update and one rejected update."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the requirement.",
+        "Make one change to the starter.",
+        "Run the checks.",
+        "Explain why a changed input produces its result."
+      ],
+      "after": [
+        "Leave __rejects_negative and __rejects_initial exactly as supplied.",
+        "Keep self.minutes = minutes in Duration.__init__ so starting minutes go through the setter.",
+        "Add a minutes getter with @property that returns self._minutes.",
+        "Add a minutes setter with @minutes.setter. Raise ValueError when value < 0; otherwise store value in self._minutes.",
+        "Check that Duration(0) and Duration(2.5) can be read, that assigning 7 works, and that negative initialization and assignment raise ValueError without changing the stored value."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Create Duration(8), assign minutes = 3, then attempt minutes = -2 and catch ValueError. What does the next minutes read return?",
+        "choices": [
+          "-2",
+          "3",
+          "8"
+        ],
+        "answer": 1,
+        "explanation": "Validation happens before writing the backing attribute, so rejection leaves the last accepted value in place."
+      },
+      "after": {
+        "question": "Create Duration(8), assign minutes = 3, then try minutes = -2 and catch ValueError. What does the next minutes read return?",
+        "choices": [
+          "-2",
+          "3",
+          "8"
+        ],
+        "answer": 1,
+        "explanation": "The setter checks the value before storing it. The rejected -2 leaves the last accepted value, 3, in place."
+      }
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Trace the visible worked calls before changing the starter."
+      ],
+      "after": [
+        "Have the getter return self._minutes. Reading self.minutes there would call the getter again.",
+        "In the setter, check value < 0 before storing value in self._minutes.",
+        "Construction uses self.minutes = minutes, so the setter checks the starting value too.",
+        "Keep __rejects_negative and __rejects_initial unchanged."
+      ]
+    }
+  ],
+  "reviewNotes": [
+    "All five sections stay in the original order and retain their roles.",
+    "The worked example and its output are preserved in Markdown code fences.",
+    "Quiz answer index 1 and its meaning are preserved.",
+    "Defined getter and setter before using them, replaced stored-state jargon, and clarified that this exercise does not validate every possible input."
+  ]
+}

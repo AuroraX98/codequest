@@ -1,0 +1,99 @@
+{
+  "lesson": "sql-06",
+  "position": 26,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Find scores above the average for their own subject using a subquery.",
+      "after": "Compare each score with the average for its own subject."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A subquery is a query placed inside another query. It can calculate a number that the outer query uses for comparison. An overall average uses all scores. A group average uses only one subject's scores. For this project, each learner's score must be compared with the average for that same subject.",
+        "Run this complete SQLite setup and overall-average query:\n```sql\nCREATE TABLE demo_scores (\n  id INTEGER PRIMARY KEY,\n  learner TEXT,\n  subject TEXT,\n  score INTEGER\n);\nINSERT INTO demo_scores VALUES\n  (1, 'Nia', 'Art', 50),\n  (2, 'Leo', 'Art', 70),\n  (3, 'Uma', 'Art', 60),\n  (4, 'Nia', 'Music', 100),\n  (5, 'Leo', 'Music', 80);\nSELECT learner, subject, score\nFROM demo_scores\nWHERE score > (SELECT AVG(score) FROM demo_scores);\n```\nThe inner query returns the overall average 72. Only the Music scores 100 and 80 exceed it. Parentheses make the inner query a single value used by the outer > comparison.",
+        "A correlated subquery refers to the current row of the outer query. Give the outer and inner tables different aliases so the reference is clear. Outer means the row we are deciding about now; inner means rows being averaged. SQL decides results as if it checked each outer row, though the database may optimize how it does the work.",
+        "Run the subject-average version on that setup:\n```sql\nSELECT outer_score.learner,\n       outer_score.subject,\n       outer_score.score\nFROM demo_scores AS outer_score\nWHERE outer_score.score > (\n  SELECT AVG(inner_score.score)\n  FROM demo_scores AS inner_score\n  WHERE inner_score.subject = outer_score.subject\n);\n```\nArt's average is 60, so Leo's 70 passes. Music's average is 90, so Nia's 100 passes. Leo's 80 no longer passes. The two aliases keep the inner subject tied to the outer row's subject.",
+        "Strictly above means >, not >=. A score equal to its group average is excluded. Be careful with an unqualified column inside a subquery: SQL searches the inner scope first. If both sides refer to the inner table, a condition can compare that row's subject with itself and average all subjects accidentally. Different aliases and fully qualified columns make this mistake visible.",
+        "Your answer should contain learner, subject, and score for qualifying rows, saved using CREATE TEMP TABLE answer AS followed by the correlated SELECT. In the corrected exercise fixture, Math has 70, 90, 80, and Dana's 81. Its average is (70 + 90 + 80 + 81) / 4 = 80.25, so Bo's 90 and Dana's 81 pass. Spanish's average remains (95 + 75) / 2 = 85, so Ari's 95 passes. There are three qualifying rows.",
+        "An average of no known scores is NULL. A comparison such as score > NULL is unknown and does not pass WHERE. The supplied fixture has known scores in both subjects. To tell whether your query really uses subject averages, try a separate fixture like the walkthrough, where the overall average and group averages choose different rows. Matching one small fixture alone can hide a correlation mistake."
+      ],
+      "after": [
+        "A subquery is a query inside another query. It can calculate the number used in a comparison. Here, that number is the average for the current row's subject.",
+        "Run this example in a fresh database:\n```sql\nCREATE TABLE demo_scores(learner TEXT, subject TEXT, score INTEGER);\nINSERT INTO demo_scores VALUES\n  ('Nia', 'Art', 50), ('Leo', 'Art', 70), ('Uma', 'Art', 60),\n  ('Nia', 'Music', 100), ('Leo', 'Music', 80);\nSELECT outer_score.learner, outer_score.subject, outer_score.score\nFROM demo_scores AS outer_score\nWHERE outer_score.score > (\n  SELECT AVG(inner_score.score)\n  FROM demo_scores AS inner_score\n  WHERE inner_score.subject = outer_score.subject\n)\nORDER BY outer_score.subject, outer_score.learner;\n```\nThe result is Leo/Art/70 and Nia/Music/100.",
+        "The inner query reads the subject from the outer row. This connection is called correlation. Different table names make it clear which row each column belongs to. SQLite may choose its own way to carry out the calculation.",
+        "Art's average is `60`, so only 70 is above it. Music's average is `90`, so only 100 is above it. An average across all subjects would answer a different question.",
+        "`>` means strictly above. A score equal to the average does not pass. Include the table names in the subject comparison so you do not accidentally compare an inner row with itself.",
+        "Save learner, subject, and score in `answer` for scores above their own subject average. In the project, Math averages `80.25`, so Bo's 90 and Dana's 81 pass. Spanish averages `85`, so Ari's 95 passes.",
+        "An average with no known values is NULL, and a comparison against it does not pass WHERE. Check data with different subject averages; using the overall average can look correct on an unhelpful test."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Name the outer table `outer_scores`.",
+        "Name the table in the inner query `inner_scores`.",
+        "Calculate the average for rows where the two subject names match.",
+        "Keep only outer scores above that subject’s average.",
+        "Store the kept rows in `answer`."
+      ],
+      "after": [
+        "Give the outer and inner uses of scores different names.",
+        "Match the inner subject to the outer row's subject.",
+        "Compare the outer score with that group's AVG(score).",
+        "Save the qualifying rows in answer."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Write the outer select first.",
+        "Use AVG(score) inside a subquery.",
+        "Name the outer table `outer_scores` and the inner table `inner_scores`. Match `inner_scores.subject = outer_scores.subject`, then compare the outer score with `>`."
+      ],
+      "after": [
+        "Use >, not >=.",
+        "Check both sides of the subject comparison.",
+        "Do not calculate one average across all subjects."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "A subject has scores 60, 80, and 100. Which score is strictly above that subject’s average?",
+        "choices": [
+          "100",
+          "80",
+          "60"
+        ],
+        "answer": 0,
+        "explanation": "The average is (60 + 80 + 100) / 3 = 80. Only 100 is strictly above it; the score equal to the average does not pass."
+      },
+      "after": {
+        "question": "A subject has scores 60, 80, and 100. Which is strictly above its average?",
+        "choices": [
+          "100",
+          "80",
+          "60"
+        ],
+        "answer": 0,
+        "explanation": "The average is 80. Only 100 is greater than 80."
+      }
+    }
+  ],
+  "headings": [
+    "Put a query inside a query",
+    "Try a subject-average check",
+    "Connect the inner query to the outer row",
+    "Read the two averages",
+    "Keep only scores strictly above",
+    "Build the project answer",
+    "Check missing and mixed subjects"
+  ],
+  "project": {
+    "title": "Find above-average results",
+    "task": "Save learner, subject, and score for rows above their own subject's average, using a subquery.",
+    "done_when": "answer contains the three qualifying project rows, and scores stays unchanged."
+  }
+}

@@ -1,0 +1,94 @@
+{
+  "lesson": "cpp-52",
+  "position": 52,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Pass -1 instead of 3 to checkedReward. Which output is correct?",
+      "after": "Catch a failure where the program knows how to handle it."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "throw signals a failure and transfers control toward a matching handler. Statements after the throwing operation inside that try block are skipped; a failed call does not supply its normal return value.",
+        "try encloses work that this boundary can handle. catch(const std::invalid_argument& error) handles that exception type without copying it. what() provides a descriptive string, not a machine-readable application protocol.",
+        "When stack unwinding occurs, destructors of fully constructed automatic objects in exited scopes run. Prefer RAII for cleanup. After this handler finishes normally, execution continues after the catch; an uncaught exception can terminate the program.",
+        "Complete local C++ example; the app itself does not execute it:\n```cpp\n#include <iostream>\n#include <stdexcept>\nint checkedReward(int score) {\n    if (score < 0) throw std::invalid_argument(\"negative score\");\n    return score;\n}\nint main() {\n    try {\n        int reward = checkedReward(3);\n        std::cout << \"reward \" << reward << \"\\n\";\n    } catch (const std::invalid_argument& error) {\n        std::cout << \"rejected: \" << error.what() << \"\\n\";\n    }\n    std::cout << \"after boundary\\n\";\n}\n```",
+        "Expected output or behavior: reward 3\nafter boundary. Local compiler test evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Add a scoped object whose destructor logs cleanup, and trace its lifetime through the throwing call. You may trace this without a compiler; finishing the reading is not proof of a local run."
+      ],
+      "after": [
+        "An exception signals a failure that interrupts the usual path. throw starts that interruption. A call that throws does not return its normal value, and the remaining statements on that path are skipped.",
+        "try marks the work covered by a handler. catch handles a matching exception type. const std::invalid_argument& reads this error without copying it, and what() provides its descriptive message.",
+        "Stack unwinding means leaving calls and scopes while an exception travels to a handler. Fully constructed local objects in those exited scopes are destroyed. RAII uses that cleanup to release owned resources.",
+        "Follow the successful call first, then locate the handler that could catch a rejected score.\n\n```cpp\n#include <iostream>\n#include <stdexcept>\nint checkedReward(int score) {\n    if (score < 0) throw std::invalid_argument(\"negative score\");\n    return score;\n}\nint main() {\n    try {\n        int reward = checkedReward(3);\n        std::cout << \"reward \" << reward << \"\\n\";\n    } catch (const std::invalid_argument& error) {\n        std::cout << \"rejected: \" << error.what() << \"\\n\";\n    }\n    std::cout << \"after boundary\\n\";\n}\n```",
+        "The program prints reward 3, then after boundary on the next line. The score is allowed, so no exception is thrown and the handler is skipped.",
+        "If this handler catches a failure and finishes normally, execution continues after catch. It does not retry the failed call or return to the skipped output. An uncaught exception can end the program."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain why, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Once throw runs, follow the path to catch rather than continuing down the try block."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Pass -1 instead of 3 to checkedReward. Which output is correct?",
+        "choices": [
+          "Only after boundary; the handler is skipped",
+          "reward -1, then after boundary",
+          "rejected: negative score, then after boundary"
+        ],
+        "answer": 2,
+        "explanation": "The throw skips the reward print. The matching handler prints the rejection, then execution continues after the boundary."
+      },
+      "after": {
+        "question": "Pass -1 instead of 3 to checkedReward. Which output is correct?",
+        "choices": [
+          "Only after boundary; the handler is skipped.",
+          "reward -1, then after boundary.",
+          "rejected: negative score, then after boundary."
+        ],
+        "answer": 2,
+        "explanation": "The throw skips the reward output. The matching handler prints the rejection, then the final output runs."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "C++ Core v1, standard C++23 features checked against the available GCC14.2 implementation. This app provides concept reading and an understanding check, not a C++ browser runner. Local example tests are separate evidence and do not certify learner mastery.",
+      "after": "The browser shows C++ code and checks your understanding; it does not run C++. Optional local examples use C++23."
+    }
+  ],
+  "headings": [
+    "Throw an exception",
+    "Handle a matching failure",
+    "Clean up while leaving scopes",
+    "One example",
+    "What appears",
+    "Continue after a handled exception"
+  ],
+  "project": {
+    "title": "Handle exceptions at a boundary",
+    "task": "Trace the normal path and identify where the matching error handler takes over.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local C++ example is optional."
+  }
+}

@@ -1,0 +1,87 @@
+{
+  "lesson": "python-72",
+  "sourceHash": "c04528df8fc1788c2d36cb863cd2e7793e9719f737c30c3306e63025c2f26093",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Implement bisect_sqrt with the shown bracket, width criterion and finite budget. The supported numeric domain is finite 0..1,000,000. Reject negative values, nonpositive width or a negative budget. Do not return an unfinished midpoint as success.",
+      "after": "Use bisection to estimate a square root by repeatedly halving a range that contains the answer."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "Bisection repeatedly halves an interval known to contain an answer. This example accepts finite values from 0 through 1,000,000, a positive finite width, and a nonnegative integer step budget. The square root lies between 0 and max(1, value). Using 1 as the minimum upper bound matters when value is below 1.",
+        "Compute the midpoint. If its square is below value, the root is above that midpoint, so replace low. Otherwise replace high. The interval still contains the root. max(1.0, value) returns the larger argument; it does not mutate either number.",
+        "Return the midpoint when high - low is at most width. Its distance from the true root is then at most half that interval width in exact arithmetic; floating-point rounding still exists. A finite step budget prevents endless work when the requested width is too small to achieve. Return None when the budget ends without the width condition. Reject negative values or invalid bounds with ValueError.",
+        "abs(number) returns its nonnegative magnitude. abs(answer - expected) measures an absolute difference. This is a bounded approximation, not a symbolic exact square root and not a guarantee about arbitrary huge or non-finite floats.",
+        "```python\ndef bisect_sqrt(value, width=0.001, max_steps=100):\n    if value < 0 or width <= 0 or max_steps < 0:\n        raise ValueError(\"invalid bounds\")\n    low = 0.0\n    high = max(1.0, value)\n    for _ in range(max_steps):\n        if high - low <= width:\n            return (low + high) / 2\n        middle = (low + high) / 2\n        if middle * middle < value:\n            low = middle\n        else:\n            high = middle\n    if high - low <= width:\n        return (low + high) / 2\n    return None\nanswer = bisect_sqrt(0.25)\nprint(abs(answer - 0.5) <= 0.001)\nprint(bisect_sqrt(9, max_steps=0))\n```\nThe first call is close enough to 0.5, so its check prints True. The zero-budget call prints None.",
+        "Implement bisect_sqrt with the shown bracket, width criterion and finite budget. The supported numeric domain is finite 0..1,000,000. Reject negative values, nonpositive width or a negative budget. Do not return an unfinished midpoint as success. The supplied __invalid_bounds_rejected helper is test infrastructure: it checks three invalid inputs raise ValueError. Leave this helper unchanged; the task is bisect_sqrt."
+      ],
+      "after": [
+        "Bisection repeatedly halves a range that contains the answer. This range is called a bracket. This lesson supports finite values from 0 through 1,000,000. Finite means a number with a limited size, excluding infinity and special “not a number” values. Use a positive finite width and a whole-number max_steps budget of 0 or more. The square root lies between 0 and max(1.0, value). Using 1 as the smallest upper bound matters when value is below 1.",
+        "Find the midpoint between low and high. If middle * middle is below value, the square root is above middle, so set low = middle. Otherwise, set high = middle. The range still contains the root. max(1.0, value) returns the larger number; it does not change either number.",
+        "Return the midpoint when high - low is at most width. Without rounding, its distance from the true root is at most half the range's width. Floating-point rounding can still affect the result. The max_steps budget limits the work when the requested width is too small to reach. Check the width again after the last allowed update. If the range is still too wide, return None. Raise ValueError for a negative value, a width of 0 or less, or a negative budget.",
+        "abs(number) gives the number's distance from 0. abs(answer - expected) measures how far apart two numbers are. This function gives an estimate, with no promise of an exact square root. It makes no accuracy promise for values outside the supported range or for numbers that are not finite.",
+        "Code breakdown:\n```python\ndef bisect_sqrt(value, width=0.001, max_steps=100):\n    if value < 0 or width <= 0 or max_steps < 0:\n        raise ValueError(\"invalid bounds\")\n    low = 0.0\n    high = max(1.0, value)\n    for _ in range(max_steps):\n        if high - low <= width:\n            return (low + high) / 2\n        middle = (low + high) / 2\n        if middle * middle < value:\n            low = middle\n        else:\n            high = middle\n    if high - low <= width:\n        return (low + high) / 2\n    return None\nanswer = bisect_sqrt(0.25)\nprint(abs(answer - 0.5) <= 0.001)\nprint(bisect_sqrt(9, max_steps=0))\n```\nOutput:\n```text\nTrue\nNone\n```\nThe first answer is close enough to 0.5, so its check prints True. The second call allows no updates, and its starting range is too wide, so it returns None.",
+        "Complete bisect_sqrt using the shown starting range, width rule, and step budget. Support finite values from 0 through 1,000,000, a positive finite width, and a whole-number budget of 0 or more. Reject a negative value, a width of 0 or less, or a negative budget with ValueError. Return a midpoint only when the width rule is met. Leave __invalid_bounds_rejected unchanged. This supplied helper checks that three invalid inputs raise ValueError; your task is bisect_sqrt."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the requirement.",
+        "Make one change to the starter.",
+        "Run the checks.",
+        "Explain why a changed input produces its result."
+      ],
+      "after": [
+        "Replace the starter's return None with a check that raises ValueError(\"invalid bounds\") when value < 0, width <= 0, or max_steps < 0.",
+        "Set low = 0.0 and high = max(1.0, value). Loop up to max_steps times.",
+        "Before each update, return (low + high) / 2 if high - low <= width.",
+        "Otherwise, calculate middle = (low + high) / 2. Set low = middle if middle * middle < value; otherwise set high = middle.",
+        "After the loop, check the width once more. Return the midpoint if the rule is met; otherwise return None.",
+        "Check that the answers for 0.25, 9, and 0 are within 0.001 of 0.5, 3, and 0. Check that bisect_sqrt(9, max_steps=0) returns None.",
+        "Check bisect_sqrt(1, width=0.5, max_steps=1): one update meets the width rule, so it should return 0.75. Keep __invalid_bounds_rejected unchanged and check that it returns True."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Why would high = value be an unsafe initial upper bound when value is 0.25?",
+        "choices": [
+          "Bisection works only on integers.",
+          "A smaller upper bound always makes the result more accurate.",
+          "Its square root is 0.5, outside the proposed interval."
+        ],
+        "answer": 2,
+        "explanation": "Bisection requires a bracket containing the answer before it starts. Faster shrinking cannot repair an invalid starting invariant."
+      },
+      "after": {
+        "question": "Why would high = value be an unsafe initial upper bound when value is 0.25?",
+        "choices": [
+          "Bisection works only on integers.",
+          "A smaller upper bound always makes the result more accurate.",
+          "Its square root is 0.5, outside the proposed interval."
+        ],
+        "answer": 2,
+        "explanation": "Bisection must start with a range that contains the answer. Shrinking a range that misses the answer cannot fix the starting mistake."
+      }
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Trace the visible worked calls before changing the starter."
+      ],
+      "after": [
+        "For value = 0.25, the starting range must contain its square root, 0.5. Using high = max(1.0, value) does this.",
+        "Check the width before each update and once after the loop. The last allowed update may make the range narrow enough.",
+        "A zero budget allows no updates, but the starting range might already meet the width rule."
+      ]
+    }
+  ],
+  "reviewNotes": [
+    "Preserved all six section roles and the worked code.",
+    "Explained finite numbers and replaced unnecessary jargon.",
+    "Preserved the final width check, supported inputs, error cases, and quiz answer index 2."
+  ]
+}

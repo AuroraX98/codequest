@@ -1,0 +1,105 @@
+{
+  "lesson": "typescript-06",
+  "position": 22,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Treat API data as unknown until checks confirm the fields and ranges you need.",
+      "after": "Check outside data before trusting its fields."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "Outside data can be wrong even when your program has good TypeScript types. Runtime means the time when JavaScript actually executes. TypeScript's types are erased before then. Use unknown for an unchecked value: you must narrow it before reading fields or doing calculations. any instead disables many checks and can let a missing field go unnoticed.",
+        "This complete TypeScript example validates a simple response:\n```typescript\ninterface Reading {\n  label: string;\n  amount: number;\n}\nfunction isReading(value: unknown): value is Reading {\n  if (typeof value !== 'object' || value === null) return false;\n  if (!('label' in value) || !('amount' in value)) return false;\n  return typeof value.label === 'string'\n    && typeof value.amount === 'number'\n    && Number.isFinite(value.amount)\n    && value.amount >= 0;\n}\nconsole.log(isReading({ label: 'Water', amount: 6 }));\nconsole.log(isReading({ label: 'Water', amount: '6' }));\n```\nIt prints true then false. The value is Reading return annotation is a type predicate: it tells TypeScript what a true result proves. The function body must actually check that promise.",
+        "typeof returns a value's basic runtime kind. JavaScript reports typeof null as 'object', so we explicitly reject null before using in. The in operator checks whether a named property exists. ! means not, || means either condition is enough, and && requires every condition. Early return false stops before an unsafe field access. This code requires known fields but permits extra fields; it does not require a particular object prototype.",
+        "Continue after the interface and guard:\n```typescript\nconst incoming: unknown = { label: 'Milk', amount: 3 };\nif (isReading(incoming)) {\n  console.log(incoming.label);\n  console.log(incoming.amount + 2);\n} else {\n  console.log('Invalid reading');\n}\nfor (const amount of [-2, NaN, Infinity]) {\n  console.log(isReading({ label: 'Milk', amount }));\n}\n```\nThe first branch prints Milk and 5. The loop prints false three times. Inside the true branch TypeScript permits field access because the guard has narrowed incoming.",
+        "NaN means not-a-number, but typeof NaN is 'number'. Infinity is also a number in JavaScript but is not a finite measurement. Number.isFinite rejects both, and does not convert numeric text into a number. A >= 0 test excludes negatives and includes zero. This guard permits nonnegative fractions because the task requires a number, not specifically an integer.\n\nIf a separate contract says durations must also be at most 600, add value.minutes <= 600 to the finite nonnegative check. Then 0 and 45 pass that range, Infinity fails, and 601 fails the upper bound. The exercise's current PracticeResponse contract requires finite nonnegative minutes without that extra upper bound; the matching math question describes the stricter hypothetical range.",
+        "For the exercise, validate PracticeResponse's title and minutes. Reject null, a missing title or minutes field, wrong field types, negative minutes, NaN, and Infinity. Accept the supplied good object. A type assertion such as value as PracticeResponse would only tell the compiler to trust you; it would perform none of these actual runtime checks.",
+        "Temporarily read unvalidated.minutes from an unknown value without a guard, then run the full TypeScript check. It should fail. Remove that practice line afterward. unknown does not itself validate anything; it makes unchecked use a compiler error. Your guard's runtime code is what determines whether the data really has a string title and a finite nonnegative duration."
+      ],
+      "after": [
+        "Runtime means when JavaScript is actually running. TypeScript's type labels are gone by then. Outside data needs real checks. Unknown prevents you from using an unchecked value freely; any skips many of those checks.",
+        "A type predicate tells TypeScript what a true result means. The code must really check that promise.\n```typescript\ninterface Reading { label: string; amount: number; }\nfunction isReading(value: unknown): value is Reading {\n  if (typeof value !== \"object\" || value === null) return false;\n  if (!(\"label\" in value) || !(\"amount\" in value)) return false;\n  return typeof value.label === \"string\"\n    && typeof value.amount === \"number\"\n    && Number.isFinite(value.amount)\n    && value.amount >= 0;\n}\nconsole.log(isReading({ label: \"Water\", amount: 6 }));\n```\nThe output is true.",
+        "First reject non-objects and null. Then check that both properties exist. Finally, check their values. This check allows extra properties; it only requires the named fields to meet the rules.",
+        "After isReading returns true, TypeScript lets the matching branch use label as text and amount as a number. A quoted amount such as `\"6\"` fails the check.",
+        "Finite means an ordinary limited number. Number.isFinite rejects Infinity and NaN, which means not-a-number. The `>= 0` check rejects negatives but accepts zero and fractions. An extra upper limit of 600 would need a separate `<= 600` check.",
+        "Validate PracticeResponse with a string title and finite, nonnegative minutes. This project has no upper limit of 600. Reject missing fields and wrong values. Writing `as PracticeResponse` would tell the checker to trust you without checking anything.",
+        "Unknown does not inspect the data by itself. Your function's running code performs the checks. Reading a field directly from unknown before checking should cause a type error."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Describe PracticeResponse with a text title and a numeric minutes value.",
+        "Write isPracticeResponse to check the value before using it. It must be a non-null object with a text title and a minutes number that is zero or greater.",
+        "Accept good: { title: \"Swift\", minutes: 20 }.",
+        "Reject missing: { title: \"Swift\" }, because minutes is absent.",
+        "Reject wrong: { title: \"Swift\", minutes: \"20\" }, because minutes is text.",
+        "Also reject null, negative minutes, NaN, and Infinity."
+      ],
+      "after": [
+        "Describe PracticeResponse with a text title and numeric minutes.",
+        "Check for a non-null object and both required fields.",
+        "Check the field types and require finite minutes of zero or more.",
+        "Run the checks for valid, missing, wrong-type, and invalid-number cases."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Check that the value is a non-null object first.",
+        "Use `in` to verify both property names exist.",
+        "Check title is a string and minutes is a finite non-negative number."
+      ],
+      "after": [
+        "Reject null before checking properties.",
+        "Use `in` to check both names.",
+        "Require Number.isFinite for minutes as well as the number type and lower limit."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "API data is typed unknown. Does that alone prove its minutes field is a valid number?",
+        "choices": [
+          "No; runtime checks must validate the value before use",
+          "Yes; unknown converts numeric strings to numbers",
+          "Yes; the annotation inspects the server response"
+        ],
+        "answer": 0,
+        "explanation": "unknown blocks unchecked use at compile time but performs no validation. The guard’s runtime tests establish the actual field types and limits."
+      },
+      "after": {
+        "question": "Does giving outside data the type unknown prove its minutes field is valid?",
+        "choices": [
+          "No, the running code must check the value",
+          "Yes, unknown converts numeric text",
+          "Yes, the type label inspects the data"
+        ],
+        "answer": 0,
+        "explanation": "Unknown makes you check before use. It does not perform the check itself."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Type-error practice: after the valid solution compiles, temporarily append this line and run the full TypeScript check: const unvalidated: unknown = { title: \"Swift\", minutes: 20 }; const unsafeMinutes = unvalidated.minutes; The compiler should report an error. Remove the line before completing the lesson. Runtime checks alone cannot establish rejection of an incorrect type.",
+      "after": "To try a type error, read a property directly from an unknown value. TypeScript should reject it until the value is checked."
+    }
+  ],
+  "headings": [
+    "Check while the program runs",
+    "Write a real value check",
+    "Check before reading fields",
+    "Use the checked value",
+    "Reject impossible measurements",
+    "Validate the practice response",
+    "Unknown is a reminder to check"
+  ],
+  "project": {
+    "title": "A reliable API client",
+    "task": "Check received data before treating it as a practice response.",
+    "done_when": "Valid data passes, missing or unsuitable fields and invalid minutes fail, and the checks pass."
+  }
+}

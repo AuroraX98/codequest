@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { ArrowRight, Check, Sparkles } from "lucide-react";
-import { providers, providerIds, type AIProvider } from "../lib/ai-providers";
+import { providers, providerIds, providerModels, selectedModel, type AIProvider } from "../lib/ai-providers";
 import type { QuestState } from "../lib/types";
 import type { Action } from "../lib/learning-client";
 export default function AIConnectionSettings({
@@ -24,6 +24,7 @@ export default function AIConnectionSettings({
   const current = state.keyConnected ? (state.aiProvider ?? "deepseek") : null;
   const [changing, setChanging] = useState(false);
   const [selection, setSelection] = useState<AIProvider | null>(null);
+  const [model, setModel] = useState("");
   const [key, setKey] = useState("");
   const [busy, setBusy] = useState(false);
   const close = () => {
@@ -46,9 +47,33 @@ export default function AIConnectionSettings({
             <Check size={16} /> {providers[current].choice} connected
           </span>
           <p>
-            <b>{providers[current].modelName}</b> · Key saved. Ask a question to
+            <b>{selectedModel(current, state.profile.aiModels?.[current]).name}</b> · Key saved. Ask a question to
             test it.
           </p>
+          {providerModels[current].length > 1 && (
+            <label>
+              AI model
+              <select
+                value={selectedModel(current, state.profile.aiModels?.[current]).id}
+                disabled={!online || busy}
+                onChange={async event => {
+                  const nextModel = event.target.value;
+                  setBusy(true);
+                  try {
+                    await beforeConnectionChange?.();
+                    const next = await request({ action: "preferences", settings: {
+                      aiModels: { ...state.profile.aiModels, [current]: nextModel },
+                    } });
+                    onSaved(next, `${selectedModel(current, nextModel).name} selected.`);
+                  } catch (e) { onError((e as Error).message); }
+                  finally { setBusy(false); }
+                }}
+              >
+                {providerModels[current].map(item => <option key={item.id} value={item.id}>{item.name}</option>)}
+              </select>
+              <small>Choose which model answers your questions. Prices and access depend on your provider.</small>
+            </label>
+          )}
           {!changing && (
             <div className="button-row">
               <button
@@ -108,6 +133,7 @@ export default function AIConnectionSettings({
                 disabled={!online || busy}
                 onClick={() => {
                   setSelection(id);
+                  setModel(selectedModel(id, state.profile.aiModels?.[id]).id);
                   setKey("");
                 }}
               >
@@ -116,7 +142,7 @@ export default function AIConnectionSettings({
                 </span>
                 <span>
                   <b>{providers[id].choice}</b>
-                  <small>{providers[id].modelName}</small>
+                  <small>{providerModels[id].map(item => item.name).join(" · ")}</small>
                 </span>
                 {selection === id ? (
                   <Check size={18} />
@@ -137,6 +163,7 @@ export default function AIConnectionSettings({
                   const next = await request({
                     action: "key",
                     provider: selection,
+                    model,
                     key: key.trim(),
                   });
                   onSaved(
@@ -151,6 +178,11 @@ export default function AIConnectionSettings({
                 }
               }}
             >
+              <label htmlFor="ai-setup-model">AI model</label>
+              <select id="ai-setup-model" value={model} disabled={busy || !online}
+                onChange={event => setModel(event.target.value)}>
+                {providerModels[selection].map(item => <option key={item.id} value={item.id}>{item.name}</option>)}
+              </select>
               <label htmlFor="ai-provider-key">
                 {providers[selection].name} API key
               </label>

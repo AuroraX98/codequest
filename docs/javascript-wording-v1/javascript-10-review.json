@@ -1,0 +1,64 @@
+{
+  "lesson": "javascript-10",
+  "position": 20,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Use the supplied minutes `[20, 35, 45]` and keep sessions of 30 minutes or more.",
+      "after": "Keep long workout sessions, convert them to seconds, and find their total and average."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "Processing a list often takes three steps: select some entries, transform the selected entries, and combine their values. An array method is a function attached to an array. `filter` selects, `map` transforms, and `reduce` combines. Each receives a callback, a function it calls for individual entries. This project selects long sessions, converts their minutes to seconds, and calculates a total and average.",
+        "An arrow function is another way to write a function. `m => m >= 30` means take an input called m and return the comparison. With two inputs, use parentheses: `(sum, x) => sum + x`. The arrow `=>` introduces the function body; it is different from `>=`, which compares numbers. For a short expression body, the arrow function returns that expression automatically.",
+        "This standalone example shows the first two steps.\n```javascript\nconst minutes = [10, 30, 40];\nconst kept = minutes.filter(m => m >= 30);\nconst seconds = kept.map(m => m * 60);\nconsole.log(kept.join(\",\"));\nconsole.log(seconds.join(\",\"));\nconsole.log(minutes.join(\",\"));\n```\nThe lines print `30,40`, `1800,2400`, and `10,30,40`. Filter keeps entries for which its comparison is true. Map multiplies each kept number by 60. Both return new arrays, so the source list is still available.",
+        "Reduce carries an accumulated answer from one entry to the next. `seconds.reduce((sum, x) => sum + x, 0)` starts sum at 0, then adds each x. The comma and final 0 provide the initial value; they are not another array entry. For 1800 and 2400 the running answers are 1800 and 4200. Starting at zero also gives an empty list the total 0.",
+        "A reusable summary handles the empty case explicitly.\n```javascript\nfunction summary(minutes) {\n  const seconds = minutes.filter(m => m >= 30).map(m => m * 60);\n  const total = seconds.reduce((sum, x) => sum + x, 0);\n  const average = seconds.length ? total / seconds.length : null;\n  return { total, average };\n}\nconsole.log(summary([10, 30, 40]).total);\nconsole.log(summary([10, 30, 40]).average);\nconsole.log(summary([]).average);\n```\nIt displays 4200, 2100, and null. The dot reads a property of the returned object. `{ total, average }` is short for an object with properties named total and average holding those variables' values.",
+        "The expression `condition ? a : b` is a conditional expression: use a when the condition is true, otherwise b. Here a nonzero length counts as true; a zero length counts as false. Divide total by the number of kept sessions using `/`. With no kept sessions, an average has no value, so return `null`, JavaScript's explicit no-value marker. Do not divide by zero or pretend an empty average is zero.",
+        "For the exercise list, 20 is removed and 35 and 45 remain. Their seconds are 2100 and 2700, total 4800, average 2400. An average in minutes for 30 and 50 is their sum 80 divided by 2, or 40. Use the count of the selected list, not the original list, and keep the unit consistent throughout each calculation."
+      ],
+      "after": [
+        "`filter` selects array items, `map` changes each selected value, and `reduce` combines values into one result.\n\nEach uses a callback. Here, those steps keep long sessions, convert minutes to seconds, and add them up.",
+        "`m => m >= 30` is an arrow function. It takes `m` and returns the comparison's answer.\n\nFor two inputs, use parentheses: `(sum, x) => sum + x`. `=>` starts the function's body; `>=` means greater than or equal to.",
+        "Select the sessions, then convert their durations:\n```javascript\nconst minutes = [10, 30, 40];\nconst kept = minutes.filter(m => m >= 30);\nconst seconds = kept.map(m => m * 60);\nconsole.log(kept.join(\",\"));\nconsole.log(seconds.join(\",\"));\nconsole.log(minutes.join(\",\"));\n```\nOutput:\n```text\n30,40\n1800,2400\n10,30,40\n```\nBoth methods return new arrays. The original minutes stay unchanged.",
+        "`seconds.reduce((sum, x) => sum + x, 0)` starts a running total at 0. Each turn adds one `x`.\n\nFor 1800 and 2400, the total becomes 1800, then 4200. The starting 0 also makes an empty array total 0.",
+        "Return both the total and average:\n```javascript\nfunction summary(minutes) {\n  const seconds = minutes.filter(m => m >= 30).map(m => m * 60);\n  const total = seconds.reduce((sum, x) => sum + x, 0);\n  const average = seconds.length ? total / seconds.length : null;\n  return { total, average };\n}\nconsole.log(summary([10, 30, 40]).total);\nconsole.log(summary([10, 30, 40]).average);\nconsole.log(summary([]).average);\n```\nOutput:\n```text\n4200\n2100\nnull\n```\n`{ total, average }` is short for an object whose properties use those names and values.",
+        "`condition ? a : b` chooses `a` for a truthy condition and `b` otherwise.\n\nDivide by the number of kept sessions to find the average. With none kept, return `null` to mean no average. Do not divide by zero.",
+        "In the project, 35 and 45 minutes remain. They become 2100 and 2700 seconds: total 4800, average 2400.\n\nUse the count of the kept sessions, and keep every duration in the same unit."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Use the supplied minutes `[20, 35, 45]` and keep sessions of 30 minutes or more.",
+        "Convert kept minutes to seconds with `map`.",
+        "Calculate total seconds and average seconds.",
+        "Return zero total and null average for an empty list."
+      ],
+      "after": [
+        "In `summarize`, keep durations of 30 minutes or more.",
+        "Map the kept durations to seconds by multiplying by 60.",
+        "Reduce from 0 to find total seconds.",
+        "Use the kept count for the average, or null when no sessions remain.",
+        "Return `{ total, average }` and check both the supplied and empty lists."
+      ]
+    }
+  ],
+  "headings": [
+    "Select, transform, and combine values",
+    "Read the short callback functions",
+    "Filter minutes and convert to seconds",
+    "Add values with a running total",
+    "Return a summary for each list",
+    "Handle an average with no values",
+    "Check the workout's seconds"
+  ],
+  "project": {
+    "title": "A workout summary",
+    "task": "Filter sessions, transform durations, and calculate the total and average.",
+    "done_when": "An empty list is handled; the supplied total and average are correct."
+  },
+  "notes": []
+}

@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useId, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useId, useMemo, useRef, useState } from "react";
 import {
   Check,
   Download,
@@ -95,7 +95,7 @@ export default function PracticeStudio(props: Props) {
     return [...groups.entries()].sort((a,b)=>compareCourseNames(courseNames[a[0]]??a[0],courseNames[b[0]]??b[0]));
   }, [props.units, props.lessons]);
   const latest = useRef(props);
-  latest.current = props;
+  useLayoutEffect(() => { latest.current = props; }, [props]);
   const mounted = useRef(false);
   const frame = useRef<HTMLIFrameElement>(null);
   const importing = useRef<HTMLInputElement>(null);
@@ -120,6 +120,7 @@ export default function PracticeStudio(props: Props) {
     const selected = props.lessons.find(lesson=>lesson.id===baseUnitId);
     if(selected && selected.learningMode !== "concept")return;
     const fallback=props.units.find(unit=>{const lesson=props.lessons.find(l=>l.id===unit.id);return lesson && lesson.learningMode !== "concept";});
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Replace a removed or unsupported catalog selection; valid selections are unchanged.
     if(fallback){setBaseUnitId(fallback.id);setCourseNotice("This topic has concept lessons, not an in-browser coding project. Choose a supported coding topic below; your saved drafts are unchanged.");}
   },[baseUnitId,props.units,props.lessons]);
   const [difficulty, setDifficulty] = useState<PracticeDifficulty>("beginner");
@@ -156,7 +157,7 @@ export default function PracticeStudio(props: Props) {
     difficulty,
   ].join(":");
   const contextRef = useRef(context);
-  contextRef.current = context;
+  useLayoutEffect(() => { contextRef.current = context; }, [context]);
   const adopt = (item: PracticeDraft) => {
     focusTheoryAfterChange.current = false;
     local.current = {
@@ -250,6 +251,7 @@ export default function PracticeStudio(props: Props) {
   useEffect(() => {
     sequence.current++;
     abort.current?.abort();
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Clear the busy indicator after cancelling the previous context request.
     setBusy("");
   }, [context]);
   useEffect(() => {
@@ -261,6 +263,7 @@ export default function PracticeStudio(props: Props) {
   }, [code, files, active]);
   useEffect(() => {
     let cancelled = false;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Invalidate old completion while the new source hash is checked asynchronously.
     setCompletedCurrent(false);
     if (draft?.completed)
       void practiceSourceHash(code, files).then((hash) => {

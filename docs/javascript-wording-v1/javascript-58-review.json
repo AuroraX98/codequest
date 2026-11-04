@@ -1,0 +1,126 @@
+{
+  "lesson": "javascript-58",
+  "position": 28,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Complete the delegated onClick guard and recording logic. For an Element-originated click under root, record topic, original target id and current listener id only when closest finds a button inside root. Return the supplied cleanup function.",
+      "after": "Let one listener handle clicks on buttons inside a group."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "In this DOM example a click starts on the inner span and bubbles through its ancestors. event.target is the originating element; event.currentTarget is the element whose listener is currently running. A listener on the containing div can handle child controls without registering a separate listener on each one.",
+        "target.closest(\"button[data-topic]\") returns the nearest matching element, including target itself, or null. root.contains(button) checks that the result is still within the delegated area. dataset.topic reads the data-topic attribute. Inputs here are click events from Elements in the supplied markup, not arbitrary non-Element event targets.",
+        "Save this supplied index.html beside main.js:\n```html\n<div id=\"topics\"><button type=\"button\" data-topic=\"read\"><span id=\"icon\">Read</span></button><p id=\"blank\">No action</p></div>\n```\nquerySelector finds the named element. addEventListener registers onClick for click events; removeEventListener later removes that same callback. MouseEvent(type, options) constructs a synthetic event and dispatchEvent sends it synchronously through DOM listeners. This tests propagation, not a trusted human click.\n```javascript\nfunction installDelegation(root, log) {\n  function onClick(event) {\n    const button = event.target.closest(\"button[data-topic]\");\n    if (!button || !root.contains(button)) return;\n    log.push({topic: button.dataset.topic,\n      target: event.target.id, current: event.currentTarget.id});\n  }\n  root.addEventListener(\"click\", onClick);\n  return () => root.removeEventListener(\"click\", onClick);\n}\nconst root = document.querySelector(\"#topics\");\nconst log = [];\nconst dispose = installDelegation(root, log);\nconst icon = document.querySelector(\"#icon\");\nicon.dispatchEvent(new MouseEvent(\"click\", {bubbles: true}));\nconsole.log(JSON.stringify(log));\ndispose();\n```\nOutput: [{\"topic\":\"read\",\"target\":\"icon\",\"current\":\"topics\"}].",
+        "installDelegation returns dispose, a no-argument function that detaches the listener. With bubbles:false the ancestor listener does not receive this child event. Optional practice: dispatch on the non-action paragraph and explain why nothing is recorded. Actual local evidence may use JSDOM with the production frame harness; that is not a real-browser interaction or rendering test."
+      ],
+      "after": [
+        "A click can travel from the clicked element up through its parent elements. This is called bubbling.\n\nWe can put one click listener on a group of buttons. It can handle clicks from inside the group. This is called event delegation.\n\n`event.target` is where the click started. `event.currentTarget` is where the listener is running.",
+        "`target.closest(\"button[data-topic]\")` looks for the nearest button with a `data-topic` attribute. It checks the target itself, then its parents. It returns `null` if it finds none.\n\n`root.contains(button)` checks that the button is inside our group. `button.dataset.topic` reads its `data-topic` text. In this example, the click starts on an HTML element.",
+        "This page puts a span inside a button. Save it as `index.html` beside `main.js`.\n```html\n<div id=\"topics\"><button type=\"button\" data-topic=\"read\"><span id=\"icon\">Read</span></button><p id=\"blank\">No action</p></div>\n```\nHere is the JavaScript for that page.\n```javascript\nfunction installDelegation(root, log) {\n  function onClick(event) {\n    const button = event.target.closest(\"button[data-topic]\");\n    if (!button || !root.contains(button)) return;\n    log.push({topic: button.dataset.topic,\n      target: event.target.id, current: event.currentTarget.id});\n  }\n  root.addEventListener(\"click\", onClick);\n  return () => root.removeEventListener(\"click\", onClick);\n}\nconst root = document.querySelector(\"#topics\");\nconst log = [];\nconst dispose = installDelegation(root, log);\nconst icon = document.querySelector(\"#icon\");\nicon.dispatchEvent(new MouseEvent(\"click\", {bubbles: true}));\nconsole.log(JSON.stringify(log));\ndispose();\n```\nOutput:\n```text\n[{\"topic\":\"read\",\"target\":\"icon\",\"current\":\"topics\"}]\n```\nThe click starts on `icon`, but the listener runs on `topics`. The guard line returns early if no suitable button was found.\n\n`MouseEvent` creates a test click. `bubbles: true` lets it travel up to the group. `dispatchEvent` sends it through the listeners right away.",
+        "`installDelegation` returns a cleanup function. We name it `dispose`. Calling it removes the listener, using the same `onClick` function that was added.\n\nComplete the guard in the starter. A click on the paragraph must add nothing to the log. After cleanup, clicks must also add nothing.\n\nThe example sends a test event through the page. It does not test how a person clicks or uses a keyboard."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the requirement.",
+        "Make one change to the starter.",
+        "Run the checks.",
+        "Explain why a changed input produces its result."
+      ],
+      "after": [
+        "Find the button with closest.",
+        "Return early if there is no button or it is outside root.",
+        "Keep the log entry with topic, target, and current.",
+        "Run the checks for a button click, a paragraph click, and cleanup."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If the synthetic child click has bubbles:false, does the div listener record it?",
+        "choices": [
+          "Yes. currentTarget always becomes the child.",
+          "No. This child event does not bubble to the ancestor listener.",
+          "Yes. Every synthetic event must bubble regardless of its option."
+        ],
+        "answer": 1,
+        "explanation": "The listener is registered on the ancestor for the bubbling phase; this event never reaches that listener by bubbling."
+      },
+      "after": {
+        "question": "Will the group listener receive this child click if bubbles is false?",
+        "choices": [
+          "Yes. currentTarget always becomes the child.",
+          "No. The click does not bubble up to this listener.",
+          "Yes. Test clicks always bubble."
+        ],
+        "answer": 1,
+        "explanation": "This listener waits for clicks that bubble up to the group. With bubbles set to false, the child click does not reach it."
+      }
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Trace the visible worked calls before changing the starter."
+      ],
+      "after": [
+        "Use !button before reading information from the button.",
+        "The guard can use !button || !root.contains(button)."
+      ]
+    },
+    {
+      "field": "checks",
+      "before": [
+        {
+          "label": "Bubbled child retains both identities",
+          "expression": "(()=>{const log=[];const stop=installDelegation(document.querySelector(\"#topics\"),log);document.querySelector(\"#icon\").dispatchEvent(new MouseEvent(\"click\",{bubbles:true}));stop();return log.length===1 && log[0].topic===\"read\" && log[0].target===\"icon\" && log[0].current===\"topics\";})()"
+        },
+        {
+          "label": "Unrelated child ignored",
+          "expression": "(()=>{const log=[];const stop=installDelegation(document.querySelector(\"#topics\"),log);document.querySelector(\"#blank\").dispatchEvent(new MouseEvent(\"click\",{bubbles:true}));stop();return log.length===0;})()"
+        },
+        {
+          "label": "Cleanup detaches callback",
+          "expression": "(()=>{const log=[];const stop=installDelegation(document.querySelector(\"#topics\"),log);stop();document.querySelector(\"#icon\").dispatchEvent(new MouseEvent(\"click\",{bubbles:true}));return log.length===0;})()"
+        }
+      ],
+      "after": [
+        {
+          "label": "Bubbled child retains both identities",
+          "expression": "(()=>{const log=[];const stop=installDelegation(document.querySelector(\"#topics\"),log);document.querySelector(\"#icon\").dispatchEvent(new MouseEvent(\"click\",{bubbles:true}));stop();return log.length===1 && log[0].topic===\"read\" && log[0].target===\"icon\" && log[0].current===\"topics\";})()"
+        },
+        {
+          "label": "Unrelated child ignored without an error",
+          "expression": "(()=>{const log=[];let failed=false;const onError=event=>{failed=true;event.preventDefault();};window.addEventListener(\"error\",onError);const stop=installDelegation(document.querySelector(\"#topics\"),log);try{document.querySelector(\"#blank\").dispatchEvent(new MouseEvent(\"click\",{bubbles:true}));return !failed && log.length===0;}finally{stop();window.removeEventListener(\"error\",onError);}})()"
+        },
+        {
+          "label": "Cleanup detaches callback",
+          "expression": "(()=>{const log=[];const stop=installDelegation(document.querySelector(\"#topics\"),log);stop();document.querySelector(\"#icon\").dispatchEvent(new MouseEvent(\"click\",{bubbles:true}));return log.length===0;})()"
+        }
+      ]
+    },
+    {
+      "field": "externalNotes",
+      "before": "ECMAScript 2026 core; native Node24 and current app worker/DOM harness evidence are recorded separately. No external service or real-browser claim follows from a local fixture.",
+      "after": ""
+    }
+  ],
+  "headings": [
+    "One listener for a group",
+    "Find the matching button",
+    "Follow one click",
+    "Remove the listener"
+  ],
+  "project": {
+    "title": "Event propagation and delegation",
+    "task": "Complete the guard in installDelegation. Record clicks only when they come from a matching button inside root. Keep the cleanup function.",
+    "done_when": "A button click records its topic and both element IDs. A paragraph click records nothing. Cleanup stops later clicks from being recorded."
+  },
+  "notes": [
+    "Incomplete starter previously passed every check despite throwing in the non-button event listener. The check now observes and rejects the window error, and cleans up both listeners.",
+    "Removed an unrelated local-project completion requirement; its useful teaching is in the lesson and technical evidence stays in review documents."
+  ]
+}

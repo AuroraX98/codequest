@@ -1,0 +1,97 @@
+{
+  "lesson": "react-08",
+  "position": 20,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Preserve each person's counter when the list is reordered.",
+      "after": "Use stable keys to keep each person's state with that person when the list moves."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "React associates component state with its position and identity in the rendered tree.",
+        "Changing ordinary props does not by itself reset that component's state.",
+        "In a list, a stable key helps React match an item before and after a reorder. Use an ID belonging to the item, not its current array index.",
+        "```react\nfunction Score({name}) {\n  const [points, setPoints] = React.useState(0);\n  return <button onClick={() => setPoints(p => p + 1)}>{name}: {points}</button>;\n}\nfunction App() {\n  const players = [{id: \"sun\", name: \"Sol\"}, {id: \"moon\", name: \"Luna\"}];\n  return <div>{players.map(player => <Score key={player.id} name={player.name} />)}</div>;\n}\n```\nEach ID identifies its own counter. Keys need to be unique among these siblings, not across the whole website.",
+        "An index key identifies a position. Reversing the list can then give the first item's old state to a different person.",
+        "Changing a key deliberately tells React to use a different identity and reset that component's state. Generating a fresh random key on every render resets state unintentionally.",
+        "For the exercise, add twice to Ari, then reverse the list. Bea must still show 0 and Ari must still show 2. Repair only the key choice in the supplied list.\n\nThe supplied reversal uses [...current].reverse(). Spread creates a new array container with the same person objects. reverse() reverses that new array in place and returns it; calling current.reverse() instead would mutate the state array. The setter’s updater receives pending state and returns the copied order. This copy is shallow; the person objects are not changed here.\n\nA small ordinary JavaScript example isolates the array operation, without another component:\n```javascript\nconst order = [\"Ari\", \"Bea\"];\nconst reversed = [...order].reverse();\nconsole.log(order.join(\",\"));\nconsole.log(reversed.join(\",\"));\n```\nThe first output is Ari,Bea and the second is Bea,Ari. join(\",\") returns comma-separated text from each array, without changing it; console.log prints that text. The copied array reversed, while order kept its original order."
+      ],
+      "after": [
+        "React keeps state for a component at its place in the screen's structure. Its identity helps React decide whether to keep that state or start again.",
+        "Changing ordinary props does not by itself reset a component's state. React may keep the same component and give it different inputs.",
+        "In a list, a stable key helps React recognize the same item after it moves. Use an ID belonging to the person, not the person's current position.",
+        "```react\nfunction Score({ name }) {\n  const [points, setPoints] = React.useState(0);\n  return <button onClick={() => setPoints(p => p + 1)}>{name}: {points}</button>;\n}\nfunction App() {\n  const [players, setPlayers] = React.useState([\n    { id: \"sun\", name: \"Sol\" },\n    { id: \"moon\", name: \"Luna\" }\n  ]);\n  return (\n    <main>\n      <button onClick={() => setPlayers(current => [...current].reverse())}>Reverse</button>\n      <div>{players.map(player => (\n        <Score key={player.id} name={player.name} />\n      ))}</div>\n    </main>\n  );\n}\n```\nClick Sol twice, then Reverse. Sol keeps 2 points and Luna keeps 0. The stable keys travel with their players.",
+        "A position key can keep the old first counter while putting a different person's name on it. That can make a count appear to belong to the wrong person. Keys must be unique among items in the same list.",
+        "Changing a key tells React this is a different identity, which resets that component's state. A new random key on every render would cause unwanted resets.",
+        "Repair the supplied list's key choice. Add twice to Ari, then reverse: Ari should keep 2 and Bea should keep 0. `[...current].reverse()` reverses a copy of the array, leaving the old array unchanged."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Run the starter and observe the misplaced count after reversing.",
+        "Use the person's stable ID as its key."
+      ],
+      "after": [
+        "Observe which person owns each count.",
+        "Use each person's stable ID as the key.",
+        "Run the checks and reverse the list after adding points."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Run the starter and observe the misplaced count after reversing.",
+        "Use the person's stable ID as its key."
+      ],
+      "after": [
+        "The key should stay the same for a person before and after reversing."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Ari has count 2 and Bea has count 0. With array-index keys, the list reverses. Why might Bea now display 2?",
+        "choices": [
+          "React stored the state with the old first position, not with Bea's identity",
+          "Array.reverse automatically adds two to every number",
+          "The button text is the key"
+        ],
+        "answer": 0,
+        "explanation": "Index keys can preserve the old component at a position while changing the person passed to it. Stable person IDs let React keep state matched to the correct person."
+      },
+      "after": {
+        "question": "With position keys, why might Bea show Ari's old count after the list reverses?",
+        "choices": [
+          "The state stayed at the old position while the person changed.",
+          "reverse adds points to each person.",
+          "The button text is always the key."
+        ],
+        "answer": 0,
+        "explanation": "Stable person IDs let React match each old counter to the same person in the new order."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Prerequisites include basic list keys already mentioned in react-02; this lesson specifically tests state identity under reorder. DOM lifecycle tested, not merely presence of a key string. Components are defined outside their parent to keep type identity stable.",
+      "after": "This lesson checks that component state follows stable record IDs after a reorder."
+    }
+  ],
+  "headings": [
+    "Keep track of each component",
+    "Change props without resetting",
+    "Match items with keys",
+    "Move two counters",
+    "Avoid position keys",
+    "Reset only on purpose",
+    "Fix the counter list"
+  ],
+  "project": {
+    "title": "Keep state with the right item",
+    "task": "Fix the list keys so each person's count stays with that person after reversing.",
+    "done_when": "After two clicks on Ari and a reversal, Ari still has 2 and Bea still has 0."
+  }
+}

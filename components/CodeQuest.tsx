@@ -1,6 +1,6 @@
 "use client";
 import { projectChecks, projectProofPasses, hasTypeContracts } from "../lib/project-checks";
-import { useEffect, useEffectEvent, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useEffectEvent, useMemo, useRef, useState } from "react";
 import {
   ArrowRight,
   BookOpen,
@@ -10,8 +10,6 @@ import {
   Code2,
   Download,
   Flame,
-  Flag,
-  GraduationCap,
   History,
   Lightbulb,
   Map,
@@ -22,7 +20,6 @@ import {
   Sparkles,
   Square,
   Star,
-  Target,
   Trophy,
   Upload,
   X,
@@ -40,7 +37,7 @@ import AIConnectionSettings from "./AIConnectionSettings";
 import APIKeyFileSettings, {
   type APIKeyFileSettingsHandle,
 } from "./APIKeyFileSettings";
-import { providers } from "../lib/ai-providers";
+import { providers, selectedModel } from "../lib/ai-providers";
 import LearningSettings from "./LearningSettings";
 import LessonContent, { InlineCode } from "./LessonContent";
 import { GlossaryScope, GlossaryText } from "./LessonGlossary";
@@ -48,7 +45,6 @@ import CodeEditor from "./CodeEditor";
 import CourseProjectStudio from "./CourseProjectStudio";
 import { projectsForLesson, missingProjectReading } from "../lib/course-projects";
 import SelectionClarifier from "./SelectionClarifier";
-import PracticeStudio from "./PracticeStudio";
 import PythonInputLesson from "./PythonInputLesson";
 import CourseTools from "./CourseTools";
 import {compareCourseNames} from "../lib/course-order";
@@ -66,8 +62,7 @@ import LessonCompletion from "./LessonCompletion";
 import ReadingMark from "./ReadingMark";
 import { useReadingProgress } from "../lib/reading-client";
 import { getLessonHeadings } from "../lib/lesson-headings";
-import { pythonConcepts, type ConceptId } from "../lib/python-concepts";
-import type { LessonNoteSource } from "../lib/lesson-notes";
+import { pythonConcepts, reviewedPythonFirstLesson } from "../lib/python-concepts";
 import { clarificationQuestion } from "../lib/lesson-selection";
 import { readProject, writeProject } from "../lib/project-files";
 import { runProject } from "../lib/runner";
@@ -86,39 +81,7 @@ import type {
   Question,
   Profile,
 } from "../lib/types";
-function noteSource(lesson: Lesson, key: string): LessonNoteSource | null {
-  if (lesson.id === "python-01" && key.startsWith("concept:")) {
-    const index = pythonConcepts.findIndex(
-      (concept) => "concept:" + concept.id === key,
-    );
-    if (index < 0) return null;
-    const concept = pythonConcepts[index];
-    return {
-      lessonId: lesson.id,
-      lessonTitle: lesson.title,
-      sectionIndex: index,
-      sectionKey: key,
-      sectionTitle: concept.title,
-      sectionText: [
-        concept.short,
-        concept.why,
-        concept.imagine,
-        concept.limit,
-      ].join("\n\n"),
-    };
-  }
-  const match = /^text:(\d+)$/.exec(key);
-  const index = match ? Number(match[1]) : -1;
-  if (index < 0 || index >= lesson.explanation.length) return null;
-  return {
-    lessonId: lesson.id,
-    lessonTitle: lesson.title,
-    sectionIndex: index,
-    sectionKey: key,
-    sectionTitle: getLessonHeadings(lesson.id)[index],
-    sectionText: lesson.explanation[index],
-  };
-}
+
 const names: Record<string, string> = {
   "csharp": "C#",
   "cpp": "C++",
@@ -239,8 +202,8 @@ export default function CodeQuest({
 }) {
   const orderedUnits = useMemo(() => courseLearningOrder(units), [units]);
   const device = useMemo(() => new LearningClient(lessons, empty), [lessons]);
-  const request = (action: Parameters<LearningClient["mutate"]>[0]) =>
-    device.mutate(action) as Promise<ApiReply>;
+  const request = useCallback((action: Parameters<LearningClient["mutate"]>[0]) =>
+    device.mutate(action) as Promise<ApiReply>, [device]);
   const [deviceStatus, setDeviceStatus] = useState<DeviceStatus>({
     online: true,
     pending: 0,
@@ -296,9 +259,21 @@ export default function CodeQuest({
   const reading = useReadingProgress(state.draftScope);
   const [tutorHidden, setTutorHidden] = useState(true);
   const [flowBackTarget, setFlowBackTarget] = useState<string | null>(null);
+  // The side-by-side contents list becomes a full row above the lesson on a phone.
+  // Close it when entering that layout, so the current idea stays in view.
+  useEffect(() => {
+    const dock = window.matchMedia("(min-width: 1100px)");
+    const onLayoutChange = (event: MediaQueryListEvent) => {
+      if (!event.matches) setTocOpen(false);
+    };
+    dock.addEventListener("change", onLayoutChange);
+    return () => dock.removeEventListener("change", onLayoutChange);
+  }, []);
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- Consume the backward-entry marker after the new keyed reader mounts.
   useEffect(() => setFlowBackTarget(null), [activeId, paragraph]);
   useEffect(() => {
     try {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- Restore the account-specific browser preference after hydration.
       setTutorHidden(
         state.draftScope
           ? localStorage.getItem(
@@ -323,21 +298,14 @@ export default function CodeQuest({
       /* The visibility choice still works for this visit. */
     }
   };
-  const [noteSelection, setNoteSelection] = useState<{
-    context: string;
-    text: string;
-    requestId: number;
-    source: LessonNoteSource;
-  } | null>(null);
-  const [noteSection, setNoteSection] = useState<{
+  const [, setNoteSection] = useState<{
     lessonId: string;
     key: string;
   } | null>(null);
-  const [labContext, setLabContext] = useState<{
+  const [, setLabContext] = useState<{
     code: string;
     explanation: string;
   } | null>(null);
-  const noteRequest = useRef(0);
   const frame = useRef<HTMLIFrameElement>(null),
     abort = useRef<AbortController | null>(null),
     codeRef = useRef(""),
@@ -376,19 +344,8 @@ export default function CodeQuest({
     units.find((u) => u.id === "javascript-01") ??
     units[0];
   const lesson = lessons.find((l) => l.id === unit?.id);
-  const noteContext = state.draftScope + ":" + lesson?.id;
-  const currentNoteSource = lesson
-    ? noteSource(
-        lesson,
-        noteSection?.lessonId === lesson.id &&
-          noteSection.key.startsWith("concept:")
-          ? noteSection.key
-          : lesson.id === "python-01" && noteSection?.lessonId !== lesson.id
-            ? "concept:program"
-            : "text:" + paragraph,
-      )
-    : null;
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Restore the selected saved project when the account or lesson changes.
     try { setSelectedCourseProject(localStorage.getItem(`codequest-project-choice:${state.draftScope}:${activeId}`) ?? ""); }
     catch { setSelectedCourseProject(""); }
   }, [state.draftScope, activeId]);
@@ -397,6 +354,8 @@ export default function CodeQuest({
     try { localStorage.setItem(`codequest-project-choice:${state.draftScope}:${activeId}`, id); } catch {}
   };
   const isConcept = lesson?.learningMode === "concept";
+  // Concept-only tracks can retain a JavaScript project runtime; reading help follows the taught language.
+  const readingLanguage = isConcept && unit && ["csharp", "cpp", "java", "c", "kotlin", "go", "rust", "php", "ruby", "r"].includes(unit.track) ? unit.track : lesson?.runtime ?? "";
   useEffect(()=>{if(!editorJump || view !== "studio" || studioMode !== "course" || phase !== "build")return;const frame=requestAnimationFrame(()=>{const target=document.getElementById("course-project-editor");target?.scrollIntoView({block:"start"});target?.focus({preventScroll:true});});return()=>cancelAnimationFrame(frame);},[editorJump,view,studioMode,phase]);
 
   const syncLabel = deviceStatusLabel(deviceStatus, localMode);
@@ -411,6 +370,7 @@ export default function CodeQuest({
     phase,
     paragraph,
     state.aiProvider,
+    selectedModel(state.aiProvider ?? "deepseek", state.profile.aiModels?.[state.aiProvider ?? "deepseek"]).id,
     state.keyConnected,
     state.profile.aiEnabled,
     deviceStatus.online,
@@ -420,6 +380,7 @@ export default function CodeQuest({
     tutorSequence.current++;
     tutorAbort.current?.abort();
     tutorFlight.current = false;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Clear cancelled external requests when the tutor context changes.
     setTutorBusy(false);
     setPendingPassage("");
     return () => {
@@ -560,7 +521,7 @@ export default function CodeQuest({
           (latest ? { ...latest, ...(linked && linked.view !== "quest" ? {view: linked.view} : {}) } : null) ??
           linked ?? normalizeRoute(saved, d.profile.activeUnit, units, lessons), d,
         );
-        if (latest && isExplicitLessonLink(location.hash) && routeHash(restored) !== routeHash(latest)) setResumeOffer(latest);
+        if (latest && (restored.view === "quest" || restored.view === "studio") && isExplicitLessonLink(location.hash) && routeHash(restored) !== routeHash(latest)) setResumeOffer(latest);
         if (restored.activeId !== d.profile.activeUnit) {
           const selected = units.find((u) => u.id === restored.activeId)!;
           d = await request({
@@ -738,11 +699,9 @@ export default function CodeQuest({
     }
     const labels: Record<string, string> = {
       quest: "Your quest",
-      studio:
-        studioMode === "practice"
-          ? "AI practice · Build studio"
-          : "Build studio",
+      studio: "Build studio",
       path: "Skill path",
+      terminology: "Terminology",
       tools: "Tools and concepts",
       progress: "Your progress",
       settings: "Settings",
@@ -774,6 +733,8 @@ export default function CodeQuest({
     paragraph,
     conceptTarget,
     navigationReady,
+    request,
+    units,
     lesson?.title,
     resumeOffer,
   ]);
@@ -1082,6 +1043,7 @@ export default function CodeQuest({
       scope = device.scope,
       context = tutorContext,
       expectedProvider = state.aiProvider ?? "deepseek",
+      expectedModel = selectedModel(expectedProvider, state.profile.aiModels?.[expectedProvider]).id,
       sequence = ++tutorSequence.current;
     const current = () =>
       sequence === tutorSequence.current &&
@@ -1091,6 +1053,7 @@ export default function CodeQuest({
       device.current.profile.aiEnabled &&
       device.current.keyConnected &&
       (device.current.aiProvider ?? "deepseek") === expectedProvider &&
+      selectedModel(expectedProvider, device.current.profile.aiModels?.[expectedProvider]).id === expectedModel &&
       device.status.online;
     tutorFlight.current = true;
     tutorAbort.current = new AbortController();
@@ -1121,6 +1084,7 @@ export default function CodeQuest({
         body: JSON.stringify({
           unitId: id,
           expectedProvider,
+          expectedModel,
           deviceScope: scope,
           question: q,
           code: code.slice(0, 15000),
@@ -1312,7 +1276,7 @@ export default function CodeQuest({
           </button>
         </div>
         <div className="workspace-toolbar">
-          <button id="unit-toc-toggle" type="button" className="secondary unit-toc-toggle" disabled={!ready || !lesson} aria-expanded={tocOpen && (view === "quest" || (view === "studio" && studioMode === "course"))} aria-controls="unit-table-of-contents" onClick={()=>{if(view !== "quest" && !(view === "studio" && studioMode === "course")){setView("quest");setPhase("learn");setTocOpen(true);}else setTocOpen(value=>!value);}}>Table of Contents <Map size={17}/></button>
+          <button id="unit-toc-toggle" type="button" className="secondary unit-toc-toggle" disabled={!ready || !lesson} aria-expanded={tocOpen && (view === "quest" || (view === "studio" && studioMode === "course"))} aria-controls="unit-table-of-contents" onKeyDown={event=>{if(event.key === "Escape" && tocOpen){event.preventDefault();event.stopPropagation();setTocOpen(false);}}} onClick={()=>{if(view !== "quest" && !(view === "studio" && studioMode === "course")){setView("quest");setPhase("learn");setTocOpen(true);}else setTocOpen(value=>!value);}}>Table of Contents <Map size={17}/></button>
           <nav aria-label="Main navigation">
             {[
               { id: "quest", label: "Learn", icon: BookOpen },
@@ -1345,7 +1309,8 @@ export default function CodeQuest({
       <div className={"shell" + (tocOpen && ready && lesson && (view === "quest" || (view === "studio" && studioMode === "course")) ? " toc-docked" : "")}>
 
         {ready && lesson && (view === "quest" || (view === "studio" && studioMode === "course")) && (
-                      <UnitTableOfContents open={tocOpen} title={lesson.title} items={lesson.id === "python-01" ? pythonConcepts.map((c,i)=>({label:c.title,paragraphIndex:i})) : getUnitContents(lesson)} active={lesson.id === "python-01" ? pythonConcepts.findIndex(c=>c.id===conceptTarget) : paragraph} onClose={()=>{setTocOpen(false);document.getElementById("unit-toc-toggle")?.focus();}} onSelect={index=>{
+                      <UnitTableOfContents open={tocOpen} title={lesson.title} items={lesson.id === "python-01" ? pythonConcepts.map((c,i)=>({label:reviewedPythonFirstLesson[c.id].title,paragraphIndex:i})) : getUnitContents(lesson)} active={lesson.id === "python-01" ? pythonConcepts.findIndex(c=>c.id===conceptTarget) : paragraph} onClose={()=>{setTocOpen(false);document.getElementById("unit-toc-toggle")?.focus();}} onSelect={index=>{
+                        if (!window.matchMedia("(min-width: 1100px)").matches) setTocOpen(false);
                         theoryFocusRequested.current = true; setView("quest"); setPhase("learn");
                         if(lesson.id === "python-01") {const concept=pythonConcepts[index];setConceptTarget(concept.id);setNoteSection({lessonId:lesson.id,key:"concept:"+concept.id});}
                         else {setParagraph(index);setNoteSection({lessonId:lesson.id,key:"text:"+index});if(lesson.id === "python-input")setInputJump({index,token:Date.now()});}
@@ -1406,13 +1371,6 @@ export default function CodeQuest({
                 onClick={() => setStudioMode("course")}
               >
                 Course project
-              </button>
-              <button
-                className={studioMode === "practice" ? "primary" : "secondary"}
-                aria-pressed={studioMode === "practice"}
-                onClick={() => setStudioMode("practice")}
-              >
-                AI practice
               </button>
               {(!isConcept || (unit && lesson && localProjectExamples(unit,lesson).length > 0)) && <button type="button" className="secondary editor-jump-button" aria-controls="course-project-editor" onClick={()=>{setStudioMode("course");setPhase("build");setEditorJump(value=>value+1);}}>Editor <Braces size={17}/></button>}
             </div>
@@ -1484,6 +1442,7 @@ export default function CodeQuest({
                           aria-pressed={phase === p.id}
                           onClick={() => {
                             setPhase(p.id);
+                            if (!window.matchMedia("(min-width: 1100px)").matches) setTocOpen(false);
                             setFeedback("");
                           }}
                         >
@@ -1589,7 +1548,8 @@ export default function CodeQuest({
                                     )
                                   ]
                                 }
-                                runtime={lesson.runtime}
+                                runtime={readingLanguage}
+                            reviewedLesson={lesson.id.startsWith("python-") || lesson.id.startsWith("javascript-") || lesson.id.startsWith("html-") || lesson.id.startsWith("css-") || lesson.id.startsWith("typescript-") || lesson.id.startsWith("react-") || lesson.id.startsWith("sql-") || lesson.id.startsWith("swift-") || lesson.id.startsWith("backend-") || lesson.id.startsWith("developer-toolkit-") || lesson.id.startsWith("ai-") || lesson.id.startsWith("csharp-") || lesson.id.startsWith("cpp-") || lesson.id.startsWith("java-") || lesson.id.startsWith("c-") || lesson.id.startsWith("kotlin-") || lesson.id.startsWith("rust-") || lesson.id.startsWith("php-") || lesson.id.startsWith("ruby-") || lesson.id.startsWith("r-") || lesson.id.startsWith("go-")}
                                 startAtEnd={
                                   flowBackTarget === lesson.id + ":" + paragraph
                                 }
@@ -1657,7 +1617,7 @@ export default function CodeQuest({
                         <LessonContent
                           glossary
                           text={lesson.quiz.question}
-                          runtime={lesson.runtime}
+                          runtime={readingLanguage}
                           as="h3"
                         />
                         <p>
@@ -1670,7 +1630,7 @@ export default function CodeQuest({
                         />
                         {feedback && (
                           <div className="notice" role="status">
-                            {feedback}
+                            <InlineCode text={feedback} />
                           </div>
                         )}
                         {!!progress?.quizPassed && !isConcept && (
@@ -1706,11 +1666,11 @@ export default function CodeQuest({
                           <p>{selectedProject.description ?? (selectedProject.core ? "Create a short introduction from a name and an age." : "Change an age and let your program calculate next year’s age.")}</p>
                           <p><strong>What you will make:</strong> {selectedProject.outcome ?? (selectedProject.core ? "A printed pet introduction using named values." : "A numeric result that updates when the starting age changes.")}</p>
                           <section className="project-skills"><h4>Skills this project uses</h4><p>{(selectedProject.skills ?? ["Strings", "Number values", "Names", "Assignment", "print", ...(selectedProject.quantitative ? ["Adding one"] : [])]).join(" · ")}</p>
-                            <div className="project-study-links">{pythonConcepts.map(concept => <button className="secondary project-study-button" key={concept.id} onClick={() => { setReturnToProject(selectedProject.id); setView("quest"); setPhase("learn"); setConceptTarget(concept.id); }}>{studyLabel(concept.title)}</button>)}</div>
+                            <div className="project-study-links">{pythonConcepts.map(concept => <button className="secondary project-study-button" key={concept.id} onClick={() => { setReturnToProject(selectedProject.id); setView("quest"); setPhase("learn"); setConceptTarget(concept.id); }}>{studyLabel(reviewedPythonFirstLesson[concept.id].title)}</button>)}</div>
                             <p className="muted">Finish requires saved reading marks for these skills and a passed Try it exercise. You can edit and run before finishing.</p>
                           </section>
                         </div>
-                        <div id="course-project-editor" tabIndex={-1}><CourseProjectStudio key={state.draftScope + selectedProject.id} project={selectedProject} lesson={lesson} finishBlockedReason={!reading.loaded ? "Reading progress is loading. You can edit and run while it loads." : reading.error ? "Reading progress could not be checked. You can keep editing; retry before finishing." : projectReadingMissing.length ? "Finish requires the reading marks listed in Skills this project uses. You can edit and run now." : undefined} scope={state.draftScope} initialCode={selectedProject.core ? progress?.code : undefined} onCompleteCore={async (source, checks) => {
+                        <div id="course-project-editor" tabIndex={-1}><CourseProjectStudio key={JSON.stringify([state.draftScope, selectedProject.id, selectedProject.version])} project={selectedProject} lesson={lesson} finishBlockedReason={!reading.loaded ? "Reading progress is loading. You can edit and run while it loads." : reading.error ? "Reading progress could not be checked. You can keep editing; retry before finishing." : projectReadingMissing.length ? "Finish requires the reading marks listed in Skills this project uses. You can edit and run now." : undefined} scope={state.draftScope} initialCode={selectedProject.core ? progress?.code : undefined} onCompleteCore={async (source, checks) => {
                           if (!reading.loaded || reading.error || projectReadingMissing.length) throw new Error("Save the six reading marks before finishing. Your draft is kept.");
                           if (!progress?.quizPassed) throw new Error("Finish the Try it exercise before finishing the course project. Your draft is saved here.");
                           if (completionLock.current) throw new Error("Project completion is already being saved.");
@@ -1732,8 +1692,8 @@ export default function CodeQuest({
                             <h3>{unit.project.title}</h3>
                             <span className="small-tag">MADE BY YOU</span>
                           </div>
-                          <GlossaryScope key={lesson.id} text={[unit.project.task, ...lesson.steps].join(" ")} runtime={lesson.runtime} wordsLabel="Words in these instructions">
-                          <p><GlossaryText text={unit.project.task} /></p>
+                          <GlossaryScope key={lesson.id} text={[unit.project.task, ...lesson.steps].join(" ")} runtime={readingLanguage} wordsLabel="Words in these instructions">
+                          <p><InlineCode text={unit.project.task} /></p>
                           {hasTypeContracts(lesson) && <p className="type-contract-notice">These checks test your types as well as your results. Keep type checking enabled. Do not use comments that tell TypeScript to skip errors for this exercise.</p>}
                           <ol className="steps">
                             {lesson.steps.map((s, i) => (
@@ -2145,8 +2105,7 @@ export default function CodeQuest({
                               : !deviceStatus.online
                                 ? "Lesson help works offline"
                                 : state.keyConnected
-                                  ? providers[state.aiProvider ?? "deepseek"]
-                                      .modelName
+                                  ? selectedModel(state.aiProvider ?? "deepseek", state.profile.aiModels?.[state.aiProvider ?? "deepseek"]).name
                                   : "Hints here. AI when you connect."}
                           </small>
                         </div>
@@ -2213,7 +2172,7 @@ export default function CodeQuest({
                           <LessonContent
                           glossary
                             text={lesson.hints[hint]}
-                            runtime={lesson.runtime}
+                            runtime={readingLanguage}
                           />
                         </div>
                       )}
@@ -2223,7 +2182,7 @@ export default function CodeQuest({
                           <LessonContent
                           glossary
                             text={helperText}
-                            runtime={lesson.runtime}
+                            runtime={readingLanguage}
                           />
                         </div>
                       )}
@@ -2257,7 +2216,7 @@ export default function CodeQuest({
                                 <LessonContent
                           glossary
                                   text={c.answer}
-                                  runtime={lesson.runtime}
+                                  runtime={readingLanguage}
                                   className="chat-answer"
                                 />
                               </div>
@@ -2340,6 +2299,7 @@ export default function CodeQuest({
                 </p>
               </div>
               {courseBookmarks[state.profile.track] && <div className="panel notice"><span>Continue {lessons.find(l => l.id === courseBookmarks[state.profile.track].activeId)?.title} · idea {courseBookmarks[state.profile.track].paragraph + 1}</span><button className="primary" onClick={() => void resumeCourse(courseBookmarks[state.profile.track]).catch(e => setError(e.message))}>Resume course</button></div>}
+              <div className="compact-course-picker"><label htmlFor="phone-course">Course</label><select id="phone-course" value={state.profile.track} onChange={event => void changeCourse(event.target.value).catch(e => setError(e.message))}>{Object.entries(names).sort((a,b)=>compareCourseNames(a[1],b[1])).map(([id,name])=><option key={id} value={id}>{name}</option>)}</select><CourseDescription track={state.profile.track} /></div>
               <CourseChooser open={coursesOpen} onToggle={()=>setCoursesOpen(v=>!v)} onTools={()=>setView("tools")} track={state.profile.track} name={names[state.profile.track]}>
 
               <div className="track-grid">
@@ -2383,7 +2343,7 @@ export default function CodeQuest({
                   role="group"
                   aria-label="Course level"
                 >
-                  {["beginner", "intermediate", "advanced"].map((l) => (
+                  {["beginner", "intermediate", "advanced"].filter(level => units.some(u => u.track === state.profile.track && u.level === level)).map((l) => (
                     <button
                       key={l}
                       className={state.profile.level === l ? "selected" : ""}
@@ -2397,6 +2357,7 @@ export default function CodeQuest({
                   ))}
                 </div>
                 <input
+                  id="course-topic-search"
                   aria-label="Search topics"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
@@ -2416,7 +2377,7 @@ export default function CodeQuest({
                   found, in learning order.
                 </p>
                 {search && (
-                  <button className="text-button" onClick={() => setSearch("")}>
+                  <button className="text-button" onClick={() => { setSearch(""); document.getElementById("course-topic-search")?.focus(); }}>
                     Clear search <X size={14} />
                   </button>
                 )}
@@ -2479,7 +2440,7 @@ export default function CodeQuest({
                       {state.profile.level}. Try another word, choose a
                       different course above, or clear your search.
                     </p>
-                    <button className="secondary" onClick={() => setSearch("")}>
+                    <button className="secondary" onClick={() => { setSearch(""); document.getElementById("course-topic-search")?.focus(); }}>
                       Show topics in this course
                     </button>
                   </div>
@@ -2802,20 +2763,6 @@ export default function CodeQuest({
                 </button>
               </div>
             )}
-          {ready && (
-            <PracticeStudio
-              key={state.draftScope}
-              state={state}
-              online={deviceStatus.online}
-              visible={view === "studio" && studioMode === "practice"}
-              units={units}
-              lessons={lessons}
-              activeId={activeId}
-              runnerUrl={state.profile.runnerUrl}
-              runnerToken={runnerToken}
-              onOpenAISettings={() => setView("settings")}
-            />
-          )}
           <APIKeyFileSettings
             localMode={localMode}
             ref={apiKeyFileSettings}

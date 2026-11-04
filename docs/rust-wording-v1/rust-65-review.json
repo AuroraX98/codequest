@@ -1,0 +1,91 @@
+{
+  "lesson": "rust-65",
+  "position": 65,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "If ready is constructed with 11, what does the one poll produce?",
+      "after": "Polling means asking a future whether it has an answer yet."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "Future::poll takes a pinned mutable receiver and a task Context, returning Poll::Ready(value) or Poll::Pending. Box::pin constructs a pinned heap value; as_mut reborrows it as Pin<&mut _>. Pin supports address-stability contracts for types that require them, not a blanket ban on moving every Rust value.",
+        "future::ready returns a future guaranteed to produce Ready on its poll. Waker::noop ignores wake requests, so it cannot drive general futures that become ready later. Context::from_waker supplies that waker for this single bounded poll. Never turn this into a spin loop or poll the completed future again; this is not a general executor.",
+        "Complete local Rust example; the app itself does not execute it:\n```rust\nuse std::future::{ready, Future};\nuse std::task::{Context, Poll, Waker};\n\nfn main() {\n    let mut future = Box::pin(ready(7));\n    let mut context = Context::from_waker(Waker::noop());\n    match future.as_mut().poll(&mut context) {\n        Poll::Ready(value) => println!(\"{value}\"),\n        Poll::Pending => panic!(\"ready future unexpectedly pending\"),\n    }\n}\n```",
+        "Expected output or behavior: 7. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Explain why replacing ready with a timer future would require real wakeup scheduling rather than this no-op waker. You may trace it without a Rust compiler; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "Polling means asking a future whether it has an answer yet.",
+        "Pinning keeps the future in place while it is polled. This future was created with a ready answer, so one poll is enough.",
+        "Follow the labeled parts of this example.\n```rust\nuse std::future::{ready, Future};\nuse std::task::{Context, Poll, Waker};\n\nfn main() {\n    let mut future = Box::pin(ready(7));\n    let mut context = Context::from_waker(Waker::noop());\n    match future.as_mut().poll(&mut context) {\n        Poll::Ready(value) => println!(\"{value}\"),\n        Poll::Pending => panic!(\"ready future unexpectedly pending\"),\n    }\n}\n```",
+        "The output is `7`. The Ready branch holds the number 7 and prints it.",
+        "Change the number passed to ready and follow the Ready branch."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read one idea.",
+        "Follow the labeled example.",
+        "Try the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Change the number passed to ready and follow the Ready branch."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If ready is constructed with 11, what does the one poll produce?",
+        "choices": [
+          "Ready(11), which is printed as 11.",
+          "Pending until a network event arrives.",
+          "A newly spawned thread that executes the future later."
+        ],
+        "answer": 0,
+        "explanation": "The ready constructor already owns its final output, so one poll returns the changed value immediately."
+      },
+      "after": {
+        "question": "If ready is constructed with 11, what does the one poll produce?",
+        "choices": [
+          "Ready(11), which is printed as 11.",
+          "Pending until a network event arrives.",
+          "A newly spawned thread that executes the future later."
+        ],
+        "answer": 0,
+        "explanation": "A future made ready with eleven immediately returns that number when polled."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Rust Core v1 uses stable Rust1.99.1 with edition2024 and the standard library. The app supplies concept reading and an understanding check, not a Rust browser runner. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "CodeQuest shows the Rust example. Running it on your own computer is optional."
+    }
+  ],
+  "headings": [
+    "Ask if a future is ready",
+    "Keep it in place",
+    "Read the example",
+    "What happens",
+    "Try one change"
+  ],
+  "project": {
+    "title": "Pin Poll and a ready future",
+    "task": "Change the number passed to ready and follow the Ready branch.",
+    "done_when": "Read each idea and pass the understanding check. Running the example on your computer is optional."
+  }
+}

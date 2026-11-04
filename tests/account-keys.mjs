@@ -45,7 +45,7 @@ const load = async (file) => {
   }
   if (file === "lib/ai-keys.ts")
     imports["./ai-providers"] = await load("lib/ai-providers.ts");
-  const module = { exports: {} };
+  const loadedModule = { exports: {} };
   const js = ts.transpileModule(await readFile(file, "utf8"), {
     compilerOptions: {
       target: ts.ScriptTarget.ES2022,
@@ -55,8 +55,8 @@ const load = async (file) => {
   vm.runInNewContext(
     js,
     {
-      module,
-      exports: module.exports,
+      module: loadedModule,
+      exports: loadedModule.exports,
       require: (id) => {
         assert.ok(id in imports, "Unexpected dependency " + id);
         return imports[id];
@@ -73,8 +73,8 @@ const load = async (file) => {
     },
     { filename: file },
   );
-  modules.set(file, module.exports);
-  return module.exports;
+  modules.set(file, loadedModule.exports);
+  return loadedModule.exports;
 };
 const server = await load("lib/server.ts");
 rows.set("learner-b", {

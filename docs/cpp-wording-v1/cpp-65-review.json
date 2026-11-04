@@ -1,0 +1,94 @@
+{
+  "lesson": "cpp-65",
+  "position": 65,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Change the worker assignment to result = 12, keeping the scopes. May the final output still be the initial 0 because scheduling is slow?",
+      "after": "Wait for a worker thread before reading the value it changes."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A std::jthread starts work whose scheduling is independent of the following statements. Do not assume the worker has already completed just because its constructor returned.",
+        "When a joinable jthread is destroyed, it requests stop and joins. Joining waits for that thread to finish. A stop request is cooperative, not forced interruption; this small lambda simply returns normally.",
+        "The zero-argument lambda [&result] { ... } captures result by reference; the empty parameter list () is optional here. result is outside the worker’s scope, so it remains alive until after the worker is joined. The main thread reads it only after joining; it does not race with the worker’s write.",
+        "Complete local C++ example; the app itself does not execute it:\n```cpp\n#include <iostream>\n#include <thread>\nint main() {\n    int result = 0;\n    {\n        std::jthread worker([&result] { result = 7; });\n    }\n    std::cout << result << \"\\n\";\n}\n```",
+        "Expected output or behavior: 7. Local compiler test evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Replace the assignment with a small bounded computation, keeping all borrowed objects alive until join. You may trace this without a compiler; finishing the reading is not proof of a local run."
+      ],
+      "after": [
+        "A thread is a path of work that can run alongside another. std::jthread starts the supplied function on a worker thread. Creating the worker does not mean its work has finished.",
+        "Joining means waiting for a thread to finish. When this jthread leaves its scope, its destructor requests a stop and joins the worker before execution continues beyond that block.",
+        "[&result] lets the worker use the original result by reference. result belongs to the outer scope, so it stays alive until after the worker finishes. This lambda takes no call arguments; its empty parameter parentheses may be omitted here.",
+        "Follow the worker's write and the block ending before the final read.\n\n```cpp\n#include <iostream>\n#include <thread>\nint main() {\n    int result = 0;\n    {\n        std::jthread worker([&result] { result = 7; });\n    }\n    std::cout << result << \"\\n\";\n}\n```",
+        "The program prints 7. Leaving the inner block joins the worker, so its write is complete before the main thread reads result.",
+        "A stop request does not forcibly interrupt a thread. The worker must cooperate if it uses that request. This short worker simply finishes its assignment and returns normally."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain why, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Locate the join before deciding when the result can be read."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Change the worker assignment to result = 12, keeping the scopes. May the final output still be the initial 0 because scheduling is slow?",
+        "choices": [
+          "No. Destruction joins before the final read, so it prints 12.",
+          "Yes. Reference capture gives the worker a private result.",
+          "Yes. jthread destruction always detaches."
+        ],
+        "answer": 0,
+        "explanation": "The join finishes the worker before the read. The reference points to the same still-live result, so the assigned 12 is observed."
+      },
+      "after": {
+        "question": "Change the worker's assignment to result = 12 and keep the scopes. Could the final output still be zero because the worker was slow?",
+        "choices": [
+          "No. The worker is joined before the read, so the program prints 12.",
+          "Yes. Reference capture gives the worker a private copy.",
+          "Yes. jthread destruction always leaves the worker running."
+        ],
+        "answer": 0,
+        "explanation": "The join waits for the worker to finish. The main thread then reads the same still-live variable the worker changed."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "C++ Core v1, standard C++23 features checked against the available GCC14.2 implementation. This app provides concept reading and an understanding check, not a C++ browser runner. Local example tests are separate evidence and do not certify learner mastery.",
+      "after": "The browser shows C++ code and checks your understanding; it does not run C++. Optional local examples use C++23."
+    }
+  ],
+  "headings": [
+    "Start another path of work",
+    "Join before continuing",
+    "Keep borrowed data alive",
+    "One example",
+    "What appears",
+    "A stop request is cooperative"
+  ],
+  "project": {
+    "title": "Give a thread a joining lifetime",
+    "task": "Trace the worker's lifetime and the read that happens after joining.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local C++ example is optional."
+  }
+}

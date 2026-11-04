@@ -1,0 +1,108 @@
+{
+  "lesson": "javascript-14",
+  "position": 47,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Create `loadCard(fetchData)` as an async function.",
+      "after": "Keep track of loading, success, and failure while waiting for data."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "Some work finishes later, such as obtaining data. A Promise represents an eventual result. It can be pending while unfinished, fulfilled with a value, or rejected with a reason. A rejection means that operation failed. A Promise is not the data itself, so code must wait for the result before using it as loaded data.",
+        "An `async` function always returns a Promise. Inside it, `await` pauses that function until a Promise settles. It lets other work proceed while waiting; it does not freeze the whole browser. If the Promise fulfills, await produces its value. If it rejects, await throws the rejection so a surrounding catch block can handle it.",
+        "Here is a complete success example without a network request.\n```javascript\nlet state = { status: \"idle\" };\nasync function load(getData) {\n  state = { status: \"loading\" };\n  try {\n    const data = await getData();\n    state = { status: \"success\", data };\n  } catch (error) {\n    state = { status: \"error\", message: error.message };\n  }\n}\nasync function demo() {\n  await load(() => Promise.resolve({ title: \"Moon Notes\" }));\n  console.log(state.status, state.data.title);\n}\nawait demo();\n```\nIt eventually prints `success Moon Notes`. The arrow function returns a fulfilled practice Promise. Await inside demo ensures the result is ready before its final display.\n\nThe app runs this example inside an async function, so await can be used here at the outer level. Awaiting demo() lets its output finish before the runner returns the result.",
+        "The try block contains work that can fail. A catch block receives the thrown error when that happens; error.message is its explanatory text. `new Error(\"Offline\")` creates an error object. The function parameter getData is a callback: the loader calls it to start the supplied work. `Promise.resolve(value)` creates a fulfilled Promise; `Promise.reject(error)` creates a rejected one.",
+        "This second standalone example follows the failure path.\n```javascript\nlet state = { status: \"idle\" };\nasync function load(getData) {\n  state = { status: \"loading\" };\n  try {\n    const data = await getData();\n    state = { status: \"success\", data };\n  } catch (error) {\n    state = { status: \"error\", message: error.message };\n  }\n}\nasync function demo() {\n  await load(() => Promise.reject(new Error(\"Try again later\")));\n  console.log(state.status, state.message);\n}\nawait demo();\n```\nIt prints `error Try again later`. The success assignment was skipped when await threw. The catch stored a useful error state rather than pretending data loaded.\n\nThe app runs this example inside an async function, so await can be used here at the outer level. Awaiting demo() lets its output finish before the runner returns the result.",
+        "Represent each stage explicitly: idle before loading, loading while waiting, success with data, and error with a message. This gives a page enough information to show the right card. Object shorthand `{ status: \"success\", data }` means the data property holds the variable data. This exercise stores these states in an object; displaying a real card would read that object and update page elements.",
+        "In your project, showSuccess and showError create the final states, and loadCard sets loading before calling and awaiting fetchData. Store the returned Promise as successfulLoad. `instanceof Promise` checks whether an object is a Promise; it does not prove success or verify the final displayed data. The checks exercise the state helpers too. Use an awaited demo to inspect a completed load; reading state immediately after starting a load can still see loading."
+      ],
+      "after": [
+        "A Promise represents work that may finish later. It is pending while waiting, fulfilled when it succeeds, or rejected when it fails.\n\nThe Promise is not the loaded data. We must wait for its result before using that data.",
+        "An `async` function returns a Promise. Inside it, `await` waits for another Promise to finish.\n\nOnly that function pauses; the rest of the page can keep working. If the Promise succeeds, `await` gives its value. If it fails, `await` throws the error.",
+        "This example loads practice data without using the internet.\n```javascript\nlet state = { status: \"idle\" };\nasync function load(getData) {\n  state = { status: \"loading\" };\n  try {\n    const data = await getData();\n    state = { status: \"success\", data };\n  } catch (error) {\n    state = { status: \"error\", message: error.message };\n  }\n}\nasync function demo() {\n  await load(() => Promise.resolve({ title: \"Moon Notes\" }));\n  console.log(state.status, state.data.title);\n}\nawait demo();\n```\nOutput:\n```text\nsuccess Moon Notes\n```\n`load` sets the state to loading, waits for the data, then saves success. `demo` waits before reading the final state. The app's example runner allows this outer `await`.",
+        "Put work that might fail inside `try`. If it throws an error, the matching `catch` handles it.\n\n`error.message` reads an Error object's message. `Promise.resolve(value)` supplies a successful practice result. `Promise.reject(new Error(...))` supplies a failed one.",
+        "This version follows the failure path.\n```javascript\nlet state = { status: \"idle\" };\nasync function load(getData) {\n  state = { status: \"loading\" };\n  try {\n    const data = await getData();\n    state = { status: \"success\", data };\n  } catch (error) {\n    state = { status: \"error\", message: error.message };\n  }\n}\nasync function demo() {\n  await load(() => Promise.reject(new Error(\"Try again later\")));\n  console.log(state.status, state.message);\n}\nawait demo();\n```\nOutput:\n```text\nerror Try again later\n```\nThe rejected Promise sends control to `catch`. The success line is skipped, and the error message is saved.",
+        "Give each stage its own state: `idle` before starting, `loading` while waiting, `success` with data, and `error` with a message.\n\nA page can read this state to decide what to show. `{ status: \"success\", data }` saves the variable `data` in a property also named `data`.",
+        "Complete `loadCard(fetchData)`. Set `cardState` to loading before awaiting `fetchData()`.\n\nAdd `showSuccess(data)` to save `{ status: \"success\", data }`. Add `showError(error)` to save the error status and `error.message`. Call the right helper from the loader.\n\nKeep `successfulLoad` as the Promise returned by the starter call. Wait for loading to finish before checking the final data or error."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Create `loadCard(fetchData)` as an async function.",
+        "Set cardState.status to \"loading\" before using await to wait for fetchData().",
+        "On success, save returned data; on failure, save a readable error.",
+        "Run the checks for a successful load and a failed load. Check the saved data and the error message."
+      ],
+      "after": [
+        "Add showSuccess(data) and showError(error) to update cardState.",
+        "Set loading at the start of loadCard.",
+        "Await fetchData() inside try, then call showSuccess.",
+        "In catch, call showError. Check both final outcomes after waiting."
+      ]
+    },
+    {
+      "field": "checks",
+      "before": [
+        {
+          "label": "The loader is asynchronous",
+          "expression": "successfulLoad instanceof Promise"
+        },
+        {
+          "label": "The loader begins as a Promise-based operation",
+          "expression": "successfulLoad instanceof Promise"
+        },
+        {
+          "label": "Success state shows supplied data",
+          "expression": "(()=>{showSuccess({title:\"Star Map\"});return cardState.status===\"success\"&&cardState.data.title===\"Star Map\"})()"
+        },
+        {
+          "label": "Error state gives a message",
+          "expression": "(()=>{showError(new Error(\"Offline\"));return cardState.status===\"error\"&&cardState.message===\"Offline\"})()"
+        }
+      ],
+      "after": [
+        {
+          "label": "The loader is asynchronous",
+          "expression": "successfulLoad instanceof Promise"
+        },
+        {
+          "label": "Loading starts before success is saved",
+          "expression": "(async()=>{await successfulLoad;const pending=loadCard(()=>Promise.resolve({title:\"Changed title\"}));const loading=cardState.status===\"loading\";await pending;return loading && cardState.status===\"success\" && cardState.data.title===\"Changed title\";})()"
+        },
+        {
+          "label": "Success state shows supplied data",
+          "expression": "(()=>{showSuccess({title:\"Star Map\"});return cardState.status===\"success\"&&cardState.data.title===\"Star Map\"})()"
+        },
+        {
+          "label": "Error state gives a message",
+          "expression": "(()=>{showError(new Error(\"Offline\"));return cardState.status===\"error\"&&cardState.message===\"Offline\"})()"
+        },
+        {
+          "label": "The loader handles rejection and can load again",
+          "expression": "(async()=>{await successfulLoad;await loadCard(()=>Promise.reject(new Error(\"Try later\")));const failed=cardState.status===\"error\" && cardState.message===\"Try later\";await loadCard(()=>Promise.resolve({title:\"Recovered\"}));return failed && cardState.status===\"success\" && cardState.data.title===\"Recovered\";})()"
+        }
+      ]
+    }
+  ],
+  "headings": [
+    "Understand a Promise",
+    "Wait inside an async function",
+    "Follow a successful load",
+    "Handle work that fails",
+    "Follow a failed load",
+    "Give each stage a clear state",
+    "Build loadCard"
+  ],
+  "project": {
+    "title": "A data-loading card",
+    "task": "Complete loadCard(fetchData), plus showSuccess(data) and showError(error). Set loading before waiting, then save the returned data or the error message.",
+    "done_when": "Loading is set immediately. After waiting, successful data is saved under success and a failed request saves an error message."
+  },
+  "notes": [
+    "Checks now verify required behavior: actual async state transitions and recovery."
+  ]
+}

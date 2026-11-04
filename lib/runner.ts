@@ -1,5 +1,16 @@
 import type { Lesson, RunResult } from "./types";
 import { runnerAssets, staticResponse } from "./offline-pack";
+/** Native method=dialog needs form permission, while all network submissions stay blocked. */
+export function projectSandbox(lesson: Pick<Lesson, "id" | "runtime">, markup: string): string {
+  if (lesson.id !== "html-15" || lesson.runtime !== "html") return "allow-scripts";
+  const document = new DOMParser().parseFromString(markup, "text/html");
+  const protectedFrame = Array.from(document.querySelectorAll('head meta[http-equiv]')).some(meta =>
+    meta.getAttribute("http-equiv")?.toLowerCase() === "content-security-policy" &&
+    /(?:^|;)\s*form-action\s+'none'\s*(?:;|$)/.test(meta.getAttribute("content") ?? ""),
+  );
+  if (!protectedFrame) throw new Error("The dialog preview needs updated offline files. Connect and update the offline pack, then run again.");
+  return "allow-scripts allow-forms";
+}
 export async function runProject(
   frame: HTMLIFrameElement,
   lesson: Lesson,
@@ -29,6 +40,7 @@ export async function runProject(
     if (abortLoad) signal?.removeEventListener("abort", abortLoad);
   }
   if (signal?.aborted) return stop();
+  const sandbox = projectSandbox(lesson, markup);
   return new Promise((resolve) => {
     const id = crypto.randomUUID();
     let sent = false,
@@ -83,6 +95,7 @@ export async function runProject(
           : 10000,
     );
     frame.onload = send;
+    frame.setAttribute("sandbox", sandbox);
     frame.removeAttribute("src");
     frame.srcdoc = markup;
   });

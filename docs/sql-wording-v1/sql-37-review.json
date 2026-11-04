@@ -1,0 +1,90 @@
+{
+  "lesson": "sql-37",
+  "position": 17,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Create slots with required person/day columns and a composite primary key. Store Mira/Mon, Mira/Tue and Oren/Mon once each.",
+      "after": "Use two columns together to identify a row."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A composite key identifies a row by a combination. PRIMARY KEY(person,day) lets Mira appear on different days and lets different people share Monday. Only the whole pair must be unique. Explicit NOT NULL on both columns also rules out incomplete identities.",
+        "UNIQUE(person,day) likewise forbids repeating a complete non-NULL pair, but SQLite treats NULLs as distinct for uniqueness. Ordinary rowid tables have a legacy exception: a non-INTEGER PRIMARY KEY may also allow NULL unless NOT NULL is declared. STRICT tables and WITHOUT ROWID tables make primary-key columns required. In a rowid table, INTEGER PRIMARY KEY is special: supplying NULL allocates an integer key instead of storing NULL. That autoallocation does not apply to WITHOUT ROWID. These are distinctions, not a recommendation to use nullable identities. The project checks successful rows; the local error example below separately demonstrates the rejected write.",
+        "\n```sql\nCREATE TABLE slots(person TEXT NOT NULL, day TEXT NOT NULL, PRIMARY KEY(person,day));\nINSERT INTO slots VALUES('Mira','Mon'),('Mira','Tue'),('Oren','Mon');\nSELECT person,day\nFROM slots\nORDER BY person,day;\n```\nAll three pairs are distinct, so all three rows are accepted.",
+        "\n```sql\nCREATE TABLE nullable_pair(person TEXT, day TEXT, UNIQUE(person,day));\nINSERT INTO nullable_pair VALUES('Mira',NULL),('Mira',NULL);\nSELECT person,day\nFROM nullable_pair\nORDER BY rowid;\n```\nBoth rows are accepted. UNIQUE does not treat the two missing day values as the same known value. rowid is SQLite’s internal integer row identifier for this ordinary table; it supplies a deterministic display order here.",
+        "Optional practice: attempt to add Mira/Mon a second time to the first table. Identify both column names in the reported uniqueness failure.",
+        "Local rejection demonstration, not the normal project solution: run each following block in its own fresh SQLite database. The final INSERT intentionally fails. The app’s current SELECT checks do not catch expected errors; this is a separately verified boundary, not a successful Run checks script.\n```sql\nCREATE TABLE slots(person TEXT NOT NULL, day TEXT NOT NULL, PRIMARY KEY(person,day));\nINSERT INTO slots VALUES('Mira','Mon');\nINSERT INTO slots VALUES('Mira','Mon');\n```\nExpected diagnostic: UNIQUE constraint failed: slots.person, slots.day. The failing statement adds no row; previously accepted rows remain."
+      ],
+      "after": [
+        "A composite key is a key made from several columns. `PRIMARY KEY(person, day)` makes each person-and-day pair unique. The same person can have another day, and another person can use the same day.",
+        "Put NOT NULL on both columns so neither part is missing. Do not assume every ordinary SQLite primary-key declaration rejects missing values.",
+        "Run this example in a fresh database:\n```sql\nCREATE TABLE demo_slots (\n  person TEXT NOT NULL,\n  day TEXT NOT NULL,\n  PRIMARY KEY(person, day)\n);\nINSERT INTO demo_slots VALUES\n  ('Lena', 'Mon'), ('Lena', 'Tue'), ('Noor', 'Mon');\nSELECT person, day\nFROM demo_slots\nORDER BY person, day;\n```\nAll three pairs are different, so all three rows are accepted.",
+        "A UNIQUE rule can also forbid repeated complete pairs. But SQLite treats NULLs as different for uniqueness, so missing parts can allow rows that look repeated. Requiring both values avoids that problem here.",
+        "Adding Lena/Mon again would repeat the whole key and fail. Reusing only Lena or only Mon is allowed. Keep deliberate failures out of the normal project submission.",
+        "Create `slots` with required text columns `person` and `day`, using them together as the primary key. Store Mira/Mon, Mira/Tue, and Oren/Mon once each."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the small example and explain its inputs and effects.",
+        "Complete the starter for this lesson.",
+        "Run the behavior checks, then predict a changed case."
+      ],
+      "after": [
+        "Mark person and day NOT NULL.",
+        "Declare PRIMARY KEY(person, day).",
+        "Insert the three requested pairs once each."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Trace the supplied rows and resulting rows before changing the query."
+      ],
+      "after": [
+        "The pair must be unique, not each column alone.",
+        "A missing day is not a complete identity."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "After storing Mira/Mon and Mira/Tue, which new pair violates the required composite key?",
+        "choices": [
+          "Oren/Mon",
+          "Mira/Mon",
+          "Oren/Tue"
+        ],
+        "answer": 1,
+        "explanation": "The complete pair repeats. Reusing only a person or only a day is allowed."
+      },
+      "after": {
+        "question": "Mira/Mon and Mira/Tue are already stored. Which new pair repeats the key?",
+        "choices": [
+          "Oren/Mon",
+          "Mira/Mon",
+          "Oren/Tue"
+        ],
+        "answer": 1,
+        "explanation": "Mira/Mon repeats both parts of an existing key. Reusing only one part is allowed."
+      }
+    }
+  ],
+  "headings": [
+    "Identify a row with a pair",
+    "Require both parts",
+    "Store three different pairs",
+    "Distinguish missing values",
+    "Reject a repeated pair",
+    "Build the project slots"
+  ],
+  "project": {
+    "title": "Make a pair unique",
+    "task": "Create slots with required person and day columns and a primary key made from both. Store Mira/Mon, Mira/Tue, and Oren/Mon.",
+    "done_when": "The three pairs are stored once each, both columns are required, and the full pair is the primary key."
+  }
+}

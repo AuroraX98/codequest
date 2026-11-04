@@ -1,0 +1,86 @@
+{
+  "lesson": "typescript-46",
+  "position": 46,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Return a fresh reading object and derive Reading using ReturnType<typeof makeReading>.",
+      "after": "Use `ReturnType` to describe the value a function returns."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "ReturnType<F> extracts the result type of a function type F. In a type position, typeof makeReading gets the function’s type without calling it. Combine them to keep a Reading description tied to the actual declared function.",
+        "makeReading takes a title string and page count number and returns a new object. The shorthand {title, pages} uses those parameter values as properties; complete is true exactly when pages is zero. Reading therefore has title:string, pages:number and complete:boolean. The visible call returns an object for Maps with complete false. The type does not enforce nonnegative page counts or validate incoming JSON.",
+        "```typescript\nfunction makeReading(title: string, pages: number) {\n  return { title, pages, complete: pages === 0 };\n}\ntype Reading = ReturnType<typeof makeReading>;\nconst entry: Reading = makeReading(\"Maps\", 3);\nconsole.log(entry.title, entry.complete);\n```",
+        "Optional local practice: Change the title at a call site and inspect which types remain unchanged.",
+        "Changed case — trace this independently before checking the result.\n```typescript\nfunction makeReading(title: string, pages: number) {\n  return { title, pages, complete: pages === 0 };\n}\ntype Reading = ReturnType<typeof makeReading>;\nconst wrong: Reading = {title:\"A\",pages:\"2\",complete:false};\n```\nCompiler result: Reading.pages must be number, not string. Diagnostic 2322. This intentionally failing example is separate from the runnable solution."
+      ],
+      "after": [
+        "`ReturnType` gets the result type of a function. In `ReturnType<typeof makeReading>`, `typeof makeReading` supplies the function's type. Neither part calls the function.",
+        "`makeReading` returns a new object with a title, a page count, and a `complete` flag. A flag is a true-or-false value. Here, `complete` is true exactly when the page count is zero.",
+        "```typescript\nfunction makeReading(title: string, pages: number) {\n  return { title, pages, complete: pages === 0 };\n}\ntype Reading = ReturnType<typeof makeReading>;\nconst entry: Reading = makeReading(\"Maps\", 3);\nconsole.log(entry.title, entry.complete);\n```\nThis prints `Maps false`. The short names `title` and `pages` in the returned object copy the matching parameter values.",
+        "Complete `makeReading` and define `Reading` using its return type. Return a new object each time. Keep the title and page count supplied to the function.",
+        "If the function's returned fields change, `Reading` follows their types. Here, pages must be a number; text such as `\"2\"` does not fit. This number type alone does not rule out negative values or check data from a file."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the example and its input/output contract.",
+        "Complete the starter without turning off compiler diagnostics.",
+        "Run the compiler and behavior checks, then explain a changed case."
+      ],
+      "after": [
+        "Return the title, pages, and complete flag.",
+        "Define `Reading` with `ReturnType<typeof makeReading>`.",
+        "Run the checks with zero pages and a nonzero count."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Compare the public input/output types and trace the visible call before editing."
+      ],
+      "after": [
+        "Use `pages === 0` for the complete flag."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If makeReading’s pages parameter changes to string and its body is updated consistently, what happens to Reading.pages?",
+        "choices": [
+          "ReturnType executes the function to guess the type at runtime.",
+          "It permanently stays number.",
+          "It follows the changed return shape and becomes string."
+        ],
+        "answer": 2,
+        "explanation": "The extracted type follows the function’s static return type, not a separate manually maintained interface."
+      },
+      "after": {
+        "question": "If the function is changed so its returned pages field is text, what happens to `Reading.pages`?",
+        "choices": [
+          "ReturnType runs the function to find out.",
+          "It stays a number forever.",
+          "It follows the returned field and becomes text."
+        ],
+        "answer": 2,
+        "explanation": "`Reading` gets its type from the function's result type. It is not a separate handwritten copy."
+      }
+    }
+  ],
+  "headings": [
+    "Reuse a function's result type",
+    "Describe one reading entry",
+    "Read the returned object",
+    "Build your reading entry",
+    "Keep the type connected"
+  ],
+  "project": {
+    "title": "Reuse the return type of a function",
+    "task": "Make `makeReading` return a new object with title, pages, and complete. Set complete to true only when pages is zero. Define `Reading` with `ReturnType<typeof makeReading>`.",
+    "done_when": "Each call returns the right fields in a new object. Reading matches the function's result type."
+  }
+}

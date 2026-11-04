@@ -1,0 +1,91 @@
+{
+  "lesson": "rust-49",
+  "position": 49,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "If the second stored value changes from 4 to 9, what is the sum?",
+      "after": "A Box owns a value stored separately. The list can use a Box to point to the rest of itself."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A recursive enum cannot contain another full copy of itself directly with no indirection. Box<List> stores an owning pointer to a heap-allocated List, giving the enum a finite representation. Dropping the box releases its owned allocation and nested values.",
+        "The tiny list owns a tail through Box. Matching &self borrows each node; n and tail are borrowed values, and the sum method reads them without taking ownership. The example uses two nodes only: recursive processing and recursive destruction are not a promise of unlimited stack capacity.",
+        "Complete local Rust example; the app itself does not execute it:\n```rust\n\nenum List { Cons(i32, Box<List>), Nil }\nimpl List {\n    fn sum(&self) -> i32 {\n        match self { Self::Cons(n, tail) => n + tail.sum(), Self::Nil => 0 }\n    }\n}\nfn main() {\n    let list = List::Cons(3, Box::new(List::Cons(4, Box::new(List::Nil))));\n    println!(\"{}\", list.sum());\n}\n```",
+        "Expected output or behavior: 7. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Explain why replacing Box<List> with List directly would create an infinitely sized recursive type. You may trace it without a Rust compiler; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "A Box owns a value stored separately. The list can use a Box to point to the rest of itself.",
+        "Each Cons holds one number and the rest of the list. Nil marks the end and adds zero.",
+        "Follow the labeled parts of this example.\n```rust\n\nenum List { Cons(i32, Box<List>), Nil }\nimpl List {\n    fn sum(&self) -> i32 {\n        match self { Self::Cons(n, tail) => n + tail.sum(), Self::Nil => 0 }\n    }\n}\nfn main() {\n    let list = List::Cons(3, Box::new(List::Cons(4, Box::new(List::Nil))));\n    println!(\"{}\", list.sum());\n}\n```",
+        "The output is `7`. The sum adds 3, then 4, then zero at the end.",
+        "Replace the second number and follow the same links."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read one idea.",
+        "Follow the labeled example.",
+        "Try the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Replace the second number and follow the same links."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If the second stored value changes from 4 to 9, what is the sum?",
+        "choices": [
+          "7 because Box freezes the literal from the source file",
+          "12",
+          "9 because owning a tail discards the head."
+        ],
+        "answer": 1,
+        "explanation": "The borrowed traversal adds the head three to the changed tail nine."
+      },
+      "after": {
+        "question": "If the second stored value changes from 4 to 9, what is the sum?",
+        "choices": [
+          "7 because Box freezes the literal from the source file",
+          "12",
+          "9 because owning a tail discards the head."
+        ],
+        "answer": 1,
+        "explanation": "The sum becomes three plus nine, which is twelve."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Rust Core v1 uses stable Rust1.99.1 with edition2024 and the standard library. The app supplies concept reading and an understanding check, not a Rust browser runner. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "CodeQuest shows the Rust example. Running it on your own computer is optional."
+    }
+  ],
+  "headings": [
+    "Link one item to the next",
+    "Find the end",
+    "Read the example",
+    "What happens",
+    "Try one change"
+  ],
+  "project": {
+    "title": "Box and recursive ownership",
+    "task": "Replace the second number and follow the same links.",
+    "done_when": "Read each idea and pass the understanding check. Running the example on your computer is optional."
+  }
+}

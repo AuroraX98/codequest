@@ -1,0 +1,92 @@
+{
+  "lesson": "c-33",
+  "position": 33,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "If initialization consistently switches to FRACTION and .value.fraction = 2.5, what prints?",
+      "after": "A tagged union holds one kind of value at a time, with a separate label saying which kind is stored."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A union overlays its members in shared storage; it does not hold independent copies of every member. This lesson reads only the member most recently stored.",
+        "An enclosing enum tag tells our code whether the union contains an int or a double. The language does not maintain that relationship automatically. Update the tag together with its matching member; never pretend a mismatched read is a numeric conversion.",
+        "Complete local C example; the app itself does not execute it:\n```c\n#include <stdio.h>\n\nenum Kind { WHOLE, FRACTION };\nstruct Number { enum Kind kind; union { int whole; double fraction; } value; };\nint main(void) {\n struct Number n = {.kind = WHOLE, .value.whole = 7};\n if (n.kind == WHOLE) { printf(\"%d\\n\", n.value.whole); }\n else { printf(\"%.1f\\n\", n.value.fraction); }\n}\n```",
+        "Expected output or behavior: 7\n. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Add a second valid initialization; do not test a mismatched tag by reading the wrong member. You may trace it without a C compiler; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "A union lets different members share the same storage. It does not keep separate values for every member. Here the storage holds either a whole number or a fractional number, and the code reads the member last written.",
+        "A tag is a label describing the stored choice. kind is the tag here. C does not keep the tag and union member in step for you. Change both together. Reading the other member is not a way to convert the number.",
+        "Follow the example one line at a time.\n```c\n#include <stdio.h>\n\nenum Kind { WHOLE, FRACTION };\nstruct Number { enum Kind kind; union { int whole; double fraction; } value; };\nint main(void) {\n struct Number n = {.kind = WHOLE, .value.whole = 7};\n if (n.kind == WHOLE) { printf(\"%d\\n\", n.value.whole); }\n else { printf(\"%.1f\\n\", n.value.fraction); }\n}\n```",
+        "The starting tag is WHOLE and the stored whole value is 7. The if statement selects that member, so the program prints 7.",
+        "To store 2.5, use the FRACTION tag and the fraction member together. Then the other print path reads the matching double value."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "The tag chooses the path, and the matching member supplies its value."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If initialization consistently switches to FRACTION and .value.fraction = 2.5, what prints?",
+        "choices": [
+          "7",
+          "2.5",
+          "2"
+        ],
+        "answer": 1,
+        "explanation": "The changed tag selects the fraction branch, and the consistently initialized double prints with one digit after the decimal point."
+      },
+      "after": {
+        "question": "Set the tag to FRACTION and the fraction member to 2.5. What prints?",
+        "choices": [
+          "7",
+          "2.5",
+          "2"
+        ],
+        "answer": 1,
+        "explanation": "The FRACTION tag selects the fraction path. It prints the stored double with one decimal place: 2.5."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "C Core v1 uses a portable C17 baseline supported by the verified compiler. C23 exists but is not claimed fully supported here. The app supplies concept reading and an understanding check, not a C browser runner. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "The browser shows C code and checks your understanding; it does not run C. Optional local examples use C17."
+    }
+  ],
+  "headings": [
+    "Share storage between alternatives",
+    "Keep the tag and value together",
+    "One example",
+    "Read the active choice",
+    "Switch both parts together"
+  ],
+  "project": {
+    "title": "Tagged unions and active alternatives",
+    "task": "Explain why changing the stored member also requires changing its tag.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local C example is optional."
+  },
+  "navigationCorrection": "Added a short example introduction so its reviewed heading remains an explicit contents target."
+}

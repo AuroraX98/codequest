@@ -1,0 +1,82 @@
+{
+  "lesson": "python-67",
+  "sourceHash": "b3fa6910d7372bc3099cbb3e48f16c51ee9a72544621051f0d49425a94c30bfd",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Complete parse_minutes(arguments) with argparse: --minutes is integer 1..60, default 10 when omitted, and abbreviated names are disabled. Preserve SystemExit code 2 rejection. Browser input is a supplied string list, not a host process.",
+      "after": "Read a minutes option, use a default when it is missing, and reject invalid choices."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "Purpose: parse_minutes(arguments) accepts an explicit list of argument strings and returns a validated integer. In the browser this list models command-line tokens; no OS terminal or subprocess is started. Argument parsing is not evaluation of a shell command.",
+        "ArgumentParser(prog=\"study\", add_help=False, allow_abbrev=False) constructs a parser with a stable displayed name, no automatic help option for this tiny exercise, and no shortened aliases. add_argument(\"--minutes\",type=int,default=10,choices=range(1,61)) registers an integer option allowed 1..60, using 10 only if omitted. Its returned Action object is not needed here.",
+        "parser.parse_args(arguments) returns a Namespace whose minutes attribute holds the result. Invalid integer text, disallowed values or unknown options print a diagnostic and raise SystemExit code 2 by default; they do not silently return a valid default. Catching SystemExit does not remove the already printed diagnostic: the browser output shows usage/error text before any later printed results. The supplied __rejects_arguments helper catches that exit to test rejection without ending the exercise.",
+        "In a local study.py, import sys and call parse_minutes(sys.argv[1:]) inside if __name__ == \"__main__\":. The slice omits the script name. Run python study.py --minutes 4 in an actual terminal. Native command execution is separately verified; worked browser calls use supplied lists. Parsing does not authorize filesystem or network actions.",
+        "Worked call:\n```python\nimport argparse\n\ndef parse_minutes(arguments):\n    parser = argparse.ArgumentParser(prog=\"study\", add_help=False, allow_abbrev=False)\n    parser.add_argument(\"--minutes\", type=int, default=10, choices=range(1, 61))\n    options = parser.parse_args(arguments)\n    return options.minutes\n\nprint(parse_minutes([\"--minutes\", \"4\"]))\nprint(parse_minutes([]))\n```\nExpected stdout:\n4\n10",
+        "Optional local practice: Optionally run native study.py with omitted, valid and invalid options; inspect exit status as well as output."
+      ],
+      "after": [
+        "A command-line argument is text you give a program when starting it. A parser reads that text and checks its rules.\n\nHere, `parse_minutes(arguments)` gets a list of strings. The browser uses that list for practice; it does not open a terminal or run a shell command.",
+        "`ArgumentParser` makes the reader. `prog=\"study\"` sets the name shown in messages. `add_help=False` leaves out the help option in this small exercise. `allow_abbrev=False` requires the full option name.\n\n`add_argument` adds `--minutes`. Use `type=int` for a whole number, `default=10` when omitted, and `choices=range(1, 61)` for 1 through 60.",
+        "`parse_args(arguments)` reads the list and returns a `Namespace`: an object that holds the chosen options. Read the number with `options.minutes`.\n\nBad numbers, values outside the range, and unknown options print an error and raise `SystemExit` with code 2. They do not use the default. The supplied helper catches this error for the checks, but the printed message remains visible.",
+        "To try this in a real terminal, save the function in `study.py`. Import `sys`, then call `parse_minutes(sys.argv[1:])` inside the main guard. The slice skips the script's name.\n\nRun `python study.py --minutes 4` in the terminal. This reads options; any further action needs its own code.",
+        "Read the supplied options:\n```python\nimport argparse\n\ndef parse_minutes(arguments):\n    parser = argparse.ArgumentParser(prog=\"study\", add_help=False, allow_abbrev=False)\n    parser.add_argument(\"--minutes\", type=int, default=10, choices=range(1, 61))\n    options = parser.parse_args(arguments)\n    return options.minutes\n\nprint(parse_minutes([\"--minutes\", \"4\"]))\nprint(parse_minutes([]))\n```\nOutput:\n```text\n4\n10\n```",
+        "Optional practice on your computer: try no option, a valid number, and a number outside 1 to 60. Compare the output and exit code. Exit code 2 means an argument was rejected."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the requirement.",
+        "Make one change to the starter.",
+        "Run the checks.",
+        "Explain why a changed input produces its result."
+      ],
+      "after": [
+        "Create the parser with `allow_abbrev=False`.",
+        "Add `--minutes` as an integer from 1 through 60, with default 10.",
+        "Read the supplied list and return `options.minutes`.",
+        "Check a missing option, both limits, a bad number, and the shortened name `--min`."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If the first supplied list is [\"--minutes\", \"61\"], does the parser return its default 10?",
+        "choices": [
+          "It accepts 61 because integer conversion succeeded.",
+          "No; 61 is outside the choices and raises SystemExit with code 2.",
+          "Yes; every invalid supplied value is replaced by 10."
+        ],
+        "answer": 1,
+        "explanation": "61 converts to an integer but fails the separate allowed-value check. Defaults apply to omission, not to an explicitly invalid option."
+      },
+      "after": {
+        "question": "If the input is `[\"--minutes\", \"61\"]`, does the parser return its default of 10?",
+        "choices": [
+          "It accepts 61 because integer conversion succeeded.",
+          "No; 61 is outside the choices and raises SystemExit with code 2.",
+          "Yes; every invalid supplied value is replaced by 10."
+        ],
+        "answer": 1,
+        "explanation": "61 is a whole number, but it is outside the allowed range. The default is used only when the option is missing."
+      }
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Read each purpose, input and result/effect description.",
+        "Trace the changed case and test a boundary."
+      ],
+      "after": [
+        "Use `range(1, 61)` to include 60.",
+        "A default fills in a missing option; it does not repair an invalid one."
+      ]
+    }
+  ],
+  "reviewNotes": [
+    "Reviewed directly by the host, one lesson at a time. Plain wording, specific guidance, preserved exercise behavior."
+  ]
+}

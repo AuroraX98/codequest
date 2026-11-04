@@ -1,0 +1,87 @@
+{
+  "lesson": "sql-29",
+  "position": 8,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Create matches(id) for labels beginning with the literal text box_. A label equal to box_ also qualifies. Preserve all source labels.",
+      "after": "Match an actual underscore instead of using it as a pattern symbol."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "LIKE compares text with a pattern. % matches zero or more characters; _ matches exactly one character. To match a literal percent or underscore, choose a one-character ESCAPE marker and put it before that symbol in the pattern.",
+        "Here ! is the escape marker: LIKE 'box!_%' ESCAPE '!' means the literal prefix box_ followed by any remaining text. Default SQLite LIKE folds ASCII letter case, but does not provide general Unicode case folding: 'a' LIKE 'A' is true while 'æ' LIKE 'Æ' is false without extra support.",
+        "Run this complete example in a fresh database.\n```sql\nCREATE TEMP VIEW shown AS\nSELECT 'box_a' LIKE 'box!_%' ESCAPE '!' AS literal_match,'boxXa' LIKE 'box!_%' ESCAPE '!' AS not_literal;\nSELECT *\nFROM shown;\n```",
+        "Change the supplied values and trace the result. This is a separate complete example.\n```sql\nCREATE TEMP VIEW shown AS\nSELECT 'box_' LIKE 'box!_%' ESCAPE '!' AS empty_tail,'a' LIKE 'A' AS ascii_fold,'æ' LIKE 'Æ' AS unicode_fold;\nSELECT *\nFROM shown;\n```",
+        "Application: Create matches(id) for labels beginning with the literal text box_. A label equal to box_ also qualifies. Preserve all source labels."
+      ],
+      "after": [
+        "`LIKE` checks text against a pattern. In a pattern, `%` means any number of characters, including none. `_` means exactly one character.",
+        "To match the actual underscore, choose an escape character. Here, `!_` means an underscore because `ESCAPE '!'` gives `!` that special job.",
+        "Run this query:\n```sql\nSELECT 'note_a' LIKE 'note!_%' ESCAPE '!' AS matched,\n       'noteXa' LIKE 'note!_%' ESCAPE '!' AS rejected,\n       'note_' LIKE 'note!_%' ESCAPE '!' AS empty_tail;\n```\nThe results are `1`, `0`, and `1`. The text must start with `note_`. Nothing has to follow it, because `%` can match no characters.",
+        "SQLite's usual LIKE check treats upper- and lower-case English letters alike. That rule does not cover every alphabet: `æ` and `Æ` do not match without extra support.",
+        "Create `matches(id)` for labels starting with the actual text `box_`. Include a label that is exactly `box_`. Escape the underscore, then use `%` for the optional text after it. Leave the labels unchanged."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the small example and explain its inputs and effects.",
+        "Complete the starter for this lesson.",
+        "Run the behavior checks, then predict a changed case."
+      ],
+      "after": [
+        "Write a pattern that starts with box_.",
+        "Escape the underscore and allow any text after it.",
+        "Save the matching IDs in matches."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Trace the supplied rows and resulting rows before changing the query."
+      ],
+      "after": [
+        "An unescaped underscore matches any one character.",
+        "Use the same escape character in the pattern and after ESCAPE."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Does 'ab' match the pattern 'a_'?",
+        "choices": [
+          "No; underscore is always literal.",
+          "Yes; underscore matches its one remaining character.",
+          "Only if the text contains a percent sign."
+        ],
+        "answer": 1,
+        "explanation": "Without ESCAPE, _ represents one character, so it matches b."
+      },
+      "after": {
+        "question": "Does 'ab' match the LIKE pattern 'a_'?",
+        "choices": [
+          "No. Underscore always means an actual underscore.",
+          "Yes. Underscore matches the remaining character, b.",
+          "Only if the text has a percent sign."
+        ],
+        "answer": 1,
+        "explanation": "Without an escape marker, underscore stands for one character."
+      }
+    }
+  ],
+  "headings": [
+    "Read a text pattern",
+    "Match the actual symbol",
+    "Try an escaped underscore",
+    "Know the case rule",
+    "Find the box labels"
+  ],
+  "project": {
+    "title": "Match text patterns literally",
+    "task": "Create matches(id) for labels beginning with the actual text box_, including box_ on its own.",
+    "done_when": "Only the matching IDs appear, and all source labels stay unchanged."
+  }
+}

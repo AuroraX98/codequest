@@ -1,0 +1,94 @@
+{
+  "lesson": "csharp-50",
+  "position": 50,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Move snapshot = query.ToList() to after numbers.Add(3), keeping its var declaration there. What does the snapshot line print?",
+      "after": "See when a query reads its source values."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "Where over a List is deferred: it tests elements when enumerated, not when the query variable is assigned.",
+        "ToList enumerates now and stores the resulting elements in a new list. Later additions to the source are not added to that list.",
+        "Enumerating the deferred query after a source change sees current source values. This is why logging or other side effects inside a query can run more than once. Do not change a List while actively enumerating it.",
+        "Complete local C# example; the app does not execute it:\n```csharp\nusing System;\nusing System.Collections.Generic;\nusing System.Linq;\nvar numbers = new List<int> { 1, 2 };\nvar query = numbers.Where(n => n > 1);\nvar snapshot = query.ToList();\nnumbers.Add(3);\nConsole.WriteLine(string.Join(\",\", query));\nConsole.WriteLine(string.Join(\",\", snapshot));\n```",
+        "Expected behavior from this example: 2,3 then 2 on separate lines. This expected result is a reasoned prediction until a compiler test is recorded.",
+        "Optional local transfer: Enumerate a query twice with a source change between the runs, then compare a list materialized before that change. This is a separate local practice task, not a requirement to mark the reading complete."
+      ],
+      "after": [
+        "Deferred means delayed until needed. Where over this List is deferred: assigning query sets up the test but does not yet collect its answers.",
+        "Enumeration means visiting a sequence's values. When code reads this query, Where checks the source values at that time.",
+        "ToList reads the query immediately and saves its results in a new list. Later additions to the source do not automatically join that saved list.",
+        "Follow when the snapshot is made and when the source changes.\n\n```csharp\nusing System;\nusing System.Collections.Generic;\nusing System.Linq;\nvar numbers = new List<int> { 1, 2 };\nvar query = numbers.Where(n => n > 1);\nvar snapshot = query.ToList();\nnumbers.Add(3);\nConsole.WriteLine(string.Join(\",\", query));\nConsole.WriteLine(string.Join(\",\", snapshot));\n```",
+        "The query line prints 2,3 because it is read after 3 is added. The snapshot line prints 2 because ToList saved its results before that addition.",
+        "Reading the query again runs its work again. Keep query calculations free of surprising extra actions, and do not change a List while a visit through it is in progress."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Trace the changed case before choosing an answer.",
+        "Explain the consequence, then optionally try the local transfer task."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Trace the inputs through the visible rule, then compare the changed case."
+      ],
+      "after": [
+        "Find the moment ToList actually reads the query."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Move snapshot = query.ToList() to after numbers.Add(3), keeping its var declaration there. What does the snapshot line print?",
+        "choices": [
+          "2,3, because it is materialized after the addition",
+          "2, because ToList always sees the original list",
+          "3, because snapshots include only new values"
+        ],
+        "answer": 0,
+        "explanation": "The time of enumeration matters: ToList now reads both matching values, 2 and 3."
+      },
+      "after": {
+        "question": "Move the whole var snapshot = query.ToList(); line below numbers.Add(3). What does the snapshot line print?",
+        "choices": [
+          "2,3",
+          "2",
+          "3"
+        ],
+        "answer": 0,
+        "explanation": "ToList now runs after the addition, so it saves both matching values, 2 and 3."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "C#14/.NET10 core syllabus. Concept-mode reading and understanding check; no in-app C# execution and no claim of mastery. Full example and optional local transfer task are supplied. Actual compiler validation, if available, is reported separately.",
+      "after": "The browser shows C# code and checks your understanding; it does not run C#. Optional local examples use a .NET 10 console project with C# 14."
+    }
+  ],
+  "headings": [
+    "A query can wait to do its work",
+    "Read the sequence",
+    "Save the results now",
+    "One example",
+    "What appears",
+    "Read again, run the query again"
+  ],
+  "project": {
+    "title": "Understand deferred enumeration",
+    "task": "Compare the example's delayed query with its saved list of results.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local C# example is optional."
+  }
+}

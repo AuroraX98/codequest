@@ -1,0 +1,86 @@
+{
+  "lesson": "typescript-43",
+  "position": 44,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Define EventName from Topic and the :saved suffix, then return the prefixed label.",
+      "after": "Build a small set of allowed text values from a shared pattern."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "Backticks in a type can describe string patterns. Here ${Topic} inserts each member of the finite Topic union, producing exactly \"goal:saved\" | \"note:saved\". The interpolation is a type operation, not a string-building function.",
+        "eventLabel receives one EventName and returns a string with the Received prefix. The colon and saved text are literal parts of each accepted name. These types are erased: text arriving from a file or network still needs runtime validation rather than a type assertion pretending it was checked.",
+        "```typescript\ntype Topic = \"goal\" | \"note\";\ntype EventName = `${Topic}:saved`;\nfunction eventLabel(event: EventName): string { return \"Received \" + event; }\nconsole.log(eventLabel(\"goal:saved\"));\nconsole.log(eventLabel(\"note:saved\"));\n```",
+        "Optional local practice: Add a third Topic and predict the extra accepted event string.",
+        "Changed case — trace this independently before checking the result.\n```typescript\ntype Topic = \"goal\" | \"note\";\ntype EventName = `${Topic}:saved`;\nfunction eventLabel(event: EventName): string { return \"Received \" + event; }\neventLabel(\"goal:deleted\");\n```\nCompiler result: The literal suffix deleted differs from the allowed saved suffix. Diagnostic 2345. This intentionally failing example is separate from the runnable solution."
+      ],
+      "after": [
+        "A template literal type describes text using backticks. `${Topic}` places each allowed topic into the pattern. With topics `\"goal\"` and `\"note\"`, the pattern allows `\"goal:saved\"` and `\"note:saved\"`.",
+        "The ending `:saved` is part of the rule. `\"goal:deleted\"` does not fit. This type describes allowed text; it does not build a new text value while the program runs.",
+        "```typescript\ntype Topic = \"goal\" | \"note\";\ntype EventName = `${Topic}:saved`;\nfunction eventLabel(event: EventName): string {\n  return \"Received \" + event;\n}\nconsole.log(eventLabel(\"goal:saved\"));\n```\nThis prints `Received goal:saved`. `EventName` checks the input. The function adds `Received ` to the front.",
+        "Define `EventName` using `Topic` and the exact ending `:saved`. Complete `eventLabel` to add `\"Received \"` before the event name.",
+        "These type rules are removed before the program runs. Text from a file or the internet still needs a real check. Adding `\"photo\"` to `Topic` would allow `\"photo:saved\"`, but it would not make all photo-related text valid."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the example and its input/output contract.",
+        "Complete the starter without turning off compiler diagnostics.",
+        "Run the compiler and behavior checks, then explain a changed case."
+      ],
+      "after": [
+        "Use the topics inside the backtick pattern.",
+        "Add the exact `:saved` ending.",
+        "Run the checks and explain which names fit."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Compare the public input/output types and trace the visible call before editing."
+      ],
+      "after": [
+        "`${Topic}` stands for each allowed member of `Topic`."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If Topic adds \"photo\", which additional input is accepted?",
+        "choices": [
+          "Every string starting with photo.",
+          "\"photo:deleted\"",
+          "\"photo:saved\""
+        ],
+        "answer": 2,
+        "explanation": "Each union member receives the exact literal suffix :saved."
+      },
+      "after": {
+        "question": "If `Topic` also allows `\"photo\"`, which new event name fits?",
+        "choices": [
+          "Every string that starts with photo.",
+          "\"photo:deleted\"",
+          "\"photo:saved\""
+        ],
+        "answer": 2,
+        "explanation": "Each topic gets the same exact ending: `:saved`."
+      }
+    }
+  ],
+  "headings": [
+    "Make a text pattern",
+    "Keep the exact ending",
+    "Read an event name",
+    "Build your event label",
+    "Check outside text"
+  ],
+  "project": {
+    "title": "Build a finite set of string names",
+    "task": "Define `EventName` from `Topic` and the `:saved` ending. Make `eventLabel` return `\"Received \"` followed by the accepted name.",
+    "done_when": "Each listed topic works with `:saved`. Other topics or endings are rejected by the type checker."
+  }
+}

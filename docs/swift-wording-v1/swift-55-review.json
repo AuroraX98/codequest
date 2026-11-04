@@ -1,0 +1,95 @@
+{
+  "lesson": "swift-55",
+  "position": 53,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Explain and optionally reproduce the complete local workflow; this lesson has no in-app executable checks.",
+      "after": "Use public to let another module call selected parts of your code."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A module is a separately compiled unit with an API visible to its clients. public declarations can cross that boundary; default internal declarations stay within the module. private further restricts access to the enclosing declaration and its same-file extensions.",
+        "Use an existing Swift 6.0-or-newer command-line toolchain and a new empty local directory for each variant. These are complete local files, not one source file for the app’s Run button. Actual recorded execution is Swift 6.4.1/Linux in language mode 6, not a Mac/Xcode or compiler 6.0 verification. No registry package, network service or user-machine installation is needed. Commands below assume a shell with swift/swiftc on PATH; preserve paths and run from that directory. RouteLabel is public, but that alone does not export its initializer or methods: those also say public. RouteLabel(prefix:) stores a prefix, and text(for:) combines that stored value with a place into a String. private prefix is hidden; internalTag omits an access modifier and is internal. -module-name names the compiled library module; -emit-module writes its importable interface and -emit-object writes linkable code. -parse-as-library treats this file as library declarations. The client uses import RouteKit; -I . finds the module here and RouteKit.o supplies its implementation when linking. This compiles two modules without a package or dynamic-library search path.",
+        "File `RouteKit.swift`:\n```swift\npublic struct RouteLabel {\n    private let prefix: String\n    let internalTag = \"local\"\n    public init(prefix: String) {\n        self.prefix = prefix\n    }\n    public func text(for place: String) -> String {\n        return prefix + \":\" + place\n    }\n}\n```\n\nFile `main.swift`:\n```swift\nimport RouteKit\nlet label = RouteLabel(prefix: \"Walk\")\nprint(label.text(for: \"Pond\"))\n```\n\nRun these local commands in order:\n```sh\nswiftc -swift-version 6 -emit-module -emit-object -parse-as-library -module-name RouteKit RouteKit.swift -o RouteKit.o\nswiftc -swift-version 6 -I . main.swift RouteKit.o -o demo\n./demo\n```\nThe final command prints exactly `Walk:Pond` followed by a newline. Build commands must succeed first.",
+        "Fresh changed variant: create these complete files in a different empty directory.\n\nFile `RouteKit.swift`:\n```swift\npublic struct RouteLabel {\n    private let prefix: String\n    let internalTag = \"local\"\n    public init(prefix: String) {\n        self.prefix = prefix\n    }\n    public func text(for place: String) -> String {\n        return prefix + \":\" + place\n    }\n}\n```\n\nFile `main.swift`:\n```swift\nimport RouteKit\nlet label = RouteLabel(prefix: \"Ride\")\nprint(label.text(for: \"Hill\"))\n```\n\nRun:\n```sh\nswiftc -swift-version 6 -emit-module -emit-object -parse-as-library -module-name RouteKit RouteKit.swift -o RouteKit.o\nswiftc -swift-version 6 -I . main.swift RouteKit.o -o demo\n./demo\n```\nThe final command prints exactly `Ride:Hill` followed by a newline.",
+        "Optional local practice: explain which file defines the API, which consumes it and what observable result establishes the contract. Do not equate a successful build with a successful behavioral test.",
+        "In another fresh copy, keep the shown library file but use this complete replacement client. Compile the library with the first command, then compile this client with the second. It is intentionally rejected; the diagnostic identifies 'internalTag' is inaccessible due to 'internal' protection level. This is local compiler evidence, not learner Run grading.\n```swift\nimport RouteKit\nlet label = RouteLabel(prefix: \"Walk\")\nprint(label.internalTag)\n```"
+      ],
+      "after": [
+        "A module is a group of Swift code built separately. Its API is the code other modules are allowed to use. public makes a declaration available outside its module. With no access word, a declaration is internal and stays inside its module.",
+        "This one example needs two files in a new empty folder: RouteKit.swift and main.swift. Use an already installed Swift toolchain that supports Swift 6 language mode. The commands shown use a Linux or macOS-style shell with swiftc available. This is local practice, not an in-app Run check.",
+        "Create RouteKit.swift:\n```swift\npublic struct RouteLabel {\n    private let prefix: String\n    let internalTag = \"local\"\n    public init(prefix: String) {\n        self.prefix = prefix\n    }\n    public func text(for place: String) -> String {\n        return prefix + \":\" + place\n    }\n}\n```\nRouteLabel stores a prefix and joins it to a place name. The type, initializer, and text method each need public so another module can use them. prefix stays private; internalTag stays inside the module.",
+        "Create main.swift in the same folder:\n```swift\nimport RouteKit\nlet label = RouteLabel(prefix: \"Walk\")\nprint(label.text(for: \"Pond\"))\n```\nimport RouteKit gives this file access to the library's public code. The client creates a label with Walk and asks for the text for Pond.",
+        "From that folder, run these commands in order:\n```sh\nswiftc -swift-version 6 -emit-module -emit-object -parse-as-library -module-name RouteKit RouteKit.swift -o RouteKit.o\nswiftc -swift-version 6 -I . main.swift RouteKit.o -o demo\n./demo\n```\nThe first builds the library's module and object files. The second finds that module with -I . and links its object file to the client. Run ./demo only after both builds succeed. It should print Walk:Pond.",
+        "A public type does not make all its parts public. A separate client cannot read internalTag or the private prefix. Without public on the initializer, the client cannot create RouteLabel this way. Check both that the build succeeds and that the printed message is right."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Explain the displayed boundary before running anything.",
+        "Optionally create the complete file tree in an isolated local directory with an existing compatible toolchain.",
+        "Run the shown commands and compare exact behavior or named test evidence; explain the changed case."
+      ],
+      "after": [
+        "Create the two shown files in one new empty folder.",
+        "Build the library, then the client with the shown commands.",
+        "Run demo and check for Walk:Pond."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Trace the inputs, returned value and changed state before running."
+      ],
+      "after": [
+        "Keep public on the type, initializer, and method.",
+        "Run the commands from the folder containing both files."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If RouteLabel is public but its initializer has no public modifier, can this separate client construct it?",
+        "choices": [
+          "Yes: a public type exports all members.",
+          "Only if the prefix is empty.",
+          "No: the initializer is still internal."
+        ],
+        "answer": 2,
+        "explanation": "A type’s visibility and the visibility of its members/initializer are separate. The client needs the public initializer in addition to the public type."
+      },
+      "after": {
+        "question": "RouteLabel is public, but its initializer has no public word. Can this separate client create it?",
+        "choices": [
+          "Yes, a public type makes every part public",
+          "Only with an empty prefix",
+          "No, the initializer stays internal"
+        ],
+        "answer": 2,
+        "explanation": "The client needs access to both the type and its initializer."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Local multifile/module/package companion only. No browser Swift compiler or multi-file Mac-companion execution is claimed.",
+      "after": "This is a local two-file example. The browser and the single-file Swift companion do not run this module workflow. Earlier execution evidence used Swift 6.4.1 on Linux, not Xcode."
+    }
+  ],
+  "headings": [
+    "Choose what other code can use",
+    "Prepare one local example",
+    "Create the library file",
+    "Create the client file",
+    "Build and run it",
+    "Check what stays hidden"
+  ],
+  "project": {
+    "title": "Export an API across a real module boundary",
+    "task": "Follow the single RouteKit example: create its library and client files, then optionally build and run them with an existing compatible local Swift toolchain.",
+    "done_when": "You can explain which declarations the client may use. If run locally, the program prints Walk:Pond. There is no in-app Run check."
+  }
+}

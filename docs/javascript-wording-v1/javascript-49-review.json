@@ -1,0 +1,94 @@
+{
+  "lesson": "javascript-49",
+  "position": 45,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Implement Counter with private #value, constructor(initial), add(amount), read(), and static zero(). Each zero() call returns a distinct instance at0. Inputs are finite numbers; add mutates only its receiver and returns its new value.",
+      "after": "Keep a counter's value private and create fresh counters from the class."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "#value is a private field declared in the class body. Methods of this class access it as this.#value. It is not the same as a public property named \"#value\", and outside code cannot directly write first.#value. This is language-level encapsulation, not encryption or a promise that an object can safely hold secrets against all program code.",
+        "static zero() is called on Counter, not on an instance. It takes no arguments and returns a fresh Counter initialized to 0. Each constructor call creates separate private state. add(amount) adds the supplied finite number and returns the updated value; read() returns the current value with no mutation.",
+        "```javascript\nclass Counter {\n  #value;\n  constructor(initial) { this.#value = initial; }\n  add(amount) { this.#value += amount; return this.#value; }\n  read() { return this.#value; }\n  static zero() { return new Counter(0); }\n}\nconst first = Counter.zero();\nconst second = Counter.zero();\nconsole.log(first.add(3));\nconsole.log(second.read());\nconsole.log(typeof first.zero);\n```\nOutput: 3,0,undefined. Changing first does not change second. typeof first.zero is undefined because the static method is not an instance method. The constructor accepts an initial finite number; this focused exercise does not add input validation.",
+        "Implement Counter with the declared private field and the class-bound zero factory. Optional practice: compare Counter.zero().read() with new Counter(7).read(). An external private-field access is rejected by the parser; do not paste invalid syntax into the main runnable solution. Bracket access with the string \"#value\" creates a separate public property, not access to the declared private name. With Counter defined above, this prints 0 9:\n```javascript\nconst c = Counter.zero();\nc[\"#value\"] = 9;\nconsole.log(c.read(), c[\"#value\"]);\n```"
+      ],
+      "after": [
+        "A field beginning with `#` is private to the class that declares it. Methods in `Counter` can use `this.#value`.\n\nOutside code cannot directly read or write that private field. This controls access through JavaScript code; it does not encrypt the value.",
+        "A static method belongs to the class. Call `Counter.zero()`, not `first.zero()`.\n\nOur `zero` method makes a new counter starting at zero. Each counter has its own saved value. `add(amount)` changes that counter and returns its new value. `read()` returns the value without changing it.",
+        "Here is the complete example.\n```javascript\nclass Counter {\n  #value;\n  constructor(initial) { this.#value = initial; }\n  add(amount) { this.#value += amount; return this.#value; }\n  read() { return this.#value; }\n  static zero() { return new Counter(0); }\n}\nconst first = Counter.zero();\nconst second = Counter.zero();\nconsole.log(first.add(3));\nconsole.log(second.read());\nconsole.log(typeof first.zero);\n```\nOutput:\n```text\n3\n0\nundefined\n```\nOnly the first counter changes. `first.zero` is undefined because `zero` belongs to the class. This exercise supplies finite numbers and does not add input checks.",
+        "A public property named `\"#value\"` is separate from the private field.\n```javascript\nclass Counter {\n  #value;\n  constructor(initial) { this.#value = initial; }\n  add(amount) { this.#value += amount; return this.#value; }\n  read() { return this.#value; }\n  static zero() { return new Counter(0); }\n}\nconst c = Counter.zero();\nc[\"#value\"] = 9;\nconsole.log(c.read(), c[\"#value\"]);\n```\nOutput:\n```text\n0 9\n```\nThe public property holds 9, but the private counter remains zero. Complete `add(amount)` by changing the private field and returning its new value."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the requirement.",
+        "Make one change to the starter.",
+        "Run the checks.",
+        "Explain why a changed input produces its result."
+      ],
+      "after": [
+        "Add amount to this.#value inside add.",
+        "Return the updated private value.",
+        "Check that changing one counter leaves another unchanged.",
+        "Keep zero as a static method that returns a fresh Counter."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If a=Counter.zero() and b=Counter.zero(), then a.add(2), what does b.read() return?",
+        "choices": [
+          "undefined",
+          "2",
+          "0"
+        ],
+        "answer": 2,
+        "explanation": "The factory constructs a new Counter each time, so the private fields belong to distinct instances."
+      },
+      "after": {
+        "question": "If a=Counter.zero() and b=Counter.zero(), then a.add(2), what does b.read() return?",
+        "choices": [
+          "undefined",
+          "2",
+          "0"
+        ],
+        "answer": 2,
+        "explanation": "Each zero call makes a separate counter. Changing a leaves b at zero."
+      }
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Trace the visible worked calls before changing the starter."
+      ],
+      "after": [
+        "Use this.#value, including the # symbol.",
+        "Each zero call should use new Counter(0)."
+      ]
+    },
+    {
+      "field": "externalNotes",
+      "before": "ECMAScript 2026 core; native Node24 and current app worker/DOM harness evidence are recorded separately. No external service or real-browser claim follows from a local fixture.",
+      "after": ""
+    }
+  ],
+  "headings": [
+    "Keep a field private",
+    "Call a method on the class",
+    "Create independent counters",
+    "Use the private field"
+  ],
+  "project": {
+    "title": "Private fields and static members",
+    "task": "Complete Counter.add(amount) using the private #value field. Keep read(), constructor(initial), and static zero(). Each zero call must create a separate counter.",
+    "done_when": "Adding returns the new value, counters keep separate state, zero is called on the class, and a public \"#value\" property cannot replace the private field."
+  },
+  "notes": [
+    "Removed an unrelated local-project completion requirement; its useful teaching is in the lesson and technical evidence stays in review documents."
+  ]
+}

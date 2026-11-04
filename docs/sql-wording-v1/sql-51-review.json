@@ -1,0 +1,105 @@
+{
+  "lesson": "sql-51",
+  "position": 51,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Explain why the injection-shaped value matches only its own saved row. Optionally run the complete pinned local companion and change only input; there is no SQL-editor binding grade.",
+      "after": "Pass input as a value so it cannot become part of the SQL command."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "Local companion only: this page’s SQL editor does not run JavaScript, bind host values or save files. Use an already available Node.js installation and the pinned SQL.js 1.13.0 distribution, containing sql-wasm.js and sql-wasm.wasm. In a fresh disposable directory, make vendor/, copy those two files there, and name the JavaScript copy sql-wasm.cjs so require treats it as CommonJS. Keep the supplied dependency license with these files. No download, package installation, remote server or credentials are part of this lesson. Save the complete program below as main.cjs and run `node main.cjs` from that directory. The validated engine is SQLite 3.49.1, not a claim about every SQL.js version. Basic JavaScript const, arrays, objects, callbacks, promises and try/finally are prerequisites; review those before the optional local exercise. The SQL template fixes the query structure. A placeholder such as $label is a value slot; binding supplies data for that slot without turning its apostrophes or comment-like characters into SQL syntax. It cannot stand in for a table name or ORDER BY direction. For those structural choices, choose from fixed, trusted query alternatives rather than joining untrusted text.",
+        "\n```javascript\nconst initSqlJs = require('./vendor/sql-wasm.cjs');\ninitSqlJs({ locateFile: file => __dirname + '/vendor/' + file }).then(SQL => {\n  const db = new SQL.Database();\n  try {\n    db.run(`CREATE TABLE labels(id INTEGER PRIMARY KEY, label TEXT);\nINSERT INTO labels VALUES (1,'Map'),(2,'Map'' OR 1=1 --');`);\n    const input = \"Map' OR 1=1 --\";\n    const stmt = db.prepare('SELECT id,label FROM labels WHERE label=$label ORDER BY id');\n    const rows = [];\n    try {\n      stmt.bind({ $label: input });\n      while (stmt.step()) rows.push(stmt.getAsObject());\n    } finally {\n      stmt.free();\n    }\n    console.log(JSON.stringify(rows));\n    console.log(db.exec('SELECT COUNT(*) FROM labels')[0].values[0][0]);\n  } finally {\n    db.close();\n  }\n}).catch(error => { console.error(error.message); process.exitCode = 1; });\n```\nThe first output is [{\"id\":2,\"label\":\"Map' OR 1=1 --\"}], followed by 2 on the next line. The unusual string matches one saved label, not all labels. The doubled apostrophe in the fixed INSERT is SQL literal escaping; the later host input is bound instead. Do not copy this setup’s fixed INSERT construction as a way to concatenate user input.",
+        "require loads the local CommonJS initializer. initSqlJs returns a promise; locateFile tells it where the matching WASM file is. __dirname is the host file’s directory. new SQL.Database() creates an empty in-memory database. db.run executes the fixed setup and returns the database object, not selected rows. db.prepare compiles the fixed SELECT and returns a statement. stmt.bind receives an object mapping the exact $label placeholder to a JavaScript value. stmt.step advances to the next result row and returns true while a row exists. stmt.getAsObject reads that current row as named fields. rows.push appends that object to the result array. finally runs cleanup even when the enclosed work throws: stmt.free releases statement resources, then db.close releases the database. Do not use either object after release. In this host file, backticks enclose a multiline JavaScript string containing SQL. They are not sent as SQL identifier quotes.",
+        "\n```javascript\nconst initSqlJs = require('./vendor/sql-wasm.cjs');\ninitSqlJs({ locateFile: file => __dirname + '/vendor/' + file }).then(SQL => {\n  const db = new SQL.Database();\n  try {\n    db.run(`CREATE TABLE labels(id INTEGER PRIMARY KEY, label TEXT);\nINSERT INTO labels VALUES (1,'Map'),(2,'Map'' OR 1=1 --');`);\n    const input = \"Missing\";\n    const stmt = db.prepare('SELECT id,label FROM labels WHERE label=$label ORDER BY id');\n    const rows = [];\n    try {\n      stmt.bind({ $label: input });\n      while (stmt.step()) rows.push(stmt.getAsObject());\n    } finally {\n      stmt.free();\n    }\n    console.log(JSON.stringify(rows));\n    console.log(db.exec('SELECT COUNT(*) FROM labels')[0].values[0][0]);\n  } finally {\n    db.close();\n  }\n}).catch(error => { console.error(error.message); process.exitCode = 1; });\n```\nThe changed input prints [] and then 2. The query returned no rows; the table was not deleted. JSON.stringify turns the result array into display text, console.log prints it, and db.exec returns result sets whose first result’s values[0][0] is the count in this known one-cell query. The final catch reports an error and sets a failing process exit code; it is not database rollback. Optional practice: bind Map and predict the one matching row. These local examples do not prove security for arbitrary SQL assembled elsewhere."
+      ],
+      "after": [
+        "Binding means putting data into a value slot in a fixed query. Here, `$label` is that slot. Even if the input contains quotes or looks like SQL, it stays a text value. A value slot cannot choose a table name or a sort direction.",
+        "```javascript\nconst initSqlJs = require('./vendor/sql-wasm.cjs');\ninitSqlJs({ locateFile: file => __dirname + '/vendor/' + file }).then(SQL => {\n  const db = new SQL.Database();\n  db.run(\"CREATE TABLE labels(id INTEGER PRIMARY KEY, label TEXT)\");\n  db.run(\"INSERT INTO labels VALUES (1,'Map'),(2,'Map'' OR 1=1 --')\");\n  const input = \"Map' OR 1=1 --\";\n  const statement = db.prepare(\n    'SELECT id, label FROM labels WHERE label = $label ORDER BY id'\n  );\n  try {\n    statement.bind({ $label: input });\n    const rows = [];\n    while (statement.step()) rows.push(statement.getAsObject());\n    console.log(JSON.stringify(rows));\n  } finally {\n    statement.free();\n    db.close();\n  }\n}).catch(error => { console.error(error.message); process.exitCode = 1; });\n```\nThe output contains just row 2: `Map' OR 1=1 --`. The words in that label do not change the query or match every row.",
+        "`prepare` reads the fixed SQL query. `bind` fills its value slot with `input`. `step` moves to the next result row, and `getAsObject` reads that row's named fields. The loop gathers the matching rows. If the label is absent, the result is an empty list.",
+        "This example is JavaScript running SQL.js, not code for the lesson's SQL editor. JavaScript loads the database library and supplies the input. `finally` releases the statement and closes the database after reading. The local setup instructions explain how to run it. The main lesson is the separation: keep the query fixed and bind the input."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the complete local host example and predict its output.",
+        "Explain the changed snapshot or binding case.",
+        "Optionally run the local companion with the specified pinned files; this page does not execute it."
+      ],
+      "after": [
+        "Follow the fixed query and its `$label` value slot.",
+        "Explain why the unusual input matches only row 2.",
+        "If running the optional local example, follow the setup notes and inspect its output."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Keep SQL text and host JavaScript roles distinct.",
+        "Use a disposable local directory; never supply production data."
+      ],
+      "after": [
+        "`statement.bind({ $label: input })` passes a value without joining it into the SQL text.",
+        "For a table name or sort direction, choose from fixed, trusted query choices instead of using a value slot."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Can binding $label also choose the table name for FROM $label?",
+        "choices": [
+          "Yes, every SQL token can be a parameter",
+          "Yes, if the value has no spaces",
+          "No; placeholders supply values, not SQL identifiers"
+        ],
+        "answer": 2,
+        "explanation": "The prepared query’s structure is fixed. Dynamic identifiers require a separate trusted structural choice, not a value parameter."
+      },
+      "after": {
+        "question": "Can a bound value choose the table name in FROM $label?",
+        "choices": [
+          "Yes, a value slot can replace any SQL word",
+          "Yes, if the value has no spaces",
+          "No, value slots supply data, not table names"
+        ],
+        "answer": 2,
+        "explanation": "The query's structure stays fixed. A table name is part of that structure, not a data value."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Local Node.js plus supplied SQL.js1.13.0 JS/WASM files only; not executable in this lesson’s SQL editor.",
+      "after": "Optional local exercise: use Node.js and SQL.js 1.13.0. In a fresh folder, place the matching sql-wasm.js and sql-wasm.wasm files in vendor; rename the JavaScript file to sql-wasm.cjs and keep its license. Save the example as main.cjs and run node main.cjs. It needs JavaScript arrays, objects, functions, promises, and try/finally. The SQL editor cannot run this host program or grade binding. The pinned database engine is SQLite 3.49.1."
+    },
+    {
+      "field": "extraFiles",
+      "before": [
+        {
+          "name": "main.cjs",
+          "code": "const initSqlJs = require('./vendor/sql-wasm.cjs');\ninitSqlJs({ locateFile: file => __dirname + '/vendor/' + file }).then(SQL => {\n  const db = new SQL.Database();\n  try {\n    db.run(`CREATE TABLE labels(id INTEGER PRIMARY KEY, label TEXT);\nINSERT INTO labels VALUES (1,'Map'),(2,'Map'' OR 1=1 --');`);\n    const input = \"Map' OR 1=1 --\";\n    const stmt = db.prepare('SELECT id,label FROM labels WHERE label=$label ORDER BY id');\n    const rows = [];\n    try {\n      stmt.bind({ $label: input });\n      while (stmt.step()) rows.push(stmt.getAsObject());\n    } finally {\n      stmt.free();\n    }\n    console.log(JSON.stringify(rows));\n    console.log(db.exec('SELECT COUNT(*) FROM labels')[0].values[0][0]);\n  } finally {\n    db.close();\n  }\n}).catch(error => { console.error(error.message); process.exitCode = 1; });"
+        }
+      ],
+      "after": [
+        {
+          "name": "main.cjs",
+          "code": "const initSqlJs = require('./vendor/sql-wasm.cjs');\ninitSqlJs({ locateFile: file => __dirname + '/vendor/' + file }).then(SQL => {\n  const db = new SQL.Database();\n  db.run(\"CREATE TABLE labels(id INTEGER PRIMARY KEY, label TEXT)\");\n  db.run(\"INSERT INTO labels VALUES (1,'Map'),(2,'Map'' OR 1=1 --')\");\n  const input = \"Map' OR 1=1 --\";\n  const statement = db.prepare(\n    'SELECT id, label FROM labels WHERE label = $label ORDER BY id'\n  );\n  try {\n    statement.bind({ $label: input });\n    const rows = [];\n    while (statement.step()) rows.push(statement.getAsObject());\n    console.log(JSON.stringify(rows));\n  } finally {\n    statement.free();\n    db.close();\n  }\n}).catch(error => { console.error(error.message); process.exitCode = 1; });\n"
+        }
+      ]
+    }
+  ],
+  "headings": [
+    "Keep input separate from SQL",
+    "One example",
+    "Fill the value slot",
+    "Run this with the host program"
+  ],
+  "project": {
+    "title": "Bind data instead of building SQL text",
+    "task": "Explain why the input `Map' OR 1=1 --` matches only its saved label. Explain why `$label` cannot stand for a table name. Optionally run the complete local example using the setup notes.",
+    "done_when": "You can explain the value slot and predict an empty result for an absent label. Any local run is separate from the SQL editor's checks."
+  }
+}

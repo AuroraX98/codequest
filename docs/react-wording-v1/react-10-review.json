@@ -1,0 +1,100 @@
+{
+  "lesson": "react-10",
+  "position": 19,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Keep two choice buttons and their summary synchronized through parent state.",
+      "after": "Put shared state in a parent so related components agree."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "Two sibling components may need to agree on one value. Independent copies of that value can drift apart.",
+        "Move the shared state to their nearest common parent. Pass the current value down through props.",
+        "Pass a callback prop down too. A child calls it to request a change; the parent updates the shared state.",
+        "```react\nfunction ModeButton({active, onChoose}) {\n  return <button aria-pressed={active} onClick={onChoose}>Quiet mode</button>;\n}\nfunction App() {\n  const [quiet, setQuiet] = React.useState(false);\n  return <main>\n    <ModeButton active={quiet} onChoose={() => setQuiet(q => !q)} />\n    <p>{quiet ? \"Quiet\" : \"Normal\"}</p>\n  </main>;\n}\n```\nThe button and paragraph read the same parent value.",
+        "A controlled component gets the important value from props rather than keeping its own competing copy. Not all child state must move up—only the state that needs coordination.",
+        "For one selected activity, store one activity name rather than two unrelated Booleans. Comparing each button's label with that name makes exactly one button selected.",
+        "The starter lets each button select itself independently, so both can stay selected. Move that decision to App and pass selected and onSelect to Choice.",
+        "Click Draw, then Read. The selected button and status must agree every time, including when clicking the already selected button."
+      ],
+      "after": [
+        "Sibling components are components beside each other under the same parent. If they need to agree on one value, separate copies can disagree.",
+        "Keep the shared state in their nearest common parent. Pass its current value down through props.",
+        "Also pass a callback: a function the child can call to request a change. The parent uses it to update the shared state.",
+        "```react\nfunction ModeButton({ active, onChoose }) {\n  return <button aria-pressed={active} onClick={onChoose}>Quiet mode</button>;\n}\nfunction App() {\n  const [quiet, setQuiet] = React.useState(false);\n  return (\n    <main>\n      <ModeButton active={quiet} onChoose={() => setQuiet(q => !q)} />\n      <p>{quiet ? \"Quiet\" : \"Normal\"}</p>\n    </main>\n  );\n}\n```\nThe button and paragraph use the same state. Clicking changes both the pressed state and the message.",
+        "The child reads `active` from props instead of keeping another copy. Only move state to the parent when it needs to be shared. Other state can stay in a child.",
+        "For a choice between two activities, store one selected activity name. Each button can compare its name with that value to find out whether it is selected.",
+        "The starter keeps a separate selected value in each button, so both can stay selected. Put the single choice in `App`. Pass `selected` and `onSelect` to each `Choice`.",
+        "Click Draw, then Read, then Read again. Exactly one choice and the summary should agree after every click."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Put the shared selected value in App.",
+        "Let each Choice receive its selected value and selection callback through props."
+      ],
+      "after": [
+        "Keep one selected activity name in App.",
+        "Pass each Choice its selected value and onSelect callback.",
+        "Run the checks and switch between the buttons."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Put the shared selected value in App.",
+        "Let each Choice receive its selected value and selection callback through props."
+      ],
+      "after": [
+        "Each child should read the shared choice instead of storing a second copy."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Each sibling stores its own selected Boolean. Both can become selected, but only one should be. What change removes that conflicting state?",
+        "choices": [
+          "Store one selected ID in the common parent and pass values/callbacks down",
+          "Add an effect to copy each sibling's state into the other forever",
+          "Change both button labels to the same word"
+        ],
+        "answer": 0,
+        "explanation": "One shared selected ID expresses the requirement directly. Each child derives its selected value from that ID, so independent copies cannot disagree."
+      },
+      "after": {
+        "question": "Two buttons keep separate selected values, so both can stay selected. What fixes this?",
+        "choices": [
+          "Keep one selected ID in the parent and pass values and callbacks down.",
+          "Keep copying each button's state into the other.",
+          "Give both buttons the same label."
+        ],
+        "answer": 0,
+        "explanation": "One selected ID expresses one choice. Both children read it, so their separate copies cannot disagree."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Existing dashboard shows shared data; this lesson explicitly teaches lifting competing sibling state and controlled props. Tested through actual button interactions. No effects, context, global store, or duplicated synchronized state needed.",
+      "after": "This lesson uses parent state and child props to keep one shared choice."
+    }
+  ],
+  "headings": [
+    "Share one value",
+    "Keep it in the common parent",
+    "Let a child request a change",
+    "Read one shared choice",
+    "Give children the current value",
+    "Store one selected name",
+    "Fix the competing choices",
+    "Check both buttons"
+  ],
+  "project": {
+    "title": "Let siblings share one choice",
+    "task": "Keep the two activity buttons and their summary in agreement using one choice stored in App.",
+    "done_when": "Exactly one button is selected, and the summary matches after switching or clicking the same choice again."
+  }
+}

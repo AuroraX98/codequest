@@ -1,0 +1,97 @@
+{
+  "lesson": "csharp-62",
+  "position": 62,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Change the declaration to int[] slice = values.AsSpan(1, 2).ToArray(); and keep the assignment. What is printed?",
+      "after": "Use a view to change part of an array without copying it."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "Span<T> describes a contiguous region of memory. array.AsSpan(start,length) views a portion of the array without copying its elements.",
+        "The slice below starts at array index 1. Assigning slice[0] therefore changes values[1], not values[0]. Slice indexes are relative to the view.",
+        "Span is a ref struct with lifetime restrictions. Do not store it in an ordinary class field or keep it across an await boundary. ReadOnlySpan prevents writes through that view but does not make the underlying array immutable.",
+        "ToArray makes a separate array. Changing that copy does not change the source; choose a view or a copy deliberately.\n\nToArray() takes no arguments and returns a new array containing the view’s elements. This separate example changes only that copy:\n```csharp\nusing System;\nint[] original = { 4, 5 };\nint[] copy = original.AsSpan(0, 1).ToArray();\ncopy[0] = 9;\nConsole.WriteLine($\"{original[0]} {copy[0]}\");\n```\nOutput: 4 9.",
+        "Complete local C# example; the app does not execute it:\n```csharp\nusing System;\nint[] values = [10, 20, 30];\nSpan<int> slice = values.AsSpan(1, 2);\nslice[0] = 99;\nConsole.WriteLine(string.Join(\",\", values));\n```",
+        "Expected behavior from this example: 10,99,30. This expected result is a reasoned prediction until a compiler test is recorded.",
+        "Optional local transfer: Create a ReadOnlySpan view, then change the original array through its own variable. Explain why the read-only view sees the changed value. This is a separate local practice task, not a requirement to mark the reading complete."
+      ],
+      "after": [
+        "Span<T> is a view of values stored next to each other in memory. A span over an array can use the array's existing storage without copying its elements.",
+        "AsSpan(1, 2) starts at array index 1 and includes two values. Here, those values are 20 and 30.",
+        "Positions inside the view start at zero. slice[0] therefore reaches values[1], the first value included in this view.",
+        "ToArray creates a separate array containing the view's elements. Changing that copy would not change the original array.",
+        "Follow the view back to the array slot it shares.\n\n```csharp\nusing System;\nint[] values = [10, 20, 30];\nSpan<int> slice = values.AsSpan(1, 2);\nslice[0] = 99;\nConsole.WriteLine(string.Join(\",\", values));\n```",
+        "The program prints 10,99,30. Writing 99 through slice[0] changes the shared slot at values[1].",
+        "Span is a ref struct, a type with rules about where and how long it may be used. It cannot be stored in an ordinary class field or used across an await pause. ReadOnlySpan blocks writes through that view, but other code can still change the underlying array."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Trace the changed case before choosing an answer.",
+        "Explain the consequence, then optionally try the local transfer task."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Trace the inputs through the visible rule, then compare the changed case."
+      ],
+      "after": [
+        "Check whether slice is sharing storage or holding a new array."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Change the declaration to int[] slice = values.AsSpan(1, 2).ToArray(); and keep the assignment. What is printed?",
+        "choices": [
+          "10,99,30 because every slice shares storage",
+          "99,20,30 because slice index 0 is source index 0",
+          "10,20,30 because the assignment changes an independent copy"
+        ],
+        "answer": 2,
+        "explanation": "ToArray copies the selected elements into another array. Changing its first element no longer writes through to values."
+      },
+      "after": {
+        "question": "Make slice an int[] using values.AsSpan(1, 2).ToArray(), then keep slice[0] = 99. What does printing values show?",
+        "choices": [
+          "10,99,30",
+          "99,20,30",
+          "10,20,30"
+        ],
+        "answer": 2,
+        "explanation": "ToArray made a separate copy. The assignment changes that copy, leaving values unchanged."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "C#14/.NET10 core syllabus. Concept-mode reading and understanding check; no in-app C# execution and no claim of mastery. Full example and optional local transfer task are supplied. Actual compiler validation, if available, is reported separately.",
+      "after": "The browser shows C# code and checks your understanding; it does not run C#. Optional local examples use a .NET 10 console project with C# 14."
+    }
+  ],
+  "headings": [
+    "A span is a view",
+    "Choose a starting position and length",
+    "Count positions inside the view",
+    "A view is different from a copy",
+    "One example",
+    "What appears",
+    "Know the view's limits"
+  ],
+  "project": {
+    "title": "View a slice with Span",
+    "task": "Follow how the span's first position refers to a slot inside the original array.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local C# example is optional."
+  }
+}

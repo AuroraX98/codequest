@@ -1,0 +1,93 @@
+{
+  "lesson": "javascript-08",
+  "position": 10,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Write two functions that return different greetings for a name.",
+      "after": "Pass a greeting function into another function and use the text it returns."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A function is also a value in JavaScript. You can give it a name, pass it as an argument, and let another function call it. A function received this way is called a callback. A higher-order function is one that receives or returns a function. These names describe what the code does; there is no extra magic syntax needed to pass a callback.",
+        "Distinguish the function from its result. `friendly` means the function itself. `friendly(\"Noor\")` calls it immediately and means the value it returns. If a receiving function expects something it can call, pass the function name without parentheses. Its parameter can then hold that function value and call it with an input.",
+        "This standalone example passes a function into another.\n```javascript\nfunction wave(name) {\n  return `Hi, ${name}!`;\n}\nfunction welcome(makeMessage, name) {\n  return makeMessage(name);\n}\nconst greeting = welcome(wave, \"Noor\");\nconsole.log(greeting);\n```\nIt prints `Hi, Noor!`. The first argument fills makeMessage with the wave function. Inside welcome, `makeMessage(name)` calls wave with Noor. The returned string travels back through welcome to greeting.",
+        "Backticks make a template literal, a string that can insert values. Inside it, `${name}` evaluates name and adds its value to the text. The dollar sign and braces mark the insertion; ordinary quoted strings do not perform this insertion. Function parentheses contain inputs, function braces contain instructions, and template-literal braces surround an expression to insert. Their meaning comes from where they appear.",
+        "Two callbacks let the same receiving function choose two styles.\n```javascript\nfunction wave(name) {\n  return `Hi, ${name}!`;\n}\nfunction cheer(name) {\n  return `Great to see you, ${name}!`;\n}\nfunction welcome(makeMessage, name) {\n  return makeMessage(name);\n}\nconsole.log(welcome(wave, \"Noor\"));\nconsole.log(welcome(cheer, \"Noor\"));\n```\nThe outputs are `Hi, Noor!` and `Great to see you, Noor!`. Welcome has not changed; only the passed function differs. Returning text lets either message be displayed or used elsewhere.",
+        "The exercise also puts returned greetings on a page. In a browser, `document` represents the page. `document.querySelector(\"#g1\")` finds the element with id g1; the `#` marks an id in this selector string. Assigning its `.textContent` sets its plain text. That requires the supplied HTML elements to exist. It does not treat the greeting as HTML instructions, so angle brackets in text stay text.\n\nIn a browser page containing `<p id=\"g1\"></p>`, run:\n```javascript\nconst output = document.querySelector(\"#g1\");\noutput.textContent = \"Hi, Noor!\";\nconsole.log(output.textContent);\n```\nThis displays Hi, Noor!. querySelector receives a CSS selector string and returns the first matching element, or null if none exists. This example supplies the matching element before accessing textContent; code for an uncertain page must check for null.",
+        "Your two supplied callbacks are friendly and playful. Pass each to showGreeting with Ari to obtain the expected two different messages. Store each result, then assign it to the matching page element's textContent. These callbacks run when showGreeting calls them; a callback can also be saved and called later in other designs. The browser elements are practice fixtures, while the main skill is passing a function and using its returned value."
+      ],
+      "after": [
+        "A function can be passed as a value. When another function receives it to call, it is called a callback.\n\nA function that receives or returns a function is called a higher-order function. You pass the callback like any other input.",
+        "`friendly` means the function itself. `friendly(\"Noor\")` calls it now and gives its result.\n\nPass the name without parentheses when the receiving function needs something it can call.",
+        "Follow a greeting callback:\n```javascript\nfunction wave(name) {\n  return `Hi, ${name}!`;\n}\nfunction welcome(makeMessage, name) {\n  return makeMessage(name);\n}\nconst greeting = welcome(wave, \"Noor\");\nconsole.log(greeting);\n```\nOutput:\n```text\nHi, Noor!\n```\n`makeMessage` receives the `wave` function. Calling `makeMessage(name)` runs `wave`, and its text is returned through `welcome`.",
+        "Backticks make a template literal: text that can include values. `${name}` inserts the current name.\n\nOrdinary quoted text does not make that insertion. Here, the braces mark a value inside text; they do not start a block of instructions.",
+        "Change the callback while keeping `welcome` the same:\n```javascript\nfunction wave(name) {\n  return `Hi, ${name}!`;\n}\nfunction cheer(name) {\n  return `Great to see you, ${name}!`;\n}\nfunction welcome(makeMessage, name) {\n  return makeMessage(name);\n}\nconsole.log(welcome(wave, \"Noor\"));\nconsole.log(welcome(cheer, \"Noor\"));\n```\nOutput:\n```text\nHi, Noor!\nGreat to see you, Noor!\n```\nEach callback returns its own greeting style.",
+        "`document` represents the browser page. `querySelector(\"#g1\")` finds the first element whose ID is g1, or returns `null` if none exists.\n\nOn a page containing `<p id=\"g1\"></p>`, run:\n```javascript\nconst output = document.querySelector(\"#g1\");\noutput.textContent = \"Hi, Noor!\";\nconsole.log(output.textContent);\n```\nOutput:\n```text\nHi, Noor!\n```\n`textContent` puts plain text in the element. It does not treat the text as HTML. If the element is not guaranteed to exist, check for `null` before using it.",
+        "Complete `showGreeting` by calling the supplied function with `name` and returning its result.\n\nCall it with `friendly` and `\"Ari\"`, saving the result as `firstGreeting`. Save the playful version as `secondGreeting`. Put them in the supplied `g1` and `g2` page elements.\n\nThese callbacks run when `showGreeting` calls them. Other programs can keep a callback to call later."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Write two functions that return different greetings for a name.",
+        "Inside showGreeting(makeGreeting, name), run makeGreeting with name and return the greeting it gives back.",
+        "Put each returned message into a page element with `textContent`.",
+        "Check both page text results."
+      ],
+      "after": [
+        "Return `makeGreeting(name)` from `showGreeting`.",
+        "Save `showGreeting(friendly, \"Ari\")` as `firstGreeting`.",
+        "Save the playful call as `secondGreeting`.",
+        "Set the `textContent` of `#g1` and `#g2` to the matching greetings, then print the saved results."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "showGreeting expects a function it can call. friendly(\"Ari\") returns text. What goes wrong with showGreeting(friendly(\"Ari\"), \"Ari\")?",
+        "choices": [
+          "It receives the function without running it",
+          "It calls friendly later with no name",
+          "It receives text instead of the callable function"
+        ],
+        "answer": 2,
+        "explanation": "The inner parentheses call friendly immediately. Its returned text is passed to showGreeting, which expects a function value; passing friendly without parentheses preserves that function."
+      },
+      "after": {
+        "question": "`showGreeting` needs a function. What goes wrong if you pass `friendly(\"Ari\")` to it?",
+        "choices": [
+          "It receives the function without running it.",
+          "It calls friendly later without a name.",
+          "It receives the returned text instead of the function."
+        ],
+        "answer": 2,
+        "explanation": "The parentheses run `friendly` now. Pass `friendly` without parentheses so `showGreeting` can call it."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "This unit demonstrates higher-order functions through returned strings. The DOM elements are fixtures; the core callback checks run in JavaScript.",
+      "after": ""
+    }
+  ],
+  "headings": [
+    "Pass a function as an input",
+    "Pass the function or call it now",
+    "Follow the greeting through a callback",
+    "Insert a name into text",
+    "Choose a different greeting function",
+    "Put returned text on the page",
+    "Connect the supplied greetings"
+  ],
+  "project": {
+    "title": "A flexible greeting tool",
+    "task": "Complete the greeting wrapper, save both named results, and show them in the supplied page elements.",
+    "done_when": "`firstGreeting` is Hello, Ari! and `secondGreeting` is Hey there, Ari!; both appear in their page elements."
+  },
+  "notes": [
+    "Removed an unrelated local-project completion requirement; its useful teaching is in the lesson and technical evidence stays in review documents."
+  ]
+}

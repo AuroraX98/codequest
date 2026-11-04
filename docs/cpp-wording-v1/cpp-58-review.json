@@ -1,0 +1,94 @@
+{
+  "lesson": "cpp-58",
+  "position": 58,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Change twice(3) to twice(4) but keep static_assert(size == 6). What happens?",
+      "after": "Calculate a constant and check it before the program runs."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A constexpr function can participate in constant evaluation when its inputs and operations permit it. Calling that function does not by itself force every call to happen at compile time.",
+        "constexpr int size = twice(3) requires a constant expression. By contrast, an ordinary int can hold a runtime result even when the called function is declared constexpr.",
+        "static_assert requires a constant condition. A false condition rejects the program during compilation, before main runs. This is different from a runtime assert that may be disabled in some builds.",
+        "Complete local C++ example; the app itself does not execute it:\n```cpp\n#include <iostream>\nconstexpr int twice(int value) { return value * 2; }\nint main() {\n    constexpr int size = twice(3);\n    static_assert(size == 6, \"unexpected size\");\n    std::cout << size << \"\\n\";\n}\n```",
+        "Expected output or behavior: 6. Local compiler test evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Keep the function constexpr but call it with a runtime input; explain which values still qualify for static_assert. You may trace this without a compiler; finishing the reading is not proof of a local run."
+      ],
+      "after": [
+        "Compile time is when source code is turned into a program. A constexpr function can be evaluated then when its inputs and operations allow it. Other calls to the same function may still run later.",
+        "constexpr int size requires its starting value to be a constant expression, one the compiler can evaluate. Here twice(3) meets that requirement.",
+        "static_assert checks a constant condition during compilation. If the condition is false, the compiler rejects the program and reports the supplied message.",
+        "Follow the constant calculation before the assertion is checked.\n\n```cpp\n#include <iostream>\nconstexpr int twice(int value) { return value * 2; }\nint main() {\n    constexpr int size = twice(3);\n    static_assert(size == 6, \"unexpected size\");\n    std::cout << size << \"\\n\";\n}\n```",
+        "The program prints 6. The compiler calculates size as six, and the size == 6 assertion passes before main runs.",
+        "A runtime check happens while a program is running. static_assert happens earlier and requires a constant condition. The separate assert facility is a runtime check that some build settings can disable."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain why, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Calculate the constant first, then test the static assertion."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Change twice(3) to twice(4) but keep static_assert(size == 6). What happens?",
+        "choices": [
+          "The program prints 8 and then warns.",
+          "The compiler changes size back to 6.",
+          "Compilation fails; there is no successful program run."
+        ],
+        "answer": 2,
+        "explanation": "size becomes the constant 8. The required compile-time assertion 8 == 6 is false."
+      },
+      "after": {
+        "question": "Change twice(3) to twice(4), but keep static_assert(size == 6). What happens?",
+        "choices": [
+          "The program prints 8 and then gives a warning.",
+          "The compiler changes size back to 6.",
+          "Compilation fails, so this changed program cannot run successfully."
+        ],
+        "answer": 2,
+        "explanation": "size becomes the constant eight. The assertion that it equals six is false, so the compiler rejects the program."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "C++ Core v1, standard C++23 features checked against the available GCC14.2 implementation. This app provides concept reading and an understanding check, not a C++ browser runner. Local example tests are separate evidence and do not certify learner mastery.",
+      "after": "The browser shows C++ code and checks your understanding; it does not run C++. Optional local examples use C++23."
+    }
+  ],
+  "headings": [
+    "Allow compile-time calculation",
+    "Require a constant result",
+    "Check with static_assert",
+    "One example",
+    "What appears",
+    "Separate compile-time and runtime checks"
+  ],
+  "project": {
+    "title": "Evaluate constants and assert at compile time",
+    "task": "Trace the constant calculation and the check performed before execution.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local C++ example is optional."
+  }
+}

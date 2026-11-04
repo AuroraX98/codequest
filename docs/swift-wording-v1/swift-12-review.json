@@ -1,0 +1,108 @@
+{
+  "lesson": "swift-12",
+  "position": 57,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Test a search function and compare work counts for two input sizes under the same rules.",
+      "after": "Count search checks to see how the work grows with the list."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A test compares an observable result with an expected one. Good search tests ask more than “did one name show up?” Test an item at the beginning, one at the end, and a value that is absent. These cases make the search do different amounts of work and catch different mistakes. A linear search checks entries one after another until it finds a match or reaches the end. Linear describes how its worst-case work grows with the number of entries. Count comparisons so you can explain the work, rather than relying on one stopwatch result.",
+        "This complete Swift example returns both the found position and a work count.\n\n```swift\nstruct LookupResult {\n    let index: Int?\n    let comparisons: Int\n}\n\nfunc locate(_ target: Int, in values: [Int]) -> LookupResult {\n    var comparisons = 0\n    for (index, value) in values.enumerated() {\n        comparisons += 1\n        if value == target {\n            return LookupResult(index: index, comparisons: comparisons)\n        }\n    }\n    return LookupResult(index: nil, comparisons: comparisons)\n}\n\nlet values = [4, 8, 12, 16]\nlet found = locate(12, in: values)\nlet missing = locate(20, in: values)\nprint(found.index ?? -1)\nprint(found.comparisons)\nprint(missing.index == nil)\nprint(missing.comparisons)\n```\n\nThe outputs are 2, 3, true, and 4. The target 12 sits at index 2, after three comparisons. The missing target requires checking all four entries.",
+        "Array positions start at zero. The first entry has index 0, the second index 1, and so on. Position is different from value: [4, 8, 12, 16] has 12 at position 2. Int? allows a returned index to be a whole number or nil when no position was found. values.enumerated() supplies a sequence of pairs containing the offset and value. for (index, value) unpacks each pair, a tuple, into two names. In this array example, the enumeration offsets are valid array indices. That assumption should not be carried over blindly to other collection types.",
+        "Increase comparisons once for each equality question about an entry, before possibly returning on a match. That makes a first-item match count one instead of zero. return exits the function as soon as it finds the target, so later entries are not compared. If the loop finishes, return nil with the total number inspected. For an empty array there are no loop turns, so the missing result has zero comparisons. If duplicate targets exist, this search returns the first one it encounters. The function's behavior and the counting rules should be explicit before measuring it.",
+        "This second complete Swift program uses executable assertions to test a small search under consistent conditions.\n\n```swift\nstruct Result {\n    let index: Int?\n    let comparisons: Int\n}\nfunc search(_ target: Int, in values: [Int]) -> Result {\n    var count = 0\n    for (index, value) in values.enumerated() {\n        count += 1\n        if value == target {\n            return Result(index: index, comparisons: count)\n        }\n    }\n    return Result(index: nil, comparisons: count)\n}\n\nlet short = Array(0..<6)\nlet long = Array(0..<12)\nlet first = search(0, in: short)\nlet smallLast = search(5, in: short)\nlet largeLast = search(11, in: long)\nlet absent = search(-1, in: short)\nassert(first.index == 0 && first.comparisons == 1)\nassert(smallLast.index == 5 && smallLast.comparisons == 6)\nassert(largeLast.comparisons == smallLast.comparisons * 2)\nassert(absent.index == nil && absent.comparisons == short.count)\nprint(\"The small search checks passed\")\n```\n\nassert reports failure in an assertion-enabled build if its condition is false; it is a development check, not user-facing input validation. Both growth runs search the last item, so they compare equivalent worst-case conditions.",
+        "Array(0..<6) turns the half-open range into [0, 1, 2, 3, 4, 5]. The six-item last-target search makes six comparisons; the twelve-item last-target search makes twelve. Doubling this input doubles its counted work. For a missing value, every item must also be checked. In general a linear scan can do about n comparisons in the worst case, where n means the number of entries. Growing from 500 to 2,000 entries multiplies the size by 2,000 ÷ 500 = 4, so comparable worst-case work is four times as large. A first-item match can still take just one comparison at either size.",
+        "Elapsed time depends on more than algorithm work. Other programs, hardware, compiler settings, warm-up, and the test environment can change a timing. A comparison count is repeatable for this same algorithm and input, though it does not account for every cost. For a fair before-and-after optimization comparison, keep the same list, same query, and same expected answer, then change the method being compared. If a prebuilt index speeds up later lookups, include the work and memory needed to construct and maintain it. Counting fewer comparisons does not prove every part of an app became fast.",
+        "For the supplied find function, return SearchResult with an optional index and comparison count. Use Array(0..<100) for the sample, store smallRun for 99, largeRun for 199 in 200 entries, and missingRun for -1 in the sample. Expect indices 99, 199, and nil with counts 100, 200, and 100; finding 0 takes one comparison. The checks cover last match, missing input, doubled work, and first match. The fixture measures growth under two sizes, not an optimized before-and-after UI. Explain those limits, run the core behavior checks, and use equivalent conditions if you later compare another implementation in the Apple environment."
+      ],
+      "after": [
+        "A linear search checks items one by one until it finds a match or reaches the end. Count each comparison to see how much work it does. Test a first item, a last item, and a missing value.",
+        "```swift\nstruct LookupResult {\n    let index: Int?\n    let comparisons: Int\n}\n\nfunc locate(_ target: Int, in values: [Int]) -> LookupResult {\n    var comparisons = 0\n    for (index, value) in values.enumerated() {\n        comparisons += 1\n        if value == target {\n            return LookupResult(index: index, comparisons: comparisons)\n        }\n    }\n    return LookupResult(index: nil, comparisons: comparisons)\n}\n\nlet values = [4, 8, 12, 16]\nlet found = locate(12, in: values)\nlet missing = locate(20, in: values)\nprint(found.index ?? -1)\nprint(found.comparisons)\nprint(missing.index == nil)\nprint(missing.comparisons)\n```\nThis prints 2, 3, true, and 4. Finding 12 takes three comparisons and returns position 2. Finding no match takes four comparisons and returns nil.",
+        "Array positions start at zero. Position 2 holds the third item. enumerated() supplies each item's position and value in this array. Int? means the returned position may be a whole number or nil when no match exists.",
+        "Add one to comparisons before each equality check. Return as soon as a match is found. That gives one comparison for a first-item match. Empty arrays need zero comparisons, and repeated matches return the first matching position.",
+        "To compare input sizes fairly, search for the last item in both lists. Searching the first item in one list and the last in another would compare different amounts of work for another reason.",
+        "For a last-item match, a list of 100 items takes 100 comparisons. A list of 200 takes 200. Doubling the size doubles this worst-case work. A first-item match can still take only one comparison at either size.",
+        "A work count is repeatable for the same method and input. Running time can also change because of hardware, other programs, or compiler settings. Counting comparisons explains this search's work; it does not measure every cost in the app.",
+        "Complete find with an optional index and a comparison count. Save smallRun for 99 in 100 entries, largeRun for 199 in 200 entries, and missingRun for -1 in the smaller array. Expect counts of 100, 200, and 100. Finding 0 in the smaller array should take one check."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Write a search function that returns the item’s position and the number of values it checked.",
+        "In Array(0..<100), search for 0, then 99, then -1.",
+        "Expect positions 0 and 99 for the first two searches, and nil when -1 is not found.",
+        "Save the search for 99 in 100 entries as smallRun. Expect 100 comparisons.",
+        "Save the search for 199 in 200 entries as largeRun. Expect 200 comparisons.",
+        "Save the search for -1 in 100 entries as missingRun. Expect 100 comparisons."
+      ],
+      "after": [
+        "Count each compared item and return the first matching position.",
+        "Return nil and the full count when no item matches.",
+        "Save the three requested runs.",
+        "Check both their positions and their work counts."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Use `enumerated()` to get both the position and value.",
+        "Increase the comparison count once for each value checked.",
+        "For a missing target, finish with a nil index and the full comparison count."
+      ],
+      "after": [
+        "Use enumerated() for the array's positions and values.",
+        "Increment the count before checking for a match.",
+        "Keep the same last-item condition when comparing sizes."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Why count the comparisons as well as measure the time?",
+        "choices": [
+          "The count is less affected by unrelated computer activity",
+          "Timing is always wrong",
+          "Comparison counts prove every program is fast"
+        ],
+        "answer": 0,
+        "explanation": "A work count is repeatable for the same input and algorithm, while wall-clock timing can vary."
+      },
+      "after": {
+        "question": "Why count comparisons as well as measuring time?",
+        "choices": [
+          "The count is less affected by other computer activity",
+          "Timing is always wrong",
+          "The count proves every part of a program is fast"
+        ],
+        "answer": 0,
+        "explanation": "The same search on the same input makes the same number of comparisons. Its running time can still vary."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "The fixture compares a linear scan across two input sizes under identical last-item conditions. That measures growth, not an optimized before/after UI. For an optimization comparison, hold one list/query fixed and compare counted linear-scan work with a prebuilt index; include index construction cost and confirm identical results.",
+      "after": "This exercise compares search work at two list sizes. It does not measure a faster UI. To compare two search methods, use the same input and expected answer and include any setup work."
+    }
+  ],
+  "headings": [
+    "Count the search work",
+    "Read one example",
+    "Separate positions from values",
+    "Count each check once",
+    "Compare the same kind of search",
+    "Explain the growth",
+    "Know what a count cannot show",
+    "Try it yourself"
+  ],
+  "project": {
+    "title": "A smooth data-heavy list",
+    "task": "Complete find and the supplied runs. Check the first item, last item, and missing value, then compare last-item searches in 100 and 200 entries.",
+    "done_when": "Positions and counts match the expected results, and doubling the list doubles the last-item search count."
+  }
+}

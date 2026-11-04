@@ -1,4 +1,4 @@
-export default [
+const readings = [
   {
     "source": "A module is a Python file whose code another file can import.",
     "simple": "A module is a Python file whose functions and other code can be used from another file.",
@@ -3084,3 +3084,5 @@ export default [
     "lesson": "python-25"
   }
 ];
+
+export default readings;

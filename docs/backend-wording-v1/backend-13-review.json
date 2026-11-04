@@ -1,0 +1,106 @@
+{
+  "lesson": "backend-13",
+  "position": 34,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Complete restoreMatches(expected, restored). Both inputs have version and notes arrays of {id,title}. Expected IDs are unique. Return true only when versions and every ID/title pair match, ignoring row order. Both inputs are well-formed records under this contract.",
+      "after": "Check the contents of restored data. A file name or matching row count cannot prove the data is right."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A backup file existing is not proof that it can restore the required data.",
+        "A restore drill opens the saved copy in an isolated environment and checks meaningful records and schema expectations.",
+        "Comparing only row counts can miss changed or replaced data. Two different sets of notes can have the same count.",
+        "Compare stable IDs and their values. Database query order is not guaranteed unless requested, so sort copies before comparing.",
+        "This practice checks a simplified restored snapshot. Version must match, and every note ID/title pair must match.\n\n```javascript\nconst rows = [{id:1}, {id:2}];\nconsole.log(rows.every(row => row.id > 0));\nconsole.log(rows.every(row => row.id === 1));\n```\nThis prints true, then false. every receives a predicate called on successive entries and returns whether all tested entries pass, stopping on the first failure. An empty array returns true; it has no failing entry. It does not validate a backup version by itself.",
+        "Use copied arrays when sorting so verification does not rearrange the caller’s records.\n\nFor numeric IDs, [...rows].sort((left, right) => left.id - right.id) orders a copy from smallest ID to largest. After checking equal lengths, compare each corresponding pair's ID and title. every((row, index) => condition) returns true only if the condition holds for every row; index identifies the matching position in the other array.",
+        "The supplied Python companion creates a disposable SQLite backup, closes the source, reopens the backup, and checks integrity plus known rows.",
+        "It never reads or overwrites your real files. Production recovery also needs retention, access controls, encryption where appropriate, and a tested recovery process."
+      ],
+      "after": [
+        "A backup is a saved copy of data. Restoring means reading that copy so the app can use the data again.",
+        "A restore drill tries this in a separate, safe place. It checks that the saved copy opens and contains the needed records.",
+        "Two lists can have the same number of notes but different titles. Check the actual values as well as the count.",
+        "An ID identifies a note. Match each ID with its title. Ignore row order: a database can return the same rows in a different order.",
+        "every checks whether all entries pass a rule.\n\n```javascript\nconst rows = [{id:1}, {id:2}];\nconsole.log(rows.every(row => row.id > 0));\nconsole.log(rows.every(row => row.id === 1));\n```\n\nThe first rule accepts both rows, so it returns true. The second fails on ID 2, so it returns false. An empty array returns true because no entry fails.",
+        "Complete restoreMatches(expected, restored). Check equal versions and lengths. Sort a copy of each notes array by numeric ID. Then compare the ID and title at each matching position. Copying first keeps the original arrays in their original order.",
+        "The downloadable Python companion makes a temporary SQLite database and backup. It closes the source, opens the backup, and checks its stored rows and database integrity.",
+        "The browser checks the supplied snapshots. The companion tests a disposable backup. Neither checks a backup of your own app. A real recovery plan must also check the other data and settings that app needs."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the requirement.",
+        "Make one change to the starter.",
+        "Run the checks.",
+        "Explain why a changed input produces its result."
+      ],
+      "after": [
+        "Compare the versions and note counts.",
+        "Sort copies of the note arrays by ID.",
+        "Check every ID and its title.",
+        "Run the checks, including shuffled rows and a wrong title."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Compare version before accepting the data.",
+        "Sort copies by stable ID.",
+        "Check each ID and its associated title, not just length."
+      ],
+      "after": [
+        "Reject a different version or a different number of notes.",
+        "Use [...rows].sort((a, b) => a.id - b.id) for numeric IDs.",
+        "Use every with the row's index to compare matching positions."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "The restored database has the expected two rows, but one note title is wrong. Is comparing only the row count enough evidence of a correct restore?",
+        "choices": [
+          "Yes; equal counts prove equal data.",
+          "No; verify important identities and values as well.",
+          "Yes; a backup extension guarantees its contents."
+        ],
+        "answer": 1,
+        "explanation": "Counts cannot distinguish different content of the same size. A restore check should test the data the application depends on."
+      },
+      "after": {
+        "question": "A restored copy has two rows as expected, but one title is wrong. Is checking only the count enough?",
+        "choices": [
+          "Yes. Equal counts prove the data matches.",
+          "No. Check the IDs and their values too.",
+          "Yes. The file's name proves its contents."
+        ],
+        "answer": 1,
+        "explanation": "Two lists can have the same size and different contents. A restore check must check the data the app needs."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "The browser verifies supplied snapshot data only. The companion Python script separately demonstrates a real disposable SQLite backup/reopen; neither step proves a production backup has been made or that all possible corruption is detected.",
+      "after": "The browser compares well-formed snapshots with numeric IDs; expected IDs are unique. The separate Python companion uses disposable SQLite files. Passing these checks does not verify a production backup or detect every possible problem."
+    }
+  ],
+  "headings": [
+    "Check what came back",
+    "Try a restore",
+    "Count is not enough",
+    "Match by ID",
+    "One example",
+    "Compare without moving the originals",
+    "Try the local backup",
+    "Know what the check proves"
+  ],
+  "project": {
+    "title": "Check the restored content, not just a file name",
+    "task": "Complete restoreMatches(expected, restored). Both inputs have version and notes arrays of {id,title}. Expected IDs are unique. Return true only when versions and every ID/title pair match, ignoring row order. Do not rearrange the input arrays.",
+    "done_when": "Checks pass for reordered notes, changed titles, wrong versions, and missing or duplicate rows. Explain why equal row counts are not enough."
+  }
+}

@@ -1,0 +1,91 @@
+{
+  "lesson": "java-64",
+  "position": 64,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "If the worker assigns 11, what prints after join?",
+      "after": "Wait for a worker thread to finish before reading its answer."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "Runnable is a functional interface whose run method takes no arguments and returns no value. The empty () in () -> introduces a zero-argument lambda. Thread.start schedules the Runnable on another thread; run called directly is just an ordinary method call. join waits for the started worker to terminate. The lambda stores into a one-element array because captured local bindings cannot be reassigned.",
+        "After a successful join, the worker actions happen-before the following read. Reading before join would lack this guarantee. Sleeping for a guessed duration is not a substitute. main declares InterruptedException instead of ignoring a failed join.",
+        "Complete local Java example; the app itself does not execute it:\n```java\n\npublic class Main {\n\n  public static void main(String[] args) throws InterruptedException {\n    int[] result = {0};\n    Thread worker = new Thread(() -> result[0] = 7);\n    worker.start();\n    worker.join();\n    System.out.println(result[0]);\n  }\n}\n```",
+        "Expected output or behavior: 7. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Explain why moving the read before join would invalidate the guaranteed answer; do not use sleep as a repair. You may trace it without a JDK; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "A thread runs a sequence of instructions. Thread.start starts the supplied task on another thread. The task is a Runnable: an operation with no input or result value. The lambda's empty () means no inputs. Calling run directly would stay on the calling thread.",
+        "join waits until the worker ends. When join returns successfully, later reads can see the worker's completed changes. A guessed sleep does not provide that guarantee. join can be interrupted, so main declares InterruptedException.",
+        "The lambda changes an array item rather than reassigning its captured variable. Trace start, join, then the read.\n\n```java\n\npublic class Main {\n\n  public static void main(String[] args) throws InterruptedException {\n    int[] result = {0};\n    Thread worker = new Thread(() -> result[0] = 7);\n    worker.start();\n    worker.join();\n    System.out.println(result[0]);\n  }\n}\n```",
+        "The program prints 7. The worker stores seven, and join finishes before main reads the array item.",
+        "The quiz changes the number stored by the worker. The wait still ensures that the completed write is visible before printing."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "The print comes after a successful join, not just after start."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If the worker assigns 11, what prints after join?",
+        "choices": [
+          "Either 0 or 11 because join never orders memory",
+          "11",
+          "7 because captured arrays are immutable."
+        ],
+        "answer": 1,
+        "explanation": "join waits for termination and orders the worker write before the subsequent read."
+      },
+      "after": {
+        "question": "Make the worker store 11. What prints after join returns successfully?",
+        "choices": [
+          "Either zero or eleven, because join gives no visibility guarantee.",
+          "11",
+          "7, because captured arrays cannot change."
+        ],
+        "answer": 1,
+        "explanation": "join waits for the worker to finish and makes its completed write visible to the later read."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Java Core v1 uses stable Java25 LTS features without preview flags. The app supplies concept reading and an understanding check, not a Java browser runner. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "The browser shows Java code and checks your understanding; it does not run Java. Optional local examples use Java25."
+    }
+  ],
+  "headings": [
+    "start gives a worker its own running thread",
+    "join waits and makes finished work visible",
+    "One example",
+    "What appears",
+    "Change the worker's answer"
+  ],
+  "project": {
+    "title": "Join a worker before observing its result",
+    "task": "Explain why main reads the result only after join.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local Java example is optional."
+  }
+}

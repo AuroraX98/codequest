@@ -1,0 +1,116 @@
+{
+  "lesson": "swift-10",
+  "position": 50,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Use an actor for shared entries and a cancellable task so older results cannot replace newer ones.",
+      "after": "Keep an older load from replacing the current result."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "Asynchronous work can pause while waiting and resume later. async marks a Swift function that may suspend. await marks a call where your code can suspend while that work completes. Suspension lets other work make progress; it does not promise a particular thread or completion order. If one request starts first but takes longer, it may finish after a newer request. A loader therefore needs a deliberate policy: only the still-current request may change the visible result. Merely adding a longer delay cannot establish that policy.",
+        "This is a complete top-level asynchronous Swift program for a compatible modern Swift toolchain. It demonstrates waiting and an error path without a user interface.\n\n```swift\nenum SampleError: Error {\n    case unavailable\n}\n\nfunc loadNames(_ request: Int) async throws -> [String] {\n    try await Task.sleep(for: .milliseconds(20))\n    try Task.checkCancellation()\n    if request == 0 {\n        throw SampleError.unavailable\n    }\n    return [\"name-\\(request)\"]\n}\n\ndo {\n    let names = try await loadNames(7)\n    print(names)\n} catch is CancellationError {\n    print(\"Cancelled\")\n} catch {\n    print(\"Could not load names\")\n}\n```\n\nThe ordinary successful result is [\"name-7\"]. throws says the function can fail by throwing an Error. try marks calls that may throw, and do/catch handles the result. Cancellation has its own catch so it can be described differently from a failed load. enum defines a type with named cases; here unavailable is one possible error value. The colon in : Error declares that the type meets Swift's error requirements. A function parameter names an input, while -> [String] promises an array of text as its successful result.",
+        "Task represents asynchronous work. Task { ... } starts a task with a closure containing its instructions. A stored Task<Void, Never>? means an optional task whose successful result is Void, no useful returned value, and whose exposed failure type is Never, meaning it does not throw an error out to its caller. The closure can still perform throwing work if it handles the error internally. task?.cancel() uses optional chaining: call cancel only if a task exists. Cancellation is cooperative. It signals that the work should stop; code must check or reach a cancellation-aware operation. Task.checkCancellation() throws if cancellation has been requested, and Task.isCancelled reads that state as a Bool.\n\nTask.sleep suspends the current task for the requested duration without promising an exact resume time; cancellation can make it throw. This complete top-level async fragment makes a task and observes cancellation:\n```swift\nlet work = Task {\n    try await Task.sleep(for: .seconds(10))\n    return \"Finished\"\n}\nwork.cancel()\ndo { print(try await work.value) }\ncatch is CancellationError { print(\"Cancelled\") }\n```\nTask receives the work closure and returns a task handle. cancel requests cooperative cancellation, not a successful work result. Awaiting value observes the result or error; this example prints Cancelled rather than waiting ten seconds.",
+        "Assign every request an increasing number. Increase requestID when starting new work and capture its value in a constant such as thisRequest. A helper accepts(request:current:) should return request == current, a Bool asking whether that request is still the latest one. If request 8 starts, then request 9 starts, only 9 remains current. If 9 finishes first, its result may be displayed; the late 8 result must be ignored. Cancellation alone is not enough because a task could finish before noticing the signal. Check both cancellation and the request ID after every await before updating protected data. In a guard with comma-separated conditions, every condition must succeed. !Task.isCancelled means cancellation has not been requested. += 1 increases the ID by one. In the supplied delay expression, condition ? first : second chooses one of two values, so request 1 gets the slower delay.",
+        "An actor protects its stored state through isolation: outside code must use its allowed access paths rather than changing the storage freely. actor PracticeStore can own its entries and accepted request number. Calls across the actor boundary use await because access may require waiting for that actor. Within its replacement method, guard request >= requestID else { return } rejects a response older than the last one stored. >= means greater than or equal to. That comparison accepts a newer replacement or a repeat of the same request. The loader's stricter equality check establishes which request is current; the store's number check separately prevents an old replacement from overwriting newer stored data.",
+        "@MainActor isolates the loader's state and methods to the main actor, the executor normally used for UI work. It does not make every operation inside an async method run without interruption. While an await suspends a method, other actor work may run and change its state. That is why a guard before await store.replace is not a substitute for another guard after it. private(set) allows reading a property outside its setting scope while keeping updates controlled. A method cancel should signal the task, increase requestID so old work is stale, and set an understandable message. It should preserve existing useful results unless the design deliberately says otherwise.",
+        "This separate complete top-level async program demonstrates actor storage rejecting an older replacement. It can run with a compatible Swift toolchain; it has no SwiftUI screen.\n\n```swift\nfunc accepts(request: Int, current: Int) -> Bool {\n    request == current\n}\n\nactor MessageStore {\n    private var values: [String] = []\n    private var requestID = 0\n\n    func replace(with newValues: [String], request: Int) {\n        guard request >= requestID else { return }\n        requestID = request\n        values = newValues\n    }\n\n    func snapshot() -> [String] {\n        values\n    }\n}\n\nlet store = MessageStore()\nawait store.replace(with: [\"new result\"], request: 9)\nawait store.replace(with: [\"old result\"], request: 8)\nlet saved = await store.snapshot()\nprint(saved)\nprint(accepts(request: 8, current: 9))\n```\n\nThe output is [\"new result\"] and false. The first call establishes request 9. The request-8 guard exits without changing values. snapshot returns the isolated array through the actor's method. This small example tests the ordering rule; it does not simulate concurrent completion by itself.",
+        "Model the loader's states in ordinary words: Ready before a request, Loading during it, Loaded with entries after success, Could not load after failure, or Load cancelled after cancellation. An outdated task should not change either the result or the current message. catch is CancellationError recognizes that error type; a following catch handles other errors. if accepts(...) inside those catches prevents a stale task from replacing a newer message. The supplied driver uses MainActor.run to read or construct main-actor state from its async context. It also stores two values in a tuple, accessed as .0 and .1, to inspect the result and message together.\n\n```swift\nlet label = await MainActor.run { \"Ready\" }\nprint(label)\n```\nIn a top-level async program this prints Ready. MainActor.run receives a synchronous closure, executes it on the main actor and returns its value through the awaited call. It does not make an entire async operation uninterrupted. The supplied start method returns its Task<Void, Never> handle as well as storing it for cancellation. The driver awaits each handle’s value before reading results, including the superseded and cancelled tasks. This observes completion instead of assuming that a chosen sleep interval is long enough. For the cancellation demonstration, one synchronous MainActor.run closure starts and cancels the task before its inherited MainActor body can execute; then the driver awaits completion. This controlled ordering does not undo work that already completed before a later cancellation. The simulated loader still uses a cancellable delay to represent work; it does not promise a scheduling order.",
+        "For the exercise, use the supplied real async driver: slow request 1 followed by faster request 2 should leave session-2 in both the loader and actor store. Request 0 should produce Could not load practice data. Explicit cancellation of request 1 should preserve session-2 and show Load cancelled. Store and cancel the Task, capture each new ID, and guard after awaits; do not depend on delays alone. In the math scenario, request A with ID 4 remains stale once B with ID 5 is current, so B stays visible even if A finishes last. Compile and run with Swift 6 language mode using the configured Mac companion or a compatible local toolchain; test in Xcode when attaching a real Apple interface. The browser cannot execute this Swift concurrency or prove its scheduling behavior."
+      ],
+      "after": [
+        "Two loads can finish in a different order from when they started. Give each new request a larger number. Before showing its answer, check that its number still matches the current request.",
+        "async marks a function that may pause. await marks a call where that pause may happen. Other work can run while it waits, so do not assume the request is still current when it resumes.",
+        "Task represents asynchronous work. Save its handle so cancel() can ask it to stop. Cancellation is a request, not an instant stop. Task.checkCancellation() throws when cancellation is requested; Task.isCancelled lets code check the flag.",
+        "accepts(request:current:) should return request == current. After each await, check both that the task is not cancelled and that its request number still matches. A longer delay cannot replace these checks.",
+        "An actor protects its own changing data. The store accepts a replacement only when its number is at least as new as the last stored request. This prevents an older result from overwriting a newer stored result. The loader separately checks which request is current.",
+        "@MainActor protects the loader's state on the main actor, which is used for UI work. It does not prevent changes while an awaited call pauses. Check the request again after that call before changing visible data. Cancelling also advances the request number, making earlier work outdated.",
+        "```swift\nfunc accepts(request: Int, current: Int) -> Bool {\n    request == current\n}\n\nactor MessageStore {\n    private var values: [String] = []\n    private var requestID = 0\n\n    func replace(with newValues: [String], request: Int) {\n        guard request >= requestID else { return }\n        requestID = request\n        values = newValues\n    }\n\n    func snapshot() -> [String] {\n        values\n    }\n}\n\nlet store = MessageStore()\nawait store.replace(with: [\"new result\"], request: 9)\nawait store.replace(with: [\"old result\"], request: 8)\nlet saved = await store.snapshot()\nprint(saved)\nprint(accepts(request: 8, current: 9))\n```\nThis prints [\"new result\"], then false. Request 9 is stored first. Request 8 is then rejected. This small program shows the ordering rule; it does not run two competing loads.",
+        "Use clear messages for loading, success, failure, and cancellation. An outdated task must not replace the current message either. Handle CancellationError separately from other errors, and check the request number in each error-handling path.",
+        "Complete the supplied loader and run its driver. Slow request 1 followed by request 2 must leave session-2 visible and stored. Request 0 must show Could not load practice data. Explicit cancellation must preserve session-2 and show Load cancelled. The driver waits for the actual task handles to finish."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Make accepts return true only when the request ID matches the current request ID.",
+        "In PracticeStore, ignore data sent with an ID older than the one already stored.",
+        "In Loader.start, cancel the previous task and save a new request ID.",
+        "After each await, check that the task has not been cancelled and that its request ID is still current.",
+        "Start slow request 1, then fast request 2.",
+        "Next, try request 0, which fails.",
+        "Finally, start request 1 and cancel it yourself.",
+        "After the two competing requests, both result and PracticeStore should contain session-2.",
+        "After failure, show \"Could not load practice data\".",
+        "After you cancel, show \"Load cancelled\"."
+      ],
+      "after": [
+        "Make accepts compare the request number with the current number.",
+        "Have the store reject replacements older than its saved request.",
+        "Cancel old work and save a fresh request number when starting.",
+        "Check cancellation and the request number after each await.",
+        "Run the supplied driver and check its result and messages."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Keep a monotonically increasing request ID.",
+        "Cancel the old task and capture the new ID before starting the Task.",
+        "After awaiting, check cancellation and confirm the captured ID still matches before changing visible data."
+      ],
+      "after": [
+        "Capture the new request number before starting its task.",
+        "Use the returned Task handle to wait for completion.",
+        "Keep useful results when cancelling; update only the current message."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "What prevents an older response from replacing the newest result?",
+        "choices": [
+          "Checking that its request ID is still current",
+          "Using a longer delay",
+          "Storing the response in a String"
+        ],
+        "answer": 0,
+        "explanation": "The request ID ties each response to the request that is still active."
+      },
+      "after": {
+        "question": "What keeps an old response from replacing the current result?",
+        "choices": [
+          "Checking that its request number is still current",
+          "Waiting longer",
+          "Storing its text in a String"
+        ],
+        "answer": 0,
+        "explanation": "The request number tells you whether this response still belongs to the current load."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "The driver awaits the actual Task handles; no fixed observation sleep proves completion. Loader guards the currently visible request. PracticeStore separately rejects a replacement older than its last stored request; it is not notified whenever a new request starts or is cancelled. Native Linux validation does not establish Mac sandbox or Apple UI behavior.",
+      "after": "Run with Swift 6 language mode in a compatible Swift companion or local toolchain. The browser cannot run this Swift code. The store tracks the last saved request; it is not told whenever a new request starts or is cancelled. A real Apple interface needs its own Xcode checks."
+    }
+  ],
+  "headings": [
+    "Let the current request win",
+    "Explain async and await",
+    "Ask old work to stop",
+    "Check the request number",
+    "Protect stored results",
+    "Check again after waiting",
+    "Read one example",
+    "Keep messages current too",
+    "Try the supplied driver"
+  ],
+  "project": {
+    "title": "A cancellable data-loading app",
+    "task": "Complete the cancellable loader. Keep current-request checks around waits, protect the actor's stored results, and handle loading errors clearly.",
+    "done_when": "The supplied driver keeps session-2 after competing loads and cancellation, and shows the correct failure or cancellation message."
+  }
+}

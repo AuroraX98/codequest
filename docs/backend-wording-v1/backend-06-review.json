@@ -1,0 +1,117 @@
+{
+  "lesson": "backend-06",
+  "position": 27,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Complete pageEntries(entries, query). Use the provided parsePage helper. Invalid pages return status 400. Valid pages return status 200 and entries ordered by numeric id, skipping offset entries and taking at most limit. Do not reorder the supplied array.",
+      "after": "Return a limited slice of entries in a predictable order."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A page of results is a slice of a longer list. limit is how many results to return at most; offset is how many to skip.",
+        "In /entries?limit=2&offset=1, the query values arrive as text. They are not trusted numbers yet.",
+        "The supplied parsePage helper accepts digit-only text, converts it with Number, and checks Number.isSafeInteger.\n\n```javascript\nconsole.log(Number(\"12\"));\nconsole.log(Number.isSafeInteger(12));\nconsole.log(Number.isSafeInteger(1.5));\nconsole.log(Number.isSafeInteger(9007199254740992));\n```\nThe outputs are 12, true, false, false. Number converts the supplied text to a number. Number.isSafeInteger receives a value and returns whether it is an integer within JavaScript’s safely representable integer range. It does not convert quoted text or validate the allowed page range; those remain separate rules.",
+        "The small pattern /^\\d+$/ means one or more digits and nothing else. The helper rejects arrays, objects, negative signs, decimal points, and blank text before conversion.",
+        "This exercise permits limits from 1 through 20 and offsets from 0 upward. Missing values default to a limit of 5 and an offset of 0.",
+        "When parsing fails, return an error before selecting data. A 400 response asks the caller to fix the request.",
+        "The list must have a predictable order before choosing its page. Sort a copied array so the original order remains untouched.\n```javascript\nconst items = [{id: 8}, {id: 2}, {id: 5}];\nconst ordered = [...items].sort((a, b) => a.id - b.id);\nconsole.log(ordered.map(item => item.id));\n```",
+        "The sorted IDs are 2, 5, and 8. The original items array still begins with 8.",
+        "slice(start, end) includes start but stops before end. For offset 1 and limit 2, use end 3.\n```javascript\nconst names = [\"A\", \"B\", \"C\", \"D\"];\nconsole.log(names.slice(1, 3));\n```",
+        "The result is B and C. An offset past the end produces an empty list, not an error.",
+        "In a real Express route, req.query supplies the query object. Pass it to the same validated helper and use its status for the response.",
+        "These browser checks run the pagination function, not a network server. Offset pages can shift when records are inserted between requests; stable cursor pagination is a separate design."
+      ],
+      "after": [
+        "A page is part of a longer list. limit says how many items to return at most. offset says how many items to skip first.",
+        "Query settings arrive as text. In /entries?limit=2&offset=1, read and validate that text before using it as numbers.",
+        "The supplied parsePage helper converts accepted text with Number. It also uses Number.isSafeInteger to require whole numbers JavaScript can represent exactly.",
+        "Its /^\\d+$/ pattern accepts one or more digits and nothing else. Arrays, objects, blank text, negative signs, and decimal points fail this text check.",
+        "Allowed limits are 1 through 20. Offsets start at 0. Missing settings use limit 5 and offset 0. A valid whole number must still meet these range rules.",
+        "If parsePage returns null, return status 400 before selecting any entries. This tells the caller to fix the page settings.",
+        "Sort by numeric ID before taking a page. Copy the array first because sort changes the array it receives. The supplied entries have distinct, finite numeric IDs.",
+        "```javascript\nconst entries = [{id: 8}, {id: 2}, {id: 5}];\nconst offset = 1;\nconst limit = 2;\nconst ordered = [...entries].sort((a, b) => a.id - b.id);\nconst page = ordered.slice(offset, offset + limit);\nconsole.log(page.map(entry => entry.id));\nconsole.log(entries.map(entry => entry.id));\n```\nThis prints [5, 8], then [8, 2, 5]. The page uses sorted order, while the original array stays unchanged.",
+        "slice(start, end) includes start and stops before end. To skip offset items and take limit items, use offset + limit for the end.",
+        "An offset beyond the list gives an empty page. It is not an error when the page settings themselves are valid. A short final page may contain fewer than limit items.",
+        "Complete pageEntries using the provided parsePage helper. Return status 200 and the sorted slice for valid settings, or status 400 for invalid settings. In Express, the route can supply req.query to this helper.",
+        "The browser checks this function, not an HTTP server. With offset paging, adding or deleting records between requests can shift page boundaries. A predictable sort helps define each page but does not freeze a changing list."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the requirement.",
+        "Make one change to the starter.",
+        "Run the checks.",
+        "Explain why a changed input produces its result."
+      ],
+      "after": [
+        "Use parsePage and reject null with status 400.",
+        "Sort a copy by numeric ID.",
+        "Slice from offset to offset + limit and return status 200.",
+        "Check invalid settings, empty pages, and unchanged input."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return status 400 when parsePage gives null.",
+        "Copy with spread before sort; sorting the original would change its order.",
+        "The end passed to slice is offset plus limit, not limit alone."
+      ],
+      "after": [
+        "Do not sort the supplied array directly.",
+        "The slice end is offset + limit, not limit alone."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Sorted IDs are [2, 4, 6, 8, 10]. With offset 2 and limit 2, which IDs belong to the page?",
+        "choices": [
+          "[2, 4]",
+          "[6, 8]",
+          "[4, 6, 8]"
+        ],
+        "answer": 1,
+        "explanation": "Offset 2 skips the first two entries, 2 and 4. Limit 2 then takes exactly the next two, 6 and 8; the end index is offset + limit."
+      },
+      "after": {
+        "question": "Sorted IDs are [2, 4, 6, 8, 10]. With offset 2 and limit 2, which IDs are returned?",
+        "choices": [
+          "[2, 4]",
+          "[6, 8]",
+          "[4, 6, 8]"
+        ],
+        "answer": 1,
+        "explanation": "Skip 2 and 4, then take the next two: 6 and 8."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Browser checks verify a pure pagination function, not Express. Download the files, replace the pagination.mjs stub, install dependencies, and run npm start locally; then inspect /entries?limit=1&offset=1 and invalid pages. Binding is loopback-only. IDs are distinct finite numbers in the exercise input.",
+      "after": "Browser checks run the pagination function. To try real HTTP, complete the downloaded pagination.mjs stub and follow its local server instructions. The server listens only on this computer."
+    }
+  ],
+  "headings": [
+    "Take one page",
+    "Read query text",
+    "Use the supplied parser",
+    "Check digits before conversion",
+    "Apply the page limits",
+    "Reject invalid settings",
+    "Sort before slicing",
+    "Read one example",
+    "Explain the slice end",
+    "Allow an empty result",
+    "Complete pageEntries",
+    "Know the paging limit"
+  ],
+  "project": {
+    "title": "Return one page of entries",
+    "task": "Complete pageEntries(entries, query) using parsePage. Return 400 for invalid settings or 200 with an ID-sorted page, without changing the input.",
+    "done_when": "Valid pages contain the correct slice; invalid settings fail; the original array order stays intact."
+  }
+}

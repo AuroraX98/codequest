@@ -1,0 +1,92 @@
+{
+  "lesson": "c-48",
+  "position": 48,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "If the filename is inside a nonexistent directory in this isolated fixture, what happens?",
+      "after": "Opening, writing, and closing a file can each fail. Check each result before reporting success."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "fopen returns a FILE pointer on success and a null pointer on failure. Check it before writing. Mode w creates or truncates a text file, so run this fixture only in a disposable directory: it replaces lesson.txt.",
+        "fputs can report EOF on failure; fclose can report a final flush failure. Once fclose has been called, do not reuse the stream pointer, even if closing reports failure. C does not automatically close a local FILE pointer when a block ends.\n\nfputs(\"ready\", file) writes the characters of the terminated string to that stream without adding a newline. It returns EOF on error and a nonnegative value on success.",
+        "Complete local C example; the app itself does not execute it:\n```c\n#include <stdio.h>\n\nint main(void) {\n    FILE *file = fopen(\"lesson.txt\", \"w\");\n    if (file == NULL) { puts(\"open failed\"); return 1; }\n    int wrote = fputs(\"ready\", file) != EOF;\n    int closed = fclose(file) == 0;\n    if (!wrote || !closed) { puts(\"write failed\"); return 1; }\n    puts(\"saved\");\n    return 0;\n}\n```",
+        "Expected output or behavior: saved. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Explain which operations can fail after a successful open and why each result needs checking. You may trace it without a C compiler; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "A FILE pointer refers to an open stream, a connection used to read or write data. fopen returns NULL if opening fails. Mode w creates a file or replaces its old contents. Run this example in a new practice folder because it replaces lesson.txt.",
+        "fputs writes the string without adding a newline and reports EOF on failure. fclose closes the stream and can report a final writing failure. Check both results. After calling fclose, stop using that stream pointer even if closing failed.",
+        "Follow the example one line at a time.\n```c\n#include <stdio.h>\n\nint main(void) {\n    FILE *file = fopen(\"lesson.txt\", \"w\");\n    if (file == NULL) { puts(\"open failed\"); return 1; }\n    int wrote = fputs(\"ready\", file) != EOF;\n    int closed = fclose(file) == 0;\n    if (!wrote || !closed) { puts(\"write failed\"); return 1; }\n    puts(\"saved\");\n    return 0;\n}\n```",
+        "If opening, writing, and closing all succeed, the file contains ready and the screen shows saved. Leaving the local block alone would not perform the explicit close for you.",
+        "If the path names a missing parent directory, fopen cannot create that directory. The NULL check prints open failed and returns before any file write."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Check the result of fopen before following the file pointer."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If the filename is inside a nonexistent directory in this isolated fixture, what happens?",
+        "choices": [
+          "The null check reports open failed before any write.",
+          "The program should ignore the pointer and call fclose anyway.",
+          "fputs safely creates all missing directories."
+        ],
+        "answer": 0,
+        "explanation": "fopen cannot create missing parent directories; the guarded failure path returns without dereferencing a null stream."
+      },
+      "after": {
+        "question": "The chosen file is inside a directory that does not exist. What happens?",
+        "choices": [
+          "It prints open failed before writing.",
+          "It should ignore NULL and close the pointer anyway.",
+          "fputs creates all the missing directories."
+        ],
+        "answer": 0,
+        "explanation": "Opening fails and returns NULL. The program reports that failure and stops before using the stream."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "C Core v1 uses a portable C17 baseline supported by the verified compiler. C23 exists but is not claimed fully supported here. The app supplies concept reading and an understanding check, not a C browser runner. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "The browser shows C code and checks your understanding; it does not run C. Optional local examples use C17."
+    }
+  ],
+  "headings": [
+    "Open a file and check the pointer",
+    "Check the write and close",
+    "One example",
+    "Read the success path",
+    "Handle an unavailable location"
+  ],
+  "project": {
+    "title": "Open files and check failures",
+    "task": "Identify why successful opening alone is not enough to report that writing succeeded.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local C example is optional."
+  },
+  "navigationCorrection": "Added a short example introduction so its reviewed heading remains an explicit contents target."
+}

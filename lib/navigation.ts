@@ -31,8 +31,9 @@ export function normalizeRoute(
   const projectRoute = (!input.view || input.view === "quest") && (input.phase === "build" || input.phase === "math");
   return {
     view: projectRoute ? "studio" : views.has(input.view ?? "") ? input.view! : "quest",
-    studioMode: input.studioMode === "practice" ? "practice" : "course",
-    phase: input.view === "studio" && input.studioMode !== "practice" ? "build" : input.phase === "math" ? "build" : steps.has(input.phase ?? "") ? input.phase! : "learn",
+    // Old AI practice links and saved locations now open the course project.
+    studioMode: "course",
+    phase: input.view === "studio" ? "build" : input.phase === "math" ? "build" : steps.has(input.phase ?? "") ? input.phase! : "learn",
     activeId,
     ...(activeId === "python-01" &&
     ["program", "values", "strings", "names", "assignment", "output"].includes(
@@ -54,7 +55,6 @@ export function routeHash(route: QuestRoute) {
     lesson: route.activeId,
     step: route.phase,
   });
-  if (route.studioMode === "practice") params.set("mode", "practice");
   if (route.concept) params.set("concept", route.concept);
   params.set("idea", String(route.paragraph + 1));
   return "#" + route.view + "?" + params;

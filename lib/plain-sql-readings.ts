@@ -1,4 +1,4 @@
-export default [
+const readings = [
   {
     "source": "SQL is a language for asking a database questions.",
     "simple": "SQL lets you ask for information kept in a database.",
@@ -2886,3 +2886,5 @@ export default [
     "lesson": "sql-13"
   }
 ];
+
+export default readings;

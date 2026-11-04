@@ -1,0 +1,94 @@
+{
+  "lesson": "cpp-56",
+  "position": 56,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Replace owner[0] = 'F'; with owner[1] = 'O';. After remove_prefix(1), what does the last line show?",
+      "after": "Look at part of an existing string without owning a copy."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "std::string_view stores a pointer and length, not an owning string copy. Its owner must remain alive and its storage must remain valid while the view is used.",
+        "Assigning owner[0] changes an existing character without reallocating storage. The view sees that edit. Operations that replace or grow the owner may invalidate the view; do not keep a view into a destroyed temporary string.",
+        "remove_prefix shortens the view, not the owning string. It requires that the removed count is no greater than the view length. A string_view also need not end with a null character; data() is not automatically a C-string.",
+        "Complete local C++ example; the app itself does not execute it:\n```cpp\n#include <iostream>\n#include <string>\n#include <string_view>\nint main() {\n    std::string owner = \"forest\";\n    std::string_view view{owner};\n    owner[0] = 'F';\n    std::cout << view << \"\\n\";\n    view.remove_prefix(1);\n    std::cout << view << \" \" << owner << \"\\n\";\n}\n```",
+        "Expected output or behavior: Forest\norest Forest. Local compiler test evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Make an owning std::string copy from the view and compare what later owner edits affect. You may trace this without a compiler; finishing the reading is not proof of a local run."
+      ],
+      "after": [
+        "std::string_view remembers where text starts and how many character units it covers. It does not own or copy that text. The owning string must keep its storage alive while the view uses it.",
+        "Changing an existing character in owner changes the text the view reads. This character assignment does not move the string's storage, so the view remains valid here.",
+        "remove_prefix(1) moves the view's start forward by one character unit. It does not erase anything from owner. The count removed must not exceed the view's length.",
+        "Follow the owner edit before the view's starting position changes.\n\n```cpp\n#include <iostream>\n#include <string>\n#include <string_view>\nint main() {\n    std::string owner = \"forest\";\n    std::string_view view{owner};\n    owner[0] = 'F';\n    std::cout << view << \"\\n\";\n    view.remove_prefix(1);\n    std::cout << view << \" \" << owner << \"\\n\";\n}\n```",
+        "The program prints Forest, then orest Forest on the next line. The view sees the capital F. Removing its prefix hides that first character only from the view.",
+        "Destroying the owner, or an operation that moves its storage, can invalidate the view. Also, a view need not end at a null character, the marker used to end a C-style string. Its data() pointer alone is not a promise of that ending."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain why, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Track the stored text separately from the part the view covers."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Replace owner[0] = 'F'; with owner[1] = 'O';. After remove_prefix(1), what does the last line show?",
+        "choices": [
+          "orest forest",
+          "Orest fOrest",
+          "Orest Orest"
+        ],
+        "answer": 1,
+        "explanation": "The borrowed characters reflect the owner’s O. Removing the view’s prefix hides only the first character from the view; the owner stays fOrest."
+      },
+      "after": {
+        "question": "Replace owner[0] = 'F' with owner[1] = 'O'. What does the final line show after remove_prefix(1)?",
+        "choices": [
+          "orest forest",
+          "Orest fOrest",
+          "Orest Orest"
+        ],
+        "answer": 1,
+        "explanation": "The second character becomes O. The view hides only the first character, while owner keeps the complete fOrest text."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "C++ Core v1, standard C++23 features checked against the available GCC14.2 implementation. This app provides concept reading and an understanding check, not a C++ browser runner. Local example tests are separate evidence and do not certify learner mastery.",
+      "after": "The browser shows C++ code and checks your understanding; it does not run C++. Optional local examples use C++23."
+    }
+  ],
+  "headings": [
+    "Borrow a view of text",
+    "See changes in the original",
+    "Shorten only the view",
+    "One example",
+    "What appears",
+    "Keep the borrowed storage valid"
+  ],
+  "project": {
+    "title": "Use a non-owning string_view",
+    "task": "Trace the shared characters and the view's shortened range.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local C++ example is optional."
+  }
+}

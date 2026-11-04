@@ -1,0 +1,91 @@
+{
+  "lesson": "kotlin-44",
+  "position": 44,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "If the text becomes \"twelve\", what prints under this explicit fallback policy?",
+      "after": "Use Result to carry either a successful value or a failure."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "Result<T> holds either a successful T or a failure. runCatching executes a block and wraps any thrown Throwable as a failure. String.toInt() converts valid integer text but throws NumberFormatException when the text is not a valid Int representation; unlike toIntOrNull, it does not return null. It does not mean that every failure should be ignored or retried.",
+        "getOrElse returns the success value or calls a failure lambda for a fallback. The -1 fallback here is an explicit teaching policy. In coroutine code, blanket runCatching can capture cancellation exceptions too: do not silently convert cancellation into success; coroutine handling is taught separately.",
+        "Complete local Kotlin/JVM example; the app itself does not execute it:\n```kotlin\nfun main() {\n    val result: Result<Int> = runCatching { \"12\".toInt() }\n    println(result.getOrElse { -1 })\n}\n```",
+        "Expected output or behavior: 12. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Inspect isSuccess before applying the fallback, and explain why fallback is not proof of valid input. You may trace it without a Kotlin compiler; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "`Result<Int>` holds either an Int answer or an error. The function `runCatching` runs a block and stores a thrown error as a failed Result. In this block, String.toInt reads integer text and throws an error if the text is invalid.",
+        "The function `getOrElse` returns a successful value unchanged. For a failure, it runs a lambda to choose a fallback. Here, the programmer has chosen -1 as that fallback.",
+        "Follow the example one line at a time.\n```kotlin\nfun main() {\n    val result: Result<Int> = runCatching { \"12\".toInt() }\n    println(result.getOrElse { -1 })\n}\n```",
+        "The screen shows `12`. Reading the text succeeds, so getOrElse returns 12 without running the fallback.",
+        "A fallback does not prove the input was valid. RunCatching catches all Throwable failures, including cancellation signals that ask ongoing work to stop. Do not silently turn a cancellation request into a successful result."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Check whether the whole text can be read as an Int."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If the text becomes \"twelve\", what prints under this explicit fallback policy?",
+        "choices": [
+          "twelve",
+          "-1",
+          "12"
+        ],
+        "answer": 1,
+        "explanation": "toInt throws on invalid numeric text; runCatching stores that failure, so getOrElse executes the fallback."
+      },
+      "after": {
+        "question": "Replace `\"12\"` with `\"twelve\"`. What appears with this fallback?",
+        "choices": [
+          "twelve",
+          "-1",
+          "12"
+        ],
+        "answer": 1,
+        "explanation": "ToInt cannot read the word twelve as integer text. RunCatching stores the error, and getOrElse uses -1."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Kotlin JVM Core v1 uses Kotlin2.4.21 stable syntax and a verified JVM toolchain. The app supplies concept reading and an understanding check, not a Kotlin browser runner. Coroutine libraries are separate dependencies. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "The browser shows Kotlin code and checks your understanding; it does not run Kotlin. Optional local examples use Kotlin/JVM."
+    }
+  ],
+  "headings": [
+    "Carry success or failure",
+    "Choose a failure fallback",
+    "One example",
+    "Read the successful result",
+    "Avoid hiding important failures"
+  ],
+  "project": {
+    "title": "Result values and failure handling",
+    "task": "Follow an invalid conversion into its explicit fallback.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local Kotlin example is optional."
+  }
+}

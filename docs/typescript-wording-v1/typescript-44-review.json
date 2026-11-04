@@ -1,0 +1,86 @@
+{
+  "lesson": "typescript-44",
+  "position": 32,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Keep missing entries explicit in Scores and make scoreOrZero return a number without modifying the dictionary.",
+      "after": "Treat a missing dictionary entry as a real possibility."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "An index signature [key: string] describes values read using string keys. In Scores, every lookup returns number | undefined. The explicit undefined is important: an arbitrary key may be absent, even when the compiler’s optional noUncheckedIndexedAccess setting is not enabled.",
+        "scoreOrZero takes a dictionary and key, reads scores[key], and uses typeof to check that the runtime value is a number. The runtime conditional test ? yes : no selects value when the test is true and zero otherwise. It returns that number or zero otherwise; a stored zero remains zero. JavaScript objects can inherit properties such as toString, so the runtime guard also prevents an inherited function from escaping as the promised number. This is a narrow numeric check, not complete external-data validation. The example prints 8 and 0.",
+        "```typescript\ntype Scores = { [key: string]: number | undefined };\nfunction scoreOrZero(scores: Scores, key: string): number {\n  const value = scores[key];\n  return typeof value === \"number\" ? value : 0;\n}\nconst scores: Scores = { art: 0, music: 8 };\nconsole.log(scoreOrZero(scores, \"music\"));\nconsole.log(scoreOrZero(scores, \"dance\"));\n```",
+        "Optional local practice: Call with the art key and explain why a zero result does not prove the property was absent.",
+        "Changed case — trace this independently before checking the result.\n```typescript\ntype Scores = { [key: string]: number | undefined };\nfunction scoreOrZero(scores: Scores, key: string): number {\n  const value = scores[key];\n  return typeof value === \"number\" ? value : 0;\n}\nconst data: Scores = {};\nconst n: number = data[\"unknown\"];\n```\nCompiler result: An arbitrary dictionary lookup may be undefined, so it cannot promise number. Diagnostic 2322. This intentionally failing example is separate from the runnable solution."
+      ],
+      "after": [
+        "A dictionary stores values under keys. An index signature describes the values read with those keys. Here, `[key: string]: number | undefined` says a text-key lookup may give a number or no value.",
+        "ScoreOrZero reads the chosen entry and checks whether it is a number. The `? :` expression chooses between that number and zero. Checking the actual value also prevents an inherited function, such as toString, from being returned as a number.",
+        "This dictionary has a music score but no dance score.\n```typescript\ntype Scores = { [key: string]: number | undefined };\nfunction scoreOrZero(scores: Scores, key: string): number {\n  const value = scores[key];\n  return typeof value === \"number\" ? value : 0;\n}\nconst scores: Scores = { art: 0, music: 8 };\nconsole.log(scoreOrZero(scores, \"music\"));\nconsole.log(scoreOrZero(scores, \"dance\"));\n```\nThe output is 8, then 0.",
+        "The art entry really contains 0. It stays 0. A zero result therefore does not tell you whether the key existed or the backup was used.",
+        "An arbitrary lookup cannot be assigned straight to a number-only variable because it might be undefined. Keep absence in the type and handle it in the code."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the example and its input/output contract.",
+        "Complete the starter without turning off compiler diagnostics.",
+        "Run the compiler and behavior checks, then explain a changed case."
+      ],
+      "after": [
+        "Let each Scores lookup be number or undefined.",
+        "Return the value only when it is a number; otherwise return zero.",
+        "Run the checks without changing the dictionary."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Compare the public input/output types and trace the visible call before editing."
+      ],
+      "after": [
+        "Read the entry once, then check it with typeof."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Why does const n:number = scores[\"unknown\"] fail?",
+        "choices": [
+          "TypeScript has proved unknown is definitely present.",
+          "The lookup might be undefined, so it needs a check or fallback.",
+          "All string keys are forbidden."
+        ],
+        "answer": 1,
+        "explanation": "The dictionary type deliberately includes absence in every arbitrary lookup."
+      },
+      "after": {
+        "question": "Why can an arbitrary Scores lookup fail when assigned directly to a number-only variable?",
+        "choices": [
+          "TypeScript proved the key exists",
+          "The result might be undefined",
+          "All text keys are forbidden"
+        ],
+        "answer": 1,
+        "explanation": "The key may be missing, so the code must check the value or choose a backup."
+      }
+    }
+  ],
+  "headings": [
+    "Describe keyed values",
+    "Check a value before returning it",
+    "Use a numeric fallback",
+    "Zero can be stored",
+    "Do not promise every key exists"
+  ],
+  "project": {
+    "title": "Admit that a dictionary entry can be missing",
+    "task": "Return a numeric score or zero while keeping missing entries explicit in the type.",
+    "done_when": "Present numbers and missing keys behave correctly, the dictionary stays unchanged, and the checks pass."
+  }
+}

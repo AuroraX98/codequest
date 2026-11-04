@@ -57,6 +57,7 @@ export type Progress = {
   updatedAt: string;
 };
 export type Profile = {
+  aiModels?: Partial<Record<AIProvider, string>>;
   courseBookmarks?: import("./course-resume").CourseBookmarks;
   track: string;
   level: string;

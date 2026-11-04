@@ -1,0 +1,97 @@
+{
+  "lesson": "csharp-41",
+  "position": 41,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Move the After output statement inside the using block, just after Working. What order now prints?",
+      "after": "Run cleanup when a resource's block ends."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "IDisposable is an interface for an explicit Dispose operation. It is commonly used for resources such as files; it is separate from the runtime eventually reclaiming object memory.",
+        "using (Ticket ticket = new Ticket()) owns the object for that block. Unlike a using System; namespace directive, this form arranges resource cleanup. C# calls Dispose when execution leaves the block, including normal exception unwinding. You do not call it a second time here.",
+        "The block prints Working before disposal. Dispose then prints Released in this demonstration; later statements run after that cleanup. Real disposal should release a resource rather than merely printing.",
+        "using Ticket ticket = new Ticket(); is another form: cleanup occurs at the end of the enclosing scope, not immediately after that declaration. Do not use a resource after its owning using scope has disposed it.",
+        "Complete local C# example; the app does not execute it:\n```csharp\nusing (Ticket ticket = new Ticket())\n{\n    System.Console.WriteLine(\"Working\");\n}\nSystem.Console.WriteLine(\"After\");\nclass Ticket : System.IDisposable\n{\n    public void Dispose() { System.Console.WriteLine(\"Released\"); }\n}\n```",
+        "Expected behavior from this example: Working then Released then After. This expected result is a reasoned prediction until a compiler test is recorded.",
+        "Optional local transfer task: Put an inner using block inside an outer one with different cleanup messages; predict the cleanup order. Use a .NET 10 console project with C# 14; reading completion does not verify this local work."
+      ],
+      "after": [
+        "A resource is something a program uses, such as an open file. Releasing it may need a clear cleanup step, separate from freeing object memory later.",
+        "IDisposable is an interface that requires a Dispose method. Real Dispose methods release resources. This example prints a message so you can see when cleanup happens.",
+        "A using block arranges a call to Dispose when the block is left, including when an exception leaves it normally. This is different from a using line that makes a namespace's names available.",
+        "The statements inside the block run while the resource is available. Cleanup follows when the program leaves the block.",
+        "Follow the messages through the end of the using block.\n\n```csharp\nusing (Ticket ticket = new Ticket())\n{\n    System.Console.WriteLine(\"Working\");\n}\nSystem.Console.WriteLine(\"After\");\nclass Ticket : System.IDisposable\n{\n    public void Dispose() { System.Console.WriteLine(\"Released\"); }\n}\n```",
+        "The program prints Working, then Released, then After. Dispose runs between the inside work and the statement after the block.",
+        "A using declaration without a block cleans up at the end of its enclosing scope, the surrounding region of code. Do not keep using a resource after its cleanup has run."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Trace the changed case before choosing an answer.",
+        "Explain the consequence, then optionally try the local transfer task."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Find the closing brace of the using block."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Move the After output statement inside the using block, just after Working. What order now prints?",
+        "choices": [
+          "Working, After, Released",
+          "Released, Working, After",
+          "Working, Released, After"
+        ],
+        "answer": 0,
+        "explanation": "Both output statements now execute inside the resource lifetime. Dispose runs only when that block ends, so Released follows After."
+      },
+      "after": {
+        "question": "Move the After print inside the using block, just after Working. What order prints?",
+        "choices": [
+          "Working, After, Released",
+          "Released, Working, After",
+          "Working, Released, After"
+        ],
+        "answer": 0,
+        "explanation": "Both messages print inside the block. Cleanup prints Released when that block ends."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "C#14/.NET10 core syllabus. Concept-mode reading and understanding check; no in-app C# execution and no claim of mastery. Full example and optional local transfer task are supplied. Actual compiler validation, if available, is reported separately.",
+      "after": "The browser shows C# code and checks your understanding; it does not run C#. Optional local examples use a .NET 10 console project with C# 14."
+    }
+  ],
+  "headings": [
+    "Some objects need cleanup",
+    "Provide a Dispose method",
+    "Let using arrange cleanup",
+    "Finish the work first",
+    "One example",
+    "What appears",
+    "The scope decides when cleanup happens"
+  ],
+  "project": {
+    "title": "Release owned resources with using",
+    "task": "Follow the example's work, cleanup, and next statement in order.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local C# example is optional."
+  }
+}

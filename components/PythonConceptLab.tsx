@@ -4,6 +4,7 @@ import { ArrowRight, Download, Play, RotateCcw, Square } from "lucide-react";
 import {
   makePythonExperiment,
   pythonConcepts,
+  reviewedPythonFirstLesson,
   type ConceptId,
   type ExperimentId,
 } from "../lib/python-concepts";
@@ -37,6 +38,7 @@ export default function PythonConceptLab({
   const [conceptResumeReady, setConceptResumeReady] = useState(false);
   useEffect(() => {
     if (pythonConcepts.some(item => item.id === targetConcept)) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- Restore the saved concept or an explicit navigation target after hydration.
       setConcept(targetConcept as ConceptId);
     } else if (resumeScope) {
       try {
@@ -51,6 +53,7 @@ export default function PythonConceptLab({
     try { localStorage.setItem(`codequest-concept-${resumeScope}:${lesson.id}`, concept); } catch {}
   }, [conceptResumeReady, resumeScope, lesson.id, concept]);
   const [flowBackTarget, setFlowBackTarget] = useState<ConceptId | null>(null);
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- Consume the backward-entry marker after the keyed reader mounts.
   useEffect(() => setFlowBackTarget(null), [concept]);
   const [roomCollapsed, setRoomCollapsed] = useState(false);
   const [detail, setDetail] = useState(
@@ -75,18 +78,11 @@ export default function PythonConceptLab({
     [experiment, pet, age],
   );
   const current = pythonConcepts.find((c) => c.id === concept)!;
-  const simpleExamples: Record<ConceptId, string> = {
-    program: 'print("Hello")',
-    values: "pet_age = 5",
-    strings: 'print("Pepper")',
-    names: 'pet_name = "Pepper"\nprint(pet_name)',
-    assignment: "pet_age = 5\npet_age = pet_age + 1",
-    output: 'print("Pepper", 5)',
-  };
+  const reviewed = reviewedPythonFirstLesson[concept];
   useEffect(() => {
     onContextChange?.({
-      code: simple ? simpleExamples[concept] : model.code,
-      explanation: [
+      code: simple ? reviewed.example.code : model.code,
+      explanation: simple ? reviewed.text : [
         current.title,
         current.short,
         current.why,
@@ -94,7 +90,7 @@ export default function PythonConceptLab({
         current.limit,
       ].join("\n\n"),
     });
-  }, [model.code, current, onContextChange, simple, concept]);
+  }, [model.code, current, onContextChange, simple, reviewed]);
   const state = model.steps[Math.min(step, model.steps.length - 1)];
   useEffect(
     () => () => {
@@ -518,39 +514,25 @@ export default function PythonConceptLab({
           <span className="lab-eyebrow">
             Idea {conceptIndex + 1} of {pythonConcepts.length}
           </span>
-          <details className="reader-index" key={concept}>
-            <summary>All ideas</summary>
-            <nav aria-label="Choose a Python idea">
-              {pythonConcepts.map((item, index) => (
-                <button
-                  type="button"
-                  key={item.id}
-                  aria-current={item.id === concept ? "step" : undefined}
-                  onClick={() => chooseConcept(index)}
-                >
-                  {index + 1}. {item.title}
-                </button>
-              ))}
-            </nav>
-          </details>
         </div>
         <div data-annotation-section={"concept:" + concept}>
           <h3 ref={simpleHeading} tabIndex={-1}>
-            {current.title}
+            {reviewed.title}
           </h3>
           <LessonStepFlow
             key={concept}
-            title={current.title}
+            title={reviewed.title}
             text={
-              current.short +
-              " " +
-              current.why +
+              reviewed.text +
               "\n\n```python\n" +
-              simpleExamples[concept] +
-              "\n```"
+              reviewed.example.code +
+              "\n```\n\n```text\n" + reviewed.result + "\n```"
             }
             resumeKey={resumeScope ? `codequest-microstep-${resumeScope}:${lesson.id}:concept:${concept}` : undefined}
-            referenceText={current.why + "\n\n```python\n" + simpleExamples[concept] + "\n```"}
+            reviewedExample={reviewed.example}
+            reviewedLesson
+            inlinePractice={false}
+            glossaryTerms={["program", "code", "value", "variable", "string", "assignment", "output", "function", "parentheses"]}
             runtime="python"
             startAtEnd={flowBackTarget === concept}
             backDisabled={conceptIndex === 0}
@@ -560,7 +542,7 @@ export default function PythonConceptLab({
                 chooseConcept(conceptIndex + 1);
               else onContinue?.();
             }}
-            completion={renderReadingMark?.(concept, current.title)}
+            completion={renderReadingMark?.(concept, reviewed.title)}
           />
 
         </div>

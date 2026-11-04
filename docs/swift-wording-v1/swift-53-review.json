@@ -1,0 +1,87 @@
+{
+  "lesson": "swift-53",
+  "position": 51,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Keep both child results in the sum and preserve terminal cleanup on failure.",
+      "after": "Start two child tasks and wait for both before leaving their scope."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "async let creates a child task whose lifetime is bounded by its surrounding scope. Reading its result needs await; a throwing result also needs try. Leaving the scope waits for unfinished children, requesting cancellation when required rather than forcibly stopping arbitrary code.",
+        "compute creates two children before awaiting their sum. CompletionLog is an actor: calls from outside cross its isolation boundary with await; item contains no suspension and actor access is serialized. The tiny jobs therefore demonstrate lifetime, not parallel speed. item returns its supplied Int or throws; defer increments finished whenever that call exits, including its throwing path. count reads the finished total. joined awaits compute to terminal completion and returns a named tuple with an optional value and completion count. On a failure, scope cleanup has joined both children before the outer catch reads the log. These jobs do not check cancellation, so both still finish; this is not a cancellation-performance guarantee.",
+        "\n```swift\nenum WorkProblem: Error { case rejected }\nactor CompletionLog {\n    private var finished = 0\n    func item(_ value: Int, fail: Bool) throws -> Int {\n        defer { finished += 1 }\n        if fail { throw WorkProblem.rejected }\n        return value\n    }\n    func count() -> Int { return finished }\n}\nfunc compute(_ log: CompletionLog, fail: Bool) async throws -> Int {\n    async let left = log.item(3, fail: fail)\n    async let right = log.item(4, fail: false)\n    return try await left + right\n}\nfunc joined(_ fail: Bool) async -> (value: Int?, completed: Int) {\n    let log = CompletionLog()\n    do {\n        let value = try await compute(log, fail: fail)\n        return (value, await log.count())\n    } catch {\n        return (nil, await log.count())\n    }\n}\nlet success = await joined(false)\nprint(success.value ?? -1)\nprint(success.completed)\n```\nExpected output:\n```text\n7\n2\n```",
+        "\n```swift\nenum WorkProblem: Error { case rejected }\nactor CompletionLog {\n    private var finished = 0\n    func item(_ value: Int, fail: Bool) throws -> Int {\n        defer { finished += 1 }\n        if fail { throw WorkProblem.rejected }\n        return value\n    }\n    func count() -> Int { return finished }\n}\nfunc compute(_ log: CompletionLog, fail: Bool) async throws -> Int {\n    async let left = log.item(3, fail: fail)\n    async let right = log.item(4, fail: false)\n    return try await left + right\n}\nfunc joined(_ fail: Bool) async -> (value: Int?, completed: Int) {\n    let log = CompletionLog()\n    do {\n        let value = try await compute(log, fail: fail)\n        return (value, await log.count())\n    } catch {\n        return (nil, await log.count())\n    }\n}\nlet failure = await joined(true)\nprint(failure.value == nil)\nprint(failure.completed)\n```\nExpected output:\n```text\ntrue\n2\n```",
+        "Optional practice: Keep both child results in the sum and preserve terminal cleanup on failure. Predict a different input before running."
+      ],
+      "after": [
+        "async let starts a child task: work tied to the block that starts it. That block is its scope. The scope waits for its children before it finishes, so they cannot be left running beyond it.",
+        "compute starts left and right before waiting for their results. await waits where needed, and try allows a thrown error to pass out. CompletionLog records when each item call finishes; defer records both success and failure.",
+        "```swift\nenum WorkProblem: Error { case rejected }\nactor CompletionLog {\n    private var finished = 0\n    func item(_ value: Int, fail: Bool) throws -> Int {\n        defer { finished += 1 }\n        if fail { throw WorkProblem.rejected }\n        return value\n    }\n    func count() -> Int { return finished }\n}\nfunc compute(_ log: CompletionLog, fail: Bool) async throws -> Int {\n    async let left = log.item(3, fail: fail)\n    async let right = log.item(4, fail: false)\n    return try await left + right\n}\nfunc joined(_ fail: Bool) async -> (value: Int?, completed: Int) {\n    let log = CompletionLog()\n    do {\n        let value = try await compute(log, fail: fail)\n        return (value, await log.count())\n    } catch {\n        return (nil, await log.count())\n    }\n}\nlet success = await joined(false)\nprint(success.value ?? -1)\nprint(success.completed)\n```\nThis prints 7, then 2. The two results add up to 3 + 4. Both calls have finished when joined reads the count. The returned tuple groups the answer and completion count together.",
+        "If one child fails, leaving the scope still waits for its children. Cancellation may be requested, but it does not force arbitrary code to stop. These short item calls do not check cancellation, so both finish and run cleanup. Their actor handles one call at a time; this example does not measure speed.",
+        "Fix compute so its successful answer includes both child results. Keep the supplied cleanup. On failure, joined should return no value and a completed count of 2, after both calls have finished."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the small example and explain its inputs and effects.",
+        "Complete the starter for the stated contract.",
+        "Use the configured compatible Swift companion or local Swift toolchain, then explain the changed case."
+      ],
+      "after": [
+        "Keep both async let child tasks.",
+        "Await and add both results.",
+        "Check the success total and the failure cleanup count."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Trace the inputs, returned value and changed state before running."
+      ],
+      "after": [
+        "Do not discard the left result.",
+        "The outer catch reads the count after the child-task scope finishes."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If the left child throws, does async-let scope exit let the other child escape indefinitely without joining it?",
+        "choices": [
+          "Yes; only the thrown result matters.",
+          "No; the scope waits for its children.",
+          "It forcibly kills the other child’s thread."
+        ],
+        "answer": 1,
+        "explanation": "Structured children cannot outlive their scope. Cancellation is a request; cooperative work must respond, and scope exit still waits."
+      },
+      "after": {
+        "question": "If the left child throws, can the other child keep running after its async let scope has finished?",
+        "choices": [
+          "Yes, only the error matters",
+          "No, the scope waits for its children",
+          "Swift forcibly stops the other child's thread"
+        ],
+        "answer": 1,
+        "explanation": "The scope waits for its children. A cancellation request is not a forced stop."
+      }
+    }
+  ],
+  "headings": [
+    "Keep child work together",
+    "Wait for the results",
+    "Read one example",
+    "Finish even after failure",
+    "Try it yourself"
+  ],
+  "project": {
+    "title": "Join a fixed pair of child tasks",
+    "task": "Fix compute to add both child results. Preserve the completion log and cleanup when a child fails.",
+    "done_when": "Success returns 7 with 2 completed calls; failure returns no value with 2 completed calls."
+  }
+}

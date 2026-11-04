@@ -1,0 +1,91 @@
+{
+  "lesson": "go-54",
+  "position": 54,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "If the worker assigns 11, what prints after receiving from done?",
+      "after": "Wait for a goroutine to finish its work."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "go invokes a function concurrently with its caller. The func() { ... }() form declares and immediately invokes an anonymous function; go changes that invocation into a goroutine. main does not automatically wait for every goroutine before the program exits.",
+        "make(chan struct{}) creates an unbuffered channel carrying empty-struct signals. The worker writes result and closes done. Receiving from the closed channel unblocks main; that synchronization orders the preceding write before the read. Only the worker owns closing done, and no sleep guesses are involved.",
+        "Complete local Go example; the app itself does not execute it:\n```go\npackage main\n\nimport (\n\"fmt\"\n)\n\n\nfunc main() {\n    done := make(chan struct{})\n    result := 0\n    go func() { result = 7; close(done) }()\n    <-done\n    fmt.Println(result)\n}\n```",
+        "Expected output or behavior: 7. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Explain why moving the read before the receive would invalidate the guaranteed result; do not run a deliberately racy variant. You may trace it without a Go compiler; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "A goroutine runs a function alongside its caller. `go func() { ... }()` starts an unnamed function this way. main does not automatically wait for other goroutines before the program exits.",
+        "done is a channel used only as a signal. The worker sets result and then closes done. `<-done` waits for that close. This orders the write before main reads result; no guessed delay is needed.",
+        "Follow the worker's write, its signal, and main's wait.\n```go\npackage main\n\nimport (\n\"fmt\"\n)\n\n\nfunc main() {\n    done := make(chan struct{})\n    result := 0\n    go func() { result = 7; close(done) }()\n    <-done\n    fmt.Println(result)\n}\n```",
+        "The screen shows `7`. The read happens after the worker has written 7 and signaled completion.",
+        "Reading result before the wait would lose that guarantee. Keep the signal between the worker's write and main's read."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Read the order: write, close, wait finishes, read."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If the worker assigns 11, what prints after receiving from done?",
+        "choices": [
+          "7 because a closure copies all captured variables.",
+          "Either 0 or 11 because channel completion never orders memory",
+          "11"
+        ],
+        "answer": 2,
+        "explanation": "The completion receive occurs after the worker’s write and close, so the later read observes eleven."
+      },
+      "after": {
+        "question": "If the worker sets result to 11, what appears after the wait?",
+        "choices": [
+          "7, because the function copied every variable.",
+          "Either 0 or 11, because the signal never orders the work.",
+          "11"
+        ],
+        "answer": 2,
+        "explanation": "The worker writes 11 before closing done. main waits for the close before reading result."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Go Core v1 uses the verified Go1.27.3 toolchain and standard library. The app supplies concept reading and an understanding check, not a Go browser runner. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "The browser shows Go code and checks your understanding; it does not run Go. Optional local examples use Go 1.27."
+    }
+  ],
+  "headings": [
+    "Start another path of work",
+    "Signal when the work is complete",
+    "One example",
+    "Read only after the signal",
+    "Keep the wait before the read"
+  ],
+  "project": {
+    "title": "Goroutines and completion",
+    "task": "Predict the result after the completion signal.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local Go example is optional."
+  }
+}

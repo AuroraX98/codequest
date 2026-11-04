@@ -52,8 +52,8 @@ try {
   const { default: Flow } = await importFile('components/LessonStepFlow.tsx');
   const { buildLessonSteps, codePartPractice, shortLessonThoughts, distinctLessonReference } = await importFile('lib/lesson-step-flow.ts');
   const { lessonBlocks } = await importFile('lib/lesson-markup.ts');
-  const { codeAnatomy } = await importFile('lib/code-anatomy.ts');
-  const { default: Content } = await importFile('components/LessonContent.tsx');
+  const { codeAnatomy: _codeAnatomy } = await importFile('lib/code-anatomy.ts');
+  const { default: _Content } = await importFile('components/LessonContent.tsx');
   const lessons = JSON.parse(await readFile(path.join(cwd, 'content/lessons.json'), 'utf8'));
   let sections = 0, ideas = 0, examples = 0, exercises = 0;
 
@@ -102,6 +102,271 @@ try {
     assert.ok(buildLessonSteps(text, 'python').some(s => s.kind === 'explain' && s.text.startsWith('A program turns')));
   });
 
+  await check('Reviewed lessons keep one authored example and do not turn mentions into extra examples or questions', () => {
+    const text = 'Use `print("Hello")` to show text.\n\n```python\nprint("Hello")\n```\n\nThe `print("Hello")` line shows Hello.\n\n```text\nHello\n```';
+    const steps = buildLessonSteps(text, 'python', {authoredOnly:true});
+    assert.deepEqual(steps.map(step=>step.kind), ['explain','example','explain','output']);
+    assert.equal(steps[1].code, 'print("Hello")\n');
+    assert.ok(!steps.some(step=>step.kind==='practice'||step.purpose==='exercise-preparation'));
+    const markup = renderToStaticMarkup(React.createElement(Flow, {text, runtime:'python', reviewedLesson:true, onNext(){}, onBack(){}, backDisabled:true}));
+    assert.match(markup, /data-step-total="4"/);
+    assert.ok(!markup.includes('data-original-wording'));
+  });
+
+  await check('All Java lessons keep one example with its authored language', () => {
+    const rows=lessons.filter(l=>l.id.startsWith('java-'));
+    assert.equal(rows.length,72);
+    for(const lesson of rows){
+      const steps=lesson.explanation.flatMap(text=>buildLessonSteps(text,lesson.runtime,{authoredOnly:true}));
+      const examples=steps.filter(s=>s.kind==='example');
+      assert.equal(examples.length,1,lesson.id);
+      const fence=lesson.explanation.join('\n').match(/\x60\x60\x60(\w+)/)[1];
+      assert.equal(examples[0].language,fence,lesson.id);
+      assert.ok(!steps.some(s=>s.kind==='practice'||s.purpose==='exercise-preparation'),lesson.id);
+      assert.ok(!steps.some(s=>s.kind==='explain'&&(/^[!?]$/.test(s.text)||/^(?:int\.\.\.|The wildcard \?|The parameter marked with \.\.\.)$/.test(s.text))),lesson.id+': code punctuation must not create fragments');
+    }
+    const wildcard=rows.find(l=>l.id==='java-39');
+    for(const [index,code] of [[0,'List<? extends Number>'],[1,'List<? super Integer>']]) {
+      const steps=buildLessonSteps(wildcard.explanation[index],'java',{authoredOnly:true});
+      assert.ok(steps.some(s=>s.kind==='explain'&&s.text.includes(code)), 'Keep the full wildcard type in one reading step');
+      assert.ok(!steps.some(s=>s.kind==='explain'&&/List<\?$/.test(s.text)), 'Never show a partial wildcard as a thought');
+    }
+  });
+
+  await check('All Rust lessons keep one example with its authored language', () => {
+    const rows=lessons.filter(l=>l.id.startsWith('rust-'));
+    assert.equal(rows.length,68);
+    for(const lesson of rows){
+      const steps=lesson.explanation.flatMap(text=>buildLessonSteps(text,lesson.runtime,{authoredOnly:true}));
+      const examples=steps.filter(s=>s.kind==='example');
+      assert.equal(examples.length,1,lesson.id);
+      const fence=lesson.explanation.join('\n').match(/\x60\x60\x60(\w+)/)[1];
+      assert.equal(examples[0].language,fence,lesson.id);
+      assert.ok(!steps.some(s=>s.kind==='practice'||s.purpose==='exercise-preparation'),lesson.id);
+    }
+  });
+
+  await check('All PHP lessons keep one example with its authored language', () => {
+    const rows=lessons.filter(l=>l.id.startsWith('php-'));
+    assert.equal(rows.length,68);
+    for(const lesson of rows){
+      const steps=lesson.explanation.flatMap(text=>buildLessonSteps(text,lesson.runtime,{authoredOnly:true}));
+      const examples=steps.filter(s=>s.kind==='example');
+      assert.equal(examples.length,1,lesson.id);
+      const fence=lesson.explanation.join('\n').match(/\x60\x60\x60(\w+)/)[1];
+      assert.equal(examples[0].language,fence,lesson.id);
+      assert.ok(!steps.some(s=>s.kind==='practice'||s.purpose==='exercise-preparation'),lesson.id);
+    }
+  });
+
+  await check('All Ruby lessons keep one example with its authored language', () => {
+    const rows=lessons.filter(l=>l.id.startsWith('ruby-'));
+    assert.equal(rows.length,64);
+    for(const lesson of rows){
+      const steps=lesson.explanation.flatMap(text=>buildLessonSteps(text,lesson.runtime,{authoredOnly:true}));
+      const examples=steps.filter(s=>s.kind==='example');
+      assert.equal(examples.length,1,lesson.id);
+      const fence=lesson.explanation.join('\n').match(/\x60\x60\x60(\w+)/)[1];
+      assert.equal(examples[0].language,fence,lesson.id);
+      assert.ok(!steps.some(s=>s.kind==='practice'||s.purpose==='exercise-preparation'),lesson.id);
+    }
+  });
+
+  await check('All R lessons keep one example with its authored language', () => {
+    const rows=lessons.filter(l=>l.id.startsWith('r-'));
+    assert.equal(rows.length,68);
+    for(const lesson of rows){
+      const steps=lesson.explanation.flatMap(text=>buildLessonSteps(text,lesson.runtime,{authoredOnly:true}));
+      const examples=steps.filter(s=>s.kind==='example');
+      assert.equal(examples.length,1,lesson.id);
+      const fence=lesson.explanation.join('\n').match(/\x60\x60\x60(\w+)/)[1];
+      assert.equal(examples[0].language,fence,lesson.id);
+      assert.ok(!steps.some(s=>s.kind==='practice'||s.purpose==='exercise-preparation'),lesson.id);
+    }
+  });
+
+  await check('All Go lessons keep one example with its authored language', () => {
+    const rows=lessons.filter(l=>l.id.startsWith('go-'));
+    assert.equal(rows.length,65);
+    for(const lesson of rows){
+      const steps=lesson.explanation.flatMap(text=>buildLessonSteps(text,lesson.runtime,{authoredOnly:true}));
+      const examples=steps.filter(s=>s.kind==='example');
+      assert.equal(examples.length,1,lesson.id);
+      const fence=lesson.explanation.join('\n').match(/\x60\x60\x60(\w+)/)[1];
+      assert.equal(examples[0].language,fence,lesson.id);
+      assert.ok(!steps.some(s=>s.kind==='practice'||s.purpose==='exercise-preparation'),lesson.id);
+    }
+  });
+
+  await check('All Kotlin lessons keep one example with its authored language', () => {
+    const rows=lessons.filter(l=>l.id.startsWith('kotlin-'));
+    assert.equal(rows.length,64);
+    for(const lesson of rows){
+      const steps=lesson.explanation.flatMap(text=>buildLessonSteps(text,lesson.runtime,{authoredOnly:true}));
+      const examples=steps.filter(s=>s.kind==='example');
+      assert.equal(examples.length,1,lesson.id);
+      const fence=lesson.explanation.join('\n').match(/\x60\x60\x60(\w+)/)[1];
+      assert.equal(examples[0].language,fence,lesson.id);
+      assert.ok(!steps.some(s=>s.kind==='practice'||s.purpose==='exercise-preparation'),lesson.id);
+    }
+  });
+
+  await check('All C lessons keep one example with its authored language', () => {
+    const rows=lessons.filter(l=>l.id.startsWith('c-'));
+    assert.equal(rows.length,62);
+    for(const lesson of rows){
+      const steps=lesson.explanation.flatMap(text=>buildLessonSteps(text,lesson.runtime,{authoredOnly:true}));
+      const examples=steps.filter(s=>s.kind==='example');
+      assert.equal(examples.length,1,lesson.id);
+      const fence=lesson.explanation.join('\n').match(/\x60\x60\x60(\w+)/)[1];
+      assert.equal(examples[0].language,fence,lesson.id);
+      assert.ok(!steps.some(s=>s.kind==='practice'||s.purpose==='exercise-preparation'),lesson.id);
+    }
+  });
+
+  await check('All C++ lessons keep one example with its authored language', () => {
+    const rows=lessons.filter(l=>l.id.startsWith('cpp-'));
+    assert.equal(rows.length,69);
+    for(const lesson of rows){
+      const steps=lesson.explanation.flatMap(text=>buildLessonSteps(text,lesson.runtime,{authoredOnly:true}));
+      const examples=steps.filter(s=>s.kind==='example');
+      assert.equal(examples.length,1,lesson.id);
+      const fence=lesson.explanation.join('\n').match(/\x60\x60\x60(\w+)/)[1];
+      assert.equal(examples[0].language,fence,lesson.id);
+      assert.ok(!steps.some(s=>s.kind==='practice'||s.purpose==='exercise-preparation'),lesson.id);
+    }
+  });
+
+  await check('All C# lessons keep one example with its authored language', () => {
+    const rows=lessons.filter(l=>l.id.startsWith('csharp-'));
+    assert.equal(rows.length,63);
+    for(const lesson of rows){
+      const steps=lesson.explanation.flatMap(text=>buildLessonSteps(text,lesson.runtime,{authoredOnly:true}));
+      const examples=steps.filter(s=>s.kind==='example');
+      assert.equal(examples.length,1,lesson.id);
+      const fence=lesson.explanation.join('\n').match(/\x60\x60\x60(\w+)/)[1];
+      assert.equal(examples[0].language,fence,lesson.id);
+      assert.ok(!steps.some(s=>s.kind==='practice'||s.purpose==='exercise-preparation'),lesson.id);
+    }
+  });
+
+  await check('All AI lessons keep one example with its authored language', () => {
+    const rows=lessons.filter(l=>l.id.startsWith('ai-'));
+    assert.equal(rows.length,32);
+    for(const lesson of rows){
+      const steps=lesson.explanation.flatMap(text=>buildLessonSteps(text,lesson.runtime,{authoredOnly:true}));
+      const examples=steps.filter(s=>s.kind==='example');
+      assert.equal(examples.length,1,lesson.id);
+      const fence=lesson.explanation.join('\n').match(/\x60\x60\x60(\w+)/)[1];
+      assert.equal(examples[0].language,fence,lesson.id);
+      assert.ok(!steps.some(s=>s.kind==='practice'||s.purpose==='exercise-preparation'),lesson.id);
+    }
+  });
+
+  await check('All Developer toolkit lessons keep one example with its authored language', () => {
+    const rows=lessons.filter(l=>l.id.startsWith('developer-toolkit-'));
+    assert.equal(rows.length,24);
+    for(const lesson of rows){
+      const steps=lesson.explanation.flatMap(text=>buildLessonSteps(text,lesson.runtime,{authoredOnly:true}));
+      const examples=steps.filter(s=>s.kind==='example');
+      assert.equal(examples.length,1,lesson.id);
+      const fence=lesson.explanation.join('\n').match(/\x60\x60\x60(\w+)/)[1];
+      assert.equal(examples[0].language,fence,lesson.id);
+      assert.ok(!steps.some(s=>s.kind==='practice'||s.purpose==='exercise-preparation'),lesson.id);
+    }
+  });
+
+  await check('All Back-end lessons keep one authored example with matching language labels', () => {
+    const rows=lessons.filter(l=>l.id.startsWith('backend-'));
+    assert.equal(rows.length,43);
+    for(const lesson of rows){
+      const steps=lesson.explanation.flatMap(text=>buildLessonSteps(text,lesson.runtime,{authoredOnly:true}));
+      const examples=steps.filter(s=>s.kind==='example');
+      assert.equal(examples.length,1,lesson.id);
+      assert.equal(examples[0].language,lesson.runtime,lesson.id);
+      assert.ok(!steps.some(s=>s.kind==='practice'||s.purpose==='exercise-preparation'),lesson.id);
+    }
+  });
+
+  await check('All Swift lessons keep one example, with local project files on separate steps', () => {
+    let count=0;
+    for (const lesson of lessons.filter(l=>l.id.startsWith('swift-'))) {
+      const steps=lesson.explanation.flatMap(text=>{
+        const section=buildLessonSteps(text,'swift',{authoredOnly:true});
+        assert.ok(section.filter(s=>s.kind==='example').length<=1,lesson.id);
+        return section;
+      });
+      const examples=steps.filter(s=>s.kind==='example');
+      assert.equal(examples.length,({'swift-55':3,'swift-56':4,'swift-57':4})[lesson.id]??1,lesson.id);
+      assert.ok(examples.every(s=>['swift','bash','sh'].includes(s.language)),lesson.id);
+      assert.ok(!steps.some(s=>s.kind==='practice'||s.purpose==='exercise-preparation'),lesson.id);
+      count++;
+    }
+    assert.equal(count,58);
+  });
+
+  await check('All SQL lessons keep one authored example with its correct SQL or JavaScript labels', () => {
+    let sectionCount=0;
+    for(const lesson of lessons.filter(l=>l.id.startsWith('sql-'))) {
+      const steps=lesson.explanation.flatMap(text=>{sectionCount++;return buildLessonSteps(text,'sql',{authoredOnly:true});});
+      assert.equal(steps.filter(s=>s.kind==='example').length,1,lesson.id);
+      assert.equal(steps.find(s=>s.kind==='example').language,['sql-51','sql-52'].includes(lesson.id)?'javascript':'sql');
+      assert.ok(!steps.some(s=>s.kind==='practice'||s.purpose==='exercise-preparation'),lesson.id);
+    }
+    assert.equal(sectionCount,318);
+  });
+
+  await check('All React lessons keep exactly one authored example across their ideas', () => {
+    let sectionCount=0;
+    for(const lesson of lessons.filter(l=>l.id.startsWith('react-'))) {
+      let exampleCount=0;
+      for(const text of lesson.explanation) {
+        const steps=buildLessonSteps(text,'react',{authoredOnly:true});
+        assert.ok(!steps.some(s=>s.kind==='practice'||s.purpose==='exercise-preparation'),lesson.id);
+        exampleCount+=steps.filter(s=>s.kind==='example').length;sectionCount++;
+      }
+      assert.equal(exampleCount,1,lesson.id);
+    }
+    assert.equal(sectionCount,210);
+  });
+
+  await check('All TypeScript sections show only the authored examples', () => {
+    let sectionCount=0,exampleCount=0;
+    for(const lesson of lessons.filter(l=>l.id.startsWith('typescript-'))) for(const text of lesson.explanation) {
+      const steps=buildLessonSteps(text,'typescript',{authoredOnly:true});
+      assert.ok(!steps.some(s=>s.kind==='practice'||s.purpose==='exercise-preparation'),lesson.id);
+      const code=steps.filter(s=>s.kind==='example');
+      assert.ok(code.length<=1,lesson.id);
+      assert.equal(code.length,[...text.matchAll(/```\w+\n/g)].length,lesson.id);
+      exampleCount+=code.length;sectionCount++;
+    }
+    assert.equal(sectionCount,257);assert.equal(exampleCount,54);
+  });
+
+  await check('All 298 CSS sections keep one authored example at a time without extra generated exercises', () => {
+    let sectionCount=0,exampleCount=0;
+    for(const lesson of lessons.filter(l=>l.id.startsWith('css-'))) for(const text of lesson.explanation) {
+      const steps=buildLessonSteps(text,'css',{authoredOnly:true});
+      assert.ok(!steps.some(s=>s.kind==='practice'||s.purpose==='exercise-preparation'),lesson.id);
+      const code=steps.filter(s=>s.kind==='example');
+      assert.ok(code.length<=1,lesson.id);
+      assert.equal(code.length,[...text.matchAll(/```\w+\n/g)].length,lesson.id);
+      exampleCount+=code.length;sectionCount++;
+    }
+    assert.equal(sectionCount,298);assert.equal(exampleCount,70);
+  });
+
+  await check('Reviewed output labels stay with their output instead of taking an empty step', () => {
+    const text = 'Run this.\n```javascript\nconsole.log(3);\n```\nOutput:\n```text\n3\n```\nThe result is three.';
+    const steps = buildLessonSteps(text,'javascript',{authoredOnly:true});
+    assert.deepEqual(steps.map(s=>s.kind),['explain','example','output','explain']);
+    assert.equal(steps[2].caption,'Output:');
+    assert.equal(steps[2].code,'3\n');
+    assert.ok(!steps.some(s=>s.kind==='explain'&&s.text==='Output:'));
+    const ordinary = buildLessonSteps('The output shows three.\n```text\n3\n```','javascript',{authoredOnly:true});
+    assert.equal(ordinary[0].text,'The output shows three.');
+    assert.equal(ordinary[1].caption,undefined);
+  });
   await check('Short thoughts keep authored inline and bold units intact', () => {
     const text = 'Read `print("Hello. Stay together!")` once. ' + 'Choose these ordinary words carefully so that the next idea stays small without changing the text. '.repeat(4) + '**Keep this whole bold phrase together.**';
     const thoughts = shortLessonThoughts(text);
@@ -113,6 +378,8 @@ try {
     assert.deepEqual(shortLessonThoughts(longSentence), [longSentence]);
     assert.ok(thoughts.some(thought => thought.includes('`print("Hello. Stay together!")`')));
     assert.ok(thoughts.some(thought => thought.includes('**Keep this whole bold phrase together.**')));
+    assert.deepEqual(shortLessonThoughts('db.run sends the SQL. stmt.step reads the next row. Cleanup follows.'), ['db.run sends the SQL.', 'stmt.step reads the next row.', 'Cleanup follows.']);
+    assert.deepEqual(shortLessonThoughts('Use e.g. a small value. Then continue.'), ['Use e.g. a small value.', 'Then continue.']);
   });
 
   await check('Examples follow their idea, deduplicate inline snippets, and never quiz an ambiguous role', () => {
@@ -248,6 +515,20 @@ try {
     values.set('old-flow', JSON.stringify({...current, flowVersion:2, index:1}));
     await render({resumeKey:'old-flow', text:'Changed curriculum.'});
     assert.equal(document.querySelector('[data-lesson-step-flow]').dataset.stepIndex, '0', 'Old layout versions cannot skip new essential teaching');
+  });
+
+  await check('Reviewed simple wording is primary and backward entry is stable after the parent clears its marker', async () => {
+    await render({resumeKey: undefined, text: 'A value is a piece of information, such as a name or an age.', runtime:'python'});
+    assert.match(document.querySelector('[data-simple-reading]').textContent, /one piece of information/);
+    assert.equal(document.querySelector('[data-original-wording]').open, false);
+    await render({resumeKey: undefined, text:'A program is a list of instructions the computer follows.',runtime:'python'});
+    assert.equal(panel().textContent,'A program is a list of instructions the computer follows.');
+    const backwardText='First thought. Last thought.';
+    localStorage.setItem('back-entry',JSON.stringify({flowVersion:4,text:backwardText,runtime:'python',index:0}));
+    await render({text:backwardText,resumeKey:'back-entry',startAtEnd:true});
+    assert.equal(panel().textContent,'Last thought.');
+    await render({text:backwardText,resumeKey:'back-entry',startAtEnd:false});
+    assert.equal(panel().textContent,'Last thought.');
   });
 
   await check('Source is escaped, output is never diagrammed, and controls remain native', async () => {

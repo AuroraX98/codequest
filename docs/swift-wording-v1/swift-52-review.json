@@ -1,0 +1,87 @@
+{
+  "lesson": "swift-52",
+  "position": 46,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Return the correct stored success or failure and describe all three paths.",
+      "after": "Store either a successful answer or a reason for failure in Result."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "Result carries either a success value or a typed failure value. Creating it does not start a task, throw immediately or make an operation asynchronous.",
+        "EntryProblem conforms to Error and has two named cases. checkedName validates a String: isEmpty identifies no characters; count is the Character count, not UTF-8 bytes. Result<String, EntryProblem> fixes its two payload types. .success(text) wraps accepted text, while .failure(.missing) stores the failure. describe consumes that value using an exhaustive switch; let name binds the success payload. Here no try is needed because neither function throws.",
+        "\n```swift\nenum EntryProblem: Error {\n    case missing\n    case tooLong\n}\nfunc checkedName(_ text: String) -> Result<String, EntryProblem> {\n    if text.isEmpty { return .failure(.missing) }\n    if text.count > 5 { return .failure(.tooLong) }\n    return .success(text)\n}\nfunc describe(_ result: Result<String, EntryProblem>) -> String {\n    switch result {\n    case .success(let name):\n        return \"saved:\" + name\n    case .failure(.missing):\n        return \"missing\"\n    case .failure(.tooLong):\n        return \"too long\"\n    }\n}\nprint(describe(checkedName(\"fern\")))\nprint(describe(checkedName(\"\")))\n```\nExpected output:\n```text\nsaved:fern\nmissing\n```",
+        "\n```swift\nenum EntryProblem: Error {\n    case missing\n    case tooLong\n}\nfunc checkedName(_ text: String) -> Result<String, EntryProblem> {\n    if text.isEmpty { return .failure(.missing) }\n    if text.count > 5 { return .failure(.tooLong) }\n    return .success(text)\n}\nfunc describe(_ result: Result<String, EntryProblem>) -> String {\n    switch result {\n    case .success(let name):\n        return \"saved:\" + name\n    case .failure(.missing):\n        return \"missing\"\n    case .failure(.tooLong):\n        return \"too long\"\n    }\n}\nprint(describe(checkedName(\"longer\")))\nprint(describe(checkedName(\"five!\")))\n```\nExpected output:\n```text\ntoo long\nsaved:five!\n```",
+        "Optional practice: Return the correct stored success or failure and describe all three paths. Predict a different input before running."
+      ],
+      "after": [
+        "Result is a value that holds either success or failure. It lets you keep an outcome and inspect it later. Storing a failure does not throw an error by itself.",
+        "Result<String, EntryProblem> holds a String for success or an EntryProblem for failure. .success(text) keeps accepted text. .failure(...) keeps the reason the text was rejected.",
+        "```swift\nenum EntryProblem: Error {\n    case missing\n    case tooLong\n}\nfunc checkedName(_ text: String) -> Result<String, EntryProblem> {\n    if text.isEmpty { return .failure(.missing) }\n    if text.count > 5 { return .failure(.tooLong) }\n    return .success(text)\n}\nfunc describe(_ result: Result<String, EntryProblem>) -> String {\n    switch result {\n    case .success(let name):\n        return \"saved:\" + name\n    case .failure(.missing):\n        return \"missing\"\n    case .failure(.tooLong):\n        return \"too long\"\n    }\n}\nprint(describe(checkedName(\"fern\")))\nprint(describe(checkedName(\"\")))\n```\nThis prints saved:fern, then missing. fern is accepted. Empty text is stored as a missing failure.",
+        "switch reads which outcome is stored. let name gives a name to the successful text. The two failure cases each get a message. These functions return values without throwing, so their calls do not need try.",
+        "Complete checkedName and describe. Reject empty text as missing. Reject more than five Swift characters as tooLong. Keep text of one through five characters unchanged, and describe each outcome with the shown message."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the small example and explain its inputs and effects.",
+        "Complete the starter for the stated contract.",
+        "Use the configured compatible Swift companion or local Swift toolchain, then explain the changed case."
+      ],
+      "after": [
+        "Check for empty text and text longer than five characters.",
+        "Return the right success or failure value.",
+        "Use switch to describe all three outcomes."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Trace the inputs, returned value and changed state before running."
+      ],
+      "after": [
+        "String.count counts Swift characters, not UTF-8 bytes.",
+        "A stored failure is a value; it does not automatically throw."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Does assigning let r = checkedName(\"\") immediately throw?",
+        "choices": [
+          "It starts a background task.",
+          "No; r stores .failure(.missing).",
+          "Yes; Error always throws."
+        ],
+        "answer": 1,
+        "explanation": "Error conformance describes a failure type. The shown function returns a Result value; it has no throws or async declaration."
+      },
+      "after": {
+        "question": "Does let r = checkedName(\"\") throw an error immediately?",
+        "choices": [
+          "It starts work in the background",
+          "No. r holds .failure(.missing)",
+          "Yes. Any Error value throws"
+        ],
+        "answer": 1,
+        "explanation": "checkedName returns a Result. Here, r stores the missing failure for later inspection."
+      }
+    }
+  ],
+  "headings": [
+    "Keep an outcome as a value",
+    "Name the two possible outcomes",
+    "Read one example",
+    "Read the stored outcome",
+    "Try it yourself"
+  ],
+  "project": {
+    "title": "Store success or failure as a value",
+    "task": "Complete checkedName to accept one through five characters and store the right failure otherwise. Make describe return saved: plus the accepted text, missing, or too long.",
+    "done_when": "All three outcomes are stored and described correctly."
+  }
+}

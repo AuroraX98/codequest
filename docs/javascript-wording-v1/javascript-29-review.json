@@ -1,0 +1,81 @@
+{
+  "lesson": "javascript-29",
+  "position": 41,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Return a callback from makeReader(record) that still calls record.describe() with record as its receiver.",
+      "after": "Keep a method connected to the object it needs."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "For an ordinary method call such as card.describe(), the object before the dot is the receiver. Inside that call, this refers to card.",
+        "The same function can be called with another receiver.\n```javascript\nfunction read() { return this.name; }\nconst first = { name: \"Pine\", read };\nconst second = { name: \"Oak\", read };\nconsole.log(first.read(), second.read());\n```\nThis prints Pine Oak.",
+        "Copying a method into a variable does not preserve its receiver. A plain call has no object before the dot; in strict mode its this is undefined.",
+        "bind creates a function with a chosen receiver.\n```javascript\nconst card = { name: \"Pine\", read() { return this.name; } };\nconst readLater = card.read.bind(card);\nconsole.log(readLater());\n```",
+        "A wrapper can also preserve the method call: () => card.read(). Arrow functions do not create their own this; do not replace an ordinary this-dependent object method with an arrow by accident.",
+        "The practice callback must read the record when called, not store one description in advance."
+      ],
+      "after": [
+        "In an ordinary method call such as `card.describe()`, the object before the dot is the receiver.\n\nInside that call, `this` means `card`. That lets the method read the card's properties.",
+        "The same function can read from different objects.\n```javascript\nfunction read() { return this.name; }\nconst first = { name: \"Pine\", read };\nconst second = { name: \"Oak\", read };\nconsole.log(first.read(), second.read());\n```\nOutput:\n```text\nPine Oak\n```\n`first.read()` supplies `first` as `this`. `second.read()` supplies `second`.",
+        "Copying a method into a variable does not keep its connection to the object.\n\nA plain call such as `read()` has no object before the dot. In strict mode, which uses stricter JavaScript rules, `this` is then `undefined` for an ordinary function.",
+        "`bind` makes a function with a chosen receiver.\n```javascript\nconst card = { name: \"Pine\", read() { return this.name; } };\nconst readLater = card.read.bind(card);\nconsole.log(readLater());\n```\nOutput:\n```text\nPine\n```\n`bind(card)` keeps `this` connected to `card` when `readLater()` runs.",
+        "A wrapper function can also keep the connection: `() => card.read()` makes the full method call later.\n\nArrow functions do not get their own `this`. Keep an ordinary method when it needs the object supplied by its caller.",
+        "Complete `makeReader(record)` so it returns a callback that calls the record's `describe` method correctly.\n\nRead the description when the callback runs. Do not save the description early: the record may change before the call."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Return a callback from makeReader(record) that still calls record.describe() with record as its receiver.",
+        "Run the checks.",
+        "Change one case and explain the result."
+      ],
+      "after": [
+        "Return a function that calls record.describe() later, or bind the method to record.",
+        "Check that the callback reads the correct record.",
+        "Change a record's title before calling the callback and check that it reads the new title."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "const read = card.describe; copies an ordinary method. Why can read() lose access to card’s fields?",
+        "choices": [
+          "A copied function always loses its code",
+          "The plain call no longer supplies card as its receiver",
+          "const freezes every object field"
+        ],
+        "answer": 1,
+        "explanation": "An ordinary function’s receiver depends on how it is called. Copying the function alone does not bind card to this."
+      },
+      "after": {
+        "question": "Why can a copied method lose access to the card's fields when called as read()?",
+        "choices": [
+          "A copied function always loses its code",
+          "The plain call no longer supplies card as its receiver",
+          "const freezes every object field"
+        ],
+        "answer": 1,
+        "explanation": "The plain call no longer supplies card as this. Copying a function does not bind it to the object."
+      }
+    }
+  ],
+  "headings": [
+    "Which object is this?",
+    "Call the same method on two objects",
+    "Why a copied method can fail",
+    "Keep the receiver with bind",
+    "Wrap the method call",
+    "Build makeReader"
+  ],
+  "project": {
+    "title": "A method’s receiver",
+    "task": "Complete makeReader(record). Return a callback that runs record.describe with record as this and reads the record's current values.",
+    "done_when": "The callback reads the correct record, sees later changes, and keeps separate records independent."
+  },
+  "notes": []
+}

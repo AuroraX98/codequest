@@ -1,0 +1,91 @@
+{
+  "lesson": "go-40",
+  "position": 40,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "If Same is called with []int{1} and []int{1} instead, what happens?",
+      "after": "Use a type that supports equality when comparing values or choosing map keys."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "comparable is a predeclared constraint usable for map-key type parameters. Concrete int and string keys fit; slices, maps and functions cannot be ordinary comparable map keys.",
+        "Interface values can be comparable as types while a comparison of a particular dynamic non-comparable value can panic. Keep this example to concrete string keys; a comparable constraint does not validate every possible dynamic value hidden inside an interface.",
+        "Complete local Go example; the app itself does not execute it:\n```go\npackage main\nimport (\"fmt\")\nfunc Same[K comparable](a, b K) bool { return a == b }\nfunc main() {\n seen := map[string]bool{\"read\": true}\n fmt.Println(seen[\"read\"], Same(\"read\", \"read\"))\n}\n```",
+        "Expected output or behavior: true true. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Explain why []int cannot replace the concrete string keys without choosing a different representation. You may trace it without a Go compiler; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "`comparable` is a constraint for types that support `==` and `!=`. Strings and integers fit, so they can be map keys. Slices, maps, and functions cannot be ordinary map keys.",
+        "An interface type can be compared, but it can hold a value that cannot be compared. Comparing interfaces holding matching non-comparable types can panic. This example uses concrete strings, so it avoids that issue.",
+        "Read the map lookup and the equality check separately.\n```go\npackage main\nimport (\"fmt\")\nfunc Same[K comparable](a, b K) bool { return a == b }\nfunc main() {\n seen := map[string]bool{\"read\": true}\n fmt.Println(seen[\"read\"], Same(\"read\", \"read\"))\n}\n```",
+        "The screen shows `true true`. The map stores true for read. Same returns true because its two strings match.",
+        "Two slices may contain the same items, but ordinary slice equality is not supported. They do not fit the comparable constraint in Same."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Equal-looking contents do not make slices comparable."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If Same is called with []int{1} and []int{1} instead, what happens?",
+        "choices": [
+          "It silently compares slice addresses.",
+          "Compilation rejects []int because slices do not satisfy comparable.",
+          "It prints true because both slices contain one."
+        ],
+        "answer": 1,
+        "explanation": "The generic equality function requires comparable arguments, but slice equality is not supported."
+      },
+      "after": {
+        "question": "Call Same with two []int{1} slices. What happens?",
+        "choices": [
+          "It compares their addresses.",
+          "Go rejects []int because slices do not fit comparable.",
+          "It returns true because both contain 1."
+        ],
+        "answer": 1,
+        "explanation": "Same requires a type that supports equality between two values of that type. Slices do not."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Go Core v1 uses the verified Go1.27.3 toolchain and standard library. The app supplies concept reading and an understanding check, not a Go browser runner. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "The browser shows Go code and checks your understanding; it does not run Go. Optional local examples use Go 1.27."
+    }
+  ],
+  "headings": [
+    "Require comparable values",
+    "Check the value inside an interface",
+    "One example",
+    "Read the two true results",
+    "Recognize a slice that cannot be compared"
+  ],
+  "project": {
+    "title": "Comparable map keys",
+    "task": "Check whether a slice can be passed to Same.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local Go example is optional."
+  }
+}

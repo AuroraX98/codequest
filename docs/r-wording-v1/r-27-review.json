@@ -1,0 +1,91 @@
+{
+  "lesson": "r-27",
+  "position": 27,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Insert force(x) as the first statement of choose. What happens for the same call?",
+      "after": "An R function normally waits to work out an input until it actually uses that input."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A supplied function argument is usually a promise: its expression and calling environment are retained until the value is needed. An unused argument can therefore contain an expression that would fail if evaluated. stop(message) raises an error and interrupts normal execution.",
+        "force(x) evaluates the promise for x now. It is useful before returning a closure that should retain the current argument value. It does not recursively force every promise stored elsewhere.\n\nHere force receives the promised x argument and evaluates it even though use is FALSE. The supplied stop call receives a diagnostic message and raises that error, so no value 7 is returned. This deliberately failing example contrasts with the successful lazy call below.\n```r\nchoose_now <- function(x, use) {\n  force(x)\n  if (use) x else 7\n}\nchoose_now(stop(\"evaluated\"), FALSE)\n```\nThis stops with evaluated.",
+        "Complete local R example; the app itself does not execute it:\n```r\nchoose <- function(x, use) {\n  if (use) x else 7\n}\ncat(choose(stop(\"evaluated\"), FALSE), \"\\n\")\n```",
+        "Expected output or behavior: 7. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Replace stop with a visible message and compare the timing with and without force. You may trace it without a R interpreter; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "An R function normally waits to work out an input until it actually uses that input.",
+        "When use is false, this branch returns seven without evaluating x.",
+        "Follow the labeled parts of this example.\n```r\nchoose <- function(x, use) {\n  if (use) x else 7\n}\ncat(choose(stop(\"evaluated\"), FALSE), \"\\n\")\n```",
+        "The output is `7`. The stop call was supplied as x, but no one asked for its value.",
+        "Put force(x) first to request x immediately."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read one idea.",
+        "Follow the labeled example.",
+        "Try the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Put force(x) first to request x immediately."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Insert force(x) as the first statement of choose. What happens for the same call?",
+        "choices": [
+          "An error with message evaluated",
+          "Still prints 7",
+          "Prints FALSE"
+        ],
+        "answer": 0,
+        "explanation": "force makes the stop expression run even though the later if branch would not otherwise use x."
+      },
+      "after": {
+        "question": "If x is forced before the choice, what happens?",
+        "choices": [
+          "The error evaluated is raised.",
+          "Seven still prints.",
+          "The stop call returns zero."
+        ],
+        "answer": 0,
+        "explanation": "Forcing x runs the stop call even though the later branch would not need x."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "R Core v1 uses R 4.5.0 and explicitly available extensions. The app supplies concept reading and an understanding check, not a R browser runner. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "CodeQuest shows the R example. Running it on your own computer is optional."
+    }
+  ],
+  "headings": [
+    "Delay an input until needed",
+    "Skip the unused input",
+    "Read the example",
+    "What happens",
+    "Try one change"
+  ],
+  "project": {
+    "title": "Lazy arguments and force",
+    "task": "Put force(x) first to request x immediately.",
+    "done_when": "Read each idea and pass the understanding check. Running the example on your computer is optional."
+  }
+}

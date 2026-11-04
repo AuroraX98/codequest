@@ -1,0 +1,96 @@
+{
+  "lesson": "backend-25",
+  "position": 11,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Implement orderedNotes(notes). Match the worked contract and the changed-input checks without modifying the supplied input values.",
+      "after": "Sort by creation value, then use the ID to break ties."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "Pagination needs predictable ordering. When two records share a creation value, an identity tie-breaker gives them a defined order.",
+        "This exercise is a small pure JavaScript model. Its inputs are supplied directly; it does not receive live HTTP requests, operate a database, or deploy a service.",
+        "Worked example:\n\n```javascript\nfunction orderedNotes(notes) {\n  return [...notes].sort((a,b)=>a.created-b.created || a.id-b.id);\n}\nconsole.log(orderedNotes([{\"id\":2,\"created\":10},{\"id\":1,\"created\":10}]));\n```\nThe returned value is [{\"id\":1,\"created\":10},{\"id\":2,\"created\":10}].",
+        "[...notes] copies the array before sort changes it. The first subtraction orders by created. A zero result makes || choose the identity comparison. Records are assumed to have distinct integer IDs.",
+        "Read the function call orderedNotes([{\"id\":2,\"created\":10},{\"id\":1,\"created\":10}]) from the inside out: the arguments supply the inputs, orderedNotes runs the body once, and return sends its result back to the caller. console.log displays that result; it does not change it.",
+        "Two notes have the same created value. Which field decides their order? The second comparison orders tied records by ID. This avoids relying on input arrival order."
+      ],
+      "after": [
+        "Pagination means showing a long list in smaller pages. The list needs a predictable order. When two notes have the same creation value, use their IDs to decide which comes first.",
+        "sort changes the array it receives. [...notes] makes a new array first, so sorting it leaves the original array's order unchanged.",
+        "```javascript\nfunction orderedNotes(notes) {\n  return [...notes].sort((a,b)=>a.created-b.created || a.id-b.id);\n}\nconsole.log(orderedNotes([{\"id\":2,\"created\":10},{\"id\":1,\"created\":10}]));\n```\nBoth notes have created: 10. The result puts ID 1 before ID 2 because their creation values tie.",
+        "The comparison function subtracts b.created from a.created. A negative result puts a first; a positive result puts b first. Zero means these creation values match.",
+        "When the first subtraction is zero, || uses a.id - b.id. That orders tied notes by increasing ID. This exercise assumes numeric creation values and distinct integer IDs.",
+        "Complete orderedNotes(notes). Return a new array ordered by created, then by id for ties. Keep the original array and its note fields unchanged. The array copy still refers to the same note objects."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the contract and trace the worked example.",
+        "Replace the unfinished return in the starter.",
+        "Run the changed-input checks.",
+        "Explain the boundary in the understanding question."
+      ],
+      "after": [
+        "Copy the notes array before sorting.",
+        "Compare created values.",
+        "Use id as the second comparison when created values tie."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "[...notes] copies the array before sort changes it. The first subtraction orders by created. A zero result makes || choose the identity comparison. Records are assumed to have distinct integer IDs."
+      ],
+      "after": [
+        "Zero from the first comparison makes || use the second one.",
+        "A new array is enough here because the notes themselves are not edited."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Two notes have the same created value. Which field decides their order?",
+        "choices": [
+          "Their original array position",
+          "Their title length",
+          "Their id"
+        ],
+        "answer": 2,
+        "explanation": "The second comparison orders tied records by ID. This avoids relying on input arrival order."
+      },
+      "after": {
+        "question": "Two notes share the same created value. What decides their order?",
+        "choices": [
+          "Their original positions",
+          "Their title lengths",
+          "Their IDs"
+        ],
+        "answer": 2,
+        "explanation": "The ID comparison breaks the tie, putting the smaller ID first."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Runs as a pure JavaScript function in the browser. Passing checks does not establish live HTTP behavior, database durability, concurrency safety, authentication security, queue delivery guarantees, or production readiness.",
+      "after": "This browser exercise orders an array. A real database query needs the same complete ordering rule for predictable pages."
+    }
+  ],
+  "headings": [
+    "Give tied records a clear order",
+    "Keep the input order safe",
+    "Read one example",
+    "Compare creation values first",
+    "Break ties with the ID",
+    "Try it yourself"
+  ],
+  "project": {
+    "title": "Use a deterministic tie-breaker",
+    "task": "Complete orderedNotes(notes) to return a new array sorted by created and then id, both increasing.",
+    "done_when": "Ties use IDs, and the input array and its note values remain unchanged."
+  }
+}

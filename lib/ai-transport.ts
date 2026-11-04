@@ -1,6 +1,6 @@
-import { providers, type AIProvider } from "./ai-providers";
+import { providers, isProviderModel, selectedModel, type AIProvider } from "./ai-providers";
 type Message = { role: "user" | "assistant"; content: string };
-export type ProviderOptions = { maxOutputTokens?: number };
+export type ProviderOptions = { maxOutputTokens?: number; model?: string };
 export class AssistantError extends Error {
   constructor(
     message: string,
@@ -20,7 +20,10 @@ export function providerRequest(
   headers: Record<string, string>;
   body: Record<string, unknown>;
 } {
-  const common = { model: providers[provider].model, stream: false };
+  if (options.model !== undefined && !isProviderModel(provider, options.model))
+    throw new AssistantError("Choose a model for this provider in Settings.", 400);
+  const model = selectedModel(provider, options.model).id;
+  const common = { model, stream: false };
   const budget = options.maxOutputTokens;
   if (
     budget !== undefined &&
@@ -51,7 +54,13 @@ export function providerRequest(
         "anthropic-version": "2023-06-01",
         "Content-Type": "application/json",
       },
-      body: { ...common, system, messages, max_tokens: budget ?? 1600 },
+      body: {
+        ...common, system, messages,
+        max_tokens: budget ?? (model === "claude-sonnet-4-6" ? 1600 : 6000),
+        ...(model === "claude-sonnet-4-6" ? {} : {
+          thinking: { type: "adaptive" }, output_config: { effort: "low" },
+        }),
+      },
     };
   return {
     url: "https://api.deepseek.com/chat/completions",

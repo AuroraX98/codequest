@@ -1,0 +1,98 @@
+{
+  "lesson": "typescript-12",
+  "position": 29,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Handle every notice variant and leave no forgotten branch.",
+      "after": "Make TypeScript warn when a choice has no matching branch."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A discriminated union has a shared field whose literal value identifies each variant.",
+        "After a branch handles one variant, TypeScript can narrow the remaining possibilities.",
+        "```typescript\ntype Signal = {kind:\"on\"} | {kind:\"off\"};\nfunction signalText(signal: Signal): string {\n  switch (signal.kind) {\n    case \"on\": return \"Enabled\";\n    case \"off\": return \"Disabled\";\n  }\n}\n```",
+        "never means no value can remain at that point under the declared type. Passing a remaining variant to a function expecting never produces a compiler error.",
+        "An assertNever helper can also throw if invalid data unexpectedly reaches that branch at runtime. It does not replace validation of outside data.\n\nHere the helper and its call appear together:\n```typescript\ntype Signal = {kind:\"on\"} | {kind:\"off\"};\nfunction assertNever(value: never): never {\n  throw new Error(\"Unexpected variant\");\n}\nfunction signalText(signal: Signal): string {\n  switch (signal.kind) {\n    case \"on\": return \"Enabled\";\n    case \"off\": return \"Disabled\";\n    default: return assertNever(signal);\n  }\n}\nconsole.log(signalText({kind:\"on\"}));\n```\nThis prints Enabled. assertNever accepts only a value narrowed to never and never returns normally. A valid handled variant never reaches that call. Adding {kind:\"pause\"} to Signal without adding its case makes the default call a type error: pause remains possible there. That changed program is supposed to fail compilation, not print a result.",
+        "For the exercise, return \"Waiting\", \"Ready: title\", or \"Failed: reason\". Finish the switch with assertNever(notice). If a new variant is added later, the compiler should point to the missing handling.",
+        "The new-case check temporarily extends Notice in a separate compilation. A complete strict-return switch or another supported exhaustive handler can satisfy this behavior without copying one helper spelling."
+      ],
+      "after": [
+        "A discriminated union uses a shared label, such as kind, to identify each possible shape.",
+        "When a branch handles one shape and returns, that shape is no longer possible on the remaining path.",
+        "A switch selects a branch by its value. Each case below returns text for one signal kind.",
+        "Never is a type with no possible value. At the end of a fully handled choice, nothing should remain. Passing a still-possible shape to a never parameter causes a type error.",
+        "The final helper call catches a forgotten case during checking.\n```typescript\ntype Signal = { kind: \"on\" } | { kind: \"off\" };\nfunction assertNever(value: never): never {\n  throw new Error(\"Unexpected variant\");\n}\nfunction signalText(signal: Signal): string {\n  switch (signal.kind) {\n    case \"on\": return \"Enabled\";\n    case \"off\": return \"Disabled\";\n    default: return assertNever(signal);\n  }\n}\nconsole.log(signalText({ kind: \"on\" }));\n```\nThe output is Enabled. If a new kind is added without a case, the final call becomes a type error.",
+        "For the project, return Waiting, Ready: followed by the title, or Failed: followed by the reason. Keep a space after each colon. Handle every notice kind.",
+        "The checks add a new notice kind in a separate copy to see whether missing handling causes an error. Keep the final never check or another complete checked approach. Do not use a cast to hide the missing case."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Return a result for each discriminant.",
+        "Keep the final never check rather than hiding the missing case with a cast."
+      ],
+      "after": [
+        "Return the requested text for every notice kind.",
+        "Keep a check that catches an unhandled kind.",
+        "Run the checks."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return a result for each discriminant.",
+        "Keep the final never check rather than hiding the missing case with a cast."
+      ],
+      "after": [
+        "Use the kind label to choose the branch.",
+        "A value can be passed to never only when no possible case remains."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "A new {kind:\"cancelled\"} variant is added to Notice but not to the switch. Why should assertNever(notice) fail compilation?",
+        "choices": [
+          "notice can still be cancelled there, so it is not never",
+          "never automatically adds a cancelled branch",
+          "The compiler runs the network request and sees cancellation"
+        ],
+        "answer": 0,
+        "explanation": "The unhandled variant remains possible at the end. That value cannot be passed to a never parameter, revealing the missing case before execution."
+      },
+      "after": {
+        "question": "A cancelled kind is added but not handled. Why does assertNever(notice) cause a type error?",
+        "choices": [
+          "Notice could still be cancelled there, so it is not never",
+          "Never creates the missing branch",
+          "The compiler runs a request and observes cancellation"
+        ],
+        "answer": 0,
+        "explanation": "The unhandled shape is still possible. It cannot be passed to a type with no possible values."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Deepens previously brief never usage with compile-negative changed-union verification. Starter intentionally fails strict compilation until missing cases are handled. No as never escape hatch; runtime checks alone cannot prove exhaustiveness.",
+      "after": "The starter reports a type error until all cases are handled. The helper can throw for unexpected running data, but outside data still needs its own checks."
+    }
+  ],
+  "headings": [
+    "Identify each possible shape",
+    "Remove handled possibilities",
+    "Choose a switch branch",
+    "Use never for no remaining value",
+    "Check every case",
+    "Handle the notice messages",
+    "Let new cases reveal missing work"
+  ],
+  "project": {
+    "title": "Make missing cases a compiler error",
+    "task": "Handle every notice kind and let a future unhandled kind cause a type error.",
+    "done_when": "Every current message is correct, missing future handling is detected, and the checks pass."
+  }
+}

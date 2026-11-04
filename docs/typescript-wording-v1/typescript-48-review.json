@@ -1,0 +1,91 @@
+{
+  "lesson": "typescript-48",
+  "position": 48,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Explain why a declaration can type-check while a missing JavaScript implementation still fails at runtime.",
+      "after": "A declaration describes code's types. The real JavaScript still has to exist."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A .d.ts file describes names and types for the compiler; it supplies no executable implementation. Here labels.d.ts declares a function named label accepting a string and returning a string. The matching labels.js actually creates that function. A declaration can be wrong, so type-checking does not verify an arbitrary JavaScript implementation.",
+        "This is a local-only workflow, not the app runner. Use an isolated folder with Node and an already installed TypeScript 5.9.3 compiler (verify tsc --version). package.json marks CommonJS for Node; exports.label publishes the JavaScript function on that module’s exports object. main.ts imports the declaration by the same module name, and generated CommonJS JavaScript loads the real labels.js.",
+        "File package.json\n```json\n{\"type\":\"commonjs\"}\n```\n\nFile labels.js\n```javascript\nexports.label = function(text) { return \"Label: \" + text; };\n```\n\nFile labels.d.ts\n```typescript\nexport declare function label(text: string): string;\n```\n\nFile main.ts\n```typescript\nimport { label } from \"./labels\";\nconsole.log(label(\"Stars\"));\n```",
+        "From that folder run:\n```sh\ntsc --strict --target ES2015 --module commonjs --noEmitOnError main.ts\nnode main.js\n```\nThe compiler emits main.js beside main.ts. It uses the declaration for checking; Node uses labels.js for execution. label(\"Stars\") returns Label: Stars, which console.log displays. --noEmitOnError prevents new output when compilation reports an error; it does not delete stale files.",
+        "Optional local practice: rename labels.js temporarily while retaining labels.d.ts and rebuild. Compilation can still succeed, but running main.js fails to load the implementation. Restore the file afterward. No browser-import support is implied."
+      ],
+      "after": [
+        "A declaration file ends in `.d.ts`. It tells TypeScript which names and types exist, but it does not create running code. This optional example uses several files on your computer. It does not run in the app's single-file editor.",
+        "File: `labels.js`\n```javascript\nexports.label = function(text) {\n  return \"Label: \" + text;\n};\n```\nThis is the real function. `exports.label` makes it available to another file using CommonJS, a way to share code between files.",
+        "File: `labels.d.ts`\n```typescript\nexport declare function label(text: string): string;\n```\nThis describes `label`: it takes text and returns text. There is no function body here. A wrong description can pass type checks while the real code behaves differently.",
+        "File: `main.ts`\n```typescript\nimport { label } from \"./labels\";\nconsole.log(label(\"Stars\"));\n```\nThis uses the function and prints `Label: Stars`. TypeScript reads its description from `labels.d.ts`. Node, the program that runs JavaScript on your computer, needs the real `labels.js`.",
+        "Optional local run: put these files in a separate folder. Add `package.json` containing `{\"type\":\"commonjs\"}`. With TypeScript 5.9.3 installed, check `tsc --version`. Run `tsc --strict --target ES2015 --module commonjs --noEmitOnError main.ts`, then `node main.js`. If `labels.js` is missing, checking can pass but running fails. Restore it before running again. `--noEmitOnError` stops new output on errors; it does not delete old output files."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the complete local files and commands.",
+        "Optionally run them in an isolated local folder.",
+        "Explain the changed-case result."
+      ],
+      "after": [
+        "Read the real function and its separate description.",
+        "Follow the import from main.ts.",
+        "Explain why the JavaScript file is still needed. Running locally is optional."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "This lesson has no in-app module or configuration runner."
+      ],
+      "after": [
+        "The declaration supplies types, not the function body."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Remove only labels.js, leaving the declaration and importing source. What can happen?",
+        "choices": [
+          "Compilation succeeds, but Node fails to load the implementation.",
+          "The declaration automatically generates the function body.",
+          "The compiler must execute the implementation before accepting the import."
+        ],
+        "answer": 0,
+        "explanation": "The .d.ts supplies a static contract, not executable code. Runtime module loading still needs the real JavaScript."
+      },
+      "after": {
+        "question": "What can happen if labels.js is missing but labels.d.ts remains?",
+        "choices": [
+          "Type checking passes, but Node cannot load the function.",
+          "The declaration creates the function automatically.",
+          "TypeScript must run the function before accepting it."
+        ],
+        "answer": 0,
+        "explanation": "The declaration describes the function. Node still needs the JavaScript file that actually creates it."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Pinned TypeScript5.9.3 strict ES2015 browser host. Compiler assertions are separate sources and never execute as learner JavaScript; local module/configuration workflows are explicitly separate.",
+      "after": "This lesson uses files on your computer. The app's single-file editor does not run this module example."
+    }
+  ],
+  "headings": [
+    "Separate the description from the code",
+    "Write the real function",
+    "Describe the function's type",
+    "Use the function",
+    "Run the files together"
+  ],
+  "project": {
+    "title": "Read a declaration beside real JavaScript",
+    "task": "Explain which file describes label and which file creates it. Then explain what happens if only labels.js is missing.",
+    "done_when": "You can explain why a type check may pass even though the real JavaScript file is missing. Trying the local commands is optional."
+  }
+}

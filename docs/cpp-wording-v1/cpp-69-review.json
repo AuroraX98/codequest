@@ -1,0 +1,94 @@
+{
+  "lesson": "cpp-69",
+  "position": 69,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Change the second command from collect to quit, leaving the final collect. What state prints?",
+      "after": "Turn a command and current game state into the next game state."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "This tiny console model receives a command and returns the next Game value. apply takes state by value, so the caller must assign the returned state. Fixed test commands replace interactive input; this is not a graphics engine.",
+        "The initial state has two turns. A collect command increases score and consumes one turn; reaching zero stops play. quit stops without consuming a turn, and an unknown command leaves state unchanged. Once stopped, later commands do nothing.",
+        "For states reached from this initializer, at most two successful collects occur, so the score and turn arithmetic stays bounded. Test early quit, unknown commands and extra commands after stopping. A production app must also validate state loaded from untrusted storage; this function does not accept arbitrary states as valid.",
+        "Complete local C++ example; the app itself does not execute it:\n```cpp\n#include <array>\n#include <iostream>\n#include <string_view>\nstruct Game { int score = 0; int turns = 2; bool playing = true; };\nGame apply(Game state, std::string_view command) {\n    if (!state.playing) return state;\n    if (command == \"quit\") { state.playing = false; return state; }\n    if (command != \"collect\") return state;\n    ++state.score;\n    --state.turns;\n    if (state.turns == 0) state.playing = false;\n    return state;\n}\nint main() {\n    Game game;\n    const std::array<std::string_view, 3> commands{\"collect\", \"collect\", \"collect\"};\n    for (auto command : commands) game = apply(game, command);\n    std::cout << game.score << \" \" << game.turns << \" \" << game.playing << \"\\n\";\n}\n```",
+        "Expected output or behavior: 2 0 0. Local compiler test evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Add a help command that preserves state and test it; then add assertions for each reachable boundary without adding graphics or unbounded loops. You may trace this without a compiler; finishing the reading is not proof of a local run."
+      ],
+      "after": [
+        "State means the values describing the game now: score, turns, and whether play continues. apply receives a copy of that state and returns the next state. The caller must assign the returned value to keep the change.",
+        "collect adds one point and uses one turn. The game starts with two turns. Reaching zero turns sets playing to false.",
+        "quit stops play without using a turn. Unknown commands leave the state unchanged. The first check also leaves an already-stopped game unchanged, so later commands cannot restart it.",
+        "Follow each fixed command through the state update. This is one small console model, without graphics or interactive input.\n\n```cpp\n#include <array>\n#include <iostream>\n#include <string_view>\nstruct Game { int score = 0; int turns = 2; bool playing = true; };\nGame apply(Game state, std::string_view command) {\n    if (!state.playing) return state;\n    if (command == \"quit\") { state.playing = false; return state; }\n    if (command != \"collect\") return state;\n    ++state.score;\n    --state.turns;\n    if (state.turns == 0) state.playing = false;\n    return state;\n}\nint main() {\n    Game game;\n    const std::array<std::string_view, 3> commands{\"collect\", \"collect\", \"collect\"};\n    for (auto command : commands) game = apply(game, command);\n    std::cout << game.score << \" \" << game.turns << \" \" << game.playing << \"\\n\";\n}\n```",
+        "The program prints 2 0 0. Two collects produce two points and use both turns. The third command is ignored. The last zero means playing is false.",
+        "From this starting state, only two collects can succeed, so the arithmetic stays within a small range. State loaded from elsewhere would need validation too. This function does not promise to repair arbitrary invalid starting values."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain why, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Write down score, turns, and playing after each command, in order."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Change the second command from collect to quit, leaving the final collect. What state prints?",
+        "choices": [
+          "2 0 0: collect always overrides quit.",
+          "1 1 0: quit ends play, so the final collect is ignored.",
+          "1 0 1: quit consumes a turn and restarts play."
+        ],
+        "answer": 1,
+        "explanation": "The first collect leaves score 1 and one turn. quit sets playing false without changing turns; the final command cannot change a stopped state."
+      },
+      "after": {
+        "question": "Change the second command to quit and keep the final collect. What state prints?",
+        "choices": [
+          "2 0 0, because collect always overrides quit.",
+          "1 1 0, because quit stops play and the last collect is ignored.",
+          "1 0 1, because quit uses a turn and restarts play."
+        ],
+        "answer": 1,
+        "explanation": "The first collect leaves one point and one turn. quit stops play without changing that turn count. The final command then leaves the state alone."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "C++ Core v1, standard C++23 features checked against the available GCC14.2 implementation. This app provides concept reading and an understanding check, not a C++ browser runner. Local example tests are separate evidence and do not certify learner mastery.",
+      "after": "The browser shows C++ code and checks your understanding; it does not run C++. Optional local examples use C++23."
+    }
+  ],
+  "headings": [
+    "Return the next state",
+    "Use a turn to collect",
+    "Stop before accepting more actions",
+    "One example",
+    "What appears",
+    "Keep the accepted states bounded"
+  ],
+  "project": {
+    "title": "Build a bounded console game-state engine",
+    "task": "Trace the next state returned for each command in the bounded game.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local C++ example is optional."
+  }
+}

@@ -1,0 +1,91 @@
+{
+  "lesson": "go-53",
+  "position": 53,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "If cancel is called twice before waiting, what prints?",
+      "after": "Tell work to stop by sending a cancellation signal."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "context.WithCancel derives a cancellable context and returns a CancelFunc. The notation <-ctx.Done() receives from that channel, waiting until cancellation closes it; channel operations are developed in the following lessons. Calling cancel closes the context’s Done channel; it does not forcibly terminate arbitrary code. Operations must observe cancellation and stop cooperatively.",
+        "Defer cancel even when another branch may cancel earlier; repeated calls are safe. After cancellation, Err reports context.Canceled. Background has no deadline and is a root context, not an automatic timeout. This fixture cancels immediately without waiting for a timer.",
+        "Complete local Go example; the app itself does not execute it:\n```go\npackage main\n\nimport (\n\"fmt\"\n\"context\"\n)\n\n\nfunc main() {\n    ctx, cancel := context.WithCancel(context.Background())\n    defer cancel()\n    cancel()\n    <-ctx.Done()\n    fmt.Println(ctx.Err() == context.Canceled)\n}\n```",
+        "Expected output or behavior: true. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Explain why returning a cancel function creates an ownership obligation even when no timeout is used. You may trace it without a Go compiler; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "A context carries a signal that work should stop. `WithCancel` returns a new context and a cancel function. A channel is a way for running tasks to communicate. `<-ctx.Done()` waits until the context's signal channel closes. Work must notice the signal and stop itself.",
+        "`context.Background()` starts with no deadline. `defer cancel()` makes sure the new context is released when the function ends. Calling cancel earlier is safe. After cancellation takes effect, Err reports context.Canceled.",
+        "Follow the cancel call before the wait.\n```go\npackage main\n\nimport (\n\"fmt\"\n\"context\"\n)\n\n\nfunc main() {\n    ctx, cancel := context.WithCancel(context.Background())\n    defer cancel()\n    cancel()\n    <-ctx.Done()\n    fmt.Println(ctx.Err() == context.Canceled)\n}\n```",
+        "The screen shows `true`. The context was canceled, the wait finished, and Err reports the expected reason.",
+        "Calling cancel again does not reopen the channel or undo cancellation."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Cancellation stays in effect."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If cancel is called twice before waiting, what prints?",
+        "choices": [
+          "true; repeated cancellation is safe.",
+          "false; the second call reopens Done.",
+          "A panic because cancel may only be called once."
+        ],
+        "answer": 0,
+        "explanation": "Cancellation remains in effect and repeated CancelFunc calls do not undo it."
+      },
+      "after": {
+        "question": "Call cancel twice before waiting. What appears?",
+        "choices": [
+          "true; repeating cancel is safe.",
+          "false; the second call reopens Done.",
+          "A panic, because cancel can only be called once."
+        ],
+        "answer": 0,
+        "explanation": "The context stays canceled. Repeating the call does not reverse the signal."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Go Core v1 uses the verified Go1.27.3 toolchain and standard library. The app supplies concept reading and an understanding check, not a Go browser runner. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "The browser shows Go code and checks your understanding; it does not run Go. Optional local examples use Go 1.27."
+    }
+  ],
+  "headings": [
+    "Create a stop signal",
+    "Release the context when finished",
+    "One example",
+    "Read the cancellation result",
+    "Call cancel more than once"
+  ],
+  "project": {
+    "title": "Context and cancellation",
+    "task": "Predict what a repeated cancel call changes.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local Go example is optional."
+  }
+}

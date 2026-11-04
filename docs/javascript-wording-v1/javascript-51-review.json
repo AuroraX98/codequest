@@ -1,0 +1,94 @@
+{
+  "lesson": "javascript-51",
+  "position": 52,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Implement readLabel with the supplied LoadError class. Return a valid string label; wrap JSON parse or wrong-label-type failures with new LoadError(\"Cannot load label\", originalCause). Append \"finished\" exactly once on success or failure.",
+      "after": "Keep the cause of an error and run a final step on both success and failure."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A custom LoadError extends Error. super(message,{cause}) supplies the error message and retains the original thrown value in the cause property; {cause} is shorthand for {cause:cause}. Setting name makes the diagnostic category explicit. Constructing an error does not throw it until throw is used.",
+        "readLabel(raw,events) parses JSON text, returns a string label if valid, or throws a LoadError wrapping a parse/shape failure. JSON.parse returns a decoded value or throws SyntaxError. data?.label reads label unless data is null or undefined, in which case it yields undefined. The explicit type guard rejects non-string labels with TypeError. finally appends \"finished\" to the supplied event array whether the try returned or threw; push returns the new length, which we ignore.",
+        "```javascript\nclass LoadError extends Error {\n  constructor(message, cause) {\n    super(message, {cause});\n    this.name = \"LoadError\";\n  }\n}\nfunction readLabel(raw, events) {\n  try {\n    const data = JSON.parse(raw);\n    if (typeof data?.label !== \"string\") {\n      throw new TypeError(\"label must be text\");\n    }\n    return data.label;\n  } catch (cause) {\n    throw new LoadError(\"Cannot load label\", cause);\n  } finally {\n    events.push(\"finished\");\n  }\n}\nconst events = [];\ntry { readLabel('{\"label\":7}', events); }\ncatch (error) { console.log(error.name, error.cause instanceof TypeError); }\nconsole.log(events.join(\",\"));\n```\nOutput: LoadError true, then finished. The cause is the original TypeError object, not merely its text. This array event demonstrates finalization order; it does not acquire or close a real external resource.",
+        "A return or throw inside finally can replace an earlier result or failure, so this finally only records completion. Optional practice: use valid {\"label\":\"Sky\"} input and explain why the returned string and the finished event both occur."
+      ],
+      "after": [
+        "A custom error can add a useful name and message while keeping the original problem.\n\nOur `LoadError` extends `Error`. `super(message, {cause})` saves the message and the original error as `cause`. Creating the error is separate from throwing it.",
+        "`readLabel` parses JSON and checks that its label is text. Broken JSON throws a `SyntaxError`. A wrong label type causes our own `TypeError`.\n\n`data?.label` gives `undefined` when data is null or undefined, so the type check can reject it safely.\n\nThe `finally` block adds `\"finished\"` to the event list on success or failure.",
+        "Here is the complete example.\n```javascript\nclass LoadError extends Error {\n  constructor(message, cause) {\n    super(message, {cause});\n    this.name = \"LoadError\";\n  }\n}\nfunction readLabel(raw, events) {\n  try {\n    const data = JSON.parse(raw);\n    if (typeof data?.label !== \"string\") {\n      throw new TypeError(\"label must be text\");\n    }\n    return data.label;\n  } catch (cause) {\n    throw new LoadError(\"Cannot load label\", cause);\n  } finally {\n    events.push(\"finished\");\n  }\n}\nconst events = [];\ntry { readLabel('{\"label\":7}', events); }\ncatch (error) { console.log(error.name, error.cause instanceof TypeError); }\nconsole.log(events.join(\",\"));\n```\nOutput:\n```text\nLoadError true\nfinished\n```\nThe numeric label fails the text check. `catch` wraps that TypeError in a LoadError. The original error remains available as `error.cause`.",
+        "Complete `readLabel(raw, events)`. Return a valid string label. Wrap failures in `new LoadError(\"Cannot load label\", cause)`.\n\nAdd `\"finished\"` exactly once in `finally`. Do not return or throw from that block: doing so could replace the earlier result or error."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the requirement.",
+        "Make one change to the starter.",
+        "Run the checks.",
+        "Explain why a changed input produces its result."
+      ],
+      "after": [
+        "Parse raw inside try and check that data?.label is a string.",
+        "Return the valid label or throw TypeError for a wrong label type.",
+        "In catch, throw LoadError with the original cause.",
+        "In finally, push \"finished\" once."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "For valid {\"label\":\"Map\"} input, does returning from try skip finally?",
+        "choices": [
+          "Yes. finally runs only for errors.",
+          "It must throw because every finally prevents a return.",
+          "No. It returns \"Map\" after recording \"finished\"."
+        ],
+        "answer": 2,
+        "explanation": "The finalization block runs before the return completes. Since it does not return or throw itself, the original result is preserved."
+      },
+      "after": {
+        "question": "For valid {\"label\":\"Map\"} input, does returning from try skip finally?",
+        "choices": [
+          "Yes. finally runs only for errors.",
+          "It must throw because every finally prevents a return.",
+          "No. It returns \"Map\" after recording \"finished\"."
+        ],
+        "answer": 2,
+        "explanation": "finally runs before the return finishes. It records finished, then the original Map result is returned."
+      }
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Trace the visible worked calls before changing the starter."
+      ],
+      "after": [
+        "Use finally for the step shared by success and failure.",
+        "Pass the original caught error into LoadError."
+      ]
+    },
+    {
+      "field": "externalNotes",
+      "before": "ECMAScript 2026 core; native Node24 and current app worker/DOM harness evidence are recorded separately. No external service or real-browser claim follows from a local fixture.",
+      "after": ""
+    }
+  ],
+  "headings": [
+    "Keep an error's cause",
+    "Run a final step either way",
+    "Follow the failed label",
+    "Build readLabel"
+  ],
+  "project": {
+    "title": "Finally and custom error causes",
+    "task": "Complete readLabel using LoadError. Return a text label, wrap parse or type failures with their original cause, and record finished exactly once on every path.",
+    "done_when": "Valid labels return correctly. Invalid labels and broken JSON keep their original error causes. Every call records one finished event."
+  },
+  "notes": [
+    "Removed an unrelated local-project completion requirement; its useful teaching is in the lesson and technical evidence stays in review documents."
+  ]
+}

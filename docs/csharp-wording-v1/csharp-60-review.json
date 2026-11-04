@@ -1,0 +1,94 @@
+{
+  "lesson": "csharp-60",
+  "position": 60,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Replace -1 with 8 in the later assignment. What does the program print?",
+      "after": "Check a new property value before storing it."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "C# 14 field-backed properties can use field inside an accessor to refer to compiler-generated backing storage. get; returns that same storage.",
+        "In set, value is the incoming assignment. The if statement rejects a negative value before the later field = value statement can store it.",
+        "After Minutes has been set to 5, assigning -1 throws before field is changed. The property still contains 5. This example explicitly targets C# 14 on .NET 10, not a preview compiler.",
+        "Complete local C# example; the app does not execute it:\n```csharp\nusing System;\nvar session = new Session();\nsession.Minutes = 5;\ntry { session.Minutes = -1; }\ncatch (ArgumentOutOfRangeException) { Console.WriteLine(\"Rejected\"); }\nConsole.WriteLine(session.Minutes);\npublic class Session\n{\n    public int Minutes\n    {\n        get;\n        set\n        {\n            if (value < 0) throw new ArgumentOutOfRangeException(\"Minutes\");\n            field = value;\n        }\n    }\n}\n```",
+        "Expected behavior from this example: Rejected, then 5 on separate lines. This expected result is a reasoned prediction until a compiler test is recorded.",
+        "Optional local transfer: Add an upper bound of 180. Check zero, 180 and 181, and verify a rejected assignment preserves the previous value. This is a separate local practice task, not a requirement to mark the reading complete."
+      ],
+      "after": [
+        "In C# 14, field inside a property accessor refers to storage created by the compiler. The short get; reads that same stored value.",
+        "A setter runs when code assigns the property. Inside set, value is the new value being offered.",
+        "This setter checks for a negative number before reaching field = value. A negative number throws an error, so the assignment to storage is skipped.",
+        "Follow the accepted assignment and the rejected assignment. This example uses C# 14 with .NET 10.\n\n```csharp\nusing System;\nvar session = new Session();\nsession.Minutes = 5;\ntry { session.Minutes = -1; }\ncatch (ArgumentOutOfRangeException) { Console.WriteLine(\"Rejected\"); }\nConsole.WriteLine(session.Minutes);\npublic class Session\n{\n    public int Minutes\n    {\n        get;\n        set\n        {\n            if (value < 0) throw new ArgumentOutOfRangeException(\"Minutes\");\n            field = value;\n        }\n    }\n}\n```",
+        "The program prints Rejected, then 5. Setting Minutes to 5 succeeds. Setting it to -1 throws before changing the stored number.",
+        "Validation happens before the write, so a rejected value leaves the last accepted value in place. A nonnegative value reaches field = value and replaces the stored number."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Trace the changed case before choosing an answer.",
+        "Explain the consequence, then optionally try the local transfer task."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Trace the inputs through the visible rule, then compare the changed case."
+      ],
+      "after": [
+        "Follow whether the setter reaches field = value."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Replace -1 with 8 in the later assignment. What does the program print?",
+        "choices": [
+          "Rejected then 5",
+          "8 only",
+          "5 only, because field-backed properties cannot change"
+        ],
+        "answer": 1,
+        "explanation": "8 satisfies the validation condition, updates the backing storage and does not enter the catch."
+      },
+      "after": {
+        "question": "Replace the later -1 assignment with 8. What prints?",
+        "choices": [
+          "Rejected, then 5",
+          "Only 8",
+          "Only 5"
+        ],
+        "answer": 1,
+        "explanation": "8 passes the check and is stored. No exception occurs, so the program prints just 8."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "C#14/.NET10 core syllabus. Concept-mode reading and understanding check; no in-app C# execution and no claim of mastery. Full example and optional local transfer task are supplied. Actual compiler validation, if available, is reported separately.",
+      "after": "The browser shows C# code and checks your understanding; it does not run C#. Optional local examples use a .NET 10 console project with C# 14."
+    }
+  ],
+  "headings": [
+    "Let the compiler provide storage",
+    "Read the incoming value",
+    "Reject before storing",
+    "One example",
+    "What appears",
+    "Keep the last accepted value"
+  ],
+  "project": {
+    "title": "Use a C#14 field-backed property",
+    "task": "Follow how the property's setter rejects a value before storing it.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local C# example is optional."
+  }
+}

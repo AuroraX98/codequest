@@ -1,0 +1,87 @@
+{
+  "lesson": "sql-40",
+  "position": 24,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Create report(worker,manager) with all four staff members and their immediate manager name, including Ari with NULL. Leave staff unchanged.",
+      "after": "Read the same table once as workers and once as their managers."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A self-join reads the same table in two roles. child is the worker row; parent is the row whose ID equals that worker’s manager_id. Aliases do not copy or change stored rows. Qualifying each column makes the roles clear.",
+        "LEFT JOIN keeps every child row. If no parent matches, selected parent columns are NULL. Here Ari has no manager. An ordinary inner JOIN drops that unmatched child. This query follows one management edge; it is not a recursive traversal of every ancestor.",
+        "\n```sql\nCREATE TABLE staff(id INTEGER PRIMARY KEY,name TEXT NOT NULL,manager_id INTEGER);\nINSERT INTO staff VALUES(1,'Ari',NULL),(2,'Bo',1),(3,'Cy',1),(4,'Dee',2);\nSELECT child.name AS worker,parent.name AS manager\nFROM staff AS child\nLEFT JOIN staff AS parent ON parent.id=child.manager_id\nORDER BY child.id;\n```\nThe pairs are Ari/NULL, Bo/Ari, Cy/Ari and Dee/Bo.",
+        "\n```sql\nCREATE TABLE staff(id INTEGER PRIMARY KEY,name TEXT NOT NULL,manager_id INTEGER);\nINSERT INTO staff VALUES(1,'Ari',NULL),(2,'Bo',1),(3,'Cy',1),(4,'Dee',2);\nSELECT child.name AS worker,parent.name AS manager\nFROM staff AS child\nJOIN staff AS parent ON parent.id=child.manager_id\nORDER BY child.id;\n```\nAri disappears; the other three pairs remain. The source table still has four rows.",
+        "Optional practice: change Dee’s manager_id to 1 in a fresh setup. Predict the one changed report value."
+      ],
+      "after": [
+        "A self-join connects a table to itself. Give each use a short name so you can tell its role. One use reads the worker; the other reads the manager.",
+        "Match the worker's manager_id to the manager's id. The short names do not copy or change the stored table. They just tell the query which role a column belongs to.",
+        "Run this example in a fresh database:\n```sql\nCREATE TABLE staff(id INTEGER PRIMARY KEY, name TEXT, manager_id INTEGER);\nINSERT INTO staff VALUES\n  (1, 'Ari', NULL), (2, 'Bo', 1), (3, 'Cy', 1), (4, 'Dee', 2);\nSELECT person.name AS worker, boss.name AS manager\nFROM staff AS person\nLEFT JOIN staff AS boss ON boss.id = person.manager_id\nORDER BY person.id;\n```\nThe pairs are Ari/NULL, Bo/Ari, Cy/Ari, and Dee/Bo.",
+        "LEFT JOIN keeps Ari even though no manager matches. An INNER JOIN would leave Ari out. This query finds only the immediate manager; it does not follow the whole chain of managers.",
+        "Create `report(worker, manager)` from the supplied staff table. Keep all four people, including Ari with a NULL manager. Leave staff unchanged."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the small example and explain its inputs and effects.",
+        "Complete the starter for this lesson.",
+        "Run the behavior checks, then predict a changed case."
+      ],
+      "after": [
+        "Give staff a worker role and a manager role.",
+        "LEFT JOIN the manager's id to the worker's manager_id.",
+        "Save the two names as worker and manager in report."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Trace the supplied rows and resulting rows before changing the query."
+      ],
+      "after": [
+        "Use the role names before each column.",
+        "Keep the worker side on the left."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If Dee’s manager_id becomes NULL, how does the LEFT JOIN report change?",
+        "choices": [
+          "Ari becomes Dee’s manager automatically",
+          "Dee stays, with a NULL manager",
+          "Dee disappears"
+        ],
+        "answer": 1,
+        "explanation": "The left row is retained even when its manager reference has no equality match."
+      },
+      "after": {
+        "question": "Dee's manager_id becomes NULL. What happens in the LEFT JOIN report?",
+        "choices": [
+          "Ari becomes Dee's manager automatically.",
+          "Dee stays, with a NULL manager.",
+          "Dee disappears."
+        ],
+        "answer": 1,
+        "explanation": "LEFT JOIN keeps Dee's row even when no manager matches."
+      }
+    }
+  ],
+  "headings": [
+    "Give one table two roles",
+    "Match the manager ID",
+    "Build a worker report",
+    "Keep people with no manager",
+    "Create the project report"
+  ],
+  "project": {
+    "title": "Give one table two roles",
+    "task": "Create report(worker, manager) with each staff member and their immediate manager name.",
+    "done_when": "All four workers appear, Ari has a NULL manager, and staff stays unchanged."
+  }
+}

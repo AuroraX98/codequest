@@ -57,7 +57,7 @@ const gets = () => calls.filter(call => call.options.method === "GET");
 try {
   await mkdir(path.join(temp, "lib"));
   await mkdir(path.join(temp, "components"));
-  await symlink(path.resolve("node_modules"), path.join(temp, "node_modules"), "dir");
+  await symlink(path.resolve("node_modules"), path.join(temp, "node_modules"), process.platform === "win32" ? "junction" : "dir");
   for (const file of ["lib/lesson-completion.ts", "lib/reading-client.ts", "components/ReadingMark.tsx", "components/LessonCompletion.tsx"]) {
     const compiled = ts.transpileModule(await readFile(file, "utf8"), { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext, jsx: ts.JsxEmit.ReactJSX } }).outputText.replace(/from "(\.\.?\/[^\"]+)"/g, 'from "$1.mjs"');
     await writeFile(path.join(temp, file.replace(/\.tsx?$/, ".mjs")), compiled);
@@ -247,7 +247,7 @@ try {
   await render({ account: otherScope, complete: true });
   assert.equal(document.querySelector('[role="progressbar"]').getAttribute("aria-valuenow"), "50");
   assert.match(document.querySelector(".completion-legacy").textContent, /earlier project completion is kept/);
-  assert.match(document.querySelector(".completion-math").textContent, /Separate from this score/);
+  assert.equal(document.querySelector(".completion-math"), null, "Retired math does not add a second progress target");
 
   // Accessible conflict and refresh flow does not pretend the write succeeded.
   override = () => Response.json({ error: "changed" }, { status: 409 });

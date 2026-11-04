@@ -1,0 +1,94 @@
+{
+  "lesson": "javascript-63",
+  "position": 60,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Complete readTopic(response): return HTTP:status for a non-ok response without reading it; otherwise await json, require a non-null object with a String topic, and return that topic. Preserve parse errors and throw TypeError for the wrong shape. No fetch is needed.",
+      "after": "Check a response's status before reading and checking its data."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "new Response(body, options) constructs a local response with the supplied body, status and headers. It does not call fetch or contact a server. response.ok is true for statuses 200 through 299; status exposes the actual code. A response with status 404 is still a response object, not automatically a thrown transport error.",
+        "response.json() takes no arguments and returns a Promise for the parsed body value. It consumes the body; bodyUsed records that use. A second read of this consumed body rejects with TypeError. Malformed JSON rejects with SyntaxError, while valid JSON can still have the wrong shape. The Content-Type header does not enforce our application’s topic field.",
+        "readTopic first applies the status policy, then reads and checks a non-null object with a String topic. TypeError(message) creates the chosen shape failure. The already-used body is deliberately read again to observe its contract.\n```javascript\nasync function readTopic(response) {\n  if (!response.ok) return \"HTTP:\" + response.status;\n  const data = await response.json();\n  if (data === null || typeof data !== \"object\" || typeof data.topic !== \"string\") {\n    throw new TypeError(\"topic must be text\");\n  }\n  return data.topic;\n}\nconst response = new Response('{\"topic\":\"Maps\"}', {\n  status: 200, headers: {\"Content-Type\": \"application/json\"}\n});\nconsole.log(await readTopic(response));\nconsole.log(response.bodyUsed);\ntry { await response.json(); }\ncatch (error) { console.log(error instanceof TypeError); }\n```\nOutput: Maps, true, true on separate lines. This is local Response behavior, not an HTTP server test.",
+        "For status 404 the function returns HTTP:404 without consuming the body. For a successful status with invalid JSON, the parsing rejection propagates; for valid JSON without a String topic, the explicit shape rejection propagates. Optional practice: construct a fresh response for each case. Reusing a consumed response would test body lifetime instead of the intended parsing case.\nThis complete shape-failure companion actually reaches the explicit TypeError constructor after valid JSON is parsed.\n```javascript\nasync function readTopic(response) {\n  if (!response.ok) return \"HTTP:\" + response.status;\n  const data = await response.json();\n  if (data === null || typeof data !== \"object\" || typeof data.topic !== \"string\") {\n    throw new TypeError(\"topic must be text\");\n  }\n  return data.topic;\n}\ntry {\n  await readTopic(new Response('{\"topic\":3}', {status: 200}));\n} catch (error) {\n  console.log(error instanceof TypeError, error.message);\n}\n```\nOutput: true topic must be text."
+      ],
+      "after": [
+        "A `Response` holds a status and a body. `new Response(...)` makes a local practice response without contacting a server.\n\n`response.ok` is true for status codes from 200 through 299. `response.status` gives the number. A 404 status does not throw an error by itself.",
+        "`response.json()` reads the body and returns a Promise for its parsed value. `bodyUsed` shows whether the body has been used.\n\nRead the body once. A second read fails with TypeError. Broken JSON fails with SyntaxError. Valid JSON can still lack the data our app needs.",
+        "This example reads a topic, then shows what happens if the same body is read again.\n```javascript\nasync function readTopic(response) {\n  if (!response.ok) return \"HTTP:\" + response.status;\n  const data = await response.json();\n  if (data === null || typeof data !== \"object\" || typeof data.topic !== \"string\") {\n    throw new TypeError(\"topic must be text\");\n  }\n  return data.topic;\n}\nconst response = new Response('{\"topic\":\"Maps\"}', {\n  status: 200, headers: {\"Content-Type\": \"application/json\"}\n});\nconsole.log(await readTopic(response));\nconsole.log(response.bodyUsed);\ntry { await response.json(); }\ncatch (error) { console.log(error instanceof TypeError); }\n```\nOutput:\n```text\nMaps\ntrue\ntrue\n```\n`readTopic` checks the status first, then awaits the JSON and checks its topic. The last line confirms that the second body read failed.",
+        "A successful status does not guarantee a text topic.\n```javascript\nasync function readTopic(response) {\n  if (!response.ok) return \"HTTP:\" + response.status;\n  const data = await response.json();\n  if (data === null || typeof data !== \"object\" || typeof data.topic !== \"string\") {\n    throw new TypeError(\"topic must be text\");\n  }\n  return data.topic;\n}\ntry {\n  await readTopic(new Response('{\"topic\":3}', {status: 200}));\n} catch (error) {\n  console.log(error instanceof TypeError, error.message);\n}\n```\nOutput:\n```text\ntrue topic must be text\n```\nComplete the starter's status check. If `response.ok` is false, return `\"HTTP:\" + response.status` before reading the body.\n\nOtherwise, keep the JSON and topic checks. Use a fresh Response for each test so an earlier read does not affect the next case."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the requirement.",
+        "Make one change to the starter.",
+        "Run the checks.",
+        "Explain why a changed input produces its result."
+      ],
+      "after": [
+        "At the start, return HTTP:status when response.ok is false.",
+        "Otherwise await response.json().",
+        "Keep the supplied text-topic check and return.",
+        "Check unsuccessful status, wrong data shape, and broken JSON with fresh responses."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "What should readTopic do for a locally constructed 404 response containing malformed JSON?",
+        "choices": [
+          "Return HTTP:404 without consuming or parsing that body.",
+          "Treat constructing the Response as a failed network request.",
+          "Throw a JSON syntax error before inspecting status."
+        ],
+        "answer": 0,
+        "explanation": "The status guard runs first and returns before json is called. This separates the authored status policy from body parsing."
+      },
+      "after": {
+        "question": "What should readTopic do for a locally constructed 404 response containing malformed JSON?",
+        "choices": [
+          "Return HTTP:404 without consuming or parsing that body.",
+          "Treat constructing the Response as a failed network request.",
+          "Throw a JSON syntax error before inspecting status."
+        ],
+        "answer": 0,
+        "explanation": "The status check returns HTTP:404 first, so the malformed body is never read."
+      }
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Trace the visible worked calls before changing the starter."
+      ],
+      "after": [
+        "The status guard must run before json().",
+        "Let parsing errors remain errors; do not turn them into a topic."
+      ]
+    },
+    {
+      "field": "externalNotes",
+      "before": "ECMAScript 2026 core; native Node24 and current app worker/DOM harness evidence are recorded separately. No external service or real-browser claim follows from a local fixture.",
+      "after": ""
+    }
+  ],
+  "headings": [
+    "Check the response status",
+    "Read the body once",
+    "Read a valid topic",
+    "Handle an unsuccessful status"
+  ],
+  "project": {
+    "title": "Response status and body contracts",
+    "task": "Complete readTopic(response). Return HTTP:status for an unsuccessful status without reading the body. Otherwise parse JSON, require a text topic, and return it.",
+    "done_when": "Valid topics return correctly. Unsuccessful statuses leave the body unread. Wrong topic types and broken JSON fail with their distinct errors."
+  },
+  "notes": [
+    "Removed an unrelated local-project completion requirement; its useful teaching is in the lesson and technical evidence stays in review documents."
+  ]
+}

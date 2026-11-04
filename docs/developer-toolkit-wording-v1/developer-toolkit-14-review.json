@@ -1,0 +1,106 @@
+{
+  "lesson": "developer-toolkit-14",
+  "position": 14,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Complete hotspot(rows). Rows have name and nonnegative selfMs. Return the name with the largest selfMs, keeping the first row on a tie. Return null for no rows. Do not change the rows.",
+      "after": "Measure where a program spends time before choosing what to make faster."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A profiler records evidence about where a running program spends work or time.",
+        "A hotspot is a measured concentration of work worth investigating, not automatic proof of a bug.",
+        "Self time describes time attributed to the function itself rather than adding all child-function time. Report formats distinguish it from inclusive total time.",
+        "In this simplified report, compare selfMs values. A frequently called function may still use less total self time than a slower function called once.\n\nTo find the largest measurement, start with the first row as the current best and visit the remaining rows. Replace the best only when the new selfMs is strictly greater, not equal; that keeps the first row on a tie. With measurements 2, 9, 9, the saved best changes to the first 9 and stays there. Check for an empty list before reading its first row.",
+        "For local Node code, node --cpu-prof profile-demo.js writes a CPU profile when the process exits. The supplied demo is disposable and does not access personal data.",
+        "The browser exercise reads summarized rows, not the native CPU-profile file format. Do not claim it generated a real profile.",
+        "Keep the workload and environment comparable when testing an optimization. One short timing result can be affected by warmup, system load and measurement noise.",
+        "After changing a hotspot, rerun correctness tests and measure again. Faster incorrect behavior is not an improvement."
+      ],
+      "after": [
+        "A profiler is a tool that measures where a running program spends time or work.",
+        "A hotspot is a part with a large measured cost. It is a place to investigate, not automatic proof of a mistake.",
+        "Self time counts time in a function itself, without adding time in functions it calls. Here, selfMs stores that time in milliseconds.",
+        "This example selects the largest measurement and keeps the first one on a tie.\n\n```javascript\nconst rows = [\n  {name: \"read\", selfMs: 2},\n  {name: \"sort\", selfMs: 9},\n  {name: \"draw\", selfMs: 9}\n];\nlet best = rows[0];\nfor (const row of rows) {\n  if (row.selfMs > best.selfMs) best = row;\n}\nconsole.log(best.name);\n```\n\nThe output is sort. draw ties with sort, so it does not replace it.",
+        "To collect a real CPU profile, save the supplied local demo and run node --cpu-prof profile-demo.js. Node writes a profile file when that process exits.",
+        "Complete hotspot(rows) for the simplified report. Return the largest row's name, the first name on a tie, or null for no rows. Do not change the array.",
+        "When checking a speed improvement, use comparable inputs and conditions. Repeat measurements: warmup and other work on the computer can affect a short run.",
+        "After a change, rerun correctness tests and measure again. A faster result that is wrong is not a successful improvement."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the requirement.",
+        "Make one change to the starter.",
+        "Run the checks.",
+        "Explain why a changed input produces its result."
+      ],
+      "after": [
+        "Return null for an empty list.",
+        "Use the first row as the current best.",
+        "Replace it only for a strictly larger selfMs.",
+        "Return its name and run the checks without changing rows."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Handle the empty array first.",
+        "Use > rather than >= to keep the first row on ties.",
+        "Read the measurements without sorting or mutating the source."
+      ],
+      "after": [
+        "Handle no rows before reading rows[0].",
+        "Use >, not >=, to keep the first tie.",
+        "A scan avoids sorting or changing the input."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "An optimization makes one timed run faster, but the result is wrong for empty input. What can you conclude?",
+        "choices": [
+          "It is a valid improvement because speed is the only requirement.",
+          "It is not yet an improvement; correctness must be restored and measurements repeated.",
+          "Profiling proves empty inputs never occur."
+        ],
+        "answer": 1,
+        "explanation": "Performance evidence does not replace the behavior contract. Check correctness and use comparable repeated measurements before accepting the change."
+      },
+      "after": {
+        "question": "A change runs faster once but gives the wrong answer for empty input. Is it ready?",
+        "choices": [
+          "Yes. Only speed matters.",
+          "No. Fix correctness, then repeat fair measurements.",
+          "Yes. Profiling proves empty input cannot happen."
+        ],
+        "answer": 1,
+        "explanation": "Speed does not replace the required behavior. The answer must remain correct."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Browser checks analyze a simplified report. A separate local Node --cpu-prof run creates a native profile; measurements depend on workload and environment and are not universal speed guarantees.",
+      "after": "The browser reads a small report; it does not generate a native profile. The separate Node command produces one from the disposable local demo."
+    }
+  ],
+  "headings": [
+    "Measure the running program",
+    "Choose a place to investigate",
+    "Read self time",
+    "One example",
+    "Create a real local profile",
+    "Keep the model separate",
+    "Compare fair measurements",
+    "Check speed and correctness"
+  ],
+  "project": {
+    "title": "Choose a hotspot from measured evidence",
+    "task": "Complete hotspot(rows). Return the name with the largest nonnegative selfMs, keeping the first row on a tie. Return null for an empty list. Leave rows unchanged.",
+    "done_when": "The checks pass for an empty list, a new maximum, and a tie. Explain why measurements and correctness must both be checked."
+  }
+}

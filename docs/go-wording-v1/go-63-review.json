@@ -1,0 +1,91 @@
+{
+  "lesson": "go-63",
+  "position": 63,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "If the requested path changes to /missing, what fails first?",
+      "after": "Test a handler by inspecting its recorded reply."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "ResponseRecorder implements ResponseWriter, so a test can invoke the handler directly and inspect the recorded status and body. This isolates handler behavior; it does not test a real listener, TLS, socket failures or deployment configuration.",
+        "Save as main_test.go and run go test -run TestHandler -v. This test expects status 200 and exactly ready. The missing path branch uses http.NotFound, so changing the request path should fail the unchanged success expectation with a precise status diagnostic.\n\nhttp.NotFound takes the response writer and request, writes status 404 and the standard \"404 page not found\" body with a newline. This recorder-only companion observes those effects directly; it opens no listener or socket.\n```go\npackage main\nimport (\"fmt\"; \"net/http\"; \"net/http/httptest\")\nfunc main() {\n    request := httptest.NewRequest(http.MethodGet, \"/absent\", nil)\n    recorder := httptest.NewRecorder()\n    http.NotFound(recorder, request)\n    fmt.Println(recorder.Code)\n    fmt.Print(recorder.Body.String())\n}\n```\nExpected output: 404; 404 page not found.",
+        "Complete local Go example; the app itself does not execute it:\n```go\npackage study\nimport (\"testing\"; \"net/http\"; \"net/http/httptest\"; \"fmt\")\nfunc handler(w http.ResponseWriter, r *http.Request) {\n    if r.URL.Path != \"/study\" { http.NotFound(w, r); return }\n    if _, err := fmt.Fprint(w, \"ready\"); err != nil { return }\n}\nfunc TestHandler(t *testing.T) {\n    request := httptest.NewRequest(http.MethodGet, \"/study\", nil)\n    recorder := httptest.NewRecorder()\n    handler(recorder, request)\n    if recorder.Code != http.StatusOK { t.Fatalf(\"unexpected status: %d\", recorder.Code) }\n    if recorder.Body.String() != \"ready\" { t.Fatalf(\"unexpected body: %q\", recorder.Body.String()) }\n}\n```",
+        "Expected output or behavior: TestHandler PASS; runner timings vary. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Add a separate expected-404 test instead of weakening the success-path assertion. You may trace it without a Go compiler; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "A response recorder acts like the writer a handler expects. A test calls the handler directly and inspects the reply. This checks handler behavior without a live server; it does not test a real network connection.",
+        "TestHandler asks for /study. It first expects status 200, then the body ready. For any other path, http.NotFound writes status 404 and a missing-page message before the handler returns.",
+        "Save this as main_test.go in a local module. `go test -run TestHandler -v` runs the test.\n```go\npackage study\nimport (\"testing\"; \"net/http\"; \"net/http/httptest\"; \"fmt\")\nfunc handler(w http.ResponseWriter, r *http.Request) {\n    if r.URL.Path != \"/study\" { http.NotFound(w, r); return }\n    if _, err := fmt.Fprint(w, \"ready\"); err != nil { return }\n}\nfunc TestHandler(t *testing.T) {\n    request := httptest.NewRequest(http.MethodGet, \"/study\", nil)\n    recorder := httptest.NewRecorder()\n    handler(recorder, request)\n    if recorder.Code != http.StatusOK { t.Fatalf(\"unexpected status: %d\", recorder.Code) }\n    if recorder.Body.String() != \"ready\" { t.Fatalf(\"unexpected body: %q\", recorder.Body.String()) }\n}\n```",
+        "TestHandler passes: both the status and the exact body match. The result comes from the test tool.",
+        "A separate test can expect 404 for a missing path. Keep the /study test strict so a broken success reply is still caught."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "The status check runs before the body check."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If the requested path changes to /missing, what fails first?",
+        "choices": [
+          "Nothing, because every recorder request becomes /study.",
+          "A network DNS lookup fails.",
+          "The status assertion reports 404."
+        ],
+        "answer": 2,
+        "explanation": "The handler’s path guard writes NotFound and returns; the test then detects the non-200 status."
+      },
+      "after": {
+        "question": "Change the test request to /missing but keep its expectations. What fails first?",
+        "choices": [
+          "Nothing, because a recorder changes every path to /study.",
+          "A network name lookup fails.",
+          "The status check reports 404."
+        ],
+        "answer": 2,
+        "explanation": "The handler sends 404 for /missing. The test expects 200, so its first check fails."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Go Core v1 uses the verified Go1.27.3 toolchain and standard library. The app supplies concept reading and an understanding check, not a Go browser runner. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "The browser shows Go code and checks your understanding; it does not run Go. Optional local examples use Go 1.27."
+    }
+  ],
+  "headings": [
+    "Record the reply in memory",
+    "Check status before body",
+    "One example",
+    "Read the test result",
+    "Keep a missing-path check separate"
+  ],
+  "project": {
+    "title": "Testing handlers without a network",
+    "task": "Identify the first failed check for a missing path.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local Go example is optional."
+  }
+}

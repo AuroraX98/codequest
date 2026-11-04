@@ -1,0 +1,91 @@
+{
+  "lesson": "rust-35",
+  "position": 35,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "If the impl Label for Topic block is removed, can the two calls still compile?",
+      "after": "Both functions here accept only values that provide the Label behavior."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "T: Label constrains a generic type to implement Label. A generic function can call label because the bound promises it. Rust normally monomorphizes such generic uses into concrete code; the bound is not a runtime search for a missing method. struct Topic; is a unit-like struct with no fields; the expression Topic creates its value without constructor parentheses.",
+        "&dyn Label is a borrowed trait object using runtime method dispatch. The trait must support dynamic use; not every trait does. Here the same contract supports a generic borrowed call and a dynamic borrowed call without transferring ownership.",
+        "Complete local Rust example; the app itself does not execute it:\n```rust\ntrait Label { fn label(&self) -> &str; }\nstruct Topic;\nimpl Label for Topic { fn label(&self) -> &str { \"topic\" } }\nfn generic<T: Label>(value: &T) { println!(\"{}\", value.label()); }\nfn dynamic(value: &dyn Label) { println!(\"{}\", value.label()); }\nfn main() { let value = Topic; generic(&value); dynamic(&value); }\n```",
+        "Expected output or behavior: topic\ntopic. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Explain which calls borrow value and why main still owns it afterward. You may trace it without a Rust compiler; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "Both functions here accept only values that provide the Label behavior.",
+        "The generic call uses the known type to choose a method. The call with `dyn Label` can choose it while the program runs.",
+        "Follow the labeled parts of this example.\n```rust\ntrait Label { fn label(&self) -> &str; }\nstruct Topic;\nimpl Label for Topic { fn label(&self) -> &str { \"topic\" } }\nfn generic<T: Label>(value: &T) { println!(\"{}\", value.label()); }\nfn dynamic(value: &dyn Label) { println!(\"{}\", value.label()); }\nfn main() { let value = Topic; generic(&value); dynamic(&value); }\n```",
+        "The output is `topic`, then `topic`. Both calls reach the label method written for Topic.",
+        "Find the block that gives Topic its label method."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read one idea.",
+        "Follow the labeled example.",
+        "Try the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Find the block that gives Topic its label method."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If the impl Label for Topic block is removed, can the two calls still compile?",
+        "choices": [
+          "Neither call can use Topic as Label without its implementation.",
+          "Only the dynamic call succeeds by searching for the method at runtime.",
+          "Both calls automatically invent a default label."
+        ],
+        "answer": 0,
+        "explanation": "The generic bound and conversion to the trait object both require Topic to implement Label; neither dispatch mechanism removes that contract."
+      },
+      "after": {
+        "question": "Without the Label implementation for Topic, which calls still build?",
+        "choices": [
+          "Neither call",
+          "Only the first",
+          "Both calls"
+        ],
+        "answer": 0,
+        "explanation": "Both functions need Topic to provide Label. Removing that implementation breaks both calls."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Rust Core v1 uses stable Rust1.99.1 with edition2024 and the standard library. The app supplies concept reading and an understanding check, not a Rust browser runner. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "CodeQuest shows the Rust example. Running it on your own computer is optional."
+    }
+  ],
+  "headings": [
+    "Require one behavior",
+    "Choose the method",
+    "Read the example",
+    "What happens",
+    "Try one change"
+  ],
+  "project": {
+    "title": "Trait bounds and dispatch",
+    "task": "Find the block that gives Topic its label method.",
+    "done_when": "Read each idea and pass the understanding check. Running the example on your computer is optional."
+  }
+}

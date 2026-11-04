@@ -1,0 +1,94 @@
+{
+  "lesson": "cpp-59",
+  "position": 59,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Remove the guard lines from score.hpp but keep both includes. What happens in this translation unit?",
+      "after": "Share a declaration through a header and guard against repeated inclusion."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A header is text included into a translation unit (one source file after preprocessing its includes). A declaration tells the compiler about a name and its type. A class definition such as struct Score may also live in a header when the language’s definition rules are respected.",
+        "Save this as score.hpp beside main.cpp:\n```cpp\n#ifndef SCORE_HPP\n#define SCORE_HPP\nstruct Score { int value; };\n#endif\n```\nThe first inclusion defines SCORE_HPP. On the second inclusion, #ifndef is false, so the guarded definition is skipped. These preprocessor directives are not runtime if statements.",
+        "The source below intentionally includes the header twice. Compile main.cpp with the header available to the compiler. Use standard include guards rather than relying on a particular compiler’s #pragma once extension for this example.",
+        "Complete local C++ example; the app itself does not execute it:\n```cpp\n#include <iostream>\n#include \"score.hpp\"\n#include \"score.hpp\"\nint main() {\n    Score score{3};\n    std::cout << score.value << \"\\n\";\n}\n```",
+        "Expected output or behavior: 3. Local compiler test evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Add a second header that also includes score.hpp and explain why the guarded definition remains usable. You may trace this without a compiler; finishing the reading is not proof of a local run."
+      ],
+      "after": [
+        "A header is a file of code that another source file can include. A declaration introduces a name and its type. Here score.hpp defines the Score type so main.cpp can use it.",
+        "#include brings a header's text into the source before compilation. One source file with its included text forms a translation unit: the code the compiler processes together.",
+        "An include guard prevents the same header contents from being included twice in that unit. #ifndef checks whether SCORE_HPP is undefined. #define marks it as defined, so the second inclusion skips the guarded text.",
+        "This is one example with two files. Save each labeled part in the named file, in the same folder, then compile main.cpp. Follow the guard when the header is included a second time.\n\n```cpp\n// File: score.hpp\n#ifndef SCORE_HPP\n#define SCORE_HPP\nstruct Score { int value; };\n#endif\n\n// File: main.cpp\n#include <iostream>\n#include \"score.hpp\"\n#include \"score.hpp\"\nint main() {\n    Score score{3};\n    std::cout << score.value << \"\\n\";\n}\n```",
+        "The program prints 3. The guard lets Score be defined once even though main.cpp includes the header twice.",
+        "The # directives are handled before the program runs. Including a header twice does not run it twice. Without the guard, this unit would contain two definitions of Score, which is an error."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain why, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Track whether SCORE_HPP has already been defined before processing each inclusion."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Remove the guard lines from score.hpp but keep both includes. What happens in this translation unit?",
+        "choices": [
+          "Compilation rejects the repeated Score definition.",
+          "It prints 6 because the header is run twice.",
+          "The linker automatically merges both class definitions."
+        ],
+        "answer": 0,
+        "explanation": "Both include directives now paste the same struct definition into one translation unit. That is a redefinition, not a second execution."
+      },
+      "after": {
+        "question": "Remove the guard lines from score.hpp but keep both includes. What happens?",
+        "choices": [
+          "The compiler rejects the repeated Score definition in the same translation unit.",
+          "The program prints 6 because the header runs twice.",
+          "The linker automatically combines the repeated definitions."
+        ],
+        "answer": 0,
+        "explanation": "Both includes bring in the same struct definition. The error is a repeated definition, not repeated execution."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "C++ Core v1, standard C++23 features checked against the available GCC14.2 implementation. This app provides concept reading and an understanding check, not a C++ browser runner. Local example tests are separate evidence and do not certify learner mastery.",
+      "after": "The browser shows C++ code and checks your understanding; it does not run C++. Optional local examples use C++23."
+    }
+  ],
+  "headings": [
+    "Put shared declarations in a header",
+    "Include text before compilation",
+    "Guard a repeated definition",
+    "One example in two files",
+    "What appears",
+    "An include is not a function call"
+  ],
+  "project": {
+    "title": "Separate declarations into headers",
+    "task": "Trace how the header guard prevents a repeated type definition.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local C++ example is optional."
+  }
+}

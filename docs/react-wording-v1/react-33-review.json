@@ -1,0 +1,86 @@
+{
+  "lesson": "react-33",
+  "position": 25,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Make the frame title follow topic and restore its prior title when the note is removed.",
+      "after": "Use an Effect to keep a browser value in step with React state."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "An Effect synchronizes something outside React’s rendered tree. Here the outside value is this sandbox document’s title, not the user’s main browser tab. Derive ordinary JSX directly during render; an Effect is not needed just to calculate a display string.",
+        "React.useEffect(setup, [topic]) runs setup after the component commits. React compares each dependency with its previous value using Object.is. The setup reads topic, so topic belongs in the list. Before a changed setup and when removing the component, React calls the cleanup function returned by the previous setup. Here cleanup restores the title captured by that setup. Only one TitleNote owns the title in this example. An empty list would omit this changing input; it is not a way to keep synchronization correct. The frame calls App as the root component with no supplied props. App returns the JSX tree; define it here without calling App() yourself or adding imports/createRoot.",
+        "```react\nfunction TitleNote({topic}) {\n  React.useEffect(() => {\n    const previous = document.title;\n    document.title = \"Study: \" + topic;\n    return () => { document.title = previous; };\n  }, [topic]);\n  return <p>Topic: {topic}</p>;\n}\nfunction App() {\n  const [topic, setTopic] = React.useState(\"Maps\");\n  const [visible, setVisible] = React.useState(true);\n  return <main>\n    <button onClick={() => setTopic(\"Birds\")}>Choose Birds</button>\n    <button onClick={() => setVisible(v => !v)}>Toggle note</button>\n    {visible && <TitleNote topic={topic} />}\n  </main>;\n}\n```",
+        "```react\nfunction TitleNote({topic}) {\n  React.useEffect(() => {\n    const previous = document.title;\n    document.title = \"Study: \" + topic;\n    return () => { document.title = previous; };\n  }, []);\n  return <p>Topic: {topic}</p>;\n}\nfunction App() {\n  const [topic, setTopic] = React.useState(\"Maps\");\n  const [visible, setVisible] = React.useState(true);\n  return <main>\n    <button onClick={() => setTopic(\"Birds\")}>Choose Birds</button>\n    <button onClick={() => setVisible(v => !v)}>Toggle note</button>\n    {visible && <TitleNote topic={topic} />}\n  </main>;\n}\n```\nWith [] the paragraph changes to Birds, but the document title remains Study: Maps. This is an intentionally stale changed case, not a recommended fix. Cleanup still runs when the note is removed.",
+        "Make the frame title follow topic and restore its prior title when the note is removed. These finite behavior checks do not prove that every possible implementation is correct. Optional local practice: change one input, predict the screen, then run it."
+      ],
+      "after": [
+        "An Effect runs work that connects React to something outside its screen description. Here, it changes the preview document's title. It does not change the main CodeQuest tab's title.",
+        "The Effect reads `topic`, so `[topic]` tells React when to repeat it. These listed values are called dependencies. React runs the setup after the component has been added or updated on the page.",
+        "```react\nfunction TitleNote({ topic }) {\n  React.useEffect(() => {\n    const previous = document.title;\n    document.title = \"Study: \" + topic;\n    return () => { document.title = previous; };\n  }, [topic]);\n  return <p>Topic: {topic}</p>;\n}\nfunction App() {\n  const [topic, setTopic] = React.useState(\"Maps\");\n  const [visible, setVisible] = React.useState(true);\n  return (\n    <main>\n      <button onClick={() => setTopic(\"Birds\")}>Choose Birds</button>\n      <button onClick={() => setVisible(v => !v)}>Toggle note</button>\n      {visible && <TitleNote topic={topic} />}\n    </main>\n  );\n}\n```\nThe preview title starts as `Study: Maps`. Choose Birds changes it to `Study: Birds`. The paragraph follows the same topic.",
+        "The returned function is cleanup: work that undoes this setup. React runs it before a changed setup and when removing the note. Here, it restores the previous title. Using `[]` would miss topic changes and leave the title out of date.",
+        "Make the title follow topic and restore the earlier title when the note is removed. Keep one TitleNote in charge of this title. Ordinary text shown in JSX can be calculated directly; it does not need an Effect."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the small example and explain its inputs and effects.",
+        "Complete the starter for this lesson.",
+        "Run the behavior checks, then predict a changed case."
+      ],
+      "after": [
+        "Read topic inside the Effect and include it in the dependencies.",
+        "Return cleanup that restores the captured title.",
+        "Run the checks for topic changes and removal."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Trace the visible input, event and resulting screen before changing the code."
+      ],
+      "after": [
+        "The Effect's dependency list must include the changing topic it reads."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "The title setup reads topic but its dependency list is []. After topic changes, which value can become stale?",
+        "choices": [
+          "Both always update because every Effect runs after every render.",
+          "The external document title, even though the JSX paragraph rerenders.",
+          "The dependency list controls whether setTopic may run."
+        ],
+        "answer": 1,
+        "explanation": "Dependencies describe reactive values read by the setup. Omitting topic skips its update-driven synchronization; state rendering itself still occurs."
+      },
+      "after": {
+        "question": "The Effect reads topic but has `[]`. After topic changes, what can stay out of date?",
+        "choices": [
+          "Nothing, because every Effect repeats after every render.",
+          "The document title, while the paragraph shows the new topic.",
+          "The dependency list prevents setTopic from running."
+        ],
+        "answer": 1,
+        "explanation": "The paragraph updates from state. The Effect needs topic in its dependency list to update the outside title too."
+      }
+    }
+  ],
+  "headings": [
+    "Update something outside the screen description",
+    "List the value the Effect reads",
+    "Follow a topic change",
+    "Clean up the earlier change",
+    "Build your title Effect"
+  ],
+  "project": {
+    "title": "An Effect synchronizes a browser value",
+    "task": "Keep the preview document's title matched to topic. Restore its previous title when the note is removed.",
+    "done_when": "The title follows topic changes and is restored after removal."
+  }
+}

@@ -1,0 +1,95 @@
+{
+  "lesson": "swift-57",
+  "position": 55,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Explain and optionally reproduce the complete local workflow; this lesson has no in-app executable checks.",
+      "after": "Check that the named test actually runs and checks the expected result."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A discovered test must actually run. A successful build or a zero-test report is not evidence that the intended behavior passed. Swift Testing supplies @Test declarations and #expect assertions.",
+        "Use an existing Swift 6.0-or-newer command-line toolchain and a new empty local directory for each variant. These are complete local files, not one source file for the app’s Run button. Actual recorded execution is Swift 6.4.1/Linux in language mode 6, not a Mac/Xcode or compiler 6.0 verification. No registry package, network service or user-machine installation is needed. Commands below assume a shell with swift/swiftc on PATH; preserve paths and run from that directory. The complete package has a library and one .testTarget depending on it. Test files go under Tests/TrailKitTests. import Testing uses the bundled testing library; no registry dependency is declared. @Test marks prefixesPlace() for test discovery. #expect checks a Bool and records a failure when it is false; the diagnostic includes the failed expression and observed values. The framework calls the test function: no manual prefixesPlace() call is required. swift test builds and discovers the package tests. Read the Swift Testing section and the named test result; an additional XCTest summary can legitimately report zero XCTest tests. Output timings, IDs and progress messages vary.",
+        "File `Package.swift`:\n```swift\n// swift-tools-version: 6.0\nimport PackageDescription\nlet package = Package(\n    name: \"TrailTests\",\n    targets: [\n        .target(name: \"TrailKit\"),\n        .testTarget(name: \"TrailKitTests\", dependencies: [\"TrailKit\"])\n    ]\n)\n```\n\nFile `Sources/TrailKit/Route.swift`:\n```swift\npublic func routeName(_ place: String) -> String {\n    return \"Route:\" + place\n}\n```\n\nFile `Tests/TrailKitTests/TrailTests.swift`:\n```swift\nimport Testing\nimport TrailKit\n@Test func prefixesPlace() {\n    #expect(routeName(\"Cove\") == \"Route:Cove\")\n    #expect(routeName(\"\") == \"Route:\")\n}\n```\n\nRun these local commands in order:\n```sh\nswift test\n```\nThe Swift Testing run discovers `prefixesPlace`, executes its two expectations, and reports 1 test passed. The process succeeds. Timing and build output are not exact contracts.",
+        "Fresh changed variant: create these complete files in a different empty directory.\n\nFile `Package.swift`:\n```swift\n// swift-tools-version: 6.0\nimport PackageDescription\nlet package = Package(\n    name: \"TrailTests\",\n    targets: [\n        .target(name: \"TrailKit\"),\n        .testTarget(name: \"TrailKitTests\", dependencies: [\"TrailKit\"])\n    ]\n)\n```\n\nFile `Sources/TrailKit/Route.swift`:\n```swift\npublic func routeName(_ place: String) -> String {\n    return \"Route:\" + place\n}\n```\n\nFile `Tests/TrailKitTests/TrailTests.swift`:\n```swift\nimport Testing\nimport TrailKit\n@Test func prefixesPlace() {\n    #expect(routeName(\"Cove\") == \"Cove\")\n    #expect(routeName(\"\") == \"Route:\")\n}\n```\n\nRun:\n```sh\nswift test\n```\nThe changed expectation wrongly expects `Cove` without the prefix. The named test runs and fails, with a diagnostic showing `Route:Cove` versus `Cove`; the process exits unsuccessfully. This is an intentional behavioral failure, not a build error.",
+        "Optional local practice: explain which file defines the API, which consumes it and what observable result establishes the contract. Do not equate a successful build with a successful behavioral test.",
+        "A separate fresh variant keeps the same manifest and library, but replaces the test file with this complete unannotated function.\n```swift\nimport Testing\nimport TrailKit\nfunc prefixesPlace() {\n    #expect(routeName(\"Cove\") == \"Route:Cove\")\n}\n```\nRun `swift test`. The function is ordinary code, not a discovered test: there is no @Test annotation. Inspect the Swift Testing count, not merely process exit status or an XCTest compatibility summary; the observed Swift 6.4.1 Linux run exits 0 and says `0 tests in 0 suites passed`. That is an empty run, not a pass for prefixesPlace. Other toolchain versions may format or handle empty discovery differently."
+      ],
+      "after": [
+        "A test runs code and checks its result. Building the code successfully does not prove the test ran. This one example uses Swift Testing to check routeName. Use a new empty folder and an existing Swift 6-compatible command-line toolchain.",
+        "Create Package.swift:\n```swift\n// swift-tools-version: 6.0\nimport PackageDescription\nlet package = Package(\n    name: \"TrailTests\",\n    targets: [\n        .target(name: \"TrailKit\"),\n        .testTarget(name: \"TrailKitTests\", dependencies: [\"TrailKit\"])\n    ]\n)\n```\n.testTarget names the test code and says it needs TrailKit. Put the files at the exact paths shown in the next steps, inside this package folder.",
+        "Create Sources/TrailKit/Route.swift:\n```swift\npublic func routeName(_ place: String) -> String {\n    return \"Route:\" + place\n}\n```\nThis is the library function the test will check. It should add Route: before the supplied place, even when the place text is empty.",
+        "Create Tests/TrailKitTests/TrailTests.swift:\n```swift\nimport Testing\nimport TrailKit\n@Test func prefixesPlace() {\n    #expect(routeName(\"Cove\") == \"Route:Cove\")\n    #expect(routeName(\"\") == \"Route:\")\n}\n```\n@Test marks prefixesPlace as a test for the runner to find. #expect checks that an expression is true. This test checks both a named place and empty text.",
+        "From the folder containing Package.swift, run:\n```sh\nswift test\n```\nLook for prefixesPlace in the Swift Testing results and a report that one test passed. Its two expectations belong to that one test. A separate XCTest summary may show zero; read the Swift Testing result for this example.",
+        "Without @Test, the function is ordinary code and is not discovered as this test. A zero-test report does not prove its behavior. If an expectation is false, read the named test's failed comparison and the actual value before deciding whether the code or expected result is wrong."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Explain the displayed boundary before running anything.",
+        "Optionally create the complete file tree in an isolated local directory with an existing compatible toolchain.",
+        "Run the shown commands and compare exact behavior or named test evidence; explain the changed case."
+      ],
+      "after": [
+        "Create the manifest, library, and test files at the shown paths.",
+        "Run swift test from the package folder.",
+        "Confirm that prefixesPlace ran and that its two expectations passed."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Trace the inputs, returned value and changed state before running."
+      ],
+      "after": [
+        "Keep @Test before the test function.",
+        "Look for the named Swift Testing result, not just a successful build."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "A Swift Testing summary reports 0 tests, with no prefixesPlace result. Does that establish its behavior passed?",
+        "choices": [
+          "Yes: compiling the library executes all assertions.",
+          "Yes: no failure means the contract was checked.",
+          "No: the intended test was not discovered and run."
+        ],
+        "answer": 2,
+        "explanation": "A useful pass needs positive evidence that the expected test ran. A zero-test run has no such evidence regardless of its exit code."
+      },
+      "after": {
+        "question": "The Swift Testing report shows zero tests and no prefixesPlace result. Has that test passed?",
+        "choices": [
+          "Yes, building runs all checks",
+          "Yes, no failures means it was checked",
+          "No, the intended test did not run"
+        ],
+        "answer": 2,
+        "explanation": "A test can only pass after it runs. A report with no tests does not check this behavior."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Local multifile/module/package companion only. No browser Swift compiler or multi-file Mac-companion execution is claimed.",
+      "after": "This local example needs several files and an existing Swift toolchain with Swift Testing. The browser and single-file Swift companion do not run it. Earlier execution evidence used Swift 6.4.1 on Linux; result formatting can vary."
+    }
+  ],
+  "headings": [
+    "Run a real test",
+    "Describe the test target",
+    "Add the code to check",
+    "Write the named test",
+    "Run and read the result",
+    "Understand a missing or failed test"
+  ],
+  "project": {
+    "title": "Discover tests and read a meaningful failure",
+    "task": "Create the one TrailTests package shown and optionally run swift test locally. Find the named prefixesPlace result and check its expectations.",
+    "done_when": "You can distinguish a real test pass from a failed expectation or a missing test. There is no in-app Run check for this package."
+  }
+}

@@ -1,0 +1,72 @@
+{
+  "lesson": "python-23",
+  "sourceHash": "32cdbe26ea5be4fe19e3ff259a6fe8cb7e562d0fe9426ea7de580963a9c2fe23",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Write read_stock(text). Parse CSV with headers item,quantity. Return {\"totals\": {...}, \"rejected\": n}. Trim item names; accept quantities containing only ASCII digits after trimming, including zero. Reject blank names and invalid or missing quantities. Add repeated valid items. Completely blank lines are ignored.",
+      "after": "Build a CSV stock reader that adds valid quantities and counts rejected rows."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "CSV means comma-separated values. It stores rows as text, often from a spreadsheet. A comma can also be part of a field, such as \"Pens, blue\", so splitting every line at every comma is unsafe. Python's standard csv module handles quoted fields and escaped quote characters for you.",
+        "csv.DictReader reads the first row as column names and returns dictionaries for following rows. io.StringIO lets a string behave like a text file, so the reader can process supplied text without writing a file. Import both csv and io. The input contract supplies the item and quantity headers and well-formed CSV quoting.",
+        "Here is a complete example with a comma inside a quoted name.\n```python\nimport csv\nimport io\ntext = 'item,quantity\\n\"Pens, blue\",2\\nTape,1\\n'\nfor row in csv.DictReader(io.StringIO(text)):\n    print(row[\"item\"], row[\"quantity\"])\n```\nThe first item is the single string Pens, blue. Quantities are still strings at this stage; the CSV reader does not choose numeric types for you.",
+        "Validation decides whether a row meets the project's requirements before you use it. Trim the item and quantity fields. A quantity must be nonempty and contain only characters from \"0123456789\". Reject -2, 2.5 and two. Leading zeroes such as 003 are accepted and represent 3. Missing fields can be None, so replace None with an empty string before trimming.\n\nIn (row.get(\"item\") or \"\"), or returns the left value if it is true-like; otherwise it returns the right operand. None and empty text are false-like, so this expression supplies empty text before strip is called. It does not necessarily return a Boolean.",
+        "Validate first, then convert to an integer.\n```python\nraw = \" 003 \".strip()\nvalid = bool(raw) and all(char in \"0123456789\" for char in raw)\nif valid:\n    amount = int(raw)\n    print(amount)\n```\nIt prints 3. The explicit character set matches this project's ASCII-digit contract; some broader Unicode digit tests accept characters that int cannot convert.\n\nbool(raw) converts the supplied value to its truth value: bool(\"\") is False, while bool(\"0\") is True because the text is nonempty. This does not validate that text as an integer; the separate character checks do that.",
+        "Keep totals in a dictionary. totals.get(item, 0) reads the existing amount or starts at zero. Increase rejected for each invalid record and continue to the next record. csv.DictReader ignores completely blank lines; a row such as comma plus a quantity is a real record with a blank name and must be rejected.\n\ndict.get takes a key and an optional default. It returns the stored value when that key exists, or the default when it does not; it does not insert the missing key.\n```python\ntotals = {\"Pens\": 4}\nprint(totals.get(\"Pens\", 0))\nprint(totals.get(\"Tape\", 0))\nprint(\"Tape\" in totals)\n```\nIt prints 4, 0, and False. The dot selects get on totals; the comma separates the key from the fallback value.",
+        "Return both the totals and the rejection count so the caller can see what happened. This exercise rejects individual bad records; malformed CSV syntax and missing headers are outside its stated input contract. Test quoted commas, duplicate names, zero stock, a missing quantity and an empty file with only headers. Do not count the header as a stock row."
+      ],
+      "after": [
+        "CSV means comma-separated values. It stores rows as text, often from a spreadsheet. A comma can also be part of a value, such as \"Pens, blue\", so splitting each line at every comma can break the data. Python's standard `csv` module handles quoted values and quote marks inside them.",
+        "`csv.DictReader` uses the first row as column names and gives you a dictionary for each following row. `io.StringIO` lets a string act like a text file, so you can read the supplied text without writing a file. Import both `csv` and `io`. This exercise supplies the `item` and `quantity` headers and correctly written CSV quoting.",
+        "Here is a complete example with a comma inside a quoted item name.\n```python\nimport csv\nimport io\ntext = 'item,quantity\\n\"Pens, blue\",2\\nTape,1\\n'\nfor row in csv.DictReader(io.StringIO(text)):\n    print(row[\"item\"], row[\"quantity\"])\n```\nThe first item is the single string `Pens, blue`. Quantities are still strings here; the CSV reader does not turn them into numbers.",
+        "Validation means checking that a row follows the project's rules before using it. Remove spaces from both ends of the item and quantity fields with `strip()`. Reject a blank item name. A quantity must be nonempty and contain only characters from `0123456789`. Reject `-2`, `2.5`, and `two`. Accept `0` and leading zeroes such as `003`, which represents 3.\n\nA missing field can be `None`. Use `(row.get(\"item\") or \"\").strip()` to replace a missing or empty value with empty text before trimming. Here, `or` returns one of the values, which is not necessarily a Boolean.",
+        "Check the text before converting it to an integer.\n```python\nraw = \" 003 \".strip()\nvalid = bool(raw) and all(char in \"0123456789\" for char in raw)\nif valid:\n    amount = int(raw)\n    print(amount)\n```\nIt prints `3`. ASCII digits are the ordinary characters `0` through `9`. Checking this exact set follows the project's rules. Some broader Unicode digit checks accept characters that `int` cannot convert.\n\n`bool(raw)` checks whether the text is nonempty: `bool(\"\")` is `False`, while `bool(\"0\")` is `True`. The separate character check decides whether every character is allowed.",
+        "Keep totals in a dictionary. Add each valid quantity to the total for its trimmed item name. Repeated names add to the same total. Increase `rejected` once for each invalid row, then continue to the next row.\n\n`csv.DictReader` ignores completely blank lines. A row such as `,4` still contains fields, so reject it for having a blank item name.\n\n`totals.get(item, 0)` returns the stored amount, or zero if the item is missing. It does not add the missing key.\n```python\ntotals = {\"Pens\": 4}\nprint(totals.get(\"Pens\", 0))\nprint(totals.get(\"Tape\", 0))\nprint(\"Tape\" in totals)\n```\nIt prints `4`, `0`, and `False`. To save the updated amount, use `totals[item] = totals.get(item, 0) + int(raw)`.",
+        "Build `read_stock(text)` to return `{\"totals\": totals, \"rejected\": rejected}`. This lets the code that called the function see the stock totals and how many rows were rejected.\n\nThis exercise rejects individual bad rows. Broken CSV quoting and missing headers are outside its rules for supplied input. Do not count the header as a stock row. Check quoted commas, repeated names, zero stock, missing quantities, and completely blank lines. Input containing only headers should return `{\"totals\": {}, \"rejected\": 0}`."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the CSV rows with `csv.DictReader` and `io.StringIO`.",
+        "Remove extra spaces from the edges of each field.",
+        "Reject a row if its item name is blank.",
+        "Reject a quantity unless all its characters are digits from 0 to 9.",
+        "Convert valid quantities to `int`.",
+        "Add each quantity to the total for that item name.",
+        "Return `totals` and `rejected`.",
+        "Test a name that has a comma inside quotes."
+      ],
+      "after": [
+        "Import `csv` and `io`. Start fresh totals and a rejected-row count inside `read_stock`.",
+        "Read rows with `csv.DictReader(io.StringIO(text))` and trim both fields.",
+        "Reject a row once if its item is blank or its quantity is not a nonempty string of digits `0` through `9`.",
+        "Add each valid quantity to its item's total, then return `{\"totals\": totals, \"rejected\": rejected}`.",
+        "Check quoted commas, repeated names, zero and leading zeroes, invalid quantities, missing fields, and blank lines."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Use (row.get(\"quantity\") or \"\").strip() for missing values.",
+        "Check raw is nonempty before all(char in \"0123456789\" for char in raw).",
+        "Increase totals[item] using totals.get(item, 0), and count invalid records separately."
+      ],
+      "after": [
+        "Use `(row.get(\"quantity\") or \"\").strip()` to handle a missing quantity.",
+        "Check that `raw` is nonempty before `all(char in \"0123456789\" for char in raw)`.",
+        "Use `totals.get(item, 0)` to add repeated items, and count invalid rows separately."
+      ]
+    }
+  ],
+  "reviewNotes": [
+    "`read_stock(text)` totals valid rows and counts each invalid row once.",
+    "Only trimmed ASCII digits are accepted; zero and leading zeroes are valid.",
+    "Completely blank lines are ignored, while blank item names are rejected.",
+    "The supplied input includes both headers and correctly written CSV quoting.",
+    "Shortened the practice directions to five focused actions; detailed edge cases remain in the explanation and checks."
+  ]
+}

@@ -1,0 +1,79 @@
+{
+  "lesson": "python-73",
+  "sourceHash": "6e412439363c78c8ae92926df5a708efe2d8970462f5579872b5b240ccd0748d",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Correct entry_allowed for integer ages and implement first_disagreement using the three ordered boundary tests. Return the first failing age or None. Keep the specification independent of the candidate implementation.",
+      "after": "Choose tests from the rule, especially values right at its boundary."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "Suppose a venue admits an integer age of 18 or older. Its threshold splits inputs into below, exactly at, and above the boundary. A useful test set represents these partitions rather than choosing three unrelated adult ages.",
+        "Testing age 19 cannot distinguish age > 18 from age >= 18: both return True. Age 18 distinguishes them. Code-path coverage alone does not show that a boundary follows its specification.",
+        "first_disagreement receives a function, calls it on three supplied age values, and returns the first age whose Boolean result differs from the specification. It returns None if these tests agree. That does not prove correctness for every possible input. Tuple unpacking gives each test its age and expected result.",
+        "```python\ndef entry_allowed(age):\n    return age >= 18\n\ndef first_disagreement(candidate):\n    for age, expected in [(17, False), (18, True), (19, True)]:\n        if candidate(age) != expected:\n            return age\n    return None\ndef wrong_rule(age):\n    return age > 18\n\nprint(first_disagreement(wrong_rule))\nprint(first_disagreement(entry_allowed))\nprint(entry_allowed(18))\n```\nIt prints 18 for the strict rule, None for the corrected rule, then True for the direct threshold call.",
+        "Correct entry_allowed for integer ages and implement first_disagreement using the three ordered boundary tests. Return the first failing age or None. Keep the specification independent of the candidate implementation."
+      ],
+      "after": [
+        "The rule says people aged 18 or older may enter. Test one age below 18, age 18 itself, and one age above 18.\n\nThese three groups help you check where the answer changes.",
+        "At age 19, both `age > 18` and `age >= 18` give `True`. At age 18, they disagree.\n\nRunning a line of code is not enough. Your test must check whether it follows the rule.",
+        "`first_disagreement` tries a supplied function with three ages. It returns the first age where the answer is wrong. It returns `None` if all three answers match.\n\nEach pair gives an age and its expected answer. Passing these tests does not prove the function works for every possible input.",
+        "```python\ndef entry_allowed(age):\n    return age >= 18\n\ndef first_disagreement(candidate):\n    for age, expected in [(17, False), (18, True), (19, True)]:\n        if candidate(age) != expected:\n            return age\n    return None\ndef wrong_rule(age):\n    return age > 18\n\nprint(first_disagreement(wrong_rule))\nprint(first_disagreement(entry_allowed))\nprint(entry_allowed(18))\n```\nOutput:\n```text\n18\nNone\nTrue\n```\nThe test catches the missing equals sign at age 18.",
+        "Fix `entry_allowed` to include age 18. In `first_disagreement`, try the ages 17, 18, and 19 in that order.\n\nUse the answers stated by the rule: `False`, `True`, `True`. Do not copy answers from the function you are testing."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the requirement.",
+        "Make one change to the starter.",
+        "Run the checks.",
+        "Explain why a changed input produces its result."
+      ],
+      "after": [
+        "Use `>=` in `entry_allowed` so age 18 is included.",
+        "Loop over the three supplied age-and-answer pairs.",
+        "Return the first age whose result differs from its expected answer.",
+        "Return `None` only after all three tests match."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Which test distinguishes age >= 18 from the incorrect age > 18?",
+        "choices": [
+          "Age 30",
+          "Age 18",
+          "Age 19"
+        ],
+        "answer": 1,
+        "explanation": "The two expressions disagree only at the threshold among these choices. A passing adult case does not test inclusion of the boundary."
+      },
+      "after": {
+        "question": "Which test distinguishes age >= 18 from the incorrect age > 18?",
+        "choices": [
+          "Age 30",
+          "Age 18",
+          "Age 19"
+        ],
+        "answer": 1,
+        "explanation": "At age 18, `>= 18` is True and `> 18` is False. The other two ages give True for both."
+      }
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Trace the visible worked calls before changing the starter."
+      ],
+      "after": [
+        "Age 18 is the boundary that separates `>` from `>=`.",
+        "Keep `return None` after the loop, so later tests can run."
+      ]
+    }
+  ],
+  "reviewNotes": [
+    "Reviewed directly by the host, one lesson at a time. Plain wording, specific guidance, preserved exercise behavior."
+  ]
+}

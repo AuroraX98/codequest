@@ -1,0 +1,98 @@
+{
+  "lesson": "sql-09",
+  "position": 44,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Move a quantity between records atomically and handle a deliberate failure.",
+      "after": "Keep related changes together so a transfer can be saved or undone as one unit."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A transaction groups related database changes into one unit. BEGIN starts the unit; COMMIT saves it; ROLLBACK discards its uncommitted changes. A transfer should subtract from one record and add the same quantity to another, so their total stays unchanged. Atomic means the intended changes succeed together or the earlier state is preserved.",
+        "Run this complete SQLite example in a fresh database:\n```sql\nCREATE TABLE demo_inventory (\n  id TEXT PRIMARY KEY,\n  quantity INTEGER NOT NULL CHECK(quantity >= 0)\n);\nINSERT INTO demo_inventory VALUES ('X', 12), ('Y', 5);\nBEGIN;\nUPDATE demo_inventory\nSET quantity = quantity - 4\nWHERE id = 'X' AND quantity >= 4;\nUPDATE demo_inventory\nSET quantity = quantity + 4\nWHERE id = 'Y' AND changes() = 1;\nCOMMIT;\nSELECT id, quantity FROM demo_inventory ORDER BY id;\n```\nX now has 8 and Y has 9; the total stays 17. NOT NULL requires a known quantity, and CHECK requires a nonnegative quantity.",
+        "The first UPDATE must match both the source id and sufficient stock. SQLite's changes() reports the row count changed by the most recently completed write. Immediately after that source UPDATE, changes() = 1 means one source row changed. The destination UPDATE uses that fact as its guard. Keep the two writes adjacent: an intervening write could change what changes() reports. This pattern assumes the supplied destination exists and the source key identifies one row.",
+        "Here is a rollback example after the first block:\n```sql\nBEGIN;\nUPDATE demo_inventory\nSET quantity = quantity - 2\nWHERE id = 'X';\nUPDATE demo_inventory\nSET quantity = quantity + 2\nWHERE id = 'Y';\nROLLBACK;\nSELECT id, quantity FROM demo_inventory ORDER BY id;\n```\nDuring the transaction the rows briefly become 6 and 11. ROLLBACK cancels both edits, so the final query still shows 8 and 9. Merely running statements next to each other without a transaction does not provide this recovery.",
+        "A SQL error does not always roll back an entire SQLite transaction automatically. Real transfer code must handle errors and issue ROLLBACK when needed. It must also verify the destination write; if that destination did not exist, guarding only the source would be insufficient. The exercise's fixed fixture provides both rows. Its deliberate failure is insufficient stock, handled by making both updates no-ops rather than by throwing an error.",
+        "In the exercise, transfer 3 from A's 10 to B's 4 inside a transaction. Require quantity >= 3 on the source and changes() = 1 on the immediately following destination update. Commit the valid transfer. Then CREATE TEMP TABLE before_failed AS SELECT id, quantity FROM inventory records the finished state for comparison. A snapshot here is a copied set of values, not another transfer.",
+        "Try the 99-unit attempt using the same guards. A has only 7, so the source changes zero rows; changes() is 0, so the destination also changes zero. COMMIT then saves no changes. Both stay at 7, their total remains 14, and the snapshot still matches. Conservation alone would not catch every incorrect distribution; check both individual quantities and unchanged state after rejection."
+      ],
+      "after": [
+        "A transaction groups database changes together. `BEGIN` starts the group. `COMMIT` saves it. `ROLLBACK` undoes its unsaved changes. A stock transfer should take from one place and add the same amount to another.",
+        "```sql\nCREATE TABLE demo_inventory(\n  id TEXT PRIMARY KEY,\n  quantity INTEGER NOT NULL CHECK(quantity >= 0)\n);\nINSERT INTO demo_inventory VALUES ('X', 12), ('Y', 5);\nBEGIN;\nUPDATE demo_inventory SET quantity = quantity - 4\nWHERE id = 'X' AND quantity >= 4;\nUPDATE demo_inventory SET quantity = quantity + 4\nWHERE id = 'Y' AND changes() = 1;\nCOMMIT;\nSELECT id, quantity FROM demo_inventory ORDER BY id;\n```\nX ends with 8 and Y ends with 9. Together they still have 17. The table rules require a known quantity of zero or more.",
+        "The first update takes stock only if X has enough. `changes()` reports how many rows the last completed write changed. The second update adds stock only when that count is 1. Keep these writes next to each other so another write does not replace that count.",
+        "`COMMIT` keeps both updates. Using `ROLLBACK` instead would undo both, leaving X at 12 and Y at 5. This all-together behavior is called atomic: the group is kept or undone as a unit.",
+        "An error does not always undo the whole transaction automatically. Real transfer code must check both writes and roll back when needed. This example assumes Y exists. If Y were missing, checking only the first write would not be enough.",
+        "The exercise already has A with 10 and B with 4. Transfer 3 from A to B and commit. Copy the resulting rows into `before_failed` so you can compare them with the next attempt.",
+        "Next, try to transfer 99 using the same guards. A has only 7, so neither update changes a row. Both quantities stay at 7. Check each quantity and the saved copy; checking only the total could miss a wrong transfer."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Require `quantity >= 3` before taking 3 from the source.",
+        "Use `changes()` to check that exactly one row changed.",
+        "Check both final quantities.",
+        "Check that their combined total stayed the same."
+      ],
+      "after": [
+        "Transfer 3 from A to B inside `BEGIN` and `COMMIT`, using both guards.",
+        "Copy the finished state into `before_failed`.",
+        "Try a transfer of 99 with the same guards.",
+        "Run the checks for both quantities, the total, and the unchanged failed attempt."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Keep the valid pair of updates inside BEGIN and COMMIT.",
+        "Subtract and add the same quantity.",
+        "Guard the source; update the destination only if the source changed."
+      ],
+      "after": [
+        "Guard the source with `quantity >= 3`, then guard the destination with `changes() = 1`.",
+        "Use `CREATE TEMP TABLE before_failed AS SELECT id, quantity FROM inventory`.",
+        "For the second attempt, replace the transfer amount with 99 in both updates and the source guard."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "The source UPDATE matches zero rows because stock is insufficient. The immediately following destination UPDATE is guarded by changes()=1. What does it do?",
+        "choices": [
+          "Adds the requested amount anyway.",
+          "Changes no destination row.",
+          "Automatically rolls back every earlier transaction."
+        ],
+        "answer": 1,
+        "explanation": "changes() reports zero for that source write, so the destination guard is false. This no-op path is not a promise of automatic transaction rollback."
+      },
+      "after": {
+        "question": "The source update changes zero rows. What does the next update do if it requires changes() = 1?",
+        "choices": [
+          "Adds the amount anyway",
+          "Changes no destination row",
+          "Automatically undoes every earlier transaction"
+        ],
+        "answer": 1,
+        "explanation": "The last write changed zero rows, so the condition is false. This skips the update; it does not promise an automatic rollback."
+      }
+    }
+  ],
+  "headings": [
+    "Keep a transfer together",
+    "One example",
+    "Move stock only when it exists",
+    "Save or undo the group",
+    "Handle errors carefully",
+    "Make the first transfer",
+    "Reject an oversized transfer"
+  ],
+  "project": {
+    "title": "A safe inventory transfer",
+    "task": "Transfer 3 from A to B in a transaction. Save that state in `before_failed`. Then try to transfer 99 with guards that leave both rows unchanged when A lacks enough stock.",
+    "done_when": "The checks pass: A and B each have 7, their total is 14, and the failed attempt matches `before_failed`."
+  }
+}

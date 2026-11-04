@@ -1,0 +1,96 @@
+{
+  "lesson": "sql-04",
+  "position": 18,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Group sessions by subject and calculate counts, totals, and averages.",
+      "after": "Turn several session rows into one summary for each subject."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "An aggregate function combines several values into one result. COUNT counts, SUM adds, and AVG finds the arithmetic average: total divided by the number of known values. GROUP BY makes separate groups before those calculations. A report grouped by subject returns one row for each subject, rather than one row for every session.",
+        "Run this complete SQLite example once:\n```sql\nCREATE TABLE demo_sessions (\n  id INTEGER PRIMARY KEY,\n  subject TEXT,\n  minutes INTEGER\n);\nINSERT INTO demo_sessions VALUES\n  (1, 'Art', 12),\n  (2, 'Art', 24),\n  (3, 'Music', 18),\n  (4, 'Music', NULL);\nSELECT COUNT(*) AS rows,\n       COUNT(minutes) AS known_minutes\nFROM demo_sessions;\n```\nThe result is rows 4 and known_minutes 3. NULL represents an unknown or missing value. It is not zero and is not the text 'NULL'. COUNT(*) counts rows; COUNT(minutes) counts rows with a known minutes value.",
+        "A function call puts its input inside parentheses, such as SUM(minutes). AS gives a result column a name, also called an alias. The * in COUNT(*) means count every row; it is not multiplication here. SUM and AVG also ignore NULL inputs. Music's missing duration does not mean a zero-minute session, so it should not pull the known average down.",
+        "Run this query after that setup:\n```sql\nSELECT subject,\n       COUNT(minutes) AS session_count,\n       SUM(minutes) AS total_minutes,\n       AVG(minutes) AS average_minutes\nFROM demo_sessions\nGROUP BY subject\nORDER BY subject;\n```\nArt has count 2, total 36, average 18. Music has count 1, total 18, average 18. GROUP BY subject gives each function only the rows for that subject. ORDER BY makes the report's order predictable.",
+        "If a group contains only NULL minutes, COUNT(minutes) is 0, while SUM(minutes) and AVG(minutes) are NULL. The average is unknown because there are no known durations to divide by. A grouped query over an empty table returns no groups. A nongrouped COUNT query over an empty table returns 0. Keep these cases distinct instead of inventing a measured zero.",
+        "The exercise needs subject and three named calculations: session_count, total_minutes, and average_minutes. Use COUNT(minutes), not COUNT(*), for the requested known-session count. Put all calculations in one SELECT and GROUP BY subject. CREATE TEMP TABLE answer AS saves that grouped result. The starter's numeric zeros are placeholders, not calculated totals.",
+        "In the supplied sessions, Math has 20 and 40: two known values, total 60, average 30. Spanish has 30 and NULL, so its known count is 1 and its average is 30. Coding has one known value, 50. Keep the report honest about missing values. A correct total alone does not prove that the count or average is correct."
+      ],
+      "after": [
+        "An aggregate function combines several values into one answer. COUNT counts them, SUM adds them, and AVG finds their average. `GROUP BY` makes a separate group for each subject.",
+        "Run this example in a fresh database:\n```sql\nCREATE TABLE demo_sessions(subject TEXT, minutes INTEGER);\nINSERT INTO demo_sessions VALUES\n  ('Art', 12), ('Art', 24), ('Music', 18), ('Music', NULL);\nSELECT subject,\n       COUNT(minutes) AS session_count,\n       SUM(minutes) AS total_minutes,\n       AVG(minutes) AS average_minutes\nFROM demo_sessions\nGROUP BY subject\nORDER BY subject;\n```\nArt has count `2`, total `36`, and average `18`. Music has count `1`, total `18`, and average `18`.",
+        "`COUNT(*)` counts every row. `COUNT(minutes)` counts only rows with a known minutes value. Music has two rows but only one known duration. The star in COUNT(*) does not mean multiplication.",
+        "SUM and AVG also skip NULL. Art's average is its total, 36, divided by its two known values: 18. `AS` gives each calculated column a name.",
+        "If a group has only NULL durations, its known count is 0, but its sum and average are NULL. An empty table has no groups. A COUNT query without GROUP BY still returns one count, which is 0 for an empty input.",
+        "Create `answer` with subject, session_count, total_minutes, and average_minutes. Read `sessions`, group by subject, and calculate the three results. Use COUNT(minutes) for the requested count of known durations.",
+        "For Math, 20 and 40 give count `2`, total `60`, and average `30`. Spanish's missing duration is not zero. Check the count, total, and average separately, and keep the source sessions unchanged."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Give the result columns the names requested in the project.",
+        "Use `GROUP BY subject` to calculate each subject separately.",
+        "Use `COUNT(minutes)` when you want to count only known minutes, not `NULL`."
+      ],
+      "after": [
+        "Group sessions by subject.",
+        "Calculate COUNT(minutes), SUM(minutes), and AVG(minutes).",
+        "Give the results their required column names and save them in answer."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Group by subject.",
+        "Use COUNT(minutes), SUM(minutes), AVG(minutes).",
+        "For Math, (20+40)/2=30."
+      ],
+      "after": [
+        "The project counts known durations, not all rows.",
+        "NULL does not add a zero to the average.",
+        "Replace the starter's fixed zeros with calculations."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "A group contains minutes values 10, NULL, and 26. What are COUNT(minutes), SUM(minutes), and AVG(minutes)?",
+        "choices": [
+          "3, 36, 12",
+          "2, 36, 18",
+          "2, 36, 36"
+        ],
+        "answer": 1,
+        "explanation": "These aggregates use the two known durations. Their sum is 10 + 26 = 36, and their average is 36 / 2 = 18. NULL is missing information, not a zero-minute value."
+      },
+      "after": {
+        "question": "The minutes are 10, NULL, and 26. What are COUNT(minutes), SUM(minutes), and AVG(minutes)?",
+        "choices": [
+          "3, 36, 12",
+          "2, 36, 18",
+          "2, 36, 36"
+        ],
+        "answer": 1,
+        "explanation": "There are two known values. They add to 36, and 36 divided by 2 is 18."
+      }
+    }
+  ],
+  "headings": [
+    "Combine values into a summary",
+    "Summarize two subjects",
+    "Count rows or known values",
+    "Read totals and averages",
+    "Handle missing and empty groups",
+    "Build the project summary",
+    "Check each calculation"
+  ],
+  "project": {
+    "title": "Summarize study sessions",
+    "task": "Group sessions by subject and save each known-duration count, total, and average in answer.",
+    "done_when": "The named columns contain the correct calculations for each subject, and missing durations are skipped rather than treated as zero."
+  }
+}

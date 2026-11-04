@@ -1,0 +1,94 @@
+{
+  "lesson": "cpp-51",
+  "position": 51,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Change twice(4) to twice(-1). What does the caller do?",
+      "after": "Return either a successful value or an error for the caller to handle."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "C++23 std::expected<T,E> contains either a successful T or an error E. It is useful when the caller should inspect a recoverable failure as part of the function’s return contract.",
+        "std::unexpected(\"outside range\") selects the error alternative here. The function accepts only 0 through 100, so multiplication in its successful branch is safe for int.",
+        "if(result) checks for success; *result accesses that successful int. error() is used only in the error branch. expected does not make other operations magically nonthrowing, and blindly accessing the wrong alternative is not a recovery strategy.",
+        "Complete local C++ example; the app itself does not execute it:\n```cpp\n#include <expected>\n#include <iostream>\n#include <string>\nstd::expected<int, std::string> twice(int amount) {\n    if (amount < 0 || amount > 100) return std::unexpected(\"outside range\");\n    return amount * 2;\n}\nint main() {\n    auto result = twice(4);\n    if (result) std::cout << \"value \" << *result << \"\\n\";\n    else std::cout << \"error \" << result.error() << \"\\n\";\n}\n```",
+        "Expected output or behavior: value 8. Local compiler test evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Add a second recoverable validation rule and make its error message distinct. You may trace this without a compiler; finishing the reading is not proof of a local run."
+      ],
+      "after": [
+        "C++23 std::expected<T, E> holds either a successful value of type T or an error of type E. Here success is an int and an error is a string. The caller handles the result explicitly.",
+        "The function accepts amounts from zero through one hundred. Outside that range, std::unexpected returns the error text immediately. Accepted values can be doubled without exceeding int's range.",
+        "if (result) checks for success. The first branch reads the successful value with *result. The else branch reads the error with result.error().",
+        "Follow the range check, the returned value, and the caller's success check.\n\n```cpp\n#include <expected>\n#include <iostream>\n#include <string>\nstd::expected<int, std::string> twice(int amount) {\n    if (amount < 0 || amount > 100) return std::unexpected(\"outside range\");\n    return amount * 2;\n}\nint main() {\n    auto result = twice(4);\n    if (result) std::cout << \"value \" << *result << \"\\n\";\n    else std::cout << \"error \" << result.error() << \"\\n\";\n}\n```",
+        "The program prints value 8. Four passes the range check, so the function returns its doubled value, eight.",
+        "Use *result only for success and error() only for failure. expected makes this choice visible; it does not prevent every possible exception from other work inside the function."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain why, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Check whether the function returns from the error branch before doing the calculation."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Change twice(4) to twice(-1). What does the caller do?",
+        "choices": [
+          "Print error outside range from the returned error.",
+          "Print value -2 because multiplication always runs.",
+          "Automatically retry with zero."
+        ],
+        "answer": 0,
+        "explanation": "The range guard returns unexpected before multiplication; the caller explicitly selects and prints the error alternative."
+      },
+      "after": {
+        "question": "Change twice(4) to twice(-1). What does the caller do?",
+        "choices": [
+          "Print error outside range using the returned error.",
+          "Print value -2 because multiplication always runs.",
+          "Automatically try again with zero."
+        ],
+        "answer": 0,
+        "explanation": "The range check returns an error before multiplication. The caller's else branch prints that error."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "C++ Core v1, standard C++23 features checked against the available GCC14.2 implementation. This app provides concept reading and an understanding check, not a C++ browser runner. Local example tests are separate evidence and do not certify learner mastery.",
+      "after": "The browser shows C++ code and checks your understanding; it does not run C++. Optional local examples use C++23."
+    }
+  ],
+  "headings": [
+    "Make success and failure visible",
+    "Return an error before calculating",
+    "Check which result arrived",
+    "One example",
+    "What appears",
+    "Read only the active result"
+  ],
+  "project": {
+    "title": "Return a value or error with expected",
+    "task": "Trace the value-or-error result from the function to the caller.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local C++ example is optional."
+  }
+}

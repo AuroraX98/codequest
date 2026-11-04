@@ -1,0 +1,106 @@
+{
+  "lesson": "backend-12",
+  "position": 33,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Complete takeRequest(state, now). State has windowStart and count. Within each 1000-unit time window, allow at most 3 requests. At now >= windowStart + 1000 start a new window at now. Return {allowed,state} without mutating the input. Times are nondecreasing and supplied in the same units.",
+      "after": "A rate limit lets through only a set number of requests in a time window."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A rate limit restricts how many requests may be accepted during a stated interval.",
+        "A fixed-duration window keeps its start time and the number accepted so far.",
+        "Check expiration before checking the count. At the exact end boundary, the next window may begin.",
+        "For this exercise, three requests fit each 1000-unit window. The fourth is rejected until a new window begins.",
+        "Return a new state object so the caller can retain the previous snapshot.",
+        "A real HTTP server can report an exceeded limit with 429 Too Many Requests. Its policy may also explain when retrying is allowed.",
+        "The provided clock is monotonic for this exercise. Real designs must handle clock behavior, user identity, shared storage, and requests reaching several servers.",
+        "This is one policy model, not a complete abuse-prevention system. Test just before and exactly at the reset boundary."
+      ],
+      "after": [
+        "A rate limit controls how many requests can pass during a set time. Our rule allows three requests per window.",
+        "A window is one span of time. Store its start in windowStart and the number of accepted requests in count.",
+        "The window ends when now >= windowStart + 1000. Check this first. When it ends, start a window at now with count 0.",
+        "This small example checks a full window just before it ends, then exactly at its end.\n\n```javascript\nconst state = { windowStart: 50, count: 3 };\nfunction windowEnded(now) {\n  return now >= state.windowStart + 1000;\n}\nconsole.log(windowEnded(1049));\nconsole.log(windowEnded(1050));\n```\n\nThe outputs are false and true. At 1050, reset the count before checking the new request.",
+        "Complete takeRequest(state, now). Return {allowed, state} with a new state object. Accept and count a request only if fewer than three have passed in its window.",
+        "When a real HTTP server rejects a request for exceeding a rate limit, it can return status 429: Too Many Requests.",
+        "The supplied times use the same units and never go backward. A count only makes sense when every time uses the same clock rules.",
+        "Test the fourth request before the window ends, then another exactly at the end. The first is blocked. The second starts the new window with count 1."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the requirement.",
+        "Make one change to the starter.",
+        "Run the checks.",
+        "Explain why a changed input produces its result."
+      ],
+      "after": [
+        "Check whether the old window has ended.",
+        "Start a new window if needed.",
+        "Allow a request only when the current count is below 3.",
+        "Return a new state object and run the checks."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Evaluate expiration with >=.",
+        "Reset the count before deciding whether this request fits.",
+        "Copy state instead of changing the caller’s object."
+      ],
+      "after": [
+        "Use >= for the end boundary.",
+        "Reset before checking the count.",
+        "Increase the count only for an accepted request."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "The window began at 50 and lasts 1000 units. The count is already 3. At time 1050, should the next request be allowed?",
+        "choices": [
+          "Yes; the exact boundary starts a new window before the count check.",
+          "No; the old count blocks forever.",
+          "Only if the request changes its clock units."
+        ],
+        "answer": 0,
+        "explanation": "1050 equals 50 + 1000. Under this policy the previous window has ended, so the new request begins a fresh count."
+      },
+      "after": {
+        "question": "A window starts at 50 and lasts 1000 units. Its count is 3. Is a request at time 1050 allowed?",
+        "choices": [
+          "Yes. A new window starts before checking the count.",
+          "No. The old count blocks every future request.",
+          "Only after changing the clock units."
+        ],
+        "answer": 0,
+        "explanation": "1050 is exactly 50 + 1000. The old window has ended. The new request becomes the first in the new window."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "No real request traffic is limited. This in-memory state transition uses a supplied clock; production enforcement needs an explicit identity/keying and distributed consistency policy.",
+      "after": "This browser exercise models one limit with a supplied clock. It does not limit real network traffic. A real service must decide whose requests share a limit and keep the count consistent across its servers."
+    }
+  ],
+  "headings": [
+    "Limit how often requests arrive",
+    "Remember the window",
+    "Check the time first",
+    "One example",
+    "Keep the old state",
+    "Tell the caller to wait",
+    "Use one clock",
+    "Try the boundary"
+  ],
+  "project": {
+    "title": "Allow only three requests per window",
+    "task": "Complete takeRequest(state, now). Allow at most 3 requests per 1000-unit window. At now >= windowStart + 1000, start a new window at now. Return {allowed,state} without changing the input. Supplied times never decrease and use the same units.",
+    "done_when": "Checks pass just before and exactly at the reset time. Explain why the fourth request waits while the first request in a new window passes."
+  }
+}

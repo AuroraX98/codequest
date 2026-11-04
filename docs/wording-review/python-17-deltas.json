@@ -1,0 +1,74 @@
+{
+  "lesson": "python-17",
+  "sourceHash": "867e6e034478ab054371f9d323a71a37e984f65db81b752278261d956297f21d",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Package a small library with tests, documentation, and explicit dependencies.",
+      "after": "Check how a small function behaves, then learn what makes it installable."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A reusable library is code that other programs can import and call. Tests document examples of how it should behave. A unit test checks a small part, such as one function, using known inputs and expected outcomes. This project's clamp function keeps a value within inclusive bounds: below the lower bound becomes the lower bound, inside stays unchanged, and above the upper bound becomes the upper bound.",
+        "Max chooses the larger value and min chooses the smaller. `min(value, high)` caps the upper limit. Taking `max(low, ...)` afterward enforces the lower limit too. If low exceeds high, there is no sensible ordered interval, so raise ValueError with a useful message. Raise reports an exception rather than silently choosing an invalid result.",
+        "Here is a complete clamp implementation with worked calls.\n```python\ndef clamp(value, low, high):\n    if low > high:\n        raise ValueError(\"low must not exceed high\")\n    return max(low, min(value, high))\n\nprint(clamp(-4, 2, 8))\nprint(clamp(5, 2, 8))\nprint(clamp(12, 2, 8))\n```\nIt prints 2, 5, and 8. For 12, min chooses 8, then max compares 2 and 8 and keeps 8. For -4, min keeps -4, then max raises it to 2. Inclusive means both 2 and 8 are allowed without changing them.",
+        "Tests should check behavior, including the boundaries themselves.\n```python\ndef clamp(value, low, high):\n    if low > high:\n        raise ValueError(\"low must not exceed high\")\n    return max(low, min(value, high))\n\nassert clamp(-4, 2, 8) == 2\nassert clamp(5, 2, 8) == 5\nassert clamp(12, 2, 8) == 8\nassert clamp(2, 2, 8) == 2\nassert clamp(8, 2, 8) == 8\ntry:\n    clamp(5, 8, 2)\nexcept ValueError:\n    print(\"Invalid bounds rejected\")\nelse:\n    raise AssertionError(\"Expected invalid bounds to fail\")\nprint(\"Behavior checks passed\")\n```\nIt prints the rejection message and Behavior checks passed. Assert raises an AssertionError when its comparison is false. The try/except/else ensures invalid bounds actually raise the intended error.",
+        "The exercise's range is 0 through 10. An input of -1 becomes 0, 5 stays 5, and 12 becomes 10. A useful README describes the allowed numeric inputs, the inclusive bounds, the invalid-bound exception, and a worked call. These examples assume comparable ordinary numbers; a real library should decide separately how to treat unusual values such as NaN or strings rather than silently claiming they satisfy the contract.",
+        "Packaging makes a library available for installation. The supplied pyproject.toml records its name, version, required Python, and dependencies=[] because this function needs no third-party runtime package. A complete single-file packaging example can also specify a build backend, the tool that creates the installable package. This configuration assumes the implementation is saved in clamp.py beside it:\n```toml\n[build-system]\nrequires = [\"setuptools\"]\nbuild-backend = \"setuptools.build_meta\"\n\n[project]\nname = \"practice-clamp-example\"\nversion = \"0.1.0\"\nrequires-python = \">=3.10\"\ndependencies = []\n\n[tool.setuptools]\npy-modules = [\"clamp\"]\n```\nThe build requirement is used to build the package; the runtime dependencies list describes what users need when running it. They serve different stages.",
+        "Optional local installation proof (POSIX shell, not the browser): save the visible function in clamp.py beside the pyproject.toml below. Use a Python build environment that already has setuptools and wheel; these commands do not download them. Run from that project directory:\n```toml\n[build-system]\nrequires = [\"setuptools\", \"wheel\"]\nbuild-backend = \"setuptools.build_meta\"\n\n[project]\nname = \"practice-clamp-example\"\nversion = \"0.1.0\"\nrequires-python = \">=3.10\"\ndependencies = []\n\n[tool.setuptools]\npy-modules = [\"clamp\"]\n```\n```sh\npython -c 'from setuptools.build_meta import build_wheel; build_wheel(\"dist\")'\npython -m venv .venv\n.venv/bin/python -m pip install --no-index --no-deps dist/practice_clamp_example-0.1.0-py3-none-any.whl\nmkdir verify-installed\ncd verify-installed\n../.venv/bin/python -I -c 'from clamp import clamp; print(clamp(12, 2, 8))'\n```\nThe final output is 8. build_wheel(\"dist\") creates a wheel in dist and returns its filename; the printed build log is not the function result. python -m venv creates an isolated environment using the chosen interpreter. Running pip through that environment’s Python installs only the named local wheel: --no-index disables index lookup and --no-deps disables dependency installation. The distribution name practice-clamp-example and import name clamp serve different purposes. The final -I interpreter flag ignores the current directory and user site packages, so this import tests the installed copy rather than a nearby source file. A directory named verify-installed must not already exist when using mkdir as shown. On Windows the environment executable is .venv\\Scripts\\python.exe and shell quoting differs; these exact commands were prepared for a POSIX terminal. This optional workflow is independent of the browser behavior checks.",
+        "The browser checks only clamp's returned behavior. They do not build a wheel, install a package, or prove a clean environment works. The supplied metadata may need additional build configuration and source-layout details for that wider goal. An actual package check must use the local files and confirm importing from the installed package rather than accidentally importing the source folder. Treat a passing function test and a passing installation test as separate evidence."
+      ],
+      "after": [
+        "A library is code other programs can import and use. A unit test checks a small piece, such as one function.\n\nHere, `clamp` keeps a number between two limits. Numbers below the lower limit move up to it. Numbers above the upper limit move down to it. Numbers inside stay the same.",
+        "`min` chooses the smaller number, so `min(value, high)` keeps the result from going too high. `max(low, ...)` then keeps it from going too low.\n\nIf `low > high`, the limits are reversed. Raise `ValueError` to report that problem.",
+        "Follow one function with three inputs:\n```python\ndef clamp(value, low, high):\n    if low > high:\n        raise ValueError(\"low must not exceed high\")\n    return max(low, min(value, high))\n\nprint(clamp(-4, 2, 8))\nprint(clamp(5, 2, 8))\nprint(clamp(12, 2, 8))\n```\nOutput:\n```text\n2\n5\n8\n```\nFor 12, `min` chooses 8, then `max` keeps 8. Both limits are allowed: this is called an inclusive range.",
+        "Tests compare actual results with expected results. Check both limits as well as numbers outside them.\n```python\ndef clamp(value, low, high):\n    if low > high:\n        raise ValueError(\"low must not exceed high\")\n    return max(low, min(value, high))\n\nassert clamp(-4, 2, 8) == 2\nassert clamp(5, 2, 8) == 5\nassert clamp(12, 2, 8) == 8\nassert clamp(2, 2, 8) == 2\nassert clamp(8, 2, 8) == 8\ntry:\n    clamp(5, 8, 2)\nexcept ValueError:\n    print(\"Invalid bounds rejected\")\nelse:\n    raise AssertionError(\"Expected invalid bounds to fail\")\nprint(\"Behavior checks passed\")\n```\nOutput:\n```text\nInvalid bounds rejected\nBehavior checks passed\n```\n`assert` reports an `AssertionError` if its check is false. The `try` block also checks that reversed limits raise `ValueError`.",
+        "The exercise uses the range 0 through 10: -1 becomes 0, 5 stays 5, and 12 becomes 10.\n\nA README is a short guide for someone using your code. Explain the inputs, limits, error, and one example. These examples use ordinary numbers. Strings and special values such as `NaN` (not a number) need their own rules.",
+        "Packaging prepares code for installation. Save the function in `clamp.py` and put this `pyproject.toml` beside it:\n```toml\n[build-system]\nrequires = [\"setuptools\", \"wheel\"]\nbuild-backend = \"setuptools.build_meta\"\n\n[project]\nname = \"practice-clamp-example\"\nversion = \"0.1.0\"\nrequires-python = \">=3.10\"\ndependencies = []\n\n[tool.setuptools]\npy-modules = [\"clamp\"]\n```\n`build-system` names tools used to make the package. `project` describes the package. `dependencies = []` means no extra packages are needed to run this function. The build tools are a separate need.",
+        "Optional practice on your computer: use the files above in a POSIX terminal, such as Bash on Linux or macOS. The build environment must already have `setuptools` and `wheel`. These commands do not download them. Start in the folder containing the files:\n```sh\npython -c 'from setuptools.build_meta import build_wheel; build_wheel(\"dist\")'\npython -m venv .venv\n.venv/bin/python -m pip install --no-index --no-deps dist/practice_clamp_example-0.1.0-py3-none-any.whl\nmkdir verify-installed\ncd verify-installed\n../.venv/bin/python -I -c 'from clamp import clamp; print(clamp(12, 2, 8))'\n```\nThe last command prints `8`.\n\nThe commands build a wheel (an installable package), make a separate Python environment, and install the local wheel. `--no-index` stops online package lookup. `--no-deps` stops installation of other packages.\n\nThe final check runs away from the source files. `-I` ignores the current folder and user packages, so it checks the installed copy. Use a new folder name for `verify-installed`.\n\nOn Windows, the environment's Python is `.venv\\\\Scripts\\\\python.exe`, and quoting differs. The commands above are for POSIX shells.",
+        "The browser checks the function's answers. Installing the package is a separate step on your computer.\n\nA passing function test does not show that installation works. After installation, try importing the installed copy from outside the source folder."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Handle the case where the lower limit is greater than the upper limit.",
+        "If the value is above `high`, use `high`.",
+        "If the value is below `low`, use `low`."
+      ],
+      "after": [
+        "Raise `ValueError` when `low` is greater than `high`.",
+        "Use `min` to keep the result at or below `high`.",
+        "Use `max` to keep it at or above `low`.",
+        "Check values below, inside, and above the range, plus both limits."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "The browser clamp checks pass. What has this established about installation in a fresh environment?",
+        "choices": [
+          "Installation definitely succeeded",
+          "Every dependency is available on another computer",
+          "Only the tested function behavior; installation needs separate verification"
+        ],
+        "answer": 2,
+        "explanation": "The browser invokes the function. It does not build a wheel or install that package in a clean environment."
+      },
+      "after": {
+        "question": "The browser checks pass. Does that prove the package installs on a fresh computer?",
+        "choices": [
+          "Yes, installation definitely succeeded.",
+          "Yes, every needed package is already there.",
+          "No. The function was tested; installation needs its own check."
+        ],
+        "answer": 2,
+        "explanation": "The browser calls the function. It does not build or install the package."
+      }
+    }
+  ],
+  "reviewNotes": [
+    "Reviewed directly by the host, one lesson at a time. Plain wording, specific guidance, preserved exercise behavior."
+  ]
+}

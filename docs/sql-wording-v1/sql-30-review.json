@@ -1,0 +1,87 @@
+{
+  "lesson": "sql-30",
+  "position": 9,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Create bands(id,band) with high for scores at least 20, middle for scores at least 10 but below 20, low for smaller scores, and unknown for NULL. Preserve scores.",
+      "after": "Use CASE to choose one label from several checks."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A searched CASE expression checks WHEN conditions in order and returns the THEN value for the first true condition. ELSE supplies the value when none is true; END closes the expression. CASE calculates a value rather than starting a separate statement.",
+        "Order overlapping conditions deliberately. Check score >= 20 before score >= 10 if the higher band must win. A missing score does not make either comparison true; a separate WHEN score IS NULL can give that case its own label.",
+        "Run this complete example in a fresh database.\n```sql\nCREATE TABLE scores(score INTEGER);\nINSERT INTO scores VALUES(22),(12),(4),(NULL);\nCREATE TEMP VIEW shown AS\nSELECT score,CASE WHEN score IS NULL THEN 'unknown' WHEN score>=20 THEN 'high' WHEN score>=10 THEN 'middle' ELSE 'low' END AS band\nFROM scores;\nSELECT *\nFROM shown\nORDER BY score;\n```",
+        "Change the supplied values and trace the result. This is a separate complete example.\n```sql\nCREATE TEMP VIEW shown AS\nSELECT CASE WHEN 22>=10 THEN 'middle' WHEN 22>=20 THEN 'high' ELSE 'low' END AS band;\nSELECT *\nFROM shown;\n```",
+        "Application: Create bands(id,band) with high for scores at least 20, middle for scores at least 10 but below 20, low for smaller scores, and unknown for NULL. Preserve scores."
+      ],
+      "after": [
+        "`CASE` chooses a value. It checks each `WHEN` in order and returns the value after the first matching `THEN`. `ELSE` supplies a fallback, and `END` finishes the choice.",
+        "A score of 22 is at least 20 and at least 10. Check the higher limit first if it should win. CASE stops at the first true check; it does not look for a better match later.",
+        "Run this example in a fresh database:\n```sql\nCREATE TABLE demo_scores(score INTEGER);\nINSERT INTO demo_scores VALUES (22), (12), (4), (NULL);\nSELECT score,\n       CASE\n         WHEN score IS NULL THEN 'unknown'\n         WHEN score >= 20 THEN 'high'\n         WHEN score >= 10 THEN 'middle'\n         ELSE 'low'\n       END AS band\nFROM demo_scores\nORDER BY score;\n```\nThe labels are `unknown` for NULL, `low` for 4, `middle` for 12, and `high` for 22.",
+        "A missing score does not pass a number comparison. `IS NULL` gives it its own label. Without that branch, this example would reach ELSE and wrongly label the missing score low.",
+        "Create `bands(id, band)` from `scores`. Use `high` for at least 20, `middle` for at least 10 but below 20, `low` below 10, and `unknown` for NULL. Keep the original scores unchanged."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the small example and explain its inputs and effects.",
+        "Complete the starter for this lesson.",
+        "Run the behavior checks, then predict a changed case."
+      ],
+      "after": [
+        "Handle a missing score with IS NULL.",
+        "Check the high limit before the middle limit.",
+        "Use ELSE for low and name the result band."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Trace the supplied rows and resulting rows before changing the query."
+      ],
+      "after": [
+        "Only the first true WHEN is used.",
+        "Keep the source id beside the calculated band."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If the score>=10 branch comes first, which label does score 30 receive?",
+        "choices": [
+          "middle",
+          "high",
+          "Both labels"
+        ],
+        "answer": 0,
+        "explanation": "The first true WHEN wins; CASE does not continue looking for a more specific later condition."
+      },
+      "after": {
+        "question": "The score >= 10 check comes first and returns middle. What label does score 30 get?",
+        "choices": [
+          "middle",
+          "high",
+          "Both labels"
+        ],
+        "answer": 0,
+        "explanation": "The first check is already true, so CASE returns middle and stops."
+      }
+    }
+  ],
+  "headings": [
+    "Choose the first true case",
+    "Put specific checks first",
+    "Label four scores",
+    "Give missing scores a label",
+    "Build the score bands"
+  ],
+  "project": {
+    "title": "Choose a value with CASE",
+    "task": "Create bands(id, band), using high at 20 or above, middle at least 10 but below 20, low below 10, and unknown for NULL.",
+    "done_when": "Every ID has the correct band, with 20 in high. The scores stay unchanged."
+  }
+}

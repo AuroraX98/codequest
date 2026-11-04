@@ -1,0 +1,91 @@
+{
+  "lesson": "rust-53",
+  "position": 53,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "If the protected addition changes from 4 to 9, what prints after the first guard is dropped?",
+      "after": "A mutex is a lock that lets only one holder use the protected value at a time."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "Mutex::lock returns a Result containing a guard. Dereferencing the guard accesses the protected value. Dropping the guard releases the lock. Here expect makes the example stop with context if the mutex is poisoned, typically after a thread panicked while holding it; production recovery is a deliberate policy, not something to ignore.\n\nMutex::new(3) constructs a new unlocked mutex containing the supplied integer. It is the later lock call that acquires guarded access.",
+        "The inner block bounds the first guard’s lifetime. The later lock occurs only after that guard was dropped, avoiding a recursive-lock assumption. This first example is single-threaded to isolate guard ownership; concurrent updates must all use the same mutex.",
+        "Complete local Rust example; the app itself does not execute it:\n```rust\nuse std::sync::Mutex;\n\nfn main() {\n    let value = Mutex::new(3);\n    {\n        let mut guard = value.lock().expect(\"mutex poisoned\");\n        *guard += 4;\n    }\n    println!(\"{}\", *value.lock().expect(\"mutex poisoned\"));\n}\n```",
+        "Expected output or behavior: 7. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Explain why moving the second lock inside the first guard’s scope would be an invalid locking design. You may trace it without a Rust compiler; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "A mutex is a lock that lets only one holder use the protected value at a time.",
+        "The first lock gives a guard for changing the number. The guard goes away when the inner block ends.",
+        "Follow the labeled parts of this example.\n```rust\nuse std::sync::Mutex;\n\nfn main() {\n    let value = Mutex::new(3);\n    {\n        let mut guard = value.lock().expect(\"mutex poisoned\");\n        *guard += 4;\n    }\n    println!(\"{}\", *value.lock().expect(\"mutex poisoned\"));\n}\n```",
+        "The output is `7`. The first guard adds 4 to 3. The second lock reads the result.",
+        "Change the amount added and trace the value after the first guard ends."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read one idea.",
+        "Follow the labeled example.",
+        "Try the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Change the amount added and trace the value after the first guard ends."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If the protected addition changes from 4 to 9, what prints after the first guard is dropped?",
+        "choices": [
+          "12",
+          "3 because a guard modifies only a copy",
+          "A deadlock is required even though the first guard was dropped."
+        ],
+        "answer": 0,
+        "explanation": "The guard mutates the protected integer and releases the lock at block exit; the later guard observes twelve."
+      },
+      "after": {
+        "question": "If the protected addition changes from 4 to 9, what prints after the first guard is dropped?",
+        "choices": [
+          "12",
+          "3 because a guard modifies only a copy",
+          "A deadlock is required even though the first guard was dropped."
+        ],
+        "answer": 0,
+        "explanation": "The protected number starts at three. Adding nine gives twelve."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Rust Core v1 uses stable Rust1.99.1 with edition2024 and the standard library. The app supplies concept reading and an understanding check, not a Rust browser runner. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "CodeQuest shows the Rust example. Running it on your own computer is optional."
+    }
+  ],
+  "headings": [
+    "Lock before changing shared data",
+    "Release the lock",
+    "Read the example",
+    "What happens",
+    "Try one change"
+  ],
+  "project": {
+    "title": "Mutex and protected state",
+    "task": "Change the amount added and trace the value after the first guard ends.",
+    "done_when": "Read each idea and pass the understanding check. Running the example on your computer is optional."
+  }
+}

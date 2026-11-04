@@ -1,5 +1,5 @@
 import {historicalTypeScriptBaseline} from './python-authorized-baseline.mjs';
-import assert from'node:assert/strict';import fs from'node:fs';import{createHash}from'node:crypto';import{historicalOriginal11Baseline,historicalJavaScriptBaseline,historicalHTMLBaseline}from'./python-authorized-baseline.mjs';
+import assert from'node:assert/strict';import fs from'node:fs';import{createHash}from'node:crypto';import{historicalOriginal11Baseline,historicalJavaScriptBaseline as _historicalJavaScriptBaseline,historicalHTMLBaseline}from'./python-authorized-baseline.mjs';
 const read=p=>JSON.parse(fs.readFileSync(p,'utf8')),root='docs/original11-function-remediation/';
 const canonical=x=>Array.isArray(x)?x.map(canonical):x&&typeof x==='object'?Object.fromEntries(Object.keys(x).sort().map(k=>[k,canonical(x[k])])):x;const hash=x=>createHash('sha256').update(JSON.stringify(canonical(x))).digest('hex');
 const lessons=read('content/lessons.json'),units=read('content/catalog.json').units,terms=read('content/terminology.json'),base=read(root+'preservation-baseline.json'),changes=read(root+'approved-staged-deltas.json').changes;

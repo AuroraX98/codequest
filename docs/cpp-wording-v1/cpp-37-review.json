@@ -1,0 +1,94 @@
+{
+  "lesson": "cpp-37",
+  "position": 37,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Change twice(3) to twice(2.5). What occurs?",
+      "after": "Limit the types a template accepts with a concept."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A concept is a compile-time constraint. <concepts> supplies std::integral, which accepts integral types such as int but not double. template<std::integral T> constrains the type parameter.",
+        "Constraints improve which calls are permitted; they do not prove all runtime inputs safe. This doubling example uses small values whose result fits int. Unchecked signed overflow is not allowed.",
+        "Calling twice with 2.5 fails constraint checking instead of quietly truncating it. There is no successful runtime result for that changed program.",
+        "Complete local C++ example; the app itself does not execute it:\n```cpp\n#include <concepts>\n#include <iostream>\ntemplate<std::integral T>\nT twice(T value) { return value + value; }\nint main() {\n    std::cout << twice(3) << '\\n';\n}\n\n```",
+        "Expected output or behavior: 6\n. Local compiler test evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Try an unsigned integer literal 3u, keeping the arithmetic safely within its range. You may trace this without a compiler; finishing the reading is not proof of a local run."
+      ],
+      "after": [
+        "A concept is a named requirement checked before the program runs. It limits which types a template can accept.",
+        "<concepts> provides std::integral. It accepts integer types such as int and rejects floating-point types such as double. template<std::integral T> applies that requirement to T.",
+        "The compiler works out T from the input, then checks the requirement. A double input fails this requirement, so that call is rejected before execution.",
+        "Follow the input's type through the requirement and then the addition.\n\n```cpp\n#include <concepts>\n#include <iostream>\ntemplate<std::integral T>\nT twice(T value) { return value + value; }\nint main() {\n    std::cout << twice(3) << '\\n';\n}\n\n```",
+        "The program prints 6. Three has type int, which meets std::integral. The function adds three to itself.",
+        "The concept checks the type, not whether every possible calculation is safe. A signed integer result must still fit its type's range. This example uses small values that fit."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain why, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Check the input's type against the concept before calculating a result."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Change twice(3) to twice(2.5). What occurs?",
+        "choices": [
+          "The program prints 5",
+          "Compilation rejects double because it is not integral",
+          "2.5 is truncated before template selection"
+        ],
+        "answer": 1,
+        "explanation": "Deduction selects double, which does not satisfy std::integral. Constraints are checked before execution."
+      },
+      "after": {
+        "question": "Change twice(3) to twice(2.5). What happens?",
+        "choices": [
+          "The program prints 5.",
+          "The compiler rejects double because it does not meet std::integral.",
+          "The fractional part is removed before the template's type is chosen."
+        ],
+        "answer": 1,
+        "explanation": "The input makes T a double. That type fails the concept requirement, so the call does not compile."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "C++ Core v1, standard C++23 features checked against the available GCC14.2 implementation. This app provides concept reading and an understanding check, not a C++ browser runner. Local example tests are separate evidence and do not certify learner mastery.",
+      "after": "The browser shows C++ code and checks your understanding; it does not run C++. Optional local examples use C++23."
+    }
+  ],
+  "headings": [
+    "State a type requirement",
+    "Use the integral requirement",
+    "Reject an unsuitable type",
+    "One example",
+    "What appears",
+    "A type check does not check every value"
+  ],
+  "project": {
+    "title": "Constrain a template with a concept",
+    "task": "Trace why the input type is accepted before the function doubles its value.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local C++ example is optional."
+  }
+}

@@ -1,0 +1,99 @@
+{
+  "lesson": "typescript-15",
+  "position": 34,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Trace a value import and a type-only import across two files.",
+      "after": "Share selected code between files, and keep type imports separate."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A module is a file with its own scope: names declared inside it do not automatically become available in other files. A top-level import or export makes these example TypeScript files modules.",
+        "Put export before a declaration to make it available to other modules. A named import uses braces to select an exported name. The quoted path tells the compiler which file to look for; ./ means the current folder.",
+        "In badges.ts, Badge describes the shape of an object. badgeText is an actual function that runs. internalPrefix is not exported, so another module cannot import it by name.\n```typescript\nexport type Badge = { label: string };\nexport function badgeText(badge: Badge): string {\n  return \"Badge: \" + badge.label;\n}\nconst internalPrefix = \"private implementation detail\";\n```",
+        "In main.ts, import { badgeText } brings in the function. import type { Badge } brings in a type for checking only. Type-only imports and type declarations are removed from the emitted JavaScript; the function still exists at runtime.\n```typescript\nimport { badgeText } from \"./badges\";\nimport type { Badge } from \"./badges\";\nconst badge: Badge = { label: \"Reader\" };\nconsole.log(badgeText(badge));\n```",
+        "An object can match an imported type without creating that type as a runtime value. You can annotate badge with Badge, but you cannot call Badge() or print Badge as if the type itself were a value.",
+        "The example prints Badge: Reader. Renaming the local badge variable would not change which function is imported; changing an export name requires changing its corresponding named import.",
+        "This is a concept lesson: the embedded editor does not run multiple TypeScript modules. The two complete files above are an optional local companion, not an in-app coding check.",
+        "To try the companion locally, use a folder with Node.js and TypeScript 5.9.3 installed. Save the two code blocks as badges.ts and main.ts. In that folder run your installed tsc --strict --skipLibCheck --target ES2022 --module commonjs --outDir dist badges.ts main.ts, then node dist/main.js. Use a folder without a package.json declaring type: module: this example deliberately emits CommonJS, a Node-compatible module format. Other runtimes may require different module settings or file extensions."
+      ],
+      "after": [
+        "A module is a file whose names stay inside that file unless shared. A top-level import or export makes these TypeScript files modules.",
+        "Export makes a name available to other files. A named import uses braces to choose a shared name. In a file path, `./` means the current folder.",
+        "Save this first part as badges.ts. Badge is a type; badgeText is a function that runs.\n```typescript\nexport type Badge = { label: string };\nexport function badgeText(badge: Badge): string {\n  return \"Badge: \" + badge.label;\n}\nconst internalPrefix = \"private implementation detail\";\n```\n`internalPrefix` is not exported, so another file cannot import it by that name.",
+        "Save this second part as main.ts. The type-only import is used for checking and disappears from the JavaScript.\n```typescript\nimport { badgeText } from \"./badges\";\nimport type { Badge } from \"./badges\";\nconst badge: Badge = { label: \"Reader\" };\nconsole.log(badgeText(badge));\n```\nThe function import remains available to run.",
+        "Badge describes an object's shape. It does not create a function called Badge. You can use it as a type label, but you cannot call it.",
+        "The two files produce Badge: Reader. Renaming the local badge variable does not change the exported function. Renaming an export means updating the matching import.",
+        "This is a concept lesson. The embedded editor does not run multiple TypeScript modules. The two files form one optional local example.",
+        "To try it in a folder with Node.js and TypeScript 5.9.3 installed, save both files together. Run `tsc --strict --skipLibCheck --target ES2022 --module commonjs --outDir dist badges.ts main.ts`, then `node dist/main.js`. CommonJS is the module format this example uses. Choose a folder without a package.json setting of `type: module`."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one idea at a time.",
+        "Apply it to the changed situation."
+      ],
+      "after": [
+        "Read the export file, then the import file.",
+        "Identify which name is a running function and which is a type.",
+        "Complete the question, or optionally try the two local files."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Compare the changed situation with the rule, not just the spelling."
+      ],
+      "after": [
+        "Type-only imports help checking but create no running value."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "A file exports type Pet = { name: string } and function petName(pet: Pet). Another file imports type { Pet } and imports { petName }. After successful compilation, which can run as a function?",
+        "choices": [
+          "petName({ name: \"Milo\" }), but not Pet({ name: \"Milo\" }).",
+          "Pet({ name: \"Milo\" }), but not petName({ name: \"Milo\" }).",
+          "Both, because exporting a type creates a function."
+        ],
+        "answer": 0,
+        "explanation": "petName is a runtime function. Pet is only a compile-time shape; type-only imports do not create JavaScript functions."
+      },
+      "after": {
+        "question": "A file imports the Pet type and the petName function. Which call can run?",
+        "choices": [
+          "petName({ name: \"Milo\" }), but not Pet({ name: \"Milo\" })",
+          "Pet({ name: \"Milo\" }), but not petName({ name: \"Milo\" })",
+          "Both, because exporting a type creates a function"
+        ],
+        "answer": 0,
+        "explanation": "Pet is only a type description. PetName is a function that runs."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Concept mode approved: no fake code check. Optional two-file companion independently compiled and run in staging. The local command assumes installed Node.js and TypeScript and CommonJS output, not the in-app single-file runner.",
+      "after": "The two-file example is a local companion. This lesson has no in-app module runner or code check."
+    }
+  ],
+  "headings": [
+    "A module keeps its own names",
+    "Choose what to share",
+    "Export a type and a function",
+    "Import what the next file needs",
+    "A type is not a function",
+    "Read the result",
+    "Know where this example runs",
+    "Try the local files"
+  ],
+  "project": {
+    "title": "Share code without sharing every name",
+    "task": "Trace the shared function and type across the two files.",
+    "done_when": "You can tell which import runs and which is only a type, and complete the question. Running the local files is optional."
+  }
+}

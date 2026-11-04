@@ -1,0 +1,99 @@
+{
+  "lesson": "swift-07",
+  "position": 26,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Use a class so two game inventories each keep their own items and quantities.",
+      "after": "Create separate objects that each remember their own item counts."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A class describes a kind of object with stored information and functions that use it. An instance is one actual object created from that class. If Inventory is the class, Inventory() constructs a new inventory instance. Calling it twice creates two independent objects. A property stores information belonging to an instance, and a method performs a job on that instance. Each inventory should keep its own quantities so adding a potion to one bag does not silently put it in another bag.",
+        "This complete program models two independent stamp albums.\n\n```swift\nfinal class Album {\n    private(set) var quantities: [String: Int] = [:]\n\n    func add(_ stamp: String, amount: Int = 1) {\n        guard amount > 0 else { return }\n        quantities[stamp, default: 0] += amount\n    }\n\n    func quantity(of stamp: String) -> Int {\n        quantities[stamp, default: 0]\n    }\n}\nlet blueAlbum = Album()\nlet redAlbum = Album()\nblueAlbum.add(\"bird\", amount: 3)\nredAlbum.add(\"flower\")\nprint(blueAlbum.quantity(of: \"bird\"))\nprint(redAlbum.quantity(of: \"bird\"))\n```\n\nThe output is 3 and 0. final prevents other classes from inheriting this class. Each constructor call gets its own stored dictionary. The functions inside the class are methods.",
+        "A dictionary pairs keys with values. [String: Int] means String keys and Int values. Here a key is an item name, and its value is the quantity. [:] is an empty dictionary; [] would be an empty array. quantities[stamp, default: 0] uses the quantity for that key, or zero if none exists. When used with += amount, it stores the increased quantity back under that key. This prevents a missing item from becoming an unsafe missing-value calculation. Dictionary keys are unique; adding the same name updates its quantity rather than creating a second identical key.",
+        "private(set) lets outside code read quantities but restricts setting it directly to the permitted scope, so the class can control updates through methods. func add has an unlabeled item argument and an amount parameter with default 1. album.add(\"flower\") therefore adds one. guard amount > 0 else { return } exits early when the amount is not positive. guard checks a condition that must be true before the remaining code continues. The plus-equals operator increases a stored value: quantity += amount has the same numeric effect as assigning quantity + amount back.",
+        "This second complete program shows how a reference differs from a newly created instance.\n\n```swift\nfinal class Counter {\n    var total = 0\n    func increase() {\n        total += 1\n    }\n}\nlet original = Counter()\nlet sameObject = original\nlet separate = Counter()\nsameObject.increase()\nprint(original.total)\nprint(separate.total)\n```\n\nThe output is 1 and 0. Classes have reference semantics: assigning original to sameObject makes both names refer to the same object. Counter() makes another object. let prevents replacing the reference stored in original, but it does not stop the object's changeable properties from changing through its methods.",
+        "Validation protects quantities from updates you do not allow. In the inventory exercise, positive additions are accepted; zero and negative additions are ignored. Starting at zero and accepting only positive additions keeps quantities nonnegative. It does not impose a maximum automatically. If a different game says quantities must stay from 0 through 5, six is invalid because it is above five; you would need an additional check for that game's limit. Test the boundary and the values just outside it. A stated range and the implemented guard must agree.",
+        "For this project, define Inventory with its private-set dictionary, add method, and quantity(of:) method. Construct first and second independently with Inventory(). Add two potions to first and one key to second; second should report zero potions. Ignore amounts zero and below. Checks call the methods and also try nonpositive additions. Explain why second = first would share an object, while second = Inventory() would create another. Keep the method labels and defaults so both add(\"key\") and add(\"potion\", amount: 2) work as intended."
+      ],
+      "after": [
+        "A class describes a kind of object. An instance is one object created from that class. Stored properties hold its information, and methods are functions that work with it. Calling `Inventory()` creates a new inventory object.",
+        "```swift\nfinal class Album {\n    private(set) var quantities: [String: Int] = [:]\n\n    func add(_ stamp: String, amount: Int = 1) {\n        guard amount > 0 else { return }\n        quantities[stamp, default: 0] += amount\n    }\n\n    func quantity(of stamp: String) -> Int {\n        quantities[stamp, default: 0]\n    }\n}\nlet blueAlbum = Album()\nlet redAlbum = Album()\nblueAlbum.add(\"bird\", amount: 3)\nredAlbum.add(\"flower\")\nprint(blueAlbum.quantity(of: \"bird\"))\nprint(redAlbum.quantity(of: \"bird\"))\n```\nThe output is 3 and 0. The blue album has three bird stamps. The red album is a separate object, so it has none. `final` means another class cannot inherit from Album.",
+        "The dictionary stores one quantity for each item name. `[:]` starts it empty. In `quantities[stamp, default: 0]`, a missing item starts from zero. Adding an amount writes the increased quantity back under that name.",
+        "`private(set)` lets outside code read the property while keeping direct changes inside the class's allowed scope. The add method controls updates. Its `amount: Int = 1` supplies 1 when the caller leaves the amount out.",
+        "Assigning an existing class object to another name shares that object. Calling its constructor again creates a separate one. A `let` name cannot be reassigned, but the object it refers to can still have changeable properties.",
+        "`guard amount > 0 else { return }` ignores zero and negative additions. Accepted amounts increase the stored count. The exercise's numbers are small; this rule does not set a maximum quantity.",
+        "Define `Inventory` with `quantities`, `add`, and `quantity(of:)`. Create `first` and `second` with two constructor calls. Add two potions to first and one key to second. Second must still report zero potions."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Create an Inventory class with an item-count dictionary named quantities. Use private(set) so code outside the class can read it but cannot change it directly.",
+        "Add a method that increases one item quantity.",
+        "Create two separate Inventory objects named first and second.",
+        "Add 2 potions to first and 1 key to second.",
+        "Check that second still has 0 potions."
+      ],
+      "after": [
+        "Create Inventory with a private-set item-count dictionary.",
+        "Add the positive-only add method and the quantity lookup.",
+        "Create two separate instances and add the supplied items.",
+        "Run the checks for separate counts and rejected additions."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Store counts in a dictionary keyed by item name.",
+        "Use dictionary defaulting so a new item starts at zero.",
+        "Only change `self`’s quantities in `add`, then compare the two objects."
+      ],
+      "after": [
+        "Use the dictionary's `default: 0` for missing items.",
+        "Give amount a default of 1.",
+        "Create second with `Inventory()`, not by assigning first."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "first is an Inventory object. You write let second = first, then add three keys through second. How many keys does first report if it started with none?",
+        "choices": [
+          "0",
+          "6",
+          "3"
+        ],
+        "answer": 2,
+        "explanation": "Assigning a class instance to another name shares the same object. Both names refer to the inventory updated by second. A separate Inventory() call would create an independent object."
+      },
+      "after": {
+        "question": "You set second = first, then add three keys through second. First had none. How many does first report?",
+        "choices": [
+          "0",
+          "6",
+          "3"
+        ],
+        "answer": 2,
+        "explanation": "Both names refer to the same inventory object, so both see its three keys."
+      }
+    }
+  ],
+  "headings": [
+    "Create an object from a class",
+    "One example",
+    "Store counts by name",
+    "Control how counts change",
+    "A second name can share an object",
+    "Accept only positive additions",
+    "Build two inventories"
+  ],
+  "project": {
+    "title": "A game inventory model",
+    "task": "Build Inventory with the supplied property and methods. Create separate objects named first and second. Add two potions to first and one key to second. Ignore nonpositive additions.",
+    "done_when": "The checks pass, and second keeps zero potions while first keeps two."
+  }
+}

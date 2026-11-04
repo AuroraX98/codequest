@@ -1,0 +1,91 @@
+{
+  "lesson": "go-31",
+  "position": 31,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "If show receives c instead of &c, what happens?",
+      "after": "Use an interface to require a particular method."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "An interface names required methods. A type implements it by having the necessary method set; there is no implements declaration. Interfaces describe behavior, not a requirement to share a base struct.",
+        "For a defined type Counter, methods with value receivers belong to both Counter and *Counter. A method declared on *Counter is not in Counter’s method set. The shorthand call on an addressable value does not change interface satisfaction.",
+        "Complete local Go example; the app itself does not execute it:\n```go\npackage main\nimport (\"fmt\")\ntype Reader interface { Read() int }\ntype Counter struct { N int }\nfunc (c *Counter) Read() int { return c.N }\nfunc show(r Reader) { fmt.Println(r.Read()) }\nfunc main() {\n c := Counter{N: 7}\n show(&c)\n}\n```",
+        "Expected output or behavior: 7. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Explain why c.Read() may work while assigning c to Reader does not. You may trace it without a Go compiler; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "An interface describes the methods a value must provide. Reader requires `Read() int`. A type with the required methods fits automatically; it does not need to say it implements Reader.",
+        "A type's method set is the list of methods it provides. A value-receiver method belongs to both Counter and *Counter. A pointer-receiver method like this Read belongs to *Counter, not Counter.",
+        "Follow the pointer passed to show.\n```go\npackage main\nimport (\"fmt\")\ntype Reader interface { Read() int }\ntype Counter struct { N int }\nfunc (c *Counter) Read() int { return c.N }\nfunc show(r Reader) { fmt.Println(r.Read()) }\nfunc main() {\n c := Counter{N: 7}\n show(&c)\n}\n```",
+        "The screen shows `7`. show receives a *Counter that fits Reader, then calls its Read method.",
+        "Go can shorten a direct call on an addressable variable, such as `c.Read()`. Passing c into an interface does not automatically turn it into a pointer. Pass `&c` when the pointer is the type that fits."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Compare the type of c with the type of &c."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If show receives c instead of &c, what happens?",
+        "choices": [
+          "It returns the zero value.",
+          "It prints 7 through automatic interface address-taking.",
+          "Compilation rejects Counter because Read has a pointer receiver."
+        ],
+        "answer": 2,
+        "explanation": "Automatic shorthand for a direct method call does not add pointer-receiver methods to Counter’s interface method set."
+      },
+      "after": {
+        "question": "Pass c to show instead of &c. What happens?",
+        "choices": [
+          "Read returns zero.",
+          "Go automatically takes c's address and shows 7.",
+          "Go rejects Counter because Read requires a pointer receiver."
+        ],
+        "answer": 2,
+        "explanation": "Counter lacks the required Read method in its method set. *Counter has it."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Go Core v1 uses the verified Go1.27.3 toolchain and standard library. The app supplies concept reading and an understanding check, not a Go browser runner. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "The browser shows Go code and checks your understanding; it does not run Go. Optional local examples use Go 1.27."
+    }
+  ],
+  "headings": [
+    "Describe an action with an interface",
+    "Check which type has the method",
+    "One example",
+    "Read through the interface",
+    "Separate direct calls from interface use"
+  ],
+  "project": {
+    "title": "Implicit interface satisfaction",
+    "task": "Explain why the interface accepts the pointer but not the value.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local Go example is optional."
+  }
+}

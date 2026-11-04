@@ -1,0 +1,92 @@
+{
+  "lesson": "c-61",
+  "position": 61,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "In this single-threaded example, what changes if volatile is removed?",
+      "after": "volatile does not make shared updates safe between threads. Use a mutex or suitable atomic operations for that."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "volatile affects how accesses to a qualified object are treated by the implementation. It does not make count++ atomic, establish inter-thread happens-before, or replace a mutex. Unsynchronized conflicting accesses by threads can cause undefined behavior even when the object is volatile.",
+        "This example is deliberately single-threaded. Replacing volatile int by int keeps its observable printed value here. It is not a demonstration that volatile and ordinary objects are identical for device or signal use; those domains need their own platform and language rules. No racy multithreaded variant is run.",
+        "Complete local C example; the app itself does not execute it:\n```c\n#include <stdio.h>\n\nint main(void) {\n    volatile int count = 0;\n    count++;\n    count++;\n    printf(\"%d\\n\", count);\n    return 0;\n}\n```",
+        "Expected output or behavior: 2. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Explain a mutex or atomic replacement in prose; do not run a deliberately racy volatile counter. You may trace it without a C compiler; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "volatile tells the compiler that accesses to an object matter under the implementation's rules, including changes outside ordinary code. It does not turn `count++` into one atomic step or coordinate threads. Conflicting unprotected thread accesses can still have undefined behavior.",
+        "This example has only one thread. It needs no coordination between threads. Device and signal uses of volatile have their own rules and are outside this example.",
+        "Follow the example one line at a time.\n```c\n#include <stdio.h>\n\nint main(void) {\n    volatile int count = 0;\n    count++;\n    count++;\n    printf(\"%d\\n\", count);\n    return 0;\n}\n```",
+        "count starts at 0 and is increased twice in order. The print displays 2. There are no competing updates.",
+        "Remove volatile and the result here is still 2. That does not make an ordinary int safe for competing updates. For a shared counter, use the mutex or atomic approach from the previous lessons."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "This example has one thread; volatile does not add a lock."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "In this single-threaded example, what changes if volatile is removed?",
+        "choices": [
+          "The output becomes unpredictable even with only one thread.",
+          "Ordinary int becomes an atomic type automatically.",
+          "The output remains 2; neither declaration alone would protect a shared concurrent increment."
+        ],
+        "answer": 2,
+        "explanation": "The simple sequential computation does not need synchronization; volatile would not supply it for competing threads."
+      },
+      "after": {
+        "question": "What changes if volatile is removed from this single-threaded example?",
+        "choices": [
+          "The output becomes unpredictable.",
+          "The ordinary int automatically becomes atomic.",
+          "The output stays 2; neither declaration protects competing updates by itself."
+        ],
+        "answer": 2,
+        "explanation": "The two updates still happen in order in one thread. volatile is not the protection a shared counter would need."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "C Core v1 uses a portable C17 baseline supported by the verified compiler. C23 exists but is not claimed fully supported here. The app supplies concept reading and an understanding check, not a C browser runner. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "The browser shows C code and checks your understanding; it does not run C. Optional local examples use C17."
+    }
+  ],
+  "headings": [
+    "Volatile is not a thread lock",
+    "Keep this example to one thread",
+    "One example",
+    "Follow the two updates",
+    "Remove volatile without changing this result"
+  ],
+  "project": {
+    "title": "Volatile is not synchronization",
+    "task": "Explain why adding volatile would not fix a counter updated by two unprotected threads.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local C example is optional."
+  },
+  "navigationCorrection": "Added a short example introduction so its reviewed heading remains an explicit contents target."
+}

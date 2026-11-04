@@ -1,0 +1,49 @@
+{
+  "lesson": "python-21",
+  "sourceHash": "1a9f7496ac2e47bbae67b079e72b5f57c833d261af7469337db06461f7656005",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Use server-managed practice credentials to access a protected API.",
+      "after": "Choose clear status messages while keeping a service's private key on the server."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A private API requires proof that a caller is allowed to use protected data or actions. A credential is information used for that proof, such as a private key or access token. Authentication establishes who a caller is; authorization decides what the caller may access. Keep private credentials in a server-managed secret store and let the server perform the protected request.",
+        "Browser-delivered code can be inspected and copied by users. This applies to JavaScript, Python run in a browser, and files downloaded with the page. Hiding a credential in a variable, a comment, or a bundled file does not keep it private. A secret store is controlled server storage designed for sensitive configuration. Safe user-facing responses should not include keys, tokens, or raw service replies that may expose sensitive details.",
+        "The fixture needs only a status-to-message function.\n```python\ndef safe_status(status):\n    if status == 200:\n        return \"Data loaded\"\n    if status == 401:\n        return \"Please sign in again\"\n    return \"Service could not complete request\"\n\nprint(safe_status(200))\nprint(safe_status(401))\nprint(safe_status(404))\n```\nIt prints Data loaded, Please sign in again, and Service could not complete request. Each return exits the function, so a matched status does not continue to the fallback. The final return covers statuses that matched neither earlier comparison.",
+        "In this contract, 200 reports ordinary success and 401 means credentials are missing, invalid, or expired, so the caller needs to sign in again. A real API may use 403 for a caller who is known but lacks permission. The supplied function uses its general failure message for that and other unmatched statuses. Follow the documented service contract rather than assuming every authorization problem has the same code or that every 200 reply contains usable data.",
+        "This second complete example exercises several replies without holding any credential.\n```python\ndef safe_status(status):\n    if status == 200:\n        return \"Data loaded\"\n    if status == 401:\n        return \"Please sign in again\"\n    return \"Service could not complete request\"\n\nstatuses = [503, 200, 401]\nfor status in statuses:\n    message = safe_status(status)\n    print(f\"Status {status}: {message}\")\n```\nIt displays a general service message for 503, a loaded message for 200, and a sign-in message for 401. The loop visits each supplied code. The f-string inserts the number and returned message into readable text; it is a text-building expression, not a function.",
+        "For a real private client, the browser sends its ordinary user request to the application's approved server integration. The server retrieves its private credential securely, performs the protected operation, validates the reply, and returns only appropriate data or a safe status. Keep secrets out of source files, browser payloads, and logs. Logging a useful status code does not require logging the credential or the entire raw response.",
+        "Your project checks messages for 200, 401, and 503. It contains no private credential and makes no private network request; status values are local practice inputs. Private keys stay on the server because browser code is visible to users. These checks confirm safe message selection, while real missing/expired credentials and server secret storage need the separate approved service integration. Do not describe a passing fixture as proof that protected access has been configured."
+      ],
+      "after": [
+        "An API lets one program ask another for data or an action. A private API checks permission before allowing protected access.\n\nA credential, such as an access token, is proof used for that check. Authentication checks identity. Authorization checks what that identity may do.",
+        "Code sent to a browser can be inspected and copied. Hiding a private service key in a variable or downloaded file does not keep it secret.\n\nKeep that key in the server's secret store: protected storage for sensitive settings. Return useful data or messages without exposing the key or private service details.",
+        "This practice function chooses a message from a status code:\n```python\ndef safe_status(status):\n    if status == 200:\n        return \"Data loaded\"\n    if status == 401:\n        return \"Please sign in again\"\n    return \"Service could not complete request\"\n\nprint(safe_status(200))\nprint(safe_status(401))\nprint(safe_status(404))\n```\nOutput:\n```text\nData loaded\nPlease sign in again\nService could not complete request\n```\nEach `return` ends the call. The last one covers every status that did not match.",
+        "In this exercise, 200 means success. 401 means the sign-in proof is missing, invalid, or expired.\n\nA real service may use 403 when the user is known but lacks permission. Our function gives that code the general failure message. For a real API, follow its documented rules and check the returned data too.",
+        "Try several supplied statuses:\n```python\ndef safe_status(status):\n    if status == 200:\n        return \"Data loaded\"\n    if status == 401:\n        return \"Please sign in again\"\n    return \"Service could not complete request\"\n\nstatuses = [503, 200, 401]\nfor status in statuses:\n    message = safe_status(status)\n    print(f\"Status {status}: {message}\")\n```\nOutput:\n```text\nStatus 503: Service could not complete request\nStatus 200: Data loaded\nStatus 401: Please sign in again\n```\nThe loop checks each status. The f-string inserts its number and message into the displayed text.",
+        "For a real private service request, the browser asks your app's server. The server reads its private key, sends the protected request, checks the reply, and returns only appropriate data.\n\nKeep the key out of browser files and logs. You can record a useful status without recording the secret or the full reply.",
+        "This exercise uses local status numbers. It has no private key and makes no private API request.\n\nThe checks show that your messages are chosen correctly. Connecting a real protected service needs separate server setup and testing."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Choose a message for each status code.",
+        "For 401, show the message for a request that is not authorized.",
+        "For other statuses, show a safe general message."
+      ],
+      "after": [
+        "Return `\"Data loaded\"` for 200.",
+        "Return `\"Please sign in again\"` for 401.",
+        "Return `\"Service could not complete request\"` for every other status.",
+        "Check 200, 401, and 503."
+      ]
+    }
+  ],
+  "reviewNotes": [
+    "Reviewed directly by the host, one lesson at a time. Plain wording, specific guidance, preserved exercise behavior."
+  ]
+}

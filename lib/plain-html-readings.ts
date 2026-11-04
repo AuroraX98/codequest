@@ -1,5 +1,5 @@
 // Reviewed HTML sentence counterparts.
-export default [
+const readings = [
   {
     "source": "A web page starts with content: words, pictures, and actions.",
     "simple": "A web page contains things to read, see, and use.",
@@ -2095,3 +2095,5 @@ export default [
     "lesson": "html-08"
   }
 ];
+
+export default readings;

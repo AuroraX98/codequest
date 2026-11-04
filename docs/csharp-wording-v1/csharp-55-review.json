@@ -1,0 +1,97 @@
+{
+  "lesson": "csharp-55",
+  "position": 55,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Move object gate = new() inside each worker. Which guarantee is lost?",
+      "after": "Let workers take turns changing one shared count."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "count++ reads, adds, and writes; two workers can read the same old value and lose one increment. A thread-safe task scheduler does not make every shared variable safe.",
+        "Enumerable.Range(0, 4) produces four integers. Select calls Task.Run once per integer; Task.Run queues the lambda on the thread pool. The unused lambda parameter is named _. ToArray enumerates the query now, so all four task objects are created before WhenAll.",
+        "lock(gate) allows one worker at a time into the protected block for that same gate. Every access that needs this protection must use the same gate.",
+        "The example creates one local gate object before starting workers. Creating a different gate inside each worker would provide no mutual exclusion between them. Do not await inside a lock body.",
+        "Complete local C# example; the app does not execute it:\n```csharp\nusing System;\nusing System.Linq;\nusing System.Threading.Tasks;\nobject gate = new object();\nint count = 0;\nTask[] workers = Enumerable.Range(0, 4).Select(_ => Task.Run(() =>\n{\n    for (int i = 0; i < 1000; i++)\n        lock (gate) { count++; }\n})).ToArray();\nawait Task.WhenAll(workers);\nConsole.WriteLine(count);\n```",
+        "Expected behavior from this example: 4000 after all workers finish. This expected result is a reasoned prediction until a compiler test is recorded.",
+        "Optional local transfer: Replace the lock-protected increment with Interlocked.Increment after consulting its documentation. Explain why observed success without a lock would not prove safety. This is a separate local practice task, not a requirement to mark the reading complete."
+      ],
+      "after": [
+        "count++ reads the old value, adds one, then writes it back. If workers overlap those steps, they can both read the same old value and lose an update.",
+        "Range supplies four values. For each one, Task.Run queues work on the thread pool, a set of threads that run queued jobs. ToArray reads the query now, creating all four tasks. The _ parameter is unused here.",
+        "lock(gate) lets only one worker at a time enter code protected by that same gate object. This keeps each read-add-write update together.",
+        "WhenAll waits for the workers before the final print. Each worker adds one a thousand times. The shared gate was created before any workers started.",
+        "Follow the single gate used around every increment.\n\n```csharp\nusing System;\nusing System.Linq;\nusing System.Threading.Tasks;\nobject gate = new object();\nint count = 0;\nTask[] workers = Enumerable.Range(0, 4).Select(_ => Task.Run(() =>\n{\n    for (int i = 0; i < 1000; i++)\n        lock (gate) { count++; }\n})).ToArray();\nawait Task.WhenAll(workers);\nConsole.WriteLine(count);\n```",
+        "The program prints 4000 after the four workers finish. The shared lock protects all four thousand updates.",
+        "A different gate in every worker would not make them take turns with each other. Updates could be lost even if some runs look correct. Keep the protected block short; C# does not allow await inside a lock block."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Trace the changed case before choosing an answer.",
+        "Explain the consequence, then optionally try the local transfer task."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Trace the inputs through the visible rule, then compare the changed case."
+      ],
+      "after": [
+        "A lock coordinates code only when that code uses the same gate."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Move object gate = new() inside each worker. Which guarantee is lost?",
+        "choices": [
+          "That all increments share one mutual-exclusion lock",
+          "That tasks can finish",
+          "That integers can hold 4000"
+        ],
+        "answer": 0,
+        "explanation": "Each worker would lock a different object. Its lock would no longer exclude the other workers, so lost updates become possible, not inevitable in every run."
+      },
+      "after": {
+        "question": "Create a separate gate inside each worker. What protection is lost?",
+        "choices": [
+          "All workers taking turns through the same lock",
+          "The ability for tasks to finish",
+          "The ability for an int to hold 4000"
+        ],
+        "answer": 0,
+        "explanation": "Different gate objects do not exclude the other workers. Their updates could overlap."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "C#14/.NET10 core syllabus. Concept-mode reading and understanding check; no in-app C# execution and no claim of mastery. Full example and optional local transfer task are supplied. Actual compiler validation, if available, is reported separately.",
+      "after": "The browser shows C# code and checks your understanding; it does not run C#. Optional local examples use a .NET 10 console project with C# 14."
+    }
+  ],
+  "headings": [
+    "A shared update has several steps",
+    "Start four workers",
+    "Use one shared lock",
+    "Wait for all the work",
+    "One example",
+    "What appears",
+    "Different locks do not protect the same update"
+  ],
+  "project": {
+    "title": "Protect shared mutable state",
+    "task": "Follow how one shared lock protects the count until all workers finish.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local C# example is optional."
+  }
+}

@@ -1,0 +1,94 @@
+{
+  "lesson": "javascript-52",
+  "position": 54,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Complete transformed: return a chain that doubles value, recovers any thrown error here to -1, and appends cleanup exactly once in finally. Inputs are a number, Boolean fail flag and mutable events array.",
+      "after": "Pass a result through Promise steps and handle a failure."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "then(onFulfilled) returns a new Promise. A returned value fulfills that next promise; a thrown error rejects it. Returning another promise makes the chain wait for that promise. Promise.resolve(value) supplies the initial fulfilled promise here. Callbacks run after the current synchronous work, not inside the call to then.",
+        "catch(onRejected) handles rejection and returns a new promise. Returning -1 recovers with that value; throwing would continue rejection. finally(onFinally) runs on either outcome without receiving the value/error. A normal return from finally does not replace the prior outcome, but throwing or returning a rejected promise from it can replace it.",
+        "transformed(value, fail, events) doubles a number or recovers to -1, then appends cleanup to the supplied list. The Error constructor takes a message; throw rejects the chain. join(\",\") returns a display String from the recorded entries. Await the returned promise so cleanup finishes before inspecting events.\n```javascript\nfunction transformed(value, fail, events) {\n  return Promise.resolve(value)\n    .then(number => {\n      if (fail) throw new Error(\"invalid\");\n      return number * 2;\n    })\n    .catch(error => -1)\n    .finally(() => { events.push(\"cleanup\"); });\n}\nconst events = [];\nconsole.log(await transformed(4, false, events));\nconsole.log(events.join(\",\"));\n```\nOutput: 8 then cleanup.",
+        "Omitting return from a then callback fulfills the next promise with undefined, not the value you computed and discarded. Optional practice: make the recovery callback return a different sentinel and trace the chain. This known synthetic failure policy is not a recommendation to turn every real failure into success.\nThe separate failure path below actually constructs and throws the diagnostic Error, then recovers and cleans up.\n```javascript\nfunction transformed(value, fail, events) {\n  return Promise.resolve(value)\n    .then(number => {\n      if (fail) throw new Error(\"invalid\");\n      return number * 2;\n    })\n    .catch(error => -1)\n    .finally(() => { events.push(\"cleanup\"); });\n}\nconst events = [];\nconsole.log(await transformed(4, true, events));\nconsole.log(events.join(\",\"));\n```\nOutput: -1 then cleanup."
+      ],
+      "after": [
+        "`then` returns a new Promise. If its callback returns a value, that becomes the next result. If it throws an error, the next Promise fails.\n\nReturning another Promise makes the chain wait for it. Remember to return the value you calculate; otherwise the callback's result is `undefined`.",
+        "`catch` handles a failed Promise. Returning a value from it makes the chain succeed with that value. Throwing keeps the failure going.\n\n`finally` runs after either outcome. It does not receive the result. A normal return from it keeps the earlier outcome, but throwing a new error can replace that outcome.",
+        "This example doubles a number and then records cleanup.\n```javascript\nfunction transformed(value, fail, events) {\n  return Promise.resolve(value)\n    .then(number => {\n      if (fail) throw new Error(\"invalid\");\n      return number * 2;\n    })\n    .catch(error => -1)\n    .finally(() => { events.push(\"cleanup\"); });\n}\nconst events = [];\nconsole.log(await transformed(4, false, events));\nconsole.log(events.join(\",\"));\n```\nOutput:\n```text\n8\ncleanup\n```\n`await` waits for the whole chain, including cleanup. The app's example runner allows this outer `await`.",
+        "This call asks the doubling step to fail.\n```javascript\nfunction transformed(value, fail, events) {\n  return Promise.resolve(value)\n    .then(number => {\n      if (fail) throw new Error(\"invalid\");\n      return number * 2;\n    })\n    .catch(error => -1)\n    .finally(() => { events.push(\"cleanup\"); });\n}\nconst events = [];\nconsole.log(await transformed(4, true, events));\nconsole.log(events.join(\",\"));\n```\nOutput:\n```text\n-1\ncleanup\n```\n`catch` supplies −1 as this exercise's fallback answer. `finally` still records cleanup once.\n\nComplete the starter's catch callback so it returns −1. In a real app, choose how to handle each error instead of hiding every failure."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the requirement.",
+        "Make one change to the starter.",
+        "Run the checks.",
+        "Explain why a changed input produces its result."
+      ],
+      "after": [
+        "Keep the doubling step and its optional error.",
+        "Change catch to return -1 for this exercise's failure.",
+        "Keep the finally step that records cleanup.",
+        "Wait for the returned Promise before checking the result and events."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If finally returns 99 normally after the chain fulfills with 8, what does the returned promise fulfill with?",
+        "choices": [
+          "undefined, because finally deletes every result.",
+          "8; a normal finally return does not replace the earlier fulfilled value.",
+          "99, because finally always transforms the value."
+        ],
+        "answer": 1,
+        "explanation": "finally observes completion for cleanup; unlike then, its ordinary return value is not used as the new fulfilled value. Throwing would be a different outcome."
+      },
+      "after": {
+        "question": "If finally returns 99 normally after the chain fulfills with 8, what does the returned promise fulfill with?",
+        "choices": [
+          "undefined, because finally deletes every result.",
+          "8; a normal finally return does not replace the earlier fulfilled value.",
+          "99, because finally always transforms the value."
+        ],
+        "answer": 1,
+        "explanation": "A normal return from finally keeps the earlier result, so it stays 8. Throwing from finally would change the outcome."
+      }
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Trace the visible worked calls before changing the starter."
+      ],
+      "after": [
+        "Return -1 from catch instead of throwing the same error.",
+        "Keep the outer return so callers can await the chain."
+      ]
+    },
+    {
+      "field": "externalNotes",
+      "before": "ECMAScript 2026 core; native Node24 and current app worker/DOM harness evidence are recorded separately. No external service or real-browser claim follows from a local fixture.",
+      "after": ""
+    }
+  ],
+  "headings": [
+    "Pass a result to the next step",
+    "Recover and clean up",
+    "Follow the success path",
+    "Follow the failure path"
+  ],
+  "project": {
+    "title": "Promise chains and error propagation",
+    "task": "Complete transformed(value, fail, events). Double the number, recover the supplied failure with -1, and record cleanup exactly once in finally.",
+    "done_when": "Successful calls return the doubled number, failed calls recover to -1, and both paths record cleanup once before completion."
+  },
+  "notes": [
+    "Removed an unrelated local-project completion requirement; its useful teaching is in the lesson and technical evidence stays in review documents."
+  ]
+}

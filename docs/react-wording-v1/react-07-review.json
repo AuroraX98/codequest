@@ -1,0 +1,104 @@
+{
+  "lesson": "react-07",
+  "position": 21,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Use actions to add and toggle tasks without changing the previous state.",
+      "after": "Use a reducer to keep state-update rules together."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A reducer is a function that receives current state and an action, then returns the next state. An action describes what happened.",
+        "```javascript\nfunction lampReducer(isOn, action) {\n  if (action.type === \"toggle\") return !isOn;\n  return isOn;\n}\nconsole.log(lampReducer(false, {type: \"toggle\"}));\n```\nThe result is true. An unrecognized action keeps the existing value.",
+        "Call React.useReducer with the reducer and initial state. It returns the current state and a dispatch function.",
+        "```react\nfunction lampReducer(isOn, action) {\n  return action.type === \"toggle\" ? !isOn : isOn;\n}\nfunction App() {\n  const [isOn, dispatch] = React.useReducer(lampReducer, false);\n  return <button onClick={() => dispatch({type: \"toggle\"})}>\n    {isOn ? \"Turn off\" : \"Turn on\"}\n  </button>;\n}\n```\nClicking dispatches an action. React uses the reducer result for the next render.",
+        "A reducer must not change its input array or objects. Return new values for the parts that change.",
+        "```javascript\nconst before = [{id: \"lamp\", on: false}];\nconst after = before.map(item => item.id === \"lamp\"\n  ? {...item, on: !item.on} : item);\nconsole.log(before[0].on, after[0].on);\n```\nThis prints false then true. The spread copies the changed object instead of editing the previous one.",
+        "The exercise has add and toggle actions. Add creates an unfinished task unless its ID already exists. Toggle changes only the matching task. An unknown action keeps the current state.\n\nsome checks whether any array entry passes a condition: tasks.some(task => task.id === wantedId) answers whether that ID is already present. To append without editing the old array, [...tasks, newTask] creates a new array containing its old entries followed by the new task.\n\n```javascript\nconst tasks = [{id:\"read\"}, {id:\"draw\"}];\nconsole.log(tasks.some(task => task.id === \"read\"));\nconsole.log(tasks.some(task => task.id === \"walk\"));\n```\nThis prints true, then false. some receives a predicate and returns true once an entry passes; it returns false if none pass, including an empty array. It does not change tasks.",
+        "The starter provides the buttons and list. Complete taskReducer, then add a task and toggle it twice. Adding the same ID again must not create a duplicate."
+      ],
+      "after": [
+        "An action is an object that describes what happened. A reducer is a function that receives the current state and an action, then returns the next state.",
+        "For a lamp, a toggle action means change on to off or off to on. An unknown action can return the current state unchanged.",
+        "`useReducer` connects those rules to React. It gives you the current state and `dispatch`, a function that sends an action to the reducer.",
+        "```react\nfunction lampReducer(isOn, action) {\n  return action.type === \"toggle\" ? !isOn : isOn;\n}\nfunction App() {\n  const [isOn, dispatch] = React.useReducer(lampReducer, false);\n  return (\n    <button onClick={() => dispatch({ type: \"toggle\" })}>\n      {isOn ? \"Turn off\" : \"Turn on\"}\n    </button>\n  );\n}\n```\nThe lamp starts off. A click sends the toggle action, so the next screen offers `Turn off`.",
+        "A reducer must leave its input state unchanged. If state contains an array or objects, make replacements for the parts that change.",
+        "To toggle one task, use `map` to make a new array. Return a copied object for the matching task, with the opposite done value. Keep the other task objects.",
+        "Your task reducer handles add and toggle. Add a new unfinished task only if its ID is not already present. `some` checks whether any task has that ID. An unknown action keeps the current state.",
+        "Complete `taskReducer` using the supplied buttons and list. Add a task, toggle it twice, and try adding the same ID again. It should appear only once."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Handle add without duplicate IDs.",
+        "Handle toggle by copying the changed task.",
+        "Keep existing state for an unknown action.",
+        "Use the supplied buttons to check the result."
+      ],
+      "after": [
+        "Handle add without duplicate IDs.",
+        "Copy the matching task when handling toggle.",
+        "Keep the current state for an unknown action.",
+        "Run the checks and use the supplied buttons."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "some can check whether an ID already exists.",
+        "map plus object spread can update one task without mutating old state."
+      ],
+      "after": [
+        "Use some to check whether an ID is already present.",
+        "Use map and object spread to replace only the changed task."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "A reducer sets tasks[0].done = true, then returns tasks. Why is that a problem even if the checkbox appears checked?",
+        "choices": [
+          "It changes the old state too, so previous snapshots no longer describe what they originally held",
+          "Reducers may never receive arrays",
+          "Dispatch always ignores actions that contain text"
+        ],
+        "answer": 0,
+        "explanation": "The task object belongs to the previous state. Mutating it changes that snapshot; returning copied changed data keeps earlier state intact."
+      },
+      "after": {
+        "question": "Why is setting `tasks[0].done = true` and returning tasks a problem?",
+        "choices": [
+          "It changes the earlier state object too.",
+          "Reducers cannot receive arrays.",
+          "Dispatch ignores actions containing text."
+        ],
+        "answer": 0,
+        "explanation": "The task belongs to the old state. Copying the changed task keeps the earlier state intact."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Prerequisites: react-02, JavaScript objects, arrays, some/map and immutable updates (javascript-22). Reducer handles actions supplied by this UI; this is not validation of arbitrary network data. Requires the React/JSX runner. Pure reducer checks and real DOM click checks are both provided.",
+      "after": "The reducer handles actions from the supplied interface. It does not validate unknown data from the internet."
+    }
+  ],
+  "headings": [
+    "Describe what happened",
+    "Choose the next state",
+    "Connect the reducer to React",
+    "Toggle one lamp",
+    "Keep old state unchanged",
+    "Copy the changed task",
+    "Handle the task actions",
+    "Build your task reducer"
+  ],
+  "project": {
+    "title": "Give task updates one home",
+    "task": "Use add and toggle actions to update tasks without changing earlier state.",
+    "done_when": "New IDs add once, toggle changes only its task, and unknown actions keep the existing state."
+  }
+}

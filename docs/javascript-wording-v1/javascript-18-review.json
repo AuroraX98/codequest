@@ -1,0 +1,75 @@
+{
+  "lesson": "javascript-18",
+  "position": 57,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Increase `latestId` each time a search starts.",
+      "after": "Keep an old search answer from replacing the answer to a newer search."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A search can start before an earlier search finishes. Responses may arrive in the opposite order from their requests. If an old response is displayed just because it arrived last, it can replace the answer the user currently wants. A request id is a number assigned when a request starts; keep the largest, newest id so the program can identify current work.",
+        "Use let for the newest id and the visible text because they change. Start the id at zero, then use `latestId++` to add one for each search. A Set holds canceled ids without duplicates. `.add(id)` records one, and `.has(id)` checks membership. Marking an old id canceled is bookkeeping in this fixture; it does not stop a real network operation.",
+        "This complete example receives a new answer before an old one.\n```javascript\nlet latestId = 0;\nconst cancelledIds = new Set();\nlet visibleResult = \"\";\nfunction beginSearch() {\n  if (latestId > 0) {\n    cancelledIds.add(latestId);\n  }\n  latestId++;\n  return latestId;\n}\nfunction receiveResult(id, text) {\n  if (id === latestId && !cancelledIds.has(id)) {\n    visibleResult = text;\n  }\n}\nconst first = beginSearch();\nconst second = beginSearch();\nreceiveResult(second, \"mountain answer\");\nreceiveResult(first, \"river answer\");\nconsole.log(visibleResult);\n```\nIt prints `mountain answer`. Beginning the second request cancels the first id in the set. Receiving the first response later fails the current-id test.",
+        "The guard contains two questions joined by `&&`, meaning both must be true. The strict equality asks whether the result belongs to the newest id. The exclamation mark `!` means not, so `!cancelledIds.has(id)` asks whether it has not been canceled. The function only assigns visibleResult inside this guard. A stale result leaves the current text alone.",
+        "This second standalone fixture tests an old response arriving first.\n```javascript\nlet latestId = 0;\nlet visibleResult = \"\";\nfunction beginSearch() {\n  latestId++;\n  return latestId;\n}\nfunction receiveResult(id, text) {\n  if (id === latestId) {\n    visibleResult = text;\n  }\n}\nconst first = beginSearch();\nconst second = beginSearch();\nreceiveResult(first, \"outdated\");\nconsole.log(visibleResult === \"\");\nreceiveResult(second, \"current\");\nconsole.log(visibleResult);\n```\nIt displays true, then current. Even before the newer answer arrives, the earlier request is already outdated. The id check alone protects which result may be displayed.",
+        "For real browser fetch work, an AbortController can request cancellation. Create a controller, pass its `.signal` in fetch's options, and call `.abort()` when the work becomes outdated. The request can reject with an abort error. Cancellation may arrive after completion, and stopping the client does not prove the server did no work. Keep the id guard as well. The supplied exercise models cancellation using a set rather than making actual fetch calls.",
+        "In your exercise, oldId must be smaller than newId. Mark oldId canceled when starting the new request, display \"new answer\", and ignore \"old answer\" even when it arrives afterward. Arrival time does not change which request is current. Tests should vary response order and confirm that stale text never overwrites current text. The canceled-id set grows in this small fixture; a long-running application could remove entries once the old work can no longer return."
+      ],
+      "after": [
+        "Search answers can arrive out of order. A slow old search might finish after a newer one.\n\nGive each search an ID when it starts. Keep the newest ID so the page can tell which answer still matters.",
+        "`latestId` starts at zero. Increase it by one for each new search.\n\nA `Set` stores canceled IDs without duplicates. `add(id)` records one, and `has(id)` checks for it. In this exercise, marking an ID canceled does not stop real network work.",
+        "This example receives the newest answer first.\n```javascript\nlet latestId = 0;\nconst cancelledIds = new Set();\nlet visibleResult = \"\";\nfunction beginSearch() {\n  if (latestId > 0) {\n    cancelledIds.add(latestId);\n  }\n  latestId++;\n  return latestId;\n}\nfunction receiveResult(id, text) {\n  if (id === latestId && !cancelledIds.has(id)) {\n    visibleResult = text;\n  }\n}\nconst first = beginSearch();\nconst second = beginSearch();\nreceiveResult(second, \"mountain answer\");\nreceiveResult(first, \"river answer\");\nconsole.log(visibleResult);\n```\nOutput:\n```text\nmountain answer\n```\nStarting the second search marks the first as canceled. When the old answer arrives later, the guard ignores it.",
+        "The guard checks two things: the answer's ID matches `latestId`, and it is not in `cancelledIds`.\n\n`&&` requires both checks to pass. `!` means not. Only then should `receiveResult` change `visibleResult`.",
+        "The old answer must also be ignored if it arrives before the new answer.\n```javascript\nlet latestId = 0;\nlet visibleResult = \"\";\nfunction beginSearch() {\n  latestId++;\n  return latestId;\n}\nfunction receiveResult(id, text) {\n  if (id === latestId) {\n    visibleResult = text;\n  }\n}\nconst first = beginSearch();\nconst second = beginSearch();\nreceiveResult(first, \"outdated\");\nconsole.log(visibleResult === \"\");\nreceiveResult(second, \"current\");\nconsole.log(visibleResult);\n```\nOutput:\n```text\ntrue\ncurrent\n```\nOnce the second search starts, the first is already outdated. This shorter example shows how the ID check protects the result.",
+        "For real requests, `AbortController` can ask unfinished work to stop. Pass its `signal` to `fetch`, then call `abort()` when the request is outdated.\n\nKeep the ID check too. Cancellation might come too late, and stopping a client request does not undo work already done by a server. Our exercise uses fixed answers instead of network requests.",
+        "Add `const cancelledIds = new Set()` to the starter. Complete `beginSearch` so it marks the previous ID canceled, increases `latestId`, and returns the new ID.\n\nComplete `receiveResult` with the two checks. The starter must keep `new answer` visible after `old answer` arrives.\n\nThis small example keeps old IDs in the Set. A long-running app should remove records once they are no longer needed."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Increase `latestId` each time a search starts.",
+        "Mark the previous request id canceled when a newer search begins.",
+        "Apply a response only when its id is current and not canceled.",
+        "Simulate response 1 arriving after response 2 and keep response 2 visible."
+      ],
+      "after": [
+        "Add a cancelledIds Set.",
+        "In beginSearch, mark the previous nonzero ID canceled, increase latestId, and return it.",
+        "In receiveResult, accept only the latest, uncanceled ID.",
+        "Check both possible answer orders."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Each call to `beginSearch` should increment and return the id.",
+        "In `receiveResult`, compare the response id with `latestId`.",
+        "Only assign to `visibleResult` when the ids match."
+      ],
+      "after": [
+        "Declare cancelledIds before the search calls.",
+        "Use id === latestId && !cancelledIds.has(id) before updating visibleResult."
+      ]
+    }
+  ],
+  "headings": [
+    "Know which search is newest",
+    "Track search IDs",
+    "Receive the newest answer first",
+    "Guard the visible result",
+    "Receive the old answer first",
+    "Understand real cancellation",
+    "Build the search guard"
+  ],
+  "project": {
+    "title": "A responsive search tool",
+    "task": "Track search IDs and ignore outdated answers. Add a cancelledIds Set, complete beginSearch, and update visibleResult only for the latest uncanceled ID.",
+    "done_when": "New IDs increase, replaced requests are marked canceled, and old answers never overwrite the current result."
+  },
+  "notes": []
+}

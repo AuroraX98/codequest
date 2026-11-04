@@ -1,0 +1,91 @@
+{
+  "lesson": "ruby-61",
+  "position": 61,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "If each worker performs 3 increments instead of 100, what is the total?",
+      "after": "A mutex is a lock that lets only one worker at a time enter a protected piece of code."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "Mutex#synchronize acquires a lock, runs its block and releases the lock on exit. A shared read-modify-write such as count += 1 belongs entirely inside the protected region; a runtime lock is not a substitute for this application invariant.",
+        "Array.new(2) with a block builds two elements by running the block twice; n.times repeats its block n times. Both workers share the same mutex and count. Each performs a finite number of increments, and the main thread joins every worker before reading. No sleep or assumed interleaving is needed; avoid calling unrelated blocking work while holding a lock.",
+        "Complete local Ruby example; the app itself does not execute it:\n```ruby\ncount = 0\nmutex = Mutex.new\nworkers = Array.new(2) do\n  Thread.new do\n    100.times { mutex.synchronize { count += 1 } }\n  end\nend\nworkers.each { |worker| worker.join }\nputs count\n\n```",
+        "Expected output or behavior: 200. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Explain why locking only the assignment but not the read would fail to protect a read-modify-write. You may trace it without a Ruby interpreter; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "A mutex is a lock that lets only one worker at a time enter a protected piece of code.",
+        "Let one worker read and update the count without another worker changing it in the middle.",
+        "Follow the labeled parts of this example.\n```ruby\ncount = 0\nmutex = Mutex.new\nworkers = Array.new(2) do\n  Thread.new do\n    100.times { mutex.synchronize { count += 1 } }\n  end\nend\nworkers.each { |worker| worker.join }\nputs count\n```",
+        "The output is `200`. Each of the two workers adds one a hundred times. Both finish before the count prints.",
+        "Give each worker only three turns."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read one idea.",
+        "Follow the labeled example.",
+        "Try the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Give each worker only three turns."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If each worker performs 3 increments instead of 100, what is the total?",
+        "choices": [
+          "6",
+          "A timing-dependent value between 3 and 6.",
+          "3"
+        ],
+        "answer": 0,
+        "explanation": "Two joined workers each contribute three increments protected by the same mutex, so all six updates are retained."
+      },
+      "after": {
+        "question": "How many increases do two workers make with three turns each?",
+        "choices": [
+          "6",
+          "3",
+          "9"
+        ],
+        "answer": 0,
+        "explanation": "Each worker adds three, and the program waits for both."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Ruby Core v1 uses Ruby 4.0.9 and explicitly available extensions. The app supplies concept reading and an understanding check, not a Ruby browser runner. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "CodeQuest shows the Ruby example. Running it on your own computer is optional."
+    }
+  ],
+  "headings": [
+    "Protect one counter",
+    "Protect the increase",
+    "Read the example",
+    "What happens",
+    "Try one change"
+  ],
+  "project": {
+    "title": "Mutex protection and shared state",
+    "task": "Give each worker only three turns.",
+    "done_when": "Read each idea and pass the understanding check. Running the example on your computer is optional."
+  }
+}

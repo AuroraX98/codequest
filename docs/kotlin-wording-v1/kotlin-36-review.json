@@ -1,0 +1,91 @@
+{
+  "lesson": "kotlin-36",
+  "position": 36,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "If item is declared Detail instead of Base, what prints?",
+      "after": "Kotlin chooses an extension function from the receiver's known type at compile time."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "fun Base.label() declares an extension with Base as receiver. It does not add an overridable member to Base or gain access to its private members.",
+        "When multiple extensions have the same name, selection uses the receiver’s compile-time type. A derived object held in a Base variable therefore uses the Base extension. Actual overridable members still dispatch dynamically; a matching member also takes priority over an extension.\n\nThe no-argument label call below has two different declared receiver types. The Base receiver returns \"base\" even though it holds a Detail object; the Detail receiver returns \"detail\". Neither extension overrides the other.\n```kotlin\nopen class Base\nclass Detail : Base()\nfun Base.label(): String = \"base\"\nfun Detail.label(): String = \"detail\"\nfun main() {\n    val broad: Base = Detail()\n    val narrow: Detail = Detail()\n    println(broad.label())\n    println(narrow.label())\n}\n```\nExpected output: base; detail.",
+        "Complete local Kotlin/JVM example; the app itself does not execute it:\n```kotlin\nopen class Base\nclass Detail : Base()\nfun Base.label(): String = \"base\"\nfun Detail.label(): String = \"detail\"\nfun main() {\n    val item: Base = Detail()\n    println(item.label())\n}\n```",
+        "Expected output or behavior: base. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Compare this result with the overridden member example from inheritance. You may trace it without a Kotlin compiler; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "An extension function can be called with dot notation without being added inside the class. In `fun Base.label()`, Base is the receiver type. This extension does not gain access to the class's private details.",
+        "Kotlin chooses between these extensions using the type known at the call site when it compiles the code. This is called static resolution. It does not choose by the actual object's child class, as an overridden member function would.",
+        "Follow the example one line at a time.\n```kotlin\nopen class Base\nclass Detail : Base()\nfun Base.label(): String = \"base\"\nfun Detail.label(): String = \"detail\"\nfun main() {\n    val item: Base = Detail()\n    println(item.label())\n}\n```",
+        "The screen shows `base`. The object is a Detail, but item is declared as Base. That declared type selects the Base extension.",
+        "A matching function defined inside the class takes priority over an extension. Two extensions with the same name do not override each other."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Look at the type written after item, not just the constructor call."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If item is declared Detail instead of Base, what prints?",
+        "choices": [
+          "Both extension strings.",
+          "detail",
+          "base"
+        ],
+        "answer": 1,
+        "explanation": "The declared receiver type now matches Detail, so the Detail extension is chosen."
+      },
+      "after": {
+        "question": "Declare item as Detail instead of Base. What appears?",
+        "choices": [
+          "Both extension messages.",
+          "detail",
+          "base"
+        ],
+        "answer": 1,
+        "explanation": "The receiver is now known as Detail at the call site. Kotlin selects the Detail extension."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Kotlin JVM Core v1 uses Kotlin2.4.21 stable syntax and a verified JVM toolchain. The app supplies concept reading and an understanding check, not a Kotlin browser runner. Coroutine libraries are separate dependencies. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "The browser shows Kotlin code and checks your understanding; it does not run Kotlin. Optional local examples use Kotlin/JVM."
+    }
+  ],
+  "headings": [
+    "Add a callable extension",
+    "Choose using the known type",
+    "One example",
+    "Read the selected extension",
+    "Keep extensions separate from overrides"
+  ],
+  "project": {
+    "title": "Extensions use static resolution",
+    "task": "Use the receiver's declared type to choose an extension.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local Kotlin example is optional."
+  }
+}

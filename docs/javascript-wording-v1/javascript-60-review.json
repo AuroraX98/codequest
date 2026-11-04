@@ -1,0 +1,94 @@
+{
+  "lesson": "javascript-60",
+  "position": 58,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Complete waitForAbort(signal): reject with signal.reason immediately if already aborted, otherwise reject on its next abort event with a once listener. Do not resolve on cancellation or start network work.",
+      "after": "Respond to a cancellation signal, including one that already happened."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "new AbortController() creates a controller with a signal. controller.abort(reason) marks that signal aborted, stores its reason and dispatches its abort event. It returns undefined. The signal is one-shot: a later abort does not reset it or replace the first reason. This is a host API, not a forced interruption of arbitrary JavaScript.",
+        "waitForAbort(signal) returns a promise that rejects with the signal’s reason. Check signal.aborted before listening, because an earlier abort will not replay its event for a new listener. Otherwise addEventListener(\"abort\", callback, {once:true}) registers one callback that is removed after its first invocation.",
+        "The Promise executor receives resolve and reject; this function only uses reject(reason). The pending promise has its listener installed before abort is called. No fetch, timer or external service is required.\n```javascript\nfunction waitForAbort(signal) {\n  return new Promise((resolve, reject) => {\n    if (signal.aborted) {\n      reject(signal.reason);\n      return;\n    }\n    signal.addEventListener(\"abort\", () => reject(signal.reason), {once: true});\n  });\n}\nconst controller = new AbortController();\nconst pending = waitForAbort(controller.signal);\ncontroller.abort(\"stop\");\ntry { await pending; }\ncatch (reason) { console.log(reason); }\nconsole.log(controller.signal.aborted);\n```\nOutput: stop then true.",
+        "Calling waitForAbort after abort still rejects immediately through its initial check. Optional practice: abort twice with different reasons and explain why the first remains. A real operation must observe its signal and release its own resources; merely creating an AbortController does not cancel unrelated work."
+      ],
+      "after": [
+        "`AbortController` gives work a signal it can watch for cancellation. Calling `controller.abort(reason)` marks the signal as aborted and sends an abort event.\n\nThe signal also stores the reason. It can be aborted only once. A second call does not replace the first reason.",
+        "Our `waitForAbort(signal)` returns a Promise that fails with the cancellation reason.\n\nFirst check `signal.aborted`. If cancellation already happened, a new listener will not receive that old event.\n\nOtherwise, listen for `abort`. The option `{once: true}` removes the listener after it runs once.",
+        "Here is the complete example.\n```javascript\nfunction waitForAbort(signal) {\n  return new Promise((resolve, reject) => {\n    if (signal.aborted) {\n      reject(signal.reason);\n      return;\n    }\n    signal.addEventListener(\"abort\", () => reject(signal.reason), {once: true});\n  });\n}\nconst controller = new AbortController();\nconst pending = waitForAbort(controller.signal);\ncontroller.abort(\"stop\");\ntry { await pending; }\ncatch (reason) { console.log(reason); }\nconsole.log(controller.signal.aborted);\n```\nOutput:\n```text\nstop\ntrue\n```\nThe Promise's setup installs the listener before `abort` is called. The event makes `reject(signal.reason)` fail the Promise. `catch` receives the reason.",
+        "Fix the already-aborted branch in `waitForAbort`. It must reject with `signal.reason`, just like the event listener does.\n\nThis example watches a signal only. Real work must also watch the signal and stop or clean up when asked. Creating a controller alone does not stop unrelated code."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the requirement.",
+        "Make one change to the starter.",
+        "Run the checks.",
+        "Explain why a changed input produces its result."
+      ],
+      "after": [
+        "Check signal.aborted before adding a listener.",
+        "If true, reject with signal.reason and return.",
+        "Otherwise keep the once-only abort listener.",
+        "Check future cancellation, earlier cancellation, and two abort calls."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If the signal was aborted before waitForAbort was called, why is the initial aborted check required?",
+        "choices": [
+          "The abort event is not replayed for a listener added later; the check observes the existing state.",
+          "An aborted signal resets itself as soon as a new listener is added.",
+          "Adding a listener automatically replays every past event."
+        ],
+        "answer": 0,
+        "explanation": "The signal state persists, but event delivery is not a historical replay. The initial branch prevents waiting forever for a request that already occurred."
+      },
+      "after": {
+        "question": "If the signal was aborted before waitForAbort was called, why is the initial aborted check required?",
+        "choices": [
+          "The abort event is not replayed for a listener added later; the check observes the existing state.",
+          "An aborted signal resets itself as soon as a new listener is added.",
+          "Adding a listener automatically replays every past event."
+        ],
+        "answer": 0,
+        "explanation": "The aborted state remains, but the event is not replayed. Checking the state handles cancellation that already happened."
+      }
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Trace the visible worked calls before changing the starter."
+      ],
+      "after": [
+        "Replace resolve(\"ignored\") with reject(signal.reason).",
+        "The first abort reason remains the signal's reason."
+      ]
+    },
+    {
+      "field": "externalNotes",
+      "before": "ECMAScript 2026 core; native Node24 and current app worker/DOM harness evidence are recorded separately. No external service or real-browser claim follows from a local fixture.",
+      "after": ""
+    }
+  ],
+  "headings": [
+    "Send a cancellation signal",
+    "Check before listening",
+    "Follow one abort",
+    "Handle an earlier abort"
+  ],
+  "project": {
+    "title": "AbortController signal behavior",
+    "task": "Complete waitForAbort(signal). Reject with signal.reason if it is already aborted; otherwise reject on the next abort event using a once-only listener.",
+    "done_when": "Both earlier and later aborts reject with the correct reason. Repeated abort calls keep the first reason."
+  },
+  "notes": [
+    "Removed an unrelated local-project completion requirement; its useful teaching is in the lesson and technical evidence stays in review documents."
+  ]
+}

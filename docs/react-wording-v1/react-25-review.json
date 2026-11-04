@@ -1,0 +1,86 @@
+{
+  "lesson": "react-25",
+  "position": 10,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Keep each editable note attached to its record when reversing the list. Preserve initialCards order.",
+      "after": "Give each list item a stable key so its input stays with the right record."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A key identifies a sibling item across renders. Use a stable ID stored in the data, not the array position or a freshly generated random value. key is React’s identity hint; it is not passed as an ordinary prop, so Card receives the separate card prop.",
+        "cards.map(callback) calls the callback for each record and returns a new array of JSX elements. React renders those elements. Card destructures its card prop and returns one list item. The input deliberately uses defaultValue: it starts from that text, then the browser holds its edits. This makes identity visible when rows move. The defective starter uses cards.indexOf(card): indexOf returns this object’s current zero-based array position, which changes when the order changes. It is shown to explain the bug, not as a key recommendation. [...current] makes a shallow array copy; reverse() reverses that copy in place, leaving the original state array untouched.",
+        "```react\nconst initialCards = [{id: \"map\", title: \"Map\"}, {id: \"lamp\", title: \"Lamp\"}];\nfunction Card({card}) {\n  return <li><label>{card.title} note <input defaultValue={card.title} /></label></li>;\n}\nfunction App() {\n  const [cards, setCards] = React.useState(initialCards);\n  return <main><button onClick={() => setCards(current => [...current].reverse())}>Reverse</button>\n    <ul>{cards.map(card => <Card key={card.id} card={card} />)}</ul>\n  </main>;\n}\n```\nEdit the Map note, then reverse. The same input and its edit travel with the map record.",
+        "```react\nconst initialCards = [{id: \"map\", title: \"Shared\"}, {id: \"lamp\", title: \"Shared\"}];\nfunction Card({card}) {\n  return <li><label>{card.title} note <input defaultValue={card.title} /></label></li>;\n}\nfunction App() {\n  const [cards, setCards] = React.useState(initialCards);\n  return <main><button onClick={() => setCards(current => [...current].reverse())}>Reverse</button>\n    <ul>{cards.map(card => <Card key={card.id} card={card} />)}</ul>\n  </main>;\n}\n```\nThe changed records have equal titles but different IDs. Their independent edits still follow their own records, demonstrating why a display title need not be a suitable key.",
+        "Optional practice: Reverse twice and explain why the edited input returns to its first position. The checks cover these finite behaviors; a matching DOM alone does not prove every implementation choice. The frame supplies React and mounts App. No imports, server, persistence or network are involved."
+      ],
+      "after": [
+        "A key tells React which item is which when a list changes. Use a stable ID from the record. Stable means it stays the same when the item moves. Its position in the list is not a stable ID.",
+        "`map` makes one component for each record. `key={card.id}` tells React the record's identity. The separate `card` prop gives `Card` its data; React does not pass key as an ordinary prop.",
+        "```react\nconst initialCards = [\n  { id: \"map\", title: \"Map\" },\n  { id: \"lamp\", title: \"Lamp\" }\n];\nfunction Card({ card }) {\n  return (\n    <li>\n      <label>{card.title} note <input defaultValue={card.title} /></label>\n    </li>\n  );\n}\nfunction App() {\n  const [cards, setCards] = React.useState(initialCards);\n  return (\n    <main>\n      <button onClick={() => setCards(current => [...current].reverse())}>\n        Reverse\n      </button>\n      <ul>{cards.map(card => <Card key={card.id} card={card} />)}</ul>\n    </main>\n  );\n}\n```\nEdit the Map note, then click Reverse. The edited input moves with Map. `defaultValue` sets its starting text; the browser then keeps the typed edits.",
+        "Two records can share a title and still need different keys. Their IDs keep them separate. `[...current]` copies the array before `reverse()` changes its order, so the original array stays unchanged.",
+        "Fix the key on each `Card`. The starter uses the item's current position, which changes after reversing. Use its record ID instead. Keep the original order of `initialCards`."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the small example and explain its inputs and effects.",
+        "Complete the starter for this lesson.",
+        "Run the behavior checks, then predict a changed case."
+      ],
+      "after": [
+        "Use each record's ID as its key.",
+        "Edit a note, then reverse the rows.",
+        "Run the checks and confirm the note follows its record."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Trace the visible input, event and resulting screen before changing the code."
+      ],
+      "after": [
+        "A key belongs to the record, not to its current place in the list."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Two records share a title but have distinct stable IDs. Which key belongs on Card?",
+        "choices": [
+          "Its current array index",
+          "The stable record ID",
+          "The shared title"
+        ],
+        "answer": 1,
+        "explanation": "IDs distinguish records independently of title or position. Position keys can attach an existing input to the wrong record after reordering."
+      },
+      "after": {
+        "question": "Two records have the same title but different stable IDs. Which key should each Card use?",
+        "choices": [
+          "Its current array position.",
+          "Its stable record ID.",
+          "The shared title."
+        ],
+        "answer": 1,
+        "explanation": "The ID still identifies the same record after a move. A shared title cannot distinguish the two records."
+      }
+    }
+  ],
+  "headings": [
+    "Keep an item's identity",
+    "Use the record's own ID",
+    "Move an edited row",
+    "Allow matching titles",
+    "Fix your list keys"
+  ],
+  "project": {
+    "title": "Let each record own its key",
+    "task": "Fix the keys so edited notes stay with their records after reversing. Keep the initialCards order unchanged.",
+    "done_when": "An edited note travels with its record when the rows reverse, including when titles match."
+  }
+}

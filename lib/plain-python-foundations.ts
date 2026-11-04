@@ -1,4 +1,4 @@
-export default [
+const readings = [
   {
     "source": "A type tells Python what kind of value it has.",
     "simple": "A type is a label that says what sort of information a value is.",
@@ -2514,3 +2514,5 @@ export default [
     "lesson": "python-12"
   }
 ];
+
+export default readings;

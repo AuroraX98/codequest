@@ -54,7 +54,7 @@ try {
   await mkdir(path.join(temp, 'components'));
   await mkdir(path.join(temp, 'lib'));
   await symlink(path.resolve('node_modules'), path.join(temp, 'node_modules'), process.platform === 'win32' ? 'junction' : 'dir');
-  for (const file of ['lib/diagram-web-platform.ts', 'lib/diagram-javascript-python.ts', 'lib/diagram-sql-swift-typescript.ts', 'components/LessonVisual.tsx', 'components/LessonDiagram.tsx', 'components/PythonLessonScene.tsx', 'components/PythonControlScenes.tsx', 'components/PythonCollectionScenes.tsx', 'components/PythonGeneratorScene.tsx', 'components/PythonCsvScene.tsx', 'lib/lesson-visuals.ts', 'lib/lesson-diagrams.ts', 'lib/diagram-drawing.ts', 'lib/python-control-scenes.ts', 'lib/python-collection-scenes.ts', 'lib/python-generator-scene.ts', 'lib/python-csv-scene.ts', 'components/PythonConceptLab.tsx', 'components/PairedLessonText.tsx', 'components/PythonConceptPicture.tsx', 'components/PythonConceptMetaphor.tsx', 'components/LessonContent.tsx', 'components/LessonStepFlow.tsx', 'lib/lesson-step-flow.ts', 'lib/understanding-practice.ts', 'lib/plain-language.ts', 'lib/plain-beginner-python.ts', 'lib/plain-html-readings.ts', 'lib/plain-css-readings.ts', 'lib/plain-python-foundations.ts', 'lib/plain-python-advanced.ts', 'lib/plain-typescript-readings.ts', 'lib/plain-react-readings.ts', 'lib/plain-backend-readings.ts', 'lib/plain-javascript-readings.ts', 'lib/plain-sql-readings.ts', 'lib/plain-swift-readings.ts', 'lib/plain-developer-readings.ts', 'components/CodeAnatomy.tsx', 'components/LessonGlossary.tsx', 'lib/lesson-glossary.ts', 'lib/code-anatomy.ts', 'lib/lesson-markup.ts', 'lib/lesson-ideas.ts', 'lib/code-language.ts', 'lib/python-concepts.ts']) {
+  for (const file of ['lib/diagram-web-platform.ts', 'lib/diagram-javascript-python.ts', 'lib/diagram-sql-swift-typescript.ts', 'components/LessonVisual.tsx', 'components/LessonDiagram.tsx', 'components/PythonLessonScene.tsx', 'components/PythonControlScenes.tsx', 'components/PythonCollectionScenes.tsx', 'components/PythonGeneratorScene.tsx', 'components/PythonCsvScene.tsx', 'lib/lesson-visuals.ts', 'lib/lesson-diagrams.ts', 'lib/diagram-drawing.ts', 'lib/python-control-scenes.ts', 'lib/python-collection-scenes.ts', 'lib/python-generator-scene.ts', 'lib/python-csv-scene.ts', 'components/PythonConceptLab.tsx', 'components/PairedLessonText.tsx', 'components/PythonConceptPicture.tsx', 'components/PythonConceptMetaphor.tsx', 'components/LessonContent.tsx', 'components/LessonStepFlow.tsx', 'lib/lesson-step-flow.ts', 'lib/understanding-practice.ts', 'lib/plain-language.ts', 'lib/plain-beginner-python.ts', 'lib/plain-html-readings.ts', 'lib/plain-css-readings.ts', 'lib/plain-python-foundations.ts', 'lib/plain-python-advanced.ts', 'lib/plain-typescript-readings.ts', 'lib/plain-react-readings.ts', 'lib/plain-backend-readings.ts', 'lib/plain-javascript-readings.ts', 'lib/plain-sql-readings.ts', 'lib/plain-swift-readings.ts', 'lib/plain-developer-readings.ts', 'components/CodeAnatomy.tsx', 'components/LessonGlossary.tsx', 'lib/lesson-glossary.ts', 'lib/code-anatomy.ts', 'lib/swift-code-words.ts', 'lib/csharp-reviewed-anatomy.ts', 'lib/cpp-reviewed-anatomy.ts', 'lib/java-reviewed-anatomy.ts', 'lib/c-reviewed-anatomy.ts', 'lib/kotlin-reviewed-anatomy.ts', 'lib/rust-reviewed-anatomy.ts', 'lib/php-reviewed-anatomy.ts', 'lib/ruby-reviewed-anatomy.ts', 'lib/r-reviewed-anatomy.ts', 'lib/go-reviewed-anatomy.ts', 'lib/lesson-markup.ts', 'lib/lesson-ideas.ts', 'lib/code-language.ts', 'lib/python-concepts.ts']) {
     const js = ts.transpileModule(await readFile(file, 'utf8'), {
       compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext, jsx: ts.JsxEmit.ReactJSX },
     }).outputText.replace(/from\s+(['"])(\.\.?\/[^'"]+)\1/g, 'from "$2.mjs"');
@@ -125,7 +125,7 @@ try {
   assert.match(pythonConcepts.find(c => c.id === 'strings').limit, /immutable/);
   assert.match(pythonConcepts.find(c => c.id === 'names').limit, /Rebinding one name does not automatically rebind another/);
   assert.match(pythonConcepts.find(c => c.id === 'assignment').explore.at(-1).text, /does not modify the original string/);
-  const python = spawnSync(process.env.PYTHON || 'python3', ['-c', String.raw`
+  const python = spawnSync(process.env.PYTHON || (process.platform === 'win32' ? 'python' : 'python3'), ['-c', String.raw`
 import ast, contextlib, io, json, sys
 cases = json.load(sys.stdin)
 allowed = (ast.Module, ast.Assign, ast.Expr, ast.Name, ast.Store, ast.Load,
@@ -224,7 +224,7 @@ print('Verified', len(cases), 'generated Python examples and all intermediate st
     await act(async () => { node.click(); });
     await flush();
   };
-  const edit = async (selector, value) => {
+  const _edit = async (selector, value) => {
     const field = document.querySelector(selector);
     assert.ok(field, selector);
     await act(async () => {
@@ -462,12 +462,12 @@ print('Verified', len(cases), 'generated Python examples and all intermediate st
   await act(async () => root.render(React.createElement(Lab, {lesson, simple:true})));
   const simpleText = document.getElementById('mount').textContent;
   for (const removed of ['In simple words', 'Words in this step', 'Words in this explanation', 'More ways to explore', 'Explore the full example']) assert.ok(!simpleText.includes(removed), removed + ' removed');
-  assert.equal((simpleText.match(/Instructions that Python follows\./g) || []).length, 1);
+  assert.equal((simpleText.match(/A program is a list of instructions the computer follows\./g) || []).length, 1);
   assert.equal(document.querySelector('[data-lesson-reference]'),null,'Repeated core teaching is not hidden in a duplicate optional panel');
   let sawWhy=false,sawCode=false;
   for(let step=0;step<10 && !(sawWhy&&sawCode);step++){
     const visible=document.querySelector('[data-step-primary]').closest('section');
-    sawWhy ||= visible.textContent.includes('A program turns a task you can describe into precise steps the computer can repeat.');
+    sawWhy ||= visible.textContent.includes('This one uses print to show the word Hello on the screen.');
     sawCode ||= [...visible.querySelectorAll('pre code')].some(code=>code.textContent.trim()==='print("Hello")');
     if(sawWhy&&sawCode)break;
     const next=document.querySelector('[data-step-primary]');

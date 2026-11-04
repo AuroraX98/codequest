@@ -1,0 +1,94 @@
+{
+  "lesson": "csharp-30",
+  "position": 30,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Create one more Counter before printing, leaving the Score assignments unchanged. What prints?",
+      "after": "Separate each object's score from a shared creation count."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "An ordinary field belongs to one object. first.Score and second.Score can therefore differ.",
+        "A static field belongs to the type rather than each instance. Use Counter.Created to read it. Creating another Counter does not make a separate Created field.",
+        "The constructor increases the shared Created count each time an object is created. This small sequential example does not make the shared update thread-safe.",
+        "Complete local C# example; the app does not execute it:\n```csharp\nCounter first = new Counter();\nCounter second = new Counter();\nfirst.Score = 8;\nSystem.Console.WriteLine(second.Score);\nSystem.Console.WriteLine(Counter.Created);\nclass Counter\n{\n    public int Score = 0;\n    public static int Created = 0;\n    public Counter() { Created = Created + 1; }\n}\n```",
+        "Expected behavior from this example: 0 then 2. This expected result is a reasoned prediction until a compiler test is recorded.",
+        "Optional local transfer task: Add another instance field for a label and compare it with the shared Created count. Use a .NET 10 console project with C# 14; reading completion does not verify this local work."
+      ],
+      "after": [
+        "An instance field belongs to one object. Each Counter has its own Score, so changing first.Score does not change second.Score.",
+        "A static field belongs to the type. Counter.Created is one shared count, rather than a separate field in every Counter.",
+        "The constructor adds one to Created each time a Counter is made. Creating an object adds to the same count.",
+        "Follow the separate scores and the shared count.\n\n```csharp\nCounter first = new Counter();\nCounter second = new Counter();\nfirst.Score = 8;\nSystem.Console.WriteLine(second.Score);\nSystem.Console.WriteLine(Counter.Created);\nclass Counter\n{\n    public int Score = 0;\n    public static int Created = 0;\n    public Counter() { Created = Created + 1; }\n}\n```",
+        "The program prints 0, then 2. second keeps its own starting score. Two constructor calls have increased the shared Created count twice.",
+        "This example creates objects one after another. If separate tasks update a shared value at the same time, their changes need extra protection. A later lesson covers that problem."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Trace the changed case before choosing an answer.",
+        "Explain the consequence, then optionally try the local transfer task."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Score belongs to each object. Created belongs to Counter."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Create one more Counter before printing, leaving the Score assignments unchanged. What prints?",
+        "choices": [
+          "8 then 3",
+          "0 then 3",
+          "0 then 1"
+        ],
+        "answer": 1,
+        "explanation": "The third construction increases the one shared static count to 3. second.Score is still its own unchanged instance field."
+      },
+      "after": {
+        "question": "Create a third Counter before printing. Keep the Score assignment unchanged. What prints?",
+        "choices": [
+          "8 then 3",
+          "0 then 3",
+          "0 then 1"
+        ],
+        "answer": 1,
+        "explanation": "second.Score stays zero. The third object increases the shared Created count to 3."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "C#14/.NET10 core syllabus. Concept-mode reading and understanding check; no in-app C# execution and no claim of mastery. Full example and optional local transfer task are supplied. Actual compiler validation, if available, is reported separately.",
+      "after": "The browser shows C# code and checks your understanding; it does not run C#. Optional local examples use a .NET 10 console project with C# 14."
+    }
+  ],
+  "headings": [
+    "Each object has its own field",
+    "A static field belongs to the type",
+    "Count each new object",
+    "One example",
+    "What appears",
+    "Shared does not mean safely updated together"
+  ],
+  "project": {
+    "title": "Separate instance and static state",
+    "task": "Follow which field is separate for each Counter and which field is shared.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local C# example is optional."
+  }
+}

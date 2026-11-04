@@ -1,3 +1,4 @@
+import { pathToFileURL } from "node:url";
 import assert from "node:assert/strict";
 import { mkdtemp, readFile, writeFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -35,10 +36,8 @@ try {
     keyFileMetadataKey,
     canAutomaticallyReadKeyFile,
     maxAPIKeyFileBytes,
-  } = await import(path.join(temp, "api-key-file.mjs"));
-  const { readDevice, writeDevice } = await import(
-    path.join(temp, "device-db.mjs")
-  );
+  } = await import(pathToFileURL(path.join(temp, "api-key-file.mjs")).href);
+  const { readDevice, writeDevice } = await import(pathToFileURL(path.join(temp, "device-db.mjs")).href);
   const text = (provider = "deepseek", apiKey = syntheticKey) =>
     JSON.stringify({ provider, apiKey });
   const file = (content) => ({

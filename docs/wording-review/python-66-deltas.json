@@ -1,0 +1,87 @@
+{
+  "lesson": "python-66",
+  "sourceHash": "f193f39444a605a99501c4cd75318f8906d41544768af8facef66fae94130afc",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Complete save_note(path,text,append=False): write UTF-8 exactly, replacement by default or append when True. Use with, return the character count, and propagate I/O errors. Use disposable virtual files only.",
+      "after": "Save text in a note, replacing the old text or adding to its end."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "Mode \"w\" creates a text file or truncates existing contents immediately. Mode \"a\" creates it if missing or writes at its end. In this browser practice those effects occur only in its isolated virtual filesystem, not arbitrary host files or a durable download.",
+        "Purpose: save_note(path, text, append=False) writes supplied text using UTF-8. Inputs are a disposable path, string and Boolean append flag. handle.write(text) returns characters accepted, not encoded byte count; it adds no newline unless the string contains one. with closes the handle even on return or error. A returned count is not a promise of atomic replacement or crash durability.",
+        "open(path, mode, encoding=\"utf-8\") returns a text file object or raises an error. In read mode, handle.read() returns complete remaining text without altering it. repr(text) creates a printable representation that exposes newline escapes. The worked calls write, append and read the disposable note.",
+        "This function does not authorize arbitrary paths or suppress I/O failures. Replacement can destroy earlier content, so use only supplied disposable paths. The supplied __read_note helper reads test fixtures; do not replace it. App execution does not demonstrate a native permission policy.",
+        "Worked call:\n```python\ndef save_note(path, text, append=False):\n    mode = \"a\" if append else \"w\"\n    with open(path, mode, encoding=\"utf-8\") as handle:\n        return handle.write(text)\n\nprint(save_note(\"demo-note.txt\", \"Sky\\n\"))\nprint(save_note(\"demo-note.txt\", \"Moon\\n\", append=True))\nwith open(\"demo-note.txt\", \"r\", encoding=\"utf-8\") as handle:\n    print(repr(handle.read()))\n```\nExpected stdout:\n4\n5\n'Sky\\nMoon\\n'",
+        "Optional local practice: On another disposable path compare writing empty text in replacement and append modes."
+      ],
+      "after": [
+        "Mode `\"w\"` creates a file, or clears an existing file as soon as it opens. Mode `\"a\"` adds text at the end, creating the file if needed.\n\nIn this exercise, you work with practice files inside the app. These are not files elsewhere on your device, and writing them does not create a lasting download.",
+        "`save_note(path, text, append=False)` writes the supplied text using UTF-8. `path` names the practice file. `append` chooses whether to add to its end.\n\n`handle.write(text)` returns the number of text characters accepted, not the number of bytes. It adds no line break unless you include one.\n\nThe `with` block closes the file even after a return or error. A write can still fail partway through; the count is not a promise that the file will survive a crash.",
+        "`open(path, mode, encoding=\"utf-8\")` opens the file or raises an error. In read mode, `handle.read()` gets its remaining text.\n\n`repr(text)` shows a string with marks such as `\\n` for a line break. The example below writes a note, adds another line, then reads the result.",
+        "Use the supplied practice paths. Replacing a file clears its old contents, and this function does not check whether a path is safe or hide file errors.\n\nLeave the supplied `__read_note` helper as it is; it reads the test notes. The app's practice files do not show how permissions work on your own computer.",
+        "Worked call:\n```python\ndef save_note(path, text, append=False):\n    mode = \"a\" if append else \"w\"\n    with open(path, mode, encoding=\"utf-8\") as handle:\n        return handle.write(text)\n\nprint(save_note(\"demo-note.txt\", \"Sky\\n\"))\nprint(save_note(\"demo-note.txt\", \"Moon\\n\", append=True))\nwith open(\"demo-note.txt\", \"r\", encoding=\"utf-8\") as handle:\n    print(repr(handle.read()))\n```\nOutput:\n```text\n4\n5\n'Sky\\nMoon\\n'\n```",
+        "For extra practice, try writing empty text to another practice file. Compare replacing its contents with adding to its end."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If the second call uses append=False, what remains?",
+        "choices": [
+          "\"Sky\\nMoon\\n\"; all writes append.",
+          "Only \"Moon\\n\"; replacement discards the earlier note.",
+          "Nothing; closing deletes the file."
+        ],
+        "answer": 1,
+        "explanation": "The second call opens mode w, truncating earlier text before writing Moon and its newline."
+      },
+      "after": {
+        "question": "If the second call uses append=False, what remains?",
+        "choices": [
+          "\"Sky\\nMoon\\n\"; all writes append.",
+          "Only \"Moon\\n\"; replacement discards the earlier note.",
+          "Nothing; closing deletes the file."
+        ],
+        "answer": 1,
+        "explanation": "The second call opens mode \"w\", which clears earlier text before writing Moon and its newline."
+      }
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Read each purpose, input and result/effect description.",
+        "Trace the changed case and test a boundary."
+      ],
+      "after": [
+        "`write` does not add a line break for you.",
+        "Opening with `\"w\"` clears the old file even when the new text is empty."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the requirement.",
+        "Make one change to the starter.",
+        "Run the checks.",
+        "Explain why a changed input produces its result."
+      ],
+      "after": [
+        "Choose `\"a\"` when `append` is true; otherwise choose `\"w\"`.",
+        "Open the practice path with UTF-8 inside a `with` block.",
+        "Write the supplied text and return the count from `write`.",
+        "Check replacement, appending, and empty text using the practice files."
+      ]
+    }
+  ],
+  "reviewNotes": [
+    "Kept all six sections in original order.",
+    "Preserved the worked code and labeled output fences.",
+    "Kept quiz answer index 1 unchanged.",
+    "Clarified that disposable paths are a use limit, not an enforced path restriction.",
+    "Removed technical audit language, explained replace versus append clearly, and retained the limits of file writes.",
+    "Made the summary and practice guidance concrete to this lesson, replacing generic review directions."
+  ]
+}

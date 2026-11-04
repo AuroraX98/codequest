@@ -1,0 +1,100 @@
+{
+  "lesson": "swift-08",
+  "position": 29,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Represent missing details safely and let several transport types provide their own descriptions.",
+      "after": "Let different types provide the same useful information through a shared requirement."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "Some information can be missing. An optional type explicitly allows either a value or no value. String? means an optional String; nil means it currently has no String. nil is not the empty String \"\": an empty String exists but contains no characters. Do not assume an optional always has a value. The nil-coalescing operator ?? chooses a fallback when the optional is nil. That makes a missing trip note explainable instead of forcing a value and risking a crash.",
+        "This complete program safely displays optional notes.\n\n```swift\nstruct Visit {\n    var destination: String\n    var note: String?\n}\nlet firstVisit = Visit(destination: \"Astoria\", note: nil)\nlet secondVisit = Visit(destination: \"Bend\", note: \"Bring a jacket\")\nlet firstNote = firstVisit.note ?? \"No extra note\"\nlet secondNote = secondVisit.note ?? \"No extra note\"\nprint(firstNote)\nprint(secondNote)\n```\n\nThe output is No extra note and Bring a jacket. struct defines a value type with named properties. Swift supplies an initializer using those stored property names. The question mark marks the optional type; the doubled question marks are a different operator that supplies the default.",
+        "A protocol describes requirements that different types agree to provide. It lets a function use the shared ability without knowing the exact type. A Transport protocol can require a String description, and Train and Bicycle can each provide their own. Conforming means declaring that a type meets the protocol and implementing the requirements. In var description: String { get }, get requires that callers can read the property; it does not require storage or prevent a conforming type from also permitting changes. A computed property calculates or returns its value when read.",
+        "This complete example uses two interchangeable tools through one protocol.\n\n```swift\nprotocol DrawingTool {\n    var description: String { get }\n}\nstruct Pencil: DrawingTool {\n    var description: String { \"Pencil\" }\n}\nstruct Brush: DrawingTool {\n    var description: String { \"Brush\" }\n}\nfunc toolMessage(using tool: any DrawingTool) -> String {\n    \"Today I will use a \\(tool.description).\"\n}\nprint(toolMessage(using: Pencil()))\nprint(toolMessage(using: Brush()))\n```\n\nThe colon after each struct name announces conformance. any DrawingTool means a value of some type that meets DrawingTool's requirements. The function can read description on either type. This needs a Swift compiler that supports the any syntax.",
+        "Structs have value semantics: assigning a struct to another variable gives a value that can be changed independently. With a Visit value, var copy = original followed by copy.destination = \"Another place\" does not replace original.destination. Classes instead use references to objects, as you saw with inventory. That difference helps you plan what should change together. A protocol does not by itself make every conforming value a struct or give it value semantics; the concrete type matters. Here the trip and transport models use structs, so their own stored values follow struct behavior.",
+        "To read an optional without a fallback, if let can unwrap it safely: if let note = trip.note { ... } runs its block only when a String exists. A force unwrap, written trip.note!, assumes a value and fails at runtime if nil is present. Do not use it for these possibly missing notes. Input ranges need similar deliberate handling: if a valid trip length is 1 through 30 days, zero is below the minimum and 31 is above the maximum. The model in this exercise stores destination and note, not days, so it does not automatically enforce that separate practice range.",
+        "For the planner, define Transport with a readable description, conforming Train and Bicycle structs, and Trip with destination and optional note. tripSummary should use any Transport and fall back to No extra note when note is nil. Use Salem with Train and nil for summary; use Eugene with Bicycle and Pack a light for bikeSummary. The checks need those destination, transport, and note words in the outputs. Build the message through properties and interpolation so changing the transport changes its text. Explain the nil case and a present note before building the summary."
+      ],
+      "after": [
+        "A protocol lists requirements a type promises to provide. A function can use those shared requirements without knowing the exact type it receives.",
+        "`var description: String { get }` requires a readable text property. A type may store that text or calculate it when read. `get` requires reading; it does not forbid the type from also allowing changes.",
+        "A type conforms to a protocol when it declares that promise and provides the required parts. `any DrawingTool` can hold a value of a type that meets DrawingTool's requirements.",
+        "```swift\nprotocol DrawingTool {\n    var description: String { get }\n}\nstruct Pencil: DrawingTool {\n    var description: String { \"Pencil\" }\n}\nstruct Brush: DrawingTool {\n    var description: String { \"Brush\" }\n}\nfunc toolMessage(using tool: any DrawingTool) -> String {\n    \"Today I will use a \\(tool.description).\"\n}\nprint(toolMessage(using: Pencil()))\nprint(toolMessage(using: Brush()))\n```\nThe function prints a Pencil message, then a Brush message. It reads the same property from either type. The colon after each struct name declares its protocol conformance.",
+        "A protocol does not decide whether values are copied or objects are shared. The actual type decides that. The structs in this example use value behavior, while a class would still use references.",
+        "The trip project also has an optional note. Use `?? \"No extra note\"` for nil, or use if let to read a present note. Empty text is present text, so it does not take the nil fallback.",
+        "Create Transport, Train, Bicycle, and Trip as requested. Build `summary` for Salem with Train and nil. Build `bikeSummary` for Eugene with Bicycle and `Pack a light`. Read the transport's description through the shared protocol."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Define a Transport protocol that requires a description property.",
+        "Create Train and Bicycle structs that follow Transport by supplying a description.",
+        "Create a Trip struct with a destination and a note that can be missing.",
+        "For summary, use a trip to Salem with Train and no note (nil).",
+        "For bikeSummary, use a trip to Eugene with Bicycle and the note \"Pack a light\".",
+        "Show \"No extra note\" when the note is nil."
+      ],
+      "after": [
+        "Define Transport with a readable String description.",
+        "Make Train and Bicycle provide that description.",
+        "Create Trip with a destination and optional note.",
+        "Build both supplied summaries, handle nil safely, and run the checks."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "The protocol requires only one shared property.",
+        "Use `??` or `if let` to handle an optional note.",
+        "Include the destination, transport description, and a safe note in the returned String."
+      ],
+      "after": [
+        "Use `any Transport` for the shared transport input.",
+        "A computed property can return each transport's description.",
+        "Include the destination, transport description, and note or fallback."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "A trip’s optional note is nil. Which interpretation is correct?",
+        "choices": [
+          "The note contains the word \"nil\"",
+          "No note is present",
+          "A note containing an empty String is present"
+        ],
+        "answer": 1,
+        "explanation": "nil represents absence. It is different from an existing empty String or text spelling the word nil."
+      },
+      "after": {
+        "question": "A trip's optional note is nil. What does that mean?",
+        "choices": [
+          "The note holds the word nil",
+          "No note is present",
+          "An empty text value is present"
+        ],
+        "answer": 1,
+        "explanation": "nil means no value. Empty text and the word nil are both actual text values."
+      }
+    }
+  ],
+  "headings": [
+    "Share a required ability",
+    "Read a required property",
+    "Use any matching type",
+    "One example",
+    "Keep the concrete type in mind",
+    "Handle a missing trip note",
+    "Build the flexible trip planner"
+  ],
+  "project": {
+    "title": "A flexible trip planner",
+    "task": "Create the shared Transport requirement and Train/Bicycle types. Use Trip with an optional note to build the supplied Salem/train and Eugene/bicycle summaries.",
+    "done_when": "The checks pass for both transport types, the present note, and the `No extra note` fallback."
+  }
+}

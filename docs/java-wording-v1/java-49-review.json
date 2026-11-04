@@ -1,0 +1,91 @@
+{
+  "lesson": "java-49",
+  "position": 49,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "What prints if the requested key changes from 3 to 9?",
+      "after": "Count how many words share each length."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "String::length here is an unbound instance method reference: each incoming String becomes the receiver on which length() is called. Collectors.groupingBy computes a key for each element and collects elements with the same key. The downstream counting collector counts each group rather than storing lists.\n\ncollect(collector) executes the stream with the supplied collector and returns its accumulated result: here, the map from length to count.",
+        "The default grouping result has no promised iteration order. Read specific keys to make the output deterministic. getOrDefault supplies zero when no group exists; it does not insert the key.",
+        "Complete local Java example; the app itself does not execute it:\n```java\nimport java.util.List;\nimport java.util.stream.Collectors;\npublic class Main {\n\n  public static void main(String[] args) {\n    var groups = List.of(\"oak\", \"elm\", \"pine\").stream()\n        .collect(Collectors.groupingBy(String::length, Collectors.counting()));\n    System.out.println(groups.getOrDefault(3, 0L));\n  }\n}\n```",
+        "Expected output or behavior: 2. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Add a second four-letter word and predict its count. You may trace it without a JDK; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "A collector tells a stream how to gather its results. groupingBy puts items with the same key together. Here, String::length gets each word's length as its key, and counting counts the words in each group. collect runs that work and returns a map of lengths to counts.",
+        "The resulting map does not promise an order for listing groups. This code asks for one key directly. getOrDefault returns that group's count, or the supplied zero if the group is absent, without adding a new group.",
+        "Group the words by length, then read the count for length three. The L in 0L makes the fallback a long, matching the count type.\n\n```java\nimport java.util.List;\nimport java.util.stream.Collectors;\npublic class Main {\n\n  public static void main(String[] args) {\n    var groups = List.of(\"oak\", \"elm\", \"pine\").stream()\n        .collect(Collectors.groupingBy(String::length, Collectors.counting()));\n    System.out.println(groups.getOrDefault(3, 0L));\n  }\n}\n```",
+        "The program prints 2. oak and elm have length three, while pine belongs to the length-four group.",
+        "The quiz asks for length nine. Check whether any supplied word belongs to that group before using the fallback."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "The lookup key is a word length; the stored value is how many words have it."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "What prints if the requested key changes from 3 to 9?",
+        "choices": [
+          "null",
+          "0",
+          "3"
+        ],
+        "answer": 1,
+        "explanation": "There is no length-nine group, so getOrDefault returns the supplied zero."
+      },
+      "after": {
+        "question": "Change the requested key from 3 to 9. What prints?",
+        "choices": [
+          "null",
+          "0",
+          "3"
+        ],
+        "answer": 1,
+        "explanation": "There is no length-nine group, so getOrDefault returns the supplied zero."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Java Core v1 uses stable Java25 LTS features without preview flags. The app supplies concept reading and an understanding check, not a Java browser runner. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "The browser shows Java code and checks your understanding; it does not run Java. Optional local examples use Java25."
+    }
+  ],
+  "headings": [
+    "Collect items into groups and count them",
+    "Look up one group's count",
+    "One example",
+    "What appears",
+    "Ask for a group that is absent"
+  ],
+  "project": {
+    "title": "Collect and group stream results",
+    "task": "Match each word to its length group and count the three-unit words.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local Java example is optional."
+  }
+}

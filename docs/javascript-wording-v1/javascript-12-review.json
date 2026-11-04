@@ -1,0 +1,65 @@
+{
+  "lesson": "javascript-12",
+  "position": 26,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Create an `li` from the input text and append it to `#books`.",
+      "after": "Add and remove one list item while leaving unrelated page content alone."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "The Document Object Model, or DOM, is the browser's object representation of the page. Each element is a node that JavaScript can read or change. A list element can be the parent of several list-item nodes. Creating an element does not display it yet; you must attach it to an element already on the page.",
+        "`document.createElement(\"li\")` creates a new list-item element. The string li is an HTML tag name, not the item's text. Assign `.textContent` to set its title as plain text, then call `.append(item)` on the chosen list to attach it. Append adds a node at the end; if the node already belonged elsewhere, append moves it instead of making a copy.",
+        "Here is example markup containing two separate lists.\n```html\n<ul id=\"books\">\n  <li>River Tales</li>\n</ul>\n<ul id=\"other\">\n  <li>Leave this here</li>\n</ul>\n```\n`ul` creates an unordered list, and li creates an entry. The ids distinguish the lists. A selector like `\"#books li\"` means li elements inside the books element. That space describes an element inside another element; it is part of the selector string.",
+        "Run this script after that markup exists.\n```javascript\nfunction addTitle(title) {\n  const item = document.createElement(\"li\");\n  item.textContent = title;\n  document.querySelector(\"#books\").append(item);\n}\nfunction removeTitle(title) {\n  const items = Array.from(document.querySelectorAll(\"#books li\"));\n  const item = items.find(li => li.textContent === title);\n  if (item) {\n    item.remove();\n  }\n}\naddTitle(\"Garden Notes\");\nremoveTitle(\"River Tales\");\n```\nThe books list ends with only Garden Notes. The other list still contains Leave this here. Adding increases the first list's count from one to two; removing its original entry returns the count to one.",
+        "`querySelector` returns the first matching element or null. `querySelectorAll` returns a collection of matching nodes. `Array.from(...)` makes an array from that collection so you can use array methods. `.find(...)` calls a callback on entries and returns the first for which it returns true, or undefined if none matches. `li => li.textContent === title` asks whether an item's text matches the requested title.",
+        "The `if (item)` guard checks whether an item was found before calling remove. An element value counts as true; undefined counts as false. This avoids an error for a title that is absent. `.remove()` detaches only that element. Do not clear the entire parent list to remove one book. When titles repeat, this implementation removes the first matching item rather than all duplicates.\n\nFor another complete worked example, start with the same HTML in a fresh page and run this script after the lists exist:\n```javascript\nconst books = document.querySelector(\"#books\");\nconst added = document.createElement(\"li\");\nadded.textContent = \"Weather Notes\";\nbooks.append(added);\nconsole.log(document.querySelectorAll(\"#books li\").length);\nadded.remove();\nconsole.log(document.querySelectorAll(\"#books li\").length);\nconsole.log(document.querySelector(\"#other li\").textContent);\n```\nThe output lines are 2, 1, and Leave this here. The matching-node collection has a length property that counts its nodes. Keeping a reference to the added node lets you remove precisely that item. Its original River Tales neighbor and the entire other list remain. This removes a selected node without needing to search for its text again.\n",
+        "Your project needs addBook and removeBook with the supplied titles. Add Small Worlds to the books list and remove Cloud Atlas from that same list. The other list's Keep me entry must survive. Count one item for each li node, and use selectors scoped to books so unrelated items are not touched. The function's job is a page update; it need not return a title to perform that update."
+      ],
+      "after": [
+        "The DOM is the browser's object model of a page. An element is a node in that model, and it can contain child nodes.\n\nCreating an element does not show it yet. Attach it to the page to make it visible.",
+        "`createElement(\"li\")` makes a list item. Set its `textContent`, then append it to the chosen list.\n\n`append` puts a node at the end. If that node was already elsewhere, it moves the node instead of copying it.",
+        "Use two lists so you can see which one changes:\n```html\n<ul id=\"books\">\n  <li>River Tales</li>\n</ul>\n<ul id=\"other\">\n  <li>Leave this here</li>\n</ul>\n```\n`ul` is a list, and `li` is a list item. `\"#books li\"` selects list items inside the element whose ID is books.",
+        "Run after that HTML is present:\n```javascript\nfunction addTitle(title) {\n  const item = document.createElement(\"li\");\n  item.textContent = title;\n  document.querySelector(\"#books\").append(item);\n}\nfunction removeTitle(title) {\n  const items = Array.from(document.querySelectorAll(\"#books li\"));\n  const item = items.find(li => li.textContent === title);\n  if (item) {\n    item.remove();\n  }\n}\naddTitle(\"Garden Notes\");\nremoveTitle(\"River Tales\");\n```\nThe books list ends with Garden Notes. The other list still says Leave this here.",
+        "`querySelectorAll` gets the matching nodes. `Array.from` puts them in an array.\n\n`find` returns the first item whose callback gives true, or undefined if none matches. Here, the callback compares each item's text with the requested title.",
+        "Check that an item was found before calling `remove`. This removes just that node; a missing title changes nothing. Repeated titles remove only the first match.\n\nIn a fresh page with the same HTML, try:\n```javascript\nconst books = document.querySelector(\"#books\");\nconst added = document.createElement(\"li\");\nadded.textContent = \"Weather Notes\";\nbooks.append(added);\nconsole.log(document.querySelectorAll(\"#books li\").length);\nadded.remove();\nconsole.log(document.querySelectorAll(\"#books li\").length);\nconsole.log(document.querySelector(\"#other li\").textContent);\n```\nOutput:\n```text\n2\n1\nLeave this here\n```\nKeeping the added node in a variable lets you remove that exact node without searching again.",
+        "Complete `addBook` and `removeBook`. Keep the call adding Small Worlds, then call `removeBook(\"Cloud Atlas\")`.\n\nUse selectors inside `#books` so the other list's Keep me entry survives. These functions change the page; they do not need to return a title."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Create a new li list item and set its text to the book title.",
+        "Add the new item to the end of the list with id=\"books\".",
+        "Find the list item whose text matches the selected title.",
+        "Remove only that matching item.",
+        "Check that adding and removing affect only the books list."
+      ],
+      "after": [
+        "In `addBook`, create an li, set its plain text, and append it to `#books`.",
+        "In `removeBook`, search only `#books li` for the first matching title.",
+        "Remove it only if found.",
+        "Keep `addBook(\"Small Worlds\")` and add `removeBook(\"Cloud Atlas\")`.",
+        "Check that Keep me in the other list stays untouched."
+      ]
+    }
+  ],
+  "headings": [
+    "Create a node before attaching it",
+    "Fill and append a list item",
+    "Keep two lists separate",
+    "Add and remove within one list",
+    "Find the first matching title",
+    "Remove a found node safely",
+    "Update only the supplied books list"
+  ],
+  "project": {
+    "title": "An editable reading list",
+    "task": "Add Small Worlds and remove Cloud Atlas from the books list. Leave the other list unchanged.",
+    "done_when": "Small Worlds remains in books, Cloud Atlas is removed, and Keep me is still in the other list."
+  },
+  "notes": []
+}

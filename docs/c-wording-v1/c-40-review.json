@@ -1,0 +1,92 @@
+{
+  "lesson": "c-40",
+  "position": 40,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "If b.value is initialized to 11, what prints before cleanup?",
+      "after": "When freeing linked nodes, save the next link before releasing the current node."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "Each linked node holds a value and a pointer to the next node. The head is the first node; NULL ends the chain. Unlike an array, successive nodes need not occupy adjacent storage.",
+        "Read the next pointer while the current node is still alive, then free the current node and advance. Reading current->next after freeing current would be invalid. If allocating a later node fails, release the earlier allocation. (struct Node){...} is a compound literal: it creates a structure value used here to initialize a node by assignment.",
+        "Complete local C example; the app itself does not execute it:\n```c\n#include <stdio.h>\n#include <stdlib.h>\n\nstruct Node { int value; struct Node *next; };\nvoid clear(struct Node *head) {\n while (head != NULL) {\n  struct Node *next = head->next;\n  free(head);\n  head = next;\n }\n}\nint main(void) {\n struct Node *a = malloc(sizeof *a);\n if (a == NULL) { return 1; }\n struct Node *b = malloc(sizeof *b);\n if (b == NULL) { free(a); return 1; }\n *b = (struct Node){.value = 8, .next = NULL};\n *a = (struct Node){.value = 3, .next = b};\n printf(\"%d\\n\", a->next->value);\n clear(a);\n}\n```",
+        "Expected output or behavior: 8\n. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Trace cleanup on a one-node chain; (struct Node){...} is a compound literal that creates a structure value for assignment. You may trace it without a C compiler; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "A linked chain stores a pointer to the next node in each node. The head is its first node. NULL marks the end. Unlike array items, linked nodes do not need to sit next to each other in memory.",
+        "To clear the chain, first save the current node's next pointer. Then free the current node and move to the saved pointer. You must not read next from a node after freeing it.",
+        "Follow the example one line at a time.\n```c\n#include <stdio.h>\n#include <stdlib.h>\n\nstruct Node { int value; struct Node *next; };\nvoid clear(struct Node *head) {\n while (head != NULL) {\n  struct Node *next = head->next;\n  free(head);\n  head = next;\n }\n}\nint main(void) {\n struct Node *a = malloc(sizeof *a);\n if (a == NULL) { return 1; }\n struct Node *b = malloc(sizeof *b);\n if (b == NULL) { free(a); return 1; }\n *b = (struct Node){.value = 8, .next = NULL};\n *a = (struct Node){.value = 3, .next = b};\n printf(\"%d\\n\", a->next->value);\n clear(a);\n}\n```",
+        "The compound literal `(struct Node){...}` makes a whole struct value for the assignment. a links to b, whose value is 8. The print follows that link before either node is freed, so it displays 8.",
+        "clear saves b's address, frees a, then moves to b. It saves NULL, frees b, and stops. If allocating b had failed, main would have freed a before returning."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "The print follows a's next link to b while both nodes are still alive."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If b.value is initialized to 11, what prints before cleanup?",
+        "choices": [
+          "An address",
+          "11",
+          "3"
+        ],
+        "answer": 1,
+        "explanation": "The next pointer in a leads to b, whose value is eleven. The print occurs while both nodes are alive, before cleanup."
+      },
+      "after": {
+        "question": "If b's value starts at 11, what prints before cleanup?",
+        "choices": [
+          "An address.",
+          "11",
+          "3"
+        ],
+        "answer": 1,
+        "explanation": "a's next pointer leads to b. The print reads b's value, now 11, before cleanup starts."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "C Core v1 uses a portable C17 baseline supported by the verified compiler. C23 exists but is not claimed fully supported here. The app supplies concept reading and an understanding check, not a C browser runner. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "The browser shows C code and checks your understanding; it does not run C. Optional local examples use C17."
+    }
+  ],
+  "headings": [
+    "Link separately stored nodes",
+    "Save the next link before freeing",
+    "One example",
+    "Read while the nodes are alive",
+    "Follow cleanup to the end"
+  ],
+  "project": {
+    "title": "Linked nodes and cleanup",
+    "task": "Explain why clear saves head->next before calling free(head).",
+    "done_when": "Read the ideas and pass the understanding check. Running the local C example is optional."
+  },
+  "navigationCorrection": "Added a short example introduction so its reviewed heading remains an explicit contents target."
+}

@@ -2,13 +2,13 @@ import assert from 'node:assert/strict';
 import { mkdtemp, mkdir, readFile, writeFile, rm, symlink } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { pathToFileURL } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import ts from 'typescript';
 import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { JSDOM } from 'jsdom';
 
-const cwd = path.resolve(new URL('..', import.meta.url).pathname);
+const cwd = fileURLToPath(new URL('..', import.meta.url));
 const temp = await mkdtemp(path.join(tmpdir(), 'codequest-diagrams-'));
 const files = ['lib/diagram-drawing.ts', 'lib/diagram-web-platform.ts', 'lib/diagram-javascript-python.ts', 'lib/diagram-sql-swift-typescript.ts', 'lib/lesson-diagrams.ts', 'lib/lesson-visuals.ts', 'components/LessonDiagram.tsx'];
 const passed = [];

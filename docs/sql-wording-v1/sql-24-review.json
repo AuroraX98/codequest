@@ -1,0 +1,98 @@
+{
+  "lesson": "sql-24",
+  "position": 50,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Create an AFTER UPDATE OF title trigger named record_title_change on notes. When the new title differs from the old title, insert note ID, old title, and new title into note_audit. Then run the supplied updates; an unchanged title must not create an audit row.",
+      "after": "Record a change automatically, but skip assignments that keep the same value."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A trigger is database work that runs automatically when its specified event happens. Unlike a SELECT, it can cause additional writes.",
+        "The supplied database has notes(id,title) and note_audit(note_id,old_title,new_title). Titles are never NULL in this fixture.",
+        "In an UPDATE trigger, OLD refers to the row before the update and NEW refers to the row after it. OLD.title and NEW.title read those two title values.",
+        "Run this complete trigger example in a fresh database, separate from the notes project.\n```sql\nCREATE TABLE demo(id INTEGER PRIMARY KEY,label TEXT NOT NULL);\nCREATE TABLE demo_log(old_label TEXT,new_label TEXT);\nINSERT INTO demo VALUES(1,'Draft');\nCREATE TRIGGER log_label AFTER UPDATE OF label ON demo\nWHEN NEW.label <> OLD.label\nBEGIN\n INSERT INTO demo_log(old_label,new_label) VALUES(OLD.label,NEW.label);\nEND;\nUPDATE demo SET label='Ready'\nWHERE id=1;\nUPDATE demo SET label='Ready'\nWHERE id=1;\nSELECT old_label,new_label\nFROM demo_log;\n```\nOnly Draft/Ready is logged. The second assignment triggers the event but fails the WHEN condition.",
+        "AFTER means the row update happens before this trigger’s work. UPDATE OF title identifies updates assigning that column, even when the assigned value equals the old value.",
+        "WHEN NEW.title <> OLD.title limits the trigger to changed titles. The <> operator means not equal. Use NEW.id for the note identity.",
+        "The supplied operations change note 1 from Moon to Moon draft, leave note 2 at Sea, then change note 1 to Moon final. The audit should contain exactly the two actual changes, in their recorded order.",
+        "Use the isolated practice data only. Triggers run inside database operations and their effects participate in transactions; test them before applying them to real stored data."
+      ],
+      "after": [
+        "A trigger is saved database work that runs automatically when a chosen event happens. Here, updating a label can add a row to a change log.",
+        "A change log stores what a value was before and after a change. The exercise has `notes` for the current titles and `note_audit` for the change records.",
+        "Inside an update trigger, `OLD` means the row before the update. `NEW` means the row after it. `OLD.title` and `NEW.title` read those two versions of the title.",
+        "```sql\nCREATE TABLE demo(id INTEGER PRIMARY KEY, label TEXT NOT NULL);\nCREATE TABLE demo_log(old_label TEXT, new_label TEXT);\nINSERT INTO demo VALUES (1, 'Draft');\nCREATE TRIGGER log_label AFTER UPDATE OF label ON demo\nWHEN NEW.label <> OLD.label\nBEGIN\n  INSERT INTO demo_log(old_label, new_label)\n  VALUES (OLD.label, NEW.label);\nEND;\nUPDATE demo SET label = 'Ready' WHERE id = 1;\nUPDATE demo SET label = 'Ready' WHERE id = 1;\nSELECT old_label, new_label FROM demo_log;\n```\nThe log has one row: `Draft, Ready`. Assigning `Ready` again does not add another row.",
+        "`AFTER UPDATE OF label` chooses assignments to the label column. `AFTER` runs the trigger's work after the row update. An assignment can happen even when the value stays the same.",
+        "`<>` means not equal. The `WHEN` condition allows the log entry only when old and new values differ. This comparison works for the supplied titles, which are never `NULL`. If missing values are allowed, the comparison needs to handle them too.",
+        "Name your trigger `record_title_change`. Store `NEW.id`, `OLD.title`, and `NEW.title` in `note_audit`. The supplied updates make two real title changes and one unchanged assignment, so the log needs two rows.",
+        "The trigger's writes belong to the same transaction as the update. Rolling back that transaction also undoes its log entries."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the requirement.",
+        "Make one change to the starter.",
+        "Run the checks.",
+        "Explain why a changed input produces its result."
+      ],
+      "after": [
+        "Create `record_title_change` after updates to `notes.title`.",
+        "Add a `WHEN` check for different old and new titles.",
+        "Insert the note ID and both titles into `note_audit`.",
+        "Run the supplied updates and check that only two changes are logged."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Trace the changed case using the primary lesson before editing."
+      ],
+      "after": [
+        "Use `WHEN NEW.title <> OLD.title`.",
+        "Inside the trigger's `BEGIN` and `END`, insert `NEW.id`, `OLD.title`, and `NEW.title`."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "An UPDATE assigns the same title it already had. Why is the WHEN comparison needed in this trigger?",
+        "choices": [
+          "UPDATE OF can fire for that assignment even though the title value did not change.",
+          "AFTER triggers never see the previous value.",
+          "The comparison makes unchanged data disappear."
+        ],
+        "answer": 0,
+        "explanation": "The event identifies the update operation; the condition separately decides whether the value actually differs."
+      },
+      "after": {
+        "question": "An update assigns the same title again. Why does the trigger need its WHEN condition?",
+        "choices": [
+          "The update event can happen even when the value stays the same",
+          "AFTER triggers cannot read the old value",
+          "The comparison deletes unchanged data"
+        ],
+        "answer": 0,
+        "explanation": "The event tells us an assignment happened. The condition checks whether the value actually changed."
+      }
+    }
+  ],
+  "headings": [
+    "Run work after a change",
+    "Keep a change record",
+    "Read before and after",
+    "One example",
+    "Choose the event",
+    "Check whether the value changed",
+    "Apply it to notes",
+    "Undo related work together"
+  ],
+  "project": {
+    "title": "Record only real title changes",
+    "task": "Create `record_title_change`, an `AFTER UPDATE OF title` trigger on `notes`. When the old and new titles differ, add the note ID and both titles to `note_audit`. Run the supplied updates.",
+    "done_when": "The checks pass, and the log contains exactly the two real changes with no row for the unchanged title."
+  }
+}

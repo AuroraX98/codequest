@@ -1,0 +1,94 @@
+{
+  "lesson": "javascript-59",
+  "position": 29,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Complete onSubmit: prevent the cancelable event default, trim the topic input, and display Saved: plus nonempty text or Topic required. Preserve literal textContent and the cleanup function.",
+      "after": "Handle a form's Save action and show a clear message."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A real form submission normally has browser behavior beyond running a listener. A non-passive submit listener can call event.preventDefault() on a cancelable event to request that its default action not occur. This does not stop propagation and is not the same as a validation rule.",
+        "form.querySelector finds the named input inside that form. value is its current String; trim() returns a new String without outer whitespace. The authored rule requires nonempty trimmed text. Assigning output.textContent displays literal text rather than treating a submitted topic as HTML. A client-side rule does not replace server-side validation.",
+        "Use this index.html:\n```html\n<form id=\"study\"><label>Topic <input id=\"topic\" name=\"topic\"></label><button type=\"submit\">Save</button><output id=\"result\"></output></form>\n```\nnew Event(\"submit\", options) constructs a synthetic cancelable event. dispatchEvent returns false when that event is cancelled, while defaultPrevented becomes true. These observations do not simulate native form constraint validation, a real navigation, or a trusted submit action.\n```javascript\nfunction installForm(form, output) {\n  function onSubmit(event) {\n    event.preventDefault();\n    const topic = form.querySelector('[name=\"topic\"]').value.trim();\n    output.textContent = topic ? \"Saved: \" + topic : \"Topic required\";\n  }\n  form.addEventListener(\"submit\", onSubmit);\n  return () => form.removeEventListener(\"submit\", onSubmit);\n}\nconst form = document.querySelector(\"#study\");\nconst output = document.querySelector(\"#result\");\nconst stop = installForm(form, output);\nform.querySelector('[name=\"topic\"]').value = \"  Maps  \";\nconst event = new Event(\"submit\", {bubbles: true, cancelable: true});\nconst allowed = form.dispatchEvent(event);\nconsole.log(allowed, event.defaultPrevented);\nconsole.log(output.textContent);\nstop();\n```\nOutput: false true then Saved: Maps.",
+        "installForm returns a cleanup closure that removes its named submit listener. Empty text gets Topic required while cancellation still occurs. Optional practice: submit literal angle brackets and verify textContent does not create markup. Production-frame/JSDOM checks establish these local event contracts, not real-browser form behavior."
+      ],
+      "after": [
+        "A form normally sends its data when it is submitted. A submit listener lets our code handle that action.\n\n`event.preventDefault()` asks the browser to skip the event's usual action. The event must be cancelable, and the listener must be allowed to cancel it. This does not stop the event from reaching other listeners.",
+        "The input's `value` is its current text. `trim()` makes a copy without spaces at the start or end.\n\nOur rule is simple: the trimmed topic must contain some text. `output.textContent` displays the result as plain text, even if it includes angle brackets. A real service must also check information it receives.",
+        "Save this page as `index.html`.\n```html\n<form id=\"study\"><label>Topic <input id=\"topic\" name=\"topic\"></label><button type=\"submit\">Save</button><output id=\"result\"></output></form>\n```\nThis JavaScript fills in the topic and sends a test submit event.\n```javascript\nfunction installForm(form, output) {\n  function onSubmit(event) {\n    event.preventDefault();\n    const topic = form.querySelector('[name=\"topic\"]').value.trim();\n    output.textContent = topic ? \"Saved: \" + topic : \"Topic required\";\n  }\n  form.addEventListener(\"submit\", onSubmit);\n  return () => form.removeEventListener(\"submit\", onSubmit);\n}\nconst form = document.querySelector(\"#study\");\nconst output = document.querySelector(\"#result\");\nconst stop = installForm(form, output);\nform.querySelector('[name=\"topic\"]').value = \"  Maps  \";\nconst event = new Event(\"submit\", {bubbles: true, cancelable: true});\nconst allowed = form.dispatchEvent(event);\nconsole.log(allowed, event.defaultPrevented);\nconsole.log(output.textContent);\nstop();\n```\nOutput:\n```text\nfalse true\nSaved: Maps\n```\n`cancelable: true` allows cancellation. `dispatchEvent` returns `false` because the handler canceled the usual action. `event.defaultPrevented` is then `true`.\n\nThis test event checks our listener. It does not perform a real form submission.",
+        "Complete `onSubmit` by calling `preventDefault`. Keep the trimming and message code already supplied.\n\nText such as `  Maps  ` becomes `Saved: Maps`. Spaces alone become `Topic required`. Both cases cancel the usual submit action.\n\nThe function returns a cleanup function. Calling `stop()` removes the listener."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the requirement.",
+        "Make one change to the starter.",
+        "Run the checks.",
+        "Explain why a changed input produces its result."
+      ],
+      "after": [
+        "Call event.preventDefault() inside onSubmit.",
+        "Keep the trim call and textContent message.",
+        "Check a topic with outer spaces and a topic containing only spaces.",
+        "Keep the returned cleanup function."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If the input contains only spaces, what should the handler do?",
+        "choices": [
+          "Allow navigation because preventDefault is only for valid values.",
+          "Insert the spaces as HTML and mark the topic valid.",
+          "Cancel the default action and display Topic required after trimming."
+        ],
+        "answer": 2,
+        "explanation": "Cancellation and validation are separate decisions. This handler always cancels the synthetic submit default and then applies its nonempty-text rule."
+      },
+      "after": {
+        "question": "What should happen if the topic contains only spaces?",
+        "choices": [
+          "Allow submission because only valid topics can be canceled.",
+          "Display the spaces as HTML and accept them.",
+          "Cancel the usual action and show Topic required."
+        ],
+        "answer": 2,
+        "explanation": "Trimming leaves an empty string. The handler shows Topic required and still cancels the usual submit action."
+      }
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Trace the visible worked calls before changing the starter."
+      ],
+      "after": [
+        "Cancel the event before choosing which message to show.",
+        "Use textContent so the topic is displayed as text."
+      ]
+    },
+    {
+      "field": "externalNotes",
+      "before": "ECMAScript 2026 core; native Node24 and current app worker/DOM harness evidence are recorded separately. No external service or real-browser claim follows from a local fixture.",
+      "after": ""
+    }
+  ],
+  "headings": [
+    "Handle the submit action",
+    "Read and check the topic",
+    "Try one submission",
+    "Complete the handler"
+  ],
+  "project": {
+    "title": "Form submission and default prevention",
+    "task": "Complete the submit listener in installForm. Cancel the usual action, trim the topic, and show Saved: followed by the topic, or Topic required if it is empty.",
+    "done_when": "The event is canceled. Topics are trimmed, blank topics show Topic required, and submitted text is displayed literally. Cleanup removes the listener."
+  },
+  "notes": [
+    "Removed an unrelated local-project completion requirement; its useful teaching is in the lesson and technical evidence stays in review documents."
+  ]
+}

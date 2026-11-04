@@ -1,0 +1,96 @@
+{
+  "lesson": "backend-23",
+  "position": 9,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Implement publicNote(note). Match the worked contract and the changed-input checks without modifying the supplied input values.",
+      "after": "Return only the note fields that belong in the response."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "The stored object may contain information a response should not reveal. Construct an explicit response rather than returning the whole stored row.",
+        "This exercise is a small pure JavaScript model. Its inputs are supplied directly; it does not receive live HTTP requests, operate a database, or deploy a service.",
+        "Worked example:\n\n```javascript\nfunction publicNote(note) {\n  return {id:note.id,title:note.title};\n}\nconsole.log(publicNote({\"id\":1,\"title\":\"Moon\",\"ownerEmail\":\"private@example.test\"}));\n```\nThe returned value is {\"id\":1,\"title\":\"Moon\"}.",
+        "Reading note.id and note.title selects those values. The returned object has no ownerEmail or token field. Projection is separate from deciding who may read the note.",
+        "Read the function call publicNote({\"id\":1,\"title\":\"Moon\",\"ownerEmail\":\"private@example.test\"}) from the inside out: the arguments supply the inputs, publicNote runs the body once, and return sends its result back to the caller. console.log displays that result; it does not change it.",
+        "A new private field is added to the stored row. What happens with this explicit projection? Only the named response fields are copied, so an unrelated stored field stays out."
+      ],
+      "after": [
+        "A stored note may include private details that a response should leave out. Build the response by naming the fields it may contain, instead of returning the entire stored object.",
+        "This selection is called a projection. It decides what the response contains. A real server must also check who is allowed to read the note before sending it.",
+        "```javascript\nfunction publicNote(note) {\n  return {id:note.id,title:note.title};\n}\nconsole.log(publicNote({\"id\":1,\"title\":\"Moon\",\"ownerEmail\":\"private@example.test\"}));\n```\nThe result contains id: 1 and title: \"Moon\". The private ownerEmail field is not copied.",
+        "note.id and note.title read the two allowed values. The surrounding braces create a new object, leaving the stored note unchanged.",
+        "If another private field is added to the stored note later, this response still leaves it out. Only explicitly selected fields are copied. Copying every field would lose that protection.",
+        "Complete publicNote(note) with a new object containing only id and title. Keep those two values unchanged and leave all other fields out."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the contract and trace the worked example.",
+        "Replace the unfinished return in the starter.",
+        "Run the changed-input checks.",
+        "Explain the boundary in the understanding question."
+      ],
+      "after": [
+        "Read the note's id and title.",
+        "Return them in a new object.",
+        "Check that private fields and other extras are absent."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Reading note.id and note.title selects those values. The returned object has no ownerEmail or token field. Projection is separate from deciding who may read the note."
+      ],
+      "after": [
+        "Name both permitted response fields explicitly.",
+        "Do not return or spread the whole stored note."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "A new private field is added to the stored row. What happens with this explicit projection?",
+        "choices": [
+          "It is automatically returned",
+          "The response stops working",
+          "It remains excluded"
+        ],
+        "answer": 2,
+        "explanation": "Only the named response fields are copied, so an unrelated stored field stays out."
+      },
+      "after": {
+        "question": "A new private field is added to the stored note. What happens with this response?",
+        "choices": [
+          "It is returned automatically",
+          "The response stops working",
+          "The private field stays out"
+        ],
+        "answer": 2,
+        "explanation": "The response copies only id and title, so the new field is excluded."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Runs as a pure JavaScript function in the browser. Passing checks does not establish live HTTP behavior, database durability, concurrency safety, authentication security, queue delivery guarantees, or production readiness.",
+      "after": "This browser exercise chooses response fields. It does not decide whether a real caller has permission to read a note."
+    }
+  ],
+  "headings": [
+    "Choose what to reveal",
+    "Keep access checks separate",
+    "Read one example",
+    "Copy only named fields",
+    "Keep new private fields out",
+    "Try it yourself"
+  ],
+  "project": {
+    "title": "Project a public response",
+    "task": "Complete publicNote(note) to return a new object with only id and title, preserving the stored input.",
+    "done_when": "The response includes both allowed values and no private or extra fields."
+  }
+}

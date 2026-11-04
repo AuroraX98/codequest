@@ -1,0 +1,107 @@
+{
+  "lesson": "developer-toolkit-08",
+  "position": 8,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Deploy a small app, check its health, and reproduce a failure using useful logs.",
+      "after": "Check the version people can actually reach, and whether it is ready to do its work."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "Deployment makes a particular built version available to its intended users. Record a release identifier so you can tell which version is served and which previous version to restore. A successful local run proves only the local run. After deployment, check a response from the actual published app for the expected version and behavior.",
+        "A health check is a small response about readiness. This complete standalone JavaScript example requires both the app and its storage to be ready:\n```javascript\nfunction readiness(appReady, storageReady, version) {\n  return {\n    status: appReady && storageReady ? 200 : 503,\n    version\n  };\n}\nconsole.log(readiness(true, true, 'demo-4'));\nconsole.log(readiness(true, false, 'demo-4'));\n```\nThe first result has status 200 and version demo-4; the second has 503 and the same version. && requires both conditions. Object shorthand version means version: version. Including the version on failure still identifies the release you are examining.",
+        "Here is a complete separate local Node server. Save as health-server.mjs and run it with Node:\n```javascript\nimport { createServer } from 'node:http';\nconst version = process.env.RELEASE_ID || 'demo-4';\nconst appReady = true;\ncreateServer((req, res) => {\n  if (req.url !== '/health') {\n    res.writeHead(404);\n    res.end('Not found');\n    return;\n  }\n  const storageReady = process.env.STORAGE_READY !== 'false';\n  const status = appReady && storageReady ? 200 : 503;\n  res.writeHead(status, { 'Content-Type': 'application/json' });\n  res.end(JSON.stringify({ status, version }));\n}).listen(3030, '127.0.0.1');\n```\n/health returns a JSON readiness result; other paths return 404. createServer registers the request callback; writeHead chooses status and headers; end finishes the response. Environment variables configure this learning flag and version.",
+        "A macOS terminal can start that disposable local server with a deliberate storage failure:\n```bash\nRELEASE_ID=demo-4 STORAGE_READY=false node health-server.mjs\n```\nWhile it runs, use another terminal:\n```bash\ncurl -i http://127.0.0.1:3030/health\n```\n-i includes response headers. Expect 503 and version demo-4. Stop the server with Control-C, restart with STORAGE_READY=true, and request again; expect 200. This flag simulates readiness, so it does not actually probe a database or prove all screens work.",
+        "Logs are recorded events that help investigate problems. A useful failure record might contain requestId, releaseId, and a category such as storage-unavailable. Match an observed failure to its log using the request id. Avoid logging passwords, keys, or private message content. Reproduce a failure in a disposable local test before guessing at a fix. Observability means having enough useful evidence to understand what the running app is doing.",
+        "Before release, run relevant checks, confirm the intended audience, and identify the previous working version. Record that evidence and your hosting provider's restore procedure in RELEASE.md. Rollback returns the served app to that working version; saved-data changes may need separate backup or migration recovery. Practice restoration in a private test environment and check its actual version afterward.",
+        "For the exercise, health(appReady, storageReady, version) returns numeric 200 only when both conditions are ready, otherwise 503, and includes version either way. The browser checks this decision function; Run performs no deployment. The supplied local server demonstrates a readiness flag and version, not every dependency. Actual hosting, health verification, and rollback are separate tasks in your chosen private provider project and may involve account or usage costs. Follow that provider's instructions and verify the real served release."
+      ],
+      "after": [
+        "Deployment makes a built version of an app available to users. Give each release an ID so a response can show which version is running.",
+        "A health check reports a small part of the app's condition. Our rule returns 200 when both the app and storage are ready, or 503 otherwise. Always include the release version.",
+        "Save this local example as health-server.mjs and run it with Node.\n\n```javascript\nimport { createServer } from 'node:http';\nconst version = process.env.RELEASE_ID || 'demo-4';\nconst appReady = true;\ncreateServer((req, res) => {\n  if (req.url !== '/health') {\n    res.writeHead(404);\n    res.end('Not found');\n    return;\n  }\n  const storageReady = process.env.STORAGE_READY !== 'false';\n  const status = appReady && storageReady ? 200 : 503;\n  res.writeHead(status, { 'Content-Type': 'application/json' });\n  res.end(JSON.stringify({ status, version }));\n}).listen(3030, '127.0.0.1');\n```\n\nOpen http://127.0.0.1:3030/health. With no settings changed, it returns status 200 and version demo-4. Other paths return 404.",
+        "To simulate unavailable storage, set STORAGE_READY to false before starting. In PowerShell, run $env:STORAGE_READY='false', then node health-server.mjs. In a macOS/Linux shell, run STORAGE_READY=false node health-server.mjs. The health response becomes 503. Stop with Ctrl+C; use true to test recovery.",
+        "A log records events that help explain a failure. Keep a request ID, release ID, and useful error category. Leave passwords, keys, and private content out.",
+        "Write the release ID and the steps for restoring the previous working version in RELEASE.md. Restoring old app code may not restore changed data; plan data recovery separately.",
+        "Complete health(appReady, storageReady, version) with the same 200-or-503 rule. The browser checks this function. The example uses a simulated storage flag. A real published app must be checked at its real address after release."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Write health(appReady,storageReady,version). The app is ready only when both appReady and storageReady are true.",
+        "Return {status:200,version} when ready, otherwise {status:503,version}.",
+        "Build a small local server using the supplied file, then follow your hosting provider’s private-deployment instructions.",
+        "Check the published app’s /health response.",
+        "In a separate local test, start the supplied server with STORAGE_READY set to false.",
+        "Write a log entry that includes the requestId and the reason for the failure.",
+        "In RELEASE.md, record the release ID and your hosting provider’s steps for restoring the previous version.",
+        "Practice restoring the previous version in a private test environment."
+      ],
+      "after": [
+        "Return 200 only when both readiness inputs are true; otherwise return 503.",
+        "Include version in either result and run the browser checks.",
+        "Run the supplied local server and test its ready and unavailable states.",
+        "For a separate release exercise, record the expected version and recovery steps, then check the actual hosted response."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Readiness combines the app and storage with AND.",
+        "Use appReady && storageReady to choose 200 or 503.",
+        "Keep version in both the success and failure result."
+      ],
+      "after": [
+        "Use appReady && storageReady.",
+        "Choose status 200 or 503.",
+        "Keep version in both results."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "How can you check that users are getting the new release?",
+        "choices": [
+          "Only a local build message",
+          "A response from the published app showing the expected release ID",
+          "An old screenshot"
+        ],
+        "answer": 1,
+        "explanation": "Check the actual served version and its expected behavior after deployment."
+      },
+      "after": {
+        "question": "What checks which release users are receiving?",
+        "choices": [
+          "Only a local build message.",
+          "A response from the published app with the expected release ID.",
+          "An old screenshot."
+        ],
+        "answer": 1,
+        "explanation": "The published response shows the version that is actually being served."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "The app checks your health decision. Actual hosting and rollback use your chosen provider and can involve account or usage costs; complete them in a private test project. No deployment is performed by this lesson’s Run button.",
+      "after": "The local example simulates storage readiness; it does not test a database. The browser Run button performs no deployment. Any separate hosting and recovery exercise uses a chosen test project and that provider's instructions."
+    }
+  ],
+  "headings": [
+    "Identify the served version",
+    "Define readiness",
+    "One example",
+    "Try a deliberate failure",
+    "Keep useful error records",
+    "Plan recovery",
+    "Complete the readiness function"
+  ],
+  "project": {
+    "title": "A maintainable published app",
+    "task": "Implement the health response. Test the local server's ready and unavailable states, and record how a chosen release can be identified and recovered.",
+    "done_when": "The browser rule passes and local health responses match the simulated state. If doing the separate hosting exercise, verify the served release and recovery at its actual address."
+  }
+}

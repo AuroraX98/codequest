@@ -14,7 +14,7 @@ const require = createRequire(import.meta.url);
 const query = (sql, params = []) => {
   const code =
     "import sqlite3,json,sys\nc=sqlite3.connect(sys.argv[1]);c.row_factory=sqlite3.Row\nsql,p=json.loads(sys.stdin.read());r=c.execute(sql,p);out=[dict(x) for x in r.fetchall()];c.commit();c.close();print(json.dumps(out))";
-  const result = spawnSync(process.env.PYTHON || "python3", ["-c", code, sqlite], {
+  const result = spawnSync(process.env.PYTHON || (process.platform === "win32" ? "python" : "python3"), ["-c", code, sqlite], {
     input: JSON.stringify([sql, params]),
     encoding: "utf8",
   });
@@ -22,7 +22,7 @@ const query = (sql, params = []) => {
   return JSON.parse(result.stdout);
 };
 const load = async (file, imports = {}) => {
-  const module = { exports: {} };
+  const loadedModule = { exports: {} };
   const compiled = ts.transpileModule(await readFile(file, "utf8"), {
     compilerOptions: {
       target: ts.ScriptTarget.ES2022,
@@ -33,8 +33,8 @@ const load = async (file, imports = {}) => {
   vm.runInNewContext(
     compiled,
     {
-      module,
-      exports: module.exports,
+      module: loadedModule,
+      exports: loadedModule.exports,
       require: (id) => (id in imports ? imports[id] : require(id)),
       z,
       crypto,
@@ -51,7 +51,7 @@ const load = async (file, imports = {}) => {
     },
     { filename: file },
   );
-  return module.exports;
+  return loadedModule.exports;
 };
 try {
   query(

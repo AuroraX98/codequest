@@ -129,9 +129,7 @@ try {
   await mkdir(path.join(temp, "components"));
   await symlink(
     path.resolve("node_modules"),
-    path.join(temp, "node_modules"),
-    "dir",
-  );
+    path.join(temp, "node_modules"), process.platform === "win32" ? "junction" : "dir");
   for (const file of ["lib/lesson-notes.ts", "components/LessonNotes.tsx"]) {
     const compiled = ts
       .transpileModule(await readFile(file, "utf8"), {

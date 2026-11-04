@@ -1,0 +1,96 @@
+{
+  "lesson": "sql-05",
+  "position": 20,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Join two supplied tables and include authors who have no books.",
+      "after": "Connect books to authors while keeping authors who have no books."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A join connects related rows from two tables. Each author has one id. A book's author_id points to the id of its author. That relationship lets SQL attach the author's name to each book. Joining does not combine all books into a single text value: one author can appear in several output rows when that author has several books.",
+        "Run this full SQLite setup and query in a fresh database:\n```sql\nCREATE TABLE demo_authors (\n  id INTEGER PRIMARY KEY,\n  name TEXT\n);\nCREATE TABLE demo_books (\n  id INTEGER PRIMARY KEY,\n  author_id INTEGER REFERENCES demo_authors(id),\n  title TEXT\n);\nINSERT INTO demo_authors VALUES\n  (1, 'Nora'), (2, 'Luis'), (3, 'Imani');\nINSERT INTO demo_books VALUES\n  (1, 1, 'Sea Path'),\n  (2, 1, 'Garden Gate'),\n  (3, 2, 'Sky Notes');\nSELECT a.name, b.title\nFROM demo_authors AS a\nINNER JOIN demo_books AS b ON b.author_id = a.id;\n```\nThis returns three matched rows: two for Nora, one for Luis. Imani has no matching book, so INNER JOIN leaves Imani out.",
+        "AS a and AS b give the tables short names. The dot in a.id means the id column from table a. ON specifies the matching condition: a book belongs to an author when b.author_id equals a.id. REFERENCES documents the relationship in the schema; the ON condition is still needed to tell this query how to join. SQLite enforcement of foreign keys must be enabled separately when you rely on that constraint.",
+        "Run this query on the same tables:\n```sql\nSELECT a.name AS author, b.title\nFROM demo_authors AS a\nLEFT JOIN demo_books AS b\n  ON b.author_id = a.id\nORDER BY a.id, b.title;\n```\nYou get Nora/Garden Gate, Nora/Sea Path, Luis/Sky Notes, and Imani/NULL. LEFT JOIN preserves each left-side author. When there is no matching book, right-side columns are NULL in the result. SQL has not stored an imaginary book for Imani.",
+        "The left table matters. Putting books on the left preserves books, not bookless authors. Also, a later WHERE b.title IS NOT NULL removes the unmatched author rows and defeats this goal. Use IS NULL to test missing values; value = NULL does not mean 'is missing' in SQL. COUNT(*) on the joined result counts the unmatched placeholder row too, while COUNT(b.title) counts known titles.\n\nSets describe distinct members. With A = {red, blue} and B = {blue, green}, blue is the only shared member, so the overlap has size 1. A join is related but can repeat matching rows: it is not automatically a set of distinct names.\n\nOn the demo tables above:\n```sql\nSELECT COUNT(*) AS joined_rows, COUNT(b.title) AS known_titles\nFROM demo_authors AS a\nLEFT JOIN demo_books AS b ON b.author_id = a.id;\n```\nThis returns joined_rows=4 and known_titles=3. COUNT receives either * for rows or an expression whose non-NULL values are counted, and returns an integer. It does not change the tables.",
+        "The exercise supplies authors and books. Keep authors on the left, join books.author_id to authors.id, and select authors.name AS author with books.title. Save the query in the temporary answer table. The author alias matters because the checks look for that result column. There is no need to remove duplicate author names: repeated names represent distinct books.",
+        "Ari Vale has two matches, Bo Lin has one, and Casey North has none. The LEFT JOIN therefore produces four rows, including Casey North with a NULL title. If you got only three rows, check whether you used INNER JOIN or filtered out NULL. If you got too many, check the ON relationship; matching unrelated ids can pair rows incorrectly."
+      ],
+      "after": [
+        "A join connects related rows from two tables. A book's author_id tells us which author's id to match. An author with two books can appear twice in the result, once for each book.",
+        "Run this example in a fresh database:\n```sql\nCREATE TABLE demo_authors(id INTEGER PRIMARY KEY, name TEXT);\nCREATE TABLE demo_books(id INTEGER PRIMARY KEY, author_id INTEGER, title TEXT);\nINSERT INTO demo_authors VALUES\n  (1, 'Nora'), (2, 'Luis'), (3, 'Imani');\nINSERT INTO demo_books VALUES\n  (1, 1, 'Sea Path'), (2, 1, 'Garden Gate'), (3, 2, 'Sky Notes');\nSELECT a.name AS author, b.title\nFROM demo_authors AS a\nLEFT JOIN demo_books AS b\n  ON b.author_id = a.id\nORDER BY a.id, b.title;\n```\nNora has two book rows, Luis has one, and Imani has one row with a NULL title.",
+        "`AS a` and `AS b` give the tables short names. The dot in `a.id` means the id from table a. `ON` gives the matching rule: the book's author_id must equal the author's id.",
+        "`LEFT JOIN` keeps every left-side author. If no book matches, the book columns are NULL in that result row. It does not add a pretend book to the stored table. INNER JOIN would keep only matched rows.",
+        "Put authors on the left to keep bookless authors. A later WHERE that demands a nonmissing book title would remove them again. Counting all joined rows also counts unmatched rows; counting known titles does not.",
+        "Join `authors` to `books` using books.author_id and authors.id. Save `authors.name AS author` and `books.title` in `answer`. Keep separate book rows even when the author name repeats.",
+        "The project should return four rows: two for Ari Vale, one for Bo Lin, and one for Casey North with a NULL title. Too few rows may mean an INNER JOIN or a filter removed Casey. Too many may mean the ON rule matches the wrong columns."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Use `ON` to match each book to its author.",
+        "Use `LEFT JOIN` to keep authors who have no books.",
+        "Keep the unmatched author too; do not filter out rows with a NULL book title."
+      ],
+      "after": [
+        "Start from authors and LEFT JOIN books.",
+        "Match books.author_id to authors.id.",
+        "Save author and title in answer, keeping unmatched authors."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Keep authors on the left side.",
+        "Match books.author_id with authors.id.",
+        "Select author and title; retain NULL for Casey."
+      ],
+      "after": [
+        "Use author as the result name for authors.name.",
+        "Do not filter out NULL titles.",
+        "Repeated author names can represent different books."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Which join keeps Casey North in the result even though they have no books?",
+        "choices": [
+          "LEFT JOIN",
+          "INNER JOIN",
+          "ORDER BY"
+        ],
+        "answer": 0,
+        "explanation": "LEFT JOIN keeps all authors; Casey has no match, so books.title is NULL."
+      },
+      "after": {
+        "question": "Which join keeps Casey North even when no book matches?",
+        "choices": [
+          "LEFT JOIN",
+          "INNER JOIN",
+          "ORDER BY"
+        ],
+        "answer": 0,
+        "explanation": "With authors on the left, LEFT JOIN keeps Casey and gives the missing book a NULL title in the result."
+      }
+    }
+  ],
+  "headings": [
+    "Connect related rows",
+    "Try a left join",
+    "Read the matching rule",
+    "Keep unmatched authors",
+    "Choose the left table carefully",
+    "Build the project join",
+    "Check the four result rows"
+  ],
+  "project": {
+    "title": "Connect books and authors",
+    "task": "Save author and title rows from authors and books, including authors with no matching book.",
+    "done_when": "The four expected rows appear, including Casey North with a NULL title. Both source tables stay unchanged."
+  }
+}

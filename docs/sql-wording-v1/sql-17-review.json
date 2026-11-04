@@ -1,0 +1,103 @@
+{
+  "lesson": "sql-17",
+  "position": 32,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Create joined(name) for names in both invited and attending, and waiting(name) for invited names not in attending. Each view should contain distinct names. Do not change either source table.",
+      "after": "Find names shared by two lists, or present in only the first list."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "INTERSECT keeps result rows that appear in both queries.",
+        "EXCEPT keeps rows from the first query that do not appear in the second.",
+        "Both operations compare result rows, not the physical positions of rows in the tables.",
+        "For sets A={Ari, Bo} and B={Bo, Cy}, the shared name is Bo. The names in A but not B contain Ari.",
+        "The order of EXCEPT matters. Reversing A and B gives Cy instead of Ari.",
+        "This complete example supplies both tables before comparing their rows.\n```sql\nCREATE TABLE morning(name TEXT);\nCREATE TABLE evening(name TEXT);\nINSERT INTO morning VALUES('Ari'),('Bo'),('Bo');\nINSERT INTO evening VALUES('Bo'),('Cy');\nSELECT name\nFROM morning\nINTERSECT\nSELECT name\nFROM evening\nORDER BY name;\nSELECT name\nFROM morning\nEXCEPT\nSELECT name\nFROM evening\nORDER BY name;\n```\nThe intersection returns Bo. The second result returns Ari: it starts with morning and removes shared names.",
+        "The result has distinct shared names. Duplicate occurrences do not turn one shared name into several rows.",
+        "For the waiting view, put invited first because you want invited people missing from attendance.",
+        "This simplified exercise identifies people by name. A real system should normally compare stable person IDs instead."
+      ],
+      "after": [
+        "`INTERSECT` keeps result rows that appear in both queries.",
+        "`EXCEPT` keeps rows from the first query that do not appear in the second.",
+        "Both queries must return the same number of columns. SQL compares their values, not their positions in the source tables.",
+        "These operations return distinct rows. Several copies of the same name do not create several copies in the result.",
+        "The order of EXCEPT matters. Start with the list you want to keep, then subtract matches from the other list.",
+        "Run this example in a fresh database:\n```sql\nCREATE TABLE morning(name TEXT);\nCREATE TABLE evening(name TEXT);\nINSERT INTO morning VALUES ('Ari'), ('Bo'), ('Bo');\nINSERT INTO evening VALUES ('Bo'), ('Cy');\nSELECT name FROM morning\nINTERSECT\nSELECT name FROM evening\nORDER BY name;\nSELECT name FROM morning\nEXCEPT\nSELECT name FROM evening\nORDER BY name;\n```\nThe two queries compare the same pair of lists.",
+        "The first result is `Bo`, the shared name. The second is `Ari`, which is in morning but not evening.",
+        "Create `joined(name)` for names in both invited and attending. Create `waiting(name)` for invited names missing from attending, with invited first in EXCEPT. Keep both source tables unchanged.",
+        "This exercise uses names to identify people. In a real system, use stable person IDs so people with the same name remain separate."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the requirement.",
+        "Make one change to the starter.",
+        "Run the checks.",
+        "Explain why a changed input produces its result."
+      ],
+      "after": [
+        "Use INTERSECT for joined.",
+        "Use invited EXCEPT attending for waiting.",
+        "Create both views with one name column."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Use INTERSECT for shared result rows.",
+        "Use EXCEPT with invited first for waiting people.",
+        "Compare the same output columns on each side."
+      ],
+      "after": [
+        "EXCEPT has a direction.",
+        "Return the same column on both sides.",
+        "The views should contain distinct names."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "A contains Ari and Bo. B contains Bo and Cy. What does B EXCEPT A return?",
+        "choices": [
+          "Ari",
+          "Bo",
+          "Cy"
+        ],
+        "answer": 2,
+        "explanation": "Start with B, then remove its shared Bo row. Cy remains; reversing the operands would ask a different question."
+      },
+      "after": {
+        "question": "A has Ari and Bo. B has Bo and Cy. What does B EXCEPT A return?",
+        "choices": [
+          "Ari",
+          "Bo",
+          "Cy"
+        ],
+        "answer": 2,
+        "explanation": "Start with B. Removing the shared Bo leaves Cy."
+      }
+    }
+  ],
+  "headings": [
+    "Find shared rows",
+    "Find rows missing from the second list",
+    "Compare matching columns",
+    "Ignore repeated copies",
+    "Choose the first list carefully",
+    "Compare two small lists",
+    "Read both results",
+    "Build the attendance views",
+    "Use reliable identities"
+  ],
+  "project": {
+    "title": "Find who joined and who is still waiting",
+    "task": "Create joined(name) for shared invited and attending names, and waiting(name) for invited names not attending.",
+    "done_when": "Both views contain the correct distinct names, and neither source table changes."
+  }
+}

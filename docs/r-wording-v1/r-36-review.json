@@ -1,0 +1,91 @@
+{
+  "lesson": "r-36",
+  "position": 36,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Change work() to work(TRUE). What prints after the error is caught?",
+      "after": "On.exit tells R what to do when the current function ends, even if an error ends it early."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "on.exit records an expression to run when the current function exits normally or through an error. Register cleanup as soon as a resource or temporary state needs restoring. add = TRUE adds a cleanup expression instead of replacing an earlier one.",
+        "The on.exit expression here restores a shared environment binding; it does not replace the normal return value. Cleanup can itself fail, so keep it reliable and avoid masking the original failure. This example changes only a local fixture environment, not global configuration.",
+        "Complete local R example; the app itself does not execute it:\n```r\nstate <- new.env(parent = emptyenv())\nstate$active <- FALSE\nwork <- function(fail = FALSE) {\n  state$active <- TRUE\n  on.exit(state$active <- FALSE, add = TRUE)\n  if (fail) stop(\"failed\")\n  5\n}\nresult <- tryCatch(work(), error = function(e) -1)\ncat(result, state$active, \"\\n\")\n```",
+        "Expected output or behavior: 5 FALSE. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Register two harmless cleanup messages with add = TRUE and inspect their order. You may trace it without a R interpreter; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "On.exit tells R what to do when the current function ends, even if an error ends it early.",
+        "Make sure active goes back to FALSE when the function exits.",
+        "Follow the labeled parts of this example.\n```r\nstate <- new.env(parent = emptyenv())\nstate$active <- FALSE\nwork <- function(fail = FALSE) {\n  state$active <- TRUE\n  on.exit(state$active <- FALSE, add = TRUE)\n  if (fail) stop(\"failed\")\n  5\n}\nresult <- tryCatch(work(), error = function(e) -1)\ncat(result, state$active, \"\\n\")\n```",
+        "The output is `5 FALSE`. The normal call returns five, and its cleanup has already reset the flag.",
+        "Take the error path and trace both the fallback and the cleanup."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read one idea.",
+        "Follow the labeled example.",
+        "Try the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Take the error path and trace both the fallback and the cleanup."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Change work() to work(TRUE). What prints after the error is caught?",
+        "choices": [
+          "5 FALSE",
+          "-1 FALSE",
+          "-1 TRUE"
+        ],
+        "answer": 1,
+        "explanation": "The error triggers the handler’s -1, but function exit still runs the registered restoration to FALSE."
+      },
+      "after": {
+        "question": "If work(TRUE) fails and the handler gives −1, what prints?",
+        "choices": [
+          "−1 TRUE",
+          "−1 FALSE",
+          "5 TRUE"
+        ],
+        "answer": 1,
+        "explanation": "The handler changes the result. The cleanup still resets active."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "R Core v1 uses R 4.5.0 and explicitly available extensions. The app supplies concept reading and an understanding check, not a R browser runner. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "CodeQuest shows the R example. Running it on your own computer is optional."
+    }
+  ],
+  "headings": [
+    "Arrange cleanup on exit",
+    "Reset the active flag",
+    "Read the example",
+    "What happens",
+    "Try one change"
+  ],
+  "project": {
+    "title": "Cleanup with on.exit",
+    "task": "Take the error path and trace both the fallback and the cleanup.",
+    "done_when": "Read each idea and pass the understanding check. Running the example on your computer is optional."
+  }
+}

@@ -1,0 +1,96 @@
+{
+  "lesson": "backend-35",
+  "position": 23,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Implement sessionActive(session,now). Match the worked contract and the changed-input checks without modifying the supplied input values.",
+      "after": "Treat a session as expired at its exact expiry time."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "An expiry time defines when a session stops being valid. This contract treats the exact expiry instant as expired.",
+        "This exercise is a small pure JavaScript model. Its inputs are supplied directly; it does not receive live HTTP requests, operate a database, or deploy a service.",
+        "Worked example:\n\n```javascript\nfunction sessionActive(session,now) {\n  return Boolean(session && now < session.expiresAt);\n}\nconsole.log(sessionActive({\"expiresAt\":100}, 99));\n```\nThe returned value is true.",
+        "now and expiresAt use the same supplied time unit. The strict less-than comparison excludes equality. A real service needs a trusted clock and validated session data; browser-provided time is not an authority.",
+        "Read the function call sessionActive({\"expiresAt\":100}, 99) from the inside out: the arguments supply the inputs, sessionActive runs the body once, and return sends its result back to the caller. console.log displays that result; it does not change it.",
+        "now equals expiresAt. Is the session active? The accepted interval ends before expiresAt. Equality is outside it."
+      ],
+      "after": [
+        "An expiry time marks when a session stops being valid. This rule accepts it only before that moment. At the expiry time itself, the session is already expired.",
+        "now and expiresAt must use the same time unit. A real server uses its trusted time and verified session data. The caller's browser must not choose the time used for this security check.",
+        "```javascript\nfunction sessionActive(session,now) {\n  return Boolean(session && now < session.expiresAt);\n}\nconsole.log(sessionActive({\"expiresAt\":100}, 99));\n```\nThis prints true. The supplied time 99 is still before the expiry time 100.",
+        "The < comparison means strictly before. When now equals expiresAt, it returns false. A later time also returns false.",
+        "session && ... prevents reading expiresAt when the session is missing. Boolean turns the whole result into true or false, including false for a missing session.",
+        "Complete sessionActive(session, now). Require a session and a current time strictly before expiresAt. Test before, at, and after the limit without changing the inputs."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the contract and trace the worked example.",
+        "Replace the unfinished return in the starter.",
+        "Run the changed-input checks.",
+        "Explain the boundary in the understanding question."
+      ],
+      "after": [
+        "Check that the session exists.",
+        "Compare now < session.expiresAt.",
+        "Return a Boolean and test the exact expiry time."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "now and expiresAt use the same supplied time unit. The strict less-than comparison excludes equality. A real service needs a trusted clock and validated session data; browser-provided time is not an authority."
+      ],
+      "after": [
+        "Use < rather than <=.",
+        "Keep now and expiresAt in the same time unit."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "now equals expiresAt. Is the session active?",
+        "choices": [
+          "Yes, equality extends it",
+          "No, the strict comparison fails",
+          "Only if the user reloads"
+        ],
+        "answer": 1,
+        "explanation": "The accepted interval ends before expiresAt. Equality is outside it."
+      },
+      "after": {
+        "question": "now equals expiresAt. Is this session active?",
+        "choices": [
+          "Yes, equality extends it",
+          "No, it has reached its expiry time",
+          "Only after a page reload"
+        ],
+        "answer": 1,
+        "explanation": "The rule accepts times strictly before expiry, so equality fails."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Runs as a pure JavaScript function in the browser. Passing checks does not establish live HTTP behavior, database durability, concurrency safety, authentication security, queue delivery guarantees, or production readiness.",
+      "after": "This browser exercise uses supplied times. A real service must use a trusted clock and validated session information."
+    }
+  ],
+  "headings": [
+    "Set the stopping time",
+    "Compare matching time units",
+    "Read one example",
+    "Exclude the exact limit",
+    "Handle a missing session",
+    "Try it yourself"
+  ],
+  "project": {
+    "title": "Make the session-expiry boundary explicit",
+    "task": "Complete sessionActive(session, now) so a present session is active only before its expiry time.",
+    "done_when": "Missing, expired, and exactly-at-expiry sessions return false."
+  }
+}

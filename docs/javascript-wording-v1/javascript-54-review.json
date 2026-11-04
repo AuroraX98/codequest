@@ -1,0 +1,94 @@
+{
+  "lesson": "javascript-54",
+  "position": 56,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Complete timerLabels(label): cancel the first scheduled callback using its handle, let the second append label, and return its completion promise. Do not use busy waiting or assert an exact elapsed duration.",
+      "after": "Schedule work for later and cancel a timer you no longer need."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "setTimeout(callback, delay) schedules a callback for later and returns a host-specific handle. The delay is a minimum scheduling request in milliseconds, not an exact appointment or a pause in the current function. A zero delay still waits until the current synchronous work finishes. Browsers and Node provide this host API; it is not an ECMAScript language timer.",
+        "clearTimeout(handle) cancels that pending timer and returns undefined. It does not undo a callback that already ran. Keep the handle instead of trying to cancel by callback name. The first timer below is cancelled synchronously, before it can run.",
+        "new Promise(executor) calls its executor immediately with resolve (and an optional reject parameter). resolve(events) fulfills this promise with the recorded array. timerLabels returns that promise, and only its retained callback resolves it.\n```javascript\nfunction timerLabels(label) {\n  return new Promise(resolve => {\n    const events = [];\n    const discarded = setTimeout(() => { events.push(\"discarded\"); }, 0);\n    clearTimeout(discarded);\n    setTimeout(() => {\n      events.push(label);\n      resolve(events);\n    }, 0);\n  });\n}\nconsole.log((await timerLabels(\"kept\")).join(\",\"));\n```\nOutput: kept. No elapsed duration is asserted.",
+        "The cancelled callback contributes no entry. The other callback appends the supplied label and completes the promise. Optional practice: change that label and predict the output; do not infer a precise delay or benchmark from it. Repeated scheduling needs an explicit lifetime/cleanup design rather than abandoned timers."
+      ],
+      "after": [
+        "`setTimeout(callback, delay)` asks the browser or Node to run a function later. The delay is in milliseconds.\n\nIt does not pause the current function. Even a delay of zero waits until the current direct work finishes. The exact running time can be later than requested.",
+        "`setTimeout` returns a handle: a value that identifies the timer. Pass that handle to `clearTimeout` to cancel a timer that has not run yet.\n\nCanceling cannot undo work that already happened. Our example cancels the first timer right away.",
+        "This example keeps one timer and cancels another.\n```javascript\nfunction timerLabels(label) {\n  return new Promise(resolve => {\n    const events = [];\n    const discarded = setTimeout(() => { events.push(\"discarded\"); }, 0);\n    clearTimeout(discarded);\n    setTimeout(() => {\n      events.push(label);\n      resolve(events);\n    }, 0);\n  });\n}\nconsole.log((await timerLabels(\"kept\")).join(\",\"));\n```\nOutput:\n```text\nkept\n```\n`new Promise` runs its setup function immediately. The second timer later adds the label and calls `resolve(events)` to supply the result. `await` waits for that result.",
+        "Complete `timerLabels(label)` by canceling the timer stored in `discarded`.\n\nKeep the second timer and the returned Promise. The output should contain only the supplied label, even when that label is empty text. Check the result, not an exact waiting time."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the requirement.",
+        "Make one change to the starter.",
+        "Run the checks.",
+        "Explain why a changed input produces its result."
+      ],
+      "after": [
+        "Keep the handle returned by the first setTimeout.",
+        "Call clearTimeout(discarded) before scheduling the second callback.",
+        "Keep the second timer's label and resolve call.",
+        "Await the result and check that discarded never appears."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Why can the zero-delay first callback be cancelled immediately after setTimeout returns?",
+        "choices": [
+          "clearTimeout reverses every side effect after a callback finishes.",
+          "A zero delay means its callback already finished before setTimeout returned.",
+          "It has been scheduled for later; current synchronous code can clear its handle before execution."
+        ],
+        "answer": 2,
+        "explanation": "Timer scheduling does not interrupt the current synchronous execution. Cancellation affects the pending callback, not already-completed work."
+      },
+      "after": {
+        "question": "Why can the zero-delay first callback be cancelled immediately after setTimeout returns?",
+        "choices": [
+          "clearTimeout reverses every side effect after a callback finishes.",
+          "A zero delay means its callback already finished before setTimeout returned.",
+          "It has been scheduled for later; current synchronous code can clear its handle before execution."
+        ],
+        "answer": 2,
+        "explanation": "A zero-delay timer still runs later. The current code can cancel it before its callback starts."
+      }
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Trace the visible worked calls before changing the starter."
+      ],
+      "after": [
+        "Cancel the handle, not the callback function.",
+        "Do not wait in a busy loop; return the Promise."
+      ]
+    },
+    {
+      "field": "externalNotes",
+      "before": "ECMAScript 2026 core; native Node24 and current app worker/DOM harness evidence are recorded separately. No external service or real-browser claim follows from a local fixture.",
+      "after": ""
+    }
+  ],
+  "headings": [
+    "Schedule a later callback",
+    "Cancel using the timer handle",
+    "Keep one timer",
+    "Complete timerLabels"
+  ],
+  "project": {
+    "title": "Timers and cancellation",
+    "task": "Complete timerLabels(label). Cancel the first timer using its handle. Let the second add the supplied label and complete the returned Promise.",
+    "done_when": "The result contains exactly the supplied label. The canceled callback adds nothing, including when the kept label is empty."
+  },
+  "notes": [
+    "Removed an unrelated local-project completion requirement; its useful teaching is in the lesson and technical evidence stays in review documents."
+  ]
+}

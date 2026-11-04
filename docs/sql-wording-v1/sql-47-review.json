@@ -1,0 +1,84 @@
+{
+  "lesson": "sql-47",
+  "position": 46,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Rename title to label and add status TEXT NOT NULL DEFAULT draft on plans, preserving both existing id/label values. Finish the transaction normally. Outcome checks inspect rows and schema, not your transaction syntax.",
+      "after": "Change a table's columns while keeping its existing rows."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A schema describes table and column definitions. ALTER TABLE plans ADD COLUMN appends a column; RENAME COLUMN changes its name, not its values. We use a disposable database and a transaction so a deliberate ROLLBACK can undo these changes before commit. Real migrations also need backups and application compatibility checks; this is not a production migration recipe.",
+        "\n```sql\nCREATE TABLE plans(id INTEGER PRIMARY KEY, title TEXT);\nINSERT INTO plans VALUES (1,'Map'),(2,'Sketch');\nBEGIN;\nALTER TABLE plans ADD COLUMN status TEXT NOT NULL DEFAULT 'draft';\nALTER TABLE plans RENAME COLUMN title TO label;\nCOMMIT;\nSELECT id,label,status\nFROM plans\nORDER BY id;\n```\nThe result is (1,'Map','draft'),(2,'Sketch','draft'). Existing rows read the new default. NOT NULL rejects missing status values, and DEFAULT supplies a value when it is omitted. SQLite 3.49.1 ADD COLUMN has restrictions: on this populated table, adding a NOT NULL column without a non-NULL default fails. Newer ALTER COLUMN features are not taught here.",
+        "\n```sql\nCREATE TABLE plans(id INTEGER PRIMARY KEY, title TEXT);\nINSERT INTO plans VALUES (1,'Map'),(2,'Sketch');\nBEGIN;\nALTER TABLE plans ADD COLUMN status TEXT NOT NULL DEFAULT 'draft';\nALTER TABLE plans RENAME COLUMN title TO label;\nROLLBACK;\nSELECT id,title\nFROM plans\nORDER BY id;\n```\nROLLBACK restores the original title column and removes status. The final query returns (1,Map),(2,Sketch). A failed statement is not an automatic substitute for rolling back a whole multi-statement migration. The supplemental failed-add fixture checks its diagnostic and preserved schema; the learner’s SELECT checks do not grade intentional errors.",
+        "Author-validated rejection example, separate from the normal successful project. Use a fresh disposable database and run this complete setup plus intentional failing statement:\n```sql\nCREATE TABLE plans(id INTEGER PRIMARY KEY, title TEXT);\nINSERT INTO plans VALUES (1,'Map'),(2,'Sketch');\nALTER TABLE plans ADD COLUMN status TEXT NOT NULL;\n```\nExpected diagnostic in the pinned engine: Cannot add a NOT NULL column with default value NULL. After catching the statement error, run the following separately to inspect preserved data:\n```sql\nSELECT id,title\nFROM plans\nORDER BY id;\n```\nThe original two id/title rows remain and no status column was added. Current learner SELECT grades do not run expected-error assertions; an error in your normal solution is still an error, not a pass."
+      ],
+      "after": [
+        "A schema describes a database's tables and columns. `ALTER TABLE` changes that shape. `ADD COLUMN` adds a column. `RENAME COLUMN` changes a column's name while keeping its values.",
+        "```sql\nCREATE TABLE demo_plans(id INTEGER PRIMARY KEY, title TEXT);\nINSERT INTO demo_plans VALUES (1, 'Map'), (2, 'Sketch');\nBEGIN;\nALTER TABLE demo_plans ADD COLUMN status TEXT NOT NULL DEFAULT 'draft';\nALTER TABLE demo_plans RENAME COLUMN title TO label;\nCOMMIT;\nSELECT id, label, status FROM demo_plans ORDER BY id;\n```\nThe rows are `(1, Map, draft)` and `(2, Sketch, draft)`. The old titles are still there under the name `label`.",
+        "`NOT NULL` requires a known status. `DEFAULT 'draft'` gives existing rows a status and fills it in for new rows when status is left out. In this SQLite exercise, adding a required column to a filled table without a suitable default fails.",
+        "The two changes sit inside one transaction. `COMMIT` keeps them. Using `ROLLBACK` instead would restore `title` and remove `status`. A statement error does not always undo the whole transaction. For a real database, also check backups and whether the app still understands the new columns."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the small example and explain its inputs and effects.",
+        "Complete the starter for this lesson.",
+        "Run the behavior checks, then predict a changed case."
+      ],
+      "after": [
+        "Begin a transaction on the supplied table.",
+        "Rename `title` to `label` and add `status TEXT NOT NULL DEFAULT 'draft'`.",
+        "Commit and run the checks for the columns and preserved rows."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Trace the supplied rows and resulting rows before changing the query."
+      ],
+      "after": [
+        "Use `ALTER TABLE plans RENAME COLUMN title TO label`.",
+        "Use `ALTER TABLE plans ADD COLUMN status TEXT NOT NULL DEFAULT 'draft'`."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "After running the changed ROLLBACK example, which columns remain?",
+        "choices": [
+          "id, title and status",
+          "id and title",
+          "id, label and status"
+        ],
+        "answer": 1,
+        "explanation": "The transaction’s ADD and RENAME are both undone, returning to the original table definition."
+      },
+      "after": {
+        "question": "Replace COMMIT with ROLLBACK in the example. Which columns remain?",
+        "choices": [
+          "id, title, and status",
+          "id and title",
+          "id, label, and status"
+        ],
+        "answer": 1,
+        "explanation": "Rolling back undoes both column changes. The table returns to its original id and title columns."
+      }
+    }
+  ],
+  "headings": [
+    "Change the table's shape",
+    "One example",
+    "Give old rows a value",
+    "Keep or undo the changes"
+  ],
+  "project": {
+    "title": "Change a small schema deliberately",
+    "task": "In a transaction, rename `plans.title` to `label` and add `status TEXT NOT NULL DEFAULT 'draft'`. Keep both existing IDs and labels, then commit.",
+    "done_when": "The checks pass for the new columns, both original labels, and the default status. The transaction is finished."
+  }
+}

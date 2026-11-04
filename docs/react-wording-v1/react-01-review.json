@@ -1,0 +1,95 @@
+{
+  "lesson": "react-01",
+  "position": 13,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Compose a profile from a component, pass details as props, and update a local counter.",
+      "after": "Keep a profile's details separate from a counter that changes."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "React builds interfaces from components. A component is a function that returns a description of what should appear. JSX is the HTML-like notation inside JavaScript, such as <h2>Hello</h2>. A JSX-aware runner translates it before execution. These examples use the lesson's available React object; they need React and JSX support, so they cannot be pasted unchanged into a plain JavaScript console.",
+        "This complete component example can be rendered by the React lesson runner:\n```react\nfunction Profile(props) {\n  return <section>\n    <h2>{props.name}</h2>\n    <p>Learning {props.subject}</p>\n  </section>;\n}\nfunction App() {\n  return <main>\n    <Profile name=\"Tara\" subject=\"Art\" />\n    <Profile name=\"Luis\" subject=\"Music\" />\n  </main>;\n}\n```\nYou see two profiles: Tara learning Art, and Luis learning Music. Props are inputs passed from a parent component to a child. Profile reads those inputs; it should not edit them.",
+        "Capitalized <Profile ... /> asks React to use your component; lowercase <section> describes a built-in HTML element. name=\"Tara\" passes text. Curly braces inside JSX evaluate JavaScript: {props.name} inserts the actual name. Text outside braces, such as Learning, appears literally. The closing /> means this component call has no enclosed children. A returned tree needs one surrounding element, here main.",
+        "Here is a separate complete interactive App. Replace the earlier App with this one to try it:\n```react\nfunction App() {\n  const [taps, setTaps] = React.useState(0);\n  return <main>\n    <p>Taps: {taps}</p>\n    <button onClick={() => setTaps(current => current + 1)}>\n      Tap once\n    </button>\n  </main>;\n}\n```\nInitially you see Taps: 0. One click shows 1, then another shows 2. useState returns two values: the current state and a setter. Square brackets unpack that pair into taps and setTaps.",
+        "State is data React remembers between renders. A render is React calling components to work out the current interface. setTaps asks React to render with the updated state; it does not directly rewrite the button's HTML. The arrow () => ... creates a function for a future click. Passing that function matters: calling setTaps while building the screen would update during rendering instead of waiting for the user.",
+        "current => current + 1 is a functional update: React supplies the latest queued count. Calling setCount(count + 1) also works for the exercise's separate clicks, but functional updates help when several increments are queued together. An ordinary local let variable would reset when the function runs again and would not itself tell React to render. Call hooks such as useState at the top level of the component, not inside a condition.",
+        "For the exercise, preserve Mina's Swift profile and the Practice button's label. Each click increments only count. Starting from 0, three taps follow 0 → 1 → 2 → 3; adding one each time is counting, not multiplication. A changing counter should not change read-only profile props. In larger apps, define child components outside their parent to preserve stable component identity; the starter's nested Profile is adequate for this simple stateless example."
+      ],
+      "after": [
+        "A profile can read details from props while a counter keeps its own state. The counter can change without changing the person's name or subject. This example brings those earlier ideas together.",
+        "```react\nfunction Profile(props) {\n  return (\n    <section>\n      <h2>{props.name}</h2>\n      <p>Learning {props.subject}</p>\n    </section>\n  );\n}\nfunction App() {\n  const [taps, setTaps] = React.useState(0);\n  return (\n    <main>\n      <Profile name=\"Tara\" subject=\"Art\" />\n      <p>Taps: {taps}</p>\n      <button onClick={() => setTaps(current => current + 1)}>\n        Tap once\n      </button>\n    </main>\n  );\n}\n```\nThe screen shows Tara, Learning Art, and Taps: 0. One click changes only the count to 1.",
+        "`Profile` reads its `name` and `subject` props. The braces place their values into the heading and paragraph. A parent can pass new props later; the child should not change those inputs itself.",
+        "`taps` is the current count. `setTaps` is its setter. The button receives a function to run after a click, so the count does not change while the screen is being described.",
+        "A render means React calls components to work out what to show. The state update asks for a new render with the new count. The profile still receives the same details.",
+        "`current => current + 1` adds one to the pending count. Keep `useState` at the top of the component. An ordinary local variable would not ask React to update the screen.",
+        "Keep Mina's Swift profile and the `Practice` button. Start at `Practice taps: 0` and add one per click. Define reusable child components outside their parent when building your own apps; defining them inside can reset their state."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Create Profile with name \"Mina\" and subject \"Swift\". Show Mina in an h2 heading and \"Learning Swift\" in a paragraph.",
+        "Start count at 0 and display \"Practice taps: 0\". Label the counter button \"Practice\".",
+        "Increase count once per click. Two clicks should show \"Practice taps: 2\" while the profile text stays the same."
+      ],
+      "after": [
+        "Show Mina in an h2 and Learning Swift in a paragraph.",
+        "Start the displayed practice count at 0.",
+        "Make each Practice click add one without changing the profile."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Keep `name` and `subject` as props on Profile.",
+        "Use the setter returned by `useState`.",
+        "Pass `() => setCount(count + 1)` to the button’s onClick."
+      ],
+      "after": [
+        "Read the profile details from props.",
+        "Update the counter with its setter."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Profile receives name=\"Mina\" and subject=\"Swift\". Only the subject prop changes to \"Drawing\"; the existing counter state is unchanged. What should change?",
+        "choices": [
+          "The profile shows Learning Drawing; the counter keeps its value",
+          "The profile keeps Learning Swift because props cannot change",
+          "The counter must reset because a prop changed"
+        ],
+        "answer": 0,
+        "explanation": "Read-only props means the child does not mutate its inputs, not that a parent cannot supply new values. Ordinary changed props update the rendered description without requiring a counter reset."
+      },
+      "after": {
+        "question": "Only Mina's subject prop changes from Swift to Drawing. The counter state stays the same. What should happen?",
+        "choices": [
+          "The profile shows Learning Drawing and the count stays the same.",
+          "The profile must keep Learning Swift.",
+          "The count must reset."
+        ],
+        "answer": 0,
+        "explanation": "A parent may supply new props. The child reads them, while the separate counter keeps its state."
+      }
+    }
+  ],
+  "headings": [
+    "Give each part one job",
+    "Read one profile and counter",
+    "Pass profile details",
+    "Update only the count",
+    "Ask React to show the change",
+    "Keep state updates in order",
+    "Build your practice profile"
+  ],
+  "project": {
+    "title": "A component-based profile",
+    "task": "Show Mina's Swift profile using props. Add a Practice button and a state counter starting at 0.",
+    "done_when": "Each Practice click increases the displayed count once. The profile details stay the same."
+  }
+}

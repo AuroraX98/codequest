@@ -1,0 +1,100 @@
+{
+  "lesson": "sql-19",
+  "position": 27,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Create a view paid_customers(id,name) containing each customer with at least one paid order. Multiple paid orders must not duplicate that customer. Keep source tables unchanged.",
+      "after": "Keep a customer once when at least one paid order exists."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "EXISTS asks whether a subquery returns at least one row.\n\nThe supplied practice database contains customers(id, name) and orders(id, customer_id, status). The names inside parentheses are the available columns; use these exact identifiers when reading the fixture tables.",
+        "It is a yes-or-no condition. It does not add all matching child rows to the outer result.",
+        "A correlated subquery refers to the current outer row. Run this complete example in a fresh database.\n```sql\nCREATE TABLE authors(id INTEGER PRIMARY KEY);\nCREATE TABLE books(id INTEGER PRIMARY KEY,author_id INTEGER);\nINSERT INTO authors VALUES(1),(2);\nINSERT INTO books VALUES(10,1),(11,1);\nSELECT a.id\nFROM authors AS a\nWHERE EXISTS(\nSELECT 1\nFROM books AS b\nWHERE b.author_id=a.id)\nORDER BY a.id;\nSELECT a.id\nFROM authors AS a\nWHERE NOT EXISTS(\nSELECT 1\nFROM books AS b\nWHERE b.author_id=a.id)\nORDER BY a.id;\n```\nThe first result contains ID 1 once, despite two matching books. The NOT EXISTS result contains ID 2.",
+        "For each author, the inner query asks whether any matching book exists. SELECT 1 is enough because the condition needs existence, not a book’s data.",
+        "Keep the relationship condition inside the subquery. Without b.author_id = a.id, any book could make every author qualify.",
+        "For your practice, require both the matching customer ID and status equal to paid.",
+        "A customer with no paid orders is excluded even if they have pending orders. A customer with several paid orders appears only once.",
+        "NOT EXISTS would ask the opposite question: no matching row. It differs from assuming every customer without a match has a zero-valued order."
+      ],
+      "after": [
+        "`EXISTS` asks whether an inner query returns at least one row. The project uses customers(id, name) and orders(id, customer_id, status).",
+        "EXISTS is a yes-or-no check on the outer row. It does not attach a separate copy for every matching order.",
+        "Run this example in a fresh database:\n```sql\nCREATE TABLE authors(id INTEGER PRIMARY KEY);\nCREATE TABLE books(id INTEGER PRIMARY KEY, author_id INTEGER);\nINSERT INTO authors VALUES (1), (2);\nINSERT INTO books VALUES (10, 1), (11, 1);\nSELECT a.id\nFROM authors AS a\nWHERE EXISTS (\n  SELECT 1\n  FROM books AS b\n  WHERE b.author_id = a.id\n)\nORDER BY a.id;\n```\nOnly author `1` appears, once, even though two books match.",
+        "`SELECT 1` is enough inside EXISTS. The check needs to know whether a row exists, not which book details it contains.",
+        "`b.author_id = a.id` ties the book to the current author. Without that check, any book could make every author pass.",
+        "For the project, match orders.customer_id to the current customer's id and require status `'paid'` inside the same subquery.",
+        "Create `paid_customers(id, name)` as a view. A customer with several paid orders appears once. A customer with only pending orders, or no orders, is left out. Keep both source tables unchanged.",
+        "`NOT EXISTS` asks the opposite question: no matching row. In the example it would choose author 2. No match does not mean there is a row with a zero value."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the requirement.",
+        "Make one change to the starter.",
+        "Run the checks.",
+        "Explain why a changed input produces its result."
+      ],
+      "after": [
+        "Read each customer as the outer row.",
+        "Use EXISTS to look for that customer's paid order.",
+        "Save the selected id and name in paid_customers."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Correlate o.customer_id with c.id.",
+        "Check paid status inside the same subquery.",
+        "EXISTS needs a match, not a count of exactly one."
+      ],
+      "after": [
+        "The inner query needs both the customer match and paid status.",
+        "EXISTS means at least one, not exactly one.",
+        "Do not join all paid orders into the outer result."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "A customer has three paid orders. A query uses WHERE EXISTS for their paid orders. How many outer customer rows does this produce for that customer?",
+        "choices": [
+          "Three, one per order.",
+          "One, because existence is a condition on the customer row.",
+          "Zero, because EXISTS requires exactly one match."
+        ],
+        "answer": 1,
+        "explanation": "EXISTS is true when any match exists. It filters the outer customer row rather than multiplying it by the number of orders."
+      },
+      "after": {
+        "question": "A customer has three paid orders. How many customer rows does WHERE EXISTS keep for them?",
+        "choices": [
+          "Three, one for each order.",
+          "One, because the customer passes the check.",
+          "Zero, because EXISTS needs exactly one match."
+        ],
+        "answer": 1,
+        "explanation": "EXISTS filters the customer row. Extra matching orders do not copy it."
+      }
+    }
+  ],
+  "headings": [
+    "Ask whether a match exists",
+    "Use a yes-or-no check",
+    "Find authors with books",
+    "Understand SELECT 1",
+    "Keep the relationship check",
+    "Find paid orders",
+    "Keep each customer once",
+    "Read NOT EXISTS"
+  ],
+  "project": {
+    "title": "Find customers who have paid orders",
+    "task": "Create paid_customers(id, name) as a view of customers with at least one paid order.",
+    "done_when": "Each qualifying customer appears once, customers without paid orders are excluded, and the source tables stay unchanged."
+  }
+}

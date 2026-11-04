@@ -1,0 +1,98 @@
+{
+  "lesson": "swift-21",
+  "position": 49,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Return an immutable snapshot rather than sharing mutable actor-owned state.",
+      "after": "Return a snapshot that keeps its value after the original data changes."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "An actor isolates its mutable state. Code outside it normally uses await to call its isolated methods.",
+        "Sendable describes values that can safely cross concurrency boundaries. It is a compiler-checked promise, not a lock added at runtime.",
+        "An immutable value-type snapshot containing Sendable fields is a simple way to communicate state without exposing a shared mutable object.",
+        "```swift\nstruct LabelSnapshot: Sendable { let text: String }\nactor LabelStore {\n    private var text = \"Ready\"\n    func snapshot() -> LabelSnapshot { LabelSnapshot(text: text) }\n}\n```\nString is Sendable. The returned struct contains a value, not direct access to the actor's stored property.\n\nIn a compatible top-level async program, follow the definitions with:\n```swift\nlet store = LabelStore()\nlet saved = await store.snapshot()\nprint(saved.text)\n```\nThis prints Ready. snapshot takes no explicit arguments and returns a LabelSnapshot value through the awaited call. Reading saved.text does not directly read actor storage. The exercise’s separate before/after values extend this same snapshot contract.",
+        "After await, other work may have changed an actor. A snapshot describes the state when it was made; it is not a live view.",
+        "For the exercise, snapshot returns CountSnapshot(total: total). The first result remains 3 after the store changes to 7; the second reports 7.",
+        "Do not add @unchecked Sendable just to silence a diagnostic. It bypasses compiler verification and requires a separate safety argument."
+      ],
+      "after": [
+        "A snapshot is a value saved from one moment. It does not keep following later changes. This lesson returns a small, fixed copy of an actor's data.",
+        "An actor protects its changing data from unsafe access by other work. Code outside it normally uses await to call a protected method. await marks a place where that call may pause.",
+        "Sendable means a value can safely pass between separate pieces of concurrent work. Concurrent work can make progress during overlapping periods. Swift checks this promise; Sendable does not add a lock or make a value update itself.",
+        "```swift\nstruct LabelSnapshot: Sendable { let text: String }\nactor LabelStore {\n    private var text = \"Ready\"\n    func snapshot() -> LabelSnapshot { LabelSnapshot(text: text) }\n}\nlet store = LabelStore()\nlet saved = await store.snapshot()\nprint(saved.text)\n```\nIn a Swift program that allows top-level await, this prints Ready. saved contains its own text value.",
+        "Reading saved.text reads the snapshot, not the actor's current storage. Other work may change an actor while a call is paused. A returned snapshot still describes the moment it was made.",
+        "Complete snapshot in the count store by returning CountSnapshot(total: total). A snapshot taken at 3 must stay 3 after the store changes to 7. A new snapshot should report 7.",
+        "Keep Sendable's normal checks. @unchecked Sendable asks Swift to trust a safety promise it has not fully checked. This exercise does not need that shortcut."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Build the snapshot from the actor's current total.",
+        "Read both stored snapshot values after the two updates."
+      ],
+      "after": [
+        "Build CountSnapshot from the current total inside the actor.",
+        "Save a snapshot before and after the update.",
+        "Check that the earlier snapshot keeps its old total."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Build the snapshot from the actor's current total.",
+        "Read both stored snapshot values after the two updates."
+      ],
+      "after": [
+        "Return a new CountSnapshot value.",
+        "The snapshot should not expose shared, changing storage."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "A Sendable snapshot was returned with total 3. The actor later changes its total to 7. What should the old immutable value show?",
+        "choices": [
+          "3; it is a snapshot, not shared mutable actor storage",
+          "7; Sendable makes every value a live view",
+          "A compiler error because values cannot cross actors"
+        ],
+        "answer": 0,
+        "explanation": "The immutable struct carries a value copied out of the actor. Sendable permits safe transfer; it does not turn it into a live subscription."
+      },
+      "after": {
+        "question": "A snapshot has total 3. The actor later changes to 7. What should the old snapshot show?",
+        "choices": [
+          "3; it keeps the earlier value",
+          "7; Sendable makes it update",
+          "A compiler error"
+        ],
+        "answer": 0,
+        "explanation": "A snapshot saves a value from one moment. It is not a live view of the actor."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Use Swift 6 language mode for the stated Sendable checking. Compiler version, language mode and an Xcode project’s isolation defaults are distinct settings. Do not add @unchecked Sendable to bypass the contract.",
+      "after": "Use Swift 6 language mode for this exercise's concurrency checks. The installed compiler version and the project's language mode are separate settings. The example also needs a program setup that allows top-level await."
+    }
+  ],
+  "headings": [
+    "Keep a snapshot",
+    "Protect changing data",
+    "Explain Sendable",
+    "Read one example",
+    "Remember when it was made",
+    "Try it yourself",
+    "Keep the compiler's checks"
+  ],
+  "project": {
+    "title": "Send a value across an isolation boundary",
+    "task": "Return CountSnapshot(total: total) from the actor. Keep the snapshot immutable so earlier results stay unchanged after later updates.",
+    "done_when": "The first snapshot stays at 3 and the later snapshot reports 7."
+  }
+}

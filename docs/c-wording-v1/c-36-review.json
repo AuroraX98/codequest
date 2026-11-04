@@ -1,0 +1,92 @@
+{
+  "lesson": "c-36",
+  "position": 36,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "If the original a[0] is initialized to 6, what prints after successful growth?",
+      "after": "realloc can resize allocated storage. Keep the old pointer until you know whether the change worked."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "realloc can resize an existing allocation. For the positive size used here, failure returns NULL and leaves the original allocation valid. Success may move it and ends the old allocation; use the returned pointer afterward, not old aliases.",
+        "Store the result in a temporary pointer. On failure free the original before returning. Preserved old elements retain their values; newly added bytes need initialization. Avoid zero-size realloc in this pattern.",
+        "Complete local C example; the app itself does not execute it:\n```c\n#include <stdio.h>\n#include <stdlib.h>\n\nint main(void) {\n int *a = malloc(sizeof *a);\n if (a == NULL) { return 1; }\n a[0] = 4;\n int *grown = realloc(a, 2 * sizeof *a);\n if (grown == NULL) { free(a); return 1; }\n a = grown;\n a[1] = 9;\n printf(\"%d %d\\n\", a[0], a[1]);\n free(a);\n}\n```",
+        "Expected output or behavior: 4 9\n. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Grow to three int elements and explicitly initialize the new third element. You may trace it without a C compiler; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "`realloc` asks to resize an allocation. For a positive requested size, failure returns NULL and leaves the original allocation usable. Success may move the data. After success, use the returned pointer and stop using old pointers into that allocation.",
+        "Store the result in a temporary pointer, grown. If it is NULL, this example frees the original and stops. Otherwise, copy grown into a. The old values are kept, but added space must be filled before reading. This pattern uses a positive size.",
+        "Follow the example one line at a time.\n```c\n#include <stdio.h>\n#include <stdlib.h>\n\nint main(void) {\n int *a = malloc(sizeof *a);\n if (a == NULL) { return 1; }\n a[0] = 4;\n int *grown = realloc(a, 2 * sizeof *a);\n if (grown == NULL) { free(a); return 1; }\n a = grown;\n a[1] = 9;\n printf(\"%d %d\\n\", a[0], a[1]);\n free(a);\n}\n```",
+        "The first item starts at 4. Successful growth keeps it and adds room for a second int. The code writes 9 to the new item, so the output is 4 9. The final free releases the resized allocation.",
+        "Set the first item to 6 before resizing. Successful realloc preserves that value too."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Growing the storage does not reset its existing first item."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If the original a[0] is initialized to 6, what prints after successful growth?",
+        "choices": [
+          "4 9",
+          "6 9",
+          "0 9"
+        ],
+        "answer": 1,
+        "explanation": "Successful realloc preserves the original first element, and the second element receives nine after growth."
+      },
+      "after": {
+        "question": "Set a[0] to 6 before resizing. What prints after successful growth?",
+        "choices": [
+          "4 9",
+          "6 9",
+          "0 9"
+        ],
+        "answer": 1,
+        "explanation": "realloc keeps the first item's 6. The newly added second item is explicitly set to 9."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "C Core v1 uses a portable C17 baseline supported by the verified compiler. C23 exists but is not claimed fully supported here. The app supplies concept reading and an understanding check, not a C browser runner. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "The browser shows C code and checks your understanding; it does not run C. Optional local examples use C17."
+    }
+  ],
+  "headings": [
+    "Resize without losing the original on failure",
+    "Check the new pointer before replacing the old one",
+    "One example",
+    "Keep old values and fill new space",
+    "Change the preserved value"
+  ],
+  "project": {
+    "title": "Grow allocations safely with realloc",
+    "task": "Explain why grown is checked before replacing a, and why the new item needs a value.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local C example is optional."
+  },
+  "navigationCorrection": "Added a short example introduction so its reviewed heading remains an explicit contents target."
+}

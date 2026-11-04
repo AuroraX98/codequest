@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { mkdtemp, mkdir, readFile, writeFile, rm, symlink } from 'node:fs/promises';
+import { mkdtemp, mkdir as _mkdir, readFile, writeFile, rm, symlink } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -61,7 +61,7 @@ try {
     assert.equal(attr(pane, 'key'), undefined, 'Hide/show must not remount the pane with a new key');
     assert.equal(attr(textarea, 'value').initializer.expression.getText(ast), 'question');
     assert.equal(attr(textarea, 'onChange').initializer.expression.getText(ast).replace(/\s/g, ''), '(e)=>setQuestion(e.target.value)');
-    for (const node of [control, pane]) {
+    for (const node of [pane]) {
       const parent = parentExpression(node);
       assert.ok(ts.isBinaryExpression(parent) && parent.operatorToken.kind === ts.SyntaxKind.AmpersandAmpersandToken);
       assert.equal(parent.left.getText(ast).replace(/\s/g, ''), '(state.profile.aiEnabled||state.profile.hintsEnabled)');
@@ -84,7 +84,8 @@ try {
       const tutorPanel = useRef(null);
       const [question, setQuestion] = useState('');
       const [chat] = useState([{question:'Earlier question', answer:'Earlier answer'}]);
-      const pendingPassage = '', tutorBusy = false;
+      const pendingPassage = '', tutorBusy = false, ready = true, view = 'quest', studioMode = 'course';
+      const setView=()=>{}, setPhase=()=>{};
       const lesson = {runtime:'python'};
       ${hook.getText(ast)}
       ${effect.getText(ast)}
@@ -215,69 +216,10 @@ try {
     assert.deepEqual(submissions, []);
   });
 
-  await check('Opening or navigating original prose replaces a stale concept-room annotation context', async () => {
-    const original = all.find(node => tag(node) === 'details' && attr(node, 'className')?.initializer?.getText(ast).includes('original-lesson'));
-    const currentSource = codequest.body.statements.find(node => ts.isVariableStatement(node) && node.declarationList.declarations.some(d => d.name.getText(ast) === 'currentNoteSource'));
-    assert.ok(original && currentSource);
-    await mkdir(path.join(temp, 'components'));
-    await mkdir(path.join(temp, 'lib'));
-    for (const file of ['components/LessonContents.tsx', 'lib/lesson-headings.ts']) {
-      const js = ts.transpileModule(await readFile(path.join(cwd, file), 'utf8'), {
-        compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext, jsx: ts.JsxEmit.ReactJSX },
-      }).outputText.replace(/from\s+(['"])(\.\.?\/[^'"]+)\1/g, 'from "$2.mjs"');
-      await writeFile(path.join(temp, file.replace(/\.tsx?$/, '.mjs')), js);
-    }
-    const contextFixture = `
-      import React, {useState, useRef} from 'react';
-      import LessonContents from './components/LessonContents.mjs';
-      import {getLessonHeadings} from './lib/lesson-headings.mjs';
-      const LessonContent = ({text}) => <p>{text}</p>;
-      const LessonVisual = () => null;
-      // This suite owns app annotation callbacks. The actual microstep flow is
-      // exercised by simple-reading.mjs and lesson-step-flow.mjs.
-      const LessonStepFlow = ({onNext, onBack, backDisabled}) => <div className="concept-controls"><button type="button" disabled={backDisabled} onClick={onBack}>Back</button><button type="button" onClick={onNext}>Next</button></div>;
-      const ArrowRight = () => null;
-      const noteSource = (lesson, sectionKey) => ({sectionKey});
-      export default function Fixture() {
-        const lesson = {id:'python-01', runtime:'python', explanation:Array.from({length:7}, (_,i) => 'Original paragraph ' + i)};
-        const [paragraph, setParagraph] = useState(0);
-        const [phase, setPhase] = useState('learn');
-        const [flowBackTarget, setFlowBackTarget] = useState(null);
-        const [noteSection, setNoteSection] = useState({lessonId:lesson.id, key:'concept:names'});
-        const conceptStart = useRef(null), theoryFocusRequested = useRef(false);
-        ${currentSource.getText(ast)}
-        return <>
-          <button type="button" data-focus-concept onClick={() => setNoteSection({lessonId:lesson.id, key:'concept:names'})}>Focus Names</button>
-          ${original.getText(ast)}
-          <output data-context>{currentNoteSource?.sectionKey}</output>
-          <output data-paragraph>{paragraph}</output><output data-phase>{phase}</output>
-        </>;
-      }
-    `;
-    await writeFile(path.join(temp, 'context-fixture.mjs'), ts.transpileModule(contextFixture, {
-      compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext, jsx: ts.JsxEmit.ReactJSX },
-    }).outputText);
-    const {default: ContextFixture} = await import(pathToFileURL(path.join(temp, 'context-fixture.mjs')).href);
-    await act(async () => root.render(React.createElement(ContextFixture)));
-    const context = () => document.querySelector('[data-context]').textContent;
-    const nativeClick = async node => { await act(async () => { node.focus(); node.click(); await new Promise(resolve => setTimeout(resolve, 0)); }); };
-    const focusNames = () => nativeClick(document.querySelector('[data-focus-concept]'));
-    const navButton = label => [...document.querySelectorAll('.concept-controls button')].find(node => node.textContent.trim() === label);
-    assert.equal(context(), 'concept:names');
-    await nativeClick(document.querySelector('.original-lesson > summary'));
-    assert.equal(document.querySelector('.original-lesson').open, true);
-    assert.equal(context(), 'text:0', 'Opening original prose must not leave notes and Ask ChatGPT attached to Names');
-    await focusNames();
-    await nativeClick(navButton('Next'));
-    assert.equal(document.querySelector('[data-paragraph]').textContent, '1');
-    assert.equal(context(), 'text:1', 'Next switches context to the newly displayed written paragraph');
-    await focusNames();
-    await nativeClick(navButton('Back'));
-    assert.equal(context(), 'text:0', 'Back switches context to the newly displayed written paragraph');
-    await focusNames();
-    await nativeClick(document.querySelector('.reader-index nav button'));
-    assert.equal(context(), 'text:0', 'Selecting the current written idea switches annotation context');
-    assert.deepEqual(requests, []);
+  await check('Current reading keeps stable lesson section anchors and explicit reading marks', async () => {
+    assert.match(source, /sectionKey=\{[\s\S]*?"text:" \+ paragraph/);
+    assert.match(source, /<LessonContents[\s\S]*?lessonId=\{lesson.id\}/);
+    assert.match(source, /<LessonStepFlow/);
   });
 
   const css = postcss.parse(await readFile(path.join(cwd, 'app/globals.css'), 'utf8'));

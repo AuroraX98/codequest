@@ -1,0 +1,105 @@
+{
+  "lesson": "sql-52",
+  "position": 52,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Explain which writes the byte snapshot contains and why closing an in-memory handle is not saving. Optionally run each full file in a separate disposable local directory; no browser SQL-editor export grade exists.",
+      "after": "Save a copy of a database, then reopen the copy."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "Local companion only: this page’s SQL editor does not run JavaScript, bind host values or save files. Use an already available Node.js installation and the pinned SQL.js 1.13.0 distribution, containing sql-wasm.js and sql-wasm.wasm. In a fresh disposable directory, make vendor/, copy those two files there, and name the JavaScript copy sql-wasm.cjs so require treats it as CommonJS. Keep the supplied dependency license with these files. No download, package installation, remote server or credentials are part of this lesson. Save the complete program below as main.cjs and run `node main.cjs` from that directory. The validated engine is SQLite 3.49.1, not a claim about every SQL.js version. Basic JavaScript const, arrays, objects, callbacks, promises and try/finally are prerequisites; review those before the optional local exercise. This file-writing example creates study.sqlite in the current working directory. Use a fresh directory for each version. It deliberately refuses to overwrite an existing file. A SQL.js database lives in memory until a host explicitly saves its bytes; closing it is not automatic persistence. We export this isolated main database after successful ordinary writes, with no active transaction or concurrent writer.",
+        "\n```javascript\nconst initSqlJs = require('./vendor/sql-wasm.cjs');\nconst { writeFileSync, readFileSync } = require('node:fs');\ninitSqlJs({ locateFile: file => __dirname + '/vendor/' + file }).then(SQL => {\n  const db = new SQL.Database();\n  let bytes;\n  try {\n    db.run(`CREATE TABLE notes(id INTEGER PRIMARY KEY, text TEXT);\nINSERT INTO notes VALUES (1,'First');`);\n    bytes = db.export();\n    db.run(`INSERT INTO notes VALUES (2,'Later');`);\n    console.log(db.exec('SELECT COUNT(*) FROM notes')[0].values[0][0]);\n  } finally {\n    db.close();\n  }\n  writeFileSync('study.sqlite', bytes, { flag: 'wx' });\n  const saved = readFileSync('study.sqlite');\n  const reopened = new SQL.Database(saved);\n  try {\n    console.log(JSON.stringify(reopened.exec('SELECT id,text FROM notes ORDER BY id')[0].values));\n  } finally {\n    reopened.close();\n  }\n}).catch(error => { console.error(error.message); process.exitCode = 1; });\n```\nThe output is 2, then [[1,\"First\"]]. The original in-memory database gained a second note after the export, but the exported bytes describe the earlier one-row state. Writing those bytes and reopening them does not retroactively include the later insert. The export is binary database content, not a string of SQL statements.",
+        "db.export() returns a Uint 8Array of SQLite bytes. writeFileSync(path,bytes,{flag:\"wx\"}) writes them to a new file synchronously; wx fails if the path already exists, avoiding silent overwrite. A write error is reported rather than called a successful save. readFileSync(path) returns a Buffer of bytes; Buffer is usable as byte input to new SQL.Database(saved). That constructor opens an independent in-memory database from the snapshot. db.exec returns query-result arrays; values contains row arrays. db.close and reopened.close release their respective handles, not the saved file. initSqlJs and locateFile initialize the local pinned engine as in the previous companion. JSON.stringify and console.log display rows; require loads the local library and Node file API. Backticks in db.run delimit the multiline JavaScript SQL string; they are not SQL identifier quotes.",
+        "\n```javascript\nconst initSqlJs = require('./vendor/sql-wasm.cjs');\nconst { writeFileSync, readFileSync } = require('node:fs');\ninitSqlJs({ locateFile: file => __dirname + '/vendor/' + file }).then(SQL => {\n  const db = new SQL.Database();\n  let bytes;\n  try {\n    db.run(`CREATE TABLE notes(id INTEGER PRIMARY KEY, text TEXT);\nINSERT INTO notes VALUES (1,'First');`);\n    db.run(`INSERT INTO notes VALUES (2,'Later');`);\n    bytes = db.export();\n    console.log(db.exec('SELECT COUNT(*) FROM notes')[0].values[0][0]);\n  } finally {\n    db.close();\n  }\n  writeFileSync('study.sqlite', bytes, { flag: 'wx' });\n  const saved = readFileSync('study.sqlite');\n  const reopened = new SQL.Database(saved);\n  try {\n    console.log(JSON.stringify(reopened.exec('SELECT id,text FROM notes ORDER BY id')[0].values));\n  } finally {\n    reopened.close();\n  }\n}).catch(error => { console.error(error.message); process.exitCode = 1; });\n```\nNow the output is 2, then [[1,\"First\"],[2,\"Later\"]], because both inserts precede export. Optional practice: reopen the file in another fresh local process with the same pinned library and compare its rows. This is a small isolated snapshot demonstration, not a live-backup algorithm, multi-connection consistency claim, browser-storage feature or guarantee against disk failure. Never overwrite your only copy of valuable data to try an example."
+      ],
+      "after": [
+        "SQL.js keeps its database in memory while the program runs. Closing it does not save a file. `export()` makes a copy of the database as bytes: small pieces of computer data. That copy contains the rows present at export time.",
+        "```javascript\nconst initSqlJs = require('./vendor/sql-wasm.cjs');\nconst { writeFileSync, readFileSync } = require('node:fs');\ninitSqlJs({ locateFile: file => __dirname + '/vendor/' + file }).then(SQL => {\n  const db = new SQL.Database();\n  let bytes;\n  try {\n    db.run(\"CREATE TABLE notes(id INTEGER PRIMARY KEY, text TEXT)\");\n    db.run(\"INSERT INTO notes VALUES (1, 'First')\");\n    bytes = db.export();\n    db.run(\"INSERT INTO notes VALUES (2, 'Later')\");\n  } finally {\n    db.close();\n  }\n  writeFileSync('study.sqlite', bytes, { flag: 'wx' });\n  const saved = readFileSync('study.sqlite');\n  const reopened = new SQL.Database(saved);\n  try {\n    console.log(JSON.stringify(reopened.exec('SELECT id, text FROM notes ORDER BY id')[0].values));\n  } finally {\n    reopened.close();\n  }\n}).catch(error => { console.error(error.message); process.exitCode = 1; });\n```\nThe output is `[[1,\"First\"]]`. The second note was added after export, so it is absent from the saved copy.",
+        "`writeFileSync` writes the copied bytes to `study.sqlite`. The `wx` option refuses to replace an existing file. `readFileSync` reads the file's bytes, and `new SQL.Database(saved)` opens a separate database from them. Later changes to the original do not update the copy.",
+        "This is a JavaScript program for Node.js, not the SQL editor. Use the setup notes and a fresh folder so the new file has its own place. Export after completed writes, with no open transaction. This example teaches a small saved copy; a database with other people writing to it needs a suitable backup process."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the complete local host example and predict its output.",
+        "Explain the changed snapshot or binding case.",
+        "Optionally run the local companion with the specified pinned files; this page does not execute it."
+      ],
+      "after": [
+        "Find where the example exports the database.",
+        "Explain why the reopened copy has only the first note.",
+        "Optionally run the local program in a fresh folder and inspect its output."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Keep SQL text and host JavaScript roles distinct.",
+        "Use a disposable local directory; never supply production data."
+      ],
+      "after": [
+        "Read the order: first insert, export, second insert.",
+        "To include a later change in a new saved copy, export again after that change."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Export bytes, then add a row to the original database without exporting again. Does reopening the first byte array include that row?",
+        "choices": [
+          "Yes, closing the original appends it",
+          "No",
+          "Yes, the array stays linked to future writes"
+        ],
+        "answer": 1,
+        "explanation": "The byte array describes the database when export was called. Later mutations require another deliberate snapshot."
+      },
+      "after": {
+        "question": "You export a database, then add a row without exporting again. Does the first copy contain the new row?",
+        "choices": [
+          "Yes, closing the original adds it",
+          "No",
+          "Yes, the copy keeps following later changes"
+        ],
+        "answer": 1,
+        "explanation": "The copy records the database at export time. Later changes need another export."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Local Node.js plus supplied SQL.js1.13.0 JS/WASM files only; not executable in this lesson’s SQL editor.",
+      "after": "Optional local exercise: use Node.js and SQL.js 1.13.0. In a fresh folder, place matching sql-wasm.js and sql-wasm.wasm files in vendor; rename the JavaScript file sql-wasm.cjs and keep its license. Save the example as main.cjs and run node main.cjs. It writes a new study.sqlite in the current folder and refuses to overwrite one. JavaScript functions, promises, arrays, and try/finally are prerequisites. The lesson's SQL editor cannot run or grade this file operation. The pinned engine is SQLite 3.49.1."
+    },
+    {
+      "field": "extraFiles",
+      "before": [
+        {
+          "name": "main.cjs",
+          "code": "const initSqlJs = require('./vendor/sql-wasm.cjs');\nconst { writeFileSync, readFileSync } = require('node:fs');\ninitSqlJs({ locateFile: file => __dirname + '/vendor/' + file }).then(SQL => {\n  const db = new SQL.Database();\n  let bytes;\n  try {\n    db.run(`CREATE TABLE notes(id INTEGER PRIMARY KEY, text TEXT);\nINSERT INTO notes VALUES (1,'First');`);\n    bytes = db.export();\n    db.run(`INSERT INTO notes VALUES (2,'Later');`);\n    console.log(db.exec('SELECT COUNT(*) FROM notes')[0].values[0][0]);\n  } finally {\n    db.close();\n  }\n  writeFileSync('study.sqlite', bytes, { flag: 'wx' });\n  const saved = readFileSync('study.sqlite');\n  const reopened = new SQL.Database(saved);\n  try {\n    console.log(JSON.stringify(reopened.exec('SELECT id,text FROM notes ORDER BY id')[0].values));\n  } finally {\n    reopened.close();\n  }\n}).catch(error => { console.error(error.message); process.exitCode = 1; });"
+        }
+      ],
+      "after": [
+        {
+          "name": "main.cjs",
+          "code": "const initSqlJs = require('./vendor/sql-wasm.cjs');\nconst { writeFileSync, readFileSync } = require('node:fs');\ninitSqlJs({ locateFile: file => __dirname + '/vendor/' + file }).then(SQL => {\n  const db = new SQL.Database();\n  let bytes;\n  try {\n    db.run(\"CREATE TABLE notes(id INTEGER PRIMARY KEY, text TEXT)\");\n    db.run(\"INSERT INTO notes VALUES (1, 'First')\");\n    bytes = db.export();\n    db.run(\"INSERT INTO notes VALUES (2, 'Later')\");\n  } finally {\n    db.close();\n  }\n  writeFileSync('study.sqlite', bytes, { flag: 'wx' });\n  const saved = readFileSync('study.sqlite');\n  const reopened = new SQL.Database(saved);\n  try {\n    console.log(JSON.stringify(reopened.exec('SELECT id, text FROM notes ORDER BY id')[0].values));\n  } finally {\n    reopened.close();\n  }\n}).catch(error => { console.error(error.message); process.exitCode = 1; });\n"
+        }
+      ]
+    }
+  ],
+  "headings": [
+    "A saved copy captures one moment",
+    "One example",
+    "Follow the saved bytes",
+    "Run it in a fresh folder"
+  ],
+  "project": {
+    "title": "Save and reopen an isolated database",
+    "task": "Explain which note is in the saved copy and why closing the original database does not save later changes. Optionally run the local example in a fresh folder using the setup notes.",
+    "done_when": "You can explain the export timing and predict what would change if export came after both inserts. Any local run is separate from the SQL editor's checks."
+  }
+}

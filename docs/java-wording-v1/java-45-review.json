@@ -1,0 +1,94 @@
+{
+  "lesson": "java-45",
+  "position": 45,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Supply new Excited() instead of new Plain(). What changes?",
+      "after": "Let an object use a helper whose behavior can be swapped."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "Composition means one object uses another object to perform part of its work. NoticeService has a Formatter; it is not a kind of Formatter. The constructor receives the collaborator explicitly.",
+        "Objects.requireNonNull checks the supplied reference and throws NullPointerException if absent. The final field prevents replacing that reference later, not every possible change inside the collaborator.",
+        "A second Formatter implementation can change formatting without subclassing NoticeService. This makes the dependency visible and allows small substitute implementations in tests.",
+        "Complete local Java example; the app itself does not execute it:\n```java\nimport java.util.Objects;\ninterface Formatter { String format(String text); }\nclass Plain implements Formatter {\n    public String format(String text) { return text; }\n}\nclass Excited implements Formatter {\n    public String format(String text) { return text + \"!\"; }\n}\nclass NoticeService {\n    private final Formatter formatter;\n    NoticeService(Formatter formatter) {\n        this.formatter = Objects.requireNonNull(formatter);\n    }\n    String message(String text) { return formatter.format(text); }\n}\npublic class Main {\n    public static void main(String[] args) {\n        NoticeService service = new NoticeService(new Plain());\n        System.out.println(service.message(\"Ready\"));\n    }\n}\n\n```",
+        "Expected output or behavior: Ready\n. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Create a test Formatter that returns a fixed value and confirm NoticeService delegates to it. You may trace it without a JDK; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "Composition means one object uses another to do part of its work. NoticeService has a Formatter helper. Its constructor receives that helper, and message asks it to format the text.",
+        "Objects.requireNonNull returns the supplied reference or throws NullPointerException if it is missing. The final field keeps that same helper reference. It does not freeze any changeable data inside the helper.",
+        "Plain and Excited both provide the Formatter method. NoticeService can use either without changing its own code. A small replacement helper can also make the service easier to test.",
+        "Follow the Plain object into the service, then follow the message call to that helper.\n\n```java\nimport java.util.Objects;\ninterface Formatter { String format(String text); }\nclass Plain implements Formatter {\n    public String format(String text) { return text; }\n}\nclass Excited implements Formatter {\n    public String format(String text) { return text + \"!\"; }\n}\nclass NoticeService {\n    private final Formatter formatter;\n    NoticeService(Formatter formatter) {\n        this.formatter = Objects.requireNonNull(formatter);\n    }\n    String message(String text) { return formatter.format(text); }\n}\npublic class Main {\n    public static void main(String[] args) {\n        NoticeService service = new NoticeService(new Plain());\n        System.out.println(service.message(\"Ready\"));\n    }\n}\n\n```",
+        "The program prints Ready. Plain returns the supplied text unchanged, and NoticeService returns that result.",
+        "The quiz supplies Excited instead. The same message call now reaches a helper that adds an exclamation mark."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Trace which helper object is passed into the constructor."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Supply new Excited() instead of new Plain(). What changes?",
+        "choices": [
+          "The output becomes Ready! without changing NoticeService",
+          "Composition makes both formatters run",
+          "NoticeService must extend Excited first"
+        ],
+        "answer": 0,
+        "explanation": "NoticeService delegates to the supplied Formatter object. The interface stays the same while the collaborator’s behavior changes."
+      },
+      "after": {
+        "question": "Supply new Excited() instead of new Plain(). What changes?",
+        "choices": [
+          "The output becomes Ready! without changing NoticeService.",
+          "Both helpers run for every message.",
+          "NoticeService must extend Excited first."
+        ],
+        "answer": 0,
+        "explanation": "NoticeService calls the Formatter it received. Excited adds the exclamation mark, so the result is Ready!."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Java Core v1 uses stable Java25 LTS features without preview flags. The app supplies concept reading and an understanding check, not a Java browser runner. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "The browser shows Java code and checks your understanding; it does not run Java. Optional local examples use Java25."
+    }
+  ],
+  "headings": [
+    "Composition means using another object",
+    "Require a helper when the service is made",
+    "Swap the helper without rewriting the service",
+    "One example",
+    "What appears",
+    "Choose the other helper"
+  ],
+  "project": {
+    "title": "Prefer a composed collaborator",
+    "task": "Trace how NoticeService passes its formatting work to the supplied helper.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local Java example is optional."
+  }
+}

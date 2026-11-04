@@ -1,0 +1,48 @@
+{
+  "lesson": "javascript-19",
+  "position": 32,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Require an array containing only finite nonnegative numbers.",
+      "after": "Check a list of numbers before adding them together."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A robust function states what input it accepts and what it does for invalid input. This total function accepts an array of finite, nonnegative numbers. Finite means a normal bounded number rather than Infinity or NaN, which means not a number. Nonnegative includes zero. Text such as \"4\" is not a numeric input even though it looks like a number.",
+        "Validate before summing. `Array.isArray(values)` checks the whole input shape. `.some(callback)` reports whether at least one entry fails a rule. `typeof v` tells you the kind of value; compare it with \"number\". `Number.isFinite(v)` checks for a finite numeric value without converting text. `||` means at least one condition is true, and `!` means not. These let you reject a non-array or an invalid entry.",
+        "This complete valid-input example includes empty input.\n```javascript\nfunction total(values) {\n  if (!Array.isArray(values) || values.some(v =>\n    typeof v !== \"number\" || !Number.isFinite(v) || v < 0\n  )) {\n    throw new TypeError(\"Expected finite nonnegative numbers in an array\");\n  }\n  return values.reduce((sum, v) => sum + v, 0);\n}\nconsole.log(total([4, 6, 0]));\nconsole.log(total([]));\n```\nIt prints 10 and 0. The guard rejects bad inputs before reduce runs. The initial reducer value zero defines the empty total. Some returns false for an empty array, so empty input passes validation.",
+        "`throw` stops normal processing and sends an error to the caller. `new TypeError(message)` makes an error object that describes a wrong input kind. A caller can use try/catch to handle it. This is different from returning an error-looking string, which could accidentally be used as if it were the total. Valid inputs return numbers; invalid ones throw an explicit error.",
+        "Here is an independently runnable malformed-input example.\n```javascript\nfunction total(values) {\n  if (!Array.isArray(values) || values.some(v =>\n    typeof v !== \"number\" || !Number.isFinite(v) || v < 0\n  )) {\n    throw new TypeError(\"Expected finite nonnegative numbers in an array\");\n  }\n  return values.reduce((sum, v) => sum + v, 0);\n}\ntry {\n  console.log(total([\"4\"]));\n} catch (error) {\n  console.log(error instanceof TypeError);\n  console.log(error.message);\n}\n```\nIt prints true and the expected-input message. The quoted 4 was rejected, so no numerical total was displayed. `instanceof TypeError` checks the error's kind.",
+        "A test supplies an input and compares behavior with an expected outcome. Cover ordinary values, an empty list, zero, negative values, numeric-looking text, non-array input, Infinity, and NaN. A large valid array checks that all entries are processed. `Array(10000).fill(1)` creates ten thousand entries containing 1, so its expected total is 10000. Tests should inspect results and errors rather than requiring a particular spelling of the code.",
+        "The exercise checks total 5 for [2, 3], zero for empty input, clear TypeErrors for negative and text entries, and 10000 for the large list. The math total of 2, 3, and 5 is 10. Ordinary array tests do not prove every possible input works: this simple contract assumes dense arrays containing only the described values. JavaScript numbers also have finite precision, so very large sums can need additional range or precision decisions in a real application."
+      ],
+      "after": [
+        "A reliable function makes its rules clear. Our `total` function accepts an array of numbers that are zero or greater.\n\nEach number must be finite: it cannot be `Infinity` or `NaN`, which stands for not a number. Text such as `\"4\"` is not accepted.",
+        "Check the input before adding anything.\n\n`Array.isArray(values)` checks that the input is an array. `values.some(...)` checks whether any entry breaks a rule. `Number.isFinite(v)` rejects text, infinity, and NaN.\n\n`||` means either condition can be true. `!` means not. Together, these let us spot a bad input.",
+        "Here is the function with two valid inputs.\n```javascript\nfunction total(values) {\n  if (!Array.isArray(values) || values.some(v =>\n    typeof v !== \"number\" || !Number.isFinite(v) || v < 0\n  )) {\n    throw new TypeError(\"Expected finite nonnegative numbers in an array\");\n  }\n  return values.reduce((sum, v) => sum + v, 0);\n}\nconsole.log(total([4, 6, 0]));\nconsole.log(total([]));\n```\nOutput:\n```text\n10\n0\n```\n`reduce` adds each number to the running sum. The starting sum is zero, so an empty list also returns zero.",
+        "`throw` stops the normal calculation and sends an error to the caller.\n\n`new TypeError(message)` creates an error with a message about the wrong input. The caller can handle it with `try` and `catch`.\n\nA valid input returns a number. An invalid input throws an error instead of pretending to be a total.",
+        "This call supplies text where a number is required.\n```javascript\nfunction total(values) {\n  if (!Array.isArray(values) || values.some(v =>\n    typeof v !== \"number\" || !Number.isFinite(v) || v < 0\n  )) {\n    throw new TypeError(\"Expected finite nonnegative numbers in an array\");\n  }\n  return values.reduce((sum, v) => sum + v, 0);\n}\ntry {\n  console.log(total([\"4\"]));\n} catch (error) {\n  console.log(error instanceof TypeError);\n  console.log(error.message);\n}\n```\nOutput:\n```text\ntrue\nExpected finite nonnegative numbers in an array\n```\nThe call inside `try` fails. `catch` receives the error. `instanceof TypeError` checks its kind, and `error.message` reads its message.",
+        "A test checks what the function does with a chosen input. Check an ordinary list, an empty list, zero, negative numbers, text, infinity, and NaN.\n\nAlso check a large list. `Array(10000).fill(1)` makes ten thousand entries containing 1. Their total should be 10000.",
+        "Complete `total(values)`. Return the sum for valid input. For invalid input, throw a `TypeError` with a clear message beginning with `Expected`.\n\nThis exercise uses arrays with no empty gaps. Extremely large sums can exceed what JavaScript numbers can store accurately; deciding how to handle that is beyond this exercise."
+      ]
+    }
+  ],
+  "headings": [
+    "Set the input rules",
+    "Check before adding",
+    "Add valid numbers",
+    "Report a bad input",
+    "Handle an error",
+    "Choose useful tests",
+    "Build total"
+  ],
+  "project": {
+    "title": "A tested data-processing tool",
+    "task": "Complete total(values). Add finite numbers that are zero or greater. Accept an empty array. Throw a TypeError with a message beginning with Expected for invalid input.",
+    "done_when": "Ordinary and large lists have the correct total, an empty list returns zero, and invalid input throws a clear TypeError."
+  },
+  "notes": []
+}

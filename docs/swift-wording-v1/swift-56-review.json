@@ -1,0 +1,92 @@
+{
+  "lesson": "swift-56",
+  "position": 54,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Explain and optionally reproduce the complete local workflow; this lesson has no in-app executable checks.",
+      "after": "Describe which parts of a Swift package need each other."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A package manifest describes buildable targets and products. Here one executable target depends on a library target inside the same package; no external package is fetched.",
+        "Use an existing Swift 6.0-or-newer command-line toolchain and a new empty local directory for each variant. These are complete local files, not one source file for the app’s Run button. Actual recorded execution is Swift 6.4.1/Linux in language mode 6, not a Mac/Xcode or compiler 6.0 verification. No registry package, network service or user-machine installation is needed. Commands below assume a shell with swift/swiftc on PATH; preserve paths and run from that directory. Package.swift begins with the tools-version declaration, which sets the manifest/toolchain requirement; it is not proof of behavior on every Swift 6 compiler. import PackageDescription exposes Package and target/product factory APIs. Package(name:products:targets:) builds the manifest description. .library and .executable declare exported products from target names. .target declares the library; .executableTarget declares the command-line program and its intra-package dependency. Target names match their Sources subdirectories. public routeName(_:) takes a place and returns prefixed text; the executable imports TrailKit to call it. swift build builds this package. swift run --skip-build TrailDemo runs the product already built; it does not compile a missing build.",
+        "File `Package.swift`:\n```swift\n// swift-tools-version: 6.0\nimport PackageDescription\nlet package = Package(\n    name: \"TrailStudy\",\n    products: [\n        .library(name: \"TrailKit\", targets: [\"TrailKit\"]),\n        .executable(name: \"TrailDemo\", targets: [\"TrailDemo\"])\n    ],\n    targets: [\n        .target(name: \"TrailKit\"),\n        .executableTarget(name: \"TrailDemo\", dependencies: [\"TrailKit\"])\n    ]\n)\n```\n\nFile `Sources/TrailKit/Route.swift`:\n```swift\npublic func routeName(_ place: String) -> String {\n    return \"Route:\" + place\n}\n```\n\nFile `Sources/TrailDemo/main.swift`:\n```swift\nimport TrailKit\nprint(routeName(\"Lake\"))\n```\n\nRun these local commands in order:\n```sh\nswift build\nswift run --skip-build TrailDemo\n```\nBuild succeeds without an external dependency. The run command prints exactly `Route:Lake` followed by a newline. Build progress text and paths are not stable output contracts.",
+        "Fresh changed variant: create these complete files in a different empty directory.\n\nFile `Package.swift`:\n```swift\n// swift-tools-version: 6.0\nimport PackageDescription\nlet package = Package(\n    name: \"TrailStudy\",\n    products: [\n        .library(name: \"TrailKit\", targets: [\"TrailKit\"]),\n        .executable(name: \"TrailDemo\", targets: [\"TrailDemo\"])\n    ],\n    targets: [\n        .target(name: \"TrailKit\"),\n        .executableTarget(name: \"TrailDemo\", dependencies: [\"TrailKit\"])\n    ]\n)\n```\n\nFile `Sources/TrailKit/Route.swift`:\n```swift\npublic func routeName(_ place: String) -> String {\n    return \"Route:\" + place\n}\n```\n\nFile `Sources/TrailDemo/main.swift`:\n```swift\nimport TrailKit\nprint(routeName(\"Bridge\"))\n```\n\nRun:\n```sh\nswift build\nswift run --skip-build TrailDemo\n```\nIn the fresh changed tree, build then run prints exactly `Route:Bridge` followed by a newline.",
+        "Optional local practice: explain which file defines the API, which consumes it and what observable result establishes the contract. Do not equate a successful build with a successful behavioral test."
+      ],
+      "after": [
+        "A package is a group of related code. A target is one part the build tools can compile. This example has a library target, TrailKit, and a program target, TrailDemo, that uses it. Use a new empty folder and an existing Swift 6-compatible command-line toolchain.",
+        "Create Package.swift at the top of that folder:\n```swift\n// swift-tools-version: 6.0\nimport PackageDescription\nlet package = Package(\n    name: \"TrailStudy\",\n    products: [\n        .library(name: \"TrailKit\", targets: [\"TrailKit\"]),\n        .executable(name: \"TrailDemo\", targets: [\"TrailDemo\"])\n    ],\n    targets: [\n        .target(name: \"TrailKit\"),\n        .executableTarget(name: \"TrailDemo\", dependencies: [\"TrailKit\"])\n    ]\n)\n```\nThis file is the manifest: the package's build plan. products names the library and program people can use. targets defines their code. dependencies says TrailDemo needs TrailKit. The first line declares the minimum tools version.",
+        "Create Sources/TrailKit/Route.swift:\n```swift\npublic func routeName(_ place: String) -> String {\n    return \"Route:\" + place\n}\n```\nThe folder name matches the TrailKit target. public lets the other target call routeName. The function adds Route: before the supplied place.",
+        "Create Sources/TrailDemo/main.swift:\n```swift\nimport TrailKit\nprint(routeName(\"Lake\"))\n```\nThe folder name matches TrailDemo. import TrailKit makes the library available, so the program can call routeName with Lake.",
+        "From the folder containing Package.swift, run:\n```sh\nswift build\nswift run --skip-build TrailDemo\n```\nBuild must succeed before using --skip-build. The program should print Route:Lake. TrailKit is another target in this same package, so this example does not download an outside package."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Explain the displayed boundary before running anything.",
+        "Optionally create the complete file tree in an isolated local directory with an existing compatible toolchain.",
+        "Run the shown commands and compare exact behavior or named test evidence; explain the changed case."
+      ],
+      "after": [
+        "Create Package.swift and the two source files at the shown paths.",
+        "Run swift build from the package folder.",
+        "Run the built TrailDemo and check for Route:Lake."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Trace the inputs, returned value and changed state before running."
+      ],
+      "after": [
+        "Match each source folder to its target name.",
+        "TrailDemo needs TrailKit in its dependencies list."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Does dependencies: [\"TrailKit\"] here name a second downloaded package?",
+        "choices": [
+          "Yes: every dependency requires a registry.",
+          "No: it names the library target in this package.",
+          "It is an unused comment."
+        ],
+        "answer": 1,
+        "explanation": "The manifest supplies a target named TrailKit and no external package dependencies. The executable imports that target’s module."
+      },
+      "after": {
+        "question": "Does dependencies: [\"TrailKit\"] download a second package here?",
+        "choices": [
+          "Yes, every dependency is downloaded",
+          "No, it names a target in this package",
+          "It is just a comment"
+        ],
+        "answer": 1,
+        "explanation": "TrailKit is defined in this package's targets list. TrailDemo uses that local target."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Local multifile/module/package companion only. No browser Swift compiler or multi-file Mac-companion execution is claimed.",
+      "after": "This example needs several local files and an existing Swift toolchain. The browser and single-file Swift companion do not run this package workflow. Earlier execution evidence used Swift 6.4.1 on Linux."
+    }
+  ],
+  "headings": [
+    "Plan one package",
+    "Write the package plan",
+    "Add the library code",
+    "Add the program code",
+    "Build and run the package"
+  ],
+  "project": {
+    "title": "Describe one package and its target dependency",
+    "task": "Create the one TrailStudy package shown: its manifest, TrailKit library, and TrailDemo program. Optionally build and run it with an existing local Swift toolchain.",
+    "done_when": "You can trace TrailDemo's dependency on TrailKit. If run locally, the program prints Route:Lake. There is no in-app Run check."
+  }
+}

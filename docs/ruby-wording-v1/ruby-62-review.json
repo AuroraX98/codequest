@@ -1,0 +1,91 @@
+{
+  "lesson": "ruby-62",
+  "position": 62,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "If the producer sends [2, 3, 4], what changes?",
+      "after": "A queue passes items in order. A bounded queue limits how many can wait inside it at once."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "SizedQueue.new(1) creates a synchronized queue holding at most one waiting item. push blocks while full, pop blocks while empty, and the queue coordinates the handoff without guessing worker timing.",
+        "The single producer closes this queue after pushing all values. pop returns nil once the closed queue is empty, so nil is reserved here as end-of-stream and never sent as data. The assignment in while stores each popped item and tests its truthiness; false would also stop this loop, so the protocol sends only integers. The consumer drains before joining the producer; joining first could deadlock if the producer is blocked on a full buffer.",
+        "Complete local Ruby example; the app itself does not execute it:\n```ruby\nqueue = SizedQueue.new(1)\nproducer = Thread.new do\n  [2, 3].each { |n| queue.push(n) }\n  queue.close\nend\nsum = 0\nwhile (item = queue.pop)\n  sum += item\nend\nproducer.join\nputs sum\n\n```",
+        "Expected output or behavior: 5. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Explain why sending nil would conflict with this particular completion test. You may trace it without a Ruby interpreter; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "A queue passes items in order. A bounded queue limits how many can wait inside it at once.",
+        "The next push may have to wait for the reader to take the current item.",
+        "Follow the labeled parts of this example.\n```ruby\nqueue = SizedQueue.new(1)\nproducer = Thread.new do\n  [2, 3].each { |n| queue.push(n) }\n  queue.close\nend\nsum = 0\nwhile (item = queue.pop)\n  sum += item\nend\nproducer.join\nputs sum\n```",
+        "The output is `5`. The reader adds two and three. It finishes after the producer closes the queue and the items are gone.",
+        "Add a third item before closing the queue."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read one idea.",
+        "Follow the labeled example.",
+        "Try the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Add a third item before closing the queue."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If the producer sends [2, 3, 4], what changes?",
+        "choices": [
+          "The program must use sleep to avoid deadlock.",
+          "Only the first item survives the capacity-one limit.",
+          "The consumer drains all three and prints 9."
+        ],
+        "answer": 2,
+        "explanation": "Capacity limits buffered items, not the total stream; synchronized consumption makes room until closure signals completion."
+      },
+      "after": {
+        "question": "If the producer sends two, three and four, what sum prints?",
+        "choices": [
+          "5",
+          "4",
+          "9"
+        ],
+        "answer": 2,
+        "explanation": "The reader takes all three, even though only one can wait in the queue at a time."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Ruby Core v1 uses Ruby 4.0.9 and explicitly available extensions. The app supplies concept reading and an understanding check, not a Ruby browser runner. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "CodeQuest shows the Ruby example. Running it on your own computer is optional."
+    }
+  ],
+  "headings": [
+    "Pass items through a queue",
+    "Allow one waiting item",
+    "Read the example",
+    "What happens",
+    "Try one change"
+  ],
+  "project": {
+    "title": "Queues and bounded communication",
+    "task": "Add a third item before closing the queue.",
+    "done_when": "Read each idea and pass the understanding check. Running the example on your computer is optional."
+  }
+}

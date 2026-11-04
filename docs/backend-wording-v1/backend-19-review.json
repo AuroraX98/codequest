@@ -1,0 +1,96 @@
+{
+  "lesson": "backend-19",
+  "position": 5,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Implement isRecord(value). Match the worked contract and the changed-input checks without modifying the supplied input values.",
+      "after": "Check that parsed JSON is an object with named fields, rather than an array or null."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "After JSON parsing, require an object before reading named fields. Arrays and null need explicit rejection for this record-shaped request contract.",
+        "This exercise is a small pure JavaScript model. Its inputs are supplied directly; it does not receive live HTTP requests, operate a database, or deploy a service.",
+        "Worked example:\n\n```javascript\nfunction isRecord(value) {\n  return value !== null && typeof value === \"object\" && !Array.isArray(value);\n}\nconsole.log(isRecord({\"title\":\"Moon\"}));\n```\nThe returned value is true.",
+        "typeof null is \"object\", so the first comparison matters. Array.isArray detects arrays. The ! operator reverses its answer. This model accepts ordinary values produced by JSON.parse, not arbitrary class instances.",
+        "Read the function call isRecord({\"title\":\"Moon\"}) from the inside out: the arguments supply the inputs, isRecord runs the body once, and return sends its result back to the caller. console.log displays that result; it does not change it.",
+        "Why is typeof value === \"object\" insufficient by itself? Null and arrays satisfy that typeof comparison. Named-field requirements come after this guard."
+      ],
+      "after": [
+        "Before reading a request's named fields, check its outer shape. Here, a record means an object with named fields. An array and null do not count as records for this rule.",
+        "This check is for ordinary values produced by JSON.parse. It checks the outside shape only. It does not prove that a required field exists or that its contents are valid.",
+        "```javascript\nfunction isRecord(value) {\n  return value !== null && typeof value === \"object\" && !Array.isArray(value);\n}\nconsole.log(isRecord({\"title\":\"Moon\"}));\n```\nThis prints true. The value is an object with a title field, and it is neither null nor an array.",
+        "JavaScript reports typeof null as \"object\". That is why value !== null must be checked separately. typeof value === \"object\" alone is not enough.",
+        "Array.isArray(value) tells you whether the value is an array. ! reverses that answer. The && operators require all three checks to pass before isRecord returns true.",
+        "Complete isRecord(value). Accept parsed JSON objects. Reject null, arrays, numbers, text, and true-or-false values. Leave the supplied value unchanged."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the contract and trace the worked example.",
+        "Replace the unfinished return in the starter.",
+        "Run the changed-input checks.",
+        "Explain the boundary in the understanding question."
+      ],
+      "after": [
+        "Reject null.",
+        "Require typeof value to be object.",
+        "Reject arrays with Array.isArray."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "typeof null is \"object\", so the first comparison matters. Array.isArray detects arrays. The ! operator reverses its answer. This model accepts ordinary values produced by JSON.parse, not arbitrary class instances."
+      ],
+      "after": [
+        "All three conditions must pass.",
+        "An empty object passes this outer-shape check."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Why is typeof value === \"object\" insufficient by itself?",
+        "choices": [
+          "It also accepts null and arrays",
+          "It rejects every JSON object",
+          "It proves the title is valid"
+        ],
+        "answer": 0,
+        "explanation": "Null and arrays satisfy that typeof comparison. Named-field requirements come after this guard."
+      },
+      "after": {
+        "question": "Why is typeof value === \"object\" not enough on its own?",
+        "choices": [
+          "It also accepts null and arrays",
+          "It rejects every JSON object",
+          "It proves title is valid"
+        ],
+        "answer": 0,
+        "explanation": "Both null and arrays report object, so they need separate checks."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Runs as a pure JavaScript function in the browser. Passing checks does not establish live HTTP behavior, database durability, concurrency safety, authentication security, queue delivery guarantees, or production readiness.",
+      "after": "This exercise checks values produced by JSON.parse. It is not a general test for every custom JavaScript class or object."
+    }
+  ],
+  "headings": [
+    "Check the outer shape",
+    "Know the input's source",
+    "Read one example",
+    "Handle null explicitly",
+    "Exclude arrays",
+    "Try it yourself"
+  ],
+  "project": {
+    "title": "Require a record-shaped body",
+    "task": "Complete isRecord(value) for parsed JSON: accept objects, reject null and arrays, and leave the input unchanged.",
+    "done_when": "Only the allowed object shape passes; field contents can be checked afterwards."
+  }
+}

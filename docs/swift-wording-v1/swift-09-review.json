@@ -1,0 +1,101 @@
+{
+  "lesson": "swift-09",
+  "position": 58,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Build a small SwiftUI form and list backed by local state.",
+      "after": "Use local state to update a SwiftUI screen when an entry is added."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "SwiftUI is Apple's system for describing app screens in Swift. A view describes what appears on screen for the current data. When view-owned state changes, SwiftUI refreshes the affected view description. @State marks that local changeable state. A property wrapper is an annotation that gives a property extra storage behavior; the @ introduces it. This screen's draft is the text being entered, and entries is the list of accepted text. Those are different pieces of state, so adding an entry can update the list and clear the draft independently.",
+        "This view is a complete replacement for ContentView.swift in an Xcode SwiftUI app project. Keep the generated App file that provides the app's @main entry point, and run in a compatible Apple simulator or device.\n\n```swift\nimport SwiftUI\n\nstruct ContentView: View {\n    @State private var name = \"\"\n\n    var body: some View {\n        VStack {\n            TextField(\"Your nickname\", text: $name)\n                .textFieldStyle(.roundedBorder)\n            Text(\"Hello, \\(name)!\")\n        }\n        .padding()\n    }\n}\n```\n\nTyping changes name and refreshes the greeting. import loads the SwiftUI module's types. : View declares protocol conformance. body is a computed property that describes the screen. some View means its result is a particular view type that the definition need not spell out.",
+        "Text draws words. TextField provides editable text. VStack arranges its child views vertically. NavigationStack supplies a navigation container and supports a screen title. Braces in body and the stacks group child-view descriptions; SwiftUI uses result-building behavior to combine those expressions. A modifier is a method that produces a view with a requested change. .padding() adds surrounding space; .textFieldStyle(.roundedBorder) asks for a rounded input style; .navigationTitle(\"Practice\") supplies a title to the navigation system. A leading dot such as .roundedBorder lets Swift infer the type of that named style from context.",
+        "A TextField needs a binding, which is a connection that can read and write another piece of state. $draft gives the projected binding for a @State property named draft. Passing plain draft would pass a String value, not the writable connection expected by text:. @Binding is used when a view receives such a connection from another owner; it is not the wrapper that creates this screen's own storage. private keeps the state implementation inside the view's allowed scope. Local @State lasts with the view's state lifetime, but does not automatically persist data across app launches.",
+        "This is another complete ContentView.swift replacement. Run it as a separate example in the same kind of Xcode project.\n\n```swift\nimport SwiftUI\n\nstruct ContentView: View {\n    @State private var draft = \"\"\n    @State private var observations: [String] = []\n\n    var body: some View {\n        NavigationStack {\n            VStack {\n                TextField(\"What did you notice?\", text: $draft)\n                    .textFieldStyle(.roundedBorder)\n                Button(\"Add observation\") {\n                    let cleaned = draft.trimmingCharacters(in: .whitespacesAndNewlines)\n                    guard !cleaned.isEmpty else { return }\n                    observations.append(cleaned)\n                    draft = \"\"\n                }\n                List(observations.indices, id: \\.self) { index in\n                    Text(observations[index])\n                }\n            }\n            .padding()\n            .navigationTitle(\"Observations\")\n        }\n    }\n}\n```\n\nThe Button action is a closure that runs on activation. It cleans input, rejects a blank result, appends one observation, and clears the field. List turns the current entries into rows.",
+        "trimmingCharacters(in: .whitespacesAndNewlines) removes leading and trailing space and line-break characters. It does not delete spaces inside a sentence. isEmpty asks whether the cleaned String has no characters. ! means NOT, so guard !cleaned.isEmpty permits only nonempty text. observations.indices gives valid array positions, starting at zero. { index in ... } names the current position, and observations[index] reads its text. In id: \\.self, the key-path notation tells List to use each index itself as that row's identity. Duplicate text can then make two rows. These index identities suit this append-only example; deleting or reordering items would need a more durable identity design.",
+        "For the practice tracker, use local @State for draft and entries, the editable field, Add entry action, and the List inside the navigation container. The supplied screen uses these form controls in VStack; it does not wrap them in a separate Form view. Run in the agreed Apple environment: a browser preview or command-line compiler does not host this iOS screen. Test a nonempty entry, whitespace-only input, and the same text twice. Expect one added row and cleared field for valid input, no row for whitespace-only input, and two rows for duplicate text. A session from 2:15 to 2:45 lasts 30 minutes because the minute difference is 45 - 15 = 30; storing or displaying time would require additional model fields beyond this text-only screen."
+      ],
+      "after": [
+        "SwiftUI describes app screens using Swift. State is data the screen keeps while it is in use. @State marks data owned by this view. When that data changes, SwiftUI updates the affected parts of the screen.",
+        "Use an iOS SwiftUI app project in Xcode. The example replaces ContentView.swift; keep the generated App file that starts the app. Run it in an Apple simulator or device. The browser cannot run this SwiftUI screen.",
+        "Text shows words, TextField accepts typing, and Button runs an action when pressed. VStack arranges views vertically. NavigationStack provides a navigation area and title. body describes the view's contents. A modifier, such as .padding(), adds a requested change to a view.",
+        "A binding is a connection that can read and change a value. $draft connects the text field to the draft state. Plain draft would supply text without that writable connection. Local @State does not save entries across app launches.",
+        "Use this complete ContentView.swift example:\n```swift\nimport SwiftUI\n\nstruct ContentView: View {\n    @State private var draft = \"\"\n    @State private var observations: [String] = []\n\n    var body: some View {\n        NavigationStack {\n            VStack {\n                TextField(\"What did you notice?\", text: $draft)\n                    .textFieldStyle(.roundedBorder)\n                Button(\"Add observation\") {\n                    let cleaned = draft.trimmingCharacters(in: .whitespacesAndNewlines)\n                    guard !cleaned.isEmpty else { return }\n                    observations.append(cleaned)\n                    draft = \"\"\n                }\n                List(observations.indices, id: \\.self) { index in\n                    Text(observations[index])\n                }\n            }\n            .padding()\n            .navigationTitle(\"Observations\")\n        }\n    }\n}\n```\nTyping changes draft. Pressing Add observation trims the text, rejects blank input, adds valid text to the list, and clears the field. SwiftUI refreshes the list from the changed state.",
+        "Trimming removes spaces and line breaks at the ends, leaving spaces inside a sentence. Each row uses its array position as its ID, so repeated text can appear twice. Positions work for this append-only example; deleting or reordering rows needs a more lasting ID.",
+        "Complete the supplied practice tracker using draft and entries. Add valid text and check that one row appears and the field clears. Try spaces only: no row should be added. Add the same text twice: two rows should appear. The controls are inside VStack, not a separate Form view."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Create a new iOS App project in Xcode using SwiftUI.",
+        "Replace the generated view with the supplied tracker screen.",
+        "Run in an iOS Simulator, add a non-empty practice entry, and inspect the list."
+      ],
+      "after": [
+        "Open a SwiftUI iOS app project in Xcode and keep its App file.",
+        "Complete the supplied ContentView with draft, entries, and the Add entry action.",
+        "Check valid text, spaces only, and repeated text in a simulator or device."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Bind the text field to `$draft`.",
+        "Trim the draft before deciding whether it is empty.",
+        "Append valid text to `entries` and clear `draft` so the list refreshes."
+      ],
+      "after": [
+        "Bind the text field to $draft.",
+        "Trim before checking whether text is empty.",
+        "Append valid text, then clear draft."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "A TextField is bound to @State name, and a Text view displays that name. You type \"Ari\". What happens without manually rewriting the Text view?",
+        "choices": [
+          "State changes and SwiftUI refreshes the greeting",
+          "Only the field changes; the greeting cannot update",
+          "The new name is automatically saved across all app launches"
+        ],
+        "answer": 0,
+        "explanation": "The binding updates the state, and SwiftUI refreshes the affected view. Local @State does not by itself provide durable storage."
+      },
+      "after": {
+        "question": "A text field changes @State name, and a Text view displays name. What happens when you type Ari?",
+        "choices": [
+          "SwiftUI updates the affected text from the changed state",
+          "Only the text field can change",
+          "The name is saved across every app launch"
+        ],
+        "answer": 0,
+        "explanation": "The binding changes state, and SwiftUI updates the view. This local state is not permanent storage."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "SwiftUI screen: create an iOS App project in Xcode, keep the generated @main App entry point, and replace ContentView.swift with solution. Run in an iOS Simulator. Manual rubric: non-empty text adds one row and clears the field; whitespace-only input adds no row; the list updates immediately. SwiftUI checks are manual because the companion compiler does not host an iOS interface. Add the same text twice and verify two rows; the row IDs use stable append-only indexes so duplicate text does not share an identity.",
+      "after": "Manual Apple check: keep the Xcode app's generated entry point and run ContentView in an iOS simulator or device. Check valid, blank, and repeated input. The browser and command-line companion cannot verify this screen."
+    }
+  ],
+  "headings": [
+    "Let state update the screen",
+    "Prepare the Apple project",
+    "Name the screen's parts",
+    "Connect the text field",
+    "Read one example",
+    "Handle input and row identity",
+    "Try the practice tracker"
+  ],
+  "project": {
+    "title": "An iOS practice tracker",
+    "task": "Complete the SwiftUI practice tracker with local state, editable text, an Add entry button, and a list. Run it in an Apple simulator or device.",
+    "done_when": "Valid text adds a row and clears the field, blank input adds none, and repeated text creates two separate rows."
+  }
+}

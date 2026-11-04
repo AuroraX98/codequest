@@ -1,0 +1,91 @@
+{
+  "lesson": "go-56",
+  "position": 56,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "If the second queued value becomes 9, what is the drained total?",
+      "after": "Read the values that remain after a buffered channel closes."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "make(chan int, 2) creates a channel with room for two queued integers. These two sends can complete without a receiver. Buffering does not make an unlimited queue or guarantee that another goroutine has finished processing a value.",
+        "Closing announces that no more values will be sent; it does not discard queued values. range drains the buffered values and stops after the closed channel is empty. Sending after close or closing twice panics; this example performs neither invalid operation.",
+        "Complete local Go example; the app itself does not execute it:\n```go\npackage main\n\nimport (\n\"fmt\"\n)\n\n\nfunc main() {\n    values := make(chan int, 2)\n    values <- 3\n    values <- 4\n    close(values)\n    total := 0\n    for value := range values { total += value }\n    fmt.Println(total)\n}\n```",
+        "Expected output or behavior: 7. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Use the two-result receive form to distinguish a valid zero from an empty closed channel. You may trace it without a Go compiler; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "A buffered channel has room for waiting values. `make(chan int, 2)` can hold two integers. Two sends fit here without a receiver. A full buffer makes further sends wait for space.",
+        "Closing tells receivers that no more values will be sent. It keeps queued items available. A range loop reads those items and stops once the closed channel is empty. Do not send after closing or close the same channel twice; either can panic.",
+        "Follow the two queued integers through the range loop.\n```go\npackage main\n\nimport (\n\"fmt\"\n)\n\n\nfunc main() {\n    values := make(chan int, 2)\n    values <- 3\n    values <- 4\n    close(values)\n    total := 0\n    for value := range values { total += value }\n    fmt.Println(total)\n}\n```",
+        "The screen shows `7`. Closing preserves 3 and 4, and the loop adds both.",
+        "A two-result receive can also report whether an item was available. Its flag is false only after the closed channel is empty, so a real queued zero is still distinguishable."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Closing is different from clearing the queue."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If the second queued value becomes 9, what is the drained total?",
+        "choices": [
+          "0 because ranging a closed channel skips queued values.",
+          "12",
+          "3 because closing discards the buffered tail"
+        ],
+        "answer": 1,
+        "explanation": "Both queued integers remain available after close, so range sums three and nine."
+      },
+      "after": {
+        "question": "Change the second queued value to 9. What total appears?",
+        "choices": [
+          "0, because a closed channel skips queued values.",
+          "12",
+          "3, because closing discards the last item."
+        ],
+        "answer": 1,
+        "explanation": "Both values remain available after close. 3 plus 9 gives 12."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Go Core v1 uses the verified Go1.27.3 toolchain and standard library. The app supplies concept reading and an understanding check, not a Go browser runner. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "The browser shows Go code and checks your understanding; it does not run Go. Optional local examples use Go 1.27."
+    }
+  ],
+  "headings": [
+    "Store a small queue of values",
+    "Close without discarding queued items",
+    "One example",
+    "Read the total after closing",
+    "Recognize the end of the queue"
+  ],
+  "project": {
+    "title": "Buffered channels and closing",
+    "task": "Find the sum of the values left in the channel.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local Go example is optional."
+  }
+}

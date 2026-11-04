@@ -1,0 +1,94 @@
+{
+  "lesson": "cpp-39",
+  "position": 39,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Replace the second lambda assignment with operation = nullptr. What prints?",
+      "after": "Store and replace a function-like operation with std::function."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "std::function<int(int)> from <functional> stores a copyable callable taking an int and returning an int. It can hold different compatible lambda types behind one declared type. The empty [] capture list means this lambda uses no surrounding local variables.",
+        "auto is simpler when the concrete callable type need not change. std::function adds flexibility with possible overhead. Calling an empty std::function throws; check it in a condition before calling.",
+        "Assigning a new compatible lambda replaces the old target. Captures still obey their own lifetime rules; the wrapper does not make borrowed references safe.",
+        "Complete local C++ example; the app itself does not execute it:\n```cpp\n#include <functional>\n#include <iostream>\nint main() {\n    std::function<int(int)> operation = [](int x) { return x + 1; };\n    std::cout << operation(3) << '\\n';\n    operation = [](int x) { return x * 2; };\n    if (operation) std::cout << operation(3) << '\\n';\n}\n\n```",
+        "Expected output or behavior: 4\n6\n. Local compiler test evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Assign a named free function with the same signature instead of a lambda. You may trace this without a compiler; finishing the reading is not proof of a local run."
+      ],
+      "after": [
+        "A callable is something you can call like a function. std::function, from <functional>, can hold different compatible callables over time. Its stored callable must be copyable.",
+        "std::function<int(int)> accepts one int and returns an int. Both lambdas here match that shape. Their empty [] means they capture no nearby local variables.",
+        "if (operation) checks whether an operation is stored. Calling an empty std::function would throw an exception, so check when an empty value is possible.",
+        "Follow the first call, the replacement, and the checked second call.\n\n```cpp\n#include <functional>\n#include <iostream>\nint main() {\n    std::function<int(int)> operation = [](int x) { return x + 1; };\n    std::cout << operation(3) << '\\n';\n    operation = [](int x) { return x * 2; };\n    if (operation) std::cout << operation(3) << '\\n';\n}\n\n```",
+        "The program prints 4, then 6 on the next line. The first operation adds one. The replacement multiplies by two.",
+        "Use auto when one lambda's own type is enough. std::function adds flexibility but can add extra work or storage. It also does not keep objects alive merely because a stored lambda captures references to them."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain why, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Check whether the stored operation exists before tracing a call."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Replace the second lambda assignment with operation = nullptr. What prints?",
+        "choices": [
+          "4 only, because the condition skips the empty callable",
+          "4 then 0",
+          "4 then a guaranteed exception"
+        ],
+        "answer": 0,
+        "explanation": "The first call already printed 4. Clearing the wrapper makes the following Boolean check false, so there is no empty call."
+      },
+      "after": {
+        "question": "Replace the second lambda assignment with operation = nullptr. What prints?",
+        "choices": [
+          "Only 4, because the check skips the empty operation.",
+          "4, then 0.",
+          "4, followed by an unavoidable exception."
+        ],
+        "answer": 0,
+        "explanation": "The first call already printed four. The later check is false, so the program never calls the empty operation."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "C++ Core v1, standard C++23 features checked against the available GCC14.2 implementation. This app provides concept reading and an understanding check, not a C++ browser runner. Local example tests are separate evidence and do not certify learner mastery.",
+      "after": "The browser shows C++ code and checks your understanding; it does not run C++. Optional local examples use C++23."
+    }
+  ],
+  "headings": [
+    "Store something callable",
+    "Describe the input and result",
+    "Check for a stored operation",
+    "One example",
+    "What appears",
+    "Choose the wrapper when needed"
+  ],
+  "project": {
+    "title": "Store a callable with std::function",
+    "task": "Trace how replacing the stored operation changes the second result.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local C++ example is optional."
+  }
+}

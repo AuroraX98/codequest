@@ -1,0 +1,108 @@
+{
+  "lesson": "react-06",
+  "position": 32,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Build a search view that ignores stale responses and keeps loading and error states understandable.",
+      "after": "Keep the newest search result, even when an older search finishes later."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "Asynchronous search can finish in a different order from when searches started. If A starts first but B finishes first, B may be the result the person now wants. A late success or failure from A must not replace it. Give each search a new id, store the latest id in a ref, and compare ids before applying either outcome.",
+        "This standalone JavaScript example demonstrates the order without React:\n```javascript\nlet latest = 0;\nfunction search(label, delay, fails) {\n  const id = ++latest;\n  setTimeout(() => {\n    if (id !== latest) return;\n    console.log(fails ? `Failed ${label}` : `Found ${label}`);\n  }, delay);\n}\nsearch('earlier', 80, true);\nsearch('current', 10, false);\n```\nOnly Found current prints. The earlier error callback runs later but is ignored. ++ adds one and uses the new value. delay is milliseconds; setTimeout schedules work rather than pausing all JavaScript execution.",
+        "In React, a controlled input keeps query in state. Each search handler uses the query from the render that supplied that handler. A callback created inside the handler keeps that snapshot, even if the person types a different query later. A request id decides whether the snapshot is still current. Typing alone need not start a request; pressing Search does in this exercise.",
+        "Here is a complete React/JSX App for a separate search example:\n```react\nfunction App() {\n  const [query, setQuery] = React.useState('');\n  const [results, setResults] = React.useState([]);\n  const [status, setStatus] = React.useState('idle');\n  const [error, setError] = React.useState('');\n  const latest = React.useRef(0);\n  function search(fails) {\n    const id = ++latest.current;\n    const searched = query;\n    setStatus('loading');\n    setError('');\n    setTimeout(() => {\n      if (id !== latest.current) return;\n      if (fails) {\n        setError('Try your search again.');\n        setStatus('error');\n        return;\n      }\n      setResults(searched ? [`Found ${searched}`] : []);\n      setStatus('success');\n    }, searched.includes('slow') ? 80 : 10);\n  }\n  return <main>\n    <label>Search <input value={query}\n      onChange={e => setQuery(e.target.value)} /></label>\n    <button onClick={() => search(false)}>Search</button>\n    <button onClick={() => search(true)}>Fail</button>\n    {status === 'loading' && <p>Searching…</p>}\n    {status === 'error' && <p role=\"alert\">{error}</p>}\n    {status === 'success' && results.length === 0 && <p>No results.</p>}\n    {status === 'success' && <ul>\n      {results.map(item => <li key={item}>{item}</li>)}\n    </ul>}\n  </main>;\n}\n```\nAn empty search ends successfully with No results. Searching cedar shows Found cedar. Fail shows the error and hides successful-result content.",
+        "Check both race orders. Start a slow error, then a quick success: keep the success after the old error arrives. Start a slow success, then a quick error: keep the error and show no old list after the success arrives. Using the id check at the beginning of the callback protects both. Clearing error when a new search begins avoids displaying the old failure as though the new attempt already failed.",
+        "A useful interface test types into the actual input and activates the actual buttons, then waits long enough for the sample timers and inspects the visible outcome. It should cover loading, empty success, normal success, failure, and both stale-response orders. Testing only the existence of a search function or a particular variable name would miss a broken visible flow.",
+        "For the exercise, preserve Search books, Search, Fail search, Searching…, No results., and Search failed. Try again. Format successful rows as Result for followed by the captured query. A newer B success remains visible when older A fails; the math question is reasoning about event order, not calculating delay totals. The supplied timers simulate requests; replacing them with fetch requires the same current-id protection in both success and catch/error paths."
+      ],
+      "after": [
+        "A search can finish later than a search started after it. The older result must not replace the newer one. This rule applies to both successful results and errors.",
+        "Give each search a new number and keep the latest number in a ref. A finished search may update the screen only if its number still matches.",
+        "Keep the query used when Search was clicked. Later typing does not change that earlier request's query. In this exercise, typing alone does not start a new search.",
+        "```react\nfunction App() {\n  const [query, setQuery] = React.useState(\"\");\n  const [results, setResults] = React.useState([]);\n  const [status, setStatus] = React.useState(\"idle\");\n  const [error, setError] = React.useState(\"\");\n  const latest = React.useRef(0);\n  function search(fails) {\n    const id = ++latest.current;\n    const searched = query;\n    setStatus(\"loading\");\n    setError(\"\");\n    setTimeout(() => {\n      if (id !== latest.current) return;\n      if (fails) {\n        setError(\"Try your search again.\");\n        setStatus(\"error\");\n        return;\n      }\n      setResults(searched ? [`Found ${searched}`] : []);\n      setStatus(\"success\");\n    }, searched.includes(\"slow\") ? 80 : 10);\n  }\n  return (\n    <main>\n      <label>Search <input value={query} onChange={e => setQuery(e.target.value)} /></label>\n      <button onClick={() => search(false)}>Search</button>\n      <button onClick={() => search(true)}>Fail</button>\n      {status === \"loading\" && <p>Searching…</p>}\n      {status === \"error\" && <p role=\"alert\">{error}</p>}\n      {status === \"success\" && results.length === 0 && <p>No results.</p>}\n      {status === \"success\" && <ul>\n        {results.map(item => <li key={item}>{item}</li>)}\n      </ul>}\n    </main>\n  );\n}\n```\nSearching cedar shows `Found cedar`. An empty search shows `No results.`. Fail shows an error. The timers imitate requests without contacting a server.",
+        "Start a slow failure, then a quick success: keep the success. Start a slow success, then a quick failure: keep the failure. The ID check happens before either outcome changes the screen.",
+        "Test by typing in the real input and using the buttons. Wait for both results, including the older one. Check loading, empty results, success, failure, and both arrival orders.",
+        "Keep the exercise's label `Search books` and buttons `Search` and `Fail search`. Show `Searching…` while waiting. A successful row says `Result for` followed by the captured query. An empty result says `No results.`; failure says `Search failed. Try again.`."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Remember the search text, results, loading status, error message, and latest request ID.",
+        "Use the Search and Fail search buttons.",
+        "Wait 80 ms for search text containing \"slow\" and 10 ms for other search text.",
+        "Show \"Searching…\" while waiting.",
+        "After success, show \"No results.\" for empty search text or \"Result for <query>\" for other text. Replace <query> with what was typed.",
+        "After failure, show \"Search failed. Try again.\"",
+        "Try an empty successful search and a normal successful search.",
+        "Start a slow failing search, then a fast successful search. Keep the newer success.",
+        "Start a slow successful search, then a fast failing search. Keep the newer failure."
+      ],
+      "after": [
+        "Capture a new ID and the current query for each search.",
+        "Keep the supplied delays: 80 ms for text containing slow, otherwise 10 ms.",
+        "Show loading, then the correct empty, success, or error display.",
+        "Ignore old successes and old failures.",
+        "Run the checks for both arrival orders."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Increment the ref for each search and capture the new ID locally.",
+        "When the timer completes, compare the captured ID with `latest.current`.",
+        "Ignore mismatches; on the latest request, set either an error message or current results and status."
+      ],
+      "after": [
+        "Compare the captured ID with latest.current before changing results or errors.",
+        "Starting a new search should clear the old error."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Why check a request ID before applying results?",
+        "choices": [
+          "A slower earlier request may finish after the newest one",
+          "To make every request succeed",
+          "To avoid rendering any results"
+        ],
+        "answer": 0,
+        "explanation": "The ID lets the interface ignore a response that belongs to an outdated search."
+      },
+      "after": {
+        "question": "Why check the request ID before applying a result?",
+        "choices": [
+          "An older, slower search may finish after the newest one.",
+          "It makes every search succeed.",
+          "It prevents all results from appearing."
+        ],
+        "answer": 0,
+        "explanation": "The ID shows whether the result still belongs to the current search."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "The controlled sample delays exercise actual React state changes without calling an external API. The semantic checks type into the field and trigger the real buttons, then inspect visible outcomes. Replace the sample timer with a real API call only after preserving the request-ID and failure handling.",
+      "after": "The delays simulate requests locally. A real network search also needs the current-ID check in both its success and error paths."
+    }
+  ],
+  "headings": [
+    "Results can arrive out of order",
+    "Give each search an ID",
+    "Keep the submitted query",
+    "Read one search example",
+    "Protect successes and failures",
+    "Test the visible outcome",
+    "Build your book search"
+  ],
+  "project": {
+    "title": "A tested search dashboard",
+    "task": "Build the supplied search with clear loading and error states. Keep newer results safe from older successes or failures.",
+    "done_when": "All supplied searches leave the correct visible result, including both out-of-order cases."
+  }
+}

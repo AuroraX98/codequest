@@ -1,0 +1,83 @@
+{
+  "lesson": "react-23",
+  "position": 8,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Start at 1. Practice passing the pure increment updater twice per click, so one click displays 3 and another displays 5. The runnable checks assess those displayed results; the changed-example question distinguishes queued updaters from repeated replacement values.",
+      "after": "Pass updater functions when several state changes must build on one another."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "When the next state depends on pending state, pass an updater function to the setter. React processes these queued updaters in order. Each receives the result of the previous update, rather than rereading one old handler snapshot.",
+        "increment receives the previous queued number and returns that number plus 1. It does not change outside data. setCount(increment) passes this function for React to call; the learner passes the function instead of invoking it. React controls when and how often the pure updater runs. Two such calls queue two transformations. App still calls useState at its top level.\n\n```jsx\nfunction increment(previous) {\n  return previous + 1;\n}\nfunction App() {\n  const [count, setCount] = React.useState(0);\n  function addPair() {\n    setCount(increment);\n    setCount(increment);\n  }\n  return <main><p>Count: {count}</p><button onClick={addPair}>Add pair</button></main>;\n}\n```\n\nStarting at 0, one Add pair click displays Count: 2. The queued calculation is 0→1→2.",
+        "This changed handler passes count +1 twice instead. Both expressions use the same 0 snapshot, so both request replacement by 1. One click displays Count: 1, not 2.\n\n```jsx\nfunction increment(previous) {\n  return previous + 1;\n}\nfunction App() {\n  const [count, setCount] = React.useState(0);\n  function addPair() {\n    setCount(count + 1);\n    setCount(count + 1);\n  }\n  return <main><p>Count: {count}</p><button onClick={addPair}>Add pair</button></main>;\n}\n```",
+        "Start at 1. Practice passing the pure increment updater twice per click, so one click displays 3 and another displays 5. The runnable checks assess those displayed results; the changed-example question distinguishes queued updaters from repeated replacement values. The starter is the small application to edit; the examples above remain available for comparison."
+      ],
+      "after": [
+        "An updater is a function that receives the pending state and returns the next state. Pending means waiting to be applied. React works through queued updaters in order, passing each result to the next one.",
+        "```jsx\nfunction increment(previous) {\n  return previous + 1;\n}\nfunction App() {\n  const [count, setCount] = React.useState(0);\n  function addPair() {\n    setCount(increment);\n    setCount(increment);\n  }\n  return (\n    <main>\n      <p>Count: {count}</p>\n      <button onClick={addPair}>Add pair</button>\n    </main>\n  );\n}\n```\nOne click changes `Count: 0` to `Count: 2`. The first updater turns 0 into 1. The next turns 1 into 2.",
+        "Calling `setCount(count + 1)` twice would use the same old count both times. Starting at 0, both calls would ask for 1. Keep updater functions pure: return a result without changing outside data. React may call them more than once to check for mistakes.",
+        "Start at `1`. Pass `increment` to the setter twice per click. The screen should show `3` after one click and `5` after another. The checks compare these results; the quiz checks why the updater works."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the small example and explain its inputs and effects.",
+        "Complete the starter for this lesson.",
+        "Run the behavior checks, then predict a changed case."
+      ],
+      "after": [
+        "Write increment to return its input plus one.",
+        "Pass it to setCount twice in the handler.",
+        "Run the checks and follow both additions."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Trace the visible input, event and resulting screen before changing the code."
+      ],
+      "after": [
+        "Use `setCount(increment)`, without calling increment yourself."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "A handler reads count 5 and calls setCount(count + 1) twice. What next count does it request?",
+        "choices": [
+          "5",
+          "6",
+          "7"
+        ],
+        "answer": 1,
+        "explanation": "Both replacement values are calculated from the same snapshot 5. Passing updater functions is what lets queued transformations build on one another."
+      },
+      "after": {
+        "question": "A handler reads count 5 and calls `setCount(count + 1)` twice. What next count is requested?",
+        "choices": [
+          "5",
+          "6",
+          "7"
+        ],
+        "answer": 1,
+        "explanation": "Both calculations use 5, so both ask for 6. Updater functions let the second change use the first change's result."
+      }
+    }
+  ],
+  "headings": [
+    "Build on the pending value",
+    "Add twice in one click",
+    "Compare a fixed replacement",
+    "Build your add-pair button"
+  ],
+  "project": {
+    "title": "Queued updater functions compose",
+    "task": "Start at 1. Pass the pure increment updater to setCount twice per Add pair click.",
+    "done_when": "One click shows 3 and another shows 5. Explain why two fixed replacement values would behave differently."
+  }
+}

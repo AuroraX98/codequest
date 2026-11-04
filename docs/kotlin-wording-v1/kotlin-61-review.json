@@ -1,0 +1,91 @@
+{
+  "lesson": "kotlin-61",
+  "position": 61,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "If the second collect is removed, what is the final starts count?",
+      "after": "A cold flow starts its work each time you collect its values."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "flow creates a cold asynchronous stream builder from the separate coroutine library. The body runs when collect requests values, not when the flow variable is declared. emit sends a value to the collector; collect is a suspending terminal operation.",
+        "This flow increments a local starts counter each time its body begins. Two sequential collections therefore start it twice. The example has no competing threads and does not describe hot shared flows or caching behavior.",
+        "Complete local Kotlin/JVM example; the app itself does not execute it:\n```kotlin\nimport kotlinx.coroutines.runBlocking\nimport kotlinx.coroutines.flow.flow\nimport kotlinx.coroutines.flow.collect\n\nfun main() {\n    runBlocking {\n        var starts = 0\n        val values = flow { starts++; emit(3) }\n        println(starts)\n        values.collect { println(it) }\n        values.collect { println(it) }\n        println(starts)\n    }\n}\n```",
+        "Expected output or behavior: 0\n3\n3\n2. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Predict two collections from a builder emitting two values without claiming it caches the first result. You may trace it without a Kotlin compiler; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "A flow sends values over time and can suspend while doing its work. The `flow` function creates a cold flow: its block waits for a collector instead of running when the variable is declared.",
+        "The suspending call `collect` runs the flow and handles its values. Inside the flow, `emit(3)` sends 3 to that collector. The local starts counter increases each time this flow's block starts.",
+        "Follow the example one line at a time.\n```kotlin\nimport kotlinx.coroutines.runBlocking\nimport kotlinx.coroutines.flow.flow\nimport kotlinx.coroutines.flow.collect\n\nfun main() {\n    runBlocking {\n        var starts = 0\n        val values = flow { starts++; emit(3) }\n        println(starts)\n        values.collect { println(it) }\n        values.collect { println(it) }\n        println(starts)\n    }\n}\n```",
+        "The screen shows `0`, `3`, `3`, then `2`. Declaring the flow does not start it. Each of the two collect calls runs the block and receives 3.",
+        "These collections run one after the other. The second collection starts fresh work; this cold flow does not keep and replay the first result. Other kinds of shared flows have different rules."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Count collect calls, not flow declarations."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If the second collect is removed, what is the final starts count?",
+        "choices": [
+          "1",
+          "2 because flow construction starts it immediately",
+          "0 because emit never executes."
+        ],
+        "answer": 0,
+        "explanation": "One terminal collection runs the cold builder once; declaration alone does not run it."
+      },
+      "after": {
+        "question": "Remove the second collect call. What is the final starts count?",
+        "choices": [
+          "1",
+          "2, because declaring the flow starts it too.",
+          "0, because emit never runs."
+        ],
+        "answer": 0,
+        "explanation": "Only one collection runs the flow's block. Declaring the flow alone does not increase starts."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Kotlin JVM Core v1 uses Kotlin2.4.21 stable syntax and a verified JVM toolchain. The app supplies concept reading and an understanding check, not a Kotlin browser runner. Coroutine libraries are separate dependencies. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "The browser shows Kotlin code and checks your understanding; it does not run Kotlin. Optional local examples use Kotlin/JVM."
+    }
+  ],
+  "headings": [
+    "Wait for a collector",
+    "Send and receive a value",
+    "One example",
+    "Count the flow starts",
+    "Start fresh for each collection"
+  ],
+  "project": {
+    "title": "Cold flows and collection",
+    "task": "Count how often a cold flow's work starts.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local Kotlin example is optional."
+  }
+}

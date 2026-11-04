@@ -1,0 +1,94 @@
+{
+  "lesson": "cpp-34",
+  "position": 34,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Call owner.reset() twice. How many times does derived print?",
+      "after": "Use a virtual destructor when an owner deletes a derived object through its base type."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A unique_ptr<Base> may own a Derived object. For ordinary deletion through Base*, Base needs a virtual destructor so derived cleanup happens too. Removing it here would be undefined behavior; we do not run that variant.",
+        "reset() destroys the currently owned object and empties the pointer. Derived destruction runs before Base destruction. Logging is only a visible demonstration of cleanup order.",
+        "Resetting an already-empty unique_ptr does nothing. This can be tested without invoking undefined behavior.",
+        "Complete local C++ example; the app itself does not execute it:\n```cpp\n#include <iostream>\n#include <memory>\nstruct Base {\n    virtual ~Base() { std::cout << \"base\\n\"; }\n};\nstruct Derived : Base {\n    ~Derived() override { std::cout << \"derived\\n\"; }\n};\nint main() {\n    std::unique_ptr<Base> owner = std::make_unique<Derived>();\n    owner.reset();\n    std::cout << \"done\\n\";\n}\n\n```",
+        "Expected output or behavior: derived\nbase\ndone\n. Local compiler test evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Add a data member with visible destruction and trace member/base cleanup without removing virtual. You may trace this without a compiler; finishing the reading is not proof of a local run."
+      ],
+      "after": [
+        "std::unique_ptr<Base> can own an object whose actual type is Derived. The pointer's declared type and the object's actual type do not have to be the same.",
+        "For this kind of deletion through Base, Base needs a virtual destructor. It makes cleanup start with the actual Derived object. Removing virtual here would cause undefined behavior: C++ would no longer promise a valid result.",
+        "owner.reset() destroys the object it owns, then leaves the pointer empty. The Derived destructor runs before the Base destructor.",
+        "Follow reset() through both destructor messages.\n\n```cpp\n#include <iostream>\n#include <memory>\nstruct Base {\n    virtual ~Base() { std::cout << \"base\\n\"; }\n};\nstruct Derived : Base {\n    ~Derived() override { std::cout << \"derived\\n\"; }\n};\nint main() {\n    std::unique_ptr<Base> owner = std::make_unique<Derived>();\n    owner.reset();\n    std::cout << \"done\\n\";\n}\n\n```",
+        "The program prints derived, base, and done on separate lines. The object is fully destroyed before execution reaches the done output.",
+        "Resetting an already-empty unique_ptr does nothing. Destruction happens once because there is no owned object left to destroy again."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain why, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "After reset, check whether the pointer still owns anything."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Call owner.reset() twice. How many times does derived print?",
+        "choices": [
+          "Twice, once per reset",
+          "Once, because the second reset sees an empty owner",
+          "Never, because the pointer type is Base"
+        ],
+        "answer": 1,
+        "explanation": "The first reset destroys the derived object through the virtual destructor. The empty second reset owns nothing to destroy."
+      },
+      "after": {
+        "question": "Call owner.reset() twice. How many times does derived print?",
+        "choices": [
+          "Twice, once for each reset.",
+          "Once, because the second reset finds an empty owner.",
+          "Never, because the pointer's declared type is Base."
+        ],
+        "answer": 1,
+        "explanation": "The first reset destroys the object through the virtual destructor. The second reset has no object to destroy."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "C++ Core v1, standard C++23 features checked against the available GCC14.2 implementation. This app provides concept reading and an understanding check, not a C++ browser runner. Local example tests are separate evidence and do not certify learner mastery.",
+      "after": "The browser shows C++ code and checks your understanding; it does not run C++. Optional local examples use C++23."
+    }
+  ],
+  "headings": [
+    "Own a derived object through its base",
+    "Start the correct cleanup",
+    "Reset the owner",
+    "One example",
+    "What appears",
+    "An empty owner has nothing to destroy"
+  ],
+  "project": {
+    "title": "Destroy polymorphic objects safely",
+    "task": "Trace the derived and base cleanup before the final output.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local C++ example is optional."
+  }
+}

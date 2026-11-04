@@ -1,0 +1,68 @@
+{
+  "lesson": "python-25",
+  "sourceHash": "bab0e902a6a7a69dc1f3c95f58bd47afcee06eec6a11750b4a4f773b19b589ac",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Write plan(tasks), where a dictionary maps task names to lists of prerequisite names. Return each task once with all prerequisites before it. Visit task names and each prerequisite list in alphabetical order for a reproducible result. Return None if a prerequisite is missing or a cycle exists. Keep input unchanged; the empty dictionary returns [].",
+      "after": "Put workshop tasks in an order that finishes each needed task first."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A workshop has tasks that depend on other tasks: paint requires sanding, and sanding requires cutting. A dependency is a task that must happen first. A graph describes these relationships using nodes for tasks and edges for dependencies. A valid ordering puts every prerequisite before the task that needs it.",
+        "A depth-first search follows prerequisites before finishing the current task. Recursion means a function calls itself on a smaller part of the problem. Keep a result list, a set of finished tasks and a set of tasks currently being visited. The visiting set describes the unfinished chain of calls, not every task you have ever seen.",
+        "This small example explores dependencies before printing a task.\n```python\ntasks = {\"paint\": [\"sand\"], \"sand\": []}\nfinished = set()\ndef visit(name):\n    if name in finished:\n        return\n    for before in tasks[name]:\n        visit(before)\n    finished.add(name)\n    print(name)\nvisit(\"paint\")\n```\nIt prints sand before paint. This first example assumes no cycles; your project must add cycle and missing-task handling.",
+        "A cycle means a chain comes back to an unfinished task, such as A needing B while B needs A. Neither can begin. Detect it by checking whether a task is already in visiting when you enter it. A finished task is different: it is safe to reuse and should not be added to the result twice.",
+        "The two sets have distinct jobs.\n```python\nvisiting = {\"build\", \"prepare\"}\nfinished = {\"collect\"}\nprint(\"build\" in visiting)\nprint(\"collect\" in finished)\nvisiting.remove(\"prepare\")\nfinished.add(\"prepare\")\n```\nThe two printed values are true. Moving a name from visiting to finished represents completing that task after its dependencies have been handled.",
+        "Before reading tasks[name], check that name exists. Return failure for missing prerequisites instead of inventing a task. Sort keys and dependency lists before visiting them to make the result reproducible. Sorting produces new lists, so it need not change the input. Independent tasks can have many valid orders; this project chooses one traversal rule for predictable checks.\n\nDefine the visit helper inside plan so each planning call gets its own result list and visiting and finished sets. A nested helper can read names from that enclosing call and mutate those lists and sets; adding to a set or appending to a list does not reassign the outer name. A return goes only to the immediate caller. Each caller must check whether its recursive visit failed and return failure too, so the outer plan can stop rather than return a partial ordering.",
+        "Return None when any visit fails; otherwise return the accumulated list. The result is called a topological ordering. Its dependency traversal visits nodes and edges once apart from sorting, but Python recursion has a depth limit, so very deep production graphs need an iterative version. Test a chain, shared prerequisites, a missing name, a self-cycle and a longer cycle."
+      ],
+      "after": [
+        "Before painting, you may need to sand. Before sanding, you may need to cut. A prerequisite is a task that must happen first.\n\nThese links form a graph. Each task is a node, and each link is an edge. A valid plan puts prerequisites before the tasks that need them.",
+        "Depth-first search follows a chain of prerequisites before finishing the current task.\n\nKeep a result list and two sets: `visiting` for the unfinished chain, and `finished` for completed tasks. The recursive `visit` function follows each prerequisite by calling itself.",
+        "Follow the prerequisite before printing its task:\n```python\ntasks = {\"paint\": [\"sand\"], \"sand\": []}\nfinished = set()\ndef visit(name):\n    if name in finished:\n        return\n    for before in tasks[name]:\n        visit(before)\n    finished.add(name)\n    print(name)\nvisit(\"paint\")\n```\nOutput:\n```text\nsand\npaint\n```\nThis small example assumes there are no cycles or missing tasks. Your project must handle those too.",
+        "A cycle is a chain that comes back to itself: A needs B, while B needs A. Neither can go first.\n\nReaching a task already in `visiting` shows a cycle. A task in `finished` is safe to reuse, but add it to the result only once.",
+        "The sets track different states:\n```python\nvisiting = {\"build\", \"prepare\"}\nfinished = {\"collect\"}\nprint(\"build\" in visiting)\nprint(\"collect\" in finished)\nvisiting.remove(\"prepare\")\nfinished.add(\"prepare\")\n```\nOutput:\n```text\nTrue\nTrue\n```\nAfter finishing a task's prerequisites, move its name from `visiting` to `finished`.",
+        "Check that a task exists before reading `tasks[name]`. Sort the task names and each prerequisite list before visiting them. This makes the order predictable without changing the input.\n\nPut `visit` inside `plan`, so each plan gets fresh lists and sets. The helper can add to those outer collections without replacing their names.\n\nIf a recursive visit fails, each waiting call must pass that failure back too. Otherwise the plan could wrongly return only part of the answer.",
+        "Return `None` for any missing task or cycle. Otherwise return the completed list; an empty input gives `[]`.\n\nThis is a topological ordering: every prerequisite comes first. Apart from sorting, the search visits each task and link once. Very deep graphs can exceed Python's recursion limit and need a loop-based version.\n\nCheck a chain, shared prerequisites, a missing name, and cycles."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "In `plan`, track the tasks being visited, the finished tasks, and the result list.",
+        "In `visit`, reject a task if its name is missing.",
+        "Reject a task if it is already being visited: that means there is a cycle.",
+        "Visit each task’s prerequisites in alphabetical order.",
+        "Mark the task finished after its prerequisites are finished.",
+        "Add the finished task to the result only once.",
+        "Visit the main task names in alphabetical order too.",
+        "Return `None` if a task cannot be planned; otherwise, return the result list."
+      ],
+      "after": [
+        "Create fresh `visiting`, `finished`, and `result` collections inside `plan`.",
+        "In `visit`, reject missing names and names already in the unfinished chain; skip finished tasks.",
+        "Visit prerequisites in sorted order, passing back any failure.",
+        "After they succeed, mark the task finished and add it once to the result.",
+        "Visit all task names in sorted order; return None on failure or the completed list."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Check visiting before treating a node as finished.",
+        "Add to visiting before recursion and remove after all prerequisites succeed.",
+        "Use sorted(tasks) and sorted(tasks[name]) without sorting input lists in place."
+      ],
+      "after": [
+        "A name in `visiting` means the current chain has come back to itself.",
+        "Append a task only after its prerequisites have succeeded.",
+        "Use `sorted(...)` to keep the original lists unchanged."
+      ]
+    }
+  ],
+  "reviewNotes": [
+    "Reviewed directly by the host, one lesson at a time. Plain wording, specific guidance, preserved exercise behavior."
+  ]
+}

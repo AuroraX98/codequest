@@ -37,10 +37,22 @@ try {
       };
       assert.deepEqual(
         parseRoute(routeHash(route), "javascript-01", units, lessons),
-        {...route, view:view === "quest" ? "studio" : view},
-        `Return from ${view} retains the course, theory page, and studio choice`,
+        {...route, studioMode: "course", view:view === "quest" ? "studio" : view},
+        `Return from ${view} retains the lesson and idea in course project mode`,
       );
     }
+  for (const activeId of ["python-01", "javascript-01"]) {
+    const legacy = parseRoute(
+      `#studio?lesson=${activeId}&step=learn&mode=practice&idea=2`,
+      "python-01", units, lessons,
+    );
+    assert.deepEqual(legacy, {
+      view: "studio", studioMode: "course", phase: "build", activeId, paragraph: 1,
+    }, "An old AI practice link opens the matching course project");
+    assert.ok(!routeHash(legacy).includes("mode=practice"));
+    assert.equal(normalizeRoute({ ...legacy, studioMode: "practice", phase: "learn" },
+      "python-01", units, lessons).phase, "build", "Old saved locations open Projects");
+  }
   assert.equal(parseRoute("#bogus", "python-01", units, lessons), null);
   assert.equal(
     parseRoute(
@@ -77,7 +89,7 @@ try {
   assert.ok(topicMatches("Functions", "A helper", "  FUNCTION "));
   assert.ok(!topicMatches("Functions", "A helper", "totally unrelated"));
   console.log(
-    "Navigation round trips preserve every section and studio choice; malformed links and saved positions remain bounded; beginner search wording works.",
+    "Navigation preserves lessons and ideas; old AI practice links open course projects; malformed links and saved positions remain bounded; beginner search wording works.",
   );
 } finally {
   await rm(tmp, { force: true });

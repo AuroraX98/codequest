@@ -1,0 +1,94 @@
+{
+  "lesson": "cpp-33",
+  "position": 33,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "If Square::score returns 6, what does show print through Shape&?",
+      "after": "Call behavior chosen by the actual object behind a base reference."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A virtual member can select an override based on the actual object type. = 0 makes score() pure virtual: Shape is abstract and cannot be instantiated directly.",
+        "struct Square : Shape publicly derives from Shape. override asks the compiler to verify that the signature really overrides a virtual function. Passing const Shape& preserves the actual Square object. Shape itself is abstract, so creating a Shape value is ill-formed. With a concrete base type, copying a derived object into a base value can instead slice away the derived part.",
+        "virtual ~Shape() = default declares a virtual destructor with compiler-provided behavior. Its importance when deleting through a base owner is the next lesson. score() const can be called through a const base reference.",
+        "Complete local C++ example; the app itself does not execute it:\n```cpp\n#include <iostream>\nstruct Shape {\n    virtual int score() const = 0;\n    virtual ~Shape() = default;\n};\nstruct Square : Shape {\n    int score() const override { return 4; }\n};\nvoid show(const Shape& shape) { std::cout << shape.score() << '\\n'; }\nint main() {\n    Square square;\n    show(square);\n}\n\n```",
+        "Expected output or behavior: 4\n. Local compiler test evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Add a second derived type with a different score and pass both to show. You may trace this without a compiler; finishing the reading is not proof of a local run."
+      ],
+      "after": [
+        "Shape describes a score operation. virtual allows another type to replace its behavior. The = 0 makes this operation pure virtual: Shape has no implementation of it. Shape is abstract, so you cannot create a Shape object directly.",
+        "Square : Shape makes Square a derived type: it builds on Shape. Square supplies its own score function. override asks the compiler to check that this function really replaces a virtual function from the base type.",
+        "const Shape& lets show read the original object through a Shape reference. The reference does not turn the Square into a separate Shape value. The virtual call can therefore select Square's behavior.",
+        "Follow square into show, then follow the call to score().\n\n```cpp\n#include <iostream>\nstruct Shape {\n    virtual int score() const = 0;\n    virtual ~Shape() = default;\n};\nstruct Square : Shape {\n    int score() const override { return 4; }\n};\nvoid show(const Shape& shape) { std::cout << shape.score() << '\\n'; }\nint main() {\n    Square square;\n    show(square);\n}\n\n```",
+        "The program prints 4. Although show uses a Shape reference, the actual object is a Square, so Square's score function runs.",
+        "virtual ~Shape() = default gives Shape a virtual destructor with compiler-provided cleanup. It supports correct destruction through a base pointer, which the next lesson explains."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain why, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "For a virtual call, identify the actual object behind the reference."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If Square::score returns 6, what does show print through Shape&?",
+        "choices": [
+          "4 because the reference is a Shape",
+          "6 because virtual dispatch selects Square",
+          "Nothing because Shape is abstract"
+        ],
+        "answer": 1,
+        "explanation": "An abstract base reference can refer to a concrete derived object. The virtual call selects that object’s override."
+      },
+      "after": {
+        "question": "Change Square::score to return 6. What does show print?",
+        "choices": [
+          "4, because the reference uses the Shape type.",
+          "6, because the virtual call uses Square's function.",
+          "Nothing, because Shape is abstract."
+        ],
+        "answer": 1,
+        "explanation": "An abstract base reference can refer to a usable derived object. The virtual call selects that object's override."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "C++ Core v1, standard C++23 features checked against the available GCC14.2 implementation. This app provides concept reading and an understanding check, not a C++ browser runner. Local example tests are separate evidence and do not certify learner mastery.",
+      "after": "The browser shows C++ code and checks your understanding; it does not run C++. Optional local examples use C++23."
+    }
+  ],
+  "headings": [
+    "Describe required behavior",
+    "Provide that behavior",
+    "Keep the original object",
+    "One example",
+    "What appears",
+    "Keep cleanup suitable for the base"
+  ],
+  "project": {
+    "title": "Override behavior through a base interface",
+    "task": "Trace how the base reference calls Square's score function.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local C++ example is optional."
+  }
+}

@@ -1,0 +1,86 @@
+{
+  "lesson": "react-31",
+  "position": 17,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Keep both badges pure. Add point must update both; Change background must not change their numbers.",
+      "after": "Keep rendering as a calculation. Let event handlers request changes."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A pure render calculates JSX from its current props and state. It does not change an outside counter, edit the DOM or send a message. React may call a component again without committing that result. A calculation must not rely on being called exactly once.",
+        "Badge receives count and returns a paragraph; count * 2 calculates a local number without changing count. React invokes Badge through <Badge count={count} />. App returns two independent uses with the same input. The click callbacks request state changes through setters; they are passed to onClick, not called during render. The arrow c => c + 1 returns the next state from the previous value. A data-* attribute stores a testable string on the element; data-night is not a CSS styling rule. The frame calls App as the root component with no supplied props. App returns the JSX tree; define it here without calling App() yourself or adding imports/createRoot.",
+        "```react\nfunction Badge({count}) {\n  const doubled = count * 2;\n  return <p data-badge>{doubled} points</p>;\n}\nfunction App() {\n  const [count, setCount] = React.useState(2);\n  const [night, setNight] = React.useState(false);\n  return <main data-night={night}>\n    <Badge count={count} /><Badge count={count} />\n    <button onClick={() => setCount(c => c + 1)}>Add point</button>\n    <button onClick={() => setNight(n => !n)}>Change background</button>\n  </main>;\n}\n```",
+        "```react\nfunction Badge({count}) {\n  const doubled = count * 2;\n  return <p data-badge>{doubled} points</p>;\n}\nfunction App() {\n  const [count, setCount] = React.useState(4);\n  const [night, setNight] = React.useState(false);\n  return <main data-night={night}>\n    <Badge count={count} /><Badge count={count} />\n    <button onClick={() => setCount(c => c + 1)}>Add point</button>\n    <button onClick={() => setNight(n => !n)}>Change background</button>\n  </main>;\n}\n```\nThe changed start produces two “8 points” paragraphs. An unrelated background-state change leaves both values alone; Add point changes both to 10.",
+        "Keep both badges pure. Add point must update both; Change background must not change their numbers. These finite behavior checks do not prove that every possible implementation is correct. Optional local practice: change one input, predict the screen, then run it."
+      ],
+      "after": [
+        "A pure render calculates the screen from its current props and state without changing outside data. Given the same inputs, it should give the same result. React may repeat the calculation.",
+        "`Badge` multiplies its supplied count by two. This creates a local result without changing count. Both uses of Badge receive the same input, so their numbers match.",
+        "```react\nfunction Badge({ count }) {\n  const doubled = count * 2;\n  return <p data-badge>{doubled} points</p>;\n}\nfunction App() {\n  const [count, setCount] = React.useState(2);\n  const [night, setNight] = React.useState(false);\n  return (\n    <main data-night={night}>\n      <Badge count={count} />\n      <Badge count={count} />\n      <button onClick={() => setCount(c => c + 1)}>Add point</button>\n      <button onClick={() => setNight(n => !n)}>Change background</button>\n    </main>\n  );\n}\n```\nBoth badges start at `4 points`. Add point makes both show `6 points`. The handlers request changes after a click.",
+        "Change background flips the separate `night` value. It does not change count, so both numbers stay the same. `data-night` records that value on the element; styling it would need a separate CSS rule.",
+        "Keep `Badge` as a calculation from its count prop. Do not increase an outside counter during rendering. Check that Add point changes both numbers and Change background leaves them alone."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the small example and explain its inputs and effects.",
+        "Complete the starter for this lesson.",
+        "Run the behavior checks, then predict a changed case."
+      ],
+      "after": [
+        "Calculate each badge from its count prop.",
+        "Keep state changes inside the click handlers.",
+        "Run the checks and compare both badges."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Trace the visible input, event and resulting screen before changing the code."
+      ],
+      "after": [
+        "Avoid changing an outside variable inside Badge."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "A component increments an outside counter during render. React calls it again for the same props. Why is this a problem?",
+        "choices": [
+          "A local multiplication always changes its input prop.",
+          "React guarantees every component runs exactly once.",
+          "Its result now depends on previous calls rather than only the current inputs."
+        ],
+        "answer": 2,
+        "explanation": "Rendering can be repeated; an outside mutation makes repeated calculation change the world. Move user-triggered changes to an event and keep render calculations repeatable."
+      },
+      "after": {
+        "question": "Why is increasing an outside counter during rendering a problem?",
+        "choices": [
+          "Multiplying a local number always changes the prop.",
+          "React promises to call a component exactly once.",
+          "The result depends on earlier calls instead of just the current inputs."
+        ],
+        "answer": 2,
+        "explanation": "React can render again with the same inputs. A pure calculation still gives the same result."
+      }
+    }
+  ],
+  "headings": [
+    "Make rendering repeatable",
+    "Calculate from the input",
+    "Read two matching badges",
+    "Change unrelated state",
+    "Build your pure badges"
+  ],
+  "project": {
+    "title": "Rendering calculates; events change things",
+    "task": "Keep both badges pure. Add point should update both; Change background should leave their numbers unchanged.",
+    "done_when": "Both badges agree after repeated clicks. Rendering does not change outside data."
+  }
+}

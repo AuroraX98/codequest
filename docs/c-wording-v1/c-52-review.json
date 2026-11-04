@@ -1,0 +1,92 @@
+{
+  "lesson": "c-52",
+  "position": 52,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "With sufficient memory, what status does prepare(0) return?",
+      "after": "A shared cleanup path can release storage on both successful and failed exits."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "C has no automatic destructor for a local heap pointer. This function initializes its status to failure, then routes a later validation failure through one cleanup label. free(NULL) is harmless, but free on an already freed pointer is not.",
+        "goto cleanup transfers control to the labeled statement in the same function. It is not an exception or a jump into another function. The successful path sets status before falling through the same free; the failed path keeps the failure status.",
+        "Complete local C example; the app itself does not execute it:\n```c\n#include <stdio.h>\n#include <stdlib.h>\nstatic int prepare(int accept) {\n    int status = 1;\n    int *value = malloc(sizeof *value);\n    if (value == NULL) return 1;\n    if (!accept) goto cleanup;\n    *value = 7;\n    status = 0;\ncleanup:\n    free(value);\n    return status;\n}\nint main(void) {\n    printf(\"%d\\n\", prepare(1));\n    return 0;\n}\n```",
+        "Expected output or behavior: 0. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Add a second resource with a null initial value and sketch reverse-order cleanup without double freeing. You may trace it without a C compiler; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "A local pointer does not automatically free its allocation when a C function ends. This function starts with status 1, meaning failure under its chosen rule. It changes that to 0 only after the work succeeds.",
+        "A label names a place inside a function. `goto cleanup` jumps to that label in the same function. Both paths reach the one free call, so the allocation is released exactly once.",
+        "Follow the example one line at a time.\n```c\n#include <stdio.h>\n#include <stdlib.h>\nstatic int prepare(int accept) {\n    int status = 1;\n    int *value = malloc(sizeof *value);\n    if (value == NULL) return 1;\n    if (!accept) goto cleanup;\n    *value = 7;\n    status = 0;\ncleanup:\n    free(value);\n    return status;\n}\nint main(void) {\n    printf(\"%d\\n\", prepare(1));\n    return 0;\n}\n```",
+        "When allocation succeeds and accept is 1, the function stores 7, changes status to 0, then frees the storage. It returns 0, which main prints. If allocation fails, it returns 1 immediately because there is nothing to release.",
+        "With accept equal to 0, the jump skips the write and the success status. Cleanup still frees the storage, and the function returns the original failure status."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Cleanup releases the resource; it does not change status by itself."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "With sufficient memory, what status does prepare(0) return?",
+        "choices": [
+          "1 after freeing its allocation",
+          "0 because reaching cleanup always means success",
+          "It leaks because goto cannot reach free."
+        ],
+        "answer": 0,
+        "explanation": "The failure branch skips setting status to zero, but still runs free exactly once."
+      },
+      "after": {
+        "question": "If allocation succeeds, what does prepare(0) return?",
+        "choices": [
+          "1, after freeing the allocation.",
+          "0, because reaching cleanup always means success.",
+          "It cannot return because goto skips free."
+        ],
+        "answer": 0,
+        "explanation": "The rejected path keeps status at 1. It still reaches free before returning that status."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "C Core v1 uses a portable C17 baseline supported by the verified compiler. C23 exists but is not claimed fully supported here. The app supplies concept reading and an understanding check, not a C browser runner. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "The browser shows C code and checks your understanding; it does not run C. Optional local examples use C17."
+    }
+  ],
+  "headings": [
+    "Start with a failure status",
+    "Send both paths through cleanup",
+    "One example",
+    "Follow the successful path",
+    "Follow the rejected path"
+  ],
+  "project": {
+    "title": "Cleanup paths and status results",
+    "task": "Trace both exits and identify where the allocation is freed exactly once.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local C example is optional."
+  },
+  "navigationCorrection": "Added a short example introduction so its reviewed heading remains an explicit contents target."
+}

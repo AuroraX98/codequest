@@ -1,0 +1,86 @@
+{
+  "lesson": "react-27",
+  "position": 12,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Save the current draft once per submission, prevent default navigation and keep the submission count accurate.",
+      "after": "Handle a form's save action in one place: onSubmit."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A form’s onSubmit receives a submission event. Put the save logic there once, rather than repeating it in both onClick and onSubmit. A submit button can initiate submission; browser keyboard submission is another route to the same form handler in a normal browser setup. This isolated preview does not enable native form submission. Use Run checks to exercise the handler here; test submit-button and Enter-key behavior in a normal browser setup.",
+        "save(event) calls event.preventDefault() to cancel this local form’s default navigation, then records the current draft and increments count with a functional updater. It does not stop event bubbling or persist anything to a server. saved is deliberately a submitted snapshot, while draft remains editable; these are distinct meanings, not redundant copies.",
+        "```react\nfunction App() {\n  const [draft, setDraft] = React.useState(\"\");\n  const [saved, setSaved] = React.useState(\"\");\n  const [count, setCount] = React.useState(0);\n  function save(event) {\n    event.preventDefault();\n    setSaved(draft);\n    setCount(value => value + 1);\n  }\n  return <main><form onSubmit={save}>\n    <label htmlFor=\"entry\">Entry</label>\n    <input id=\"entry\" value={draft} onChange={event => setDraft(event.target.value)} />\n    <button type=\"submit\">Save</button>\n  </form><p role=\"status\">Saved: {saved}; count: {count}</p></main>;\n}\n```\nOne submission stores the current draft and increments count once. A second intentional submission increments it again.",
+        "```react\nfunction App() {\n  const [draft, setDraft] = React.useState(\"Seed\");\n  const [saved, setSaved] = React.useState(\"\");\n  const [count, setCount] = React.useState(0);\n  function save(event) {\n    event.preventDefault();\n    setSaved(draft);\n    setCount(value => value + 1);\n  }\n  return <main><form onSubmit={save}>\n    <label htmlFor=\"entry\">Entry</label>\n    <input id=\"entry\" value={draft} onChange={event => setDraft(event.target.value)} />\n    <button type=\"submit\">Save</button>\n  </form><p role=\"status\">Saved: {saved}; count: {count}</p></main>;\n}\n```\nThis changed App begins with draft Seed. Submitting without editing saves Seed once.",
+        "Optional practice: Edit again after saving and explain why saved text stays unchanged until another submission. Checks dispatch cancelable submit events; they do not prove Enter-key or screen-reader behavior. The checks cover these finite behaviors; a matching DOM alone does not prove every implementation choice. The frame supplies React and mounts App. No imports, server, persistence or network are involved."
+      ],
+      "after": [
+        "A submission asks a form to send or save its values. Put the save handler on the form's `onSubmit`. Avoid also saving in the button's `onClick`, which could save twice.",
+        "`draft` is the text being edited. `saved` keeps the text from the last submission. `event.preventDefault()` stops the form's usual page navigation. It does not save anything to a server.",
+        "```react\nfunction App() {\n  const [draft, setDraft] = React.useState(\"\");\n  const [saved, setSaved] = React.useState(\"\");\n  const [count, setCount] = React.useState(0);\n  function save(event) {\n    event.preventDefault();\n    setSaved(draft);\n    setCount(value => value + 1);\n  }\n  return (\n    <main>\n      <form onSubmit={save}>\n        <label htmlFor=\"entry\">Entry</label>\n        <input id=\"entry\" value={draft} onChange={event => setDraft(event.target.value)} />\n        <button type=\"submit\">Save</button>\n      </form>\n      <p role=\"status\">Saved: {saved}; count: {count}</p>\n    </main>\n  );\n}\n```\nEach submission keeps the current draft and increases the count once.",
+        "After saving, typing more changes only the draft. The saved text stays the same until another submission. This is why the two state values have different jobs.",
+        "This preview does not enable native form submission. Use Run checks to test the handler here. Try the Save button and Enter key on a normal browser page outside this preview. Complete the handler so each submission saves once and stops page navigation."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the small example and explain its inputs and effects.",
+        "Complete the starter for this lesson.",
+        "Run the behavior checks, then predict a changed case."
+      ],
+      "after": [
+        "Keep all save work in the form's submit handler.",
+        "Prevent default navigation and record the draft once.",
+        "Run the checks. Test normal button and Enter submission separately outside this preview."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Trace the visible input, event and resulting screen before changing the code."
+      ],
+      "after": [
+        "The button starts a submission. The form's onSubmit does the saving."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "After saving Moon, the user types Star without submitting. What should the saved snapshot show?",
+        "choices": [
+          "Moon until the next submission",
+          "Star immediately",
+          "An empty string"
+        ],
+        "answer": 0,
+        "explanation": "Draft is current editing text; saved is the last submitted text. Only the submit handler replaces that snapshot."
+      },
+      "after": {
+        "question": "After saving Moon, you type Star without submitting. What should the saved message show?",
+        "choices": [
+          "Moon until the next submission.",
+          "Star immediately.",
+          "Empty text."
+        ],
+        "answer": 0,
+        "explanation": "Typing changes draft. Only a submission replaces saved."
+      }
+    }
+  ],
+  "headings": [
+    "Handle one submission",
+    "Keep the draft and saved text separate",
+    "Save the current draft",
+    "Keep later edits separate",
+    "Test your form handler"
+  ],
+  "project": {
+    "title": "Handle saving at the form boundary",
+    "task": "Save the current draft once per submission. Prevent page navigation and increase the submission count once.",
+    "done_when": "Run checks passes for repeated submissions. Later typing leaves the last saved text unchanged until another submission."
+  }
+}

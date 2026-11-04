@@ -1,0 +1,83 @@
+{
+  "lesson": "react-22",
+  "position": 7,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Start at 2. Each Record click should increment count and report the count that the handler read before that increment.",
+      "after": "A setter does not change the state value inside a handler that is already running."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A render gives its event handlers a snapshot of state. Calling a setter requests future state; it does not rewrite the local count variable in the handler that is already running. This matters when one event records the current value and also changes it.",
+        "The two useState calls remember a count and a report string separately. record calls setCount with count +1, then calls setReport with a string built from the same old count. Both setters request the next render. The output element displays the report string; it does not perform the calculation itself.\n\n```jsx\nfunction App() {\n  const [count, setCount] = React.useState(1);\n  const [report, setReport] = React.useState(\"Not recorded\");\n  function record() {\n    setCount(count + 1);\n    setReport(\"Read \" + count);\n  }\n  return <main><p>Count: {count}</p><output>{report}</output><button onClick={record}>Record</button></main>;\n}\n```\n\nAfter one click, the paragraph says Count: 2 and the output says Read 1. That is not a lost update: the report deliberately records the snapshot read by this event.",
+        "With initial count 4, one click produces Count: 5 and Read 4. The setter call still does not replace the handler’s local count.\n\n```jsx\nfunction App() {\n  const [count, setCount] = React.useState(4);\n  const [report, setReport] = React.useState(\"Not recorded\");\n  function record() {\n    setCount(count + 1);\n    setReport(\"Read \" + count);\n  }\n  return <main><p>Count: {count}</p><output>{report}</output><button onClick={record}>Record</button></main>;\n}\n```",
+        "Start at 2. Each Record click should increment count and report the count that the handler read before that increment. The starter is the small application to edit; the examples above remain available for comparison."
+      ],
+      "after": [
+        "A render is React calling a component to work out what to show. Each render gives its handlers the state values from that render. This is called a snapshot. A setter asks for a later update; it does not replace the value the current handler is reading.",
+        "```jsx\nfunction App() {\n  const [count, setCount] = React.useState(1);\n  const [report, setReport] = React.useState(\"Not recorded\");\n  function record() {\n    setCount(count + 1);\n    setReport(\"Read \" + count);\n  }\n  return (\n    <main>\n      <p>Count: {count}</p>\n      <output>{report}</output>\n      <button onClick={record}>Record</button>\n    </main>\n  );\n}\n```\nAfter one click, the screen shows `Count: 2` and `Read 1`. The report uses the count that this handler read before the update.",
+        "On the next click, the new handler reads `2`. It asks for a count of `3` and a report of `Read 2`. The report is meant to show the earlier value.",
+        "Start at `2`. Each `Record` click should add one to the count and report the number read before adding. Keep the count and report in separate state values."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the small example and explain its inputs and effects.",
+        "Complete the starter for this lesson.",
+        "Run the behavior checks, then predict a changed case."
+      ],
+      "after": [
+        "Read count inside the click handler.",
+        "Ask for count + 1 and a report made from count.",
+        "Run the checks and compare the count with the report."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Trace the visible input, event and resulting screen before changing the code."
+      ],
+      "after": [
+        "Even after setCount, this handler's count still has its earlier value."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Starting from 2, two separate Record clicks occur. What does the second click leave in output?",
+        "choices": [
+          "Read 2",
+          "Read 4",
+          "Read 3"
+        ],
+        "answer": 2,
+        "explanation": "The first event reads 2 and renders 3. The next event reads the new snapshot 3, then requests 4."
+      },
+      "after": {
+        "question": "Starting at 2, what report appears after two separate Record clicks?",
+        "choices": [
+          "Read 2",
+          "Read 4",
+          "Read 3"
+        ],
+        "answer": 2,
+        "explanation": "The first click reads 2 and asks for 3. The next click reads 3 and asks for 4."
+      }
+    }
+  ],
+  "headings": [
+    "Read one saved value",
+    "Record before adding",
+    "Follow the next click",
+    "Build your record button"
+  ],
+  "project": {
+    "title": "A handler reads one state snapshot",
+    "task": "Start at 2. Each Record click adds one and reports the value read before that addition.",
+    "done_when": "The new count and the earlier count in the report are both correct after repeated clicks."
+  }
+}

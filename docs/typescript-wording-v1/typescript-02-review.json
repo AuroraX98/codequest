@@ -1,0 +1,105 @@
+{
+  "lesson": "typescript-02",
+  "position": 8,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Combine aliases, unions, intersections, and interfaces to model different activity records.",
+      "after": "Use a kind label to tell two activity shapes apart."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A type alias gives a reusable name to a type: type Size = 'small' | 'large'. The | means either choice, called a union. The quoted values are literal types: exactly those words, rather than any string. An intersection uses & to require both sets of fields. An interface also describes an object shape. These tools let us describe related records without losing their differences.",
+        "Here is a complete TypeScript example for a TypeScript runner:\n```typescript\ninterface Timed {\n  title: string;\n  minutes: number;\n}\ntype Drawing = Timed & { kind: 'draw'; pictures: number };\ntype Singing = Timed & { kind: 'sing'; songs: number };\ntype Session = Drawing | Singing;\nconst drawing: Session = {\n  kind: 'draw', title: 'Birds', minutes: 12, pictures: 3\n};\nconst singing: Session = {\n  kind: 'sing', title: 'Warmup', minutes: 8, songs: 2\n};\n```\nEach record needs Timed's title and minutes plus its own kind and detail. & combines requirements; it does not merge two runtime objects. | says a Session is one of the two valid shapes.",
+        "The shared kind field tells us which shape we have. A discriminated union is a union whose members carry distinct identifying literal values. Narrowing means a check gives TypeScript a more specific type for one part of the code. Checking session.kind === 'draw' proves that this branch has pictures. In the other branch, the only remaining member is Singing, with songs.",
+        "Continue after the previous types and objects:\n```typescript\nfunction describeSession(session: Session): string {\n  if (session.kind === 'draw') {\n    return `${session.title}: ${session.pictures} pictures.`;\n  }\n  return `${session.title}: ${session.songs} songs.`;\n}\nconsole.log(describeSession(drawing));\nconsole.log(describeSession(singing));\n```\nThe outputs are Birds: 3 pictures. and Warmup: 2 songs. === tests exact equality. The if branch returns early, so the second return is reached only for the singing shape. Trying to read songs in the drawing branch is a type error.",
+        "A separate alias containing more words does not automatically add more shapes to a union. In your starter, ActivityKind includes walk, read, and code, but Activity contains only WalkActivity | ReadActivity. There is no CodeActivity in that union yet. Follow the actual accepted parameter type when deciding which branches describe is responsible for.\n\nFor two sets of activity names, {walk, read} and {read, code}, the overlap is {read}; their union is {walk, read, code}. This set vocabulary explains either/shared choices. An object type intersection uses & to require all fields from both object types, so do not read it as keeping only the fields the objects share.",
+        "For the exercise, both branches must include title and minutes. The walk branch reads steps; the read branch reads pages. Preserve the punctuation shown by the requested sentences. Checking kind before reading a branch-specific field teaches both the compiler and the reader why that field is available. Do not convert all fields to text as a substitute for describing the correct shape.",
+        "After your valid version compiles, temporarily try a walk record with pages and no steps. The compiler should reject it, because the discriminant and fields do not agree. Remove the invalid example afterward. These are development checks; a forged network object can still lie at runtime, so outside data needs actual value checks before it becomes a trusted Activity."
+      ],
+      "after": [
+        "An interface can describe shared properties. An intersection, written `&`, requires shared and extra properties together. A union, written `|`, allows one shape or another.",
+        "Both sessions need a title. The kind label tells you which extra property belongs to that session.\n```typescript\ninterface Titled { title: string; }\ntype Drawing = Titled & { kind: \"draw\"; pictures: number };\ntype Singing = Titled & { kind: \"sing\"; songs: number };\ntype Session = Drawing | Singing;\nfunction describeSession(session: Session): string {\n  if (session.kind === \"draw\") {\n    return `${session.title}: ${session.pictures} pictures.`;\n  }\n  return `${session.title}: ${session.songs} songs.`;\n}\nconsole.log(describeSession({ kind: \"draw\", title: \"Birds\", pictures: 3 }));\n```\nThe output is Birds: 3 pictures.",
+        "A discriminated union is a union with a label that identifies each shape. Here, `kind` is that label. Checking for `\"draw\"` tells TypeScript that this path has pictures.",
+        "The drawing path returns early. The remaining path must be singing, so it can read songs. Reading songs on the drawing path would be a type error.",
+        "In the project, ActivityKind lists walk, read, and code. But Activity contains only the walking and reading object types. Listing the word code separately does not create a coding activity shape.",
+        "Both project activities have a title and minutes. A walking activity also has steps. A reading activity has pages. Check kind, then include the correct detail in the returned sentence.",
+        "A record labeled walk but missing steps does not match the walking type. TypeScript can catch that mistake in checked code. Data from outside the program still needs checks while it runs."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Create an ActivityKind type that allows only \"walk\", \"read\", or \"code\".",
+        "Define the fields both activities share: title and minutes.",
+        "Give walking activities a steps field and reading activities a pages field.",
+        "Use the supplied walk object: { kind: \"walk\", title: \"Park\", minutes: 20, steps: 1800 }. Its summary must include \"1800 steps\".",
+        "Use the supplied reading object: { kind: \"read\", title: \"Novel\", minutes: 15, pages: 8 }. Its summary must include \"8 pages\"."
+      ],
+      "after": [
+        "Keep ActivityKind limited to walk, read, or code.",
+        "Describe the shared title and minutes.",
+        "Give walking activities steps and reading activities pages.",
+        "Check kind before reading the matching detail.",
+        "Return each requested sentence and run the checks."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "The common `kind` property identifies which shape is present.",
+        "When kind is walk, `steps` exists; otherwise this union branch is read.",
+        "Return a separate message for each branch and include the matching numeric detail."
+      ],
+      "after": [
+        "Use the kind label to choose a path.",
+        "Read steps only on the walk path, and pages on the read path.",
+        "Include the title, minutes, and matching detail."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Activity is WalkActivity | ReadActivity. In a branch where kind === \"walk\", which field can you read safely?",
+        "choices": [
+          "Both; a union requires both shapes at once",
+          "steps, from WalkActivity",
+          "pages, from ReadActivity"
+        ],
+        "answer": 1,
+        "explanation": "The kind check narrows the union to WalkActivity, which has steps. A union allows either shape; it does not require both sets of fields."
+      },
+      "after": {
+        "question": "Activity is WalkActivity or ReadActivity. After checking kind is walk, which detail can you read?",
+        "choices": [
+          "Both, because a union requires both shapes",
+          "Steps from the walking activity",
+          "Pages from the reading activity"
+        ],
+        "answer": 1,
+        "explanation": "The kind check identifies the walking shape, which has steps."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Type-error practice: after the valid solution compiles, temporarily append this line and run the full TypeScript check: const invalidActivity: Activity = { kind: \"walk\", title: \"Park\", minutes: 20, pages: 8 }; The compiler should report an error. Remove the line before completing the lesson. Runtime checks alone cannot establish rejection of an incorrect type.",
+      "after": "To try a type error, temporarily give a walk record pages but no steps. Run the check, read the error, then restore the valid record."
+    }
+  ],
+  "headings": [
+    "Share some parts and vary others",
+    "Describe two session kinds",
+    "Use the kind label",
+    "Choose the matching detail",
+    "Follow the actual activity type",
+    "Describe each activity",
+    "Check a mismatched record"
+  ],
+  "project": {
+    "title": "A typed activity planner",
+    "task": "Describe walking and reading records, then use their kind labels to return the right activity summary.",
+    "done_when": "Both valid shapes work, a mismatched shape is rejected, and the checks pass."
+  }
+}

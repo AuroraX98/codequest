@@ -1,0 +1,100 @@
+{
+  "lesson": "sql-22",
+  "position": 45,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Begin a transaction. Increase account 1 balance from 10 to 15, then create savepoint trial. Temporarily set account 2 balance to 99, roll back only to trial, release it, and commit. Final balances must be 15 and 20.",
+      "after": "Undo the newest part of a transaction while keeping an earlier change."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A transaction can contain a named savepoint for a smaller reversible portion of its work.",
+        "ROLLBACK TO returns to the state at that savepoint without cancelling the whole outer transaction.",
+        "Changes made before the savepoint remain part of the transaction.",
+        "This complete example makes both changes visible before choosing which part to undo.\n```sql\nCREATE TABLE demo_accounts(id INTEGER PRIMARY KEY,balance INTEGER);\nINSERT INTO demo_accounts VALUES(1,10),(2,20);\nBEGIN;\nUPDATE demo_accounts SET balance=15\nWHERE id=1;\nSAVEPOINT trial;\nUPDATE demo_accounts SET balance=99\nWHERE id=2;\nROLLBACK TO trial;\nRELEASE trial;\nCOMMIT;\nSELECT id,balance\nFROM demo_accounts\nORDER BY id;\n```\nThe final rows are 1/15 and 2/20: the first change survives, the later trial change does not.",
+        "ROLLBACK TO does not itself remove the named savepoint. RELEASE removes that mark after you are finished with it.",
+        "Releasing an inner savepoint is not the same as committing the outer transaction. A later outer rollback can still undo its changes.",
+        "In this practice, the first account changes before trial. Only the second account’s tentative update should be undone.",
+        "Use this only on the supplied isolated data. It is a transaction lesson, not a real financial operation."
+      ],
+      "after": [
+        "A savepoint is a named mark inside a transaction. It gives you a place to return to if you want to undo only part of the work.",
+        "`ROLLBACK TO trial` undoes changes made after the savepoint named `trial`. It keeps the outer transaction open.",
+        "Changes made before the savepoint remain. The position of the savepoint decides which changes can be undone together.",
+        "```sql\nCREATE TABLE demo_accounts(id INTEGER PRIMARY KEY, balance INTEGER);\nINSERT INTO demo_accounts VALUES (1, 10), (2, 20);\nBEGIN;\nUPDATE demo_accounts SET balance = 15 WHERE id = 1;\nSAVEPOINT trial;\nUPDATE demo_accounts SET balance = 99 WHERE id = 2;\nROLLBACK TO trial;\nRELEASE trial;\nCOMMIT;\nSELECT id, balance FROM demo_accounts ORDER BY id;\n```\nAccount 1 ends at 15. Account 2 ends at 20. The first change happened before the mark; the second change happened after it.",
+        "`ROLLBACK TO` keeps the savepoint available. `RELEASE trial` removes that mark when you have finished using it.",
+        "Releasing a savepoint inside a transaction does not save the whole transaction. `COMMIT` does that. Before the commit, an outer `ROLLBACK` can still undo the earlier change.",
+        "In the exercise, change account 1 before creating `trial`. Change account 2 after creating it. That places only the second change in the part you will undo.",
+        "After the commit, check both rows. Account 1 must show the kept change, and account 2 must show its original value."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the requirement.",
+        "Make one change to the starter.",
+        "Run the checks.",
+        "Explain why a changed input produces its result."
+      ],
+      "after": [
+        "Begin the transaction and change account 1 to 15.",
+        "Create `SAVEPOINT trial`, then change account 2 to 99.",
+        "Roll back to `trial`, release it, and commit.",
+        "Run the checks for balances 15 and 20."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Rollback to the named savepoint, not the entire transaction.",
+        "Release the savepoint after returning to it.",
+        "Commit the outer transaction after the intended state is restored."
+      ],
+      "after": [
+        "Use `ROLLBACK TO trial`, not a full `ROLLBACK`.",
+        "Use `RELEASE trial` before `COMMIT`."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "You update A, create savepoint S, update B, then ROLLBACK TO S. Which changes remain in the open transaction?",
+        "choices": [
+          "A remains; B is undone.",
+          "Both A and B are committed permanently.",
+          "A is undone; B remains."
+        ],
+        "answer": 0,
+        "explanation": "The savepoint was established after A and before B. Rolling back to it removes the later portion, not the earlier work."
+      },
+      "after": {
+        "question": "You change A, create savepoint S, change B, then roll back to S. What stays in the open transaction?",
+        "choices": [
+          "A's change stays; B's change is undone",
+          "Both changes are saved permanently",
+          "A's change is undone; B's change stays"
+        ],
+        "answer": 0,
+        "explanation": "The mark comes after A's change and before B's change. Only the work after the mark is undone."
+      }
+    }
+  ],
+  "headings": [
+    "Mark a place to return to",
+    "Undo only the later work",
+    "Keep the earlier change",
+    "One example",
+    "Remove the mark",
+    "Save the whole transaction",
+    "Place the mark carefully",
+    "Check both rows"
+  ],
+  "project": {
+    "title": "Undo a trial change but keep the approved change",
+    "task": "Begin a transaction. Set account 1 to 15. Create `trial`, set account 2 to 99, then undo only the work after `trial`. Release the savepoint and commit.",
+    "done_when": "The checks pass: account 1 has 15, account 2 has 20, and the transaction is committed."
+  }
+}

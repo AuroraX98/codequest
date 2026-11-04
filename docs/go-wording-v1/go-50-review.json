@@ -1,0 +1,91 @@
+{
+  "lesson": "go-50",
+  "position": 50,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "If the input is a twenty-character line, what happens under this configured limit?",
+      "after": "Read input one line at a time and check why reading stopped."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "bufio.Scanner splits input into tokens; its default split is lines with line endings removed. Scanner has a maximum token size, so it is not an unlimited line reader. Buffer configures the starting buffer and maximum before scanning starts.",
+        "Scan returning false can mean end-of-input or a failure. Always inspect Err after the loop. This fixture chooses a tiny maximum of eight bytes and prints a stable label rather than depending on the exact error text. A larger configured limit still needs an application size policy.",
+        "Complete local Go example; the app itself does not execute it:\n```go\npackage main\n\nimport (\n\"fmt\"\n\"bufio\"\n\"strings\"\n)\n\n\nfunc main() {\n    scanner := bufio.NewScanner(strings.NewReader(\"abc\\n\"))\n    scanner.Buffer(make([]byte, 0, 4), 8)\n    count := 0\n    for scanner.Scan() { count++ }\n    if err := scanner.Err(); err != nil { fmt.Println(\"scan failed\"); return }\n    fmt.Println(count)\n}\n```",
+        "Expected output or behavior: 1. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Choose a justified production limit and explain when a Reader may be more appropriate than Scanner. You may trace it without a Go compiler; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "A Scanner reads input in pieces called tokens. By default, each token is one line without its line ending. Scanner has a size limit. Set its buffer before scanning; this example sets a small maximum of eight bytes.",
+        "`Scan()` returns false when input ends or when a problem stops scanning. After the loop, `Err()` tells these cases apart. A nil error means no scanning failure was reported.",
+        "Follow each successful Scan and then check Err.\n```go\npackage main\n\nimport (\n\"fmt\"\n\"bufio\"\n\"strings\"\n)\n\n\nfunc main() {\n    scanner := bufio.NewScanner(strings.NewReader(\"abc\\n\"))\n    scanner.Buffer(make([]byte, 0, 4), 8)\n    count := 0\n    for scanner.Scan() { count++ }\n    if err := scanner.Err(); err != nil { fmt.Println(\"scan failed\"); return }\n    fmt.Println(count)\n}\n```",
+        "The screen shows `1`. The short line fits, so the loop counts one line and finishes without an error.",
+        "A line of twenty plain letters is too large for this tiny limit. Choose a limit that fits the task; use a different reading approach when lines may be much larger."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "The loop ending is not enough; read Err too."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If the input is a twenty-character line, what happens under this configured limit?",
+        "choices": [
+          "The scanner silently accepts unlimited lines.",
+          "Scan false can only mean a clean EOF.",
+          "The scanner reports an error; the program prints scan failed."
+        ],
+        "answer": 2,
+        "explanation": "The token exceeds the small configured maximum, and Err distinguishes that failure from normal exhaustion."
+      },
+      "after": {
+        "question": "What happens with a line of twenty plain letters?",
+        "choices": [
+          "The scanner accepts lines of any size.",
+          "Scan returning false always means a clean end.",
+          "The scanner reports an error, and the program shows scan failed."
+        ],
+        "answer": 2,
+        "explanation": "The line exceeds the configured limit. Err reports the problem after Scan stops."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Go Core v1 uses the verified Go1.27.3 toolchain and standard library. The app supplies concept reading and an understanding check, not a Go browser runner. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "The browser shows Go code and checks your understanding; it does not run Go. Optional local examples use Go 1.27."
+    }
+  ],
+  "headings": [
+    "Split input into lines",
+    "Check the stopping reason",
+    "One example",
+    "Read the line count",
+    "Try a line beyond the limit"
+  ],
+  "project": {
+    "title": "Buffered scanning and limits",
+    "task": "Distinguish a size failure from the normal end of input.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local Go example is optional."
+  }
+}

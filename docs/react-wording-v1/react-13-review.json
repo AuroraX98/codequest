@@ -1,0 +1,97 @@
+{
+  "lesson": "react-13",
+  "position": 35,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Show a useful fallback for a failed panel without losing the surrounding dashboard.",
+      "after": "Use an error boundary to replace a broken panel while keeping the rest of the page usable."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "An error boundary handles rendering failures in components below it and can replace that subtree with fallback UI.",
+        "React 18 uses a class component for a boundary. The supplied class extends React.Component; render returns its UI and this.props.children is the content placed inside it.\n\nThe class syntax builds on JavaScript classes. constructor(props) initializes a new boundary instance. super(props) calls the parent React.Component constructor before using this; this.state then stores the initial local failure flag. React creates the instance and calls render after updates; you do not manually run the constructor or render to handle an error.",
+        "getDerivedStateFromError returns a state update after a descendant render fails. render can then choose fallback content instead of the failed children.",
+        "```react\nclass SmallBoundary extends React.Component {\n  constructor(props) { super(props); this.state = {failed:false}; }\n  static getDerivedStateFromError() { return {failed:true}; }\n  render() { return this.state.failed ? <p>Try again later</p> : this.props.children; }\n}\n```\n\nTo exercise the boundary, render it around a child that fails:\n```react\nfunction BrokenPanel() { throw new Error(\"Demo failure\"); }\nfunction App() {\n  return <SmallBoundary><BrokenPanel /></SmallBoundary>;\n}\n```\nWith SmallBoundary defined above, rendering App shows Try again later. React calls the static error method with the thrown error; this example does not use that parameter. The method returns a state update. React then calls render, which takes no explicit arguments and returns fallback UI. The framework invokes these methods; do not call them yourself to simulate handling.\n\nnew Error(\"Demo failure\") constructs an Error object with that message. throw interrupts the child’s render by throwing that object. The nearest suitable boundary can then choose its fallback; Error construction alone, without throw, would not signal a render failure.",
+        "Place the boundary around the area that can fail, not around unrelated controls that should stay usable.",
+        "A boundary does not generally catch errors thrown directly by an event handler or a timer callback. Handle those where they occur; this exercise button changes state and the child then fails during render.",
+        "For the exercise, complete PanelBoundary's fallback behavior. Break panel should show \"Panel unavailable\" while Dashboard remains. Reset panel fixes the input and changes the boundary key to create fresh boundary state."
+      ],
+      "after": [
+        "An error boundary catches a rendering failure in a component below it. It can show fallback content: a useful replacement for the part that failed.",
+        "This course's React version uses a class component for this boundary. `extends React.Component` gives it React's component behavior. The constructor starts its state, and `render` returns what to show.",
+        "React calls `getDerivedStateFromError` when a child render fails. Returning `{failed: true}` lets the next render choose the fallback. You do not call this method yourself.",
+        "```react\nclass SmallBoundary extends React.Component {\n  constructor(props) {\n    super(props);\n    this.state = { failed: false };\n  }\n  static getDerivedStateFromError() {\n    return { failed: true };\n  }\n  render() {\n    return this.state.failed\n      ? <p>Try again later</p>\n      : this.props.children;\n  }\n}\nfunction BrokenPanel() {\n  throw new Error(\"Demo failure\");\n}\nfunction App() {\n  return <SmallBoundary><BrokenPanel /></SmallBoundary>;\n}\n```\nBrokenPanel throws an error on purpose. The boundary shows `Try again later` instead. Creating an Error object alone would not throw it.",
+        "Place the boundary around the panel that may fail. Keep unrelated headings and controls outside so they can remain available.",
+        "A render boundary does not generally catch an error thrown directly by a click handler or timer. Handle those failures where they happen. In this exercise, the button changes state, and the child then fails while rendering.",
+        "Complete `PanelBoundary`. Break panel should show `Panel unavailable` while Dashboard stays visible. Reset panel fixes the input and changes the boundary key so it starts with fresh state."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Set failed state when a descendant render throws.",
+        "Render the fallback only for the failed subtree."
+      ],
+      "after": [
+        "Return failed state when a child render throws.",
+        "Show fallback content only for that panel.",
+        "Run the checks for Break panel and Reset panel."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Set failed state when a descendant render throws.",
+        "Render the fallback only for the failed subtree."
+      ],
+      "after": [
+        "Use this.props.children while the panel has not failed."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "An event handler directly throws an error before scheduling a render. Should this render boundary be your error-handling plan for it?",
+        "choices": [
+          "No; handle that event failure explicitly",
+          "Yes; boundaries catch every JavaScript error anywhere",
+          "Yes; adding a key makes all errors disappear"
+        ],
+        "answer": 0,
+        "explanation": "Boundaries protect descendant rendering/lifecycle work, not arbitrary event-handler or asynchronous callback failures. Handle those errors at their source."
+      },
+      "after": {
+        "question": "A click handler directly throws an error. Should this render boundary be the plan for handling it?",
+        "choices": [
+          "No. Handle that event failure explicitly.",
+          "Yes. Boundaries catch every JavaScript error.",
+          "Yes. A key removes every kind of error."
+        ],
+        "answer": 0,
+        "explanation": "This boundary protects rendering below it. Event and timer failures need their own handling."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Targets React18.3.1 supported class boundary API. Intentional test failure logs are expected. Broken starter can unmount the root by failing to show fallback; validation must treat this as expected failure, not a successful test. No claim of catching server rendering or all async failures.",
+      "after": "This lesson deliberately triggers a rendering error to test the fallback. Error logs from that demonstration are expected."
+    }
+  ],
+  "headings": [
+    "Contain a rendering failure",
+    "Use the supplied boundary class",
+    "Record that the child failed",
+    "Read one complete boundary",
+    "Keep unrelated controls outside",
+    "Handle other errors where they happen",
+    "Build your panel fallback"
+  ],
+  "project": {
+    "title": "Contain a render failure",
+    "task": "Show Panel unavailable when the panel render fails, while keeping Dashboard and its controls available.",
+    "done_when": "Break panel shows the fallback. Reset panel restores the working panel without losing the surrounding dashboard."
+  }
+}

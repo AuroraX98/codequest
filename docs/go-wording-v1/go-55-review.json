@@ -1,0 +1,91 @@
+{
+  "lesson": "go-55",
+  "position": 55,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "If the worker sends 8 instead, what prints?",
+      "after": "Pass one value through an unbuffered channel."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "make(chan int) creates an unbuffered channel. A send ch <- value and a receive <-ch rendezvous; the sender cannot finish the send until a receiver is ready. Channels communicate typed values, not arbitrary shared memory transactions.",
+        "The worker sends one integer, then closes a separate completion channel. main receives the value and waits for done so the worker’s lifetime is complete before returning. Closing the data channel is unnecessary when the receiver knows exactly one value is expected.",
+        "Complete local Go example; the app itself does not execute it:\n```go\npackage main\n\nimport (\n\"fmt\"\n)\n\n\nfunc main() {\n    values := make(chan int)\n    done := make(chan struct{})\n    go func() { values <- 6; close(done) }()\n    value := <-values\n    <-done\n    fmt.Println(value * 2)\n}\n```",
+        "Expected output or behavior: 12. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Explain why sending on the same unbuffered channel before any receiver can run would block. You may trace it without a Go compiler; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "An unbuffered channel has no space to store waiting values. `values <- 6` sends an integer. `<-values` receives it. The send cannot finish until a receiver is ready.",
+        "The worker sends one value, then closes a separate done channel. main receives the number and waits for done. It knows exactly one number is expected, so it does not need a close signal on values.",
+        "Follow the number from the sender to the receiver.\n```go\npackage main\n\nimport (\n\"fmt\"\n)\n\n\nfunc main() {\n    values := make(chan int)\n    done := make(chan struct{})\n    go func() { values <- 6; close(done) }()\n    value := <-values\n    <-done\n    fmt.Println(value * 2)\n}\n```",
+        "The screen shows `12`. main receives 6 and doubles it.",
+        "If no receiver can run, an unbuffered send waits. Here the worker and main can reach opposite sides of the same transfer."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Follow the number after the receive."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If the worker sends 8 instead, what prints?",
+        "choices": [
+          "8 because receiving prevents later arithmetic.",
+          "12 because channels cache their first literal",
+          "16"
+        ],
+        "answer": 2,
+        "explanation": "The receiver obtains eight and the unchanged calculation doubles it."
+      },
+      "after": {
+        "question": "If the worker sends 8, what appears?",
+        "choices": [
+          "8, because receiving prevents arithmetic.",
+          "12, because the first number is cached.",
+          "16"
+        ],
+        "answer": 2,
+        "explanation": "main receives 8 and multiplies it by 2."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Go Core v1 uses the verified Go1.27.3 toolchain and standard library. The app supplies concept reading and an understanding check, not a Go browser runner. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "The browser shows Go code and checks your understanding; it does not run Go. Optional local examples use Go 1.27."
+    }
+  ],
+  "headings": [
+    "Meet at a send and receive",
+    "Wait for the worker to finish",
+    "One example",
+    "Read the received value",
+    "Know when a send waits"
+  ],
+  "project": {
+    "title": "Unbuffered channels",
+    "task": "Predict the result when the sent number changes.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local Go example is optional."
+  }
+}

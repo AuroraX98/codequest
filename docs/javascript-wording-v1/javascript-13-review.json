@@ -1,0 +1,48 @@
+{
+  "lesson": "javascript-13",
+  "position": 30,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Record a start timestamp when the signal is shown.",
+      "after": "Measure how much time passes between a signal and a click."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A timestamp records when something happened. JavaScript's `Date.now()` gives a timestamp measured in milliseconds since a fixed reference date. A millisecond is one thousandth of a second. To measure a duration, subtract the earlier timestamp from the later one. The result is elapsed time, not a clock reading. Both numbers must use the same unit and reference.\n\n```javascript\nconst recorded = Date.now();\nconsole.log(typeof recorded);\nconsole.log(Number.isFinite(recorded));\n```\nThis prints number and true. Date.now takes no arguments and returns milliseconds since 1970-01-01T00:00:00Z. Its exact number changes with the wall clock, so the example checks the result kind rather than promising a fixed timestamp.",
+        "The program needs state: stored information that can change between actions. Use let for the saved start and elapsed values. `null` means there is no recorded value yet. Use null rather than 0 as the missing marker because zero can be a valid timestamp or duration. A signal saves a starting time; a later click can calculate the difference.",
+        "Here is a complete timer calculation using supplied practice times.\n```javascript\nlet startedAt = null;\nlet elapsed = null;\nfunction signal(now) {\n  startedAt = now;\n  elapsed = null;\n}\nfunction clickAt(now) {\n  if (startedAt !== null) {\n    elapsed = Math.max(0, now - startedAt);\n  }\n}\nsignal(2000);\nclickAt(2180);\nconsole.log(elapsed);\n```\nIt prints 180. The first call records 2000; the second subtracts it from 2180. The functions change the outer let variables, so they do not need return statements to save the result.",
+        "`!==` means strict inequality: are these values different? The guard allows calculation only when startedAt is different from null. An early click must be ignored because no signal time exists. `Math.max(a, b)` chooses the larger number. Taking the maximum of 0 and the difference prevents a negative duration when supplied times are out of order. It cannot turn a bad clock reading into a reliable measurement.",
+        "A reset prepares another round.\n```javascript\nlet startedAt = null;\nlet elapsed = null;\nfunction signal(now) {\n  startedAt = now;\n  elapsed = null;\n}\nfunction clickAt(now) {\n  if (startedAt !== null) {\n    elapsed = Math.max(0, now - startedAt);\n  }\n}\nfunction reset() {\n  startedAt = null;\n  elapsed = null;\n}\nclickAt(1500);\nconsole.log(elapsed);\nsignal(2000);\nclickAt(2200);\nreset();\nconsole.log(startedAt, elapsed);\n```\nThis displays null, then `null null`. The early click stored nothing; reset cleared both values after the later round.",
+        "In a real browser button, a click event listener can call `clickAt(Date.now())` when clicked. The signal action would call `signal(Date.now())` at its starting moment. Pass a function to addEventListener so the browser can run it later. Your exercise tests the timing functions with fixed numbers instead, which makes the expected difference predictable and repeatable without waiting for a person's click.",
+        "The supplied round begins at 1000 and clicks at 1240, so elapsed is 240 milliseconds. For 500 and 650, it is 150 milliseconds. Check normal, early, and reset cases separately. Starting a new signal should clear the previous elapsed result; reset should clear the start too. A timing measurement from this simple clock is a practice estimate, and real applications may use a monotonic clock for durations that must ignore wall-clock adjustments."
+      ],
+      "after": [
+        "A timestamp is a number that tells us when something happened. `Date.now()` gives the current time in milliseconds since the start of 1970 in UTC.\n\nA millisecond is one thousandth of a second.\n```javascript\nconst recorded = Date.now();\nconsole.log(typeof recorded);\nconsole.log(Number.isFinite(recorded));\n```\nOutput:\n```text\nnumber\ntrue\n```\n`typeof` checks the kind of value. `Number.isFinite` checks that it is an ordinary, finite number. The timestamp itself changes as time passes.",
+        "Our timer needs to remember two values: when it started and how much time passed. These saved values are its state.\n\nUse `let` because the values can change. Start with `null`, meaning no time is saved yet. Do not use zero for missing time: a real result can be zero.",
+        "To find how much time passed, subtract the start time from the click time.\n```javascript\nlet startedAt = null;\nlet elapsed = null;\nfunction signal(now) {\n  startedAt = now;\n  elapsed = null;\n}\nfunction clickAt(now) {\n  if (startedAt !== null) {\n    elapsed = Math.max(0, now - startedAt);\n  }\n}\nsignal(2000);\nclickAt(2180);\nconsole.log(elapsed);\n```\nOutput:\n```text\n180\n```\n`signal(2000)` saves the start. `clickAt(2180)` finds the difference: 2180 − 2000 = 180 milliseconds. These functions update the saved variables.",
+        "`startedAt !== null` checks that a start time exists. Without one, the click is ignored.\n\n`Math.max(0, now - startedAt)` chooses the larger number. If the supplied click time is earlier than the start, it saves zero. This avoids a negative result, but cannot fix an incorrect clock.",
+        "Resetting clears both saved values so another round can begin.\n```javascript\nlet startedAt = null;\nlet elapsed = null;\nfunction signal(now) {\n  startedAt = now;\n  elapsed = null;\n}\nfunction clickAt(now) {\n  if (startedAt !== null) {\n    elapsed = Math.max(0, now - startedAt);\n  }\n}\nfunction reset() {\n  startedAt = null;\n  elapsed = null;\n}\nclickAt(1500);\nconsole.log(elapsed);\nsignal(2000);\nclickAt(2200);\nreset();\nconsole.log(startedAt, elapsed);\n```\nOutput:\n```text\nnull\nnull null\n```\nThe early click is ignored. Later, `reset()` clears both the start time and the result.",
+        "A real button's click listener could call `clickAt(Date.now())`. The signal action could call `signal(Date.now())`.\n\nOur exercise passes in fixed times instead. That makes the answers easy to check without waiting for a person to click.",
+        "Complete `signal`, `clickAt`, and `reset`. The starter's times, 1000 and 1240, should leave `elapsed` equal to 240.\n\nStarting a new round clears the old result. Resetting clears both values.\n\nA device's clock can be adjusted. For more reliable duration measurements in a browser, `performance.now()` uses a clock that does not jump when the date or time is changed."
+      ]
+    }
+  ],
+  "headings": [
+    "What a timestamp means",
+    "Remember the timer's state",
+    "Find the time difference",
+    "Ignore an early click",
+    "Reset the timer",
+    "Connect timing to a click",
+    "Build and check a round"
+  ],
+  "project": {
+    "title": "A reaction timer",
+    "task": "Complete signal(now), clickAt(now), and reset(). Use the supplied times to save the delay between a signal and a click.",
+    "done_when": "The starter records 240 milliseconds. Early clicks are ignored, results are never negative, and reset clears both saved values."
+  },
+  "notes": []
+}

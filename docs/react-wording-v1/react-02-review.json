@@ -1,0 +1,100 @@
+{
+  "lesson": "react-02",
+  "position": 18,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Handle a labeled form, reject empty submissions, and show each valid entry once.",
+      "after": "Add a form entry only when its trimmed text is not empty."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "React handles actions through event-handler functions. A controlled input takes its displayed value from state and updates that state when someone types. value sets the displayed text; onChange tells React how to respond to edits. You need both. A visible label tells people what the field is for, including people using assistive technology. This isolated preview does not enable native form submission. Use Run checks to exercise the handler here; test submit-button and Enter-key behavior in a normal browser setup.",
+        "Run this complete App in the React/JSX lesson runner:\n```react\nfunction App() {\n  const [draft, setDraft] = React.useState('');\n  return <main>\n    <label>New note\n      <input value={draft}\n        onChange={event => setDraft(event.target.value)} />\n    </label>\n    <p>You typed: {draft}</p>\n  </main>;\n}\n```\nTyping hello updates both the field and paragraph. event is the change information; event.target is the input involved; .value is its current text. The arrow receives that event when editing happens.",
+        "Forms normally submit by navigating or reloading the page. event.preventDefault() prevents that default action so your React code can handle submission. It does not stop typing. trim() removes whitespace from both ends of a string. Three spaces become empty text, whose length is 0. A valid submission here needs trimmed length greater than 0, so a blank draft must be rejected before anything is added.",
+        "This is a separate complete App; replace the first App to try it:\n```react\nfunction App() {\n  const [draft, setDraft] = React.useState('');\n  const [notes, setNotes] = React.useState([]);\n  const [message, setMessage] = React.useState('');\n  function submit(event) {\n    event.preventDefault();\n    const cleaned = draft.trim();\n    if (cleaned.length === 0) {\n      setMessage('Write a note first.');\n      return;\n    }\n    setNotes(current => [...current, cleaned]);\n    setDraft('');\n    setMessage('Note added.');\n  }\n  return <main>\n    <form onSubmit={submit}>\n      <label>New note <input value={draft}\n        onChange={e => setDraft(e.target.value)} /></label>\n      <button type=\"submit\">Add note</button>\n    </form>\n    <p role=\"status\">{message}</p>\n    <ul>{notes.map((note, i) => <li key={i}>{note}</li>)}</ul>\n  </main>;\n}\n```\nSubmitting spaces shows Write a note first. and no item. Submitting '  Sketch  ' adds one Sketch item, clears the field, and shows Note added.",
+        "The early return stops the invalid path. [...current, cleaned] creates a new array by spreading the existing items, then appending the cleaned text. It preserves earlier notes and gives React a new value to render. map visits each note and returns one li element. key helps React track list children; an index key is acceptable for this simple append-only list, but stable unique ids are better for lists that reorder or remove items.",
+        "role=\"status\" exposes the message as status feedback for assistive technology. type=\"submit\" connects the button to the form's submit action, so pressing Enter in the field can also submit. Attach addition to the form handler once; adding in both an onClick and onSubmit can duplicate items. The handler receives a function reference submit, rather than submit(), which would run immediately.",
+        "For the exercise, the field label is Activity, the button is Add activity, and the required messages are Enter an activity first. and Activity added. Keep those words because the checks inspect visible behavior. Reject a blank or whitespace-only draft, add a valid trimmed item exactly once, then clear draft. Clearing a message alone does not clear the input: the controlled field follows its own state."
+      ],
+      "after": [
+        "A form should check its text before adding an item. Blank text needs a clear message. Valid text should be added once, then the field should clear.",
+        "Keep the field's text in state. Give the input both `value` and `onChange`, and use a visible label. This keeps the field and its state in agreement.",
+        "`trim()` removes spaces from the start and end of text. A draft containing only spaces becomes empty text. Check that cleaned text before adding anything.",
+        "```react\nfunction App() {\n  const [draft, setDraft] = React.useState(\"\");\n  const [notes, setNotes] = React.useState([]);\n  const [message, setMessage] = React.useState(\"\");\n  function submit(event) {\n    event.preventDefault();\n    const cleaned = draft.trim();\n    if (cleaned.length === 0) {\n      setMessage(\"Write a note first.\");\n      return;\n    }\n    setNotes(current => [...current, cleaned]);\n    setDraft(\"\");\n    setMessage(\"Note added.\");\n  }\n  return (\n    <main>\n      <form onSubmit={submit}>\n        <label>New note\n          <input value={draft} onChange={e => setDraft(e.target.value)} />\n        </label>\n        <button type=\"submit\">Add note</button>\n      </form>\n      <p role=\"status\">{message}</p>\n      <ul>{notes.map((note, i) => <li key={i}>{note}</li>)}</ul>\n    </main>\n  );\n}\n```\nSubmitting only spaces shows `Write a note first.` and adds nothing. Submitting `  Sketch  ` adds `Sketch`, clears the field, and shows `Note added.`.",
+        "The early `return` stops an invalid submission. `[...current, cleaned]` keeps the earlier notes and adds the new one in a new array. Position keys work for this simple list that only adds at the end; use stable IDs if items can move or be removed.",
+        "`role=\"status\"` makes feedback available to assistive tools. Put the add action only in `onSubmit`. This preview does not enable native form submission: use Run checks here, and test button and Enter submission on a normal browser page.",
+        "Build the activity version with the label `Activity` and button `Add activity`. For blank text, show `Enter an activity first.`. For valid text, add the trimmed item once, clear the field, and show `Activity added.`."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Use state to remember the text being typed, the message, and the list of added activities.",
+        "Add a labeled input. Make the form run a submit function when the user submits it.",
+        "Submit an empty field. Add no list item and show \"Enter an activity first.\"",
+        "Enter \"  Read  \" with spaces at the edges, then submit once.",
+        "Check that the list has one item, \"Read\", with the outside spaces removed.",
+        "Clear the input and show \"Activity added.\" after adding the item."
+      ],
+      "after": [
+        "Keep the draft, message, and activity list in state.",
+        "Trim and check the draft in the form handler.",
+        "For blank text, show Enter an activity first. and stop.",
+        "For valid text, add it once, clear the field, and show Activity added.",
+        "Run the checks."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Trim the draft before checking whether it is blank.",
+        "Use a functional state update to append to the current list.",
+        "On valid text, append once, clear the draft, and set a success message."
+      ],
+      "after": [
+        "Check the trimmed text, not the original draft.",
+        "Clear draft to clear a controlled input."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "The activity field contains only three spaces when Add activity is submitted. What does the supplied trim-and-validation handler do?",
+        "choices": [
+          "Adds a blank list item because spaces are text",
+          "Shows the empty-input message and adds no item",
+          "Reloads the page because trim submits the form"
+        ],
+        "answer": 1,
+        "explanation": "trim returns an empty string for whitespace-only input. The empty branch shows the message and returns before appending an item; preventDefault prevents normal form navigation."
+      },
+      "after": {
+        "question": "The field contains only three spaces. What should the handler do?",
+        "choices": [
+          "Add a blank item.",
+          "Show the empty-input message and add nothing.",
+          "Reload the page because trim submits it."
+        ],
+        "answer": 1,
+        "explanation": "trim turns the spaces into empty text. The handler shows the message and returns before adding an item."
+      }
+    }
+  ],
+  "headings": [
+    "Check before adding",
+    "Keep the draft in state",
+    "Remove outside spaces",
+    "Read one complete note form",
+    "Add the cleaned text once",
+    "Show useful feedback",
+    "Build your activity board"
+  ],
+  "project": {
+    "title": "An interactive activity board",
+    "task": "Build a labeled activity form. Reject blank text and add each valid, trimmed activity once.",
+    "done_when": "Blank text shows Enter an activity first. Valid text adds one item, clears the field, and shows Activity added."
+  }
+}

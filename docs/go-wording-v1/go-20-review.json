@@ -1,0 +1,97 @@
+{
+  "lesson": "go-20",
+  "position": 20,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Replace the allocation and copy with target:=source. What prints after target[0]=9?",
+      "after": "Copy slice items into separate storage."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "copy(dst,src) copies up to the smaller length and returns the number copied. It does not automatically grow the destination.",
+        "make([]int,len(source)) provides separate storage for the destination elements.",
+        "target := source would share backing storage. Calling copy after separate allocation copies the elements instead.",
+        "For int elements this separates the values. A slice of pointers or nested slices can still share referenced objects; this is not a universal deep copy.",
+        "Complete local Go example; the app itself does not execute it:\n```go\npackage main\n\nimport (\n\t\"fmt\"\n)\n\nfunc main() {\n\tsource := []int{2, 4}\n\ttarget := make([]int, len(source))\n\tcopy(target, source)\n\ttarget[0] = 9\n\tfmt.Println(source[0], target[0])\n}\n\n```",
+        "Expected output or behavior: 2 9. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Compare descriptor assignment with copy into new storage. State the limits of copying reference-containing elements. You may trace it without a Go compiler; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "`copy(target, source)` copies items into target and returns how many it copied. It stops at the shorter slice's length. It does not grow target.",
+        "`make([]int, len(source))` creates separate storage with room for the source's items.",
+        "After making target, copy the items into it. Using only `target := source` would instead make both slices share the same array.",
+        "Here, each item is an integer, so copying gives separate number values. Items that point to other data can still share that data after copying.",
+        "Follow the new storage and the copied items.\n```go\npackage main\n\nimport (\n\t\"fmt\"\n)\n\nfunc main() {\n\tsource := []int{2, 4}\n\ttarget := make([]int, len(source))\n\tcopy(target, source)\n\ttarget[0] = 9\n\tfmt.Println(source[0], target[0])\n}\n\n```",
+        "The screen shows `2 9`. Updating target's first item does not change source's first item.",
+        "Replace both the make line and the copy line with `target := source`. That changes the example from copying items to sharing them."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "A slice assignment alone does not make a new array."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Replace the allocation and copy with target:=source. What prints after target[0]=9?",
+        "choices": [
+          "2 9 because every assignment copies all elements.",
+          "9 9 because both descriptors now share the same backing storage.",
+          "2 2 because slice assignment is read-only."
+        ],
+        "answer": 1,
+        "explanation": "The replacement copies the slice descriptor instead of creating independent element storage."
+      },
+      "after": {
+        "question": "Replace make and copy with target := source. After target[0] = 9, what appears?",
+        "choices": [
+          "2 9, because assignment copies every item.",
+          "9 9, because both slices share the array.",
+          "2 2, because assigned slices cannot change."
+        ],
+        "answer": 1,
+        "explanation": "Both slices point to the same first item. Changing it through target is also visible through source."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Go Core v1 uses the verified Go1.27.3 toolchain and standard library. The app supplies concept reading and an understanding check, not a Go browser runner. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "The browser shows Go code and checks your understanding; it does not run Go. Optional local examples use Go 1.27."
+    }
+  ],
+  "headings": [
+    "Copy items into a destination",
+    "Make room in a new array",
+    "Distinguish copying from sharing",
+    "Know what is copied",
+    "One example",
+    "Read the separate values",
+    "Replace copying with sharing"
+  ],
+  "project": {
+    "title": "Copy into independent slice storage",
+    "task": "Explain the difference between copying items and sharing a slice.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local Go example is optional."
+  }
+}

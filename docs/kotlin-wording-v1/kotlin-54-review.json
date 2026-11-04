@@ -1,0 +1,91 @@
+{
+  "lesson": "kotlin-54",
+  "position": 54,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "What happens if Scale.kt and any compiled equivalent are omitted from this clean build?",
+      "after": "A build must include every source file and library the program needs."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "The helper in Scale.kt below is an explicit source dependency. Compile both files with kotlinc Main.kt Scale.kt -language-version 2.4 -jvm-target 21 -include-runtime -d app.jar, then run java -jar app.jar. Omitting the helper from a clean build leaves an unresolved symbol.",
+        "A real build file should record the Kotlin plugin/compiler version, repositories, target JVM and external library versions. The coroutine examples later use kotlinx-coroutines-core-jvm 1.8.0, a separately versioned library—not Kotlin stdlib and not version 2.4.21. Its jar must be present at both compilation and runtime; -include-runtime bundles Kotlin runtime, not arbitrary dependencies.\n```kotlin\n/* Scale.kt */\nfun doubleIt(value: Int): Int = value * 2\n```",
+        "Complete local Kotlin/JVM example; the app itself does not execute it:\n```kotlin\n\n\nfun main() {\n    println(doubleIt(6))\n}\n```",
+        "Expected output or behavior: 12. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Write down the exact compiler, JVM target and dependency versions; distinguish a demonstrated command from an untested Gradle configuration. You may trace it without a Kotlin compiler; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "A dependency is code your program needs from somewhere else. Here, Main.kt needs doubleIt from Scale.kt. A clean build starts without old compiled files, so missing dependencies cannot be hidden by earlier results.",
+        "A build file records how to build a project: the compiler version, JVM target, source files, and library versions. Extra libraries must be available when compiling and running. The option `-include-runtime` adds Kotlin's basic runtime library, not every extra dependency.",
+        "Save these two parts as Scale.kt and Main.kt. They form one example.\n```kotlin\n// File: Scale.kt\nfun doubleIt(value: Int): Int = value * 2\n\n// File: Main.kt\nfun main() {\n    println(doubleIt(6))\n}\n```",
+        "The screen shows `12` when both files are compiled together. Main calls the supplied helper with 6, and the helper doubles it.",
+        "Build the example with `kotlinc Main.kt Scale.kt -jvm-target 21 -include-runtime -d app.jar`, then run `java -jar app.jar`. The later coroutine lessons also need the separate kotlinx-coroutines library. Keep its version and file location with the build instructions."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Main calls a function that must be supplied to the build."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "What happens if Scale.kt and any compiled equivalent are omitted from this clean build?",
+        "choices": [
+          "Compilation reports an unresolved doubleIt reference.",
+          "The missing function silently returns zero.",
+          "The import system downloads a dependency automatically."
+        ],
+        "answer": 0,
+        "explanation": "The compiler needs an actual declaration from supplied sources or classpath artifacts."
+      },
+      "after": {
+        "question": "Leave out Scale.kt and any compiled copy of it in a clean build. What happens?",
+        "choices": [
+          "Compilation fails because doubleIt cannot be found.",
+          "The missing function returns zero.",
+          "The import system downloads the helper automatically."
+        ],
+        "answer": 0,
+        "explanation": "The compiler needs the helper's declaration from a supplied file or library. It cannot invent the missing function."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Kotlin JVM Core v1 uses Kotlin2.4.21 stable syntax and a verified JVM toolchain. The app supplies concept reading and an understanding check, not a Kotlin browser runner. Coroutine libraries are separate dependencies. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "The browser shows Kotlin code and checks your understanding; it does not run Kotlin. Optional local examples use Kotlin/JVM."
+    }
+  ],
+  "headings": [
+    "Supply a required dependency",
+    "Record the build requirements",
+    "One example in two labeled files",
+    "Read the linked result",
+    "Build with all required code"
+  ],
+  "project": {
+    "title": "Build files and explicit dependencies",
+    "task": "Identify the missing dependency in a clean build.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local Kotlin example is optional."
+  }
+}

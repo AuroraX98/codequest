@@ -1,5 +1,5 @@
 // Reviewed CSS sentence counterparts.
-export default [
+const readings = [
   {
     "source": "CSS means Cascading Style Sheets.",
     "simple": "CSS is the style language for web pages. The full name is Cascading Style Sheets.",
@@ -1705,3 +1705,5 @@ export default [
     "lesson": "css-07"
   }
 ];
+
+export default readings;

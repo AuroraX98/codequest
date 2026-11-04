@@ -1,0 +1,97 @@
+{
+  "lesson": "rust-22",
+  "position": 22,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Move text.push before the print of view. What happens?",
+      "after": "Rust can let you change a value once its shared borrow is no longer needed."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "The compiler can determine that a shared borrow is no longer used after its final access. Its effective restriction need not last to the closing brace.",
+        "Here view is printed before text.push, so the shared borrow is no longer needed when mutation begins.",
+        "If text.push occurs before a later print of view, the mutable access overlaps a still-needed shared borrow and is rejected.",
+        "No runtime borrow counter is used for these ordinary references. Later RefCell has a different runtime-checked mechanism.",
+        "Complete local Rust example; the app itself does not execute it:\n```rust\nfn main() {\n    let mut text = String::from(\"moon\");\n    let view = &text;\n    println!(\"{}\", view);\n    text.push('!');\n}\n\n```",
+        "Expected output or behavior: moon. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Compare mutation before and after the reference’s last use. Explain the rejected overlap without running invalid code. You may trace it without a Rust compiler; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "Rust can let you change a value once its shared borrow is no longer needed.",
+        "The name `view` borrows the String for reading.",
+        "The print line is the last place that uses the view.",
+        "The next line can add a mark because there is no later use of the view.",
+        "Follow the labeled parts of this example.\n```rust\nfn main() {\n    let mut text = String::from(\"moon\");\n    let view = &text;\n    println!(\"{}\", view);\n    text.push('!');\n}\n```",
+        "The output is `moon`. The print happens before the mark is added.",
+        "Move the change above the last read on paper. Which two actions now overlap?"
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read one idea.",
+        "Follow the labeled example.",
+        "Try the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Move the change above the last read on paper. Which two actions now overlap?"
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Move text.push before the print of view. What happens?",
+        "choices": [
+          "Compilation fails because mutation overlaps a shared borrow that is still used later.",
+          "It always compiles because the variables have different names.",
+          "The print silently switches to an empty String."
+        ],
+        "answer": 0,
+        "explanation": "The later read keeps the shared borrow needed across the attempted mutation."
+      },
+      "after": {
+        "question": "Can the program add the mark before it prints `view`?",
+        "choices": [
+          "No. The view still needs the borrowed text.",
+          "Yes. The view owns a separate copy.",
+          "Yes. Rust moves the print automatically."
+        ],
+        "answer": 0,
+        "explanation": "The later print still needs the shared view. Rust refuses the earlier change."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Rust Core v1 uses stable Rust1.99.1 with edition2024 and the standard library. The app supplies concept reading and an understanding check, not a Rust browser runner. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "CodeQuest shows the Rust example. Running it on your own computer is optional."
+    }
+  ],
+  "headings": [
+    "End a borrow at its last use",
+    "Lend a view",
+    "Find the last read",
+    "Change the owner afterward",
+    "Read the example",
+    "What happens",
+    "Try one change"
+  ],
+  "project": {
+    "title": "Borrow lifetimes and last use",
+    "task": "Move the change above the last read on paper. Which two actions now overlap?",
+    "done_when": "Read each idea and pass the understanding check. Running the example on your computer is optional."
+  }
+}

@@ -1,0 +1,87 @@
+{
+  "lesson": "swift-28",
+  "position": 30,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Define the supplied Pass and Visitor types and passMessage(_:) to return the pass message, or No pass when visitor.pass is nil. Keep empty titles as present passes.",
+      "after": "Call a method only when an optional value is present."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "The ? in holder.ticket?.message() checks the optional ticket before calling its method. If ticket is nil, message is not called and the chain produces nil. If it is present, the method runs. This is different from !, which would demand a value and could fail.",
+        "Ticket.message takes no explicit argument and returns a String. Calling it through optional chaining produces String?, because the whole call might be skipped. ?? then supplies the nonoptional fallback. The structs store a ticket value and its holder; constructing a Holder with nil is valid.",
+        "\n```swift\nstruct Ticket {\n    let label: String\n    func message() -> String {\n        \"Ticket: \\(label)\"\n    }\n}\nstruct Holder {\n    let ticket: Ticket?\n}\nlet holder = Holder(ticket: Ticket(label: \"Balcony\"))\nlet text = holder.ticket?.message() ?? \"No ticket\"\nprint(text)\n```\nOutput:\n```text\nTicket: Balcony\n```",
+        "\n```swift\nstruct Ticket {\n    let label: String\n    func message() -> String {\n        \"Ticket: \\(label)\"\n    }\n}\nstruct Holder {\n    let ticket: Ticket?\n}\nlet holder = Holder(ticket: nil)\nlet text = holder.ticket?.message() ?? \"No ticket\"\nprint(text)\n```\nOutput:\n```text\nNo ticket\n```",
+        "A nested optional field can stop a chain without nested force unwraps. The absence of the ticket is not the same as a present ticket whose label is empty."
+      ],
+      "after": [
+        "Optional chaining uses `?.` to continue only when a value exists. In `holder.ticket?.message()`, a missing ticket skips the method call and gives nil.",
+        "The method itself returns a String. Calling it through a possibly missing ticket gives `String?`, because the call might not happen. `??` then supplies text for the missing result.",
+        "```swift\nstruct Ticket {\n    let label: String\n    func message() -> String {\n        \"Ticket: \\(label)\"\n    }\n}\nstruct Holder {\n    let ticket: Ticket?\n}\nlet holder = Holder(ticket: Ticket(label: \"Balcony\"))\nlet text = holder.ticket?.message() ?? \"No ticket\"\nprint(text)\n```\nThe output is `Ticket: Balcony`. The ticket exists, so its message method runs.",
+        "If the ticket were nil, the method would not run and the expression would use `No ticket`. The question mark checks for a value; it does not demand one or force a crash.",
+        "Complete Pass, Visitor, and `passMessage(_:)`. Return the pass's message when the pass exists, or `No pass` when it is nil. A present pass with an empty title is still a pass."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the small example and explain its inputs and effects.",
+        "Complete the starter for the stated contract.",
+        "Use the configured compatible Swift companion or local Swift toolchain, then explain the changed case."
+      ],
+      "after": [
+        "Keep the visitor's pass optional.",
+        "Use optional chaining to call its message method.",
+        "Supply No pass for nil and run the checks."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Trace the inputs, returned value and changed state before running."
+      ],
+      "after": [
+        "Follow `visitor.pass` with `?.message()`.",
+        "Use `?? \"No pass\"` for the missing result."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "A method returns Int, but you call it through a possibly nil object using ?. What can the entire call return?",
+        "choices": [
+          "Only an Int; the method’s return type removes absence",
+          "Always0 when the object is missing",
+          "An Int value or nil"
+        ],
+        "answer": 2,
+        "explanation": "The call itself can be skipped, so the chain has an optional result."
+      },
+      "after": {
+        "question": "A method returns Int, but you call it through a possibly missing value with ?. What can the whole call produce?",
+        "choices": [
+          "Only an Int",
+          "Always 0 when missing",
+          "An Int or nil"
+        ],
+        "answer": 2,
+        "explanation": "The call may be skipped, so its result is optional."
+      }
+    }
+  ],
+  "headings": [
+    "Follow the value if it exists",
+    "The whole call can be missing",
+    "One example",
+    "Choose the fallback",
+    "Keep empty text separate from nil"
+  ],
+  "project": {
+    "title": "Follow an optional chain",
+    "task": "Complete Pass, Visitor, and `passMessage(_:)`. Return the pass message when a pass exists and `No pass` when it is nil. Keep empty titles as present passes.",
+    "done_when": "The checks pass for a normal pass, an empty title, and a missing pass."
+  }
+}

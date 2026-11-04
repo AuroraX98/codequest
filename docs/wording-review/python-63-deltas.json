@@ -1,0 +1,86 @@
+{
+  "lesson": "python-63",
+  "sourceHash": "161f6fd01c9a2276e9da7f10d8c07a8b3a78407a4217ae6edd55a1ea883a87a4",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Complete countdown(start), yielding start down to 1 lazily. Nonnegative integer inputs only; zero yields nothing.",
+      "after": "Write a countdown generator that yields numbers one at a time and can resume."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A generator function contains yield. Calling countdown(start) returns a generator without running its body yet. Each next resumes until a yield supplies one value; local variables and the suspended position are retained. Returning or reaching the end finishes iteration rather than yielding another item.",
+        "Purpose: countdown supplies integers from start down to 1 without building a full list. Input: a nonnegative integer. Result: a single-use generator; its effect is to advance only when consumed. Start zero yields nothing. The subtraction after yield happens when the generator resumes, not before the yielded value is received.",
+        "next(stream) requests one value and raises StopIteration if exhausted; next(stream, \"done\") instead returns the supplied default on exhaustion. list(stream) consumes all remaining values into a new list, so use it only for bounded streams. It does not restart a partly consumed generator.",
+        "Calling countdown again creates independent state. This practice does not require send, throw or yield from. Keep yield inside the loop; returning the first value would finish rather than suspend. The worked example calls the generator, advances it and then consumes its remainder.",
+        "Worked call:\n```python\ndef countdown(start):\n    remaining = start\n    while remaining > 0:\n        yield remaining\n        remaining -= 1\n\nstream = countdown(3)\nprint(next(stream))\nprint(list(stream))\nprint(next(stream, \"done\"))\nprint(list(countdown(0)))\n```\nExpected stdout:\n3\n[2, 1]\ndone\n[]",
+        "Optional local practice: Trace two interleaved generators and explain their independent states."
+      ],
+      "after": [
+        "A generator function can pause and continue later. It uses yield. Calling countdown(start) returns a generator, but its body has not run yet. Each next resumes it until yield supplies one value. Its local variables and where it paused are kept. Returning or reaching the end finishes the stream instead of yielding another item.",
+        "countdown should supply integers from start down to 1 without building a full list. Input: a nonnegative integer. Result: a single-use generator. It advances only when used. If start is 0, it yields nothing. The subtraction after yield happens when the generator resumes, not before the yielded value is received.",
+        "next(stream) asks for one value. If nothing remains, it raises StopIteration, the error that means no more items. next(stream, \"done\") returns the supplied default when nothing remains. list(stream) uses up all remaining values into a new list, so use it only for bounded streams. It does not restart a partly used generator.",
+        "Calling countdown again creates a new generator with its own state. This lesson does not need send, throw, or yield from. Keep yield inside the loop. Returning the first value would finish instead of pausing. The worked example calls the generator, advances it once, then uses up the rest.",
+        "Worked call:\n```python\ndef countdown(start):\n    remaining = start\n    while remaining > 0:\n        yield remaining\n        remaining -= 1\n\nstream = countdown(3)\nprint(next(stream))\nprint(list(stream))\nprint(next(stream, \"done\"))\nprint(list(countdown(0)))\n```\nExpected stdout:\n```text\n3\n[2, 1]\ndone\n[]\n```",
+        "Optional local practice: Trace two generators at the same time. Call next on each in turn and explain why their paused positions and remaining values do not affect each other."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the requirement.",
+        "Make one change to the starter.",
+        "Run the checks.",
+        "Explain why a changed input produces its result."
+      ],
+      "after": [
+        "Replace the starter's `if False: yield start` with a while loop that yields remaining, then subtracts 1.",
+        "Keep yield inside the loop so each next returns one value and pauses before the subtraction.",
+        "Check list(countdown(4)) == [4,3,2,1] and list(countdown(0)) == [].",
+        "Use next on countdown(3), then list the same generator, then call next(stream, \"done\"); confirm 3, [2, 1], done.",
+        "Create two generators from countdown(2). Advance one twice and the other once; explain why their values are independent."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "If the first countdown starts at 2, what remains for list(stream) after one next call?",
+        "choices": [
+          "[2,1]; list restarts it.",
+          "[1]; the value2 was already consumed.",
+          "[]; yield finishes permanently."
+        ],
+        "answer": 1,
+        "explanation": "next consumed 2 and suspended after yield; list resumes and collects only the remaining 1."
+      },
+      "after": {
+        "question": "If the first countdown starts at 2, what remains for list(stream) after one next call?",
+        "choices": [
+          "[2,1]; list restarts it.",
+          "[1]; the value 2 was already consumed.",
+          "[]; yield finishes permanently."
+        ],
+        "answer": 1,
+        "explanation": "next got 2 and paused after yield. list resumes the same generator and collects only the remaining 1."
+      }
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Read each purpose, input and result/effect description.",
+        "Trace the changed case and test a boundary."
+      ],
+      "after": [
+        "A generator starts paused: creating it does not produce values until next or list asks for them.",
+        "The subtraction runs after control returns to the function, so the yielded value is the value before subtracting.",
+        "list uses only what is left; it does not restart a generator that already gave a value."
+      ]
+    }
+  ],
+  "reviewNotes": [
+    "Kept zero yields nothing and nonnegative input limit.",
+    "Kept single-use generator behavior and independent new calls.",
+    "Kept worked code/output and quiz answer index 1."
+  ]
+}

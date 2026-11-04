@@ -1,0 +1,98 @@
+{
+  "lesson": "typescript-13",
+  "position": 31,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Describe the element type of an array without changing any runtime value.",
+      "after": "Find an array's item type without reading an actual item."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A conditional type chooses a type based on a type relationship. Its form is T extends Pattern ? YesType : NoType.",
+        "```typescript\ntype IsText<T> = T extends string ? true : false;\nconst textCase: IsText<string> = true;\nconst numberCase: IsText<number> = false;\n```\nThis selection happens during typechecking, not when values run.",
+        "infer introduces a type variable for a part that matches the pattern.",
+        "```typescript\ntype Item<T> = T extends ReadonlyArray<infer E> ? E : T;\nconst numberItem: Item<number[]> = 3;\nconst textItem: Item<readonly string[]> = \"blue\";\n```\nE is the element type discovered from the array.",
+        "With a type parameter on the left, conditional types can distribute over union members. Item<string[] | number> becomes string | number.",
+        "For the exercise, implement ElementOf<T>: arrays and readonly arrays produce their element type; a non-array stays T. Keep the supplied typed values and runtime formatter.",
+        "ElementOf must preserve numeric and text array elements, non-array boolean values, and the corresponding alternatives of a union; returning any is not equivalent."
+      ],
+      "after": [
+        "A conditional type compares a type with a pattern. If it matches, it uses one result type; otherwise it uses another.",
+        "This choice happens during type checking. It does not inspect values while JavaScript runs.",
+        "Infer asks TypeScript to work out a type from the matching pattern. In `ReadonlyArray<infer E>`, E becomes the array's item type.",
+        "This type gets the item type from either a mutable or readonly array. Other types stay unchanged.\n```typescript\ntype Item<T> = T extends ReadonlyArray<infer E> ? E : T;\nconst numberItem: Item<number[]> = 3;\nconst textItem: Item<readonly string[]> = \"blue\";\n```\n`numberItem` must be a number. `textItem` must be text.",
+        "Because the condition checks T directly, it works on each union member. Item<string[] | number> becomes string or number.",
+        "Define ElementOf with the same rule: arrays give their item type, while a non-array stays T. Keep the supplied values and formatter.",
+        "Preserve the actual item types. Returning any would lose the connection and allow values that should be rejected."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Match mutable and readonly arrays with ReadonlyArray.",
+        "Use infer for the element and retain T for other inputs."
+      ],
+      "after": [
+        "Match both array kinds with ReadonlyArray.",
+        "Use infer to name the item type.",
+        "Return T for non-arrays and run the checks."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Match mutable and readonly arrays with ReadonlyArray.",
+        "Use infer for the element and retain T for other inputs."
+      ],
+      "after": [
+        "The matched item type belongs in the true branch.",
+        "The false branch should keep the original T."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "ElementOf<number[]> evaluates to number. Does this extract the first number from an actual array?",
+        "choices": [
+          "No; it describes a type and performs no runtime array access",
+          "Yes; every conditional type reads index zero",
+          "Yes; infer runs a loop over the array"
+        ],
+        "answer": 0,
+        "explanation": "A type alias exists for the compiler and is erased. Runtime extraction needs JavaScript code; this exercise extracts the element type, not an element value."
+      },
+      "after": {
+        "question": "Does ElementOf<number[]> read the first number from a real array?",
+        "choices": [
+          "No, it describes the item type only",
+          "Yes, conditional types always read position zero",
+          "Yes, infer loops over the array"
+        ],
+        "answer": 0,
+        "explanation": "This is a type lookup. Reading a real item needs running JavaScript code."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Full compiler verification is essential; runtime checks cannot prove conditional type correctness. Starter intentionally fails compilation until the type is supplied. Compiler tests include readonly arrays, scalar and union cases, plus forbidden assignments.",
+      "after": "The starter reports type errors until ElementOf is supplied. The checks cover mutable arrays, readonly arrays, non-arrays, and unions."
+    }
+  ],
+  "headings": [
+    "Choose a type from a pattern",
+    "Matching is a type check",
+    "Name the discovered type",
+    "Look inside an array type",
+    "Handle a union",
+    "Define ElementOf",
+    "Keep the type precise"
+  ],
+  "project": {
+    "title": "Extract a type with conditional inference",
+    "task": "Describe an array's item type while keeping non-array types unchanged.",
+    "done_when": "The derived types stay precise for all supplied cases and the checks pass."
+  }
+}

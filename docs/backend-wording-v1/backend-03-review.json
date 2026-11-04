@@ -1,0 +1,104 @@
+{
+  "lesson": "backend-03",
+  "position": 20,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Use database queries to produce grouped reports and check missing values.",
+      "after": "Build a per-user report that counts missing durations correctly."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A report summarizes records instead of returning every original row. GROUP BY user_id makes a separate group for each user's sessions. COUNT(*) counts all records; COUNT(minutes) counts known durations; AVG(minutes) averages those known durations. A view stores a named query you can read like a table. It usually recalculates from underlying rows, rather than saving a frozen copy of the report.",
+        "Run this complete separate SQLite example:\n```sql\nCREATE TABLE demo_sessions (\n  user_id TEXT,\n  minutes INTEGER\n);\nINSERT INTO demo_sessions VALUES\n  ('x', 12), ('x', 24), ('y', NULL), ('y', 18);\nCREATE VIEW demo_report AS\nSELECT user_id,\n       COUNT(*) AS row_count,\n       COUNT(minutes) AS known_count,\n       AVG(minutes) AS average_minutes\nFROM demo_sessions\nGROUP BY user_id;\nSELECT * FROM demo_report ORDER BY user_id;\n```\nThe result is x: 2 rows, 2 known, average 18; y: 2 rows, 1 known, average 18. AS names each result column. SELECT * reads all the view's columns.",
+        "NULL means unknown, not zero. For durations 12, 24, NULL, the known-value average is (12 + 24) / 2 = 18, not 36 / 3 = 12. An all-NULL group has known_count 0 and average NULL. Showing the known count helps readers see how much evidence the average uses. One small report describes its supplied data; it does not prove what caused a change or what all users do.",
+        "A report can also include users with no sessions. Here is a second query, with a complete users schema, after the previous setup:\n```sql\nCREATE TABLE demo_users (\n  id TEXT PRIMARY KEY,\n  name TEXT\n);\nINSERT INTO demo_users VALUES ('x', 'Nia'), ('y', 'Leo'), ('z', 'Uma');\nSELECT u.id,\n       COUNT(s.user_id) AS session_rows,\n       COUNT(s.minutes) AS known_count,\n       AVG(s.minutes) AS average_minutes\nFROM demo_users AS u\nLEFT JOIN demo_sessions AS s ON s.user_id = u.id\nGROUP BY u.id\nORDER BY u.id;\n```\nUser z has 0 session_rows, 0 known_count, and NULL average. COUNT(s.user_id) avoids counting the unmatched LEFT JOIN placeholder as a real session; COUNT(*) there would misleadingly count it as one row.",
+        "Joins can multiply rows when each session matches several records in another table. If a session with 10 minutes matches three tags, a later SUM could count its 10 three times. Before trusting an aggregate, inspect how many rows the join produces and what one result row represents. The exercise's query needs no join: it groups the sessions table directly.",
+        "For the exercise, replace the placeholder report view with a grouped query that returns user_id, row_count, known_count, and average_minutes. User a's 20 and 40 give row_count 2, known_count 2, average 30. User b has NULL and 10: row_count 2, known_count 1, average 10. Keep those column aliases and one result row per user; ORDER BY user_id helps display the report predictably.",
+        "The browser runs this SQL in an isolated SQLite database. A real report API also needs an HTTP route. In your downloaded SQLite server, a GET /report handler can execute the grouped query with db.prepare(...).all() and send res.json(rows); this is a description of integration, not a standalone executable snippet. The report should apply the project's permission rules when it contains private data. Compare the actual HTTP response with the expected two rows before calling that API complete."
+      ],
+      "after": [
+        "A report summarizes records. GROUP BY user_id makes one group per user. COUNT(*) counts all rows, COUNT(minutes) counts known durations, and AVG(minutes) averages those known values. A view gives this query a name so it can be read like a table.",
+        "```sql\nCREATE TABLE demo_sessions (\n  user_id TEXT,\n  minutes INTEGER\n);\nINSERT INTO demo_sessions VALUES\n  ('x', 12), ('x', 24), ('y', NULL), ('y', 18);\nCREATE VIEW demo_report AS\nSELECT user_id,\n       COUNT(*) AS row_count,\n       COUNT(minutes) AS known_count,\n       AVG(minutes) AS average_minutes\nFROM demo_sessions\nGROUP BY user_id;\nSELECT * FROM demo_report ORDER BY user_id;\n```\nUser x has 2 rows, 2 known durations, and an average of 18. User y has 2 rows, 1 known duration, and an average of 18. AS gives each result column its name.",
+        "NULL means unknown, not zero. AVG skips unknown durations when adding and counting values. If every duration in a group is NULL, the average is NULL. Include known_count so readers can see how many durations support the average.",
+        "Grouping sessions includes only users who have session rows. Including users with no sessions would need a users table and a LEFT JOIN. In that case, count a matched session field, not COUNT(*), to avoid counting an unmatched placeholder as a session.",
+        "A join can repeat a session when it matches several rows in another table. Adding those repeated durations would inflate a total. This exercise avoids that problem by grouping the sessions table directly.",
+        "Replace the placeholder report view. Keep the columns user_id, row_count, known_count, and average_minutes. User a should have 2 rows, 2 known durations, and average 30. User b should have 2 rows, 1 known duration, and average 10.",
+        "The browser runs this SQL in its own SQLite database. A real GET /report route must run the query in the local server and send its rows. Check permission before returning private reports, then compare the actual HTTP response with the expected rows."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Use the supplied sessions table. User a has 20 and 40 minutes. User b has one missing value (NULL) and 10 minutes.",
+        "Create a report view with user_id, row_count, known_count, and average_minutes.",
+        "Group the results by user_id.",
+        "Use COUNT(*) to count every row. Use COUNT(minutes) to count only rows whose minutes are not NULL.",
+        "Inspect the report: a has two known values averaging 30; b has one known value averaging 10.",
+        "Use this query in your local database API. Check that the report returned over HTTP has the same rows."
+      ],
+      "after": [
+        "Group the supplied sessions by user_id.",
+        "Use COUNT(*), COUNT(minutes), and AVG(minutes) with the required names.",
+        "Create the report view and check both users' rows.",
+        "For a local report API, also verify the rows returned over HTTP."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Build one SELECT grouped by user_id, then use it as the report view.",
+        "COUNT(*) and COUNT(minutes) answer different questions.",
+        "Use AVG(minutes) without replacing NULL with zero."
+      ],
+      "after": [
+        "Do not replace NULL with zero before averaging.",
+        "Keep the exact result-column names for the checks."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "The minutes values are 10, NULL, and 30. What does AVG(minutes) return?",
+        "choices": [
+          "About 13.33",
+          "NULL",
+          "20"
+        ],
+        "answer": 2,
+        "explanation": "AVG uses the two known values: (10 + 30) / 2 = 20. NULL is not treated as zero and does not invalidate the whole group."
+      },
+      "after": {
+        "question": "The durations are 10, NULL, and 30. What does AVG(minutes) return?",
+        "choices": [
+          "About 13.33",
+          "NULL",
+          "20"
+        ],
+        "answer": 2,
+        "explanation": "It averages the two known values: (10 + 30) / 2 = 20."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "The app runs this query in a real isolated SQLite database. To finish the report API, place the query in your downloaded database server, expose GET /report, and compare its response with the two reference rows.",
+      "after": "The browser checks a real SQLite query. Exposing the report through GET /report in a local server is a separate integration step."
+    }
+  ],
+  "headings": [
+    "Summarize each user's sessions",
+    "Read one example",
+    "Treat missing values as unknown",
+    "Know who appears in the report",
+    "Watch for repeated rows",
+    "Build the practice report",
+    "Connect the report to an API"
+  ],
+  "project": {
+    "title": "A reliable report API",
+    "task": "Create the grouped report view with the four required columns. Check known and missing durations, then optionally expose the query through the local report API.",
+    "done_when": "Each user has one correct row, and missing values do not become zeroes or extra known durations."
+  }
+}

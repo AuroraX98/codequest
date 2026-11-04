@@ -1,0 +1,94 @@
+{
+  "lesson": "javascript-45",
+  "position": 50,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Return {units:text.length, points:number_of_for_of_iterations} for a well-formed Unicode string. Preserve text exactly; do not normalize or call code-point count a visible-character count.",
+      "after": "Understand why text can have different kinds of length."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A JavaScript string’s length counts UTF-16 code units. Many characters use one unit, but a supplementary code point such as 🌱 uses a surrogate pair: two units. Neither this length nor code-point count necessarily equals the number of visible grapheme clusters.",
+        "for...of over a string yields strings representing Unicode code points rather than splitting a valid surrogate pair. textCounts(text) counts those iterations and returns {units,points}. The shortened property points means points: points. This exercise uses well-formed Unicode strings; it does not repair isolated surrogates or normalize combining marks.",
+        "```javascript\nfunction textCounts(text) {\n  let points = 0;\n  for (const point of text) {\n    points += 1;\n  }\n  return {units: text.length, points};\n}\nconsole.log(JSON.stringify(textCounts(\"A🌱\")));\nconsole.log(JSON.stringify(textCounts(\"e\\u0301\")));\n```\nOutput: {\"units\":3,\"points\":2} then {\"units\":2,\"points\":2}. A🌱 has two code points but three UTF-16 units. e followed by a combining acute mark can look like one letter while containing two code points. JSON.stringify only formats these result objects; it does not change text.",
+        "Use the count that answers your actual question. Code-point iteration is not full grapheme segmentation. Optional practice: compare \"é\" and \"e\\u0301\" and explain why visually similar text can have different counts without changing either input."
+      ],
+      "after": [
+        "JavaScript stores text using units called UTF-16 code units. A string's `length` counts those units.\n\nA Unicode code point identifies a text element, such as a letter, an emoji, or an accent mark. Some code points, including 🌱, need two UTF-16 units.\n\nNeither count always equals the number of symbols you see on screen.",
+        "`for...of` walks through a string one code point at a time. It keeps a valid two-unit pair together.\n\nOur function counts these steps and also reads `text.length`. It returns both numbers. The inputs in this exercise are valid Unicode strings.",
+        "Here is the complete example.\n```javascript\nfunction textCounts(text) {\n  let points = 0;\n  for (const point of text) {\n    points += 1;\n  }\n  return {units: text.length, points};\n}\nconsole.log(JSON.stringify(textCounts(\"A🌱\")));\nconsole.log(JSON.stringify(textCounts(\"e\\u0301\")));\n```\nOutput:\n```text\n{\"units\":3,\"points\":2}\n{\"units\":2,\"points\":2}\n```\nA and 🌱 make two code points, but need three storage units. In the second string, `\\u0301` is an accent mark added after e. They can look like one letter while counting as two code points.",
+        "Complete `textCounts(text)`. Return `units` from `text.length`, and `points` from counting the `for...of` steps.\n\nKeep the text exactly as supplied. These are storage-unit and code-point counts, not a guaranteed count of visible characters."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the requirement.",
+        "Make one change to the starter.",
+        "Run the checks.",
+        "Explain why a changed input produces its result."
+      ],
+      "after": [
+        "Start points at zero.",
+        "Add one for each for...of step through text.",
+        "Return {units: text.length, points}.",
+        "Check an emoji, a combining accent, and empty text."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "For \"🌱🌱\", what are the UTF-16 unit count and code-point count?",
+        "choices": [
+          "4 units and 2 code points",
+          "4 units and 4 code points",
+          "2 units and 2 code points"
+        ],
+        "answer": 0,
+        "explanation": "Each supplementary code point uses two UTF-16 code units but one for...of iteration."
+      },
+      "after": {
+        "question": "For \"🌱🌱\", what are the UTF-16 unit count and code-point count?",
+        "choices": [
+          "4 units and 2 code points",
+          "4 units and 4 code points",
+          "2 units and 2 code points"
+        ],
+        "answer": 0,
+        "explanation": "Each 🌱 uses two UTF-16 units but is one code point. Two of them give 4 units and 2 code points."
+      }
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Trace the visible worked calls before changing the starter."
+      ],
+      "after": [
+        "Do not use text.length for both counts.",
+        "An empty string has zero units and zero loop steps."
+      ]
+    },
+    {
+      "field": "externalNotes",
+      "before": "ECMAScript 2026 core; native Node24 and current app worker/DOM harness evidence are recorded separately. No external service or real-browser claim follows from a local fixture.",
+      "after": ""
+    }
+  ],
+  "headings": [
+    "Two ways to count text",
+    "Count code points with a loop",
+    "Compare the two counts",
+    "Build textCounts"
+  ],
+  "project": {
+    "title": "Unicode code units and code points",
+    "task": "Complete textCounts(text). Return its UTF-16 unit count as units and its for...of step count as points. Keep the input text unchanged.",
+    "done_when": "Emoji and combining-accent examples have the correct two counts. Empty text returns zero for both."
+  },
+  "notes": [
+    "Removed an unrelated local-project completion requirement; its useful teaching is in the lesson and technical evidence stays in review documents."
+  ]
+}

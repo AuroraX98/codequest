@@ -1,0 +1,82 @@
+{
+  "lesson": "javascript-32",
+  "position": 53,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Write schedule(log): append start now, queue micro in a fulfilled-Promise callback, append end now, and return the callback’s Promise.",
+      "after": "See why a Promise callback runs after the current work finishes."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "JavaScript executes the current synchronous work before running queued Promise reaction callbacks.",
+        "A fulfilled Promise does not make its then callback run immediately inside the current call stack.\n```javascript\nconsole.log(\"A\");\nPromise.resolve().then(() => console.log(\"B\"));\nconsole.log(\"C\");\n```\nThis logs A, C, B.",
+        "Promise reactions use the microtask queue. They run after the current synchronous work finishes and before the browser moves to a subsequent task.",
+        "Returning the Promise lets a caller await the completion of that callback. It does not move the callback ahead of the remaining synchronous statements.",
+        "This exercise checks ordering, not elapsed time. It makes no promise that a callback runs after an exact number of milliseconds.",
+        "Long synchronous work delays queued work. Repeatedly scheduling microtasks can also delay other work; a queue is not an unlimited responsiveness guarantee."
+      ],
+      "after": [
+        "JavaScript finishes its current synchronous work before running queued Promise callbacks.\n\nSynchronous means the statements being run directly, one after another. A queued callback waits for its turn.",
+        "Even an already fulfilled Promise waits before running its `then` callback.\n```javascript\nconsole.log(\"A\");\nPromise.resolve().then(() => console.log(\"B\"));\nconsole.log(\"C\");\n```\nOutput:\n```text\nA\nC\nB\n```\nA and C are direct statements. B is inside the queued callback, so it appears last.",
+        "Promise callbacks use a waiting line called the microtask queue.\n\nAfter the current work finishes, JavaScript runs these microtasks before moving on to a later task, such as a timer callback.",
+        "`then` returns a Promise for the callback's result. Returning that Promise lets the caller `await` its completion.\n\nIt does not move the callback ahead of the direct statements that still need to run.",
+        "Complete `schedule(log)`. Add `start` now. Queue a `then` callback that adds `micro`. Add `end` now, then return the Promise from `then`.\n\nThe exercise checks order, not a precise delay in milliseconds.",
+        "Long direct work can delay callbacks. A long chain of microtasks can also delay other page work.\n\nUsing a Promise does not automatically make slow work quick. Here, keep each step small and check the resulting order."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Write schedule(log): append start now, queue micro in a fulfilled-Promise callback, append end now, and return the callback’s Promise.",
+        "Run the checks.",
+        "Change one case and explain the result."
+      ],
+      "after": [
+        "Add start to log.",
+        "Save the Promise from a then callback that adds micro.",
+        "Add end, then return the saved Promise.",
+        "Check that awaiting it gives start,end,micro."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Promise.resolve().then(() => log.push(\"later\")); log.push(\"now\"); Which entry is added first?",
+        "choices": [
+          "later, because the Promise is already fulfilled",
+          "now, because the current synchronous work completes first",
+          "Either one based on a random delay"
+        ],
+        "answer": 1,
+        "explanation": "Fulfillment queues the reaction; it does not interrupt the current synchronous statements."
+      },
+      "after": {
+        "question": "Promise.resolve().then(() => log.push(\"later\")); log.push(\"now\"); Which entry is added first?",
+        "choices": [
+          "later, because the Promise is already fulfilled",
+          "now, because the current synchronous work completes first",
+          "Either one based on a random delay"
+        ],
+        "answer": 1,
+        "explanation": "The now statement runs directly. The fulfilled Promise queues later for after the current work."
+      }
+    }
+  ],
+  "headings": [
+    "Finish the current work first",
+    "Read the output order",
+    "Meet the microtask queue",
+    "Return completion to the caller",
+    "Build schedule",
+    "Keep queued work small"
+  ],
+  "project": {
+    "title": "Promise callbacks wait for the current work",
+    "task": "Complete schedule(log). Add start and end directly, add micro inside a fulfilled Promise's then callback, and return that callback's Promise.",
+    "done_when": "Before waiting, the log has start,end. After waiting, micro is last. The caller's remaining direct work also runs before micro."
+  },
+  "notes": []
+}

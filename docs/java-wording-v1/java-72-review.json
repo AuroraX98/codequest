@@ -1,0 +1,91 @@
+{
+  "lesson": "java-72",
+  "position": 72,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "With target 3 and the same four commands, what prints?",
+      "after": "Update a study count while keeping it within its target."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A Session record stores completed and target counts. The compact constructor is written Session { ... } without a parameter list. Its component parameters are available inside, and implicit field assignments happen after the body completes normally. It rejects negative completed values, nonpositive targets and completed values above target. The step method returns a new valid Session; it does not mutate an existing record.",
+        "A done command increments only below target. Unknown commands leave the state unchanged. The fixed command list makes this a bounded study-session model, not a persistent tracker or concurrent service. Repeated done commands cannot exceed the target; invalid construction fails immediately.",
+        "Complete local Java example; the app itself does not execute it:\n```java\n\npublic class Main {\n  record Session(int completed, int target) {\n    Session {\n      if (target <= 0 || completed < 0 || completed > target)\n        throw new IllegalArgumentException(\"invalid session\");\n    }\n    Session step(String command) {\n      if (\"done\".equals(command) && completed < target)\n        return new Session(completed + 1, target);\n      return this;\n    }\n  }\n  public static void main(String[] args) {\n    Session session = new Session(0, 2);\n    for (String command : new String[]{\"done\", \"skip\", \"done\", \"done\"}) {\n      session = session.step(command);\n    }\n    System.out.println(session.completed() + \"/\" + session.target());\n  }\n}\n```",
+        "Expected output or behavior: 2/2. Compiler evidence is recorded separately from app reading completion.",
+        "Optional local transfer task: Add explicit checks for unknown commands, target completion and invalid constructor arguments. You may trace it without a JDK; reading completion is not proof of a local run."
+      ],
+      "after": [
+        "The Session record stores completed and target counts. Its compact constructor, written Session without an input list, checks those supplied components. It rejects a target below one or a completed count outside zero through target. Java stores the components only after this constructor body finishes normally.",
+        "step returns a new Session for done when the count is below target. Otherwise it returns the current Session unchanged. The old record is not edited. Unknown commands and extra done commands cannot push the count above target. This example keeps its state only while the program runs.",
+        "Trace the four commands in order, assigning each returned state back to session.\n\n```java\n\npublic class Main {\n  record Session(int completed, int target) {\n    Session {\n      if (target <= 0 || completed < 0 || completed > target)\n        throw new IllegalArgumentException(\"invalid session\");\n    }\n    Session step(String command) {\n      if (\"done\".equals(command) && completed < target)\n        return new Session(completed + 1, target);\n      return this;\n    }\n  }\n  public static void main(String[] args) {\n    Session session = new Session(0, 2);\n    for (String command : new String[]{\"done\", \"skip\", \"done\", \"done\"}) {\n      session = session.step(command);\n    }\n    System.out.println(session.completed() + \"/\" + session.target());\n  }\n}\n```",
+        "The program prints 2/2. The first done reaches one, skip changes nothing, the next done reaches two, and the last done leaves the full session unchanged.",
+        "The quiz raises the target to three. There are still three done commands, and skip still leaves the state alone."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read one visible idea at a time.",
+        "Predict the changed case before choosing.",
+        "Explain the consequence, then optionally try the local transfer."
+      ],
+      "after": [
+        "Read each idea.",
+        "Follow the labeled example.",
+        "Answer the understanding check."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Return to the preceding idea and compare what changed."
+      ],
+      "after": [
+        "Count only done commands, and stop increasing when completed reaches target."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "With target 3 and the same four commands, what prints?",
+        "choices": [
+          "2/3 because skip stops the loop",
+          "3/3",
+          "4/3 because every command increments."
+        ],
+        "answer": 1,
+        "explanation": "There are three done commands; skip preserves state and the target bounds each transition."
+      },
+      "after": {
+        "question": "Use target 3 with the same four commands. What prints?",
+        "choices": [
+          "2/3, because skip stops the loop.",
+          "3/3",
+          "4/3, because every command adds one."
+        ],
+        "answer": 1,
+        "explanation": "All three done commands can now add one. skip does nothing, so the final count reaches three out of three."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "Java Core v1 uses stable Java25 LTS features without preview flags. The app supplies concept reading and an understanding check, not a Java browser runner. Local compiler results are recorded separately and do not certify learner mastery.",
+      "after": "The browser shows Java code and checks your understanding; it does not run Java. Optional local examples use Java25."
+    }
+  ],
+  "headings": [
+    "Reject an invalid session at creation",
+    "Return a valid state for each command",
+    "One example",
+    "What appears",
+    "Raise the target"
+  ],
+  "project": {
+    "title": "Build a resilient study-session model",
+    "task": "Trace every returned Session and check that the count stays within the target.",
+    "done_when": "Read the ideas and pass the understanding check. Running the local Java example is optional."
+  }
+}

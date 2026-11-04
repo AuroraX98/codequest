@@ -1,0 +1,90 @@
+{
+  "lesson": "swift-58",
+  "position": 4,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Repair the OR logic bug using an inclusive interval contract; test both endpoints and both outside sides.",
+      "after": "Tell the difference between code that cannot run and code that gives the wrong answer."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "A compiler error prevents a program from becoming an executable. A logic error can compile normally and still violate the intended contract. Reduce a problem to a small complete example, then compare expected and actual behavior.",
+        "isWithin takes an Int and inclusive lower/upper Int bounds, returning Bool. >= and <= test the two boundaries; && requires both. For a reversed interval no value satisfies both comparisons. This function does not need subtraction, so extreme Int values are safe to compare. A quoted string is not automatically an Int argument: fix the type mismatch rather than hiding it. After compilation succeeds, test boundaries and outside values; one happy-path call does not prove the condition is right.",
+        "\n```swift\nfunc isWithin(_ value: Int, lower: Int, upper: Int) -> Bool {\n    return value >= lower && value <= upper\n}\nprint(isWithin(5, lower: 2, upper: 8))\nprint(isWithin(2, lower: 2, upper: 8))\n```\nExpected output:\n```text\ntrue\ntrue\n```",
+        "\n```swift\nfunc isWithin(_ value: Int, lower: Int, upper: Int) -> Bool {\n    return value >= lower && value <= upper\n}\nprint(isWithin(9, lower: 2, upper: 8))\nprint(isWithin(5, lower: 8, upper: 2))\n```\nExpected output:\n```text\nfalse\nfalse\n```",
+        "This separate complete local example is intentionally rejected. It is author-validated compiler evidence, not an additional learner Run checks feature.\n```swift\nfunc isWithin(_ value: Int, lower: Int, upper: Int) -> Bool {\n    return value >= lower && value <= upper\n}\nprint(isWithin(\"5\", lower: 2, upper: 8))\n```\nThe intended diagnostic identifies cannot convert value of type 'String' to expected argument type 'Int'. Do not paste it together with a success example.",
+        "Optional practice: Repair the OR logic bug using an inclusive interval contract; test both endpoints and both outside sides. Predict a different input before running."
+      ],
+      "after": [
+        "A compiler error stops code from becoming a runnable program. A logic error lets the program run but gives an answer that breaks the intended rule. Passing the compiler's checks does not prove the answer is right.",
+        "The rule here is to accept a number between two limits, including both endpoints. `>=` means at least. `<=` means at most. `&&` requires both checks to be true.",
+        "```swift\nfunc isWithin(_ value: Int, lower: Int, upper: Int) -> Bool {\n    return value >= lower && value <= upper\n}\nprint(isWithin(5, lower: 2, upper: 8))\nprint(isWithin(2, lower: 2, upper: 8))\n```\nBoth calls print `true`. Five is inside the limits, and two is an allowed endpoint.",
+        "The buggy starter uses `||`, meaning either check can pass. That wrongly accepts 9 for limits 2 through 8 because 9 is at least 2. Use `&&` so the number must pass the upper check too.",
+        "The function expects `Int` inputs. Quoted text is a different type, even when it looks like a number. Give the function a whole-number value or convert the text deliberately; do not hide the mismatch.",
+        "Check both endpoints and a value outside each end. If the lower limit is greater than the upper limit, no value can pass both checks. Direct comparisons also avoid the overflow risk of subtracting extreme whole numbers."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Read the small example and explain its inputs and effects.",
+        "Complete the starter for the stated contract.",
+        "Use the configured compatible Swift companion or local Swift toolchain, then explain the changed case."
+      ],
+      "after": [
+        "Replace the starter's either-or check with a check that needs both limits.",
+        "Test the lower endpoint, upper endpoint, and values just outside.",
+        "Run the checks with a compatible Swift companion or local compiler."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Trace the inputs, returned value and changed state before running."
+      ],
+      "after": [
+        "Use `value >= lower && value <= upper`.",
+        "Do not subtract the limits; compare them directly."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "The buggy version uses value >= lower || value <= upper. For value 9 and bounds 2...8, why is its true answer wrong?",
+        "choices": [
+          "The code cannot compile.",
+          "Only the lower comparison passes; inclusive membership needs both.",
+          "9 should be converted to a String."
+        ],
+        "answer": 1,
+        "explanation": "The OR condition compiles but accepts values satisfying either side. The desired conjunction requires both bounds simultaneously."
+      },
+      "after": {
+        "question": "The buggy OR check accepts 9 for limits 2 through 8. Why is that wrong?",
+        "choices": [
+          "The code cannot compile",
+          "Only the lower check passes; being inside needs both",
+          "9 must be changed to text"
+        ],
+        "answer": 1,
+        "explanation": "OR accepts either true check. Nine passes the lower check but fails the upper one, so it is outside."
+      }
+    }
+  ],
+  "headings": [
+    "Two kinds of mistake",
+    "State the rule first",
+    "One example",
+    "Require both checks",
+    "Fix a type mismatch",
+    "Test the edges"
+  ],
+  "project": {
+    "title": "Separate a compiler rejection from a wrong answer",
+    "task": "Fix `isWithin` so it returns true only when the value is at least the lower limit and at most the upper limit. Include both endpoints.",
+    "done_when": "The checks pass for inside values, both endpoints, both outside sides, and reversed limits."
+  }
+}

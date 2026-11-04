@@ -1,0 +1,107 @@
+{
+  "lesson": "backend-02",
+  "position": 18,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Connect the API to a practice database and save entries.",
+      "after": "Keep entries in a database file so another program run can read them."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "Durable storage keeps data after a process stops. A JavaScript array is in memory and disappears on restart. A SQLite database opened with a file name stores records on disk. An adapter gives your code small methods such as save and load so callers can ask for storage without depending on its internal details. An adapter can be memory-only or durable; the method names alone do not prove persistence.",
+        "This complete standalone JavaScript adapter is memory-only practice:\n```javascript\nconst store = {\n  rows: [],\n  save(row) { this.rows.push({ ...row }); },\n  load() { return this.rows.map(row => ({ ...row })); }\n};\nfunction saveNote(row) {\n  store.save(row);\n}\nfunction loadNotes() {\n  return store.load();\n}\nsaveNote({ id: 'x', minutes: 35 });\nsaveNote({ id: 'y', minutes: 12 });\nconsole.log(loadNotes());\n```\nIt returns both rows. this means the store object inside its methods. {...row} copies the flat record, and map returns a new array of copied records. Saving the second row appends rather than replacing the first.",
+        "A prepared statement separates fixed SQL structure from the values supplied later. Placeholders such as ? stand for values, in order. The database handles their representation so a string value is not interpreted as extra SQL commands. Do not construct a query by concatenating untrusted input into its SQL text. Prepared statements address SQL input handling; range validation and ownership checks are still separate responsibilities.",
+        "Save this complete example as storage.mjs and run it with Node.js 22.13 or newer, whose node:sqlite module is available in this lesson's required environment:\n```javascript\nimport { DatabaseSync } from 'node:sqlite';\nconst db = new DatabaseSync('demo-practice.sqlite');\ndb.exec('CREATE TABLE IF NOT EXISTS notes(id TEXT PRIMARY KEY, minutes INTEGER NOT NULL)');\nconst insert = db.prepare('INSERT INTO notes(id, minutes) VALUES(?, ?)');\ninsert.run('x', 35);\ninsert.run('y', 12);\nconst saved = db.prepare('SELECT id, minutes FROM notes ORDER BY id').all();\nconsole.log(saved);\ndb.close();\n```\nA first run in a folder without that file prints x/35 and y/12 and leaves a database file. db.prepare builds a statement; run executes the insert with two values; all returns the query's rows. This demonstration should be inserted only once: rerunning those same primary keys causes a duplicate-key error.",
+        "To verify persistence, use a separate reader after the first script has exited:\n```javascript\nimport { DatabaseSync } from 'node:sqlite';\nconst db = new DatabaseSync('demo-practice.sqlite');\nconsole.log(db.prepare('SELECT id, minutes FROM notes ORDER BY id').all());\ndb.close();\n```\nSave as read-storage.mjs in the same folder and run it. The same rows still exist because the file outlived the first process. A different working folder can open a different file with the same relative name, so check your location when testing persistence.",
+        "Set membership helps compare ids. Suppose saved ids are {x, y} and requested ids are {x, z}. Their overlap is {x}, because only x occurs in both. z is requested but missing, and y is stored but not requested. Positions do not decide membership. A JavaScript Set stores distinct values and has(id) checks whether a particular id is present.\n\n```javascript\nconst savedIds = new Set([\"x\", \"y\"]);\nconsole.log(savedIds.has(\"x\"));\nconsole.log(savedIds.has(\"z\"));\n```\nThis prints true, then false. has receives one candidate value, returns a Boolean and does not change the set.",
+        "For the browser exercise, saveEntry must call store.save and loadEntries must call store.load. The supplied a and b rows must survive a later c addition. The browser adapter makes copied rows but does not write a disk file. The downloaded server uses practice.sqlite and prepared statements with the same storage idea. Save a record, stop and restart that local server in the same folder, and read it again; only that actual restart test establishes its durability."
+      ],
+      "after": [
+        "Durable storage keeps data after the program stops. A JavaScript array lives in memory and is lost on restart. A SQLite database opened with a filename stores its records on disk.",
+        "An adapter gives code simple storage methods such as save and load. The methods hide how storage works. Their names do not prove data is durable: an adapter may use memory or a real file.",
+        "A prepared statement keeps fixed SQL instructions separate from the values supplied later. Each ? stands for one value. Pass values to run instead of joining untrusted text into SQL. Input validation and permission checks are still separate steps.",
+        "In a new empty folder, save this as storage.mjs:\n```javascript\nimport { DatabaseSync } from 'node:sqlite';\nconst db = new DatabaseSync('demo-practice.sqlite');\ndb.exec('CREATE TABLE IF NOT EXISTS notes(id TEXT PRIMARY KEY, minutes INTEGER NOT NULL)');\nif (process.argv[2] === 'save') {\n  const insert = db.prepare('INSERT INTO notes(id, minutes) VALUES(?, ?)');\n  insert.run('x', 35);\n  insert.run('y', 12);\n}\nconst saved = db.prepare('SELECT id, minutes FROM notes ORDER BY id').all();\nconsole.log(saved);\ndb.close();\n```\nUse Node.js 22.13 or newer. Run node storage.mjs save once. It adds x with 35 minutes and y with 12 minutes, prints both, and closes the database.",
+        "After that command finishes, run node storage.mjs without save. process.argv[2] reads the optional command input, so this run skips the inserts and only reads. Seeing the same two rows in a new process shows that the file kept them.",
+        "Run both commands from the same folder and keep demo-practice.sqlite there. A different folder can select a different file. Do not run the save mode again with these same IDs: the primary key rule rejects duplicates.",
+        "For the browser exercise, make saveEntry call store.save and make loadEntries return store.load(). Preserve earlier a and b rows when c is added. This supplied adapter uses memory only. The downloadable server uses practice.sqlite; save, stop, restart, and read it to check real persistence."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Use the supplied store object. Make saveEntry call store.save and loadEntries call store.load.",
+        "Save {id:\"a\",minutes:25} and {id:\"b\",minutes:10}. Keep earlier entries when saving a new one.",
+        "Download the local files and install Node.js 22.13 or newer.",
+        "Open their folder in a terminal. Run npm install, then npm start.",
+        "Add an entry, then stop the server with Control-C.",
+        "Restart the server and check that GET /entries still shows that entry.",
+        "Keep practice.sqlite in the same folder so the server can read its saved data.",
+        "From the requested IDs a and c, list the IDs that are also in the saved set a and b."
+      ],
+      "after": [
+        "Connect saveEntry and loadEntries to the supplied store methods.",
+        "Check that adding a new record preserves earlier records.",
+        "For the local example, run storage.mjs save once, then storage.mjs from the same folder.",
+        "Confirm that the later process reads the same saved rows."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "The store already has save(row) and load() methods.",
+        "Call store.save(row) inside saveEntry.",
+        "Return store.load() from loadEntries; do not replace the store when saving."
+      ],
+      "after": [
+        "Do not replace the store when saving another record.",
+        "Return the result of store.load().",
+        "A file's survival must be checked after the writing process ends."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "Which keeps a saved entry after a server restart?",
+        "choices": [
+          "A variable in server memory",
+          "A durable SQLite file",
+          "A console message"
+        ],
+        "answer": 1,
+        "explanation": "A file-backed database stores records outside the current running process."
+      },
+      "after": {
+        "question": "What keeps a saved entry after the server restarts?",
+        "choices": [
+          "A variable in memory",
+          "A durable SQLite file",
+          "A console message"
+        ],
+        "answer": 1,
+        "explanation": "The database file stores the records outside the running process."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "The browser adapter is memory-only practice. The downloaded Node server uses a real SQLite file. Verify persistence by stopping and restarting that server; the browser check cannot prove disk durability.",
+      "after": "Browser checks use a memory-only adapter. The Node example and downloaded server use disk files. A stop-and-restart check is needed to verify that those files keep the entries."
+    }
+  ],
+  "headings": [
+    "Store beyond one run",
+    "Use a storage adapter",
+    "Keep values out of SQL text",
+    "Read one storage example",
+    "Check a second run",
+    "Keep the same file location",
+    "Complete the browser exercise"
+  ],
+  "project": {
+    "title": "A durable practice API",
+    "task": "Connect the browser storage functions to the supplied adapter. Then optionally run the downloaded SQLite server and check its entries after a stop and restart.",
+    "done_when": "Browser saves preserve previous records. For the real local server, the same records can be read after restart."
+  }
+}

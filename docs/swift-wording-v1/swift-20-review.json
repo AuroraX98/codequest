@@ -1,0 +1,95 @@
+{
+  "lesson": "swift-20",
+  "position": 47,
+  "reviewer": "host",
+  "changes": [
+    {
+      "field": "summary",
+      "before": "Let a saved callback stop referring to its owner after the owner is released.",
+      "after": "Let a saved function use an object without keeping that object alive."
+    },
+    {
+      "field": "explanation",
+      "before": [
+        "Automatic Reference Counting keeps a class instance alive while strong references own it.",
+        "A closure can capture an instance strongly. If the instance also stores that closure, the two can keep each other alive.",
+        "Use a weak capture when the callback should not keep the owner alive. A weak reference becomes nil after the instance is released.",
+        "```swift\nfinal class LabelOwner {\n    let text: String\n    init(text: String) { self.text = text }\n    func makeReader() -> () -> String {\n        return { [weak self] in self?.text ?? \"Released\" }\n    }\n}\n```\nThe returned closure can outlive the owner without owning it.\n\nAfter that class definition:\n```swift\nfunc releasedReader() -> () -> String {\n    let owner = LabelOwner(text: \"Map\")\n    return owner.makeReader()\n}\nlet read = releasedReader()\nprint(read())\n```\nThis prints Released. makeReader takes no explicit arguments and returns a zero-argument closure. The small releasedReader helper returns that closure after its local owner loses its last strong reference. Calling read then uses the fallback instead of accessing a released owner. No force unwrap is needed.",
+        "self? safely reads through the optional weak reference. A fallback handles the owner no longer existing; force unwrapping would defeat that safety.",
+        "For the exercise, Reader stores its own callback. Implement install so the callback reads the current owner name while it exists and returns \"Released\" afterwards."
+      ],
+      "after": [
+        "A reference is a way to reach a class object. A strong reference also keeps that object alive. Swift's Automatic Reference Counting, or ARC, releases an object when nothing holds it strongly.",
+        "A closure is a function value that can remember things it uses. If an object stores a closure, and that closure strongly holds the object, they can keep each other alive. This loop is called a strong reference cycle.",
+        "[weak self] lets the closure refer to its owner without keeping it alive. The weak reference becomes nil after that owner is released.",
+        "```swift\nfinal class LabelOwner {\n    let text: String\n    init(text: String) { self.text = text }\n    func makeReader() -> () -> String {\n        return { [weak self] in self?.text ?? \"Released\" }\n    }\n}\nfunc releasedReader() -> () -> String {\n    let owner = LabelOwner(text: \"Map\")\n    return owner.makeReader()\n}\nlet read = releasedReader()\nprint(read())\n```\nThis prints Released. The returned closure remains available, but the local owner has no strong reference keeping it alive.",
+        "self?.text reads text only while the owner exists. The ?? operator supplies Released when it is missing. No forced unwrap is needed. The closure can still run safely after its owner is gone.",
+        "Reader in the exercise stores its own callback, a function saved to call later. Complete install with a weak self capture. Read the owner's current name while it exists, and return Released afterwards."
+      ]
+    },
+    {
+      "field": "steps",
+      "before": [
+        "Use a weak self capture in the stored callback.",
+        "Handle the missing owner without force unwrapping."
+      ],
+      "after": [
+        "Save a callback that captures self weakly.",
+        "Read the current name through self?.",
+        "Use Released as the fallback after the owner is gone."
+      ]
+    },
+    {
+      "field": "hints",
+      "before": [
+        "Use a weak self capture in the stored callback.",
+        "Handle the missing owner without force unwrapping."
+      ],
+      "after": [
+        "Capturing the name alone would save old text, not read the current name.",
+        "Use [weak self] and handle nil."
+      ]
+    },
+    {
+      "field": "quiz",
+      "before": {
+        "question": "The owner stores its callback, and that callback strongly captures the owner. Why may setting the outside owner variable to nil fail to release it?",
+        "choices": [
+          "The owner and callback still own each other through strong references",
+          "nil always means an empty string",
+          "Every closure is kept forever by Swift"
+        ],
+        "answer": 0,
+        "explanation": "Removing one outside reference does not break an internal strong cycle. A suitable weak capture avoids making the callback another owner."
+      },
+      "after": {
+        "question": "An owner stores a callback that holds the owner strongly. Why might the owner stay alive after its outside variable becomes nil?",
+        "choices": [
+          "The owner and callback still hold each other strongly",
+          "nil means an empty string",
+          "Swift keeps every closure forever"
+        ],
+        "answer": 0,
+        "explanation": "Removing an outside reference does not break the strong reference cycle inside."
+      }
+    },
+    {
+      "field": "externalNotes",
+      "before": "ARC applies to class instances. weak is appropriate here because the callback must not own the instance; it is not a universal ownership fix.",
+      "after": "ARC manages class objects. Use weak here because the saved callback should not keep its owner alive; other relationships may need strong references."
+    }
+  ],
+  "headings": [
+    "Explain a strong reference",
+    "Avoid a holding loop",
+    "Use a weak capture",
+    "Read one example",
+    "Handle a missing owner",
+    "Try it yourself"
+  ],
+  "project": {
+    "title": "Avoid a closure ownership cycle",
+    "task": "Complete Reader.install. Its saved callback must read the current owner name while the owner exists and return Released after the owner is released.",
+    "done_when": "The callback reflects name changes, allows the owner to be released, and handles a missing owner safely."
+  }
+}
