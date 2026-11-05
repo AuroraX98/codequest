@@ -55,6 +55,13 @@ try {
   const { buildLessonSteps } = await importFile('lib/lesson-step-flow.ts');
   const lessons = JSON.parse(await readFile(path.join(cwd, 'content/lessons.json'), 'utf8'));
   const used = new Set(); let coveredLessons = 0, coveredSections = 0, matches = 0;
+  await check('Lesson word help and Terminology use the same base definitions and appropriate course meanings', async()=>{
+    const entries=JSON.parse(await readFile(path.join(cwd,'content/terminology.json'),'utf8'));
+    const byId=new Map(entries.map(term=>[term.id,term]));
+    for(const word of lessonGlossary) assert.equal(byId.get(word.id)?.meaning,word.meaning,word.id);
+    assert.match(glossaryMatches('An index.', 'r')[0].term.meaning,/first position is 1/);
+    assert.match(glossaryMatches('A token.', 'ai')[0].term.meaning,/piece a model uses/);
+  });
   await check('Every curated entry has a short definition, example, and unique stable identity', () => {
     assert.equal(new Set(lessonGlossary.map(term => term.id)).size, lessonGlossary.length);
     for (const term of lessonGlossary) {

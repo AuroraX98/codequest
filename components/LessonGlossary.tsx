@@ -63,9 +63,9 @@ function Scope({ children, runtime, includedTerms }: { children: ReactNode; text
       {active && <>
         <div className={styles.heading}><strong id={`${id}-name`}>{active.name}</strong><button type="button" className={styles.close} aria-label="Close word explanation" onClick={() => close(true)}>Close</button></div>
         <p>{active.meaning}</p>
-        <p className={styles.example}><span>Example</span>{active.example}</p>
+        {active.example && <p className={styles.example}><span>Example</span>{active.example}</p>}
       </>}
     </div>
-    <span className={styles.srOnly} role="status" aria-live="polite">{active ? `${active.name}. ${active.meaning} Example: ${active.example}` : ""}</span>
+    <span className={styles.srOnly} role="status" aria-live="polite">{active ? `${active.name}. ${active.meaning} ${active.example ? "Example: "+active.example : ""}` : ""}</span>
   </GlossaryContext.Provider>;
 }

@@ -12,7 +12,7 @@ CodeQuest teaches coding one idea at a time. Read a short explanation, tap a pie
 
 ## Get more from one lesson
 
-1. **Read one idea.** If a word is new, look it up in **Terminology**.
+1. **Read one idea.** If a word is new, open **Terminology** and choose your course. Tap **Study** to open the idea that explains it.
 2. **Predict what the example will do.** In Python, `print("Hi")` shows the word **Hi**. Tap the code labels to see which part tells Python to show something and which part gives it the words.
 3. **Change one thing.** In an exercise you can run, change `"Hi"` to your name. Guess what will appear, then run the code and check.
 4. **Use it from memory.** Open **Try it**. If you get stuck, revisit that idea in the **Table of Contents** and try again. When you’re ready, open **Projects** to use what you learned.

@@ -851,6 +851,7 @@ export default function CodeQuest({
       loadLesson(id, d.progress);
       setParagraph(entry?.paragraph ?? 0);
       setConceptTarget(entry?.concept);
+      if (id === "python-input" && entry) setInputJump({index: entry.paragraph, token: Date.now()});
       if (entry?.concept) setNoteSection({lessonId:id,key:"concept:"+entry.concept});
       setView(destination);
       setPhase("learn");

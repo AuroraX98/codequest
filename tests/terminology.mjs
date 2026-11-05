@@ -7,11 +7,36 @@ import {JSDOM} from 'jsdom';
 const read=p=>fs.readFile(new URL('../'+p,import.meta.url),'utf8');
 const terms=JSON.parse(await read('content/terminology.json')),lessons=JSON.parse(await read('content/lessons.json')),units=JSON.parse(await read('content/catalog.json')).units;
 assert.ok(terms.length>=942,'Minimum retained term baseline; SQL gate checks exact current total');assert.equal(new Set(terms.map(t=>t.id)).size,terms.length);
-for(const t of terms){assert.ok(t.name&&t.meaning&&t.category);assert.ok(['term','acronym','slang'].includes(t.kind));if(t.kind==='slang')assert.ok(t.context);for(const l of t.links??[]){assert.ok(lessons.find(x=>x.id===l.lessonId)?.explanation[l.paragraph]);assert.notEqual(l.lessonId,'python-01');}}
+const tracks=new Map(units.map(unit=>[unit.id,unit.track]));
+const headings=new Map(await Promise.all([...new Set(tracks.values())].map(async course=>[course,JSON.parse(await read('content/'+course+'-reviewed-headings.json'))])));
+const firstModule=ts.transpileModule(await read('lib/python-concepts.ts'),{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.ESNext}}).outputText;
+const {reviewedPythonFirstLesson}=await import('data:text/javascript;base64,'+Buffer.from(firstModule).toString('base64'));
+for (const term of terms) {
+  assert.ok(term.name && term.meaning && term.category);
+  assert.ok(['term','acronym','slang'].includes(term.kind));
+  if (term.kind==='slang') assert.ok(term.context);
+  const sources=new Set();
+  for (const link of term.links??[]) {
+    const course=tracks.get(link.lessonId); assert.ok(course);
+    sources.add(course);
+    const lesson=lessons.find(x=>x.id===link.lessonId);
+    const section=lesson.explanation[link.paragraph];
+    const special=link.lessonId==='python-01'?reviewedPythonFirstLesson[link.concept]:null;
+    if (link.lessonId==='python-01') assert.ok(special,term.id);
+    assert.equal(link.idea,special?.title??headings.get(course)[link.lessonId][link.paragraph],term.id);
+    assert.ok(link.evidence && (special?.text??section).includes(link.evidence),term.id+' points away from its lesson wording');
+    if(link.example) {
+      const source = special?.example.code ?? lesson.explanation[link.exampleParagraph];
+      assert.ok(source?.includes(link.example),term.id+' example must occur in its own source lesson');
+    }
+  }
+  assert.deepEqual(new Set(term.languages??[]),sources,term.id+' must have only its sourced courses');
+}
 const dir=new URL('../.sites-runtime/terminology-test/',import.meta.url);await fs.mkdir(dir,{recursive:true});
-for(const [file,name]of [['lib/course-order.ts','course-order'],['lib/terminology.ts','terminology'],['lib/study-label.ts','study-label'],['lib/navigation.ts','navigation'],['components/Terminology.tsx','terminology-view']]){
+for(const [file,name]of [['lib/term-senses.ts','term-senses'],['lib/course-order.ts','course-order'],['lib/terminology.ts','terminology'],['lib/study-label.ts','study-label'],['lib/navigation.ts','navigation'],['components/Terminology.tsx','terminology-view']]){
  let source=await read(file);source=source.replace("import data from '../content/terminology.json';",'const data='+JSON.stringify(terms)+';').replace("import catalog from '../content/catalog.json';",'const catalog='+JSON.stringify({units})+';');
- let out=ts.transpileModule(source,{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.ESNext,jsx:ts.JsxEmit.ReactJSX}}).outputText.replaceAll("'../lib/terminology'","'./terminology.mjs'").replaceAll("'../lib/study-label'","'./study-label.mjs'").replaceAll('"../lib/course-order"','"./course-order.mjs"');
+ const compiled=ts.transpileModule(source,{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.ESNext,jsx:ts.JsxEmit.ReactJSX}}).outputText;
+ const out=compiled.replace(/(['"])(?:\.\.\/lib\/|\.\/)(term-senses|course-order|study-label|terminology)\1/g,(_,quote,module)=>quote+'./'+module+'.mjs'+quote);
  await fs.writeFile(new URL(name+'.mjs',dir),out);
 }
 const {terminologyMatches,terminologyInLanguage,readTerminologyState,taughtTermLinks}=await import(new URL('terminology.mjs',dir));
@@ -26,7 +51,7 @@ const {courseNames,compareCourseNames}=await import(new URL('course-order.mjs',d
 const {default:View}=await import(new URL('terminology-view.mjs',dir));const root=createRoot(document.getElementById('root'));let target;
 const render=scope=>act(async()=>root.render(React.createElement(View,{scope,lessons,languageNames:courseNames,onStudy:l=>target=l})));
 try{
- await render('a');const courseLabels=[...document.querySelectorAll('select')[1].options].slice(1).map(o=>o.textContent);assert.deepEqual(courseLabels,[...courseLabels].sort(compareCourseNames));const ids=()=>[...document.querySelectorAll('[data-term-id]')].map(n=>n.dataset.termId);const before=ids();assert.ok(before.length&&before.length<terms.length);assert.equal(document.querySelector('input').value,'API');
+ await render('a');const courseLabels=[...document.querySelectorAll('select')[1].options].slice(2).map(o=>o.textContent);assert.deepEqual(courseLabels,[...courseLabels].sort(compareCourseNames));const ids=()=>[...document.querySelectorAll('[data-term-id]')].map(n=>n.dataset.termId);const before=ids();assert.ok(before.length&&before.length<terms.length);assert.equal(document.querySelector('input').value,'API');
  const list=[...document.querySelectorAll('button')].find(b=>b.textContent==='List');await act(async()=>list.click());assert.equal(list.getAttribute('aria-pressed'),'true');assert.deepEqual(ids(),before);assert.ok(document.querySelector('.terminology-results.list'));
  assert.equal(JSON.parse(localStorage.getItem('codequest-terminology:a')).view,'list');
  await render('b');assert.equal(document.querySelector('input').value,'');assert.equal(ids().length,terms.length);assert.equal(document.querySelectorAll('button button').length,0);
@@ -47,9 +72,38 @@ try{
  for(const track of [...new Set(units.map(u=>u.track))]){
   const scoped=terms.filter(t=>terminologyInLanguage(t,track));const example=scoped.find(t=>t.languages?.includes(track))??scoped[0];
   const query=example.name;const key='search-'+track;localStorage.setItem('codequest-terminology:'+key,JSON.stringify({language:track,query,category:'all',view:'list',selectedId:''}));
-  await render(key);assert.deepEqual(ids(),scoped.filter(t=>terminologyMatches(t,query)).map(t=>t.id));
-  const button=[...document.querySelectorAll('button')].find(b=>b.textContent==='Tiles');await act(async()=>button.click());assert.deepEqual(ids(),scoped.filter(t=>terminologyMatches(t,query)).map(t=>t.id));
+  await render(key);assert.deepEqual(ids(),scoped.filter(t=>terminologyMatches(t,query,track)).map(t=>t.id));
+  const button=[...document.querySelectorAll('button')].find(b=>b.textContent==='Tiles');await act(async()=>button.click());assert.deepEqual(ids(),scoped.filter(t=>terminologyMatches(t,query,track)).map(t=>t.id));
  }
+ await render('alignment');
+ const byId=id=>terms.find(term=>term.id===id);
+ for(const course of new Set(tracks.values())){
+   assert.equal(terminologyInLanguage(byId('backpropagation'),course),course==='ai');
+   assert.equal(terminologyInLanguage(byId('lgtm'),course),false);
+ }
+ assert.equal(terminologyInLanguage(byId('lgtm'),'reference'),true);
+ assert.equal(readTerminologyState('{"selectedId":"token","selectedCourse":"developer-toolkit"}').selectedCourse,'developer-toolkit');
+ assert.equal(terminologyInLanguage(byId('sql-index'),'sql'),true);
+ assert.equal(terminologyInLanguage(byId('index'),'sql'),false);
+ const token=document.querySelector('[data-term-id="token"]');
+ assert.equal(terminologyMatches(byId('token'),'','ai','security'),false);
+ assert.equal(terminologyMatches(byId('token'),'','developer-toolkit','security'),true);
+ assert.equal(terminologyMatches(byId('template-literal'),'f-string','javascript'),false);
+ assert.equal(terminologyMatches(byId('template-literal'),'f-string','python'),true);
+ const select=token.querySelector('select');
+ await act(async()=>{select.value='ai';select.dispatchEvent(new dom.window.Event('change',{bubbles:true}));});
+ assert.match(token.textContent,/piece a model uses/);
+ await act(async()=>{select.value='developer-toolkit';select.dispatchEvent(new dom.window.Event('change',{bubbles:true}));});
+ assert.match(token.textContent,/secret that can grant access/);
+ assert.doesNotMatch(token.textContent,/piece a model uses/);
+ await act(async()=>token.querySelector('.project-study-button').click());
+ assert.equal(target.lessonId,'developer-toolkit-17');
+ const pythonLink=byId('program').links.find(link=>link.lessonId==='python-01');
+ assert.equal(pythonLink.concept,'program');
+ const filter=document.querySelectorAll('.terminology-toolbar select')[1];
+ await act(async()=>{filter.value='reference';filter.dispatchEvent(new dom.window.Event('change',{bubbles:true}));});
+ assert.deepEqual(ids(),terms.filter(term=>!term.links?.length).map(term=>term.id));
+ assert.equal(document.querySelector('.project-study-button'),null);
  await render('a');assert.equal(document.querySelector('input').value,'API');assert.ok(document.querySelector('.terminology-results.list'));
  assert.equal(document.querySelectorAll('[onmouseover],iframe,script').length,0);
 }finally{await act(async()=>root.unmount());dom.window.close();await fs.rm(dir,{recursive:true,force:true});}

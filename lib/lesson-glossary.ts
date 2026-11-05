@@ -1,8 +1,9 @@
+import { courseTermSense } from './term-senses';
 /** Hand-written learning help. No network, model calls, or changes to lesson source. */
 export type GlossaryTerm = { id: string; name: string; aliases: string[]; meaning: string; example: string; runtimes?: string[] };
 const term = (id: string, name: string, aliases: string[], meaning: string, example: string, runtimes?: string[]): GlossaryTerm => ({ id, name, aliases: [name, ...aliases], meaning, example, runtimes });
 export const lessonGlossary: GlossaryTerm[] = [
-  term('program', 'program', ['programs'], 'A set of instructions for a computer to follow.', 'A program can add two prices and show the total.'),
+  term('program', 'program', ['programs'], 'A program is a list of instructions the computer follows.', 'A program can add two prices and show the total.'),
   term('code', 'code', ['source code'], 'Instructions written in a programming language.', 'print("Hello") is one line of Python code.'),
   term('value', 'value', ['values'], 'One piece of information that code can use.', '5 is a number value. "Hello" is a text value.'),
   term('variable', 'variable', ['variables'], 'A name that lets your code use a value.', 'After score = 5, the name score refers to 5.'),
@@ -27,11 +28,11 @@ export const lessonGlossary: GlossaryTerm[] = [
   term('iteration', 'iteration', ['iterations', 'iterate', 'iterating'], 'One pass through a loop, or the act of going through items.', 'Printing three list items takes three loop iterations.'),
   term('list', 'list', ['lists'], 'An ordered collection of items.', '["book", "pen"] is a Python list with two items.'),
   term('array', 'array', ['arrays'], 'An ordered collection whose items can be reached by position.', '[10, 20, 30] is a JavaScript array. Position 0 holds 10.'),
-  term('index', 'index', ['indexes', 'indices'], 'A position used to find an item in an ordered collection. Many languages start at 0.', 'In ["red", "blue"], index 0 selects "red".', ['python', 'javascript', 'typescript', 'react', 'swift']),
+  term('index', 'index', ['indexes', 'indices'], 'A position used to find an item in an ordered collection. Many languages start at 0.', 'In ["red", "blue"], index 0 selects "red".', ['python', 'javascript', 'typescript', 'react', 'swift', 'r', 'c', 'cpp', 'csharp', 'java', 'go', 'kotlin', 'ruby']),
   term('sql-index', 'index', ['indexes', 'indices'], 'An extra database structure that can help find rows faster. It takes space and must be updated when data changes.', 'An index on genre can speed up a search for books in one genre.', ['sql']),
   term('dictionary', 'dictionary', ['dictionaries'], 'A collection that connects keys to values.', 'In {"name": "Mina"}, the key "name" leads to the value "Mina".'),
   term('key', 'key', ['keys'], 'A label used to find a value in a collection.', 'In {"score": 5}, "score" is the key and 5 is its value.'),
-  term('tuple', 'tuple', ['tuples'], 'An ordered group of values. In Python, its items cannot be replaced after it is made.', '(3, 4) is a Python tuple that could store a point.'),
+  term('tuple', 'tuple', ['tuples'], 'An ordered group of values treated as one value. Exact type and mutability rules depend on the language.', '(3, 4) is a Python tuple that could store a point.'),
   term('python-set', 'set', ['sets'], 'A Python collection with no duplicate items. It does not provide numbered positions.', '{1, 1, 2} creates a set containing 1 and 2.', ['python']),
   term('object', 'object', ['objects'], 'A value that can have its own data and actions.', 'A player object might have a name, a score, and a method to add points.'),
   term('property', 'property', ['properties', 'fields', 'field'], 'A named piece of data or a setting that belongs to something.', 'In player.score, score is a property of player. In CSS, color is a style property.'),
@@ -47,7 +48,7 @@ export const lessonGlossary: GlossaryTerm[] = [
   term('iterable', 'iterable', ['iterables'], 'Something you can go through item by item.', 'A Python list is iterable, so a for loop can visit its items.'),
   term('generator', 'generator', ['generators'], 'Code that produces items one at a time instead of preparing them all at once.', 'A Python function with yield can produce the next number when asked.'),
   term('syntax', 'syntax', ['syntax error'], 'The writing rules of a programming language.', 'Python needs a colon after an if condition. Leaving it out can cause a syntax error.'),
-  term('indentation', 'indentation', ['indenting', 'indented', 'indent'], 'Spaces at the start of a line. In Python, they show which lines belong together.', 'The indented lines after if run as part of that if block.'),
+  term('indentation', 'indentation', ['indenting', 'indented', 'indent'], 'Spaces at the start of a line that make nesting visible. Some languages also use them to define blocks.', 'The indented lines after if run as part of that if block.'),
   term('parentheses', 'parentheses', ['parenthesis'], 'The curved marks ( and ). They group things or surround function inputs.', 'In print("Hello"), the text goes inside the parentheses.'),
   term('comment', 'comment', ['comments'], 'A note in code for people to read. The program does not run it as an instruction.', '# Remember the total is a Python comment.'),
   term('output', 'output', ['outputs'], 'Information a program produces or shows.', 'print("Hello") produces the output Hello.'),
@@ -58,7 +59,7 @@ export const lessonGlossary: GlossaryTerm[] = [
   term('algorithm', 'algorithm', ['algorithms'], 'A clear set of steps for solving a problem.', 'To find the largest number, compare each number with the largest seen so far.'),
   term('callback', 'callback', ['callbacks'], 'A function passed to other code so that code can call it when needed.', 'A button can call your callback when someone clicks it.'),
   term('async', 'asynchronous', ['async'], 'Work that can finish later, letting other work happen while you wait.', 'Loading a web page can happen while the app still responds to clicks.'),
-  term('await', 'await', [], 'Wait for an asynchronous result inside the current async function.', 'data = await fetchData() waits here for the data. It does not freeze all other work.'),
+  term('await', 'await', [], 'Pause this part of the code until the result is ready.', 'data = await fetchData() waits here for the data. It does not freeze all other work.'),
   term('promise', 'Promise', ['promises'], 'A JavaScript object for a result that may arrive later or fail.', 'A request for data can return a Promise before the data arrives.'),
   term('state', 'state', [], 'The information an app currently remembers.', 'A counter that shows 3 has a current count state of 3.'),
   term('event', 'event', ['events'], 'Something that happens, such as a click, that code can respond to.', 'An input event tells your app that a field changed.'),
@@ -70,7 +71,7 @@ export const lessonGlossary: GlossaryTerm[] = [
   term('type-guard', 'type guard', ['type guards'], 'A check that helps TypeScript narrow down what type a value has.', 'typeof value === "string" checks whether value is text.', ['typescript', 'react']),
   term('generic', 'generic', ['generics'], 'Code with a placeholder for a type so it can work with different types safely.', 'Collection<T> can become Collection<number> or Collection<string>.'),
   term('destructure', 'destructure', ['destructuring'], 'Take named parts out of an object or array into separate names.', 'const { score } = player reads player.score into the name score.'),
-  term('template-literal', 'template literal', ['template literals', 'f-string', 'f-strings', 'text template'], 'Text with spaces for values that code fills in.', 'In Python, f"Hi {name}" puts the value of name into the message.'),
+  term('template-literal', 'template literal', ['template literals', 'f-string', 'f-strings', 'text template'], 'Building text by inserting values from expressions. Each programming language has its own syntax for this.', 'In Python, f"Hi {name}" puts the value of name into the message.'),
   term('protocol', 'protocol', ['protocols'], 'In Swift, a list of requirements a type promises to provide.', 'A Transport protocol might require a description property.', ['swift']),
   term('actor', 'actor', ['actors'], 'In Swift, a type that helps protect its changing data when several tasks use it.', 'A store actor can keep two tasks from changing its data at the same time.', ['swift']),
   term('optional', 'optional', ['optionals'], 'A Swift value that may contain a value or may contain nothing, written nil.', 'String? can hold "Hello" or nil.', ['swift']),
@@ -78,7 +79,7 @@ export const lessonGlossary: GlossaryTerm[] = [
   term('prop', 'prop', ['props'], 'An input passed to a React component.', 'In <Profile name="Mina" />, name is a prop.'),
   term('render', 'render', ['renders', 'rendering'], 'Create the description or display of what the user should see.', 'A React component renders a heading from the current name.'),
   term('html-element', 'element', ['elements', 'HTML element'], 'A piece of a web page, often written with a start tag, content, and an end tag.', '<p>Hello</p> is a paragraph element.', ['html', 'css', 'react']),
-  term('attribute', 'attribute', ['attributes'], 'A named setting on an HTML element, or a named member of an object in languages such as Python.', 'In <img src="photo.jpg">, src is an HTML attribute.'),
+  term('attribute', 'attribute', ['attributes'], 'A named detail attached to something. What it describes depends on the course.', 'In <img src="photo.jpg">, src is an HTML attribute.'),
   term('selector', 'selector', ['selectors'], 'A CSS pattern that chooses which elements to style.', '.card chooses elements with the class card.'),
   term('css-class', 'class', ['classes'], 'An HTML label used to group elements, often so CSS can style them.', 'class="card" lets the CSS selector .card choose that element.', ['html', 'css', 'react']),
   term('accessibility', 'accessibility', ['accessible'], 'Making an app usable by people with different needs and ways of using a computer.', 'A button should work with a keyboard as well as a mouse.'),
@@ -105,7 +106,7 @@ export const lessonGlossary: GlossaryTerm[] = [
   term('dependency', 'dependency', ['dependencies'], 'Other code a project needs to work.', 'A project can depend on a library for reading CSV files.'),
   term('git', 'Git', [], 'A tool that records versions of your files so you can review and recover changes.', 'A Git commit records a saved checkpoint of changes.'),
   term('commit', 'commit', ['commits'], 'In Git, a recorded checkpoint of changes with a message explaining them.', 'A commit named "Fix total" can record the corrected calculation.'),
-  term('constructor', 'constructor', ['constructors'], 'Code that prepares a new object when it is created.', 'In Python, __init__ sets up an object’s starting data.'),
+  term('constructor', 'constructor', ['constructors'], 'Code used when creating an object to prepare its starting state.', 'In Python, __init__ sets up an object’s starting data.'),
   term('comprehension', 'list comprehension', ['comprehension', 'comprehensions'], 'A short way to build a new Python list by going through other items.', '[n * 2 for n in [1, 2]] makes [2, 4].', ['python']),
   term('modulo', 'modulo', ['remainder'], 'The amount left after whole-number division.', '7 % 3 gives 1 because 7 is two groups of 3 with 1 left.'),
   term('module', 'module', ['modules'], 'A file or unit of code that can share its functions and values with other code.', 'A Python file named helpers.py is a module you can import.'),
@@ -123,7 +124,7 @@ export const lessonGlossary: GlossaryTerm[] = [
   term('memoized', 'memoized', ['memoization'], 'Keeping a calculation’s previous result so it can be reused when its inputs have not changed.', 'A saved search result can be reused when the list and search text stay the same.'),
   term('payload', 'payload', ['payloads'], 'The useful data carried by a message or event.', 'An event named progress might carry the payload {percent: 50}.'),
   term('keyword', 'keyword', ['keywords'], 'A word with a special meaning in a programming language.', 'Python uses if for a decision and return to give back a result.'),
-  term('token', 'token', ['tokens'], 'A small unit with meaning. In code it might be a name or symbol; in AI text it may be a word or part of one. An access token is different: it is a secret used for access.', 'In code, the name print is one token. Do not share an access token.'),
+  term('token', 'token', ['tokens'], 'A small unit. It can be a piece of text or a value used to check access, depending on the course.', 'In code, the name print is one token. Do not share an access token.'),
   term('ai', 'AI', ['artificial intelligence'], 'Computer systems that perform tasks such as recognizing patterns or generating text. Their answers can be wrong.', 'An AI helper may suggest code. Run and check the code before trusting it.'),
   term('ai-model', 'AI model', ['language model', 'large language model', 'LLM'], 'A system trained on examples to produce predictions or responses.', 'A language model can suggest an explanation, but it may invent details.'),
   term('prompt', 'prompt', ['prompts'], 'An instruction or question given to an AI tool. A program can also use a prompt to ask a person for input.', 'An AI prompt could be: Explain this function in two short sentences.'),
@@ -137,10 +138,12 @@ function matcher(runtime: string) {
   if (!value) {
     const terms = new Map<string, GlossaryTerm>();
     for (const entry of lessonGlossary) if (!entry.runtimes || entry.runtimes.includes(runtime)) {
+      const sense = courseTermSense(entry.id, runtime);
+      const resolved = sense ? {...entry, meaning:sense.meaning, example:sense.example ?? ''} : entry;
       for (const alias of entry.aliases) {
         // Neither Rust nor Go has a built-in Double type. Functions may use that name.
         if ((runtime === "go" || runtime === "rust") && entry.id === "float" && alias === "Double") continue;
-        terms.set(alias.toLowerCase(), entry);
+        terms.set(alias.toLowerCase(), resolved);
       }
     }
     const aliases = [...terms.keys()].sort((a, b) => b.length - a.length).map(escaped);
