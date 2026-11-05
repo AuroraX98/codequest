@@ -33,7 +33,7 @@ try{
 const app=await read('../components/CodeQuest.tsx');
 assert.doesNotMatch(app,/Unlimited tutor requests|state\.tutorUsed\}\s+used/);
 assert.match(app,/aria-expanded=\{!tutorHidden/);assert.match(app,/buddy-toggle-button/);
-assert.match(app,/await reading.refresh\(\); const data = await request\(\{action:"completeConcept"/);
+assert.match(app,/await reading.refresh\(\);\s+const data = await request\(\{action:"completeConcept"/);
 assert.match(app,/phase === "build" && !isConcept && !selectedProject/);
 assert.doesNotMatch(app,/<LessonNotes\b/);
 assert.doesNotMatch(app, /id: "build", name: "Build"/, 'No duplicate local Build tab');

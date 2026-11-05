@@ -28,7 +28,7 @@ import {
 import { validBookmarks, mergeBookmarks, latestBookmark, isExplicitLessonLink, type CourseBookmarks, type CourseBookmark } from "../lib/course-resume";
 import { defaultProfile } from "../lib/profile";
 import { deviceStatusLabel } from "../lib/device-status-label";
-import { courseLearningOrder } from "../lib/course-learning-order";
+import { courseLearningOrder, courseLessonList } from "../lib/course-learning-order";
 import LocalCourseProject from "./LocalCourseProject";
 import { localProjectExamples } from "../lib/local-course-project";
 import { studyLabel } from "../lib/study-label";
@@ -403,13 +403,14 @@ export default function CodeQuest({
       ),
     [orderedUnits, state.profile.track, state.profile.level, search],
   );
-  const next =
-    orderedUnits.find(
-      (u) =>
-        u.track === unit?.track &&
-        u.level === unit?.level &&
-        !state.progress.find((p) => p.unitId === u.id)?.completedAt,
-    ) ?? orderedUnits.find((u) => u.track === unit?.track && u.level === unit?.level);
+  const courseLessons = useMemo(() => courseLessonList(orderedUnits, lessons, unit?.track), [orderedUnits, lessons, unit?.track]);
+  const courseIndex = courseLessons.findIndex(item => item.id === activeId);
+  const nextLesson = courseIndex >= 0 ? courseLessons[courseIndex + 1] : undefined;
+  const missingReadingKey = isConcept ? projectReadingMissing[0] : undefined;
+  const missingParagraph = missingReadingKey ? Number(missingReadingKey.split(":")[1]) : 0;
+  const missingHeading = lesson && missingReadingKey ? getLessonHeadings(lesson.id)[missingParagraph] : "";
+  const canFinishConcept = reading.loaded && reading.online && !reading.error &&
+    !missingReadingKey && !Object.values(reading.pending).some(Boolean);
   const draftKey = (id: string) =>
     "codequest-draft-" + draftScope.current + "-" + id;
   const loadLesson = (
@@ -906,6 +907,28 @@ export default function CodeQuest({
       if (sequence === navigationSequence.current) navigationPending.current = "";
     }
   };
+  const finishConcept = async () => {
+    if (!canFinishConcept || completionLock.current) return;
+    const id = activeId;
+    completionLock.current = true;
+    setCompleting(true);
+    try {
+      await reading.refresh();
+      const data = await request({action:"completeConcept", unitId:id});
+      if (unitRef.current !== id) return;
+      setState(data);
+      if (nextLesson) {
+        completionLock.current = false;
+        await select(nextLesson.id);
+      }
+      if (unitRef.current === id) setPhase("done");
+    } catch (error) {
+      setError((error as Error).message);
+    } finally {
+      completionLock.current = false;
+      setCompleting(false);
+    }
+  };
   const changeCourse = async (track: string) => {
     const bookmark = bookmarksRef.current[track];
     if (bookmark) { setSearch(""); await resumeCourse(bookmark, "path"); return; }
@@ -1321,7 +1344,12 @@ export default function CodeQuest({
       <div className={"shell" + (tocOpen && ready && lesson && (view === "quest" || (view === "studio" && studioMode === "course")) ? " toc-docked" : "")}>
 
         {ready && lesson && (view === "quest" || (view === "studio" && studioMode === "course")) && (
-                      <UnitTableOfContents open={tocOpen} title={lesson.title} items={lesson.id === "python-01" ? pythonConcepts.map((c,i)=>({label:reviewedPythonFirstLesson[c.id].title,paragraphIndex:i})) : getUnitContents(lesson)} active={lesson.id === "python-01" ? pythonConcepts.findIndex(c=>c.id===conceptTarget) : paragraph} onClose={()=>{setTocOpen(false);document.getElementById("unit-toc-toggle")?.focus();}} onSelect={index=>{
+                      <UnitTableOfContents open={tocOpen} title={lesson.title}
+                        courseName={names[unit.track]} lessons={courseLessons} lessonId={activeId}
+                        onLesson={id => {
+                          if (!window.matchMedia("(min-width: 1100px)").matches) setTocOpen(false);
+                          void select(id);
+                        }} items={lesson.id === "python-01" ? pythonConcepts.map((c,i)=>({label:reviewedPythonFirstLesson[c.id].title,paragraphIndex:i})) : getUnitContents(lesson)} active={lesson.id === "python-01" ? pythonConcepts.findIndex(c=>c.id===conceptTarget) : paragraph} onClose={()=>{setTocOpen(false);document.getElementById("unit-toc-toggle")?.focus();}} onSelect={index=>{
                         if (!window.matchMedia("(min-width: 1100px)").matches) setTocOpen(false);
                         theoryFocusRequested.current = true; setView("quest"); setPhase("learn");
                         if(lesson.id === "python-01") {const concept=pythonConcepts[index];setConceptTarget(concept.id);setNoteSection({lessonId:lesson.id,key:"concept:"+concept.id});}
@@ -1659,15 +1687,32 @@ export default function CodeQuest({
                       </div>
                     )}
                     {phase === "practice" && isConcept && !!progress?.quizPassed && <div className="panel concept-finish">
-                      <p>This concept lesson uses reading and an understanding check—no code project is required.</p>
-                      {projectReadingMissing.length > 0 && <p>Mark each teaching section as read before recording completion. Opening it alone does not mark it.</p>}
-                      <button className="secondary project-study-button" onClick={() => setPhase("learn")}>Return to teaching</button>
-                      <button className="primary" disabled={completing || !reading.loaded || !reading.online || !!reading.error || projectReadingMissing.length > 0 || Object.values(reading.pending).some(Boolean)} onClick={async () => {
-                        if (completionLock.current) return; completionLock.current = true; setCompleting(true); const id = activeId;
-                        try { await reading.refresh(); const data = await request({action:"completeConcept", unitId:id}); setState(data); if (unitRef.current === id) setPhase("done"); }
-                        catch (e) { setError((e as Error).message); } finally { completionLock.current = false; setCompleting(false); }
-                      }}>{completing ? "Saving…" : "Finish this concept lesson"}</button>
-                      {!reading.online && <p>Reconnect to verify saved reading and record completion. You can still read offline.</p>}
+                      {progress.completedAt ? <>
+                        <p>This lesson is complete.</p>
+                        <button className="primary" onClick={() => nextLesson ? void select(nextLesson.id) : setView("path")}>
+                          {nextLesson ? "Next lesson: " + nextLesson.title : "Back to courses"}
+                        </button>
+                      </> : <>
+                        {missingReadingKey && reading.loaded && <div className="concept-reading-step">
+                          <p>If you’ve read “{missingHeading}”, mark it here.</p>
+                          <ReadingMark key={missingReadingKey} reading={reading} lessonId={lesson.id} sectionKey={missingReadingKey} sectionTitle={missingHeading} />
+                          <button className="secondary" onClick={() => {
+                            setParagraph(missingParagraph);
+                            setNoteSection({lessonId: lesson.id, key: missingReadingKey});
+                            setPhase("learn");
+                          }}>Read this idea</button>
+                        </div>}
+                        {!reading.loaded && !reading.error && reading.online && <p>Loading your reading progress…</p>}
+                        {!reading.online && <p>Reconnect to save lesson completion. You can keep learning offline.</p>}
+                        {reading.error && !missingReadingKey && <p role="alert">{reading.error}</p>}
+                        {reading.error && (!reading.loaded || !missingReadingKey) && <button className="secondary" onClick={() => void reading.refresh()}>Reload reading progress</button>}
+                        <button className="primary" disabled={completing || !canFinishConcept} onClick={() => void finishConcept()}>
+                          {completing ? "Saving…" : nextLesson ? "Finish and continue to " + nextLesson.title : "Finish lesson"}
+                        </button>
+                        {!canFinishConcept && <button className="secondary" onClick={() => nextLesson ? void select(nextLesson.id) : setView("path")}>
+                          {nextLesson ? "Next lesson without finishing: " + nextLesson.title : "Back to courses"}
+                        </button>}
+                      </>}
                     </div>}
                     {phase === "build" && isConcept && <LocalCourseProject key={`${state.draftScope}:${lesson.id}`} unit={unit} lesson={lesson} scope={state.draftScope} initialExampleId={openedProject?.exampleId} onStudy={index=>{setView("quest");setPhase("learn");setParagraph(index);}} />}
                     {phase === "build" && !isConcept && selectedProject && (
@@ -2077,17 +2122,14 @@ export default function CodeQuest({
                           You can always revisit a quest. Its XP is awarded
                           once.
                         </p>
-                        <button
-                          className="primary"
-                          onClick={() => next && select(next.id)}
-                        >
-                          Your next small step <ArrowRight size={17} />
-                        </button>
+                        {nextLesson && <button className="primary" onClick={() => void select(nextLesson.id)}>
+                          Next lesson: {nextLesson.title} <ArrowRight size={17} />
+                        </button>}
                         <button
                           className="text-button"
                           onClick={() => setView("path")}
                         >
-                          Explore your skill path
+                          Back to courses
                         </button>
                       </div>
                     )}

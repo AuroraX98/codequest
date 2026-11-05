@@ -7,7 +7,7 @@ import reactRoute from "../content/react-route-plan.json";
 import sqlRoute from "../content/sql-route-plan.json";
 import swiftRoute from "../content/swift-route-plan.json";
 import backendRoute from "../content/backend-route-plan.json";
-import type { Unit } from "./types";
+import type { Lesson, Unit } from "./types";
 
 /** Reorder only the reviewed track's slots; IDs and other track positions stay intact. */
 function orderTrack(units: Unit[], track: string, seed: string[]): Unit[] {
@@ -39,4 +39,13 @@ export function courseLearningOrder(units: Unit[]): Unit[] {
     result.splice(result.indexOf(anchor) + 1, 0, unit);
   }
   return result;
+}
+
+/** Follow the Courses tab's levels, keeping the reviewed order inside each level. */
+export function courseLessonList(orderedUnits: Unit[], lessons: Lesson[], track?: string) {
+  const titles = new Map(lessons.map(lesson => [lesson.id, lesson.title]));
+  const course = orderedUnits.filter(unit => unit.track === track);
+  return ["beginner", "intermediate", "advanced"].flatMap(level =>
+    course.filter(unit => unit.level === level).map(unit => ({ id: unit.id, title: titles.get(unit.id) ?? unit.topic }))
+  );
 }

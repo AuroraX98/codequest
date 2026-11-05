@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import ts from 'typescript';
+import vm from 'node:vm';
+import {createRequire} from 'node:module';
 import React,{act,useState} from 'react';
 import {createRoot} from 'react-dom/client';
 import {JSDOM} from 'jsdom';
@@ -8,18 +10,40 @@ const dir=new URL('../.sites-runtime/unit-toc-test/',import.meta.url);await fs.m
 const read=p=>fs.readFile(new URL('../'+p,import.meta.url),'utf8');
 await fs.writeFile(new URL('toc.mjs',dir),ts.transpileModule(await read('components/UnitTableOfContents.tsx'),{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.ESNext,jsx:ts.JsxEmit.ReactJSX}}).outputText);
 const dom=new JSDOM('<div id="root"></div>',{url:'https://fixture.test'});for(const [k,v]of Object.entries({window:dom.window,document:dom.window.document,IS_REACT_ACT_ENVIRONMENT:true}))Object.defineProperty(globalThis,k,{configurable:true,value:v});
-const {default:Drawer}=await import(new URL('toc.mjs',dir));let selected=null,closed=0,studied=0;
-function App(){const [open,setOpen]=useState(true),[active,setActive]=useState(2);return React.createElement(React.Fragment,null,React.createElement(Drawer,{open,title:'Current unit only',items:[{label:'First concept',paragraphIndex:0},{label:'contextlib.contextmanager() and a deliberately long readable concept name',paragraphIndex:3}],active,onClose:()=>{closed++;setOpen(false);},onSelect:i=>{selected=i;setActive(i);}}),React.createElement('main',null,React.createElement('button',{onClick:()=>studied++},'Keep studying')));}
+const {default:Drawer}=await import(new URL('toc.mjs',dir));let selected=null,closed=0,studied=0,chosenLesson=null;
+function App(){const [open,setOpen]=useState(true),[active,setActive]=useState(2);return React.createElement(React.Fragment,null,React.createElement(Drawer,{open,title:'Current lesson',courseName:'Python',lessonId:'python-93',lessons:[{id:'python-93',title:'Leave a note with a comment'},{id:'python-02',title:'Types & Comparisons'}],onLesson:id=>{chosenLesson=id;},items:[{label:'First concept',paragraphIndex:0},{label:'contextlib.contextmanager() and a deliberately long readable concept name',paragraphIndex:3}],active,onClose:()=>{closed++;setOpen(false);},onSelect:i=>{selected=i;setActive(i);}}),React.createElement('main',null,React.createElement('button',{onClick:()=>studied++},'Keep studying')));}
 const root=createRoot(document.getElementById('root'));
 try{
  await act(async()=>root.render(React.createElement(App)));
  assert.equal(document.querySelectorAll('dialog,[aria-modal], [inert]').length,0);assert.ok(document.querySelector('aside').getAttribute('aria-labelledby'));assert.equal(document.querySelectorAll('nav button').length,2);assert.equal(document.querySelector('nav button').getAttribute('aria-current'),'step');
+ const chooser=document.querySelector('aside select');assert.equal(chooser.value,'python-93');assert.equal(chooser.options.length,2);assert.match(chooser.labels[0].textContent,/Lessons in Python/);
+ await act(async()=>{chooser.value='python-02';chooser.dispatchEvent(new dom.window.Event('change',{bubbles:true}));});assert.equal(chosenLesson,'python-02');assert.equal(selected,null);
+ chosenLesson=null;await act(async()=>document.querySelector('.unit-toc-next').click());assert.equal(chosenLesson,'python-02');
  await act(async()=>document.querySelectorAll('nav button')[1].click());assert.equal(selected,3);assert.ok(document.querySelector('aside'),'selection leaves panel open');assert.equal(closed,0);assert.equal(document.querySelectorAll('nav button')[1].getAttribute('aria-current'),'step');
  await act(async()=>document.querySelector('main button').click());assert.equal(studied,1);assert.ok(document.querySelector('aside'),'outside study interaction leaves panel open');
  document.querySelector('main button').focus();assert.equal(document.activeElement.textContent,'Keep studying');
  await act(async()=>document.querySelector('nav button').dispatchEvent(new dom.window.KeyboardEvent('keydown',{key:'Escape',bubbles:true})));assert.equal(document.querySelector('aside'),null);
  await act(async()=>root.render(React.createElement(App,{key:'new'})));await act(async()=>document.querySelector('[aria-label="Close Table of Contents"]').click());assert.equal(document.querySelector('aside'),null);
 }finally{await act(async()=>root.unmount());dom.window.close();await fs.rm(dir,{recursive:true,force:true});}
+
+const compiledOrder = ts.transpileModule(await read('lib/course-learning-order.ts'), {
+ compilerOptions: {module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022,esModuleInterop:true}
+}).outputText;
+const orderModule={exports:{}};
+vm.runInNewContext(compiledOrder,{module:orderModule,exports:orderModule.exports,require:createRequire(new URL('../lib/course-learning-order.ts',import.meta.url))});
+const {courseLearningOrder,courseLessonList}=orderModule.exports;
+const units=JSON.parse(await read('content/catalog.json')).units, lessons=JSON.parse(await read('content/lessons.json'));
+const ordered=courseLearningOrder(units);
+for(const track of new Set(units.map(u=>u.track))){
+ const menu=Array.from(courseLessonList(ordered,lessons,track));
+ const expected=['beginner','intermediate','advanced'].flatMap(level=>ordered.filter(u=>u.track===track && u.level===level));
+ assert.deepEqual(menu.map(l=>l.id),expected.map(u=>u.id));
+ assert.equal(menu.length,units.filter(u=>u.track===track).length);
+ assert.equal(menu[menu.length],undefined,'the last lesson never wraps to the first');
+}
+const python=courseLessonList(ordered,lessons,'python');
+assert.equal(python.length,95);
+assert.equal(python[python.findIndex(l=>l.id==='python-93')+1].title,'Types & Comparisons');
 const app=await read('components/CodeQuest.tsx'),css=await read('app/globals.css');
 assert.doesNotMatch(app,/Lessons <Map|aria-haspopup="dialog"/);
 assert.equal((app.match(/id="unit-toc-toggle"/g)||[]).length,1);assert.equal((app.match(/className="secondary buddy-toggle-button"/g)||[]).length,1);
