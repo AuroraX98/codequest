@@ -1,3 +1,4 @@
+import { completionActivity } from "./learning-activity";
 import { projectChecks, hasTypeContracts } from "./project-checks";
 import { mergeBookmarks, type CourseBookmarks } from "./course-resume";
 import type { AIProvider } from "./ai-providers";
@@ -164,18 +165,7 @@ export class LearningClient {
     p.updatedAt = at;
     s.completed = s.progress.filter((p) => p.completedAt).length;
     s.xp = s.completed * 100;
-    const today = new Date().toISOString().slice(0, 10);
-    s.todayCompleted = s.recentDays.find((d) => d.day === today)?.count ?? 0;
-    const days = new Set(
-      s.recentDays.filter((d) => d.count > 0).map((d) => d.day),
-    );
-    const cursor = new Date(today + "T12:00:00Z");
-    if (!days.has(today)) cursor.setUTCDate(cursor.getUTCDate() - 1);
-    s.streak = 0;
-    while (days.has(cursor.toISOString().slice(0, 10))) {
-      s.streak++;
-      cursor.setUTCDate(cursor.getUTCDate() - 1);
-    }
+    Object.assign(s, completionActivity(s.recentDays));
     return s;
   }
   private adopt(r: Account) {
@@ -183,6 +173,7 @@ export class LearningClient {
     let state = { ...r.remote, profile: normalizeProfile(r.remote.profile) };
     for (const q of r.queue)
       state = this.apply(state, q.body, q.createdAt, false);
+    Object.assign(state, completionActivity(state.recentDays));
     this.current = state;
     this.status.pending = r.queue.length;
     this.status.conflict = r.conflict ?? null;

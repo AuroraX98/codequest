@@ -33,9 +33,11 @@ const completionModule={exports:{}};
 vm.runInNewContext(ts.transpileModule(await readFile('lib/lesson-completion.ts','utf8'),{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.CommonJS}}).outputText,{module:completionModule,exports:completionModule.exports});
 const completion=completionModule.exports;
 const checksModule={exports:{}};vm.runInNewContext(ts.transpileModule(await readFile('lib/project-checks.ts','utf8'),{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.CommonJS}}).outputText,{module:checksModule,exports:checksModule.exports});
+const providers={exports:{}};
+vm.runInNewContext(ts.transpileModule(await readFile('lib/ai-providers.ts','utf8'),{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.CommonJS}}).outputText,{module:providers,exports:providers.exports});
 const fixture={exports:{}};
 const source=ts.transpileModule(await readFile('app/api/quest/route.ts','utf8'),{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.CommonJS,esModuleInterop:true}}).outputText;
-vm.runInNewContext(source,{module:fixture,exports:fixture.exports,require:id=>id==='../../../lib/project-checks'?checksModule.exports:id==='../../../lib/server'?server:id==='../../../lib/lesson-completion'?completion:id==='../../../content/lessons.json'?[concept,...lessons]:id==='../../../content/catalog.json'?{...catalog,units:[{id:concept.id,track:'ai'},...catalog.units]}:require(id),crypto,Request,Response,Headers,URL,Date});
+vm.runInNewContext(source,{module:fixture,exports:fixture.exports,require:id=>id==='../../../lib/ai-providers'?providers.exports:id==='../../../lib/project-checks'?checksModule.exports:id==='../../../lib/server'?server:id==='../../../lib/lesson-completion'?completion:id==='../../../content/lessons.json'?[concept,...lessons]:id==='../../../content/catalog.json'?{...catalog,units:[{id:concept.id,track:'ai'},...catalog.units]}:require(id),crypto,Request,Response,Headers,URL,Date});
 const post=(body,origin='https://fixture.example')=>fixture.exports.POST(new Request('https://fixture.example/api/quest',{method:'POST',headers:{origin,'content-type':'application/json'},body:JSON.stringify(body)}));
 const finish={action:'completeConcept',unitId:concept.id,deviceScope:scope};
 const done=()=>database.prepare('SELECT completed_at,last_run FROM progress WHERE user_id=? AND unit_id=?').get('owner-a',concept.id);
@@ -117,7 +119,7 @@ try{
 }finally{database.close()}
 const temp=await mkdtemp(path.join(tmpdir(),'codequest-concept-client-'));
 try{
- for(const name of ['learning-client','device-db','profile','project-checks','course-resume','navigation']){const js=ts.transpileModule(await readFile(`lib/${name}.ts`,'utf8'),{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.ESNext}}).outputText.replace(/from "\.\/([^\"]+)"/g,'from "./$1.mjs"');await writeFile(path.join(temp,name+'.mjs'),js)}
+ for(const name of ['learning-activity','learning-client','device-db','profile','project-checks','course-resume','navigation']){const js=ts.transpileModule(await readFile(`lib/${name}.ts`,'utf8'),{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.ESNext}}).outputText.replace(/from "\.\/([^\"]+)"/g,'from "./$1.mjs"');await writeFile(path.join(temp,name+'.mjs'),js)}
  const {LearningClient}=await import(pathToFileURL(path.join(temp,'learning-client.mjs')));
  const {defaultProfile}=await import(pathToFileURL(path.join(temp,'profile.mjs')));
  const {readDevice}=await import(pathToFileURL(path.join(temp,'device-db.mjs')));

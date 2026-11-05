@@ -22,7 +22,7 @@ export default function CourseProjectStudio({ project, lesson, scope, initialCod
   const saveQueue = useRef<Promise<unknown>>(Promise.resolve());
   useEffect(() => {
     const id = ++generation.current;
-    loadCourseProject(scope, seed.project, seed.initialCode).then(value => { if (id === generation.current) { latest.current = value; setDraft(value); setStatus("Saved on this device"); } }).catch(() => { if (id === generation.current) setError("Could not load your saved project. Reload before editing."); });
+    loadCourseProject(scope, seed.project, seed.initialCode).then(value => { if (id === generation.current) { latest.current = value; setDraft(value); setStatus("Project ready."); } }).catch(() => { if (id === generation.current) setError("Could not load your saved project. Reload before editing."); });
     return () => { generation.current = id + 1; abort.current?.abort(); };
   }, [scope, seed]);
   const persist = async (next: CourseProjectDraft) => {

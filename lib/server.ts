@@ -1,3 +1,4 @@
+import { completionActivity } from "./learning-activity";
 import { env } from "cloudflare:workers";
 import { getChatGPTUser } from "../app/chatgpt-auth";
 import type { Profile, QuestState, Progress } from "./types";
@@ -57,23 +58,14 @@ export async function state(user: string): Promise<QuestState> {
     )
     .bind(user)
     .all<Progress>();
+  const today = new Date().toISOString().slice(0, 10);
   const days = await db()
     .prepare(
-      "SELECT day,completed AS count,tutor_used FROM activity WHERE user_id=? ORDER BY day DESC LIMIT 370",
+      "SELECT day,completed AS count,tutor_used FROM activity WHERE user_id=? AND (completed>0 OR day=?) ORDER BY day DESC",
     )
-    .bind(user)
+    .bind(user, today)
     .all<{ day: string; count: number; tutor_used: number }>();
-  const today = new Date().toISOString().slice(0, 10);
-  let streak = 0;
-  const set = new Set(
-    days.results.filter((d) => d.count > 0).map((d) => d.day),
-  );
-  const cursor = new Date(today + "T12:00:00Z");
-  if (!set.has(today)) cursor.setUTCDate(cursor.getUTCDate() - 1);
-  while (set.has(cursor.toISOString().slice(0, 10))) {
-    streak++;
-    cursor.setUTCDate(cursor.getUTCDate() - 1);
-  }
+  const {streak, todayCompleted} = completionActivity(days.results, today);
   const completed = rows.results.filter((r) => r.completedAt).length;
   const draftScope = await accountScope(user);
   const { aiDisconnected, ...settings } = JSON.parse(p!.settings);
@@ -87,7 +79,7 @@ export async function state(user: string): Promise<QuestState> {
     xp: completed * 100,
     completed,
     streak,
-    todayCompleted: days.results.find((d) => d.day === today)?.count ?? 0,
+    todayCompleted,
     keyConnected: !!aiProvider,
     aiProvider,
     tutorUsed: days.results.find((d) => d.day === today)?.tutor_used ?? 0,

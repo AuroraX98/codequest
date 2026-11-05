@@ -40,7 +40,7 @@ import APIKeyFileSettings, {
 import { providers, selectedModel } from "../lib/ai-providers";
 import LearningSettings from "./LearningSettings";
 import LessonContent, { InlineCode } from "./LessonContent";
-import { GlossaryScope, GlossaryText } from "./LessonGlossary";
+import { GlossaryScope } from "./LessonGlossary";
 import CodeEditor from "./CodeEditor";
 import CourseProjectStudio from "./CourseProjectStudio";
 import { projectsForLesson, missingProjectReading } from "../lib/course-projects";
@@ -59,6 +59,9 @@ import {getUnitContents} from "../lib/unit-toc";
 import UnitTableOfContents from "./UnitTableOfContents";
 import Terminology from "./Terminology";
 import LessonCompletion from "./LessonCompletion";
+import SavedLearning from "./SavedLearning";
+import ProgressStats from "./ProgressStats";
+import SavedDeviceProjects, {type DeviceProjectTarget} from "./SavedDeviceProjects";
 import ReadingMark from "./ReadingMark";
 import { useReadingProgress } from "../lib/reading-client";
 import { getLessonHeadings } from "../lib/lesson-headings";
@@ -214,6 +217,7 @@ export default function CodeQuest({
   });
   const [helperText, setHelperText] = useState("");
   const [selectedCourseProject, setSelectedCourseProject] = useState("");
+  const [progressProject, setProgressProject] = useState<DeviceProjectTarget & {scope: string}>();
   const [returnToProject, setReturnToProject] = useState<string | null>(null);
   const [state, setState] = useState<QuestState>(empty),
     [ready, setReady] = useState(false),
@@ -350,6 +354,7 @@ export default function CodeQuest({
     catch { setSelectedCourseProject(""); }
   }, [state.draftScope, activeId]);
   const chooseCourseProject = (id: string) => {
+    setProgressProject(undefined);
     setSelectedCourseProject(id);
     try { localStorage.setItem(`codequest-project-choice:${state.draftScope}:${activeId}`, id); } catch {}
   };
@@ -360,7 +365,8 @@ export default function CodeQuest({
 
   const syncLabel = deviceStatusLabel(deviceStatus, localMode);
   const availableCourseProjects = projectsForLesson(activeId);
-  const selectedProject = availableCourseProjects.find(p => p.id === selectedCourseProject) ?? availableCourseProjects[0];
+  const openedProject = progressProject?.scope === state.draftScope && progressProject.lessonId === activeId ? progressProject : undefined;
+  const selectedProject = availableCourseProjects.find(p => p.id === (openedProject?.guidedId ?? selectedCourseProject)) ?? availableCourseProjects[0];
   const projectReadingMissing = lesson ? missingProjectReading(lesson, reading.records) : [];
   const progress = state.progress.find((p) => p.unitId === unit?.id);
   const tutorContext = [
@@ -817,13 +823,14 @@ export default function CodeQuest({
     setState(d);
     if (phase === "math") setPhase("build");
   };
-  const select = async (id: string, entry?: Pick<PythonTool, "paragraph" | "concept">, destination: "quest" | "path" = "quest") => {
+  const select = async (id: string, entry?: Pick<PythonTool, "paragraph" | "concept">, destination: "quest" | "path" | "studio" = "quest", projectTarget?: DeviceProjectTarget) => {
     if (completionLock.current) return;
     const sequence = ++navigationSequence.current;
+    const nextPhase = destination === "studio" ? "build" : "learn";
     navigationPending.current = routeHash({
       view: destination,
-      studioMode,
-      phase: "learn",
+      studioMode: destination === "studio" ? "course" : studioMode,
+      phase: nextPhase,
       activeId: id,
       paragraph: entry?.paragraph ?? 0,
       concept: entry?.concept,
@@ -853,8 +860,12 @@ export default function CodeQuest({
       setConceptTarget(entry?.concept);
       if (id === "python-input" && entry) setInputJump({index: entry.paragraph, token: Date.now()});
       if (entry?.concept) setNoteSection({lessonId:id,key:"concept:"+entry.concept});
+      if (destination === "studio") {
+        setStudioMode("course");
+        setProgressProject(projectTarget && {...projectTarget, scope:d.draftScope});
+      }
       setView(destination);
-      setPhase("learn");
+      setPhase(nextPhase);
       setResumeOffer(null);
     } catch (e) {
       if (sequence === navigationSequence.current)
@@ -1658,7 +1669,7 @@ export default function CodeQuest({
                       }}>{completing ? "Saving…" : "Finish this concept lesson"}</button>
                       {!reading.online && <p>Reconnect to verify saved reading and record completion. You can still read offline.</p>}
                     </div>}
-                    {phase === "build" && isConcept && <LocalCourseProject key={`${state.draftScope}:${lesson.id}`} unit={unit} lesson={lesson} scope={state.draftScope} onStudy={index=>{setView("quest");setPhase("learn");setParagraph(index);}} />}
+                    {phase === "build" && isConcept && <LocalCourseProject key={`${state.draftScope}:${lesson.id}`} unit={unit} lesson={lesson} scope={state.draftScope} initialExampleId={openedProject?.exampleId} onStudy={index=>{setView("quest");setPhase("learn");setParagraph(index);}} />}
                     {phase === "build" && !isConcept && selectedProject && (
                       <>
                         <div className="panel project-brief"><h3>Choose a Python Basics project</h3>
@@ -2494,26 +2505,10 @@ export default function CodeQuest({
                 <p className="eyebrow">LOOK HOW FAR YOU’VE COME</p>
                 <h1>Your progress, one step at a time.</h1>
                 <p>
-                  The skills you practice become projects you can return to.
+                  See what you’ve finished and reopen saved work from any course.
                 </p>
               </div>
-              <div className="stats-grid">
-                <div className="panel">
-                  <Trophy />
-                  <strong>{state.completed}</strong>
-                  <span>Quests finished</span>
-                </div>
-                <div className="panel reward-stat">
-                  <Zap />
-                  <strong>{state.xp}</strong>
-                  <span>Experience points (XP) earned</span>
-                </div>
-                <div className="panel reward-stat">
-                  <Flame />
-                  <strong>{state.streak}</strong>
-                  <span>Day streak</span>
-                </div>
-              </div>
+              <ProgressStats state={state} />
               <div className="panel milestones">
                 <h3>Your milestones</h3>
                 <div className="badges">
@@ -2532,43 +2527,22 @@ export default function CodeQuest({
                     >
                       <Star size={27} />
                       <b>{b.name}</b>
-                      <small>{b.goal} finished quests</small>
+                      <small>{state.completed >= b.goal ? "Earned" : "Goal"} · {b.goal} {b.goal === 1 ? "finished lesson" : "finished lessons"}</small>
                     </div>
                   ))}
                 </div>
               </div>
-              <div className="panel">
-                <h3>Your saved learning</h3>
-                <p>
-                  Your saved lessons and projects belong here, including work you’re still figuring out.
-                </p>
-                {state.progress.length === 0 ? (
-                  <p className="muted">
-                    Start a lesson or save a project and it will appear here.
-                  </p>
-                ) : (
-                  state.progress.map((p) => {
-                    const u = units.find((u) => u.id === p.unitId);
-                    return (
-                      <button
-                        className="portfolio-row"
-                        key={p.unitId}
-                        onClick={() => select(p.unitId)}
-                      >
-                        {lessons.find(l => l.id === p.unitId)?.learningMode === "concept" ? <BookOpen size={20} /> : <Braces size={20} />}
-                        <span>
-                          <b>{u?.project.title ?? p.unitId}</b>
-                          <small>
-                            {u && names[u.track]} ·{" "}
-                            {p.completedAt ? "Finished" : "In progress"}
-                          </small>
-                        </span>
-                        <ArrowRight size={18} />
-                      </button>
-                    );
-                  })
-                )}
-              </div>
+              <SavedLearning lessons={lessons} units={units} progress={state.progress} reading={reading} courseNames={names}
+                onLesson={(id, idea) => void select(id, id === "python-01"
+                  ? {paragraph: 0, concept: pythonConcepts[idea]?.id}
+                  : {paragraph: idea})}
+                onProject={id => {
+                  const core = projectsForLesson(id).find(project=>project.core);
+                  void select(id, undefined, "studio", core ? {lessonId:id, guidedId:core.id} : undefined);
+                }}
+              />
+              <SavedDeviceProjects key={state.draftScope} scope={state.draftScope} units={units} lessons={lessons} names={names}
+                onOpen={target=>void select(target.lessonId, undefined, "studio", target)} />
             </>
           )}
           {ready && view === "settings" && (
@@ -2637,7 +2611,7 @@ export default function CodeQuest({
                   <label className="setting-row setting-field">
                     <span>
                       <b>Daily goal</b>
-                      <small>Finished projects. One is a good start.</small>
+                      <small>Lessons to finish each day. One is a good start.</small>
                     </span>
                     <input
                       type="number"

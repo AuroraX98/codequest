@@ -8,7 +8,7 @@ import "fake-indexeddb/auto";
 
 const temp = await mkdtemp(path.join(tmpdir(), "codequest-action-scope-"));
 try {
-  for (const name of ["learning-client", "device-db", "profile", "project-checks", "course-resume", "navigation"]) {
+  for (const name of ["learning-activity","learning-client", "device-db", "profile", "project-checks", "course-resume", "navigation"]) {
     const source = await readFile(`lib/${name}.ts`, "utf8");
     const compiled = ts
       .transpileModule(source, {

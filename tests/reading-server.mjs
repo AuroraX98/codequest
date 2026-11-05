@@ -128,6 +128,7 @@ try {
   );
   let user = userA;
   const server = await load("lib/server.ts", {
+    "./learning-activity": await load("lib/learning-activity.ts", {}),
     "cloudflare:workers": { env: { DB: d1 } },
     "../app/chatgpt-auth": {
       getChatGPTUser: async () => (user ? { userId: user } : null),

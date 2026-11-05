@@ -36,6 +36,7 @@ const load = async (file) => {
   if (modules.has(file)) return modules.get(file);
   const imports = {};
   if (file === "lib/server.ts") {
+    imports["./learning-activity"] = await load("lib/learning-activity.ts");
     imports["cloudflare:workers"] = { env };
     imports["../app/chatgpt-auth"] = {
       getChatGPTUser: async () => ({ userId: "learner-a" }),

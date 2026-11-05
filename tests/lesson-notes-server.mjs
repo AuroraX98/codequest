@@ -3,6 +3,7 @@ import { readFile, readdir } from "node:fs/promises";
 import { createRequire } from "node:module";
 import { DatabaseSync } from "node:sqlite";
 import vm from "node:vm";
+import path from "node:path";
 import ts from "typescript";
 
 const require = createRequire(import.meta.url);
@@ -15,6 +16,11 @@ const load = async (file, imports = {}) => {
       esModuleInterop: true,
     },
   }).outputText;
+  for (const [,spec] of compiled.matchAll(/require\(["'](\.[^"']+)["']\)/g)) {
+    if (spec in imports) continue;
+    const target=path.resolve(path.dirname(file),spec);
+    imports[spec]=spec.endsWith(".json") ? JSON.parse(await readFile(target,"utf8")) : await load(target+".ts");
+  }
   vm.runInNewContext(
     compiled,
     {
@@ -107,6 +113,7 @@ try {
   let user = userA;
   // Test the actual production authentication, origin, and scope helpers.
   const server = await load("lib/server.ts", {
+    "./learning-activity": await load("lib/learning-activity.ts", {}),
     "cloudflare:workers": { env: { DB: d1 } },
     "../app/chatgpt-auth": {
       getChatGPTUser: async () => (user ? { userId: user } : null),

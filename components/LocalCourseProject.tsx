@@ -7,14 +7,14 @@ import {studyLabel} from "../lib/study-label";
 import CodeEditor from "./CodeEditor";
 import LessonContent from "./LessonContent";
 
-export default function LocalCourseProject({unit,lesson,scope,onStudy}:{unit:Unit;lesson:Lesson;scope:string;onStudy:(paragraph:number)=>void}){
+export default function LocalCourseProject({unit,lesson,scope,onStudy,initialExampleId}:{unit:Unit;lesson:Lesson;scope:string;initialExampleId?:string;onStudy:(paragraph:number)=>void}){
   const examples=localProjectExamples(unit,lesson);
   const storageKey=localProjectStorageKey(scope,lesson.id);
   const [drafts,setDrafts]=useState<Record<string,string>>(()=>{
     if(!scope)return {};
     try{const value=JSON.parse(localStorage.getItem(storageKey)??"{}");return value&&typeof value==="object"?Object.fromEntries(Object.entries(value).filter(([,v])=>typeof v==="string")) as Record<string,string>:{};}catch{return {};}
   });
-  const [selected,setSelected]=useState(examples[0]?.id??"");
+  const [selected,setSelected]=useState(examples.find(e=>e.id===initialExampleId)?.id??examples[0]?.id??"");
   const [status,setStatus]=useState("Local practice is separate from course completion.");
   const [showSetup,setShowSetup]=useState(false);
   const example=examples.find(e=>e.id===selected)??examples[0];
