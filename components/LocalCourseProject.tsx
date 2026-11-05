@@ -18,6 +18,7 @@ export default function LocalCourseProject({unit,lesson,scope,onStudy,initialExa
   const [status,setStatus]=useState("Local practice is separate from course completion.");
   const [showSetup,setShowSetup]=useState(false);
   const example=examples.find(e=>e.id===selected)??examples[0];
+  const reviewingChanges = example?.language === "diff";
   const code=example?(drafts[example.id]??example.code):"";
   const change=(value:string)=>{
     if(!example)return;
@@ -45,23 +46,23 @@ export default function LocalCourseProject({unit,lesson,scope,onStudy,initialExa
         <p>Use the selected example and its lesson instructions. Local edits and downloads do not mark this lesson complete.</p>
         <button className="secondary project-study-button" onClick={()=>onStudy(example.paragraph)}>{studyLabel(lesson.title)}</button>
         {examples.length>1&&<label>Worked example<select value={example.id} onChange={e=>{setSelected(e.target.value);setShowSetup(false);setStatus("Each example keeps its own device-local draft.");}}>{examples.map(e=><option key={e.id} value={e.id}>{e.title} · {codeLabel(e.language)} · {e.standalone?"complete example":"snippet / fragment"}</option>)}</select></label>}
-        <p>{example.standalone?"The lesson identifies this as a complete local example. Its stated toolchain, files and setup are still required.":"This is an illustrative snippet or fragment, not a certified standalone program. Read its context before adapting it into a local project."}</p>
+        <p>{reviewingChanges ? "Read each minus line as old code and each plus line as new code." : example.standalone?"The lesson identifies this as a complete local example. Its stated toolchain, files and setup are still required.":"This is an illustrative snippet or fragment, not a certified standalone program. Read its context before adapting it into a local project."}</p>
       </div>
       <div id="course-project-editor" tabIndex={-1} className="panel editor-panel">
         <div className="editor-bar"><span>{codeLabel(example.language)} · {example.filename}</span><span role="status">{status}</span></div>
         <CodeEditor code={code} onChange={change} runtime={example.language} unitId={`${scope}:${lesson.id}:${example.id}`} />
         <div className="editor-actions">
-          <button className="primary" aria-expanded={showSetup} onClick={()=>setShowSetup(v=>!v)}>Run locally guidance</button>
+          <button className="primary" aria-expanded={showSetup} onClick={()=>setShowSetup(v=>!v)}>{reviewingChanges ? "Review the change" : "Run locally guidance"}</button>
           <button className="secondary" onClick={async()=>{try{await navigator.clipboard.writeText(code);setStatus("Copied your current code.");}catch{setStatus("Copy was unavailable. Select the code or download it.");}}}>Copy code</button>
           <button className="secondary" onClick={download}>Download code</button>
         </div>
-        <p className="notice">This lesson has no in-app {codeLabel(example.language)} runner. These controls do not execute code, verify results or award completion.</p>
+        {!reviewingChanges && <p className="notice">This lesson has no in-app {codeLabel(example.language)} runner. These controls do not execute code, verify results or award completion.</p>}
         {showSetup&&<div className="local-project-setup">
-          <h3>Use the lesson’s local setup</h3>
-          <p>{example.standalone?"Save the example with the filename required by its instructions, install the stated tools, and follow the commands taught in the lesson. Downloading alone does not run it.":"Do not assume this fragment can run by itself. First supply the surrounding program and setup taught in the lesson; no generic run command is provided."}</p>
+          <h3>{reviewingChanges ? "Read the proposed change" : "Use the lesson’s local setup"}</h3>
+          <p>{reviewingChanges ? "Compare the old and new lines. Tell a teammate what would change." : example.standalone?"Save the example with the filename required by its instructions, install the stated tools, and follow the commands taught in the lesson. Downloading alone does not run it.":"Do not assume this fragment can run by itself. First supply the surrounding program and setup taught in the lesson; no generic run command is provided."}</p>
           {example.context&&<LessonContent text={example.context} runtime={example.language}/>}
           {lesson.externalNotes&&<p>{lesson.externalNotes}</p>}
-          <button className="secondary project-study-button" onClick={()=>onStudy(example.paragraph)}>Read setup and example context</button>
+          <button className="secondary project-study-button" onClick={()=>onStudy(example.paragraph)}>{reviewingChanges ? "Read the lesson example" : "Read setup and example context"}</button>
         </div>}
       </div>
     </>}

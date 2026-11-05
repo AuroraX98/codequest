@@ -29,5 +29,14 @@ function orderTrack(units: Unit[], track: string, seed: string[]): Unit[] {
 }
 export function courseLearningOrder(units: Unit[]): Unit[] {
   const ordered = orderTrack(orderTrack(orderTrack(orderTrack(orderTrack(orderTrack(orderTrack(orderTrack(units, "python", route.recommendedSeedOrder), "javascript", javascriptRoute.recommendedSeedOrder), "html", htmlRoute.recommendedSeedOrder), "css", cssRoute.recommendedSeedOrder), "typescript", typescriptRoute.recommendedSeedOrder), "react", reactRoute.recommendedSeedOrder), "sql", sqlRoute.recommendedSeedOrder), "swift", swiftRoute.recommendedSeedOrder);
-  return orderTrack(ordered, "backend", backendRoute.recommendedSeedOrder);
+  const result = orderTrack(ordered, "backend", backendRoute.recommendedSeedOrder);
+  // Place follow-up lessons beside their anchor without shifting existing lessons past one another.
+  for (const unit of units) {
+    if (!unit.study_after) continue;
+    const anchor = result.find(item => item.id === unit.study_after && item.track === unit.track);
+    if (!anchor) continue;
+    result.splice(result.indexOf(unit), 1);
+    result.splice(result.indexOf(anchor) + 1, 0, unit);
+  }
+  return result;
 }

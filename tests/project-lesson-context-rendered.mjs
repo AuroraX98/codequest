@@ -56,7 +56,7 @@ const names=vm.runInContext('(function(){'+ts.transpileModule(namesSource,{compi
 const root=createRoot(document.getElementById('root'));
 const counts={ordinary:0,guided:0,local:0,exploration:0};
 const tracks=[...new Set(units.map(u=>u.track))];
-assert.equal(tracks.length,21);assert.equal(lessons.length,1221);
+assert.equal(tracks.length,21);assert.equal(lessons.length,units.length);
 function verify(unit){
  const lesson=lessons.find(l=>l.id===unit.id);
  assert.equal(exposed.activeId,unit.id);assert.equal(exposed.state.profile.activeUnit,unit.id);assert.equal(exposed.state.profile.track,unit.track);assert.equal(exposed.error,'');
@@ -87,5 +87,5 @@ try{
  assert.equal(counts.exploration,0,'Every current concept lesson offers a local code example');
  assert.equal(saves,units.length+tracks.length);
  assert.equal(loads,saves);
- console.log('PASS rendered project headings and lesson links for 21 courses and 1221 lessons; branches '+JSON.stringify(counts));
+ console.log('PASS rendered project headings and lesson links for '+tracks.length+' courses and '+lessons.length+' lessons; branches '+JSON.stringify(counts));
 }finally{await act(async()=>root.unmount());dom.window.close();}

@@ -79,9 +79,9 @@ try{
  const byId=id=>terms.find(term=>term.id===id);
  for(const course of new Set(tracks.values())){
    assert.equal(terminologyInLanguage(byId('backpropagation'),course),course==='ai');
-   assert.equal(terminologyInLanguage(byId('lgtm'),course),false);
+   assert.equal(terminologyInLanguage(byId('lgtm'),course),course==='developer-toolkit');
  }
- assert.equal(terminologyInLanguage(byId('lgtm'),'reference'),true);
+ assert.deepEqual(terms.filter(term => terminologyInLanguage(term, 'reference')).map(term => term.id).sort(), ['bikeshedding','yak-shaving']);
  assert.equal(readTerminologyState('{"selectedId":"token","selectedCourse":"developer-toolkit"}').selectedCourse,'developer-toolkit');
  assert.equal(terminologyInLanguage(byId('sql-index'),'sql'),true);
  assert.equal(terminologyInLanguage(byId('index'),'sql'),false);

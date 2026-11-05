@@ -50,7 +50,7 @@ const fixtureVisuals = Object.fromEntries(['sequence', 'compare', 'collection', 
 const compile = async (bundle, files) => {
   const dir = path.join(temp, bundle);
   await mkdir(dir, { recursive: true });
-  if (files.includes('components/LessonContent.tsx')) files = [...new Set([...files, 'components/CodeAnatomy.tsx', 'components/LessonGlossary.tsx', 'lib/lesson-glossary.ts', 'lib/code-anatomy.ts', 'lib/swift-code-words.ts', 'lib/csharp-reviewed-anatomy.ts', 'lib/cpp-reviewed-anatomy.ts', 'lib/java-reviewed-anatomy.ts', 'lib/c-reviewed-anatomy.ts', 'lib/kotlin-reviewed-anatomy.ts', 'lib/rust-reviewed-anatomy.ts', 'lib/php-reviewed-anatomy.ts', 'lib/ruby-reviewed-anatomy.ts', 'lib/r-reviewed-anatomy.ts', 'lib/go-reviewed-anatomy.ts'])];
+  if (files.includes('components/LessonContent.tsx')) files = [...new Set([...files, 'components/CodeAnatomy.tsx', 'components/LessonGlossary.tsx', 'lib/lesson-glossary.ts', 'lib/term-senses.ts', 'lib/code-anatomy.ts', 'lib/swift-code-words.ts', 'lib/csharp-reviewed-anatomy.ts', 'lib/cpp-reviewed-anatomy.ts', 'lib/java-reviewed-anatomy.ts', 'lib/c-reviewed-anatomy.ts', 'lib/kotlin-reviewed-anatomy.ts', 'lib/rust-reviewed-anatomy.ts', 'lib/php-reviewed-anatomy.ts', 'lib/ruby-reviewed-anatomy.ts', 'lib/r-reviewed-anatomy.ts', 'lib/go-reviewed-anatomy.ts', 'lib/term-lesson-visuals.ts'])];
   if (files.includes('lib/lesson-headings.ts')) {
     files = [...new Set([...files, 'lib/additional-unit-contents.ts', 'lib/remaining-lesson-headings.ts'])];
     const headingsSource = await readFile(path.join(cwd, 'lib/lesson-headings.ts'), 'utf8');
@@ -310,7 +310,7 @@ try {
     assert.deepEqual(new Set(calls.map(node => node.expression.getText(ast))), new Set(['setParagraph', 'setNoteSection']), 'A TOC click changes position and annotation context only, not progress or completion');
     const reading = descendants.find(node => tag(node) === 'LessonStepFlow');
     assert.equal(attr(reading, 'text').initializer.expression.getText(ast).replace(/\s/g, '').replace(/,\)/g, ')'), 'lesson.explanation[Math.min(paragraph,lesson.explanation.length-1)]');
-    assert.equal(attr(reading, 'runtime').initializer.expression.getText(ast), 'lesson.runtime');
+    assert.equal(attr(reading, 'runtime').initializer.expression.getText(ast), 'readingLanguage');
     assert.equal(attr(reading, 'backDisabled').initializer.expression.getText(ast).replace(/\s/g, ''), 'paragraph===0');
     const backText = attr(reading, 'onBack').initializer.expression.getText(ast).replace(/\s/g, '');
     const nextText = attr(reading, 'onNext').initializer.expression.getText(ast).replace(/\s/g, '');

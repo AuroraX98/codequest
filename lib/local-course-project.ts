@@ -8,7 +8,7 @@ export type LocalProjectExample = {
 const extensions: Record<string,string> = {
   csharp:"cs",cpp:"cpp",c:"c",java:"java",kotlin:"kt",go:"go",rust:"rs",
   php:"php",ruby:"rb",r:"R",swift:"swift",python:"py",javascript:"js",
-  typescript:"ts",html:"html",css:"css",sql:"sql",bash:"sh",sh:"sh",json:"json"
+  typescript:"ts",html:"html",css:"css",sql:"sql",bash:"sh",sh:"sh",json:"json",diff:"diff"
 };
 function fingerprint(text: string) {
   let value=2166136261;for(let i=0;i<text.length;i++)value=Math.imul(value^text.charCodeAt(i),16777619);

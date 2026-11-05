@@ -6,7 +6,7 @@ def read(p):return json.loads((r/p).read_text(encoding='utf8'))
 ls={l['id']:l for l in read('content/lessons.json')};units=read('content/catalog.json')['units']
 tracks={}
 for u in units:tracks.setdefault(u['track'],[]).append(u['id'])
-assert len(tracks)==21 and len(ls)==len(units)==1221 and set(ls)=={u['id'] for u in units}
+assert len(tracks)==21 and len(ls)==len(units)==1231 and set(ls)=={u['id'] for u in units}
 report={}
 for course,route in tracks.items():
  heads=read(f'content/{course}-reviewed-headings.json');assert set(route)==set(heads),course
@@ -26,7 +26,7 @@ for course,route in tracks.items():
   for ch in receipt['changes']:assert ch['after']==l[ch['field']],(id,ch['field'])
  native=read(f'docs/{course}-wording-v1/native-results.json');assert len(native)==2*len(route) and all(f['pass'] for f in native)
  report[course].update(workedExamples=len(examples),nativeChecks=len(native))
-assert sum(t['sections'] for t in report.values())==7102
+assert sum(t['sections'] for t in report.values())==7112
 terms=read('content/terminology.json')
 for c in ('rust','php','ruby','r'):
  changes=read(f'docs/{c}-wording-v1/terminology-wording.json')
@@ -36,6 +36,4 @@ for c in ('rust','php','ruby','r'):
   for link in entry['links']:
    assert link['lessonId'] in ls and 0<=link['paragraph']<len(ls[link['lessonId']]['explanation'])
  report[c]['simplifiedDefinitions']=len(changes)
-data={'courses':len(report),'lessons':len(ls),'sections':7102,'courseDetail':report}
-(r/'docs/r-wording-v1/final-catalog.json').write_text(json.dumps(data,indent=2)+'\n',encoding='utf8')
-print('PASS:',len(report),'courses,',len(ls),'lessons, 7102 section headings; 268 final-course examples, 536 native checks.')
+print('PASS:',len(report),'courses,',len(ls),'lessons, 7112 section headings; 268 final-course examples, 536 native checks.')

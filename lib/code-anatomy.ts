@@ -1,4 +1,5 @@
 import type { SyntaxNode } from "@lezer/common";
+import { termLessonTokens } from "./term-lesson-visuals";
 import { codeLanguage } from "./code-language";
 import { swiftCodeWord } from "./swift-code-words";
 import { reviewedCSharpAnatomy, csharpMeanings } from "./csharp-reviewed-anatomy";
@@ -1344,7 +1345,7 @@ function parsedTokens(source: string, language: string): AnatomyToken[] {
 export function codeAnatomy(source: string, requestedLanguage: string): CodeAnatomyModel {
   const language = anatomyLanguage(requestedLanguage);
   if (!supportsCodeAnatomy(language)) return { source, language, lines: [] };
-  const tokens = parsedTokens(source, language);
+  const tokens = termLessonTokens(source, language) ?? parsedTokens(source, language);
   const lines: AnatomyLine[] = [];
   let from = 0;
   for (const [index, raw] of source.split("\n").entries()) {

@@ -2,7 +2,7 @@
 
 [**Open CodeQuest and start learning**](https://codequest.aurorax.chatgpt.site/)
 
-CodeQuest teaches coding one idea at a time. Read a short explanation, tap a piece of code to see what it does, then try it yourself. It’s for first-time coders and for people who want practice with a language they’ve used before. There are **21 courses and 1,221 lessons**.
+CodeQuest teaches coding one idea at a time. Read a short explanation, tap a piece of code to see what it does, then try it yourself. It’s for first-time coders and for people who want practice with a language they’ve used before. There are **21 courses and 1,231 lessons**.
 
 ## Start in your browser
 

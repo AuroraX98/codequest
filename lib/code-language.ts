@@ -68,6 +68,7 @@ export function codeLabel(language: string) {
     sh: "Terminal",
     shell: "Terminal",
     json: "JSON",
+    diff: "Code changes",
     text: "Text",
     output: "Output",
   };

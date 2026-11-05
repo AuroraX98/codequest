@@ -11,7 +11,7 @@ import { JSDOM } from 'jsdom';
 
 const cwd = fileURLToPath(new URL('..', import.meta.url));
 const temp = await mkdtemp(path.join(tmpdir(), 'codequest-anatomy-'));
-const files = ['lib/code-language.ts', 'lib/code-anatomy.ts', 'lib/swift-code-words.ts', 'lib/csharp-reviewed-anatomy.ts', 'lib/cpp-reviewed-anatomy.ts', 'lib/java-reviewed-anatomy.ts', 'lib/c-reviewed-anatomy.ts', 'lib/kotlin-reviewed-anatomy.ts', 'lib/rust-reviewed-anatomy.ts', 'lib/php-reviewed-anatomy.ts', 'lib/ruby-reviewed-anatomy.ts', 'lib/r-reviewed-anatomy.ts', 'lib/go-reviewed-anatomy.ts', 'components/CodeAnatomy.tsx', 'components/LessonGlossary.tsx', 'lib/lesson-glossary.ts'];
+const files = ['lib/code-language.ts', 'lib/code-anatomy.ts', 'lib/term-lesson-visuals.ts', 'lib/swift-code-words.ts', 'lib/csharp-reviewed-anatomy.ts', 'lib/cpp-reviewed-anatomy.ts', 'lib/java-reviewed-anatomy.ts', 'lib/c-reviewed-anatomy.ts', 'lib/kotlin-reviewed-anatomy.ts', 'lib/rust-reviewed-anatomy.ts', 'lib/php-reviewed-anatomy.ts', 'lib/ruby-reviewed-anatomy.ts', 'lib/r-reviewed-anatomy.ts', 'lib/go-reviewed-anatomy.ts', 'components/CodeAnatomy.tsx', 'components/LessonGlossary.tsx', 'lib/lesson-glossary.ts', 'lib/term-senses.ts'];
 const reports = [];
 const check = async (name, fn) => { await fn(); reports.push(name); };
 try {

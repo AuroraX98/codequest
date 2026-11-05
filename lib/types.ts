@@ -10,6 +10,7 @@ export type Runtime =
   | "swift";
 export type Unit = {
   prerequisite_ids?: string[];
+  study_after?: string;
   id: string;
   track: string;
   level: string;
