@@ -33,10 +33,10 @@ for (const term of terms) {
   assert.deepEqual(new Set(term.languages??[]),sources,term.id+' must have only its sourced courses');
 }
 const dir=new URL('../.sites-runtime/terminology-test/',import.meta.url);await fs.mkdir(dir,{recursive:true});
-for(const [file,name]of [['lib/term-senses.ts','term-senses'],['lib/course-order.ts','course-order'],['lib/terminology.ts','terminology'],['lib/study-label.ts','study-label'],['lib/navigation.ts','navigation'],['components/Terminology.tsx','terminology-view']]){
+for(const [file,name]of [['lib/term-senses.ts','term-senses'],['lib/course-order.ts','course-order'],['lib/terminology.ts','terminology'],['lib/study-label.ts','study-label'],['lib/navigation.ts','navigation'],['components/WorkspaceTitle.tsx','WorkspaceTitle'],['components/Terminology.tsx','terminology-view']]){
  let source=await read(file);source=source.replace("import data from '../content/terminology.json';",'const data='+JSON.stringify(terms)+';').replace("import catalog from '../content/catalog.json';",'const catalog='+JSON.stringify({units})+';');
  const compiled=ts.transpileModule(source,{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.ESNext,jsx:ts.JsxEmit.ReactJSX}}).outputText;
- const out=compiled.replace(/(['"])(?:\.\.\/lib\/|\.\/)(term-senses|course-order|study-label|terminology)\1/g,(_,quote,module)=>quote+'./'+module+'.mjs'+quote);
+ const out=compiled.replace(/(['"])(?:\.\.\/lib\/|\.\/)(term-senses|course-order|study-label|terminology|WorkspaceTitle)\1/g,(_,quote,module)=>quote+'./'+module+'.mjs'+quote);
  await fs.writeFile(new URL(name+'.mjs',dir),out);
 }
 const {terminologyMatches,terminologyInLanguage,readTerminologyState,taughtTermLinks}=await import(new URL('terminology.mjs',dir));

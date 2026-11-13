@@ -32,7 +32,7 @@ export default function LessonContents({
             Idea {index + 1} of {headings.length}
           </span>
         </div>
-        <h3 id={`${id}-current`}>{headings[index]}</h3>
+        <h2 id={`${id}-current`}>{headings[index]}</h2>
         <div
           role="region"
           aria-labelledby={`${id}-current`}

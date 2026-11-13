@@ -177,7 +177,7 @@ export default function LessonContent({
 }: {
   text: string;
   runtime: string;
-  as?: "p" | "h3" | "h4";
+  as?: "p" | "h2" | "h3" | "h4";
   className?: string;
   bulletPoints?: boolean;
   glossary?: boolean;

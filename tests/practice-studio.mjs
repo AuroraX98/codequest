@@ -88,6 +88,7 @@ try {
   );
   for (const file of [
     "components/PracticeStudio.tsx",
+    "components/WorkspaceTitle.tsx",
     "lib/course-order.ts",
     "lib/practice-storage.ts",
     "lib/practice-project.ts",

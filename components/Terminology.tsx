@@ -1,4 +1,5 @@
 'use client';
+import WorkspaceTitle from "./WorkspaceTitle";
 import { useEffect, useId, useMemo, useState } from 'react';
 import { ArrowRight, LayoutGrid, List } from 'lucide-react';
 import { compareCourseNames } from '../lib/course-order';
@@ -206,14 +207,14 @@ export default function Terminology({
   );
   return (
     <section className="terminology" aria-labelledby={uid + '-title'}>
-      <div className="page-title">
+      <WorkspaceTitle section="terminology">
         <p className="eyebrow">LOOK SOMETHING UP</p>
         <h1 id={uid + '-title'}>Terminology</h1>
         <p>
           Choose a course to see the words it teaches. Use Study to open the
           exact idea that explains a word.
         </p>
-      </div>
+      </WorkspaceTitle>
       <div className="terminology-toolbar">
         <label htmlFor={uid + '-search'}>
           Find a term, abbreviation or meaning

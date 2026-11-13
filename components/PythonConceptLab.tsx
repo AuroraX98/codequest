@@ -530,6 +530,7 @@ export default function PythonConceptLab({
             }
             resumeKey={resumeScope ? `codequest-microstep-${resumeScope}:${lesson.id}:concept:${concept}` : undefined}
             reviewedExample={reviewed.example}
+            explanationExample={{ code: reviewed.example.code, language: "python", output: reviewed.result, note: "Read these instructions from top to bottom. The output shows what they display." }}
             reviewedLesson
             inlinePractice={false}
             glossaryTerms={["program", "code", "value", "variable", "string", "assignment", "output", "function", "parentheses"]}

@@ -9,6 +9,7 @@ import LessonContent, { CodeExample, InlineCode } from "./LessonContent";
 import styles from "./LessonStepFlow.module.css";
 import { plainLessonExplanation } from "../lib/plain-language";
 import { GlossaryScope, GlossaryText } from "./LessonGlossary";
+import type { IdeaExample, IdeaExamples } from "../lib/idea-example";
 
 export type LessonStage = {
   index: number;
@@ -33,6 +34,8 @@ export type LessonStepFlowProps = {
   inlinePractice?: boolean;
   glossaryTerms?: string[];
   reviewedLesson?: boolean;
+  ideaExamples?: IdeaExamples;
+  explanationExample?: IdeaExample;
 };
 
 /** Navigation resumes on this device when scoped. Only manual completion saves completed progress. */
@@ -40,7 +43,7 @@ export default function LessonStepFlow(props: LessonStepFlowProps) {
   return <StepFlow key={JSON.stringify([props.runtime, props.text, props.resumeKey, props.reviewedLesson, props.inlinePractice])} {...props} />;
 }
 
-function StepFlow({ text, runtime, referenceText = text, referenceVisual, resumeKey, title, onNext, onBack, backDisabled, completion, startAtEnd = false, onStageChange, reviewedExample, inlinePractice = true, glossaryTerms, reviewedLesson = false }: LessonStepFlowProps) {
+function StepFlow({ text, runtime, referenceText = text, referenceVisual, resumeKey, title, onNext, onBack, backDisabled, completion, startAtEnd = false, onStageChange, reviewedExample, inlinePractice = true, glossaryTerms, reviewedLesson = false, ideaExamples, explanationExample }: LessonStepFlowProps) {
   const steps = useMemo(() => buildLessonSteps(text, runtime, { authoredOnly: reviewedLesson }).filter(step => inlinePractice || (step.kind !== "practice" && !(step.kind === "explain" && step.purpose === "exercise-preparation"))), [text, runtime, inlinePractice, reviewedLesson]);
   const extraReference = useMemo(() => distinctLessonReference(text, referenceText, runtime), [text, referenceText, runtime]);
   const showReferenceVisual = !!referenceVisual && hasLessonVisual(referenceVisual.unitId, referenceVisual.paragraph);
@@ -76,6 +79,9 @@ function StepFlow({ text, runtime, referenceText = text, referenceVisual, resume
   const stageCallback = useRef(onStageChange);
   const id = useId();
   const step = steps[index];
+  const thoughtIndex = steps.slice(0, index + 1).filter(candidate => candidate.kind === "explain").length - 1;
+  const ideaExample = step.kind === "explain"
+    ? (ideaExamples?.examples[ideaExamples.thoughtExamples[thoughtIndex]] ?? explanationExample) : undefined;
   const glossaryText = useMemo(() => step.kind === "explain" ? step.text : step.kind === "practice" ? step.question + " " + (result ? step.explanation : "") : step.kind === "output" ? "output code" : codeAnatomy(step.code, step.language).lines.flatMap(line => line.tokens.map(token => token.label + " " + token.explanation)).join(" "), [step, result]);
   // Keep the user's preferred definition. Use reviewed source-matched wording elsewhere.
   const simpleThought = !reviewedLesson && step.kind === "explain" && step.text !== "A program is a list of instructions the computer follows."
@@ -112,12 +118,21 @@ function StepFlow({ text, runtime, referenceText = text, referenceVisual, resume
       <span>{stageLabel}</span>
       <span title={resumeKey ? "Your place is saved on this device, not synced across devices." : undefined}>Step {index + 1} of {steps.length}</span>
     </div>
+    <progress className="lesson-step-meter" value={index + 1} max={steps.length} aria-hidden="true" />
     <GlossaryScope scopeKey={index} runtime={runtime} text={glossaryText} includedTerms={glossaryTerms}>
     <div className={styles.panel} key={index} ref={panel} tabIndex={-1} data-step-kind={step.kind} aria-label={`${stageLabel}, step ${index + 1} of ${steps.length}`}>
-      {step.kind === "explain" && <>
+      {step.kind === "explain" && <div className={ideaExample ? styles.contextPair : undefined}>
+        <div className={styles.explanation}>
         <p className={styles.thought} data-technical-reading data-simple-reading={simpleThought ? true : undefined}><InlineCode text={simpleThought ?? step.text} /></p>
         {simpleThought && <details className={styles.reference} data-original-wording><summary>Original wording</summary><p><InlineCode text={step.text} /></p></details>}
-      </>}
+        </div>
+        {ideaExample && <aside className={styles.ideaExample} aria-label="Example for this idea" data-idea-example>
+          <p className={styles.exampleLabel}>Example for this idea</p>
+          <CodeExample code={ideaExample.code} language={ideaExample.language} />
+          {ideaExample.output !== undefined && <CodeExample code={ideaExample.output} language="output" />}
+          <p className={styles.exampleNote}><InlineCode text={ideaExample.note} /></p>
+        </aside>}
+      </div>}
       {step.kind === "example" && <>
         <p className={styles.hint}>See what each part does.</p>
         <CodeAnatomy code={step.code} language={step.language} collapseExplanations reviewedExample={reviewedExample} />

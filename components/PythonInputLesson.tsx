@@ -2,6 +2,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import type { Lesson } from "../lib/types";
 import LessonStepFlow from "./LessonStepFlow";
+import type { IdeaExamples } from "../lib/idea-example";
 
 /** Typed-input demonstration; no Python stdin is invoked in the browser. */
 export default function PythonInputLesson({
@@ -11,9 +12,13 @@ export default function PythonInputLesson({
   renderReadingMark,
   onParagraphChange,
   jumpTo,
+  onJumpHandled,
+  ideaExamples,
 }: {
   lesson: Lesson;
+  ideaExamples?: (IdeaExamples | undefined)[];
   jumpTo?: {index:number;token:number};
+  onJumpHandled?: () => void;
   resumeScope?: string;
   onContinue: () => void;
   renderReadingMark?: (paragraph: number) => ReactNode;
@@ -41,16 +46,28 @@ export default function PythonInputLesson({
     setReady(true);
   }, [key, resumeScope, lesson.explanation.length]);
   useEffect(() => {
-    if (ready && resumeScope)
+    if (ready && resumeScope && !jumpTo)
       try {
         localStorage.setItem(key, JSON.stringify({ part, answer, submitted }));
       } catch {}
-  }, [ready, key, resumeScope, part, answer, submitted]);
+  }, [ready, key, resumeScope, part, answer, submitted, jumpTo]);
   useEffect(() => {
-    if (ready && part < lesson.explanation.length) onParagraphChange?.(part);
-  }, [ready, part, lesson.explanation.length, onParagraphChange]);
-  // eslint-disable-next-line react-hooks/set-state-in-effect -- Respond to an explicit table-of-contents navigation command.
-  useEffect(()=>{if(ready && jumpTo && jumpTo.index>=0 && jumpTo.index<lesson.explanation.length)setPart(jumpTo.index);},[ready,jumpTo,lesson.explanation.length]);
+    if (ready && !jumpTo && part < lesson.explanation.length) onParagraphChange?.(part);
+  }, [ready, part, lesson.explanation.length, onParagraphChange, jumpTo]);
+  useEffect(() => {
+    if (!ready || !jumpTo) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- An explicit navigation command takes precedence over the saved reading position.
+    setPart(jumpTo.index);
+    onJumpHandled?.();
+  }, [ready, jumpTo, onJumpHandled]);
+  function moveTo(next: number) {
+    // Keep a refresh of the typing activity distinct from a link to its last reading idea.
+    window.history.replaceState({
+      ...window.history.state,
+      inputActivityHash: next === lesson.explanation.length ? window.location.hash : undefined,
+    }, "");
+    setPart(next);
+  }
   if (!ready) return <p>Opening your tiny lesson…</p>;
   if (part < lesson.explanation.length)
     return (
@@ -59,9 +76,10 @@ export default function PythonInputLesson({
         text={lesson.explanation[part]}
         runtime="python"
         reviewedLesson
+        ideaExamples={ideaExamples?.[part]}
         resumeKey={resumeScope ? `${key}:part-${part}` : undefined}
-        onNext={() => setPart(part + 1)}
-        onBack={() => setPart(Math.max(0, part - 1))}
+        onNext={() => moveTo(part + 1)}
+        onBack={() => moveTo(Math.max(0, part - 1))}
         backDisabled={part === 0}
         completion={renderReadingMark?.(part)}
       />
@@ -114,7 +132,7 @@ export default function PythonInputLesson({
         </div>
       )}
       <nav aria-label="Input lesson steps" className="button-row">
-        <button onClick={() => setPart(lesson.explanation.length - 1)}>
+        <button onClick={() => moveTo(lesson.explanation.length - 1)}>
           Back
         </button>
         <button

@@ -2,72 +2,75 @@
 
 [**Open CodeQuest and start learning**](https://codequest.aurorax.chatgpt.site/)
 
-CodeQuest teaches coding one idea at a time. Read a short explanation, tap a piece of code to see what it does, then try it yourself. It’s for first-time coders and for people who want practice with a language they’ve used before. There are **21 courses and 1,231 lessons**.
+Learn coding one idea at a time through explanations, examples, questions, and projects. CodeQuest has **21 courses and 1,231 lessons**. The courses work without an AI key.
 
 ## Start in your browser
 
-1. Open CodeQuest using the link above. Sign in with ChatGPT if asked.
-2. Open **Courses**. Choose **Python** for a first program or **HTML** to make a first web page. On a phone, use the **Course** menu. On a larger screen, choose **Show courses** if the list is closed.
-3. Select the first lesson, or choose **Resume course** to open your saved spot. The **Learn** tab shows one idea at a time.
+1. Open CodeQuest and sign in with ChatGPT if asked.
+2. Choose **Python** for a first program or **HTML** for a first web page in **Courses**. **Resume course** returns to your saved spot.
+3. Read an idea, predict its result, then try the exercise or project. **Tools and concepts**, **Terminology**, and the **Table of Contents** help you revisit unfamiliar topics.
 
-## Get more from one lesson
-
-1. **Read one idea.** If a word is new, open **Terminology** and choose your course. Tap **Study** to open the idea that explains it.
-2. **Predict what the example will do.** In Python, `print("Hi")` shows the word **Hi**. Tap the code labels to see which part tells Python to show something and which part gives it the words.
-3. **Change one thing.** In an exercise you can run, change `"Hi"` to your name. Guess what will appear, then run the code and check.
-4. **Use it from memory.** Open **Try it**. If you get stuck, revisit that idea in the **Table of Contents** and try again. When you’re ready, open **Projects** to use what you learned.
+Python explanations keep the relevant code, definitions, values, and results beside them. Short notes connect each example to its explanation. Smaller example text wraps to fit its panel; copying keeps the original code intact. Settings offer larger reading text, hints, and optional progress rewards.
 
 ## Pick a course
 
 | Course | What you’ll learn to do |
 | --- | --- |
-| Python | Give the computer instructions, store answers, and repeat a task. |
-| HTML | Build a web page with headings, links, pictures, and forms. |
-| CSS | Change a page’s colors, spacing, and layout so it fits different screens. |
-| JavaScript | Make a page react when someone clicks a button or types a word. |
-| TypeScript | Catch mistakes early, like giving a word to code that expects a number. |
-| React | Build a screen from reusable pieces, like a task card that updates when you tap it. |
-| SQL | Ask a table of data a question, like “Which tasks are still open?” |
-| Back-end development | Build the part of an app that receives a request and saves or finds an answer. |
-| Developer toolkit | Track changes with Git, find bugs, and check that a fix works. |
-| AI | Learn how computers find patterns in examples, then test where their guesses go wrong. |
-| Swift | Write code for Apple apps, from storing a score to updating a list on screen. |
-| Kotlin | Use functions and lists to organize data, like a set of study sessions. |
-| Java | Group related information and actions, like a study session and the code that updates it. |
-| C# | Build a small study tracker that checks its input and handles mistakes. |
-| C | See how a program stores values in memory and reads them back safely. |
-| C++ | Build a small game that keeps track of what happens as you play. |
-| Go | Build tools that share work across tasks and handle errors. |
-| Rust | Learn which part of a program owns a value and when another part can use it. |
-| PHP | Handle a web form and save its answers in a database. |
-| Ruby | Write small programs that read, change, and save information, like a study log. |
-| R | Explore numbers, compare groups, and draw charts that help you explain what you found. |
-
-## Use CodeQuest without internet
-
-While online, open **Settings**, download the offline learning pack, and wait for the check to finish. Later, open CodeQuest in the same browser and profile. Downloaded lessons and supported code exercises work offline. Reconnect to sync your work and confirm lesson completion. Some projects, such as making an Apple app, need the tools named in the lesson.
-
-**Coding Buddy** is optional. The lessons work on their own. For live AI help, connect your own API key in **Settings**. A key lets the app ask your AI provider for help. Keep it private. The provider may charge for use. [API key help](docs/api-key-removal.md)
+| Python | Give instructions, store values, and repeat tasks. |
+| HTML | Build pages with headings, links, pictures, and forms. |
+| CSS | Control colors, spacing, and layouts for different screens. |
+| JavaScript | Make pages respond to clicks and typed input. |
+| TypeScript | Describe expected values and catch type mistakes. |
+| React | Build screens from reusable pieces that respond to changing data. |
+| SQL | Store, organize, and ask questions about data in tables. |
+| Backend development | Handle requests and save or retrieve information. |
+| Developer toolkit | Track changes with Git, find bugs, and check fixes. |
+| AI | Explore how models learn from examples and where predictions fail. |
+| Swift | Work with values, functions, and Apple app interfaces. |
+| Kotlin | Organize information with functions, collections, and classes. |
+| Java | Group related data and actions in objects. |
+| C# | Build programs with checked inputs and error handling. |
+| C | Work with values, memory, and pointers. |
+| C++ | Manage objects, collections, and ownership of resources. |
+| Go | Write tools that coordinate work and handle errors. |
+| Rust | Understand ownership, borrowing, and reliable data handling. |
+| PHP | Handle web requests, forms, and stored information. |
+| Ruby | Write programs that read, change, and organize information. |
+| R | Explore data, compare groups, and make charts. |
 
 ## Run a copy on your computer
 
-Choose this option for a local copy with its own saved progress and no sign-in. You’ll need internet the first time.
+Local mode has its own saved progress and needs no sign-in. Initial setup needs internet.
 
-1. Install [Node.js](https://nodejs.org/en/download) and choose **Latest LTS**. Node.js runs the app and includes `npm`, the tool used in the next steps.
-2. On GitHub, choose **Code → Download ZIP**, then extract the ZIP. Open the folder that contains `package.json`.
-3. Open a terminal in that folder. On Windows, click the folder’s address bar, type `cmd`, and press **Enter**. Run these commands one at a time. Wait for the first to finish before starting the second.
+1. Install [Node.js](https://nodejs.org/en/download), version **22.13 or newer**. It includes `npm`, which installs and starts the app.
+2. Choose **Code → Download ZIP** on GitHub, extract it, and open the folder containing `package.json`.
+3. Open a terminal in that folder. Run these commands one at a time:
 
    ```sh
    npm ci
    npm run local
    ```
 
-4. Open **http://127.0.0.1:5173** in your browser, or use the address printed in the terminal. Keep the terminal open while learning.
+4. Open [http://127.0.0.1:5173](http://127.0.0.1:5173) and keep the terminal running.
 
-Next time, run just `npm run local` in the same folder. Press **Ctrl+C** in the terminal to stop. Your local work lives in `.codequest-local`. Keep that folder private when you back it up. [Windows setup help](docs/windows-setup.md)
+Next time, run `npm run local` in the same folder. **Ctrl+C** stops it. Startup was checked on macOS; a Windows user also reported success. [Windows setup help](docs/windows-setup.md)
 
-The local setup has been checked on Windows. macOS setup still needs testing. To put your own copy online, see the [hosting guide](docs/hosting-a-copy.md).
+## Running code and studying offline
 
-## About the material
+Python, JavaScript, TypeScript, SQL, HTML, CSS, and React have browser runners. Other lessons may need local tools: C, C++, C#, Java, Kotlin, Go, Rust, PHP, Ruby, and R examples can be edited and downloaded, but have no in-app language runner. Follow their local setup instructions. Swift uses the [Mac companion](public/companion/README.txt); SwiftUI needs Xcode. Backend and developer-tool projects may need local servers or Git.
 
-The courses were made with help from ChatGPT. Some topics draw on free MIT teaching materials. The [license](LICENSE) covers the original app code. Teaching material has separate terms, and outside software keeps its own license. [Third-party notices](public/third-party/README.txt)
+While online, choose **Settings → Download offline pack** and wait until it is ready. Use the same browser profile for downloaded lessons and supported exercises. Browsers can remove downloads to free space; external services and new packages may need internet.
+
+**Coding Buddy** is optional. Connect your own DeepSeek, OpenAI, or Claude API key in Settings for live help. Your question and relevant lesson/code context go to that provider. API usage needs internet and may cost money separately from a chat subscription. [API key help](docs/api-key-removal.md)
+
+## Keep your work
+
+Online learning records save to your account. Local mode uses `.codequest-local/`, and some drafts stay in your browser. Keep the same folder and browser address. Use **Download backup** before moving work; **Restore project files** restores code, not a whole account. Local-example drafts have separate download controls.
+
+Keep `.codequest-local/` and filled key files private and out of GitHub. A shared app folder shares learner data; downloaded lessons are accessible within that browser profile.
+
+## About the project
+
+Courses were made with ChatGPT’s help; some topics draw on MIT teaching materials. The [MIT license](LICENSE) covers original app code; it excludes lesson and teaching content. Outside software keeps its own terms: [third-party notices](public/third-party/README.txt).
+
+For a separate online copy, follow the [hosting guide](docs/hosting-a-copy.md). Contributors: [`lessons`](content/lessons.json), [`documentation`](docs/), and [`checks`](tests/). Build with `npm run build`. Verification reports apply only to their stated checks and releases.

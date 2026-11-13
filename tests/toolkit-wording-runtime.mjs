@@ -34,7 +34,7 @@ for(const l of ls){
  for(const f of l.extraFiles??[])fs.writeFileSync(path.join(dir,f.name),f.code);
  fs.writeFileSync(path.join(dir,'example.'+({bash:'sh',javascript:'mjs',json:'json',html:'html'}[m[1]]??'txt')),m[2]);
 }
-const git=process.env.GIT_EXECUTABLE || 'git';
+const git=process.env.CODEQUEST_GIT ?? 'git';
 function g(dir,args,success=true){const run=spawnSync(git,args,{cwd:dir,encoding:'utf8'});if(success)assert.equal(run.status,0,args.join(' ')+'\n'+run.stderr);return run;}
 function repo(prefix){const dir=fs.mkdtempSync(path.join(scratch,prefix+'-'));g(dir,['init','-b','main']);g(dir,['config','user.name','Practice Learner']);g(dir,['config','user.email','learner@example.invalid']);return dir;}
 function commit(dir,msg){g(dir,['add','.']);g(dir,['commit','-m',msg]);}

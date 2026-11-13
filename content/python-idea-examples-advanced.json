@@ -1,0 +1,2625 @@
+{
+  "python-65": [
+    {
+      "examples": [
+        {
+          "code": "class MinuteError(ValueError):\n    pass\ntry:\n    raise MinuteError(\"whole minutes required\")\nexcept ValueError as error:\n    print(type(error).__name__, str(error))\n",
+          "language": "python",
+          "note": "MinuteError belongs to the ValueError family, so the broader handler catches it. pass supplies the empty class body.",
+          "output": "MinuteError whole minutes required"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "examples": [
+        {
+          "code": "class MinuteError(ValueError):\n    pass\n\ndef parse_minutes(text):\n    try:\n        value = int(text)\n    except ValueError as error:\n        raise MinuteError(\"whole minutes required\") from error\n    if not 1 <= value <= 60:\n        raise MinuteError(\"minutes outside 1..60\")\n    return value\nfor text in [\"1\", \"60\", \"bad\", \"0\"]:\n    try:\n        print(parse_minutes(text))\n    except MinuteError as error:\n        print(str(error))\n",
+          "language": "python",
+          "note": "The two boundary values work. Invalid text and an out-of-range number produce different messages.",
+          "output": "1\n60\nwhole minutes required\nminutes outside 1..60"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "examples": [
+        {
+          "code": "class MinuteError(ValueError):\n    pass\n\ndef parse_minutes(text):\n    try:\n        value = int(text)\n    except ValueError as error:\n        raise MinuteError(\"whole minutes required\") from error\n    if not 1 <= value <= 60:\n        raise MinuteError(\"minutes outside 1..60\")\n    return value\nfor text in [\"bad\", \"61\"]:\n    try:\n        parse_minutes(text)\n    except MinuteError as error:\n        print(str(error), type(error.__cause__).__name__)\n",
+          "language": "python",
+          "note": "The conversion error keeps a ValueError cause. The range error has no earlier cause, so its cause is None.",
+          "output": "whole minutes required ValueError\nminutes outside 1..60 NoneType"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "examples": [
+        {
+          "code": "class MinuteError(ValueError):\n    pass\n\ndef parse_minutes(text):\n    try:\n        value = int(text)\n    except ValueError as error:\n        raise MinuteError(\"whole minutes required\") from error\n    if not 1 <= value <= 60:\n        raise MinuteError(\"minutes outside 1..60\")\n    return value\ndef __failure_details(text):\n    try:\n        parse_minutes(text)\n    except MinuteError as error:\n        return str(error), type(error.__cause__).__name__\nprint(__failure_details(\"bad\"))\n",
+          "language": "python",
+          "note": "This small helper reads the message and cause; the complete conversion function is visible above it.",
+          "output": "('whole minutes required', 'ValueError')"
+        },
+        {
+          "code": "class MinuteError(ValueError):\n    pass\n\ndef parse_minutes(text):\n    try:\n        value = int(text)\n    except ValueError as error:\n        raise MinuteError(\"whole minutes required\") from error\n    if not 1 <= value <= 60:\n        raise MinuteError(\"minutes outside 1..60\")\n    return value\n\ndef __failure_details(text):\n    try:\n        parse_minutes(text)\n    except MinuteError as error:\n        return (str(error), type(error.__cause__).__name__)\n    return None\nprint(__failure_details(\"bad\"))\nprint(__failure_details(\"15\"))\n",
+          "language": "python",
+          "note": "The supplied helper returns the message and cause for a failed conversion, or None when parsing succeeds.",
+          "output": "('whole minutes required', 'ValueError')\nNone"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        1,
+        1
+      ]
+    },
+    {
+      "examples": [
+        {
+          "code": "class MinuteError(ValueError):\n    pass\n\ndef parse_minutes(text):\n    try:\n        value = int(text)\n    except ValueError as error:\n        raise MinuteError(\"whole minutes required\") from error\n    if not 1 <= value <= 60:\n        raise MinuteError(\"minutes outside 1..60\")\n    return value\n\nprint(parse_minutes(\"15\"))\ntry:\n    parse_minutes(\"bad\")\nexcept MinuteError as error:\n    print(str(error))\n    print(type(error.__cause__).__name__)\n",
+          "language": "python",
+          "note": "The valid call returns 15. The invalid call reports the new message and the original ValueError cause.",
+          "output": "15\nwhole minutes required\nValueError"
+        }
+      ],
+      "thoughtExamples": [
+        0
+      ]
+    },
+    {
+      "examples": [
+        {
+          "code": "def display_minutes(text):\n    try:\n        minutes = int(text)\n    except ValueError:\n        return \"Please enter whole minutes\"\n    return minutes + 1\nprint(display_minutes(\"bad\"))\nprint(display_minutes(\"4\"))\n",
+          "language": "python",
+          "note": "Only the conversion is inside try. An unrelated mistake after the conversion would remain visible instead of being hidden by a broad handler.",
+          "output": "Please enter whole minutes\n5"
+        }
+      ],
+      "thoughtExamples": [
+        0
+      ]
+    }
+  ],
+  "python-66": [
+    {
+      "examples": [
+        {
+          "code": "from pathlib import Path\nfrom tempfile import TemporaryDirectory\n\ndef save_note(path, text, append=False):\n    mode = \"a\" if append else \"w\"\n    with open(path, mode, encoding=\"utf-8\") as handle:\n        return handle.write(text)\nwith TemporaryDirectory() as folder:\n    path = Path(folder) / \"practice.txt\"\n    save_note(path, \"Old\")\n    save_note(path, \"New\")\n    save_note(path, \"!\", append=True)\n    print(path.read_text(encoding=\"utf-8\"))\n",
+          "language": "python",
+          "note": "Writing with w replaces Old with New; a adds the exclamation mark. This example uses a temporary practice folder.",
+          "output": "New!"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "examples": [
+        {
+          "code": "from pathlib import Path\nfrom tempfile import TemporaryDirectory\n\ndef save_note(path, text, append=False):\n    mode = \"a\" if append else \"w\"\n    with open(path, mode, encoding=\"utf-8\") as handle:\n        return handle.write(text)\nwith TemporaryDirectory() as folder:\n    path = Path(folder) / \"practice.txt\"\n    print(save_note(path, \"é\"))\n    print(path.read_bytes())\n",
+          "language": "python",
+          "note": "One text character is accepted, although UTF-8 stores it as two bytes. The with block closes the handle before the next read.",
+          "output": "1\nb'\\xc3\\xa9'"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "examples": [
+        {
+          "code": "from pathlib import Path\nfrom tempfile import TemporaryDirectory\n\ndef save_note(path, text, append=False):\n    mode = \"a\" if append else \"w\"\n    with open(path, mode, encoding=\"utf-8\") as handle:\n        return handle.write(text)\nwith TemporaryDirectory() as folder:\n    path = Path(folder) / \"demo-note.txt\"\n    print(save_note(path, \"Sky\\n\"))\n    print(save_note(path, \"Moon\\n\", append=True))\n    with open(path, \"r\", encoding=\"utf-8\") as handle:\n        print(repr(handle.read()))\n",
+          "language": "python",
+          "note": "repr keeps the two line breaks visible as \\n. The program opens, writes, appends, and reads the same temporary file.",
+          "output": "4\n5\n'Sky\\nMoon\\n'"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "examples": [
+        {
+          "code": "from pathlib import Path\nfrom tempfile import TemporaryDirectory\n\ndef save_note(path, text, append=False):\n    mode = \"a\" if append else \"w\"\n    with open(path, mode, encoding=\"utf-8\") as handle:\n        return handle.write(text)\nwith TemporaryDirectory() as folder:\n    path = Path(folder) / \"practice.txt\"\n    save_note(path, \"Old contents\")\n    save_note(path, \"Replacement\")\n    print(path.read_text(encoding=\"utf-8\"))\n",
+          "language": "python",
+          "note": "The second write clears the previous contents. The selected path belongs to this temporary practice folder.",
+          "output": "Replacement"
+        },
+        {
+          "code": "from tempfile import TemporaryDirectory\nfrom pathlib import Path\ndef save_note(path, text, append=False):\n    mode = \"a\" if append else \"w\"\n    with open(path, mode, encoding=\"utf-8\") as handle:\n        return handle.write(text)\n\ndef __read_note(path):\n    with open(path, \"r\", encoding=\"utf-8\") as handle:\n        return handle.read()\nwith TemporaryDirectory() as folder:\n    path = Path(folder) / \"practice.txt\"\n    save_note(path, \"Sky\")\n    print(__read_note(path))\n",
+          "language": "python",
+          "note": "The supplied __read_note helper opens the same temporary practice file and returns its saved text.",
+          "output": "Sky"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        1,
+        1,
+        0
+      ]
+    },
+    {
+      "examples": [
+        {
+          "code": "from pathlib import Path\nfrom tempfile import TemporaryDirectory\n\ndef save_note(path, text, append=False):\n    mode = \"a\" if append else \"w\"\n    with open(path, mode, encoding=\"utf-8\") as handle:\n        return handle.write(text)\nwith TemporaryDirectory() as folder:\n    path = Path(folder) / \"demo-note.txt\"\n    print(save_note(path, \"Sky\\n\"))\n    print(save_note(path, \"Moon\\n\", append=True))\n    with open(path, \"r\", encoding=\"utf-8\") as handle:\n        print(repr(handle.read()))\n",
+          "language": "python",
+          "note": "The writes accept four and five characters. Reading afterward gives Sky and Moon, each followed by a line break.",
+          "output": "4\n5\n'Sky\\nMoon\\n'"
+        }
+      ],
+      "thoughtExamples": [
+        0
+      ]
+    },
+    {
+      "examples": [
+        {
+          "code": "from pathlib import Path\nfrom tempfile import TemporaryDirectory\n\ndef save_note(path, text, append=False):\n    mode = \"a\" if append else \"w\"\n    with open(path, mode, encoding=\"utf-8\") as handle:\n        return handle.write(text)\nwith TemporaryDirectory() as folder:\n    path = Path(folder) / \"practice.txt\"\n    save_note(path, \"Keep\")\n    save_note(path, \"\", append=True)\n    print(repr(path.read_text(encoding=\"utf-8\")))\n    save_note(path, \"\")\n    print(repr(path.read_text(encoding=\"utf-8\")))\n",
+          "language": "python",
+          "note": "Appending empty text preserves Keep. Opening with w clears it even when the new text is empty.",
+          "output": "'Keep'\n''"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0
+      ]
+    }
+  ],
+  "python-67": [
+    {
+      "examples": [
+        {
+          "code": "import argparse\n\ndef parse_minutes(arguments):\n    parser = argparse.ArgumentParser(prog=\"study\", add_help=False, allow_abbrev=False)\n    parser.add_argument(\"--minutes\", type=int, default=10, choices=range(1, 61))\n    options = parser.parse_args(arguments)\n    return options.minutes\n\nprint(parse_minutes([\"--minutes\", \"4\"]))\nprint(parse_minutes([]))\n",
+          "language": "python",
+          "note": "The supplied lists stand in for command-line text: one chooses 4, while an empty list uses 10.",
+          "output": "4\n10"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "examples": [
+        {
+          "code": "import argparse\n\ndef parse_minutes(arguments):\n    parser = argparse.ArgumentParser(prog=\"study\", add_help=False, allow_abbrev=False)\n    parser.add_argument(\"--minutes\", type=int, default=10, choices=range(1, 61))\n    options = parser.parse_args(arguments)\n    return options.minutes\n\nprint(parse_minutes([\"--minutes\", \"4\"]))\nprint(parse_minutes([]))\n",
+          "language": "python",
+          "note": "The parser definition shows the full option name, integer conversion, default, and allowed range before either call.",
+          "output": "4\n10"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "examples": [
+        {
+          "code": "import argparse\n\ndef parse_minutes(arguments):\n    parser = argparse.ArgumentParser(prog=\"study\", add_help=False, allow_abbrev=False)\n    parser.add_argument(\"--minutes\", type=int, default=10, choices=range(1, 61))\n    options = parser.parse_args(arguments)\n    return options.minutes\nimport contextlib\nimport io\nfor arguments in [[], [\"--minutes\", \"4\"], [\"--minutes\", \"61\"]]:\n    with contextlib.redirect_stderr(io.StringIO()) as messages:\n        try:\n            print(parse_minutes(arguments))\n        except SystemExit as error:\n            print(\"exit code\", error.code)\n            print(\"error:\" in messages.getvalue())\n",
+          "language": "python",
+          "note": "An invalid value raises SystemExit(2) and writes an error. The demonstration catches it and checks the captured message.",
+          "output": "10\n4\nexit code 2\nTrue"
+        },
+        {
+          "code": "import argparse\nparser = argparse.ArgumentParser(prog=\"study\", add_help=False, allow_abbrev=False)\nparser.add_argument(\"--minutes\", type=int, default=10, choices=range(1, 61))\noptions = parser.parse_args([\"--minutes\", \"4\"])\nprint(type(options).__name__)\nprint(options)\nprint(options.minutes)\n",
+          "language": "python",
+          "note": "The parser returns a Namespace object containing minutes=4. Accessing options.minutes reads the selected integer.",
+          "output": "Namespace\nNamespace(minutes=4)\n4"
+        },
+        {
+          "code": "import argparse\n\ndef parse_minutes(arguments):\n    parser = argparse.ArgumentParser(prog=\"study\", add_help=False, allow_abbrev=False)\n    parser.add_argument(\"--minutes\", type=int, default=10, choices=range(1, 61))\n    options = parser.parse_args(arguments)\n    return options.minutes\n\ndef __rejects_arguments(arguments):\n    try:\n        parse_minutes(arguments)\n    except SystemExit as error:\n        return error.code == 2\n    return False\nimport contextlib\nimport io\nmessages = io.StringIO()\nwith contextlib.redirect_stderr(messages):\n    print(__rejects_arguments([\"--unknown\"]))\nprint(messages.getvalue().splitlines()[-1])\n",
+          "language": "python",
+          "note": "The helper catches exit code 2 and returns True. The parser also writes an error; the demonstration captures and displays its final line.",
+          "output": "True\nstudy: error: unrecognized arguments: --unknown"
+        }
+      ],
+      "thoughtExamples": [
+        1,
+        1,
+        0,
+        0,
+        2
+      ]
+    },
+    {
+      "examples": [
+        {
+          "code": "import argparse\n\ndef parse_minutes(arguments):\n    parser = argparse.ArgumentParser(prog=\"study\", add_help=False, allow_abbrev=False)\n    parser.add_argument(\"--minutes\", type=int, default=10, choices=range(1, 61))\n    options = parser.parse_args(arguments)\n    return options.minutes\nimport sys\n# Save this program as study.py, then run: python study.py --minutes 4\nif __name__ == \"__main__\":\n    print(parse_minutes(sys.argv[1:]))\n",
+          "language": "python",
+          "note": "The main guard reads arguments after the filename. Running python study.py --minutes 4 prints 4; running it without an option prints 10."
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "examples": [
+        {
+          "code": "import argparse\n\ndef parse_minutes(arguments):\n    parser = argparse.ArgumentParser(prog=\"study\", add_help=False, allow_abbrev=False)\n    parser.add_argument(\"--minutes\", type=int, default=10, choices=range(1, 61))\n    options = parser.parse_args(arguments)\n    return options.minutes\n\nprint(parse_minutes([\"--minutes\", \"4\"]))\nprint(parse_minutes([]))\n",
+          "language": "python",
+          "note": "The first parse uses the supplied option. The second parse has no option and uses its default.",
+          "output": "4\n10"
+        }
+      ],
+      "thoughtExamples": [
+        0
+      ]
+    },
+    {
+      "examples": [
+        {
+          "code": "import argparse\n\ndef parse_minutes(arguments):\n    parser = argparse.ArgumentParser(prog=\"study\", add_help=False, allow_abbrev=False)\n    parser.add_argument(\"--minutes\", type=int, default=10, choices=range(1, 61))\n    options = parser.parse_args(arguments)\n    return options.minutes\nimport contextlib\nimport io\nfor arguments in [[], [\"--minutes\", \"4\"], [\"--minutes\", \"61\"]]:\n    with contextlib.redirect_stderr(io.StringIO()) as messages:\n        try:\n            print(parse_minutes(arguments))\n        except SystemExit as error:\n            print(\"exit code\", error.code)\n            print(\"error:\" in messages.getvalue())\n",
+          "language": "python",
+          "note": "Compare the empty list, a valid value, and 61. Only the invalid call produces exit code 2.",
+          "output": "10\n4\nexit code 2\nTrue"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        0
+      ]
+    }
+  ],
+  "python-68": [
+    {
+      "examples": [
+        {
+          "code": "import io\nimport unittest\n\ndef run_case(case_class):\n    suite = unittest.TestLoader().loadTestsFromTestCase(case_class)\n    output = io.StringIO()\n    runner = unittest.TextTestRunner(stream=output, verbosity=0)\n    result = runner.run(suite)\n    return (result.testsRun, result.wasSuccessful())\n\nclass AdditionTest(unittest.TestCase):\n    def test_total(self):\n        self.assertEqual(2 + 3, 5)\n\nprint(run_case(AdditionTest))\n",
+          "language": "python",
+          "note": "AdditionTest inherits the test tools. The method name starts with test_, so the loader runs its 2 + 3 check.",
+          "output": "(1, True)"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "examples": [
+        {
+          "code": "import io\nimport unittest\n\ndef run_case(case_class):\n    suite = unittest.TestLoader().loadTestsFromTestCase(case_class)\n    output = io.StringIO()\n    runner = unittest.TextTestRunner(stream=output, verbosity=0)\n    result = runner.run(suite)\n    return (result.testsRun, result.wasSuccessful())\n\nclass AdditionTest(unittest.TestCase):\n    def test_total(self):\n        self.assertEqual(2 + 3, 5)\nprint(run_case(AdditionTest))\nprint(run_case(AdditionTest))\n",
+          "language": "python",
+          "note": "Each call creates a new suite from AdditionTest, so both calls run the one test.",
+          "output": "(1, True)\n(1, True)"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "examples": [
+        {
+          "code": "import io\nimport unittest\n\ndef run_case(case_class):\n    suite = unittest.TestLoader().loadTestsFromTestCase(case_class)\n    output = io.StringIO()\n    runner = unittest.TextTestRunner(stream=output, verbosity=0)\n    result = runner.run(suite)\n    return (result.testsRun, result.wasSuccessful())\n\nclass AdditionTest(unittest.TestCase):\n    def test_total(self):\n        self.assertEqual(2 + 3, 5)\nclass EmptyTest(unittest.TestCase):\n    pass\nprint(run_case(AdditionTest))\nprint(run_case(EmptyTest))\n",
+          "language": "python",
+          "note": "The empty class returns (0, True). Checking the count prevents confusing no tests with a tested result.",
+          "output": "(1, True)\n(0, True)"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "examples": [
+        {
+          "code": "# Save as test_sample.py in a new practice folder.\nimport unittest\n\nclass AdditionTest(unittest.TestCase):\n    def test_total(self):\n        self.assertEqual(2 + 3, 5)\n\n# In that folder, run this terminal command:\n# python -m unittest discover -s . -p \"test_*.py\" -v\n",
+          "language": "python",
+          "note": "The filename matches test_*.py. The terminal command searches the current folder and displays the discovered test names."
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "examples": [
+        {
+          "code": "import io\nimport unittest\n\ndef run_case(case_class):\n    suite = unittest.TestLoader().loadTestsFromTestCase(case_class)\n    output = io.StringIO()\n    runner = unittest.TextTestRunner(stream=output, verbosity=0)\n    result = runner.run(suite)\n    return (result.testsRun, result.wasSuccessful())\n\nclass AdditionTest(unittest.TestCase):\n    def test_total(self):\n        self.assertEqual(2 + 3, 5)\nclass WrongTotal(unittest.TestCase):\n    def test_total(self):\n        self.assertEqual(2 + 3, 6)\nprint(run_case(WrongTotal))\n",
+          "language": "python",
+          "note": "The failed assertion produces (1, False). This program loads only the class supplied to run_case.",
+          "output": "(1, False)"
+        },
+        {
+          "code": "import io\nimport unittest\n\ndef run_case(case_class):\n    suite = unittest.TestLoader().loadTestsFromTestCase(case_class)\n    output = io.StringIO()\n    runner = unittest.TextTestRunner(stream=output, verbosity=0)\n    result = runner.run(suite)\n    return (result.testsRun, result.wasSuccessful())\n\nclass __PassingCase(unittest.TestCase):\n    def test_sum(self):\n        self.assertEqual(1 + 1, 2)\nclass __FailingCase(unittest.TestCase):\n    def test_sum(self):\n        self.assertEqual(1 + 1, 3)\nclass __EmptyCase(unittest.TestCase):\n    pass\nclass __TwoCases(unittest.TestCase):\n    def test_a(self):\n        self.assertEqual(2 * 2, 4)\n    def test_b(self):\n        self.assertEqual(3 - 1, 2)\nfor case in [__PassingCase, __FailingCase, __EmptyCase, __TwoCases]:\n    print(run_case(case))\n",
+          "language": "python",
+          "note": "These are the supplied classes: one passing test, one failing test, no tests, and two passing tests. They exercise the runner’s result counting.",
+          "output": "(1, True)\n(1, False)\n(0, True)\n(2, True)"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        0,
+        1,
+        1
+      ]
+    },
+    {
+      "examples": [
+        {
+          "code": "import io\nimport unittest\n\ndef run_case(case_class):\n    suite = unittest.TestLoader().loadTestsFromTestCase(case_class)\n    output = io.StringIO()\n    runner = unittest.TextTestRunner(stream=output, verbosity=0)\n    result = runner.run(suite)\n    return (result.testsRun, result.wasSuccessful())\n\nclass AdditionTest(unittest.TestCase):\n    def test_total(self):\n        self.assertEqual(2 + 3, 5)\n\nprint(run_case(AdditionTest))\n",
+          "language": "python",
+          "note": "The result counts one discovered method and reports that its assertion passed.",
+          "output": "(1, True)"
+        }
+      ],
+      "thoughtExamples": [
+        0
+      ]
+    },
+    {
+      "examples": [
+        {
+          "code": "from fnmatch import fnmatch\nprint(fnmatch(\"test_sample.py\", \"test_*.py\"))\nprint(fnmatch(\"sample.py\", \"test_*.py\"))\n",
+          "language": "python",
+          "note": "The first filename matches the discovery pattern; the renamed one does not. Actual discovery must still be run in the practice folder.",
+          "output": "True\nFalse"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        0
+      ]
+    }
+  ],
+  "python-69": [
+    {
+      "examples": [
+        {
+          "code": "print(7 + 3, 7 - 3, 7 * 3)\nprint(2 ** 3)\nprint(7 / 3)\nprint(7 // 3, -7 // 3)\n",
+          "language": "python",
+          "note": "Read the output in call order: addition, subtraction, multiplication, power, ordinary division, then floor division.",
+          "output": "10 4 21\n8\n2.3333333333333335\n2 -3"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "examples": [
+        {
+          "code": "a, b = -7, 3\nprint(a // b, a % b)\nprint(a == (a // b) * b + (a % b))\ntry:\n    print(a / 0)\nexcept ZeroDivisionError:\n    print(\"Cannot divide by zero\")\n",
+          "language": "python",
+          "note": "The quotient is -3 and the remainder is 2; together they reconstruct -7. Division by zero takes the error path.",
+          "output": "-3 2\nTrue\nCannot divide by zero"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "examples": [
+        {
+          "code": "print(2 + 3 * 4)\nprint((2 + 3) * 4)\nprint(2 * 3 ** 2)\nprint((2 * 3) ** 2)\n",
+          "language": "python",
+          "note": "Parentheses move addition or multiplication earlier. Compare 14 with 20, then 18 with 36.",
+          "output": "14\n20\n18\n36"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "examples": [
+        {
+          "code": "print(7 / 3)\nprint(7 // 3)\nprint(7 % 3)\nprint(-7 // 3)\nprint(-7 % 3)\nprint(2 + 3 * 4)\nprint((2 + 3) * 4)\nprint(2 ** 3)\n",
+          "language": "python",
+          "note": "Each printed value corresponds to the expression on the same numbered line of this example.",
+          "output": "2.3333333333333335\n2\n1\n-3\n2\n14\n20\n8"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0
+      ]
+    },
+    {
+      "examples": [
+        {
+          "code": "def full_groups(amount, size):\n    return amount // size\nprint(full_groups(7, 3))\nprint(full_groups(-7, 3))\n",
+          "language": "python",
+          "note": "Floor division returns 2 for 7 ÷ 3 and -3 for -7 ÷ 3, moving toward smaller whole numbers.",
+          "output": "2\n-3"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        0,
+        0
+      ]
+    }
+  ],
+  "python-70": [
+    {
+      "examples": [
+        {
+          "code": "start, stop, step = 1, 7, 2\nprint(list(range(start, stop, step)))\nprint(list(range(4)))  # omitted start = 0, omitted step = 1\nprint(list(range(6, 0, -2)))\n",
+          "language": "python",
+          "note": "Start is included and stop is excluded. The examples move by 2, default to starting at 0, and move backward by 2.",
+          "output": "[1, 3, 5]\n[0, 1, 2, 3]\n[6, 4, 2]"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "examples": [
+        {
+          "code": "numbers = range(1, 7, 2)\nfor number in numbers:\n    print(number)\nprint(list(range(1, 7, -2)))\n",
+          "language": "python",
+          "note": "The loop reads one number at a time. A negative step cannot move from 1 toward 7, so that range is empty.",
+          "output": "1\n3\n5\n[]"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "examples": [
+        {
+          "code": "values = [[\"A\"], [\"B\"], [\"C\"]]\nreversed_values = values[::-1]\nprint(reversed_values)\nprint(values)\nprint(reversed_values is values)\nprint(reversed_values[0] is values[2])\n",
+          "language": "python",
+          "note": "Reversal creates another outer list while keeping references to the same inner items. The source order stays A, B, C.",
+          "output": "[['C'], ['B'], ['A']]\n[['A'], ['B'], ['C']]\nFalse\nTrue"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "examples": [
+        {
+          "code": "def select_steps(values, start, stop, step):\n    return values[start:stop:step]\nvalues = [\"A\", \"B\", \"C\", \"D\"]\nselected = select_steps(values, 1, 4, 2)\nprint(selected)\nprint(values)\n",
+          "language": "python",
+          "note": "The returned slice contains B and D. Printing the original confirms that its order was preserved.",
+          "output": "['B', 'D']\n['A', 'B', 'C', 'D']"
+        },
+        {
+          "code": "def __preserves_slice():\n    source = [0, 1, 2, 3]\n    result = select_steps(source, 0, 4, 2)\n    return source == [0, 1, 2, 3] and result is not source\n\ndef select_steps(values, start, stop, step):\n    return values[start:stop:step]\nprint(__preserves_slice())\n",
+          "language": "python",
+          "note": "The supplied helper checks that select_steps leaves source unchanged and returns another list.",
+          "output": "True"
+        }
+      ],
+      "thoughtExamples": [
+        1,
+        0
+      ]
+    },
+    {
+      "examples": [
+        {
+          "code": "print(list(range(0, 5, 2)))\ntry:\n    range(0, 5, 0)\nexcept ValueError:\n    print(\"step cannot be zero\")\n",
+          "language": "python",
+          "note": "The first range uses whole-number bounds and step. Python rejects the second because its step is zero.",
+          "output": "[0, 2, 4]\nstep cannot be zero"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "examples": [
+        {
+          "code": "numbers = range(1, 7, 2)\npositions = list(numbers)\nprint(positions)\n",
+          "language": "python",
+          "note": "list collects the range values as [1, 3, 5], preserving their order.",
+          "output": "[1, 3, 5]"
+        }
+      ],
+      "thoughtExamples": [
+        0
+      ]
+    },
+    {
+      "examples": [
+        {
+          "code": "positions = list(range(1, 7, 2))\nvalues = [\"A\", \"B\", \"C\", \"D\", \"E\", \"F\", \"G\"]\nprint(positions)\nprint(values[1:7:2])\nprint(list(range(6, 0, -2)))\nprint(values[::-1])\n",
+          "language": "python",
+          "note": "The first two outputs use matching positions and slices. The last two demonstrate backward movement and full reversal.",
+          "output": "[1, 3, 5]\n['B', 'D', 'F']\n[6, 4, 2]\n['G', 'F', 'E', 'D', 'C', 'B', 'A']"
+        }
+      ],
+      "thoughtExamples": [
+        0
+      ]
+    },
+    {
+      "examples": [
+        {
+          "code": "def select_steps(values, start, stop, step):\n    return values[start:stop:step]\nvalues = [\"A\", \"B\", \"C\"]\nprint(select_steps(values, 0, 3, 2))\nprint(select_steps([], 0, 3, 1))\nprint(select_steps(values, 0, 3, -1))\nprint(values)\n",
+          "language": "python",
+          "note": "The normal slice selects A and C. Empty input and a step pointing away from stop produce empty lists.",
+          "output": "['A', 'C']\n[]\n[]\n['A', 'B', 'C']"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    }
+  ],
+  "python-71": [
+    {
+      "examples": [
+        {
+          "code": "def find_square(target, limit):\n    for candidate in range(limit + 1):\n        if candidate * candidate == target:\n            return candidate\n    return None\nprint(list(range(3 + 1)))\nprint(find_square(16, 3))\nprint(find_square(16, 4))\n",
+          "language": "python",
+          "note": "The limit 3 permits candidates 0 through 3. The square root 4 becomes available only when the limit grows to 4.",
+          "output": "[0, 1, 2, 3]\nNone\n4"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "examples": [
+        {
+          "code": "def find_square(target, limit):\n    for candidate in range(limit + 1):\n        if candidate * candidate == target:\n            return candidate\n    return None\nprint(find_square(9, 5))\nprint(find_square(9, 2))\n",
+          "language": "python",
+          "note": "candidate is squared inside the loop. A match returns immediately; None is returned only after the loop finishes.",
+          "output": "3\nNone"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "examples": [
+        {
+          "code": "def find_square(target, limit):\n    for candidate in range(limit + 1):\n        if candidate * candidate == target:\n            return candidate\n    return None\nprint(find_square(16, 3))\nprint(find_square(16, 4))\n",
+          "language": "python",
+          "note": "An area of 16 needs side length 4. The first limit excludes that side; the second allows it.",
+          "output": "None\n4"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "examples": [
+        {
+          "code": "def find_square(target, limit):\n    for candidate in range(limit + 1):\n        if candidate * candidate == target:\n            return candidate\n    return None\nprint(find_square(9, 5))\nprint(find_square(9, 2))\n",
+          "language": "python",
+          "note": "The first search reaches candidate 3. The second runs out of allowed candidates at 2.",
+          "output": "3\nNone"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0
+      ]
+    },
+    {
+      "examples": [
+        {
+          "code": "def find_square(target, limit):\n    for candidate in range(limit + 1):\n        if candidate * candidate == target:\n            return candidate\n    return None\nprint(find_square(0, 0))\nprint(find_square(9, 3))\nprint(find_square(8, 3))\n",
+          "language": "python",
+          "note": "These calls check zero, a match exactly at the limit, and an unsuccessful search that must return None.",
+          "output": "0\n3\nNone"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        0,
+        0
+      ]
+    }
+  ],
+  "python-72": [
+    {
+      "examples": [
+        {
+          "code": "for value in [0.25, 9.0]:\n    low = 0.0\n    high = max(1.0, value)\n    print(value, \"starts between\", low, \"and\", high)\n",
+          "language": "python",
+          "note": "For 0.25, the upper bound is 1.0, which includes its square root 0.5. Using 0.25 as that bound would exclude it.",
+          "output": "0.25 starts between 0.0 and 1.0\n9.0 starts between 0.0 and 9.0"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "examples": [
+        {
+          "code": "value = 9.0\nlow, high = 0.0, max(1.0, value)\nmiddle = (low + high) / 2\nif middle * middle < value:\n    low = middle\nelse:\n    high = middle\nprint(middle)\nprint(low, high)\n",
+          "language": "python",
+          "note": "The first midpoint is 4.5. Its square exceeds 9, so the new upper bound is 4.5 and the root 3 remains inside.",
+          "output": "4.5\n0.0 4.5"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "examples": [
+        {
+          "code": "def bisect_sqrt(value, width=0.001, max_steps=100):\n    if value < 0 or width <= 0 or max_steps < 0:\n        raise ValueError(\"invalid bounds\")\n    low = 0.0\n    high = max(1.0, value)\n    for _ in range(max_steps):\n        if high - low <= width:\n            return (low + high) / 2\n        middle = (low + high) / 2\n        if middle * middle < value:\n            low = middle\n        else:\n            high = middle\n    if high - low <= width:\n        return (low + high) / 2\n    return None\nprint(bisect_sqrt(9, width=10, max_steps=0))\nprint(bisect_sqrt(9, width=0.001, max_steps=0))\ntry:\n    bisect_sqrt(9, width=0)\nexcept ValueError as error:\n    print(str(error))\n",
+          "language": "python",
+          "note": "A starting range already narrow enough can return immediately. A tighter width with no update budget returns None; zero width is rejected.",
+          "output": "4.5\nNone\ninvalid bounds"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "examples": [
+        {
+          "code": "def bisect_sqrt(value, width=0.001, max_steps=100):\n    if value < 0 or width <= 0 or max_steps < 0:\n        raise ValueError(\"invalid bounds\")\n    low = 0.0\n    high = max(1.0, value)\n    for _ in range(max_steps):\n        if high - low <= width:\n            return (low + high) / 2\n        middle = (low + high) / 2\n        if middle * middle < value:\n            low = middle\n        else:\n            high = middle\n    if high - low <= width:\n        return (low + high) / 2\n    return None\nanswer = bisect_sqrt(0.25)\nprint(abs(answer - 0.5) <= 0.001)\nprint(abs(-3))\n",
+          "language": "python",
+          "note": "abs removes the direction of a difference. The first check asks whether this estimate is sufficiently close to 0.5.",
+          "output": "True\n3"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "examples": [
+        {
+          "code": "def bisect_sqrt(value, width=0.001, max_steps=100):\n    if value < 0 or width <= 0 or max_steps < 0:\n        raise ValueError(\"invalid bounds\")\n    low = 0.0\n    high = max(1.0, value)\n    for _ in range(max_steps):\n        if high - low <= width:\n            return (low + high) / 2\n        middle = (low + high) / 2\n        if middle * middle < value:\n            low = middle\n        else:\n            high = middle\n    if high - low <= width:\n        return (low + high) / 2\n    return None\nanswer = bisect_sqrt(0.25)\nprint(abs(answer - 0.5) <= 0.001)\nprint(bisect_sqrt(9, max_steps=0))\n",
+          "language": "python",
+          "note": "The first call gets a close estimate; the second cannot shrink its range because it permits no updates.",
+          "output": "True\nNone"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "examples": [
+        {
+          "code": "def bisect_sqrt(value, width=0.001, max_steps=100):\n    if value < 0 or width <= 0 or max_steps < 0:\n        raise ValueError(\"invalid bounds\")\n    low = 0.0\n    high = max(1.0, value)\n    for _ in range(max_steps):\n        if high - low <= width:\n            return (low + high) / 2\n        middle = (low + high) / 2\n        if middle * middle < value:\n            low = middle\n        else:\n            high = middle\n    if high - low <= width:\n        return (low + high) / 2\n    return None\nfor arguments in [(-1, 0.001, 100), (9, 0, 100), (9, 0.001, -1)]:\n    try:\n        bisect_sqrt(*arguments)\n    except ValueError:\n        print(\"invalid bounds rejected\")\n",
+          "language": "python",
+          "note": "The three calls separately reject a negative value, zero width, and negative budget. The full function also shows the width check after the loop.",
+          "output": "invalid bounds rejected\ninvalid bounds rejected\ninvalid bounds rejected"
+        },
+        {
+          "code": "def bisect_sqrt(value, width=0.001, max_steps=100):\n    if value < 0 or width <= 0 or max_steps < 0:\n        raise ValueError(\"invalid bounds\")\n    low = 0.0\n    high = max(1.0, value)\n    for _ in range(max_steps):\n        if high - low <= width:\n            return (low + high) / 2\n        middle = (low + high) / 2\n        if middle * middle < value:\n            low = middle\n        else:\n            high = middle\n    if high - low <= width:\n        return (low + high) / 2\n    return None\n\ndef __invalid_bounds_rejected():\n    for args in [(-1, 0.01, 10), (1, 0, 10), (1, 0.01, -1)]:\n        try:\n            bisect_sqrt(*args)\n        except ValueError:\n            continue\n        return False\n    return True\nprint(__invalid_bounds_rejected())\n",
+          "language": "python",
+          "note": "The supplied helper tries three invalid cases and returns True only when all three raise ValueError.",
+          "output": "True"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        0,
+        0,
+        1,
+        1,
+        1
+      ]
+    }
+  ],
+  "python-73": [
+    {
+      "examples": [
+        {
+          "code": "def entry_allowed(age):\n    return age >= 18\nfor age in [17, 18, 19]:\n    print(age, entry_allowed(age))\n",
+          "language": "python",
+          "note": "The expected answers change exactly at 18: False, True, True.",
+          "output": "17 False\n18 True\n19 True"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "examples": [
+        {
+          "code": "for age in [19, 18]:\n    print(age, age > 18, age >= 18)\n",
+          "language": "python",
+          "note": "The two comparisons agree at 19 and disagree at 18. Testing the boundary exposes the missing equals sign.",
+          "output": "19 True True\n18 False True"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "examples": [
+        {
+          "code": "def entry_allowed(age):\n    return age >= 18\n\ndef first_disagreement(candidate):\n    for age, expected in [(17, False), (18, True), (19, True)]:\n        if candidate(age) != expected:\n            return age\n    return None\ndef wrong_rule(age):\n    return age > 18\n\nprint(first_disagreement(wrong_rule))\nprint(first_disagreement(entry_allowed))\nprint(entry_allowed(18))\n",
+          "language": "python",
+          "note": "The candidate function is called with each age and compared with an independently written expected answer.",
+          "output": "18\nNone\nTrue"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "examples": [
+        {
+          "code": "def entry_allowed(age):\n    return age >= 18\n\ndef first_disagreement(candidate):\n    for age, expected in [(17, False), (18, True), (19, True)]:\n        if candidate(age) != expected:\n            return age\n    return None\ndef wrong_rule(age):\n    return age > 18\n\nprint(first_disagreement(wrong_rule))\nprint(first_disagreement(entry_allowed))\nprint(entry_allowed(18))\n",
+          "language": "python",
+          "note": "wrong_rule fails at 18. entry_allowed matches all three expectations and permits 18.",
+          "output": "18\nNone\nTrue"
+        }
+      ],
+      "thoughtExamples": [
+        0
+      ]
+    },
+    {
+      "examples": [
+        {
+          "code": "def entry_allowed(age):\n    return age >= 18\n\ndef first_disagreement(candidate):\n    for age, expected in [(17, False), (18, True), (19, True)]:\n        if candidate(age) != expected:\n            return age\n    return None\ndef wrong_rule(age):\n    return age > 18\n\nprint(first_disagreement(wrong_rule))\nprint(first_disagreement(entry_allowed))\nprint(entry_allowed(18))\n",
+          "language": "python",
+          "note": "The expected pairs are written in the loop. They are not calculated using the candidate being checked.",
+          "output": "18\nNone\nTrue"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        0,
+        0
+      ]
+    }
+  ],
+  "python-74": [
+    {
+      "examples": [
+        {
+          "code": "def total_prefix(values, count):\n    total = 0\n    for index in range(count + 1):\n        total += values[index]\n    return total\nprint(\"expected:\", 4 + 7)\nprint(\"actual:\", total_prefix([4, 7, 9], 2))\n",
+          "language": "python",
+          "note": "This version of total_prefix contains the starter bug: count + 1 adds an unwanted third item. The actual 20 differs from the expected 11.",
+          "output": "expected: 11\nactual: 20"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "examples": [
+        {
+          "code": "values = [4]\ncount = 0\nprint(list(range(count + 1)))\nprint(sum(values[index] for index in range(count + 1)))\n",
+          "language": "python",
+          "note": "Even with count 0, the buggy range contains index 0. Reading that index incorrectly adds 4.",
+          "output": "[0]\n4"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "examples": [
+        {
+          "code": "def total_prefix(values, count):\n    total = 0\n    for index in range(count):\n        total += values[index]\n    return total\nprint(total_prefix([4, 7, 9], 2))\nprint(total_prefix([4], 0))\nassert total_prefix([4], 0) == 0\n",
+          "language": "python",
+          "note": "range(count) is empty when count is zero. The final assertion preserves the small case as a regression test.",
+          "output": "11\n0"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "examples": [
+        {
+          "code": "values = [4]\ncount = 1\ntry:\n    total = sum(values[index] for index in range(count + 1))\n    total -= values[-1]\nexcept IndexError:\n    print(\"read past the list before subtraction\")\n",
+          "language": "python",
+          "note": "The invalid read happens before any later subtraction can run. Fixing the loop bound prevents that read.",
+          "output": "read past the list before subtraction"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "examples": [
+        {
+          "code": "def total_prefix(values, count):\n    total = 0\n    for index in range(count):\n        total += values[index]\n    return total\nprint(total_prefix([4, 7, 9], 2))\nprint(total_prefix([4], 0))\n",
+          "language": "python",
+          "note": "The repaired loop adds the first two values and performs no reads when count is zero.",
+          "output": "11\n0"
+        }
+      ],
+      "thoughtExamples": []
+    },
+    {
+      "examples": [
+        {
+          "code": "def total_prefix(values, count):\n    total = 0\n    for index in range(count):\n        total += values[index]\n    return total\nvalues = [4, 7, 9]\nprint(total_prefix(values, 2))\nprint(total_prefix(values, 0))\nprint(values)\n",
+          "language": "python",
+          "note": "The result uses only the requested prefix. Printing values afterward confirms that the list was not changed.",
+          "output": "11\n0\n[4, 7, 9]"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        0,
+        0
+      ]
+    }
+  ],
+  "python-75": [
+    {
+      "examples": [
+        {
+          "code": "def recursive_total(values):\n    if not values:\n        return 0\n    first = values[0]\n    rest_total = recursive_total(values[1:])\n    return first + rest_total\nprint(recursive_total([2, 5]))\nprint(recursive_total([]))\n",
+          "language": "python",
+          "note": "The empty list returns 0. Each other call passes values[1:], which has one fewer item.",
+          "output": "7\n0"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "examples": [
+        {
+          "code": "def recursive_total(values):\n    if not values:\n        return 0\n    first = values[0]\n    rest_total = recursive_total(values[1:])\n    return first + rest_total\n# The calls have separate local variables:\n# recursive_total([2, 5]): first = 2, waits for [5]\n# recursive_total([5]): first = 5, waits for []\n# recursive_total([]): returns 0\nprint(recursive_total([2, 5]))\n",
+          "language": "python",
+          "note": "The two first names belong to different function calls. Both are needed while the inner call finishes.",
+          "output": "7"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "examples": [
+        {
+          "code": "def recursive_total(values):\n    if not values:\n        return 0\n    first = values[0]\n    rest_total = recursive_total(values[1:])\n    return first + rest_total\nprint(recursive_total([]))\nprint(recursive_total([5]))\nprint(recursive_total([2, 5]))\n",
+          "language": "python",
+          "note": "The three results show the return sequence: 0, then 5 + 0, then 2 + 5.",
+          "output": "0\n5\n7"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "examples": [
+        {
+          "code": "def recursive_total(values):\n    if not values:\n        return 0\n    first = values[0]\n    rest_total = recursive_total(values[1:])\n    return first + rest_total\nvalues = [2, 5]\nshorter = values[1:]\nprint(shorter)\nprint(shorter is values)\nprint(recursive_total(values))\n",
+          "language": "python",
+          "note": "The slice is a new shorter list, so every nonempty recursive call performs a copy. Keep the exercise inputs small.",
+          "output": "[5]\nFalse\n7"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "examples": [
+        {
+          "code": "def recursive_total(values):\n    if not values:\n        return 0\n    first = values[0]\n    rest_total = recursive_total(values[1:])\n    return first + rest_total\nprint(recursive_total([2, 5]))\nprint(recursive_total([]))\n",
+          "language": "python",
+          "note": "The two calls display 7 and 0. The empty-list base case ends the repeated calls.",
+          "output": "7\n0"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0
+      ]
+    },
+    {
+      "examples": [
+        {
+          "code": "def recursive_total(values):\n    if not values:\n        return 0\n    first = values[0]\n    rest_total = recursive_total(values[1:])\n    return first + rest_total\nvalues = [2, 5]\nprint(recursive_total(values))\nprint(values)\n",
+          "language": "python",
+          "note": "The function adds the returned rest_total instead of discarding it, and the original list remains [2, 5].",
+          "output": "7\n[2, 5]"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        0
+      ]
+    }
+  ],
+  "python-76": [
+    {
+      "examples": [
+        {
+          "code": "class Label:\n    def __init__(self, text):\n        self.text = text\n\n    def __str__(self):\n        return self.text\n\n    def __repr__(self):\n        return f\"Label({self.text!r})\"\nitem = Label(\"Moon\")\nprint(str(item))\nprint(repr(item))\n",
+          "language": "python",
+          "note": "The class supplies two string-returning methods. str uses __str__; repr uses __repr__.",
+          "output": "Moon\nLabel('Moon')"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "examples": [
+        {
+          "code": "class Label:\n    def __init__(self, text):\n        self.text = text\n\n    def __str__(self):\n        return self.text\n\n    def __repr__(self):\n        return f\"Label({self.text!r})\"\nitem = Label(\"Moon\\nStar\")\nprint(str(item))\nprint(repr(item))\n",
+          "language": "python",
+          "note": "Ordinary display uses the actual line break. !r uses repr, keeping the quote marks and \\n visible for inspection.",
+          "output": "Moon\nStar\nLabel('Moon\\nStar')"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "examples": [
+        {
+          "code": "class Label:\n    def __init__(self, text):\n        self.text = text\n\n    def __str__(self):\n        return self.text\n\n    def __repr__(self):\n        return f\"Label({self.text!r})\"\nitem = Label(\"Moon\")\nprint(item)\nprint(str(item))\nprint(repr(item))\n",
+          "language": "python",
+          "note": "print(item) and str(item) use the readable form. The final representation is text to inspect; this example never evaluates it.",
+          "output": "Moon\nMoon\nLabel('Moon')"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "examples": [
+        {
+          "code": "class Label:\n    def __init__(self, text):\n        self.text = text\n\n    def __str__(self):\n        return self.text\n\n    def __repr__(self):\n        return f\"Label({self.text!r})\"\nitem = Label(\"Moon\")\nprint(str(item))\nprint(repr(item))\n",
+          "language": "python",
+          "note": "The second output includes quotes around Moon because __repr__ uses the representation of the saved string.",
+          "output": "Moon\nLabel('Moon')"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0
+      ]
+    },
+    {
+      "examples": [
+        {
+          "code": "class Label:\n    def __init__(self, text):\n        self.text = text\n\n    def __str__(self):\n        return self.text\n\n    def __repr__(self):\n        return f\"Label({self.text!r})\"\nitem = Label(\"Moon\")\nreadable = str(item)\ndiagnostic = repr(item)\nprint(readable, diagnostic)\nprint(isinstance(readable, str), isinstance(diagnostic, str))\n",
+          "language": "python",
+          "note": "Both methods return strings that other code can save. Printing inside either method would not supply those return values.",
+          "output": "Moon Label('Moon')\nTrue True"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    }
+  ],
+  "python-77": [
+    {
+      "examples": [
+        {
+          "code": "class Tag:\n    def __init__(self, text):\n        self.text = text\n\n    def __eq__(self, other):\n        if not isinstance(other, Tag):\n            return NotImplemented\n        return self.text == other.text\nleft = Tag(\"music\")\nright = Tag(\"music\")\nprint(left == right)\nprint(left is right)\nprint(left == \"music\")\n",
+          "language": "python",
+          "note": "left and right are separate objects with matching text. Their equality is True while their identity is False.",
+          "output": "True\nFalse\nFalse"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "examples": [
+        {
+          "code": "class Tag:\n    def __init__(self, text):\n        self.text = text\n\n    def __eq__(self, other):\n        if not isinstance(other, Tag):\n            return NotImplemented\n        return self.text == other.text\ntag = Tag(\"music\")\nprint(tag.__eq__(Tag(\"music\")))\nprint(tag.__eq__(\"music\") is NotImplemented)\n",
+          "language": "python",
+          "note": "The direct method call shows the returned sentinel for an unsupported type. It does not raise NotImplementedError.",
+          "output": "True\nTrue"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "examples": [
+        {
+          "code": "class Tag:\n    def __init__(self, text):\n        self.text = text\n\n    def __eq__(self, other):\n        if not isinstance(other, Tag):\n            return NotImplemented\n        return self.text == other.text\ntag = Tag(\"music\")\nprint(tag == \"music\")\nprint(tag.__eq__(\"music\") is NotImplemented)\n",
+          "language": "python",
+          "note": "The special method returns NotImplemented for the string; Python’s complete equality comparison ends as False.",
+          "output": "False\nTrue"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "examples": [
+        {
+          "code": "class Tag:\n    def __init__(self, text):\n        self.text = text\n\n    def __eq__(self, other):\n        if not isinstance(other, Tag):\n            return NotImplemented\n        return self.text == other.text\nprint([Tag(\"music\")] == [Tag(\"music\")])\ntry:\n    print({Tag(\"music\"): \"saved\"})\nexcept TypeError:\n    print(\"Tag is not hashable\")\n",
+          "language": "python",
+          "note": "List comparison uses the Tag equality method. Using Tag as a dictionary key fails because no suitable hash is defined.",
+          "output": "True\nTag is not hashable"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "examples": [
+        {
+          "code": "class Tag:\n    def __init__(self, text):\n        self.text = text\n\n    def __eq__(self, other):\n        if not isinstance(other, Tag):\n            return NotImplemented\n        return self.text == other.text\nleft = Tag(\"music\")\nright = Tag(\"music\")\nprint(left == right)\nprint(left is right)\nprint(left == \"music\")\n",
+          "language": "python",
+          "note": "The three calls compare saved values, object identity, and an unsupported string, respectively.",
+          "output": "True\nFalse\nFalse"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "examples": [
+        {
+          "code": "class Tag:\n    def __init__(self, text):\n        self.text = text\n\n    def __eq__(self, other):\n        if not isinstance(other, Tag):\n            return NotImplemented\n        return self.text == other.text\nclass Other:\n    text = \"music\"\ntag = Tag(\"music\")\nprint(tag == Tag(\"music\"))\nprint(tag.__eq__(Other()) is NotImplemented)\nprint(tag is tag)\n",
+          "language": "python",
+          "note": "A different class having a text attribute is still not a Tag. The identity test continues to ask whether it is the same object.",
+          "output": "True\nTrue\nTrue"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    }
+  ],
+  "python-78": [
+    {
+      "examples": [
+        {
+          "code": "a = (\"read\", \"study\")\nb = (\"read\", \"study\")\nprint(a == b, hash(a) == hash(b))\nprint(hash(-1) == hash(-2))\n",
+          "language": "python",
+          "note": "Equal tuple keys have equal hashes. Even the different integers -1 and -2 share a hash, showing that hashes are not unique IDs.",
+          "output": "True True\nTrue"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "examples": [
+        {
+          "code": "class Task:\n    # __hash__ is intentionally not defined.\n    def __init__(self, title, category):\n        self.title = title\n        self.category = category\n\n    def __eq__(self, other):\n        if not isinstance(other, Task):\n            return NotImplemented\n        return (self.title, self.category) == (other.title, other.category)\ntask = Task(\"read\", \"study\")\nprint(task == Task(\"read\", \"study\"))\ntry:\n    hash(task)\nexcept TypeError:\n    print(\"unhashable task\")\n",
+          "language": "python",
+          "note": "Task compares its two saved fields. Because those fields can change and the class defines no hash, hash(task) is rejected.",
+          "output": "True\nunhashable task"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "examples": [
+        {
+          "code": "class Task:\n    def __init__(self, title, category):\n        self.title = title\n        self.category = category\n\n    def __eq__(self, other):\n        if not isinstance(other, Task):\n            return NotImplemented\n        return (self.title, self.category) == (other.title, other.category)\n\ndef snapshot_key(task):\n    return (task.title, task.category)\nfirst = Task(\"read\", \"study\")\nsecond = Task(\"read\", \"study\")\na = snapshot_key(first)\nb = snapshot_key(second)\nprint(first == second)\nprint(a == b, hash(a) == hash(b))\ntry:\n    hash(first)\nexcept TypeError:\n    print(\"unhashable task\")\n",
+          "language": "python",
+          "note": "The tuples contain matching strings, so their equality and hash comparison both succeed. The changeable Task itself remains unhashable.",
+          "output": "True\nTrue True\nunhashable task"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "examples": [
+        {
+          "code": "class Task:\n    def __init__(self, title, category):\n        self.title = title\n        self.category = category\n\n    def __eq__(self, other):\n        if not isinstance(other, Task):\n            return NotImplemented\n        return (self.title, self.category) == (other.title, other.category)\n\ndef snapshot_key(task):\n    return (task.title, task.category)\ntask = Task(\"read\", \"study\")\nold_key = snapshot_key(task)\ntask.title = \"write\"\nprint(old_key)\nprint(old_key == snapshot_key(task))\n",
+          "language": "python",
+          "note": "old_key stores the two string values from before the reassignment. It keeps read even after task.title becomes write.",
+          "output": "('read', 'study')\nFalse"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "examples": [
+        {
+          "code": "class Task:\n    def __init__(self, title, category):\n        self.title = title\n        self.category = category\n\n    def __eq__(self, other):\n        if not isinstance(other, Task):\n            return NotImplemented\n        return (self.title, self.category) == (other.title, other.category)\ndef snapshot_key(task):\n    return (task.title, task.category)\ntask = Task(\"read\", \"study\")\nold_key = snapshot_key(task)\nsaved = {old_key: \"first\"}\nsaved[snapshot_key(Task(\"read\", \"study\"))] = \"replacement\"\ntask.title = \"write\"\nprint(old_key)\nprint(saved)\nprint(len(saved))\n",
+          "language": "python",
+          "note": "The equal snapshot replaces the value at the existing dictionary entry. Changing the task afterward leaves the stored tuple key unchanged.",
+          "output": "('read', 'study')\n{('read', 'study'): 'replacement'}\n1"
+        },
+        {
+          "code": "class Task:\n    def __init__(self, title, category):\n        self.title = title\n        self.category = category\n\n    def __eq__(self, other):\n        if not isinstance(other, Task):\n            return NotImplemented\n        return (self.title, self.category) == (other.title, other.category)\n\ndef snapshot_key(task):\n    return (task.title, task.category)\n\ndef __snapshot_preserved():\n    task = Task(\"read\", \"study\")\n    key = snapshot_key(task)\n    task.title = \"write\"\n    return key == (\"read\", \"study\") and snapshot_key(task) == (\"write\", \"study\")\nprint(__snapshot_preserved())\n",
+          "language": "python",
+          "note": "The supplied helper saves a snapshot, changes the task title, then checks both the old and new tuple values.",
+          "output": "True"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        1,
+        1
+      ]
+    }
+  ],
+  "python-79": [
+    {
+      "examples": [
+        {
+          "code": "def counted_find(values, target):\n    comparisons = 0\n    for index, value in enumerate(values):\n        comparisons += 1\n        if value == target:\n            return index, comparisons\n    return None, comparisons\nvalues = [7, 2, 7]\nprint(\"items:\", len(values))\nprint(\"missing search:\", counted_find(values, 9))\n",
+          "language": "python",
+          "note": "There are three items and three value == target tests. The counter measures those tests, not elapsed time.",
+          "output": "items: 3\nmissing search: (None, 3)"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "examples": [
+        {
+          "code": "def counted_find(values, target):\n    comparisons = 0\n    for index, value in enumerate(values):\n        comparisons += 1\n        if value == target:\n            return index, comparisons\n    return None, comparisons\nprint(counted_find([7, 2, 7], 7))\nprint(counted_find([7, 2, 7], 9))\n",
+          "language": "python",
+          "note": "enumerate supplies both the index and value. The comparison count increases immediately before each equality test.",
+          "output": "(0, 1)\n(None, 3)"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "examples": [
+        {
+          "code": "def counted_find(values, target):\n    comparisons = 0\n    for index, value in enumerate(values):\n        comparisons += 1\n        if value == target:\n            return index, comparisons\n    return None, comparisons\nprint(counted_find([], 7))\nprint(counted_find([7, 2, 9], 7))\nprint(counted_find([7, 2, 9], 9))\nprint(counted_find([7, 2, 9], 5))\n",
+          "language": "python",
+          "note": "The calls show zero tests for empty input, one for an immediate match, and three for a last match or missing value.",
+          "output": "(None, 0)\n(0, 1)\n(2, 3)\n(None, 3)"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "examples": [
+        {
+          "code": "def counted_find(values, target):\n    comparisons = 0\n    for index, value in enumerate(values):\n        comparisons += 1\n        if value == target:\n            return index, comparisons\n    return None, comparisons\nvalues = [7, 2, 9]\nfor target in values:\n    print(counted_find(values, target))\nprint(values)\n",
+          "language": "python",
+          "note": "Keeping the list fixed makes the comparison counts grow from one to three as the target moves later. The source order is preserved.",
+          "output": "(0, 1)\n(1, 2)\n(2, 3)\n[7, 2, 9]"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        0
+      ]
+    }
+  ],
+  "python-80": [
+    {
+      "examples": [
+        {
+          "code": "for n in [4, 8, 16]:\n    events = 0\n    for _ in range(n):\n        events += 1\n    print(n, events)\n",
+          "language": "python",
+          "note": "This chosen event count grows exactly with n, illustrating linear growth. The printed counts do not measure seconds.",
+          "output": "4 4\n8 8\n16 16"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "examples": [
+        {
+          "code": "for n in [4, 8]:\n    visits = sum(1 for _ in range(n))\n    pairs = sum(1 for i in range(n) for j in range(n))\n    print(n, visits, pairs)\n",
+          "language": "python",
+          "note": "Doubling n from 4 to 8 doubles visits from 4 to 8 and quadruples pairs from 16 to 64.",
+          "output": "4 4 16\n8 8 64"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "examples": [
+        {
+          "code": "def halvings(n):\n    count = 0\n    while n > 1:\n        n //= 2\n        count += 1\n    return count\nfor n in [0, 1, 7, 8, 16]:\n    print(n, halvings(n))\n",
+          "language": "python",
+          "note": "Seven moves to 3 then 1; eight moves to 4, 2, then 1. Zero and one already need no halvings.",
+          "output": "0 0\n1 0\n7 2\n8 3\n16 4"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "examples": [
+        {
+          "code": "def growth_counts(n):\n    fixed = 1\n    linear = 0\n    pairs = 0\n    for i in range(n):\n        linear += 1\n        for j in range(n):\n            pairs += 1\n    halvings = 0\n    remaining = n\n    while remaining > 1:\n        remaining //= 2\n        halvings += 1\n    return fixed, linear, pairs, halvings\nprint(growth_counts(4))\nprint(growth_counts(8))\n",
+          "language": "python",
+          "note": "Each returned tuple lists fixed events, linear visits, ordered pairs, and halvings in that order.",
+          "output": "(1, 4, 16, 2)\n(1, 8, 64, 3)"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "examples": [
+        {
+          "code": "def growth_counts(n):\n    fixed = 1\n    linear = 0\n    pairs = 0\n    for i in range(n):\n        linear += 1\n        for j in range(n):\n            pairs += 1\n    halvings = 0\n    remaining = n\n    while remaining > 1:\n        remaining //= 2\n        halvings += 1\n    return fixed, linear, pairs, halvings\nfor n in [0, 7, 8]:\n    print(n, growth_counts(n))\n",
+          "language": "python",
+          "note": "The counters show the four growth patterns. Crossing from 7 to the power of two 8 adds one halving.",
+          "output": "0 (1, 0, 0, 0)\n7 (1, 7, 49, 2)\n8 (1, 8, 64, 3)"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    }
+  ],
+  "python-81": [
+    {
+      "examples": [
+        {
+          "code": "def binary_find(values, target):\n    low = 0\n    high = len(values) - 1\n    probes = 0\n    while low <= high:\n        mid = (low + high) // 2\n        probes += 1\n        if values[mid] == target:\n            return mid, probes\n        if values[mid] < target:\n            low = mid + 1\n        else:\n            high = mid - 1\n    return None, probes\nvalues = [2, 4, 6, 8, 10]\nprint(binary_find(values, 8))\nprint(values)\n",
+          "language": "python",
+          "note": "The caller supplies the ascending list. The function searches its index bounds and leaves that order unchanged.",
+          "output": "(3, 2)\n[2, 4, 6, 8, 10]"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "examples": [
+        {
+          "code": "values = [2, 4, 6, 8, 10]\ntarget = 8\nlow, high = 0, len(values) - 1\nmid = (low + high) // 2\nprint(mid, values[mid])\nif values[mid] < target:\n    low = mid + 1\nprint(low, high)\nprint((low + high) // 2)\n",
+          "language": "python",
+          "note": "The first middle is index 2 containing 6. Removing indices through 2 leaves bounds 3 through 4, whose middle is 3.",
+          "output": "2 6\n3 4\n3"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "examples": [
+        {
+          "code": "def binary_find(values, target):\n    low = 0\n    high = len(values) - 1\n    probes = 0\n    while low <= high:\n        mid = (low + high) // 2\n        probes += 1\n        if values[mid] == target:\n            return mid, probes\n        if values[mid] < target:\n            low = mid + 1\n        else:\n            high = mid - 1\n    return None, probes\nprint(binary_find([2, 4, 6, 8, 10], 8))\nprint(binary_find([], 8))\n",
+          "language": "python",
+          "note": "The normal call needs two middle-position probes. The empty list starts with high = -1, so it needs none.",
+          "output": "(3, 2)\n(None, 0)"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "examples": [
+        {
+          "code": "def binary_find(values, target):\n    low = 0\n    high = len(values) - 1\n    probes = 0\n    while low <= high:\n        mid = (low + high) // 2\n        probes += 1\n        if values[mid] == target:\n            return mid, probes\n        if values[mid] < target:\n            low = mid + 1\n        else:\n            high = mid - 1\n    return None, probes\nprint(binary_find([2, 4, 4, 4, 6], 4))\nprint(binary_find([8, 2, 4], 8))\n",
+          "language": "python",
+          "note": "The duplicate search may return any matching position. The unsorted list misses a present 8, showing why sorted input is required.",
+          "output": "(2, 1)\n(None, 2)"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "examples": [
+        {
+          "code": "def binary_find(values, target):\n    low = 0\n    high = len(values) - 1\n    probes = 0\n    while low <= high:\n        mid = (low + high) // 2\n        probes += 1\n        if values[mid] == target:\n            return mid, probes\n        if values[mid] < target:\n            low = mid + 1\n        else:\n            high = mid - 1\n    return None, probes\nfor values, target in [([], 8), ([2, 4, 6], 9), ([2, 4, 6], 2), ([2, 4, 6], 6), ([4, 4], 4)]:\n    print(binary_find(values, target))\n",
+          "language": "python",
+          "note": "These cases cover empty, absent, both boundaries, and duplicate targets. The second number counts probes, not seconds.",
+          "output": "(None, 0)\n(None, 2)\n(0, 2)\n(2, 2)\n(0, 1)"
+        },
+        {
+          "code": "def binary_find(values, target):\n    low = 0\n    high = len(values) - 1\n    probes = 0\n    while low <= high:\n        mid = (low + high) // 2\n        probes += 1\n        if values[mid] == target:\n            return mid, probes\n        if values[mid] < target:\n            low = mid + 1\n        else:\n            high = mid - 1\n    return None, probes\n\ndef counted_find(values, target):\n    comparisons = 0\n    for index, value in enumerate(values):\n        comparisons += 1\n        if value == target:\n            return index, comparisons\n    return None, comparisons\nvalues = [2, 4, 6, 8, 10]\nprint(\"binary probes:\", binary_find(values, 10))\nprint(\"linear equality tests:\", counted_find(values, 10))\n",
+          "language": "python",
+          "note": "Both searches use the same sorted list and return index 4. Their counters count different events: middle-position probes and equality tests.",
+          "output": "binary probes: (4, 3)\nlinear equality tests: (4, 5)"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        1,
+        1
+      ]
+    }
+  ],
+  "python-82": [
+    {
+      "examples": [
+        {
+          "code": "records = [(2, \"A\"), (1, \"B\"), (2, \"C\")]\ni = 1\nitem = records[i]\nprint(\"earlier priority:\", records[i - 1][0])\nprint(\"next record:\", item)\nprint(\"next priority:\", item[0])\n",
+          "language": "python",
+          "note": "At i = 1, the single earlier A record is the sorted prefix. B has the next priority to insert.",
+          "output": "earlier priority: 2\nnext record: (1, 'B')\nnext priority: 1"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "examples": [
+        {
+          "code": "result = [(2, \"A\"), (1, \"B\"), (2, \"C\")]\nitem = result[1]\nj = 0\nwhile j >= 0 and result[j][0] > item[0]:\n    result[j + 1] = result[j]\n    j -= 1\nresult[j + 1] = item\nprint(result)\n",
+          "language": "python",
+          "note": "A shifts right to make room for B. The condition checks j before reading an item and only moves a strictly greater priority.",
+          "output": "[(1, 'B'), (2, 'A'), (2, 'C')]"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "examples": [
+        {
+          "code": "def insertion_sort(records):\n    result = records.copy()\n    shifts = 0\n    for i in range(1, len(result)):\n        item = result[i]\n        j = i - 1\n        while j >= 0 and result[j][0] > item[0]:\n            result[j + 1] = result[j]\n            shifts += 1\n            j -= 1\n        result[j + 1] = item\n    return result, shifts\nsource = [(2, \"A\"), (1, \"B\"), (2, \"C\")]\nprint(insertion_sort(source))\nprint(source)\n",
+          "language": "python",
+          "note": "The new list places B first and keeps equal-priority A before C. Only A’s move counts as a shift.",
+          "output": "([(1, 'B'), (2, 'A'), (2, 'C')], 1)\n[(2, 'A'), (1, 'B'), (2, 'C')]"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "examples": [
+        {
+          "code": "def insertion_sort(records):\n    result = records.copy()\n    shifts = 0\n    for i in range(1, len(result)):\n        item = result[i]\n        j = i - 1\n        while j >= 0 and result[j][0] > item[0]:\n            result[j + 1] = result[j]\n            shifts += 1\n            j -= 1\n        result[j + 1] = item\n    return result, shifts\nprint(insertion_sort([(1, \"A\"), (2, \"B\"), (3, \"C\")]))\nprint(insertion_sort([(3, \"A\"), (2, \"B\"), (1, \"C\")]))\n",
+          "language": "python",
+          "note": "Sorted input needs zero shifts. Reversed input of size three needs 1 + 2 = 3 shifts, although other work is not counted.",
+          "output": "([(1, 'A'), (2, 'B'), (3, 'C')], 0)\n([(1, 'C'), (2, 'B'), (3, 'A')], 3)"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "examples": [
+        {
+          "code": "def insertion_sort(records):\n    result = records.copy()\n    shifts = 0\n    for i in range(1, len(result)):\n        item = result[i]\n        j = i - 1\n        while j >= 0 and result[j][0] > item[0]:\n            result[j + 1] = result[j]\n            shifts += 1\n            j -= 1\n        result[j + 1] = item\n    return result, shifts\nsource = [(2, \"first\"), (1, \"low\"), (2, \"second\")]\nresult, shifts = insertion_sort(source)\nprint(result, shifts)\nprint(source)\nprint(result is source)\nprint(insertion_sort([]))\n",
+          "language": "python",
+          "note": "The equal-priority labels preserve their order, source stays unchanged, and the returned list is new. Empty input returns ([], 0).",
+          "output": "[(1, 'low'), (2, 'first'), (2, 'second')] 1\n[(2, 'first'), (1, 'low'), (2, 'second')]\nFalse\n([], 0)"
+        },
+        {
+          "code": "def insertion_sort(records):\n    result = records.copy()\n    shifts = 0\n    for i in range(1, len(result)):\n        item = result[i]\n        j = i - 1\n        while j >= 0 and result[j][0] > item[0]:\n            result[j + 1] = result[j]\n            shifts += 1\n            j -= 1\n        result[j + 1] = item\n    return result, shifts\n\ndef __insertion_preserved():\n    source = [(2, \"A\"), (1, \"B\"), (1, \"C\")]\n    before = source.copy()\n    result, shifts = insertion_sort(source)\n    empty = []\n    empty_result, empty_shifts = insertion_sort(empty)\n    return source == before and result is not source and result == [(1, \"B\"), (1, \"C\"), (2, \"A\")] and empty_result == [] and empty_result is not empty\nprint(__insertion_preserved())\n",
+          "language": "python",
+          "note": "The supplied helper checks original order, sorted result, and separate result lists, including the empty case.",
+          "output": "True"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        1,
+        1
+      ]
+    }
+  ],
+  "python-83": [
+    {
+      "examples": [
+        {
+          "code": "def merge(left, right):\n    result = []\n    i = 0\n    j = 0\n    while i < len(left) and j < len(right):\n        if left[i] <= right[j]:\n            result.append(left[i])\n            i += 1\n        else:\n            result.append(right[j])\n            j += 1\n    result.extend(left[i:])\n    result.extend(right[j:])\n    return result\nprint(merge([1, 4, 4], [2, 4, 8]))\nprint(merge([], [3, 5]))\n",
+          "language": "python",
+          "note": "Each output keeps all repeated 4s. The function compares only the two next unused values before appending one.",
+          "output": "[1, 2, 4, 4, 4, 8]\n[3, 5]"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "examples": [
+        {
+          "code": "def merge(left, right):\n    result = []\n    i = 0\n    j = 0\n    while i < len(left) and j < len(right):\n        if left[i] <= right[j]:\n            result.append(left[i])\n            i += 1\n        else:\n            result.append(right[j])\n            j += 1\n    result.extend(left[i:])\n    result.extend(right[j:])\n    return result\nprint(merge([1, 4], [1, 2, 8]))\nprint(merge([], [3, 5]))\n",
+          "language": "python",
+          "note": "The <= branch chooses the left 1 first. Once one input is exhausted, extend adds the other input’s remaining sorted values.",
+          "output": "[1, 1, 2, 4, 8]\n[3, 5]"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "examples": [
+        {
+          "code": "def merge(left, right):\n    result = []\n    i = 0\n    j = 0\n    while i < len(left) and j < len(right):\n        if left[i] <= right[j]:\n            result.append(left[i])\n            i += 1\n        else:\n            result.append(right[j])\n            j += 1\n    result.extend(left[i:])\n    result.extend(right[j:])\n    return result\nprint(merge([1, 4, 4], [2, 4, 8]))\nprint(merge([], [3, 5]))\n",
+          "language": "python",
+          "note": "append adds one chosen item. The final extend calls add the unused tails; they are statements because their return value is None.",
+          "output": "[1, 2, 4, 4, 4, 8]\n[3, 5]"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "examples": [
+        {
+          "code": "left, right = [1], [2, 3, 4]\ni = j = comparisons = 0\nresult = []\nwhile i < len(left) and j < len(right):\n    comparisons += 1\n    if left[i] <= right[j]:\n        result.append(left[i]); i += 1\n    else:\n        result.append(right[j]); j += 1\nresult.extend(left[i:])\nresult.extend(right[j:])\nprint(result, comparisons)\nprint(len(left) + len(right))\n",
+          "language": "python",
+          "note": "All four values are copied to the result. Only one value comparison is needed before the left input runs out.",
+          "output": "[1, 2, 3, 4] 1\n4"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "examples": [
+        {
+          "code": "def merge(left, right):\n    result = []\n    i = 0\n    j = 0\n    while i < len(left) and j < len(right):\n        if left[i] <= right[j]:\n            result.append(left[i])\n            i += 1\n        else:\n            result.append(right[j])\n            j += 1\n    result.extend(left[i:])\n    result.extend(right[j:])\n    return result\nleft, right = [1], [2, 3, 4]\nresult = merge(left, right)\nprint(result)\nprint(left, right)\nprint(result is left, result is right)\n",
+          "language": "python",
+          "note": "The left list finishes early; the remaining right values are appended. Both original lists are preserved.",
+          "output": "[1, 2, 3, 4]\n[1] [2, 3, 4]\nFalse False"
+        },
+        {
+          "code": "def merge(left, right):\n    result = []\n    i = 0\n    j = 0\n    while i < len(left) and j < len(right):\n        if left[i] <= right[j]:\n            result.append(left[i])\n            i += 1\n        else:\n            result.append(right[j])\n            j += 1\n    result.extend(left[i:])\n    result.extend(right[j:])\n    return result\n\ndef __merge_preserved():\n    left = [1, 4]\n    right = [2, 3]\n    result = merge(left, right)\n    empty = []\n    tail = merge(empty, right)\n    return left == [1, 4] and right == [2, 3] and result == [1, 2, 3, 4] and result is not left and result is not right and tail == [2, 3] and tail is not right and tail is not empty\nprint(__merge_preserved())\n",
+          "language": "python",
+          "note": "The supplied helper confirms both input lists are preserved and the merged list is new, including an empty-side case.",
+          "output": "True"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        0,
+        1,
+        1,
+        1
+      ]
+    }
+  ],
+  "python-84": [
+    {
+      "examples": [
+        {
+          "code": "def merge_counted(left, right):\n    result = []\n    i = 0\n    j = 0\n    comparisons = 0\n    while i < len(left) and j < len(right):\n        comparisons += 1\n        if left[i] <= right[j]:\n            result.append(left[i])\n            i += 1\n        else:\n            result.append(right[j])\n            j += 1\n    result.extend(left[i:])\n    result.extend(right[j:])\n    return result, comparisons\n\ndef merge_sort(values):\n    if len(values) <= 1:\n        return values.copy(), 0\n    mid = len(values) // 2\n    left, left_count = merge_sort(values[:mid])\n    right, right_count = merge_sort(values[mid:])\n    result, merge_count = merge_counted(left, right)\n    return result, left_count + right_count + merge_count\nprint(merge_sort([2, 1]))\nprint(merge_sort([7]))\nprint(merge_sort([]))\n",
+          "language": "python",
+          "note": "The two-item input splits into single-item base cases, then merges. One-item and empty inputs already satisfy the base case.",
+          "output": "([1, 2], 1)\n([7], 0)\n([], 0)"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "examples": [
+        {
+          "code": "def merge_counted(left, right):\n    result = []\n    i = 0\n    j = 0\n    comparisons = 0\n    while i < len(left) and j < len(right):\n        comparisons += 1\n        if left[i] <= right[j]:\n            result.append(left[i])\n            i += 1\n        else:\n            result.append(right[j])\n            j += 1\n    result.extend(left[i:])\n    result.extend(right[j:])\n    return result, comparisons\nprint(merge_counted([1], [2, 3]))\n",
+          "language": "python",
+          "note": "Only 1 <= 2 needs comparing. After left is exhausted, the remaining 2 and 3 are copied without more comparisons.",
+          "output": "([1, 2, 3], 1)"
+        },
+        {
+          "code": "result = []\nprint(result.append(1))\nprint(result.extend([2, 3]))\nprint(result)\n",
+          "language": "python",
+          "note": "append and extend change the list. Both calls return None; the final list is [1, 2, 3].",
+          "output": "None\nNone\n[1, 2, 3]"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        1,
+        1,
+        0
+      ]
+    },
+    {
+      "examples": [
+        {
+          "code": "def merge_counted(left, right):\n    result = []\n    i = 0\n    j = 0\n    comparisons = 0\n    while i < len(left) and j < len(right):\n        comparisons += 1\n        if left[i] <= right[j]:\n            result.append(left[i])\n            i += 1\n        else:\n            result.append(right[j])\n            j += 1\n    result.extend(left[i:])\n    result.extend(right[j:])\n    return result, comparisons\n\ndef merge_sort(values):\n    if len(values) <= 1:\n        return values.copy(), 0\n    mid = len(values) // 2\n    left, left_count = merge_sort(values[:mid])\n    right, right_count = merge_sort(values[mid:])\n    result, merge_count = merge_counted(left, right)\n    return result, left_count + right_count + merge_count\nprint(merge_sort([4, 1, 3, 2]))\nprint(merge_sort([]))\n",
+          "language": "python",
+          "note": "The complete merge_counted definition is included, so both recursive calls and their final merge can be followed here.",
+          "output": "([1, 2, 3, 4], 5)\n([], 0)"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "examples": [
+        {
+          "code": "def merge_counted(left, right):\n    result = []\n    i = 0\n    j = 0\n    comparisons = 0\n    while i < len(left) and j < len(right):\n        comparisons += 1\n        if left[i] <= right[j]:\n            result.append(left[i])\n            i += 1\n        else:\n            result.append(right[j])\n            j += 1\n    result.extend(left[i:])\n    result.extend(right[j:])\n    return result, comparisons\n\ndef merge_sort(values):\n    if len(values) <= 1:\n        return values.copy(), 0\n    mid = len(values) // 2\n    left, left_count = merge_sort(values[:mid])\n    right, right_count = merge_sort(values[mid:])\n    result, merge_count = merge_counted(left, right)\n    return result, left_count + right_count + merge_count\nfor values in [[1, 2, 3, 4], [4, 1, 3, 2]]:\n    print(merge_sort(values))\n",
+          "language": "python",
+          "note": "Both lists have four items and two merge levels, but their comparison counts differ. Counts are not elapsed times.",
+          "output": "([1, 2, 3, 4], 4)\n([1, 2, 3, 4], 5)"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "examples": [
+        {
+          "code": "def merge_counted(left, right):\n    result = []\n    i = 0\n    j = 0\n    comparisons = 0\n    while i < len(left) and j < len(right):\n        comparisons += 1\n        if left[i] <= right[j]:\n            result.append(left[i])\n            i += 1\n        else:\n            result.append(right[j])\n            j += 1\n    result.extend(left[i:])\n    result.extend(right[j:])\n    return result, comparisons\n\ndef merge_sort(values):\n    if len(values) <= 1:\n        return values.copy(), 0\n    mid = len(values) // 2\n    left, left_count = merge_sort(values[:mid])\n    right, right_count = merge_sort(values[mid:])\n    result, merge_count = merge_counted(left, right)\n    return result, left_count + right_count + merge_count\nsource = [5, 1, 4, 2, 3]\nresult, comparisons = merge_sort(source)\nprint(result, comparisons)\nprint(source)\nprint(result is source)\nprint(merge_sort([2, 2]))\n",
+          "language": "python",
+          "note": "The five-item input splits into sizes two and three. The result is a new sorted list, and duplicates remain present.",
+          "output": "[1, 2, 3, 4, 5] 8\n[5, 1, 4, 2, 3]\nFalse\n([2, 2], 1)"
+        },
+        {
+          "code": "def merge_counted(left, right):\n    result = []\n    i = 0\n    j = 0\n    comparisons = 0\n    while i < len(left) and j < len(right):\n        comparisons += 1\n        if left[i] <= right[j]:\n            result.append(left[i])\n            i += 1\n        else:\n            result.append(right[j])\n            j += 1\n    result.extend(left[i:])\n    result.extend(right[j:])\n    return result, comparisons\n\ndef merge_sort(values):\n    if len(values) <= 1:\n        return values.copy(), 0\n    mid = len(values) // 2\n    left, left_count = merge_sort(values[:mid])\n    right, right_count = merge_sort(values[mid:])\n    result, merge_count = merge_counted(left, right)\n    return result, left_count + right_count + merge_count\n\ndef __sort_preserved():\n    for source in ([], [7], [3, 1, 2]):\n        before = source.copy()\n        result, count = merge_sort(source)\n        if source != before or result is source:\n            return False\n    return True\nprint(__sort_preserved())\n",
+          "language": "python",
+          "note": "The supplied helper tests empty, single-item, and longer lists, checking that each source is preserved and every result is a new list.",
+          "output": "True"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        1,
+        1,
+        1
+      ]
+    }
+  ],
+  "python-85": [
+    {
+      "examples": [
+        {
+          "code": "errors = [ValueError(\"bad minutes\"), TypeError(\"wrong shape\")]\ntry:\n    raise ExceptionGroup(\"batch\", errors)\nexcept ExceptionGroup as group:\n    print(len(group.exceptions))\n    print([type(error).__name__ for error in group.exceptions])\n",
+          "language": "python",
+          "note": "raise reports a group containing two errors. The outer handler catches that group and reads its individual errors.",
+          "output": "2\n['ValueError', 'TypeError']"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "examples": [
+        {
+          "code": "def route_errors(errors, handled):\n    if not errors:\n        return\n    try:\n        raise ExceptionGroup(\"batch\", errors)\n    except* ValueError as group:\n        for error in group.exceptions:\n            handled.append(str(error))\ndef observe(errors):\n    handled = []\n    remaining = []\n    try:\n        route_errors(errors, handled)\n    except ExceptionGroup as group:\n        remaining = [type(error).__name__ for error in group.exceptions]\n    return handled, remaining\nprint(observe([ValueError(\"bad minutes\"), TypeError(\"wrong shape\")]))\n",
+          "language": "python",
+          "note": "except* selects the ValueError subgroup. The remaining TypeError is caught by the separate outer try in observe.",
+          "output": "(['bad minutes'], ['TypeError'])"
+        },
+        {
+          "code": "def route_errors(errors, handled):\n    if not errors:\n        return\n    try:\n        raise ExceptionGroup(\"batch\", errors)\n    except* ValueError as group:\n        for error in group.exceptions:\n            handled.append(str(error))\n\ndef observe(errors):\n    handled = []\n    remaining = []\n    try:\n        route_errors(errors, handled)\n    except ExceptionGroup as group:\n        remaining = [type(error).__name__ for error in group.exceptions]\n    return handled, remaining\nhandled = []\nprint(route_errors([ValueError(\"bad minutes\")], handled))\nprint(handled)\n",
+          "language": "python",
+          "note": "When every error is handled, route_errors finishes normally with None. The handled list still contains the saved message.",
+          "output": "None\n['bad minutes']"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        0,
+        1,
+        0
+      ]
+    },
+    {
+      "examples": [
+        {
+          "code": "def route_errors(errors, handled):\n    if not errors:\n        return\n    try:\n        raise ExceptionGroup(\"batch\", errors)\n    except* ValueError as group:\n        for error in group.exceptions:\n            handled.append(str(error))\ndef observe(errors):\n    handled = []\n    remaining = []\n    try:\n        route_errors(errors, handled)\n    except ExceptionGroup as group:\n        remaining = [type(error).__name__ for error in group.exceptions]\n    return handled, remaining\nprint(observe([ValueError(\"bad minutes\"), TypeError(\"wrong shape\")]))\n",
+          "language": "python",
+          "note": "The returned pair contains the handled message and the remaining error’s class name.",
+          "output": "(['bad minutes'], ['TypeError'])"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "examples": [
+        {
+          "code": "def route_errors(errors, handled):\n    if not errors:\n        return\n    try:\n        raise ExceptionGroup(\"batch\", errors)\n    except* ValueError as group:\n        for error in group.exceptions:\n            handled.append(str(error))\ndef observe(errors):\n    handled = []\n    remaining = []\n    try:\n        route_errors(errors, handled)\n    except ExceptionGroup as group:\n        remaining = [type(error).__name__ for error in group.exceptions]\n    return handled, remaining\nprint(observe([ValueError(\"first\"), ValueError(\"second\")]))\nprint(observe([]))\nprint(observe([RuntimeError(\"still passes outward\")]))\n",
+          "language": "python",
+          "note": "ValueError messages are collected in order. Empty input creates no group, while RuntimeError remains unhandled by route_errors.",
+          "output": "(['first', 'second'], [])\n([], [])\n([], ['RuntimeError'])"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    }
+  ],
+  "python-86": [
+    {
+      "examples": [
+        {
+          "code": "import asyncio\n\nasync def run_pair(label=\"handled\"):\n    events = []\n    ready = asyncio.Event()\n    blocked = asyncio.Event()\n    async def waiting():\n        try:\n            ready.set()\n            await blocked.wait()\n        finally:\n            events.append(\"cleanup\")\n    async def failing():\n        await ready.wait()\n        raise ValueError(\"worker failed\")\n    try:\n        async with asyncio.TaskGroup() as group:\n            group.create_task(waiting())\n            group.create_task(failing())\n    except* ValueError:\n        events.append(label)\n    events.append(\"done\")\n    return events\nprint(asyncio.run(run_pair()))\n",
+          "language": "python",
+          "note": "The two tasks belong to one group. A failure cancels the waiting task; its cleanup finishes before the group’s handler runs.",
+          "output": "['cleanup', 'handled', 'done']"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "examples": [
+        {
+          "code": "import asyncio\n\nasync def run_pair(label=\"handled\"):\n    events = []\n    ready = asyncio.Event()\n    blocked = asyncio.Event()\n    async def waiting():\n        try:\n            ready.set()\n            await blocked.wait()\n        finally:\n            events.append(\"cleanup\")\n    async def failing():\n        await ready.wait()\n        raise ValueError(\"worker failed\")\n    try:\n        async with asyncio.TaskGroup() as group:\n            group.create_task(waiting())\n            group.create_task(failing())\n    except* ValueError:\n        events.append(label)\n    events.append(\"done\")\n    return events\nprint(asyncio.run(run_pair()))\n",
+          "language": "python",
+          "note": "ready is set before waiting blocks. The failing task waits for ready, so the ordering follows signals instead of a guessed delay.",
+          "output": "['cleanup', 'handled', 'done']"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "examples": [
+        {
+          "code": "import asyncio\n\nasync def run_pair(label=\"handled\"):\n    events = []\n    ready = asyncio.Event()\n    blocked = asyncio.Event()\n    async def waiting():\n        try:\n            ready.set()\n            await blocked.wait()\n        finally:\n            events.append(\"cleanup\")\n    async def failing():\n        await ready.wait()\n        raise ValueError(\"worker failed\")\n    try:\n        async with asyncio.TaskGroup() as group:\n            group.create_task(waiting())\n            group.create_task(failing())\n    except* ValueError:\n        events.append(label)\n    events.append(\"done\")\n    return events\nprint(asyncio.run(run_pair()))\n",
+          "language": "python",
+          "note": "The finally block records cleanup first, the handler then records handled, and normal code finally records done.",
+          "output": "['cleanup', 'handled', 'done']"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "examples": [
+        {
+          "code": "import asyncio\n\nasync def run_pair(label=\"handled\"):\n    events = []\n    ready = asyncio.Event()\n    blocked = asyncio.Event()\n    async def waiting():\n        try:\n            ready.set()\n            await blocked.wait()\n        finally:\n            events.append(\"cleanup\")\n            print(\"cleanup\")\n    async def failing():\n        await ready.wait()\n        raise ValueError(\"worker failed\")\n    try:\n        async with asyncio.TaskGroup() as group:\n            group.create_task(waiting())\n            group.create_task(failing())\n    except* TypeError:\n        events.append(label)\n    events.append(\"done\")\n    return events\ntry:\n    print(asyncio.run(run_pair()))\nexcept ExceptionGroup as group:\n    print(type(group.exceptions[0]).__name__ + \" passed outward\")\n",
+          "language": "python",
+          "note": "The TypeError handler misses ValueError. Cleanup prints first, then the outer handler reports the uncaught error; done is never reached.",
+          "output": "cleanup\nValueError passed outward"
+        },
+        {
+          "code": "import asyncio\n\nasync def run_pair(label=\"handled\"):\n    events = []\n    ready = asyncio.Event()\n    blocked = asyncio.Event()\n    async def waiting():\n        try:\n            ready.set()\n            await blocked.wait()\n        finally:\n            events.append(\"cleanup\")\n    async def failing():\n        await ready.wait()\n        raise ValueError(\"worker failed\")\n    try:\n        async with asyncio.TaskGroup() as group:\n            group.create_task(waiting())\n            group.create_task(failing())\n    except* ValueError:\n        events.append(label)\n    events.append(\"done\")\n    return events\nasync def main():\n    print(await run_pair(\"caught ValueError\"))\n\nasyncio.run(main())\n",
+          "language": "python",
+          "note": "Inside main, await run_pair() uses the running loop. Its ValueError handler permits the final done entry; catching only TypeError would leave this failure unhandled.",
+          "output": "['cleanup', 'caught ValueError', 'done']"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        1,
+        1,
+        1,
+        1
+      ]
+    }
+  ],
+  "python-87": [
+    {
+      "examples": [
+        {
+          "code": "from unittest.mock import Mock\n\ndef load_topic(fetch, key):\n    try:\n        topic = fetch(key)\n    except KeyError:\n        return \"Missing\"\n    return \"Topic: \" + topic\nfake = Mock(return_value=\"Stars\")\nprint(load_topic(fake, \"topic-7\"))\nfake.assert_called_once_with(\"topic-7\")\nprint(\"call verified\")\n",
+          "language": "python",
+          "note": "The complete load_topic function receives its fetch dependency and calls it exactly once with topic-7.",
+          "output": "Topic: Stars\ncall verified"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "examples": [
+        {
+          "code": "from unittest.mock import Mock\n\ndef load_topic(fetch, key):\n    try:\n        topic = fetch(key)\n    except KeyError:\n        return \"Missing\"\n    return \"Topic: \" + topic\nfake = Mock(return_value=\"Stars\")\nprint(fake(\"topic-7\"))\nprint(fake.assert_called_once_with(\"topic-7\"))\nmissing = Mock(side_effect=KeyError(\"absent\"))\nprint(load_topic(missing, \"topic-7\"))\n",
+          "language": "python",
+          "note": "The first mock records the call and returns Stars; its successful assertion returns None. The second mock raises KeyError.",
+          "output": "Stars\nNone\nMissing"
+        },
+        {
+          "code": "from unittest.mock import Mock\nfake = Mock(return_value=\"Stars\")\nfake(\"topic-7\")\nprint(fake.assert_called_once_with(\"topic-7\"))\ntry:\n    fake.assert_called_once_with(\"different-key\")\nexcept AssertionError:\n    print(\"AssertionError: the requested key differs\")\n",
+          "language": "python",
+          "note": "Matching the recorded call returns None. Expecting a different key raises AssertionError.",
+          "output": "None\nAssertionError: the requested key differs"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        0,
+        0,
+        1
+      ]
+    },
+    {
+      "examples": [
+        {
+          "code": "from unittest.mock import Mock\n\ndef load_topic(fetch, key):\n    try:\n        topic = fetch(key)\n    except KeyError:\n        return \"Missing\"\n    return \"Topic: \" + topic\nfake = Mock(return_value=\"Stars\")\nprint(load_topic(fake, \"topic-7\"))\nfake.assert_called_once_with(\"topic-7\")\nprint(\"call verified\")\n",
+          "language": "python",
+          "note": "The output checks the returned topic; assert_called_once_with independently checks the requested key.",
+          "output": "Topic: Stars\ncall verified"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0
+      ]
+    },
+    {
+      "examples": [
+        {
+          "code": "from unittest.mock import Mock\n\ndef load_topic(fetch, key):\n    try:\n        topic = fetch(key)\n    except KeyError:\n        return \"Missing\"\n    return \"Topic: \" + topic\nfake = Mock(side_effect=KeyError(\"absent\"))\nprint(load_topic(fake, \"topic-7\"))\nfake.assert_called_once_with(\"topic-7\")\nprint(fake.call_count)\n",
+          "language": "python",
+          "note": "KeyError produces Missing, and the failed call still counts as one recorded call. This mock does not contact a real service.",
+          "output": "Missing\n1"
+        },
+        {
+          "code": "from unittest.mock import Mock\n\ndef load_topic(fetch, key):\n    try:\n        topic = fetch(key)\n    except KeyError:\n        return \"Missing\"\n    return \"Topic: \" + topic\n\ndef check_fetch(key, missing=False):\n    fake = Mock(side_effect=KeyError(\"absent\")) if missing else Mock(return_value=\"Maps\")\n    result = load_topic(fake, key)\n    fake.assert_called_once_with(key)\n    return result\n\ndef check_other_error():\n    fake = Mock(side_effect=RuntimeError(\"offline\"))\n    try:\n        load_topic(fake, \"id\")\n    except RuntimeError:\n        fake.assert_called_once_with(\"id\")\n        return True\n    return False\nprint(check_fetch(\"topic-7\"))\nprint(check_fetch(\"topic-7\", missing=True))\nprint(check_other_error())\n",
+          "language": "python",
+          "note": "check_fetch checks one call with the supplied key. check_other_error confirms RuntimeError passes outward rather than becoming Missing.",
+          "output": "Topic: Maps\nMissing\nTrue"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        0,
+        1,
+        1,
+        1,
+        1
+      ]
+    }
+  ],
+  "python-88": [
+    {
+      "examples": [
+        {
+          "code": "import logging\nfrom io import StringIO\n\ndef capture_status(ok, token, level=logging.INFO):\n    stream = StringIO()\n    logger = logging.Logger(\"lesson-local\", level=level)\n    logger.propagate = False\n    handler = logging.StreamHandler(stream)\n    handler.setFormatter(logging.Formatter(\"%(levelname)s:%(message)s\"))\n    logger.addHandler(handler)\n    try:\n        logger.debug(\"diagnostic\")\n        logger.info(\"status=%s\", \"ok\" if ok else \"failed\")\n        return stream.getvalue()\n    finally:\n        logger.removeHandler(handler)\n        handler.close()\nmessage = capture_status(False, \"made-up-token\")\nprint(message, end=\"\")\nprint(\"made-up-token\" in message)\n",
+          "language": "python",
+          "note": "The message records failed and excludes the made-up token. The final False checks only this captured message.",
+          "output": "INFO:status=failed\nFalse"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "examples": [
+        {
+          "code": "import logging\nfrom io import StringIO\n\ndef capture_status(ok, token, level=logging.INFO):\n    stream = StringIO()\n    logger = logging.Logger(\"lesson-local\", level=level)\n    logger.propagate = False\n    handler = logging.StreamHandler(stream)\n    handler.setFormatter(logging.Formatter(\"%(levelname)s:%(message)s\"))\n    logger.addHandler(handler)\n    try:\n        logger.debug(\"diagnostic\")\n        logger.info(\"status=%s\", \"ok\" if ok else \"failed\")\n        return stream.getvalue()\n    finally:\n        logger.removeHandler(handler)\n        handler.close()\nprint(capture_status(True, \"synthetic-secret\"), end=\"\")\n",
+          "language": "python",
+          "note": "Logger creates the record, StreamHandler sends it to StringIO, and Formatter writes LEVEL:message. propagate=False prevents forwarding.",
+          "output": "INFO:status=ok"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "examples": [
+        {
+          "code": "import logging\nfrom io import StringIO\n\ndef capture_status(ok, token, level=logging.INFO):\n    stream = StringIO()\n    logger = logging.Logger(\"lesson-local\", level=level)\n    logger.propagate = False\n    handler = logging.StreamHandler(stream)\n    handler.setFormatter(logging.Formatter(\"%(levelname)s:%(message)s\"))\n    logger.addHandler(handler)\n    try:\n        logger.debug(\"diagnostic\")\n        logger.info(\"status=%s\", \"ok\" if ok else \"failed\")\n        return stream.getvalue()\n    finally:\n        logger.removeHandler(handler)\n        handler.close()\nprint(capture_status(True, \"synthetic-secret\"), end=\"\")\n",
+          "language": "python",
+          "note": "At INFO level the DEBUG diagnostic is skipped, leaving only INFO:status=ok. Cleanup removes and closes the handler.",
+          "output": "INFO:status=ok"
+        },
+        {
+          "code": "import logging\nlogger = logging.Logger(\"example\", level=logging.INFO)\nlogger.addHandler(logging.NullHandler())\nprint(logger.info(\"status=%s\", \"ok\"))\n",
+          "language": "python",
+          "note": "The logging method returns None. This small example uses a handler that discards the record so the return value is easy to see.",
+          "output": "None"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0
+      ]
+    },
+    {
+      "examples": [
+        {
+          "code": "import logging\nfrom io import StringIO\n\ndef capture_status(ok, token, level=logging.INFO):\n    stream = StringIO()\n    logger = logging.Logger(\"lesson-local\", level=level)\n    logger.propagate = False\n    handler = logging.StreamHandler(stream)\n    handler.setFormatter(logging.Formatter(\"%(levelname)s:%(message)s\"))\n    logger.addHandler(handler)\n    try:\n        logger.debug(\"diagnostic\")\n        logger.info(\"status=%s\", \"ok\" if ok else \"failed\")\n        return stream.getvalue()\n    finally:\n        logger.removeHandler(handler)\n        handler.close()\nprint(repr(capture_status(True, \"made-up-token\", logging.DEBUG)))\nprint(repr(capture_status(True, \"made-up-token\", logging.WARNING)))\nprint(repr(capture_status(True, \"made-up-token\", logging.INFO)))\n",
+          "language": "python",
+          "note": "DEBUG includes both messages, WARNING includes neither, and a new INFO call includes one message without duplication.",
+          "output": "'DEBUG:diagnostic\\nINFO:status=ok\\n'\n''\n'INFO:status=ok\\n'"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    }
+  ],
+  "python-89": [
+    {
+      "examples": [
+        {
+          "code": "def first_title(groups: dict[str, list[str]], key: str) -> str | None:\n    titles = groups.get(key, [])\n    return titles[0] if titles else None\n\ndef identity_count(value: int) -> int:\n    return value\nprint(first_title({\"today\": [\"Read\", \"Draw\"]}, \"today\"))\nprint(first_title({\"today\": []}, \"today\"))\nprint(identity_count(\"text\"))\n",
+          "language": "python",
+          "note": "The annotations describe a dictionary of title lists and a possible string-or-None result. The final call shows that Python does not enforce int by itself.",
+          "output": "Read\nNone\ntext"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "examples": [
+        {
+          "code": "def first_title(groups: dict[str, list[str]], key: str) -> str | None:\n    titles = groups.get(key, [])\n    return titles[0] if titles else None\n\ndef identity_count(value: int) -> int:\n    return value\nprint(first_title({\"today\": [\"Read\", \"Draw\"]}, \"today\"))\nprint(first_title({\"today\": []}, \"today\"))\nprint(identity_count(\"text\"))\n",
+          "language": "python",
+          "note": "get finds a saved list or uses an empty one. The conditional return supplies its first title or None.",
+          "output": "Read\nNone\ntext"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "examples": [
+        {
+          "code": "def identity_count(value: int) -> int:\n    return value\nprint(identity_count(\"text\"))\n",
+          "language": "python",
+          "note": "Python executes the function and returns text. A separate static type checker can flag this argument; this example does not run one.",
+          "output": "text"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "examples": [
+        {
+          "code": "def first_title(groups: dict[str, list[str]], key: str) -> str | None:\n    titles = groups.get(key, [])\n    return titles[0] if titles else None\n\ndef identity_count(value: int) -> int:\n    return value\ngroups = {\"today\": [\"Read\", \"Draw\"]}\nprint(type(groups[\"today\"]).__name__)\nprint(first_title(groups, \"today\"))\nprint(first_title(groups, \"missing\"))\n",
+          "language": "python",
+          "note": "groups[\"today\"] is a list of strings. A present first title gives a string, while the missing group gives None.",
+          "output": "list\nRead\nNone"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        0,
+        0
+      ]
+    }
+  ],
+  "python-90": [
+    {
+      "examples": [
+        {
+          "code": "import timeit\nvalues = [1, 2, 3]\ndef operation():\n    return sum(values)\nprint(operation())\ntimer = timeit.Timer(operation)\nsamples = timer.repeat(repeat=2, number=3)\nprint(len(samples))\n",
+          "language": "python",
+          "note": "operation returns 6. The list exists before timing starts, and Timer receives the function to call.",
+          "output": "6\n2"
+        },
+        {
+          "code": "import timeit\nvalues = [1, 2, 3]\nresults = []\ndef operation():\n    results.append(sum(values))\n    return results[-1]\ntimer = timeit.Timer(operation)\ntimer.repeat(repeat=2, number=3)\nprint(results)\n",
+          "language": "python",
+          "note": "The input list is prepared before timing. Each call appends a result, and timeit does not reset that list between calls.",
+          "output": "[6, 6, 6, 6, 6, 6]"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        0,
+        1,
+        1
+      ]
+    },
+    {
+      "examples": [
+        {
+          "code": "import timeit\ncalls = []\ndef operation():\n    calls.append(\"called\")\ntimer = timeit.Timer(operation)\nprint(len(calls))\nsamples = timer.repeat(repeat=2, number=3)\nprint(len(samples), len(calls))\n",
+          "language": "python",
+          "note": "Constructing Timer performs zero calls. Two measurements of three calls produce two timing samples and six function calls.",
+          "output": "0\n2 6"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "examples": [
+        {
+          "code": "import timeit\n\ndef measure(operation, repeats=2, number=3):\n    if repeats < 1 or number < 1:\n        raise ValueError(\"positive repetition counts required\")\n    timer = timeit.Timer(operation)\n    return timer.repeat(repeat=repeats, number=number)\nvalues = [1, 2, 3]\ndef operation():\n    return sum(values)\nsamples = measure(operation, repeats=2, number=3)\nprint(len(samples), all(value >= 0 for value in samples))\n",
+          "language": "python",
+          "note": "The check verifies two nonnegative elapsed totals. It makes no claim about their exact values or speed.",
+          "output": "2 True"
+        },
+        {
+          "code": "import timeit\n\ndef measure(operation, repeats=2, number=3):\n    if repeats < 1 or number < 1:\n        raise ValueError(\"positive repetition counts required\")\n    timer = timeit.Timer(operation)\n    return timer.repeat(repeat=repeats, number=number)\n\ndef counted_measure():\n    calls = []\n    def operation():\n        calls.append(1)\n    samples = measure(operation, repeats=2, number=3)\n    return len(samples), len(calls), all(value >= 0 for value in samples)\n\ndef rejects_count(repeats, number):\n    try:\n        measure(lambda: 1, repeats=repeats, number=number)\n    except ValueError:\n        return True\n    return False\nprint(counted_measure())\nprint(rejects_count(0, 3))\nprint(rejects_count(2, 0))\n",
+          "language": "python",
+          "note": "counted_measure reports two samples, six calls, and nonnegative totals. rejects_count confirms that either zero count is rejected.",
+          "output": "(2, 6, True)\nTrue\nTrue"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        0,
+        0,
+        1,
+        1,
+        0,
+        0
+      ]
+    },
+    {
+      "examples": [
+        {
+          "code": "import timeit\n\ndef measure(operation, repeats=2, number=3):\n    if repeats < 1 or number < 1:\n        raise ValueError(\"positive repetition counts required\")\n    timer = timeit.Timer(operation)\n    return timer.repeat(repeat=repeats, number=number)\nvalues = [1, 2, 3]\ndef operation():\n    return sum(values)\nsamples = measure(operation, repeats=2, number=3)\naverages = [total / 3 for total in samples]\nprint(len(averages), all(value >= 0 for value in averages))\ntry:\n    measure(operation, repeats=0)\nexcept ValueError:\n    print(\"positive counts required\")\n",
+          "language": "python",
+          "note": "Each total covers three calls, so dividing by three gives its per-call average. Zero repetitions are rejected.",
+          "output": "2 True\npositive counts required"
+        },
+        {
+          "code": "import timeit\n\ndef measure(operation, repeats=2, number=3):\n    if repeats < 1 or number < 1:\n        raise ValueError(\"positive repetition counts required\")\n    timer = timeit.Timer(operation)\n    return timer.repeat(repeat=repeats, number=number)\n\ndef counted_measure():\n    calls = []\n    def operation():\n        calls.append(1)\n    samples = measure(operation, repeats=2, number=3)\n    return len(samples), len(calls), all(value >= 0 for value in samples)\n\ndef rejects_count(repeats, number):\n    try:\n        measure(lambda: 1, repeats=repeats, number=number)\n    except ValueError:\n        return True\n    return False\nprint(counted_measure())\nprint(rejects_count(0, 3))\nprint(rejects_count(2, 0))\n",
+          "language": "python",
+          "note": "counted_measure reports two samples, six calls, and nonnegative totals. rejects_count confirms that either zero count is rejected.",
+          "output": "(2, 6, True)\nTrue\nTrue"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        0,
+        0,
+        1,
+        1
+      ]
+    }
+  ],
+  "python-91": [
+    {
+      "examples": [
+        {
+          "code": "def square(value):\n    return value * value\n\ndef workload(count):\n    total = 0\n    for value in range(count):\n        total += square(value)\n    return total\nprint([square(value) for value in range(3)])\nprint(workload(3))\n",
+          "language": "python",
+          "note": "The three square results are 0, 1, and 4. workload adds them to 5; a profiler can record the calls made during that work.",
+          "output": "[0, 1, 4]\n5"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "examples": [
+        {
+          "code": "import cProfile\nimport pstats\n\ndef square(value):\n    return value * value\n\ndef workload(count):\n    total = 0\n    for value in range(count):\n        total += square(value)\n    return total\n\ndef profile_work(count):\n    profiler = cProfile.Profile()\n    result = profiler.runcall(workload, count)\n    stats = pstats.Stats(profiler)\n    calls = 0\n    for key, entry in stats.stats.items():\n        if key[2] == \"square\":\n            calls += entry[1]\n    return result, calls\nprint(profile_work(3))\n",
+          "language": "python",
+          "note": "runcall executes workload once while profiling. The returned result and the recorded square calls are separate pieces of information.",
+          "output": "(5, 3)"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "examples": [
+        {
+          "code": "import cProfile\nimport pstats\n\ndef square(value):\n    return value * value\n\ndef workload(count):\n    total = 0\n    for value in range(count):\n        total += square(value)\n    return total\n\ndef profile_work(count):\n    profiler = cProfile.Profile()\n    result = profiler.runcall(workload, count)\n    stats = pstats.Stats(profiler)\n    calls = 0\n    for key, entry in stats.stats.items():\n        if key[2] == \"square\":\n            calls += entry[1]\n    return result, calls\nprint(profile_work(3))\n",
+          "language": "python",
+          "note": "The stats loop matches key[2], the function name, and adds entry[1], its total call count. The result is 5 from three square calls.",
+          "output": "(5, 3)"
+        },
+        {
+          "code": "import cProfile\nimport pstats\n\ndef square(value):\n    return value * value\n\ndef workload(count):\n    total = 0\n    for value in range(count):\n        total += square(value)\n    return total\n\ndef profile_work(count):\n    profiler = cProfile.Profile()\n    result = profiler.runcall(workload, count)\n    stats = pstats.Stats(profiler)\n    calls = 0\n    for key, entry in stats.stats.items():\n        if key[2] == \"square\":\n            calls += entry[1]\n    return result, calls\nprofiler = cProfile.Profile()\nprofiler.runcall(workload, 3)\nfor key, entry in pstats.Stats(profiler).stats.items():\n    if key[2] == \"square\":\n        primitive_calls, total_calls, own_time, cumulative_time, callers = entry\n        print(total_calls)\n        print(own_time >= 0, cumulative_time >= own_time)\n",
+          "language": "python",
+          "note": "The named fields unpack the stats entry. Own time excludes child calls; cumulative time includes them. Actual times vary, so only their relation is displayed.",
+          "output": "3\nTrue True"
+        }
+      ],
+      "thoughtExamples": [
+        1,
+        1,
+        1,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "examples": [
+        {
+          "code": "import cProfile\nimport pstats\n\ndef square(value):\n    return value * value\n\ndef workload(count):\n    total = 0\n    for value in range(count):\n        total += square(value)\n    return total\n\ndef profile_work(count):\n    profiler = cProfile.Profile()\n    result = profiler.runcall(workload, count)\n    stats = pstats.Stats(profiler)\n    calls = 0\n    for key, entry in stats.stats.items():\n        if key[2] == \"square\":\n            calls += entry[1]\n    return result, calls\nprint(profile_work(0))\nprint(profile_work(4))\n",
+          "language": "python",
+          "note": "With count zero, square has no calls and the total is zero. Four inputs produce 0 + 1 + 4 + 9 = 14 from four calls.",
+          "output": "(0, 0)\n(14, 4)"
+        },
+        {
+          "code": "import cProfile\nimport pstats\n\ndef square(value):\n    return value * value\n\ndef workload(count):\n    total = 0\n    for value in range(count):\n        total += square(value)\n    return total\n\ndef profile_work(count):\n    profiler = cProfile.Profile()\n    result = profiler.runcall(workload, count)\n    stats = pstats.Stats(profiler)\n    calls = 0\n    for key, entry in stats.stats.items():\n        if key[2] == \"square\":\n            calls += entry[1]\n    return result, calls\nprofiler = cProfile.Profile()\nprofiler.runcall(workload, 3)\nfor key, entry in pstats.Stats(profiler).stats.items():\n    if key[2] == \"square\":\n        primitive_calls, total_calls, own_time, cumulative_time, callers = entry\n        print(total_calls)\n        print(own_time >= 0, cumulative_time >= own_time)\n",
+          "language": "python",
+          "note": "The measurement fields are available under the names own_time and cumulative_time. The example checks their relation instead of printing machine-dependent times.",
+          "output": "3\nTrue True"
+        },
+        {
+          "code": "import timeit\n\ndef square(value):\n    return value * value\nsamples = timeit.repeat(lambda: square(3), repeat=2, number=3)\nprint(len(samples), all(value >= 0 for value in samples))\n",
+          "language": "python",
+          "note": "timeit focuses on this one small operation. Each sample contains three calls, and the measured elapsed values can vary.",
+          "output": "2 True"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        0,
+        2,
+        0,
+        1
+      ]
+    }
+  ],
+  "python-93": [
+    {
+      "examples": [
+        {
+          "code": "# Show a greeting\nprint(\"Hello\")\n",
+          "language": "python",
+          "note": "The comment explains the purpose to a reader. Only the print instruction produces output.",
+          "output": "Hello"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        0,
+        0
+      ]
+    }
+  ],
+  "python-94": [
+    {
+      "examples": [
+        {
+          "code": "if True:\n    print(\"Ready\")\n",
+          "language": "python",
+          "note": "if starts the condition, True lets the indented print run, and Ready appears. The keyword if cannot be a variable name.",
+          "output": "Ready"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    }
+  ],
+  "python-95": [
+    {
+      "examples": [
+        {
+          "code": "import os\n\n# Read the private setting by its name; do not print its value.\napi_key = os.getenv(\"STUDY_API_KEY\")\nif api_key is None:\n    print(\"No key is configured\")\nelse:\n    print(\"A key is configured\")\n",
+          "language": "python",
+          "note": "The code checks whether the private setting exists without displaying the key. These messages describe presence only; no service is contacted. The displayed output assumes STUDY_API_KEY is unset; with a configured key it prints A key is configured.",
+          "output": "No key is configured"
+        }
+      ],
+      "thoughtExamples": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    }
+  ]
+}

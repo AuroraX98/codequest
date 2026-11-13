@@ -1,4 +1,5 @@
 "use client";
+import WorkspaceTitle from "./WorkspaceTitle";
 import { useEffect, useLayoutEffect, useId, useMemo, useRef, useState } from "react";
 import {
   Check,
@@ -572,14 +573,14 @@ export default function PracticeStudio(props: Props) {
   if (!props.visible) return null;
   return (
     <section aria-label="AI practice studio">
-      <div className="page-title">
+      <WorkspaceTitle section="practice">
         <p className="eyebrow">EXTRA PRACTICE, YOUR WAY</p>
         <h1>Build something new.</h1>
         <p>
           Choose a topic and difficulty. Your assistant creates a fresh project
           with the explanations you need before you try it.
         </p>
-      </div>
+      </WorkspaceTitle>
       <div className="panel content-flow">
         <h3>
           <Sparkles size={20} /> Create a practice project

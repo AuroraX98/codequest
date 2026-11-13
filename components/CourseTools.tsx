@@ -1,4 +1,5 @@
 "use client";
+import WorkspaceTitle from "./WorkspaceTitle";
 import { studyLabel } from "../lib/study-label";
 import { useMemo, useState } from "react";
 import { ArrowRight } from "lucide-react";
@@ -35,14 +36,14 @@ export default function CourseTools({
   );
   return (
     <section aria-labelledby="course-tools-title">
-      <div className="page-title">
+      <WorkspaceTitle section="tools">
         <p className="eyebrow">{courseName} · CHOOSE YOUR PATH</p>
         <h1 id="course-tools-title">Tools and concepts</h1>
         <p>
           Jump to one thing you want to understand. These are shortcuts into
           your course, with the same tiny steps and saved progress.
         </p>
-      </div>
+      </WorkspaceTitle>
       <div className="segmented" role="group" aria-label="Learning path">
         <button onClick={() => onCourse(track)}>Guided course</button>
         <button className="selected" aria-pressed="true">
