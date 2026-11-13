@@ -63,8 +63,8 @@ function CodeAnatomyContent({ code, language, collapseExplanations = false, revi
     </div>
     {parts.length > 0 ? <>
       {narrow && <pre className={styles.sourceLine} tabIndex={0} aria-label={`Original code, line ${line.number}`}><code>{line.text}</code></pre>}
-      <div className={styles.viewport} role="region" tabIndex={0} aria-label={`Code anatomy for line ${line.number}. Scroll sideways if needed.`}>
-        <svg className={styles.diagram} width={width} height={170} viewBox={`0 0 ${width} 170`} role="img" aria-labelledby={`${id}-title ${id}-description`} style={{ minWidth: narrow ? 0 : Math.min(width, 560) }}>
+      <div className={styles.viewport} role="region" tabIndex={0} aria-label={`Code anatomy for line ${line.number}`}>
+        <svg className={styles.diagram} width={width} height={170} viewBox={`0 0 ${width} 170`} role="img" aria-labelledby={`${id}-title ${id}-description`}>
           <title id={`${id}-title`}>{`${codeLabel(language)} line ${line.number}, parts ${firstPart + (narrow ? selectedPart : 0)}–${narrow ? firstPart + selectedPart : firstPart + parts.length - 1}`}</title>
           <desc id={`${id}-description`}>{visibleParts.map(token => `${token.label}: ${token.text}. ${token.plainExplanation}`).join(" ")}</desc>
           <rect x="2" y="6" width={width - 4} height="92" rx="20" fill="#f5f6f7" />

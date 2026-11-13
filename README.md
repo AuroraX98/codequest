@@ -10,7 +10,7 @@ Learn coding one idea at a time through explanations, examples, questions, and p
 2. Choose **Python** for a first program or **HTML** for a first web page in **Courses**. **Resume course** returns to your saved spot.
 3. Read an idea, predict its result, then try the exercise or project. **Tools and concepts**, **Terminology**, and the **Table of Contents** help you revisit unfamiliar topics.
 
-Python explanations keep the relevant code, definitions, values, and results beside them. Short notes connect each example to its explanation. Smaller example text wraps to fit its panel; copying keeps the original code intact. Settings offer larger reading text, hints, and optional progress rewards.
+Every course keeps a concrete example beside each explained idea, including the relevant code, definitions, values, and results. Examples change when an idea discusses a different input or outcome, and supporting files stay visible when needed. Smaller code text wraps to fit the panel; copying keeps the original code intact. Settings offer larger reading text, hints, and optional progress rewards.
 
 ## Pick a course
 
@@ -73,4 +73,4 @@ Keep `.codequest-local/` and filled key files private and out of GitHub. A share
 
 Courses were made with ChatGPT’s help; some topics draw on MIT teaching materials. The [MIT license](LICENSE) covers original app code; it excludes lesson and teaching content. Outside software keeps its own terms: [third-party notices](public/third-party/README.txt).
 
-For a separate online copy, follow the [hosting guide](docs/hosting-a-copy.md). Contributors: [`lessons`](content/lessons.json), [`documentation`](docs/), and [`checks`](tests/). Build with `npm run build`. Verification reports apply only to their stated checks and releases.
+For a separate online copy, follow the [hosting guide](docs/hosting-a-copy.md). Contributors: [`lessons`](content/lessons.json), [`documentation`](docs/), and [`checks`](tests/). Build with `npm run build`. See [example coverage and checks](docs/course-idea-examples.md). Verification reports apply only to their stated checks and releases.

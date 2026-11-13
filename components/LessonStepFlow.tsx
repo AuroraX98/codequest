@@ -128,7 +128,15 @@ function StepFlow({ text, runtime, referenceText = text, referenceVisual, resume
         </div>
         {ideaExample && <aside className={styles.ideaExample} aria-label="Example for this idea" data-idea-example>
           <p className={styles.exampleLabel}>Example for this idea</p>
+          {ideaExample.files?.map(file => <div key={file.name} data-example-file>
+            <p className={styles.fileLabel}><InlineCode text={file.name} /></p>
+            <CodeExample code={file.code} language={file.language} />
+          </div>)}
           <CodeExample code={ideaExample.code} language={ideaExample.language} />
+          {ideaExample.stdin !== undefined && <div data-example-input>
+            <p className={styles.fileLabel}>Example input</p>
+            <CodeExample code={ideaExample.stdin} language="text" />
+          </div>}
           {ideaExample.output !== undefined && <CodeExample code={ideaExample.output} language="output" />}
           <p className={styles.exampleNote}><InlineCode text={ideaExample.note} /></p>
         </aside>}

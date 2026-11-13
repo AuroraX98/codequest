@@ -57,7 +57,7 @@ import PythonConceptLab from "./PythonConceptLab";
 import LessonContents from "./LessonContents";
 import LessonIllustration from "./LessonIllustration";
 import LessonStepFlow from "./LessonStepFlow";
-import { pythonIdeaExamples } from "../lib/python-idea-examples";
+import { courseIdeaExamples } from "../lib/course-idea-examples";
 import {getUnitContents} from "../lib/unit-toc";
 import UnitTableOfContents from "./UnitTableOfContents";
 import Terminology from "./Terminology";
@@ -1560,7 +1560,7 @@ export default function CodeQuest({
                       <div className="panel lesson-card">
                         <span className="small-tag">ONE IDEA AT A TIME</span>
                         <button className="text-button" onClick={()=>setView("tools")}>Browse tools and concepts</button>
-                        {lesson.id === "python-input" && <PythonInputLesson lesson={lesson} ideaExamples={lesson.explanation.map((_, index) => pythonIdeaExamples(lesson.id, index))} jumpTo={inputJump} onJumpHandled={clearInputJump} resumeScope={state.draftScope} onContinue={()=>setPhase("practice")} onParagraphChange={setParagraph} renderReadingMark={index=><ReadingMark reading={reading} lessonId={lesson.id} sectionKey={"text:"+index} sectionTitle={getLessonHeadings(lesson.id)[index]} />} />}
+                        {lesson.id === "python-input" && <PythonInputLesson lesson={lesson} ideaExamples={lesson.explanation.map((_, index) => courseIdeaExamples(lesson.id, index))} jumpTo={inputJump} onJumpHandled={clearInputJump} resumeScope={state.draftScope} onContinue={()=>setPhase("practice")} onParagraphChange={setParagraph} renderReadingMark={index=><ReadingMark reading={reading} lessonId={lesson.id} sectionKey={"text:"+index} sectionTitle={getLessonHeadings(lesson.id)[index]} />} />}
                         {lesson.id === "python-01" && (
                           <PythonConceptLab
                             key={state.draftScope + ":" + lesson.id}
@@ -1648,7 +1648,7 @@ export default function CodeQuest({
                                   ]
                                 }
                                 runtime={readingLanguage}
-                                ideaExamples={pythonIdeaExamples(lesson.id, paragraph)}
+                                ideaExamples={courseIdeaExamples(lesson.id, paragraph)}
                             reviewedLesson={lesson.id.startsWith("python-") || lesson.id.startsWith("javascript-") || lesson.id.startsWith("html-") || lesson.id.startsWith("css-") || lesson.id.startsWith("typescript-") || lesson.id.startsWith("react-") || lesson.id.startsWith("sql-") || lesson.id.startsWith("swift-") || lesson.id.startsWith("backend-") || lesson.id.startsWith("developer-toolkit-") || lesson.id.startsWith("ai-") || lesson.id.startsWith("csharp-") || lesson.id.startsWith("cpp-") || lesson.id.startsWith("java-") || lesson.id.startsWith("c-") || lesson.id.startsWith("kotlin-") || lesson.id.startsWith("rust-") || lesson.id.startsWith("php-") || lesson.id.startsWith("ruby-") || lesson.id.startsWith("r-") || lesson.id.startsWith("go-")}
                                 startAtEnd={
                                   flowBackTarget === lesson.id + ":" + paragraph
