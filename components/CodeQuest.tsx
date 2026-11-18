@@ -13,7 +13,7 @@ import {
   Flame,
   History,
   Lightbulb,
-  Map,
+  Map as MapIcon,
   MessageCircle,
   Play,
   RotateCcw,
@@ -360,7 +360,8 @@ export default function CodeQuest({
     units.find((u) => u.id === activeId) ??
     units.find((u) => u.id === "javascript-01") ??
     units[0];
-  const lesson = lessons.find((l) => l.id === unit?.id);
+  const lessonsById = useMemo(() => new Map(lessons.map(item => [item.id, item])), [lessons]);
+  const lesson = lessonsById.get(unit?.id);
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- Restore the selected saved project when the account or lesson changes.
     try { setSelectedCourseProject(localStorage.getItem(`codequest-project-choice:${state.draftScope}:${activeId}`) ?? ""); }
@@ -412,9 +413,9 @@ export default function CodeQuest({
         (u) =>
           u.track === state.profile.track &&
           u.level === state.profile.level &&
-          topicMatches(u.topic, u.project.title, search),
+          topicMatches(u.topic, u.project.title, search, lessonsById.get(u.id)?.title),
       ),
-    [orderedUnits, state.profile.track, state.profile.level, search],
+    [orderedUnits, lessonsById, state.profile.track, state.profile.level, search],
   );
   const courseLessons = useMemo(() => courseLessonList(orderedUnits, lessons, unit?.track), [orderedUnits, lessons, unit?.track]);
   const courseIndex = courseLessons.findIndex(item => item.id === activeId);
@@ -1368,12 +1369,12 @@ export default function CodeQuest({
           </button>
         </div>
         <div className="workspace-toolbar">
-          <button id="unit-toc-toggle" type="button" className="secondary unit-toc-toggle" disabled={!ready || !lesson} aria-expanded={tocOpen && (view === "quest" || (view === "studio" && studioMode === "course"))} aria-controls="unit-table-of-contents" onKeyDown={event=>{if(event.key === "Escape" && tocOpen){event.preventDefault();event.stopPropagation();setTocOpen(false);}}} onClick={()=>{if(view !== "quest" && !(view === "studio" && studioMode === "course")){setView("quest");setPhase("learn");setTocOpen(true);}else setTocOpen(value=>!value);}}>Table of Contents <Map size={17}/></button>
+          <button id="unit-toc-toggle" type="button" className="secondary unit-toc-toggle" disabled={!ready || !lesson} aria-expanded={tocOpen && (view === "quest" || (view === "studio" && studioMode === "course"))} aria-controls="unit-table-of-contents" onKeyDown={event=>{if(event.key === "Escape" && tocOpen){event.preventDefault();event.stopPropagation();setTocOpen(false);}}} onClick={()=>{if(view !== "quest" && !(view === "studio" && studioMode === "course")){setView("quest");setPhase("learn");setTocOpen(true);}else setTocOpen(value=>!value);}}>Table of Contents <MapIcon size={17}/></button>
           <nav aria-label="Main navigation">
             {[
               { id: "quest", label: "Learn", icon: BookOpen },
               { id: "studio", label: "Projects", icon: Braces },
-              { id: "path", label: "Courses", icon: Map },
+              { id: "path", label: "Courses", icon: MapIcon },
               { id: "terminology", label: "Terminology", icon: BookOpen },
               { id: "progress", label: "Progress", icon: Trophy },
             ].map((n) => (
@@ -2499,7 +2500,7 @@ export default function CodeQuest({
               <h2 className="sr-only">Lessons in {names[state.profile.track]}</h2>
               <div className="path-list">
                 {visible.map((u) => {
-                  const l = lessons.find((l) => l.id === u.id),
+                  const l = lessonsById.get(u.id),
                     done = state.progress.find(
                       (p) => p.unitId === u.id,
                     )?.completedAt;
@@ -2525,10 +2526,11 @@ export default function CodeQuest({
                       </span>
                       <div>
                         <small>
-                          {names[u.track]} · {u.level}
+                          {names[u.track]} · {u.level}{l && u.topic !== l.title ? " · " + u.topic : ""}
                         </small>
-                        <h3>{u.topic}</h3>
-                        <p>{l?.learningMode === "concept" ? "Read · explore · check your understanding" : u.project.title}</p>
+                        <h3>{l?.title ?? u.topic}</h3>
+                        {l?.learningMode === "concept" ? <p>Read · explore · check your understanding</p> :
+                          u.project.title !== l?.title && <p>{u.project.title}</p>}
                         <span className="path-meta">
                           {l ? l.estimatedMinutes + " min" : "Content loading"}
 

@@ -82,7 +82,7 @@ export function parseRoute(
     lessons,
   );
 }
-export function topicMatches(topic: string, project: string, query: string) {
+export function topicMatches(topic: string, project: string, query: string, lessonTitle = "") {
   const synonyms: Record<string, string> = {
     repeat: "loop",
     repetition: "loop",
@@ -100,7 +100,7 @@ export function topicMatches(topic: string, project: string, query: string) {
     functions: "function",
   };
   const words = query.trim().toLowerCase().split(/\s+/).filter(Boolean);
-  const text = (topic + " " + project).toLowerCase();
+  const text = [topic, project, lessonTitle].join(" ").toLowerCase();
   return words.every(
     (word) =>
       text.includes(word) || (synonyms[word] && text.includes(synonyms[word])),

@@ -6,6 +6,18 @@ export type CourseTermSense = {
   aliases?: string[];
 };
 const senses: Record<string, Record<string, CourseTermSense>> = {
+  row: {
+    css: {
+      meaning: 'A row is a band across a layout where items can sit side by side.',
+      example: 'Three pictures across the top of a gallery make its first row.',
+    },
+  },
+  column: {
+    css: {
+      meaning: 'A column is a band down a layout where items can sit one above another.',
+      example: 'The picture at the top left and the one under it share the first column.',
+    },
+  },
   'ai-model': {
     ai: {meaning: 'An AI model learns patterns from examples and uses them to make predictions or responses. A language model is one kind of AI model.'}
   },

@@ -1,8 +1,9 @@
 "use client";
 
-import { createContext, useContext, useEffect, useId, useRef, useState, type ReactNode } from "react";
+import { createContext, Fragment, useContext, useEffect, useId, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { glossaryMatches, type GlossaryTerm } from "../lib/lesson-glossary";
 import styles from "./LessonGlossary.module.css";
+import CssLessonPicture from "./CssLessonPicture";
 
 type Help = { active: string | null; panelId: string; scopeId: string; runtime: string; includedTerms?: string[]; toggle: (term: GlossaryTerm, button: HTMLButtonElement) => void };
 const GlossaryContext = createContext<Help | null>(null);
@@ -16,10 +17,12 @@ export function GlossaryText({ text }: { text: string }) {
   let start = 0;
   for (const match of matches) {
     parts.push(text.slice(start, match.from));
-    parts.push(<button key={match.from} type="button" className={styles.term} data-glossary-term={match.term.id} data-glossary-scope={context.scopeId}
+    const suffix = text.slice(match.to).match(/^[’']s\b/i)?.[0] ?? "";
+    const word = <button type="button" className={styles.term} data-glossary-term={match.term.id} data-glossary-scope={context.scopeId}
       aria-label={`Explain ${match.text}`} aria-expanded={context.active === match.term.id} aria-controls={context.panelId}
-      onClick={event => context.toggle(match.term, event.currentTarget)}>{match.text}</button>);
-    start = match.to;
+      onClick={event => context.toggle(match.term, event.currentTarget)}>{match.text}</button>;
+    parts.push(suffix ? <span key={match.from} className={styles.wholeWord}>{word}{suffix}</span> : <Fragment key={match.from}>{word}</Fragment>);
+    start = match.to + suffix.length;
   }
   parts.push(text.slice(start));
   return <>{parts}</>;
@@ -37,6 +40,37 @@ function Scope({ children, runtime, includedTerms }: { children: ReactNode; text
     setActive(null);
     if (restoreFocus && trigger.current?.isConnected) trigger.current.focus({ preventScroll: true });
   }
+  useLayoutEffect(() => {
+    const tip = region.current;
+    const word = trigger.current;
+    if (!active || !tip || !word) return;
+    tip.showPopover?.();
+    function position() {
+      if (!tip || !word) return;
+      const anchor = word.getBoundingClientRect();
+      const gap = 6, edge = 8;
+      const width = document.documentElement.clientWidth || window.innerWidth;
+      const height = window.innerHeight;
+      if (anchor.bottom < 0 || anchor.top > height) {
+        setActive(null);
+        return;
+      }
+      const below = height - anchor.bottom - gap - edge;
+      const above = anchor.top - gap - edge;
+      const putAbove = below < tip.scrollHeight + 2 && above > below;
+      tip.style.maxHeight = Math.max(40, putAbove ? above : below) + "px";
+      tip.style.left = Math.max(edge, Math.min(anchor.left, width - tip.offsetWidth - edge)) + "px";
+      tip.style.top = Math.max(edge, putAbove ? anchor.top - gap - tip.offsetHeight : anchor.bottom + gap) + "px";
+    }
+    position();
+    window.addEventListener("resize", position);
+    window.addEventListener("scroll", position, true);
+    return () => {
+      window.removeEventListener("resize", position);
+      window.removeEventListener("scroll", position, true);
+      tip.hidePopover?.();
+    };
+  }, [active]);
   useEffect(() => {
     if (!active) return;
     const key = (event: KeyboardEvent) => {
@@ -59,11 +93,13 @@ function Scope({ children, runtime, includedTerms }: { children: ReactNode; text
   } };
   return <GlossaryContext.Provider value={context}>
     {children}
-    <div ref={region} id={`${id}-definition`} hidden={!active} className={styles.definition} role="region" aria-labelledby={`${id}-name`} data-glossary-definition>
+    <div ref={region} id={`${id}-definition`} popover="manual" hidden={!active} className={styles.definition} role="region" aria-labelledby={`${id}-name`} data-glossary-definition>
       {active && <>
         <div className={styles.heading}><strong id={`${id}-name`}>{active.name}</strong><button type="button" className={styles.close} aria-label="Close word explanation" onClick={() => close(true)}>Close</button></div>
         <p>{active.meaning}</p>
-        {active.example && <p className={styles.example}><span>Example</span>{active.example}</p>}
+        {runtime === "css" && (active.id === "row" || active.id === "column")
+          ? <CssLessonPicture kind="grid" axis={active.id} />
+          : active.example && <p className={styles.example}><span>Example</span>{active.example}</p>}
       </>}
     </div>
     <span className={styles.srOnly} role="status" aria-live="polite">{active ? `${active.name}. ${active.meaning} ${active.example ? "Example: "+active.example : ""}` : ""}</span>

@@ -45,7 +45,7 @@ for case in cases.values():
             continue
         try:
             result = subprocess.run(command, cwd=folder, input=example.get("stdin", ""), text=True, capture_output=True, timeout=8,
-                                    env={"PATH": os.environ.get("PATH", ""), "PYTHONHASHSEED": "0"})
+                                    env={key: os.environ[key] for key in ("PATH", "SystemRoot") if key in os.environ} | {"PYTHONHASHSEED": "0"})
             executed += 1
             if result.returncode:
                 failures.append({"locations": case["locations"], "error": result.stderr[-1800:]})

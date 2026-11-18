@@ -4,9 +4,10 @@ import WorkspaceTitle from "../../components/WorkspaceTitle";
 import catalog from "../../content/catalog.json";
 import terms from "../../content/terminology.json";
 
-const title = "CodeQuest — Coding lessons, explained examples and projects";
+const title = "CodeQuest — Learn to code one step at a time";
 const lessonCount = catalog.units.length.toLocaleString("en-US");
-const description = `Learn coding at your own pace with ${lessonCount} lessons across 21 courses, step-by-step code explanations and practical projects. Online with ChatGPT sign-in and offline after downloading.`;
+const courseCount = new Set(catalog.units.map(unit => unit.track)).size;
+const description = `Learn to code with ${lessonCount} lessons across ${courseCount} courses. Find a lesson by title, tap a word for help, and try a short quiz or a small project.`;
 const url = "https://codequest.aurorax.chatgpt.site/about";
 export const metadata: Metadata = {
   title,
@@ -29,11 +30,11 @@ export default function AboutCodeQuest() {
       <main className="about-layout">
         <WorkspaceTitle section="courses">
           <p className="eyebrow">CodeQuest</p>
-          <h1>Learn coding, one clear step at a time.</h1>
+          <h1>Learn to code one step at a time</h1>
           <p>
-            Build your understanding with short lessons, worked examples and
-            practical projects. CodeQuest explains what each part of the code
-            does, then gives you a chance to use the idea yourself.
+            Read one idea, see it in a code example, then try it yourself.
+            Start with Python to write your first program or HTML to make
+            your first web page.
           </p>
           <p>
             <Link href="/" className="primary">
@@ -42,37 +43,43 @@ export default function AboutCodeQuest() {
           </p>
         </WorkspaceTitle>
         <section className="panel">
-          <h2>Explore 21 coding courses</h2>
+          <h2>Find a lesson</h2>
           <p>
-            Study Python, JavaScript, HTML, CSS, TypeScript, React, SQL, Swift,
-            back-end development, AI and developer tools, alongside
-            introductions to other languages. The curriculum contains{" "}
-            {lessonCount} lessons and a glossary of{" "}
-            {terms.length.toLocaleString("en-US")} terms.
+            Choose from {lessonCount} lessons across {courseCount} courses.
+            In Courses, pick your course and level, then search by lesson title,
+            topic, or project name. Open a lesson to read it, take its quiz, or
+            try its project.
           </p>
         </section>
         <section className="panel">
           <h2>Understand the code you write</h2>
           <p>
-            Follow labeled code breakdowns, try understanding checks, and put
-            ideas together in projects. Move at your own pace and return to
-            earlier concepts when you need them. Some language and deployment
-            exercises use external tools, with instructions in the lesson.
+            Tap a linked word to see what it means. In a lesson about styling a
+            web page, a picture shows how padding adds room between a button’s
+            text and its border. Use Next and Back to go through the example
+            at your own pace.
+          </p>
+          <p>
+            Code wraps to fit your phone screen. You can make the text larger
+            in Settings or look up {terms.length.toLocaleString("en-US")} coding
+            terms in Terminology. Some projects use tools on your computer.
+            Those lessons tell you what to open.
           </p>
         </section>
         <section className="panel">
-          <h2>Learn online or prepare for offline study</h2>
+          <h2>Keep learning offline</h2>
           <p>
-            Open the app and sign in with ChatGPT to keep your own learning
-            records. Download the offline pack in Settings while online, then
-            study cached lessons and use supported code runtimes in the same
-            browser without a connection. Initial setup, account synchronization
-            and some completion features require internet.
+            Sign in with ChatGPT to save your progress online. While you have
+            internet, open Settings and choose Download offline pack. Later,
+            use the same browser to read the lessons and try supported exercises
+            offline. Reconnect to sync your progress and use features that need
+            internet.
           </p>
           <p>
-            The optional Coding Buddy also requires internet and your own
-            supported AI provider key. It is separate from your ChatGPT
-            subscription.
+            You can take the courses without an AI key. For live help from
+            Coding Buddy, you need internet and an API key from a supported AI
+            service. The service may charge for use separately from your
+            ChatGPT subscription.
           </p>
         </section>
         <p>

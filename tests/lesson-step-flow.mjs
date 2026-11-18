@@ -55,7 +55,17 @@ try {
   const { codeAnatomy: _codeAnatomy } = await importFile('lib/code-anatomy.ts');
   const { default: _Content } = await importFile('components/LessonContent.tsx');
   const lessons = JSON.parse(await readFile(path.join(cwd, 'content/lessons.json'), 'utf8'));
+  const catalog = JSON.parse(await readFile(path.join(cwd, 'content/catalog.json'), 'utf8'));
   let sections = 0, ideas = 0, examples = 0, exercises = 0;
+
+  function courseLessons(track) {
+    const expectedIds = catalog.units.filter(unit => unit.track === track).map(unit => unit.id).sort();
+    assert.ok(expectedIds.length > 0, `No lessons found in the catalog for ${track}`);
+    assert.equal(new Set(expectedIds).size, expectedIds.length, `Duplicate lesson IDs in the ${track} catalog`);
+    const rows = lessons.filter(lesson => lesson.id.startsWith(`${track}-`));
+    assert.deepEqual(rows.map(lesson => lesson.id).sort(), expectedIds, `Lesson IDs must match the ${track} catalog`);
+    return rows;
+  }
 
   await check('Every authored section preserves canonical prose and examples without duplicate optional text', () => {
     const doc = new JSDOM('').window.document;
@@ -114,8 +124,8 @@ try {
   });
 
   await check('All Java lessons keep one example with its authored language', () => {
-    const rows=lessons.filter(l=>l.id.startsWith('java-'));
-    assert.equal(rows.length,72);
+    const rows = courseLessons('java');
+    assert.ok(rows.some(lesson => lesson.id === 'java-73'), 'The Java catalog includes Recognize boilerplate');
     for(const lesson of rows){
       const steps=lesson.explanation.flatMap(text=>buildLessonSteps(text,lesson.runtime,{authoredOnly:true}));
       const examples=steps.filter(s=>s.kind==='example');
@@ -134,8 +144,7 @@ try {
   });
 
   await check('All Rust lessons keep one example with its authored language', () => {
-    const rows=lessons.filter(l=>l.id.startsWith('rust-'));
-    assert.equal(rows.length,68);
+    const rows = courseLessons('rust');
     for(const lesson of rows){
       const steps=lesson.explanation.flatMap(text=>buildLessonSteps(text,lesson.runtime,{authoredOnly:true}));
       const examples=steps.filter(s=>s.kind==='example');
@@ -147,8 +156,7 @@ try {
   });
 
   await check('All PHP lessons keep one example with its authored language', () => {
-    const rows=lessons.filter(l=>l.id.startsWith('php-'));
-    assert.equal(rows.length,68);
+    const rows = courseLessons('php');
     for(const lesson of rows){
       const steps=lesson.explanation.flatMap(text=>buildLessonSteps(text,lesson.runtime,{authoredOnly:true}));
       const examples=steps.filter(s=>s.kind==='example');
@@ -160,8 +168,7 @@ try {
   });
 
   await check('All Ruby lessons keep one example with its authored language', () => {
-    const rows=lessons.filter(l=>l.id.startsWith('ruby-'));
-    assert.equal(rows.length,64);
+    const rows = courseLessons('ruby');
     for(const lesson of rows){
       const steps=lesson.explanation.flatMap(text=>buildLessonSteps(text,lesson.runtime,{authoredOnly:true}));
       const examples=steps.filter(s=>s.kind==='example');
@@ -173,8 +180,7 @@ try {
   });
 
   await check('All R lessons keep one example with its authored language', () => {
-    const rows=lessons.filter(l=>l.id.startsWith('r-'));
-    assert.equal(rows.length,68);
+    const rows = courseLessons('r');
     for(const lesson of rows){
       const steps=lesson.explanation.flatMap(text=>buildLessonSteps(text,lesson.runtime,{authoredOnly:true}));
       const examples=steps.filter(s=>s.kind==='example');
@@ -186,8 +192,7 @@ try {
   });
 
   await check('All Go lessons keep one example with its authored language', () => {
-    const rows=lessons.filter(l=>l.id.startsWith('go-'));
-    assert.equal(rows.length,65);
+    const rows = courseLessons('go');
     for(const lesson of rows){
       const steps=lesson.explanation.flatMap(text=>buildLessonSteps(text,lesson.runtime,{authoredOnly:true}));
       const examples=steps.filter(s=>s.kind==='example');
@@ -199,8 +204,7 @@ try {
   });
 
   await check('All Kotlin lessons keep one example with its authored language', () => {
-    const rows=lessons.filter(l=>l.id.startsWith('kotlin-'));
-    assert.equal(rows.length,64);
+    const rows = courseLessons('kotlin');
     for(const lesson of rows){
       const steps=lesson.explanation.flatMap(text=>buildLessonSteps(text,lesson.runtime,{authoredOnly:true}));
       const examples=steps.filter(s=>s.kind==='example');
@@ -212,8 +216,7 @@ try {
   });
 
   await check('All C lessons keep one example with its authored language', () => {
-    const rows=lessons.filter(l=>l.id.startsWith('c-'));
-    assert.equal(rows.length,62);
+    const rows = courseLessons('c');
     for(const lesson of rows){
       const steps=lesson.explanation.flatMap(text=>buildLessonSteps(text,lesson.runtime,{authoredOnly:true}));
       const examples=steps.filter(s=>s.kind==='example');
@@ -225,8 +228,7 @@ try {
   });
 
   await check('All C++ lessons keep one example with its authored language', () => {
-    const rows=lessons.filter(l=>l.id.startsWith('cpp-'));
-    assert.equal(rows.length,69);
+    const rows = courseLessons('cpp');
     for(const lesson of rows){
       const steps=lesson.explanation.flatMap(text=>buildLessonSteps(text,lesson.runtime,{authoredOnly:true}));
       const examples=steps.filter(s=>s.kind==='example');
@@ -238,8 +240,7 @@ try {
   });
 
   await check('All C# lessons keep one example with its authored language', () => {
-    const rows=lessons.filter(l=>l.id.startsWith('csharp-'));
-    assert.equal(rows.length,63);
+    const rows = courseLessons('csharp');
     for(const lesson of rows){
       const steps=lesson.explanation.flatMap(text=>buildLessonSteps(text,lesson.runtime,{authoredOnly:true}));
       const examples=steps.filter(s=>s.kind==='example');
@@ -251,8 +252,7 @@ try {
   });
 
   await check('All AI lessons keep one example with its authored language', () => {
-    const rows=lessons.filter(l=>l.id.startsWith('ai-'));
-    assert.equal(rows.length,32);
+    const rows = courseLessons('ai');
     for(const lesson of rows){
       const steps=lesson.explanation.flatMap(text=>buildLessonSteps(text,lesson.runtime,{authoredOnly:true}));
       const examples=steps.filter(s=>s.kind==='example');
@@ -263,9 +263,9 @@ try {
     }
   });
 
-  await check('All Developer toolkit lessons keep one example with its authored language', () => {
-    const rows=lessons.filter(l=>l.id.startsWith('developer-toolkit-'));
-    assert.equal(rows.length,24);
+  await check('All Developer Toolkit lessons keep one example with its authored language', () => {
+    const rows = courseLessons('developer-toolkit');
+    assert.ok(rows.some(lesson => lesson.id === 'developer-toolkit-30'), 'The Developer Toolkit catalog includes lesson 30');
     for(const lesson of rows){
       const steps=lesson.explanation.flatMap(text=>buildLessonSteps(text,lesson.runtime,{authoredOnly:true}));
       const examples=steps.filter(s=>s.kind==='example');
@@ -277,8 +277,7 @@ try {
   });
 
   await check('All Back-end lessons keep one authored example with matching language labels', () => {
-    const rows=lessons.filter(l=>l.id.startsWith('backend-'));
-    assert.equal(rows.length,43);
+    const rows = courseLessons('backend');
     for(const lesson of rows){
       const steps=lesson.explanation.flatMap(text=>buildLessonSteps(text,lesson.runtime,{authoredOnly:true}));
       const examples=steps.filter(s=>s.kind==='example');
@@ -289,8 +288,7 @@ try {
   });
 
   await check('All Swift lessons keep one example, with local project files on separate steps', () => {
-    let count=0;
-    for (const lesson of lessons.filter(l=>l.id.startsWith('swift-'))) {
+    for (const lesson of courseLessons('swift')) {
       const steps=lesson.explanation.flatMap(text=>{
         const section=buildLessonSteps(text,'swift',{authoredOnly:true});
         assert.ok(section.filter(s=>s.kind==='example').length<=1,lesson.id);
@@ -300,14 +298,12 @@ try {
       assert.equal(examples.length,({'swift-55':3,'swift-56':4,'swift-57':4})[lesson.id]??1,lesson.id);
       assert.ok(examples.every(s=>['swift','bash','sh'].includes(s.language)),lesson.id);
       assert.ok(!steps.some(s=>s.kind==='practice'||s.purpose==='exercise-preparation'),lesson.id);
-      count++;
     }
-    assert.equal(count,58);
   });
 
   await check('All SQL lessons keep one authored example with its correct SQL or JavaScript labels', () => {
     let sectionCount=0;
-    for(const lesson of lessons.filter(l=>l.id.startsWith('sql-'))) {
+    for (const lesson of courseLessons('sql')) {
       const steps=lesson.explanation.flatMap(text=>{sectionCount++;return buildLessonSteps(text,'sql',{authoredOnly:true});});
       assert.equal(steps.filter(s=>s.kind==='example').length,1,lesson.id);
       assert.equal(steps.find(s=>s.kind==='example').language,['sql-51','sql-52'].includes(lesson.id)?'javascript':'sql');
@@ -318,7 +314,7 @@ try {
 
   await check('All React lessons keep exactly one authored example across their ideas', () => {
     let sectionCount=0;
-    for(const lesson of lessons.filter(l=>l.id.startsWith('react-'))) {
+    for (const lesson of courseLessons('react')) {
       let exampleCount=0;
       for(const text of lesson.explanation) {
         const steps=buildLessonSteps(text,'react',{authoredOnly:true});
@@ -332,7 +328,7 @@ try {
 
   await check('All TypeScript sections show only the authored examples', () => {
     let sectionCount=0,exampleCount=0;
-    for(const lesson of lessons.filter(l=>l.id.startsWith('typescript-'))) for(const text of lesson.explanation) {
+    for (const lesson of courseLessons('typescript')) for(const text of lesson.explanation) {
       const steps=buildLessonSteps(text,'typescript',{authoredOnly:true});
       assert.ok(!steps.some(s=>s.kind==='practice'||s.purpose==='exercise-preparation'),lesson.id);
       const code=steps.filter(s=>s.kind==='example');
@@ -345,7 +341,7 @@ try {
 
   await check('All 298 CSS sections keep one authored example at a time without extra generated exercises', () => {
     let sectionCount=0,exampleCount=0;
-    for(const lesson of lessons.filter(l=>l.id.startsWith('css-'))) for(const text of lesson.explanation) {
+    for (const lesson of courseLessons('css')) for(const text of lesson.explanation) {
       const steps=buildLessonSteps(text,'css',{authoredOnly:true});
       assert.ok(!steps.some(s=>s.kind==='practice'||s.purpose==='exercise-preparation'),lesson.id);
       const code=steps.filter(s=>s.kind==='example');

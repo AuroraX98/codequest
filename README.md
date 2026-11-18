@@ -2,15 +2,17 @@
 
 [**Open CodeQuest and start learning**](https://codequest.aurorax.chatgpt.site/)
 
-Learn coding one idea at a time through explanations, examples, questions, and projects. CodeQuest has **21 courses and 1,231 lessons**. The courses work without an AI key.
+Learn to code one idea at a time. CodeQuest has **21 courses and 1,231 lessons**. Read a short explanation, see what the code does, then try it in a quiz or a small project. You can take every course without an AI key.
 
 ## Start in your browser
 
 1. Open CodeQuest and sign in with ChatGPT if asked.
-2. Choose **Python** for a first program or **HTML** for a first web page in **Courses**. **Resume course** returns to your saved spot.
-3. Read an idea, predict its result, then try the exercise or project. **Tools and concepts**, **Terminology**, and the **Table of Contents** help you revisit unfamiliar topics.
+2. Open **Courses**. Choose **Python** to write your first program or **HTML** to make your first web page.
+3. Pick a lesson or search by its title, topic, or project name within your course and level. Open the lesson to read it, take its quiz, or try its project. **Resume course** brings you back to your saved spot.
 
-Every course keeps a concrete example beside each explained idea, including the relevant code, definitions, values, and results. Examples change when an idea discusses a different input or outcome, and supporting files stay visible when needed. Smaller code text wraps to fit the panel; copying keeps the original code intact. Settings offer larger reading text, hints, and optional progress rewards.
+Use **Next** and **Back** to move through an explanation. Each idea comes with an example. Tap a linked word to see its meaning where you are reading. For example, a picture in the CSS course shows what *padding* does to a button. More padding leaves more room between the text and the button’s border.
+
+Long lines of code wrap to fit a phone screen. **Copy** keeps the original line breaks. You can make the text larger in **Settings** or use the **Table of Contents** to return to an earlier lesson.
 
 ## Pick a course
 

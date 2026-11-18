@@ -26,7 +26,7 @@ const install = (name, value) => {
 };
 let root;
 try {
-  await symlink(path.resolve('node_modules'), path.join(temp, 'node_modules'));
+  await symlink(path.resolve('node_modules'), path.join(temp, 'node_modules'), process.platform === 'win32' ? 'junction' : 'dir');
   await build({stdin:{contents:`export {default as Flow} from './components/LessonStepFlow'; export {buildLessonSteps} from './lib/lesson-step-flow'; export {courseIdeaExamples} from './lib/course-idea-examples';`, resolveDir:process.cwd(), loader:'ts'}, outfile:path.join(temp,'test.mjs'), bundle:true, platform:'node', format:'esm', packages:'external', plugins:[{name:'css', setup(b){b.onLoad({filter:/\.module\.css$/},()=>({contents:'export default new Proxy({}, {get:(_, name)=>String(name)});',loader:'js'}));}}]});
   const {Flow, buildLessonSteps, courseIdeaExamples} = await import(pathToFileURL(path.join(temp,'test.mjs')));
   const trackOf = lesson => lesson.id.replace(/-[^-]+$/, '');
@@ -86,7 +86,8 @@ try {
     const panel=document.querySelector('[data-idea-example]');assert.ok(panel);
     assert.equal(panel.closest('details'),null,'Examples are immediately visible');
     const codes=[...panel.querySelectorAll('pre code')].map(node=>node.textContent);
-    assert.deepEqual(codes,[...(context.files??[]).map(file=>file.code),context.code,...(context.stdin!==undefined?[context.stdin]:[]),...(context.output!==undefined?[context.output]:[])]);
+    assert.deepEqual(codes,[context.code,...(context.stdin!==undefined?[context.stdin]:[]),...(context.output!==undefined?[context.output]:[]),...(context.files??[]).map(file=>file.code)]);
+    if(context.files?.length) assert.equal(panel.querySelector('[data-example-setup]').open,false);
   };
   const journeys=[...new Map(fixtures.map(fixture=>[fixture[0].id+':'+fixture[1],fixture])).values()];
   for(const [lesson,section] of journeys) {
@@ -107,9 +108,10 @@ try {
   verifyExample(escaped);
   assert.equal(document.querySelectorAll('img,script,[onerror]').length,0);
   await click('[data-idea-example] [aria-label="Copy example code"]');
-  assert.equal(copied,escaped.files[0].code,'Companion copy preserves exact code');
-  await click('[data-idea-example] [aria-label="Copy example code"]');
   assert.equal(copied,escaped.code,'Main example copy preserves exact code');
+  await click('[data-example-setup] summary');
+  await click('[data-example-file] [aria-label="Copy example code"]');
+  assert.equal(copied,escaped.files[0].code,'Companion copy preserves exact code');
   const savedLesson=lessons.find(lesson=>lesson.id==='java-02'),savedText=savedLesson.explanation[0];
   const savedSteps=buildLessonSteps(savedText,'java',{authoredOnly:true});
   const resumeKey='example-account:java-02:0';

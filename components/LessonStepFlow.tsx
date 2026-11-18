@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from "react";
+import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { buildLessonSteps, distinctLessonReference, type LessonStep } from "../lib/lesson-step-flow";
 import LessonVisual, { hasLessonVisual } from "./LessonVisual";
+import CssLessonPicture from "./CssLessonPicture";
 import CodeAnatomy, { type ReviewedCodeExample } from "./CodeAnatomy";
 import { codeAnatomy } from "../lib/code-anatomy";
 import LessonContent, { CodeExample, InlineCode } from "./LessonContent";
@@ -75,13 +76,15 @@ function StepFlow({ text, runtime, referenceText = text, referenceVisual, resume
     try { localStorage.setItem(resumeKey, JSON.stringify({ flowVersion: 4, text, runtime, reviewedLesson, inlinePractice, index, selection, result })); } catch {}
   }, [resumeReady, resumeKey, text, runtime, reviewedLesson, inlinePractice, index, selection, result]);
   const panel = useRef<HTMLDivElement>(null);
-  const previousIndex = useRef(index);
+  const movedByReader = useRef(false);
   const stageCallback = useRef(onStageChange);
   const id = useId();
   const step = steps[index];
   const thoughtIndex = steps.slice(0, index + 1).filter(candidate => candidate.kind === "explain").length - 1;
   const ideaExample = step.kind === "explain"
     ? (ideaExamples?.examples[ideaExamples.thoughtExamples[thoughtIndex]] ?? explanationExample) : undefined;
+  const cssIdea = referenceVisual?.unitId === "css-01" ? referenceVisual.paragraph : undefined;
+  const inlineSelector = Boolean(ideaExample && cssIdea === 2);
   const glossaryText = useMemo(() => step.kind === "explain" ? step.text : step.kind === "practice" ? step.question + " " + (result ? step.explanation : "") : step.kind === "output" ? "output code" : codeAnatomy(step.code, step.language).lines.flatMap(line => line.tokens.map(token => token.label + " " + token.explanation)).join(" "), [step, result]);
   // Keep the user's preferred definition. Use reviewed source-matched wording elsewhere.
   const simpleThought = !reviewedLesson && step.kind === "explain" && step.text !== "A program is a list of instructions the computer follows."
@@ -90,9 +93,15 @@ function StepFlow({ text, runtime, referenceText = text, referenceVisual, resume
   const canContinue = step.kind !== "practice" || result !== null;
   const stageLabel = step.kind === "explain" ? "One idea" : step.kind === "example" ? "See it" : step.kind === "practice" ? "Your turn" : "The result";
 
-  useEffect(() => {
-    if (index !== previousIndex.current) panel.current?.focus({ preventScroll: true });
-    previousIndex.current = index;
+  useLayoutEffect(() => {
+    if (!movedByReader.current || !panel.current) return;
+    movedByReader.current = false;
+    panel.current.focus({ preventScroll: true });
+    const start = panel.current.querySelector("[data-technical-reading], legend, p") ?? panel.current;
+    const { top, bottom } = start.getBoundingClientRect();
+    if (top < 0 || bottom > window.innerHeight) {
+      start.scrollIntoView({ block: "start", behavior: "instant" });
+    }
   }, [index]);
   useEffect(() => { stageCallback.current = onStageChange; }, [onStageChange]);
   useEffect(() => {
@@ -100,6 +109,7 @@ function StepFlow({ text, runtime, referenceText = text, referenceVisual, resume
   }, [index, steps.length, step.kind, isLast]);
 
   function goTo(next: number) {
+    movedByReader.current = true;
     setSelection(null);
     setResult(null);
     setIndex(next);
@@ -128,17 +138,22 @@ function StepFlow({ text, runtime, referenceText = text, referenceVisual, resume
         </div>
         {ideaExample && <aside className={styles.ideaExample} aria-label="Example for this idea" data-idea-example>
           <p className={styles.exampleLabel}>Example for this idea</p>
-          {ideaExample.files?.map(file => <div key={file.name} data-example-file>
-            <p className={styles.fileLabel}><InlineCode text={file.name} /></p>
-            <CodeExample code={file.code} language={file.language} />
-          </div>)}
           <CodeExample code={ideaExample.code} language={ideaExample.language} />
+          {cssIdea === 5 && <CssLessonPicture kind="spacing" />}
+          {inlineSelector && referenceVisual && <LessonVisual {...referenceVisual} />}
           {ideaExample.stdin !== undefined && <div data-example-input>
             <p className={styles.fileLabel}>Example input</p>
             <CodeExample code={ideaExample.stdin} language="text" />
           </div>}
           {ideaExample.output !== undefined && <CodeExample code={ideaExample.output} language="output" />}
           <p className={styles.exampleNote}><InlineCode text={ideaExample.note} /></p>
+          {!!ideaExample.files?.length && <details className={styles.reference} data-example-setup>
+            <summary>Show setup</summary>
+            {ideaExample.files.map(file => <div key={file.name} data-example-file>
+              <p className={styles.fileLabel}><InlineCode text={file.name} /></p>
+              <CodeExample code={file.code} language={file.language} />
+            </div>)}
+          </details>}
         </aside>}
       </div>}
       {step.kind === "example" && <>
@@ -177,11 +192,11 @@ function StepFlow({ text, runtime, referenceText = text, referenceVisual, resume
         {step.kind === "practice" && !result ? "Check" : isLast || result ? "Continue" : "Next"}
       </button>
     </nav>
-    {(extraReference.trim() || showReferenceVisual) && <details key={`${index}:reference`} className={styles.reference} data-lesson-reference>
+    {(extraReference.trim() || (showReferenceVisual && !inlineSelector)) && <details key={`${index}:reference`} className={styles.reference} data-lesson-reference>
       <summary>Tell me more</summary>
       <div className={styles.referenceContent}>
         {extraReference && <LessonContent text={extraReference} runtime={runtime} glossary />}
-        {showReferenceVisual && referenceVisual && <LessonVisual {...referenceVisual} />}
+        {showReferenceVisual && !inlineSelector && referenceVisual && <LessonVisual {...referenceVisual} />}
       </div>
     </details>}
   </section>;
